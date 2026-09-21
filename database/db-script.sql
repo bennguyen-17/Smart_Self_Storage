@@ -1,8 +1,8 @@
-CREATE DATABASE storage_management_db
+CREATE DATABASE IF NOT EXISTS smart_storage
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 
-USE storage_management_db;
+USE smart_storage;
 
 CREATE TABLE Role (
     roleId INT AUTO_INCREMENT PRIMARY KEY,
