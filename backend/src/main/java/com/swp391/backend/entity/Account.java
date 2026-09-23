@@ -5,31 +5,31 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "account")
+@Table(name = "Account")
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer accountId;
+    private Long accountId;
 
     @Column(nullable = false)
-    private Integer roleId;
+    private Long roleId;
 
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(nullable = false, unique = true, columnDefinition = "NVARCHAR(255)")
     private String email;
 
     @Column(length = 20)
     private String phone;
 
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(255)")
     private String fullName;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(255)")
     private String password;
 
-    @Column(length = 30)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(30)")
     private String status;
 
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
@@ -42,35 +42,37 @@ public class Account {
 
     private LocalDateTime lockUntil;
 
-    // Constructors, getters, and setters
-
     public Account() {
     }
 
-    public Account(Integer roleId, String email, String phone, String fullName, String password, String status) {
+    public Account(Long accountId, Long roleId, String email, String phone, String fullName, String password, String status, LocalDateTime createdAt, LocalDateTime updatedAt, Integer failedAttempts, LocalDateTime firstFailedAt, LocalDateTime lockUntil) {
+        this.accountId = accountId;
         this.roleId = roleId;
         this.email = email;
         this.phone = phone;
         this.fullName = fullName;
         this.password = password;
         this.status = status;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.failedAttempts = failedAttempts;
+        this.firstFailedAt = firstFailedAt;
+        this.lockUntil = lockUntil;
     }
 
-    public Integer getAccountId() {
+    public Long getAccountId() {
         return accountId;
     }
 
-    public void setAccountId(Integer accountId) {
+    public void setAccountId(Long accountId) {
         this.accountId = accountId;
     }
 
-    public Integer getRoleId() {
+    public Long getRoleId() {
         return roleId;
     }
 
-    public void setRoleId(Integer roleId) {
+    public void setRoleId(Long roleId) {
         this.roleId = roleId;
     }
 
@@ -153,5 +155,4 @@ public class Account {
     public void setLockUntil(LocalDateTime lockUntil) {
         this.lockUntil = lockUntil;
     }
-
 }
