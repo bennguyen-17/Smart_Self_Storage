@@ -4,6 +4,8 @@ import com.swp391.backend.dto.auth.LoginRequest;
 import com.swp391.backend.dto.auth.LoginResponse;
 import com.swp391.backend.entity.Account;
 import com.swp391.backend.repository.AccountRepository;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -12,6 +14,11 @@ import java.util.Optional;
 public class AuthService {
 
     private final AccountRepository accountRepository;
+    private final PasswordEncoder passwordEncoder;
+    
+    public PasswordEncoder(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public AuthService(AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
