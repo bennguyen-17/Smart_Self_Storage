@@ -15,13 +15,11 @@ public class AuthService {
 
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
-    
-    public PasswordEncoder(PasswordEncoder passwordEncoder) {
-        this.passwordEncoder = passwordEncoder;
-    }
 
-    public AuthService(AccountRepository accountRepository) {
+    public AuthService(AccountRepository accountRepository, 
+        PasswordEncoder passwordEncoder) {
         this.accountRepository = accountRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public Optional<LoginResponse> login(LoginRequest request) {
@@ -34,12 +32,13 @@ public class AuthService {
         }
 
         Account account = accountResult.get();
-
-        // Tạm thời so sánh password trực tiếp
-        if (!request.getPassword().equals(account.getPassword())) {
+        
+        // BCrypt
+        if (!passwordEncoder.matches(
+                request.getPassword(),
+                account.getPassword())) {
             return Optional.empty();
-        }
-
+                }
         return Optional.of(new LoginResponse(
                 account.getAccountId(),
                 account.getFullName(),
