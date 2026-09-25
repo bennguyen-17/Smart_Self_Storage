@@ -2,6 +2,7 @@ package com.swp391.backend.service;
 
 import com.swp391.backend.dto.ApiResponse;
 import com.swp391.backend.dto.RegisterRequest;
+import com.swp391.backend.dto.ResendOtpRequest;
 import com.swp391.backend.dto.VerifyOtpRequest;
 import com.swp391.backend.dto.auth.LoginRequest;
 import com.swp391.backend.dto.auth.LoginResponse;
@@ -87,6 +88,38 @@ public class AuthService {
         userRepository.save(user);
 
         return new ApiResponse(true, "Xác thực OTP thành công! Tài khoản đã được kích hoạt.");
+    }
+
+    // --- US-01: API Gửi lại mã OTP (Resend OTP) ---
+    public ApiResponse resendOtp(ResendOtpRequest request) {
+        if (request.getPhone() == null || request.getPhone().trim().isEmpty()) {
+            return new ApiResponse(false, "Số điện thoại không được để trống!");
+        }
+
+        Optional<User> userOpt = userRepository.findByPhone(request.getPhone());
+
+        if (userOpt.isEmpty()) {
+            return new ApiResponse(false, "Số điện thoại chưa được đăng ký trong hệ thống!");
+        }
+
+        User user = userOpt.get();
+
+        if (user.isActive()) {
+            return new ApiResponse(false, "Tài khoản đã được kích hoạt trước đó, vui lòng đăng nhập!");
+        }
+
+        // Sinh mã OTP 6 số ngẫu nhiên mới & gia hạn 5 phút
+        String otpCode = String.format("%06d", new Random().nextInt(999999));
+        user.setOtpCode(otpCode);
+        user.setOtpExpiryTime(LocalDateTime.now().plusMinutes(5));
+        userRepository.save(user);
+
+        // In mã OTP ra Console để test dev
+        System.out.println("==========================================");
+        System.out.println(">>> MÃ OTP GỬI LẠI CHO " + request.getPhone() + " LÀ: " + otpCode + " (Hạn 5 phút) <<<");
+        System.out.println("==========================================");
+
+        return new ApiResponse(true, "Mã OTP mới đã được gửi lại thành công! Vui lòng kiểm tra.");
     }
 
     // --- US-02: Đăng nhập ---

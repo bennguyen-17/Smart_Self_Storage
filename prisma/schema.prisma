@@ -1,0 +1,547 @@
+// ============================================================================
+// PRISMA SCHEMA: SMART SELF-STORAGE SYSTEM
+// SWP391 - FALL 2026
+// Dialect: MySQL 8.0+
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------------------------------
+// 1. Role
+// ----------------------------------------------------------------------------
+model Role {
+  roleId   Int       @id @default(autoincrement()) @map("roleId")
+  roleName String    @unique @map("roleName") @db.VarChar(50)
+  accounts Account[]
+
+  @@map("Role")
+}
+
+// ----------------------------------------------------------------------------
+// 2. Facility (Cơ sở lưu trữ)
+// ----------------------------------------------------------------------------
+model Facility {
+  facilityId       Int               @id @default(autoincrement()) @map("facilityId")
+  facilityName     String            @map("facilityName") @db.VarChar(100)
+  address          String            @map("address") @db.VarChar(255)
+  phone            String            @map("phone") @db.VarChar(15)
+  status           FacilityStatus    @default(ACTIVE) @map("status")
+  floors           Floor[]
+  employeeProfiles EmployeeProfile[]
+  staffShifts      StaffShift[]
+
+  @@map("Facility")
+}
+
+enum FacilityStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+// ----------------------------------------------------------------------------
+// 3. Account (Tài khoản người dùng - Login bằng SĐT)
+// ----------------------------------------------------------------------------
+model Account {
+  accountId Int           @id @default(autoincrement()) @map("accountId")
+  roleId    Int           @map("roleId")
+  phone     String        @unique @map("phone") @db.VarChar(15)
+  fullName  String        @map("fullName") @db.VarChar(100)
+  password  String        @map("password") @db.VarChar(255)
+  status    AccountStatus @default(ACTIVE) @map("status")
+  createdAt DateTime      @default(now()) @map("createdAt")
+  updatedAt DateTime      @default(now()) @updatedAt @map("updatedAt")
+
+  role            Role             @relation(fields: [roleId], references: [roleId], onUpdate: Cascade)
+  customerProfile CustomerProfile?
+  employeeProfile EmployeeProfile?
+  activityLogs    ActivityLog[]
+  auditLogs       AuditLog[]
+  reservations    Reservation[]
+
+  @@map("Account")
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  BANNED
+}
+
+// ----------------------------------------------------------------------------
+// 4. CustomerProfile (Hồ sơ khách hàng - CCCD)
+// ----------------------------------------------------------------------------
+model CustomerProfile {
+  customerId     Int    @id @default(autoincrement()) @map("customerId")
+  accountId      Int    @unique @map("accountId")
+  identityNumber String @unique @map("identityNumber") @db.VarChar(20)
+
+  account Account @relation(fields: [accountId], references: [accountId], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("CustomerProfile")
+}
+
+// ----------------------------------------------------------------------------
+// 5. EmployeeProfile (Hồ sơ nhân viên)
+// ----------------------------------------------------------------------------
+model EmployeeProfile {
+  employeeId Int @id @default(autoincrement()) @map("employeeId")
+  accountId  Int @unique @map("accountId")
+  facilityId Int @map("facilityId")
+
+  account     Account      @relation(fields: [accountId], references: [accountId], onDelete: Cascade, onUpdate: Cascade)
+  facility    Facility     @relation(fields: [facilityId], references: [facilityId], onUpdate: Cascade)
+  staffShifts StaffShift[]
+  inspections Inspection[]
+
+  @@map("EmployeeProfile")
+}
+
+// ----------------------------------------------------------------------------
+// 6. ActivityLog (Nhật ký thao tác hệ thống)
+// ----------------------------------------------------------------------------
+model ActivityLog {
+  activityLogId Int      @id @default(autoincrement()) @map("activityLogId")
+  accountId     Int      @map("accountId")
+  action        String   @map("action") @db.VarChar(100)
+  description   String?  @map("description") @db.Text
+  createdAt     DateTime @default(now()) @map("createdAt")
+  ipAddress     String?  @map("ipAddress") @db.VarChar(45)
+
+  account Account @relation(fields: [accountId], references: [accountId], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("ActivityLog")
+}
+
+// ----------------------------------------------------------------------------
+// 7. AuditLog (Nhật ký mở cổng PIN động cơ sở)
+// ----------------------------------------------------------------------------
+model AuditLog {
+  auditLogId Int      @id @default(autoincrement()) @map("auditLogId")
+  accountId  Int      @map("accountId")
+  action     String   @map("action") @db.VarChar(100)
+  createdAt  DateTime @default(now()) @map("createdAt")
+
+  account Account @relation(fields: [accountId], references: [accountId], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("AuditLog")
+}
+
+// ----------------------------------------------------------------------------
+// 8. Floor (Tầng của cơ sở)
+// ----------------------------------------------------------------------------
+model Floor {
+  floorId      Int         @id @default(autoincrement()) @map("floorId")
+  facilityId   Int         @map("facilityId")
+  floorName    String      @map("floorName") @db.VarChar(50)
+  maxLoadPerM2 Decimal?    @map("maxLoadPerM2") @db.Decimal(10, 2)
+  status       FloorStatus @default(ACTIVE) @map("status")
+
+  facility     Facility      @relation(fields: [facilityId], references: [facilityId], onDelete: Cascade, onUpdate: Cascade)
+  storageUnits StorageUnit[]
+
+  @@map("Floor")
+}
+
+enum FloorStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+// ----------------------------------------------------------------------------
+// 9. UnitType (Loại kho)
+// ----------------------------------------------------------------------------
+model UnitType {
+  unitTypeId       Int              @id @default(autoincrement()) @map("unitTypeId")
+  typeName         String           @map("typeName") @db.VarChar(50)
+  size             String           @map("size") @db.VarChar(50)
+  storageCondition StorageCondition @default(NORMAL) @map("storageCondition")
+  status           UnitTypeStatus   @default(ACTIVE) @map("status")
+
+  storageUnits       StorageUnit[]
+  prices             Price[]
+  promotionUnitTypes PromotionUnitType[]
+
+  @@map("UnitType")
+}
+
+enum StorageCondition {
+  NORMAL
+  CLIMATE_CONTROLLED
+}
+
+enum UnitTypeStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// ----------------------------------------------------------------------------
+// 10. StorageUnit (Ngăn kho / Buồng kho)
+// ----------------------------------------------------------------------------
+model StorageUnit {
+  unitId     Int               @id @default(autoincrement()) @map("unitId")
+  floorId    Int               @map("floorId")
+  unitTypeId Int               @map("unitTypeId")
+  status     StorageUnitStatus @default(AVAILABLE) @map("status")
+
+  floor        Floor         @relation(fields: [floorId], references: [floorId], onDelete: Cascade, onUpdate: Cascade)
+  unitType     UnitType      @relation(fields: [unitTypeId], references: [unitTypeId], onUpdate: Cascade)
+  reservations Reservation[]
+
+  @@map("StorageUnit")
+}
+
+enum StorageUnitStatus {
+  AVAILABLE
+  HOLD
+  RENTED
+  MAINTENANCE
+  OVERDUE
+}
+
+// ----------------------------------------------------------------------------
+// 11. Price (Bảng giá thuê)
+// ----------------------------------------------------------------------------
+model Price {
+  priceId                 Int         @id @default(autoincrement()) @map("priceId")
+  unitTypeId              Int         @map("unitTypeId")
+  dailyPrice              Decimal     @map("dailyPrice") @db.Decimal(12, 2)
+  monthlyPrice            Decimal     @map("monthlyPrice") @db.Decimal(12, 2)
+  depositAmount           Decimal     @map("depositAmount") @db.Decimal(12, 2)
+  climateSurchargePercent Decimal?    @default(0.00) @map("climateSurchargePercent") @db.Decimal(5, 2)
+  effectiveFrom           DateTime    @map("effectiveFrom") @db.Date
+  effectiveTo             DateTime?   @map("effectiveTo") @db.Date
+  status                  PriceStatus @default(ACTIVE) @map("status")
+
+  unitType UnitType @relation(fields: [unitTypeId], references: [unitTypeId], onUpdate: Cascade)
+
+  @@map("Price")
+}
+
+enum PriceStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// ----------------------------------------------------------------------------
+// 12. Promotion (Chương trình khuyến mãi)
+// ----------------------------------------------------------------------------
+model Promotion {
+  promotionId   Int             @id @default(autoincrement()) @map("promotionId")
+  promotionName String          @map("promotionName") @db.VarChar(100)
+  promotionType PromotionType   @map("promotionType")
+  discountValue Decimal         @map("discountValue") @db.Decimal(12, 2)
+  startDate     DateTime        @map("startDate") @db.Date
+  endDate       DateTime        @map("endDate") @db.Date
+  status        PromotionStatus @default(ACTIVE) @map("status")
+
+  promotionUnitTypes PromotionUnitType[]
+
+  @@map("Promotion")
+}
+
+enum PromotionType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum PromotionStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+}
+
+// ----------------------------------------------------------------------------
+// 13. PromotionUnitType (Liên kết Khuyến mãi - Loại kho)
+// ----------------------------------------------------------------------------
+model PromotionUnitType {
+  promotionId Int @map("promotionId")
+  unitTypeId  Int @map("unitTypeId")
+
+  promotion Promotion @relation(fields: [promotionId], references: [promotionId], onDelete: Cascade, onUpdate: Cascade)
+  unitType  UnitType  @relation(fields: [unitTypeId], references: [unitTypeId], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([promotionId, unitTypeId])
+  @@map("PromotionUnitType")
+}
+
+// ----------------------------------------------------------------------------
+// 14. Shift (Ca trực)
+// ----------------------------------------------------------------------------
+model Shift {
+  shiftId   Int         @id @default(autoincrement()) @map("shiftId")
+  shiftName String      @map("shiftName") @db.VarChar(50)
+  startTime DateTime    @map("startTime") @db.Time(0)
+  endTime   DateTime    @map("endTime") @db.Time(0)
+  status    ShiftStatus @default(ACTIVE) @map("status")
+
+  staffShifts StaffShift[]
+
+  @@map("Shift")
+}
+
+enum ShiftStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// ----------------------------------------------------------------------------
+// 15. StaffShift (Phân công ca trực)
+// ----------------------------------------------------------------------------
+model StaffShift {
+  staffShiftId Int              @id @default(autoincrement()) @map("staffShiftId")
+  employeeId   Int              @map("employeeId")
+  facilityId   Int              @map("facilityId")
+  shiftId      Int              @map("shiftId")
+  workDate     DateTime         @map("workDate") @db.Date
+  status       StaffShiftStatus @default(SCHEDULED) @map("status")
+
+  employee EmployeeProfile @relation(fields: [employeeId], references: [employeeId], onDelete: Cascade, onUpdate: Cascade)
+  facility Facility        @relation(fields: [facilityId], references: [facilityId], onUpdate: Cascade)
+  shift    Shift           @relation(fields: [shiftId], references: [shiftId], onUpdate: Cascade)
+
+  @@map("StaffShift")
+}
+
+enum StaffShiftStatus {
+  SCHEDULED
+  ATTENDED
+  ABSENT
+  CANCELLED
+}
+
+// ----------------------------------------------------------------------------
+// 16. Reservation (Đơn giữ chỗ / Đặt trước kho)
+// ----------------------------------------------------------------------------
+model Reservation {
+  reservationId Int               @id @default(autoincrement()) @map("reservationId")
+  accountId     Int               @map("accountId")
+  unitId        Int               @map("unitId")
+  startDate     DateTime          @map("startDate") @db.Date
+  endDate       DateTime          @map("endDate") @db.Date
+  rentalType    RentalType        @map("rentalType")
+  rentalAmount  Decimal           @map("rentalAmount") @db.Decimal(12, 2)
+  depositAmount Decimal           @map("depositAmount") @db.Decimal(12, 2)
+  status        ReservationStatus @default(PENDING) @map("status")
+  createdAt     DateTime          @default(now()) @map("createdAt")
+  holdExpiresAt DateTime?         @map("holdExpiresAt")
+
+  account     Account     @relation(fields: [accountId], references: [accountId], onUpdate: Cascade)
+  storageUnit StorageUnit @relation(fields: [unitId], references: [unitId], onUpdate: Cascade)
+  contract    Contract?
+
+  @@map("Reservation")
+}
+
+enum RentalType {
+  DAILY
+  MONTHLY
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+}
+
+// ----------------------------------------------------------------------------
+// 17. Contract (Hợp đồng thuê kho)
+// ----------------------------------------------------------------------------
+model Contract {
+  contractId    Int            @id @default(autoincrement()) @map("contractId")
+  reservationId Int            @unique @map("reservationId")
+  pdfUrl        String?        @map("pdfUrl") @db.VarChar(255)
+  activatedAt   DateTime?      @map("activatedAt")
+  terminatedAt  DateTime?      @map("terminatedAt")
+  status        ContractStatus @default(ACTIVE) @map("status")
+
+  reservation    Reservation     @relation(fields: [reservationId], references: [reservationId], onUpdate: Cascade)
+  payments       Payment[]
+  gatePins       GatePin[]
+  supportTickets SupportTicket[]
+
+  @@map("Contract")
+}
+
+enum ContractStatus {
+  ACTIVE
+  EXPIRED
+  TERMINATED
+  CANCELLED
+}
+
+// ----------------------------------------------------------------------------
+// 18. Payment (Hóa đơn và Thanh toán)
+// ----------------------------------------------------------------------------
+model Payment {
+  paymentId            Int            @id @default(autoincrement()) @map("paymentId")
+  contractId           Int            @map("contractId")
+  invoiceNumber        String         @unique @map("invoiceNumber") @db.VarChar(50)
+  invoiceType          InvoiceType    @map("invoiceType")
+  amount               Decimal        @map("amount") @db.Decimal(12, 2)
+  pdfUrl               String?        @map("pdfUrl") @db.VarChar(255)
+  issuedAt             DateTime       @default(now()) @map("issuedAt")
+  dueAt                DateTime       @map("dueAt")
+  status               PaymentStatus  @default(PENDING) @map("status")
+  paymentMethod        PaymentMethod? @map("paymentMethod")
+  transactionCode      String?        @map("transactionCode") @db.VarChar(100)
+  paymentStatus        TxnStatus      @default(PENDING) @map("paymentStatus")
+  gatewayTransactionId String?        @map("gatewayTransactionId") @db.VarChar(100)
+  paidAt               DateTime?      @map("paidAt")
+
+  contract    Contract     @relation(fields: [contractId], references: [contractId], onUpdate: Cascade)
+  inspections Inspection[]
+
+  @@map("Payment")
+}
+
+enum InvoiceType {
+  INITIAL_RENTAL
+  MONTHLY_RENEWAL
+  OVERDUE_FEE
+  INSPECTION_DAMAGE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  VNPAY
+  MOMO
+  BANK_TRANSFER
+  CASH
+}
+
+enum TxnStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+// ----------------------------------------------------------------------------
+// 19. GatePin (Mã PIN động mở cổng 15s - 30s)
+// ----------------------------------------------------------------------------
+model GatePin {
+  gatePinId   Int           @id @default(autoincrement()) @map("gatePinId")
+  contractId  Int           @map("contractId")
+  pinCode     String        @map("pinCode") @db.VarChar(6)
+  status      GatePinStatus @default(ACTIVE) @map("status")
+  generatedAt DateTime      @default(now()) @map("generatedAt")
+  expiresAt   DateTime      @map("expiresAt")
+
+  contract Contract @relation(fields: [contractId], references: [contractId], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("GatePin")
+}
+
+enum GatePinStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+// ----------------------------------------------------------------------------
+// 20. FeeItem (Danh mục biểu phí phụ thu / bồi thường hư hỏng)
+// ----------------------------------------------------------------------------
+model FeeItem {
+  feeItemId   Int           @id @default(autoincrement()) @map("feeItemId")
+  feeName     String        @map("feeName") @db.VarChar(100)
+  unitPrice   Decimal       @map("unitPrice") @db.Decimal(12, 2)
+  description String?       @map("description") @db.VarChar(255)
+  status      FeeItemStatus @default(ACTIVE) @map("status")
+
+  inspectionItems InspectionItem[]
+
+  @@map("FeeItem")
+}
+
+enum FeeItemStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// ----------------------------------------------------------------------------
+// 21. Inspection (Biên bản kiểm tra kho khi trả kho)
+// ----------------------------------------------------------------------------
+model Inspection {
+  inspectionId    Int             @id @default(autoincrement()) @map("inspectionId")
+  paymentId       Int             @map("paymentId")
+  employeeId      Int             @map("employeeId")
+  inspectionDate  DateTime        @default(now()) @map("inspectionDate")
+  conditionStatus ConditionStatus @map("conditionStatus")
+
+  payment         Payment          @relation(fields: [paymentId], references: [paymentId], onUpdate: Cascade)
+  employee        EmployeeProfile  @relation(fields: [employeeId], references: [employeeId], onUpdate: Cascade)
+  inspectionItems InspectionItem[]
+
+  @@map("Inspection")
+}
+
+enum ConditionStatus {
+  CLEAN_PASS
+  DAMAGED_DIRTY
+}
+
+// ----------------------------------------------------------------------------
+// 22. InspectionItem (Chi tiết phụ phí kiểm tra kho)
+// ----------------------------------------------------------------------------
+model InspectionItem {
+  inspectionItemId Int     @id @default(autoincrement()) @map("inspectionItemId")
+  inspectionId     Int     @map("inspectionId")
+  feeItemId        Int     @map("feeItemId")
+  quantity         Int     @default(1) @map("quantity")
+  amount           Decimal @map("amount") @db.Decimal(12, 2)
+
+  inspection Inspection @relation(fields: [inspectionId], references: [inspectionId], onDelete: Cascade, onUpdate: Cascade)
+  feeItem    FeeItem    @relation(fields: [feeItemId], references: [feeItemId], onUpdate: Cascade)
+
+  @@map("InspectionItem")
+}
+
+// ----------------------------------------------------------------------------
+// 23. SupportTicket (Yêu cầu hỗ trợ gắn với hợp đồng)
+// ----------------------------------------------------------------------------
+model SupportTicket {
+  ticketId    Int            @id @default(autoincrement()) @map("ticketId")
+  contractId  Int            @map("contractId")
+  ticketCode  String         @unique @map("ticketCode") @db.VarChar(50)
+  category    TicketCategory @map("category")
+  description String         @map("description") @db.Text
+  status      TicketStatus   @default(PENDING) @map("status")
+  submittedAt DateTime       @default(now()) @map("submittedAt")
+  acceptedAt  DateTime?      @map("acceptedAt")
+  resolvedAt  DateTime?      @map("resolvedAt")
+  slaDeadline DateTime?      @map("slaDeadline")
+
+  contract Contract @relation(fields: [contractId], references: [contractId], onUpdate: Cascade)
+
+  @@map("SupportTicket")
+}
+
+enum TicketCategory {
+  TECHNICAL
+  BILLING
+  ACCESS_GATE
+  CLEANLINESS
+  OTHER
+}
+
+enum TicketStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}

@@ -2,6 +2,7 @@ package com.swp391.backend.controller;
 
 import com.swp391.backend.dto.ApiResponse;
 import com.swp391.backend.dto.RegisterRequest;
+import com.swp391.backend.dto.ResendOtpRequest;
 import com.swp391.backend.dto.VerifyOtpRequest;
 import com.swp391.backend.dto.auth.LoginRequest;
 import com.swp391.backend.dto.auth.LoginResponse;
@@ -39,6 +40,16 @@ public class AuthController {
     @PostMapping("/verify-otp")
     public ResponseEntity<ApiResponse> verifyOtp(@RequestBody VerifyOtpRequest request) {
         ApiResponse response = authService.verifyOtp(request);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    // --- US-01: API Gửi lại mã OTP (Resend OTP) ---
+    @PostMapping("/resend-otp")
+    public ResponseEntity<ApiResponse> resendOtp(@RequestBody ResendOtpRequest request) {
+        ApiResponse response = authService.resendOtp(request);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         }
