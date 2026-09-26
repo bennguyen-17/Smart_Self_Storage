@@ -171,3 +171,36 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Bản đồ mạng lưới kho (prototype customer_login.html) */
+.province-path {
+  cursor: pointer;
+  transition:
+    fill 0.2s ease,
+    stroke 0.2s ease,
+    stroke-width 0.2s ease;
+}
+
+.light .province-path {
+  fill: #e2e8f0;
+  stroke: #cbd5e1;
+  stroke-width: 0.7;
+}
+
+.light .province-path:hover {
+  fill: #bfdbfe;
+  stroke: #2563eb;
+  stroke-width: 1.2;
+}
+
+.dark .province-path {
+  fill: #1e293b;
+  stroke: #475569;
+  stroke-width: 0.7;
+}
+
+.dark .province-path:hover {
+  fill: #3b82f6;
+  stroke: #93c5fd;
+  stroke-width: 1.2;
+}

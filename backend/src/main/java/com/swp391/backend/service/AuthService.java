@@ -19,8 +19,14 @@ public class AuthService {
 
     public Optional<LoginResponse> login(LoginRequest request) {
 
+        String identifier = request.getIdentifier();
+
         Optional<Account> accountResult =
-                accountRepository.findByEmail(request.getEmail());
+                accountRepository.findByEmail(identifier);
+
+        if (accountResult.isEmpty()) {
+            accountResult = accountRepository.findByPhone(identifier);
+        }
 
         if (accountResult.isEmpty()) {
             return Optional.empty();

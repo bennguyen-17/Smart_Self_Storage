@@ -10,6 +10,25 @@ export interface RegisterData {
   password: string;
 }
 
+export interface AuthUser {
+  id: number;
+  fullName: string;
+  email: string;
+  role: string;
+}
+
+export interface LoginResponse {
+  success: boolean;
+  token: string;
+  user: AuthUser;
+}
+
+export interface LockedResponse {
+  success: boolean;
+  message: string;
+  retryAfterSeconds: number;
+}
+
 export const register = async (data: RegisterData) => {
   const response = await axios.post(`${BASE_URL}/api/v1/auth/register`, {
     fullName: data.fullName,
@@ -39,11 +58,17 @@ export const resendOtp = async (phone: string) => {
   return response.data;
 };
 
-export const login = async (identifier: string, password: string) => {
-  const response = await axios.post(`${BASE_URL}/api/v1/auth/login`, {
-    identifier,
-    password,
-  });
+export const login = async (
+  identifier: string,
+  password: string
+): Promise<LoginResponse> => {
+  const response = await axios.post<LoginResponse>(
+    `${BASE_URL}/api/v1/auth/login`,
+    {
+      identifier,
+      password,
+    }
+  );
 
   return response.data;
 };

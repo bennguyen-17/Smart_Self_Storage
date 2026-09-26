@@ -1,16 +1,16 @@
 import { Navigate, Route, Routes } from "react-router-dom"
 import { Agentation } from "agentation";
 
-import LoginPage from "@/pages/LoginPage"
-import RegisterPage from "@/pages/RegisterPage"
+import AuthPage from "@/pages/AuthPage"
+import InternalLoginPage from "@/pages/InternalLoginPage"
 
 function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Navigate to="/register" replace />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/customer_login" element={<AuthPage />} />
+        <Route path="/internal_login" element={<InternalLoginPage />} />
+        <Route path="*" element={<Navigate to="/customer_login" replace />} />
       </Routes>
       {import.meta.env.VITE_ENABLE_AGENTATION === "true" && <Agentation />}
     </>
