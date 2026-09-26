@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
-public class AuthService {
+public class LoginService {
 
     private static final int MAX_FAILED_ATTEMPTS = 5;
     private static final int LOCK_MINUTES = 15;
@@ -23,7 +23,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final ActivityLogRepository activityLogRepository;
 
-    public AuthService(
+    public LoginService(
             AccountRepository accountRepository,
             JwtService jwtService,
             ActivityLogRepository activityLogRepository) {
