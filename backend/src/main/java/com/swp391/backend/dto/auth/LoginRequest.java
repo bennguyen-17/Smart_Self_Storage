@@ -1,23 +1,23 @@
 package com.swp391.backend.dto.auth;
 
 public class LoginRequest {
-    private String email;
+    private String phone;
     private String password;
 
     public LoginRequest() {
     }
 
-    public LoginRequest(String email, String password) {
-        this.email = email;
+    public LoginRequest(String phone, String password) {
+        this.phone = phone;
         this.password = password;
     }
 
-    public String getEmail() {
-        return email;
+    public String getPhone() {
+        return phone;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public String getPassword() {
@@ -27,4 +27,6 @@ public class LoginRequest {
     public void setPassword(String password) {
         this.password = password;
     }
+
+   
 }

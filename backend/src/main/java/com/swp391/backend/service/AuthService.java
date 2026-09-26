@@ -3,131 +3,189 @@ package com.swp391.backend.service;
 import com.swp391.backend.dto.auth.LoginRequest;
 import com.swp391.backend.dto.auth.LoginResponse;
 import com.swp391.backend.entity.Account;
-import com.swp391.backend.entity.LoginAttempt;
+import com.swp391.backend.entity.ActivityLog;
 import com.swp391.backend.repository.AccountRepository;
-import com.swp391.backend.repository.LoginAttemptRepository;
+import com.swp391.backend.repository.ActivityLogRepository;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class AuthService {
+
     private static final int MAX_FAILED_ATTEMPTS = 5;
-    private static final Duration ATTEMPT_WINDOW = Duration.ofMinutes(10);
-    private static final Duration ACCOUNT_LOCK_DURATION = Duration.ofMinutes(15);
+    private static final int LOCK_MINUTES = 15;
+    private static final int ATTEMPT_WINDOW_MINUTES = 10;
 
     private final AccountRepository accountRepository;
-    private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final LoginAttemptRepository loginAttemptRepository;
+    private final ActivityLogRepository activityLogRepository;
 
-    public AuthService(AccountRepository accountRepository, 
-        PasswordEncoder passwordEncoder,
-        JwtService jwtService,
-        LoginAttemptRepository loginAttemptRepository) {
+    public AuthService(
+            AccountRepository accountRepository,
+            JwtService jwtService,
+            ActivityLogRepository activityLogRepository) {
+
         this.accountRepository = accountRepository;
-        this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
-        this.loginAttemptRepository = loginAttemptRepository;
+        this.activityLogRepository = activityLogRepository;
     }
 
     public LoginResult login(LoginRequest request, String ipAddress) {
-        String loginIdentifier = request.getEmail();
+
         LocalDateTime now = LocalDateTime.now();
 
-        Optional<Account> accountResult =
-                accountRepository.findByEmail(loginIdentifier);
+        // find in db
+        Optional<Account> result = accountRepository.findByPhone(request.getPhone());
 
-        if (accountResult.isPresent()) {
-            Account account = accountResult.get();
-            if ("SUSPENDED".equalsIgnoreCase(account.getStatus())) {
-                if (account.getLockUntil() != null && account.getLockUntil().isAfter(now)) {
-                    long remainingMinutes = Math.max(1,
-                            (Duration.between(now, account.getLockUntil()).toSeconds() + 59) / 60);
-                    return LoginResult.failure(
-                            "Tài khoản bị khóa. Vui lòng thử lại sau " + remainingMinutes + " phút.",
-                            423
-                    );
-                }
-
-                if (account.getLockUntil() == null) {
-                    return LoginResult.failure("Tài khoản đang bị tạm ngưng.", 423);
-                }
-
-                account.setStatus("ACTIVE");
-                account.setLockUntil(null);
-                accountRepository.save(account);
-            }
-        }
-
-        Account account = accountResult.orElse(null);
-        if (account == null || !passwordEncoder.matches(request.getPassword(), account.getPassword())) {
-            int attemptCount = recordFailedAttempt(loginIdentifier, ipAddress, now);
-
-            if (attemptCount >= MAX_FAILED_ATTEMPTS && account != null) {
-                account.setStatus("SUSPENDED");
-                account.setLockUntil(now.plus(ACCOUNT_LOCK_DURATION));
-                accountRepository.save(account);
-                return LoginResult.failure("Quá 5 lần đăng nhập sai. Tài khoản bị khóa trong 15 phút.", 423);
-            }
-
-            int remainingAttempts = Math.max(0, MAX_FAILED_ATTEMPTS - attemptCount);
+        if (result.isEmpty()) {
             return LoginResult.failure(
-                    "Mật khẩu không đúng. Bạn còn " + remainingAttempts + " lần thử",
-                    401
-            );
+                    "Số điện thoại hoặc mật khẩu không đúng.",
+                    401);
         }
 
-        loginAttemptRepository.deleteByLoginIdentifierAndIpAddress(loginIdentifier, ipAddress);
-        String role = account.getRoleId() == null
-                ? null
-                : account.getRoleId().toString();
+        Account account = result.get();
+
+        // account suspended check
+        if ("SUSPENDED".equals(account.getStatus())) {
+
+            if (account.getLockUntil() != null
+                    && account.getLockUntil().isAfter(now)) {
+
+                return LoginResult.failure(
+                        "Tài khoản đang bị khóa. Vui lòng thử lại sau.",
+                        423);
+            }
+
+            // unlock
+            account.setStatus("ACTIVE");
+            account.setFailedAttempts(0);
+            account.setFirstFailedAt(null);
+            account.setLockUntil(null);
+
+            accountRepository.save(account);
+        }
+
+        // check password
+        boolean passwordCorrect = request.getPassword() != null
+                && request.getPassword().equals(account.getPassword());
+
+        if (!passwordCorrect) {
+
+            long failedAttempts = handleFailedLogin(account, now, ipAddress);
+
+            if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+
+                return LoginResult.failure(
+                        "Quá 5 lần đăng nhập sai. Tài khoản bị khóa 15 phút.",
+                        423);
+            }
+
+            long remaining = MAX_FAILED_ATTEMPTS - failedAttempts;
+
+            return LoginResult.failure(
+                    "Số điện thoại hoặc mật khẩu không đúng. Còn "
+                            + remaining + " lần thử.",
+                    401);
+        }
+
+        // login successfully
+ 
+        account.setLockUntil(null);
+        account.setStatus("ACTIVE");
+
+        accountRepository.save(account);
+
+        // log
+        saveActivityLog(
+                account,
+                "LOGIN_SUCCESS",
+                "Login successful",
+                ipAddress);
+
+        // create JWT
         String token = jwtService.generateToken(account);
 
-        return LoginResult.success(new LoginResponse(
-                token,
-                new LoginResponse.UserInfo(
-                        account.getAccountId(),
-                        account.getFullName(),
-                        role
-                )
-        ));
+        return LoginResult.success(
+                new LoginResponse(
+                        token,
+                        new LoginResponse.UserInfo(
+                                account.getAccountId(),
+                                account.getFullName(),
+                                account.getRoleId().toString())));
     }
 
-    private int recordFailedAttempt(String loginIdentifier, String ipAddress, LocalDateTime now) {
-        LoginAttempt attempt = loginAttemptRepository
-                .findByLoginIdentifierAndIpAddress(loginIdentifier, ipAddress)
-                .orElseGet(() -> {
-                    LoginAttempt newAttempt = new LoginAttempt();
-                    newAttempt.setLoginIdentifier(loginIdentifier);
-                    newAttempt.setIpAddress(ipAddress);
-                    newAttempt.setFirstFailedAt(now);
-                    newAttempt.setAttemptCount(0);
-                    return newAttempt;
-                });
+    private Long handleFailedLogin(
+            Account account,
+            LocalDateTime now,
+            String ipAddress) {
 
-        if (attempt.getFirstFailedAt() == null
-                || attempt.getFirstFailedAt().isBefore(now.minus(ATTEMPT_WINDOW))) {
-            attempt.setAttemptCount(0);
-            attempt.setFirstFailedAt(now);
+        // Save failed login
+        saveActivityLog(
+                account,
+                "LOGIN_FAILED",
+                "Incorrect password",
+                ipAddress);
+
+        // Find latest successful login
+        LocalDateTime lastSuccess = activityLogRepository.findLastLoginSuccess(
+                account.getAccountId(),
+                ipAddress);
+
+        // Start of 10-minute window
+        LocalDateTime from = now.minusMinutes(ATTEMPT_WINDOW_MINUTES);
+
+        // Count failed login attempts
+        long failedAttempts = activityLogRepository.countFailedLogs(
+                account.getAccountId(),
+                ipAddress,
+                from,
+                lastSuccess);
+
+        // Lock account after 5 failed attempts
+        if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+
+            account.setStatus("SUSPENDED");
+
+            account.setLockUntil(
+                    now.plusMinutes(LOCK_MINUTES));
+
+            accountRepository.save(account);
         }
 
-        attempt.setAttemptCount(attempt.getAttemptCount() + 1);
-        attempt.setLastFailedAt(now);
-        loginAttemptRepository.save(attempt);
-        return attempt.getAttemptCount();
+        return failedAttempts;
+    }
+
+    private void saveActivityLog(
+            Account account,
+            String action,
+            String description,
+            String ipAddress) {
+
+        ActivityLog log = new ActivityLog();
+
+        log.setAccountId(account.getAccountId());
+        log.setAction(action);
+        log.setDescription(description);
+        log.setCreatedAt(LocalDateTime.now());
+        log.setIpAddress(ipAddress);
+
+        activityLogRepository.save(log);
     }
 
     public static class LoginResult {
+
         private final LoginResponse response;
         private final String message;
         private final int httpStatus;
 
-        private LoginResult(LoginResponse response, String message, int httpStatus) {
+        private LoginResult(
+                LoginResponse response,
+                String message,
+                int httpStatus) {
+
             this.response = response;
             this.message = message;
             this.httpStatus = httpStatus;
@@ -137,7 +195,10 @@ public class AuthService {
             return new LoginResult(response, null, 200);
         }
 
-        public static LoginResult failure(String message, int httpStatus) {
+        public static LoginResult failure(
+                String message,
+                int httpStatus) {
+
             return new LoginResult(null, message, httpStatus);
         }
 
