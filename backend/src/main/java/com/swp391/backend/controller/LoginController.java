@@ -13,11 +13,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/auth")
-public class AuthController {
+@RequestMapping("/api/auth")
+public class LoginController {
     private final LoginService authService;
 
-    public AuthController(LoginService authService) {
+    public LoginController(LoginService authService) {
         this.authService = authService;
     }
 
