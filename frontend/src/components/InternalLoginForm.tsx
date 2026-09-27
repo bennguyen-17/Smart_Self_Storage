@@ -29,41 +29,6 @@ import {
 } from "@/components/ui/input-group"
 import { Spinner } from "@/components/ui/spinner"
 
-const DEMO_ROLES = [
-  {
-    label: "Staff Trực Ca",
-    email: "staff@smartstorage.vn",
-    password: "staff123",
-    card: "border-cyan-200 bg-cyan-50/50 hover:bg-cyan-100 dark:border-cyan-900 dark:bg-cyan-950/30 dark:hover:bg-cyan-900/50",
-    text: "text-cyan-800 dark:text-cyan-300",
-    sub: "text-cyan-600 dark:text-cyan-400",
-  },
-  {
-    label: "Manager Chi Nhánh",
-    email: "manager@smartstorage.vn",
-    password: "mgr123",
-    card: "border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100 dark:border-indigo-900 dark:bg-indigo-950/30 dark:hover:bg-indigo-900/50",
-    text: "text-indigo-800 dark:text-indigo-300",
-    sub: "text-indigo-600 dark:text-indigo-400",
-  },
-  {
-    label: "BOM (Ban Giám Đốc)",
-    email: "bom@smartstorage.vn",
-    password: "bom123",
-    card: "border-purple-200 bg-purple-50/50 hover:bg-purple-100 dark:border-purple-900 dark:bg-purple-950/30 dark:hover:bg-purple-900/50",
-    text: "text-purple-800 dark:text-purple-300",
-    sub: "text-purple-600 dark:text-purple-400",
-  },
-  {
-    label: "Admin Hệ Thống",
-    email: "admin@smartstorage.vn",
-    password: "admin123",
-    card: "border-rose-200 bg-rose-50/50 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/30 dark:hover:bg-rose-900/50",
-    text: "text-rose-800 dark:text-rose-300",
-    sub: "text-rose-600 dark:text-rose-400",
-  },
-]
-
 function InternalLoginForm() {
   const { user, isAuthenticated, signIn } = useAuth()
 
@@ -251,35 +216,6 @@ function InternalLoginForm() {
           <Alert variant="destructive" className="mt-4">
             <AlertDescription>{serverError}</AlertDescription>
           </Alert>
-        )}
-
-        {/* Tạm thời - chỉ hiện khi dev, không lên production */}
-        {import.meta.env.DEV && (
-          <div className="mt-4 space-y-2 border-t pt-4">
-            <div className="text-[11px] font-bold text-muted-foreground">
-              ⚡ Chọn nhanh vai trò để demo:
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              {DEMO_ROLES.map((role) => (
-                <Button
-                  key={role.email}
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    form.setValue("identifier", role.email)
-                    form.setValue("password", role.password)
-                  }}
-                  className={`h-auto w-full flex-col items-start justify-start gap-0 whitespace-normal rounded-xl p-2 text-left font-normal ${role.card}`}
-                >
-                  <div className={`text-[11px] font-bold ${role.text}`}>
-                    {role.label}
-                  </div>
-                  <div className={`text-[10px] ${role.sub}`}>{role.email}</div>
-                </Button>
-              ))}
-            </div>
-          </div>
         )}
       </form>
 

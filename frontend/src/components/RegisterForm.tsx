@@ -369,18 +369,6 @@ function RegisterForm() {
             <AlertDescription>{serverError}</AlertDescription>
           </Alert>
         )}
-
-        {/* Tạm thời - chỉ hiện khi dev, không lên production */}
-        {import.meta.env.DEV && (
-          <Button
-            type="button"
-            variant="outline"
-            className="mt-3 w-full"
-            onClick={() => setShowOtp(true)}
-          >
-            Test OTP
-          </Button>
-        )}
       </form>
 
       <p className="mt-5 text-center text-[11px] text-muted-foreground">
