@@ -2,6 +2,9 @@ package com.swp391.backend.service;
 
 import com.swp391.backend.dto.auth.LoginRequest;
 import com.swp391.backend.dto.auth.LoginResponse;
+import com.swp391.backend.dto.ApiResponse;
+import com.swp391.backend.dto.ResendOtpRequest;
+import com.swp391.backend.dto.ResetPasswordRequest;
 import com.swp391.backend.entity.Account;
 import com.swp391.backend.entity.ActivityLog;
 import com.swp391.backend.repository.AccountRepository;
@@ -11,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 public class LoginService {
@@ -115,6 +119,64 @@ public class LoginService {
                                 account.getAccountId(),
                                 account.getFullName(),
                                 account.getRoleId().toString())));
+    }
+
+    public ApiResponse forgotPassword(ResendOtpRequest request) {
+        if (request.getPhone() == null || request.getPhone().trim().isEmpty()) {
+            return new ApiResponse(false, "Số điện thoại không được để trống!");
+        }
+
+        Optional<Account> accountOptional = accountRepository.findByPhone(request.getPhone());
+        if (accountOptional.isEmpty()) {
+            return new ApiResponse(false, "Không tìm thấy tài khoản với số điện thoại này!");
+        }
+
+        Account account = accountOptional.get();
+        String otpCode = String.format("%06d", new Random().nextInt(1_000_000));
+        account.setOtpCode(otpCode);
+        account.setOtpExpiryTime(LocalDateTime.now().plusMinutes(5));
+        accountRepository.save(account);
+
+        System.out.println("==========================================");
+        System.out.println(">>> OTP đặt lại mật khẩu cho " + request.getPhone() + " là: " + otpCode + " <<<");
+        System.out.println("==========================================");
+
+        return new ApiResponse(true, "Đã tạo OTP. Vui lòng kiểm tra console để thử nghiệm.");
+    }
+
+    public ApiResponse resetPassword(ResetPasswordRequest request) {
+        if (request.getPhone() == null || request.getPhone().trim().isEmpty()) {
+            return new ApiResponse(false, "Số điện thoại không được để trống!");
+        }
+
+        Optional<Account> accountOptional = accountRepository.findByPhone(request.getPhone());
+        if (accountOptional.isEmpty()) {
+            return new ApiResponse(false, "Không tìm thấy tài khoản với số điện thoại này!");
+        }
+
+        Account account = accountOptional.get();
+
+        if (account.getOtpCode() == null
+                || request.getOtpCode() == null
+                || !account.getOtpCode().equals(request.getOtpCode())) {
+            return new ApiResponse(false, "Mã OTP không chính xác!");
+        }
+
+        if (account.getOtpExpiryTime() == null
+                || !account.getOtpExpiryTime().isAfter(LocalDateTime.now())) {
+            return new ApiResponse(false, "Mã OTP đã hết hạn!");
+        }
+
+        if (request.getNewPassword() == null || request.getNewPassword().trim().isEmpty()) {
+            return new ApiResponse(false, "Mật khẩu mới không được để trống!");
+        }
+
+        account.setPassword(request.getNewPassword());
+        account.setOtpCode(null);
+        account.setOtpExpiryTime(null);
+        accountRepository.save(account);
+
+        return new ApiResponse(true, "Đặt lại mật khẩu thành công!");
     }
 
     private Long handleFailedLogin(

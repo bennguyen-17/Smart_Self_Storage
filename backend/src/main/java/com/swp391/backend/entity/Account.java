@@ -42,6 +42,10 @@ public class Account {
 
     private LocalDateTime lockUntil;
 
+    private String otpCode;
+
+    private LocalDateTime otpExpiryTime;
+
     public Account() {
     }
 
@@ -154,5 +158,21 @@ public class Account {
 
     public void setLockUntil(LocalDateTime lockUntil) {
         this.lockUntil = lockUntil;
+    }
+
+    public String getOtpCode() {
+        return otpCode;
+    }
+
+    public void setOtpCode(String otpCode) {
+        this.otpCode = otpCode;
+    }
+
+    public LocalDateTime getOtpExpiryTime() {
+        return otpExpiryTime;
+    }
+
+    public void setOtpExpiryTime(LocalDateTime otpExpiryTime) {
+        this.otpExpiryTime = otpExpiryTime;
     }
 }

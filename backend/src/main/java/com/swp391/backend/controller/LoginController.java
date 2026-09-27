@@ -1,6 +1,9 @@
 package com.swp391.backend.controller;
 
 import com.swp391.backend.dto.auth.LoginRequest;
+import com.swp391.backend.dto.ApiResponse;
+import com.swp391.backend.dto.ResendOtpRequest;
+import com.swp391.backend.dto.ResetPasswordRequest;
 import com.swp391.backend.service.LoginService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,5 +35,23 @@ public class LoginController {
         return ResponseEntity
                 .status(HttpStatus.valueOf(result.getHttpStatus()))
                 .body(Map.of("message", result.getMessage()));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse> forgotPassword(@RequestBody ResendOtpRequest request) {
+        ApiResponse response = authService.forgotPassword(request);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse> resetPassword(@RequestBody ResetPasswordRequest request) {
+        ApiResponse response = authService.resetPassword(request);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.badRequest().body(response);
     }
 }
