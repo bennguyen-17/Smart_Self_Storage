@@ -1,8 +1,8 @@
-﻿import React from 'react';
+import React from 'react';
 import CustomerPortal from './pages/CustomerPortal';
 
-function App() {
+const App: React.FC = () => {
   return <CustomerPortal />;
-}
+};
 
 export default App;

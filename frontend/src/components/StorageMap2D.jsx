@@ -45,7 +45,10 @@ export default function StorageMap2D({
 
   const renderUnitCard = (u) => {
     const isSelected = selectedUnit && selectedUnit.id === u.id;
-    const isOccupied = u.status === 'OCCUPIED';
+    const isOccupied = u.status === 'OCCUPIED' || u.status === 'RENTED';
+    const isHold = u.status === 'HOLD';
+    const isMaintenance = u.status === 'MAINTENANCE' || u.status === 'UNDER_MAINTENANCE';
+    const isAvailable = !isOccupied && !isHold && !isMaintenance;
 
     let cardBg = `unit-color-${u.size}`;
     let statusDot = <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 inline-block" />;
@@ -55,9 +58,17 @@ export default function StorageMap2D({
       cardBg = 'unit-selected ring-2 ring-amber-400 font-black shadow-md';
       statusDot = <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mr-1 inline-block animate-ping" />;
       badgeText = 'Đang chọn';
+    } else if (isHold) {
+      cardBg = 'bg-amber-100 dark:bg-amber-950/40 border-amber-400 text-amber-800 dark:text-amber-200 cursor-not-allowed';
+      statusDot = <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1 inline-block" />;
+      badgeText = 'Giữ 5p';
+    } else if (isMaintenance) {
+      cardBg = 'bg-slate-200 dark:bg-slate-800 border-slate-400 text-slate-500 dark:text-slate-400 cursor-not-allowed opacity-60';
+      statusDot = <span className="w-1.5 h-1.5 rounded-full bg-slate-500 mr-1 inline-block" />;
+      badgeText = 'Bảo trì';
     } else if (isOccupied) {
       cardBg = 'unit-occupied cursor-not-allowed opacity-60';
-      statusDot = <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mr-1 inline-block" />;
+      statusDot = <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mr-1 inline-block" />;
       badgeText = 'Đã thuê';
     }
 
@@ -67,7 +78,7 @@ export default function StorageMap2D({
     return (
       <div
         key={u.id}
-        onClick={() => !isOccupied && onSelectUnit(isSelected ? null : u)}
+        onClick={() => isAvailable && onSelectUnit(isSelected ? null : u)}
         className={`proportional-unit ${cardBg} ${heightClass} p-2 rounded-xl border shadow-xs text-center flex flex-col justify-between transition cursor-pointer hover:shadow-md group`}
       >
         <div className="flex justify-between items-center w-full">
