@@ -1,7 +1,7 @@
 import { useState } from "react"
 import axios from "axios"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Eye, EyeOff, Lock, Mail, UserShield } from "lucide-react"
+import { Eye, EyeOff, Lock, Phone, UserShield } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -38,7 +38,7 @@ function InternalLoginForm() {
   const form = useForm<InternalLoginFormValues>({
     resolver: zodResolver(internalLoginSchema),
     defaultValues: {
-      identifier: "",
+      phone: "",
       password: "",
     },
   })
@@ -49,7 +49,7 @@ function InternalLoginForm() {
     setServerError("")
 
     try {
-      const data = await login(values.identifier, values.password)
+      const data = await login(values.phone, values.password)
 
       if (!data?.token || !data?.user) {
         setServerError("Phản hồi từ máy chủ không hợp lệ. Vui lòng thử lại sau.")
@@ -117,27 +117,29 @@ function InternalLoginForm() {
 
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
         <FieldGroup className="gap-4">
-          {/* Email */}
+          {/* Phone */}
           <Controller
-            name="identifier"
+            name="phone"
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor={field.name}>
-                  Email được cấp
+                  Số điện thoại nội bộ
                   <span className="text-rose-500">*</span>
                 </FieldLabel>
 
                 <InputGroup>
                   <InputGroupAddon align="inline-start">
-                    <Mail />
+                    <Phone />
                   </InputGroupAddon>
 
                   <InputGroupInput
                     {...field}
                     id={field.name}
-                    placeholder="name@smartstorage.vn"
-                    autoComplete="username"
+                    placeholder="0900 xxx xxx"
+                    inputMode="numeric"
+                    maxLength={10}
+                    autoComplete="tel"
                     aria-invalid={fieldState.invalid}
                   />
                 </InputGroup>

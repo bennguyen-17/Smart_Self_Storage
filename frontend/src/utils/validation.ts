@@ -48,16 +48,19 @@ export const loginSchema = z.object({
   password: loginPasswordSchema,
 })
 
-/** Đăng nhập nội bộ: dùng email được cấp. */
+/** Đăng nhập nội bộ: chỉ dùng số điện thoại. */
 export const internalLoginSchema = z.object({
-  identifier: z.string().superRefine((value, ctx) => {
+  phone: z.string().superRefine((value, ctx) => {
     if (!value.trim()) {
-      ctx.addIssue({ code: "custom", message: "Vui lòng nhập email" })
+      ctx.addIssue({ code: "custom", message: "Vui lòng nhập số điện thoại" })
       return
     }
 
-    if (!EMAIL_REGEX.test(value)) {
-      ctx.addIssue({ code: "custom", message: "Email không hợp lệ" })
+    if (!PHONE_REGEX.test(value)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số",
+      })
     }
   }),
   password: loginPasswordSchema,
