@@ -438,22 +438,66 @@ INSERT INTO Price (priceId, unitTypeId, dailyPrice, monthlyPrice, depositAmount,
 (5, 5, 150000.00, 2400000.00, 2400000.00, 20.00, '2026-01-01', NULL, 'ACTIVE'),
 (6, 6, 270000.00, 4500000.00, 4500000.00, 20.00, '2026-01-01', NULL, 'ACTIVE');
 
--- 9. StorageUnits mẫu
+-- 9. StorageUnits mẫu (Khớp 100% Sơ đồ mặt bằng 2D)
 INSERT INTO StorageUnit (unitId, floorId, unitTypeId, status) VALUES
--- Tầng Trệt HN-01 (Kho XL)
+-- === HN-01 TẦNG TRỆT (Floor 1): 10 Ô KHO XL (Dãy Mặt tiền 5 ô + Dãy Hậu cần 5 ô) ===
 (1, 1, 4, 'AVAILABLE'),
 (2, 1, 4, 'RENTED'),
--- Tầng 1 HN-01 (S, M, L)
+(11, 1, 4, 'AVAILABLE'),
+(12, 1, 4, 'AVAILABLE'),
+(13, 1, 4, 'MAINTENANCE'),
+(14, 1, 4, 'AVAILABLE'),
+(15, 1, 4, 'HOLD'),
+(16, 1, 4, 'AVAILABLE'),
+(17, 1, 4, 'RENTED'),
+(18, 1, 4, 'AVAILABLE'),
+
+-- === HN-01 TẦNG 1 (Floor 2): 8 ô S, 6 ô M, 4 ô L ===
 (3, 2, 1, 'AVAILABLE'),
 (4, 2, 1, 'HOLD'),
+(19, 2, 1, 'AVAILABLE'),
+(20, 2, 1, 'RENTED'),
+(21, 2, 1, 'AVAILABLE'),
+(22, 2, 1, 'AVAILABLE'),
+(23, 2, 1, 'MAINTENANCE'),
+(24, 2, 1, 'AVAILABLE'),
 (5, 2, 2, 'RENTED'),
+(25, 2, 2, 'AVAILABLE'),
+(26, 2, 2, 'AVAILABLE'),
+(27, 2, 2, 'HOLD'),
+(28, 2, 2, 'AVAILABLE'),
+(29, 2, 2, 'AVAILABLE'),
 (6, 2, 3, 'AVAILABLE'),
--- Tầng 2 HN-01
+(30, 2, 3, 'RENTED'),
+(31, 2, 3, 'AVAILABLE'),
+(32, 2, 3, 'AVAILABLE'),
+
+-- === HN-01 TẦNG 2 (Floor 3): 6 ô S, 8 ô M, 4 ô L ===
+(33, 3, 1, 'AVAILABLE'),
+(34, 3, 1, 'RENTED'),
+(35, 3, 1, 'AVAILABLE'),
+(36, 3, 1, 'AVAILABLE'),
+(37, 3, 1, 'AVAILABLE'),
+(38, 3, 1, 'AVAILABLE'),
 (7, 3, 2, 'AVAILABLE'),
+(39, 3, 2, 'AVAILABLE'),
+(40, 3, 2, 'RENTED'),
+(41, 3, 2, 'HOLD'),
+(42, 3, 2, 'AVAILABLE'),
+(43, 3, 2, 'AVAILABLE'),
+(44, 3, 2, 'AVAILABLE'),
+(45, 3, 2, 'AVAILABLE'),
 (8, 3, 3, 'MAINTENANCE'),
--- HCM-01 Tầng 1 (Kho mát VIP M & L)
+(46, 3, 3, 'AVAILABLE'),
+(47, 3, 3, 'RENTED'),
+(48, 3, 3, 'AVAILABLE'),
+
+-- === HCM-01 TẦNG 1 (Floor 8): Kho mát VIP Climate-Controlled (M & L) ===
 (9, 8, 5, 'RENTED'),
-(10, 8, 6, 'AVAILABLE');
+(10, 8, 6, 'AVAILABLE'),
+(49, 8, 5, 'AVAILABLE'),
+(50, 8, 5, 'HOLD'),
+(51, 8, 6, 'AVAILABLE');
 
 -- 10. Shifts
 INSERT INTO Shift (shiftId, shiftName, startTime, endTime, status) VALUES

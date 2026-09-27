@@ -60,7 +60,20 @@ public class StorageService {
     public List<UnitDetailResponse> filterUnits(Integer facilityId, Integer floorId, Integer unitTypeId, String storageCondition, String status) {
         List<StorageUnit> allUnits;
 
-        if (floorId != null) {
+        if (facilityId != null && floorId != null) {
+            Optional<Floor> directFloor = floorRepository.findById(floorId);
+            if (directFloor.isPresent() && directFloor.get().getFacilityId().equals(facilityId)) {
+                allUnits = storageUnitRepository.findByFloorId(floorId);
+            } else {
+                List<Floor> facilityFloors = floorRepository.findByFacilityId(facilityId);
+                if (floorId <= facilityFloors.size() && floorId > 0) {
+                    Integer actualFloorId = facilityFloors.get(floorId - 1).getFloorId();
+                    allUnits = storageUnitRepository.findByFloorId(actualFloorId);
+                } else {
+                    allUnits = java.util.Collections.emptyList();
+                }
+            }
+        } else if (floorId != null) {
             allUnits = storageUnitRepository.findByFloorId(floorId);
         } else if (facilityId != null) {
             List<Floor> floors = floorRepository.findByFacilityId(facilityId);
@@ -285,25 +298,26 @@ public class StorageService {
             dto.setStorageCondition(ut.getStorageCondition());
             dto.setIsClimate("CLIMATE_CONTROLLED".equalsIgnoreCase(ut.getStorageCondition()));
 
-            // Gán kích thước chuẩn Dài x Rộng x Cao
-            if (ut.getTypeName().toLowerCase().contains("xl")) {
+            // Gán kích thước chuẩn Dài x Rộng x Cao (BR-08)
+            String lowerType = ut.getTypeName().toLowerCase();
+            if (lowerType.contains("xl")) {
                 sizeCode = "XL";
                 dto.setLengthM(4.0);
                 dto.setWidthM(2.5);
                 dto.setHeightM(2.0);
                 dto.setAreaM2(10.0);
-            } else if (ut.getTypeName().toLowerCase().contains("l")) {
-                sizeCode = "L";
-                dto.setLengthM(3.0);
-                dto.setWidthM(2.0);
-                dto.setHeightM(2.0);
-                dto.setAreaM2(6.0);
-            } else if (ut.getTypeName().toLowerCase().contains("s")) {
+            } else if (lowerType.contains("size s") || lowerType.startsWith("s ") || lowerType.equals("s")) {
                 sizeCode = "S";
                 dto.setLengthM(1.0);
                 dto.setWidthM(1.0);
                 dto.setHeightM(2.0);
                 dto.setAreaM2(1.0);
+            } else if (lowerType.contains("size l") || lowerType.startsWith("l ") || lowerType.equals("l")) {
+                sizeCode = "L";
+                dto.setLengthM(3.0);
+                dto.setWidthM(2.0);
+                dto.setHeightM(2.0);
+                dto.setAreaM2(6.0);
             } else {
                 sizeCode = "M";
                 dto.setLengthM(2.0);
