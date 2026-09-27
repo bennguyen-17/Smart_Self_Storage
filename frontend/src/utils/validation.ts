@@ -24,28 +24,43 @@ export const passwordRules: PasswordRule[] = [
   },
 ]
 
+const loginPasswordSchema = z.string().superRefine((value, ctx) => {
+  if (!value) {
+    ctx.addIssue({ code: "custom", message: "Mật khẩu không được để trống" })
+  }
+})
+
+/** Đăng nhập khách hàng: chỉ dùng số điện thoại. */
 export const loginSchema = z.object({
-  identifier: z.string().superRefine((value, ctx) => {
+  phone: z.string().superRefine((value, ctx) => {
     if (!value.trim()) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Vui lòng nhập email hoặc số điện thoại",
-      })
+      ctx.addIssue({ code: "custom", message: "Vui lòng nhập số điện thoại" })
       return
     }
 
-    if (!EMAIL_REGEX.test(value) && !PHONE_REGEX.test(value)) {
+    if (!PHONE_REGEX.test(value)) {
       ctx.addIssue({
         code: "custom",
-        message: "Email hoặc số điện thoại không hợp lệ",
+        message: "Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số",
       })
     }
   }),
-  password: z.string().superRefine((value, ctx) => {
-    if (!value) {
-      ctx.addIssue({ code: "custom", message: "Mật khẩu không được để trống" })
+  password: loginPasswordSchema,
+})
+
+/** Đăng nhập nội bộ: dùng email được cấp. */
+export const internalLoginSchema = z.object({
+  identifier: z.string().superRefine((value, ctx) => {
+    if (!value.trim()) {
+      ctx.addIssue({ code: "custom", message: "Vui lòng nhập email" })
+      return
+    }
+
+    if (!EMAIL_REGEX.test(value)) {
+      ctx.addIssue({ code: "custom", message: "Email không hợp lệ" })
     }
   }),
+  password: loginPasswordSchema,
 })
 
 export const registerSchema = z
@@ -136,4 +151,5 @@ export const registerSchema = z
   })
 
 export type LoginFormValues = z.infer<typeof loginSchema>
+export type InternalLoginFormValues = z.infer<typeof internalLoginSchema>
 export type RegisterFormValues = z.infer<typeof registerSchema>

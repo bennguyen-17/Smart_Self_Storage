@@ -60,7 +60,6 @@ public class AuthService {
         return new ApiResponse(true, "Đã gửi mã OTP mới! Vui lòng kiểm tra và xác thực.");
     }
 
-
     public ApiResponse verifyOtp(VerifyOtpRequest request) {
         Optional<User> userOpt = userRepository.findByPhone(request.getPhone());
 
