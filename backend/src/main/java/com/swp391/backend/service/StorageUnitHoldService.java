@@ -12,7 +12,7 @@ import java.util.Optional;
 @Service
 public class StorageUnitHoldService {
 
-    private static final long HOLD_DURATION_SECONDS = 300;
+    private static final long HOLD_DURATION_SECONDS = 60*5;
 
     private final StorageUnitRepository storageUnitRepository;
 
@@ -25,7 +25,7 @@ public class StorageUnitHoldService {
         Optional<StorageUnit> unitOptional = storageUnitRepository.findByUnitId(unitId);
 
         if (unitOptional.isEmpty()) {
-            return HoldUnitResponse.error("Storage unit was not found.");
+            return HoldUnitResponse.error("Không tìm thấy kho lưu trữ.");
         }
 
         StorageUnit unit = unitOptional.get();
@@ -42,7 +42,7 @@ public class StorageUnitHoldService {
         }
 
         if (!"AVAILABLE".equals(unit.getStatus())) {
-            return HoldUnitResponse.error("Storage unit is not available for a hold.");
+            return HoldUnitResponse.error("Kho lưu trữ hiện không khả dụng để giữ chỗ.");
         }
 
         LocalDateTime holdExpiresAt = now.plusSeconds(HOLD_DURATION_SECONDS);
@@ -54,7 +54,7 @@ public class StorageUnitHoldService {
         HoldUnitResponse response = new HoldUnitResponse();
         response.setSuccess(true);
         response.setHoldId(unit.getUnitId());
-        response.setMessage("Storage unit held successfully.");
+        response.setMessage("Giữ chỗ kho lưu trữ thành công.");
         response.setHoldExpiresAt(holdExpiresAt);
 
         return response;
