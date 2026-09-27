@@ -39,7 +39,8 @@ public class AuthService {
             if ("ACTIVE".equalsIgnoreCase(account.getStatus())) {
                 return new ApiResponse(false, "Số điện thoại này đã được đăng ký và kích hoạt!");
             }
-            // Nếu CHƯA kích hoạt (INACTIVE), cho phép cập nhật lại thông tin & cấp OTP mới
+            // Nếu CHƯA kích hoạt (UNVERIFIED), cho phép cập nhật lại thông tin & cấp OTP mới
+            account.setStatus("UNVERIFIED");
             account.setPassword(passwordEncoder.encode(request.getPassword()));
             account.setFullName(request.getFullName());
             if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
@@ -51,7 +52,7 @@ public class AuthService {
             account.setPassword(passwordEncoder.encode(request.getPassword()));
             account.setFullName(request.getFullName());
             account.setRoleId(5L); // Khách hàng
-            account.setStatus("INACTIVE");
+            account.setStatus("UNVERIFIED");
 
             String email = (request.getEmail() != null && !request.getEmail().trim().isEmpty())
                     ? request.getEmail().trim()
