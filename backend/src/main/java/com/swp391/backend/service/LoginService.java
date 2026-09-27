@@ -52,6 +52,12 @@ public class LoginService {
 
         Account account = result.get();
 
+        if ("PENDING_OTP".equalsIgnoreCase(account.getStatus())) {
+            return LoginResult.failure(
+                    "Tài khoản chưa được kích hoạt OTP. Vui lòng hoàn tất xác thực OTP trước!",
+                    401);
+        }
+
         // account suspended check
         if ("SUSPENDED".equals(account.getStatus())) {
 
