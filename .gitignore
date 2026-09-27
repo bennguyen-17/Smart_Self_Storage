@@ -1,4 +1,4 @@
-﻿# ==========================================
+# ==========================================
 # SMART SELF STORAGE - UNIFIED .GITIGNORE
 # ==========================================
 
@@ -43,9 +43,9 @@ frontend/pnpm-debug.log*
 frontend/lerna-debug.log*
 frontend/node_modules/
 frontend/dist/
-frontend/dist-ssr/
 frontend/*.local
 
-node_modules
+# --- [PRISMA / ROOT NODE] ---
+node_modules/
+.env
 
-.agents/*

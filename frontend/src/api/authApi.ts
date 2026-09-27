@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:8080";
+const API_BASE = "/api/auth";
 
 export interface RegisterData {
   fullName: string;
@@ -30,7 +30,7 @@ export interface LockedResponse {
 }
 
 export const register = async (data: RegisterData) => {
-  const response = await axios.post(`${BASE_URL}/api/v1/auth/register`, {
+  const response = await axios.post(`${API_BASE}/register`, {
     fullName: data.fullName,
     cccd: data.identityNumber,
     email: data.email,
@@ -42,7 +42,7 @@ export const register = async (data: RegisterData) => {
 };
 
 export const verifyOtp = async (phone: string, otpCode: string) => {
-  const response = await axios.post(`${BASE_URL}/api/v1/auth/verify-otp`, {
+  const response = await axios.post(`${API_BASE}/verify-otp`, {
     phone,
     otpCode,
   });
@@ -51,24 +51,19 @@ export const verifyOtp = async (phone: string, otpCode: string) => {
 };
 
 export const resendOtp = async (phone: string) => {
-  const response = await axios.post(`${BASE_URL}/api/v1/auth/resend-otp`, {
+  const response = await axios.post(`${API_BASE}/resend-otp`, {
     phone,
   });
 
   return response.data;
 };
 
-export const login = async (
-  identifier: string,
-  password: string
-): Promise<LoginResponse> => {
-  const response = await axios.post<LoginResponse>(
-    `${BASE_URL}/api/v1/auth/login`,
-    {
-      identifier,
-      password,
-    }
-  );
+export const login = async (identifier: string, password: string) => {
+  const response = await axios.post(`${API_BASE}/login`, {
+    phone: identifier,
+    identifier,
+    password,
+  });
 
   return response.data;
 };

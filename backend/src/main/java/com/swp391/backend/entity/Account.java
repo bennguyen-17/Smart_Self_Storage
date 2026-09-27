@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long accountId;
+    private Integer accountId;
 
     @Column(nullable = false)
     private Long roleId;
@@ -42,10 +42,14 @@ public class Account {
 
     private LocalDateTime lockUntil;
 
+    private String otpCode;
+
+    private LocalDateTime otpExpiryTime;
+
     public Account() {
     }
 
-    public Account(Long accountId, Long roleId, String email, String phone, String fullName, String password, String status, LocalDateTime createdAt, LocalDateTime updatedAt, Integer failedAttempts, LocalDateTime firstFailedAt, LocalDateTime lockUntil) {
+    public Account(Integer accountId, Long roleId, String email, String phone, String fullName, String password, String status, LocalDateTime createdAt, LocalDateTime updatedAt, Integer failedAttempts, LocalDateTime firstFailedAt, LocalDateTime lockUntil) {
         this.accountId = accountId;
         this.roleId = roleId;
         this.email = email;
@@ -60,11 +64,11 @@ public class Account {
         this.lockUntil = lockUntil;
     }
 
-    public Long getAccountId() {
+    public Integer getAccountId() {
         return accountId;
     }
 
-    public void setAccountId(Long accountId) {
+    public void setAccountId(Integer accountId) {
         this.accountId = accountId;
     }
 
@@ -154,5 +158,21 @@ public class Account {
 
     public void setLockUntil(LocalDateTime lockUntil) {
         this.lockUntil = lockUntil;
+    }
+
+    public String getOtpCode() {
+        return otpCode;
+    }
+
+    public void setOtpCode(String otpCode) {
+        this.otpCode = otpCode;
+    }
+
+    public LocalDateTime getOtpExpiryTime() {
+        return otpExpiryTime;
+    }
+
+    public void setOtpExpiryTime(LocalDateTime otpExpiryTime) {
+        this.otpExpiryTime = otpExpiryTime;
     }
 }

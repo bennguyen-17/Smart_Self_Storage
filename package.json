@@ -1,0 +1,17 @@
+{
+  "name": "smart-self-storage",
+  "version": "1.0.0",
+  "description": "Smart Self-Storage Management System - SWP391",
+  "scripts": {
+    "prisma:push": "prisma db push",
+    "prisma:pull": "prisma db pull",
+    "prisma:studio": "prisma studio",
+    "prisma:generate": "prisma generate"
+  },
+  "devDependencies": {
+    "prisma": "^5.20.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.20.0"
+  }
+}

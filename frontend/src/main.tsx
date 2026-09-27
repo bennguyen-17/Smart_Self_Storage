@@ -4,20 +4,19 @@ import { BrowserRouter } from "react-router-dom"
 
 import "./index.css"
 import App from "./App.tsx"
-import { AuthProvider } from "@/context/AuthContext.tsx"
 import { ThemeProvider } from "@/components/theme-provider.tsx"
 import { Toaster } from "@/components/ui/sonner"
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <ThemeProvider>
-      <BrowserRouter>
-        <AuthProvider>
+const rootElement = document.getElementById("root")
+if (rootElement) {
+  createRoot(rootElement).render(
+    <StrictMode>
+      <ThemeProvider>
+        <BrowserRouter>
           <App />
-        </AuthProvider>
-      </BrowserRouter>
-
-      <Toaster richColors position="top-center" />
-    </ThemeProvider>
-  </StrictMode>
-)
+        </BrowserRouter>
+        <Toaster richColors position="top-center" />
+      </ThemeProvider>
+    </StrictMode>
+  )
+}
