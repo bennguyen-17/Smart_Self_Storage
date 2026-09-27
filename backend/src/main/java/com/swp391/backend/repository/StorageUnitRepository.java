@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface StorageUnitRepository extends JpaRepository<StorageUnit, Integer> {
+public interface StorageUnitRepository extends JpaRepository<StorageUnit, String> {
     List<StorageUnit> findByFloorId(Integer floorId);
     List<StorageUnit> findByFloorIdAndStatus(Integer floorId, String status);
     List<StorageUnit> findByUnitTypeIdAndStatus(Integer unitTypeId, String status);

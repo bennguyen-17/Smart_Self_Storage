@@ -7,8 +7,8 @@ import jakarta.persistence.*;
 public class StorageUnit {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer unitId;
+    @Column(name = "unitCode", nullable = false, length = 50)
+    private String unitCode;
 
     @Column(nullable = false)
     private Integer floorId;
@@ -22,19 +22,19 @@ public class StorageUnit {
     public StorageUnit() {
     }
 
-    public StorageUnit(Integer unitId, Integer floorId, Integer unitTypeId, String status) {
-        this.unitId = unitId;
+    public StorageUnit(String unitCode, Integer floorId, Integer unitTypeId, String status) {
+        this.unitCode = unitCode;
         this.floorId = floorId;
         this.unitTypeId = unitTypeId;
         this.status = status;
     }
 
-    public Integer getUnitId() {
-        return unitId;
+    public String getUnitCode() {
+        return unitCode;
     }
 
-    public void setUnitId(Integer unitId) {
-        this.unitId = unitId;
+    public void setUnitCode(String unitCode) {
+        this.unitCode = unitCode;
     }
 
     public Integer getFloorId() {

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Smart Self-Storage Management System - SWP391",
   "scripts": {
+    "backend": "cd backend && mvnw.cmd spring-boot:run",
     "prisma:push": "prisma db push",
     "prisma:pull": "prisma db pull",
     "prisma:studio": "prisma studio",

@@ -258,7 +258,8 @@ public class StorageService {
 
     private UnitDetailResponse mapSingleUnit(StorageUnit u) {
         UnitDetailResponse dto = new UnitDetailResponse();
-        dto.setUnitId(u.getUnitId());
+        dto.setUnitCode(u.getUnitCode());
+        dto.setUnitId(u.getUnitCode());
         dto.setFloorId(u.getFloorId());
         dto.setUnitTypeId(u.getUnitTypeId());
         dto.setStatus(u.getStatus());
@@ -327,10 +328,8 @@ public class StorageService {
             }
         }
 
-        // Sinh mã ô kho chuẩn khớp 100% Prototype (ví dụ: HN01-G-XL05)
-        int orderNum = (u.getUnitId() % 20) + 1;
-        String unitCode = String.format("%s-%s-%s%02d", facCode, floorPrefix, sizeCode, orderNum);
-        dto.setUnitCode(unitCode);
+        // Gán mã ô kho chuẩn từ Database (ví dụ: HN01-G-XL01)
+        dto.setUnitCode(u.getUnitCode());
 
         // Lấy thông tin Bảng giá
         priceRepository.findByUnitTypeIdAndStatus(u.getUnitTypeId(), "ACTIVE").ifPresent(p -> {

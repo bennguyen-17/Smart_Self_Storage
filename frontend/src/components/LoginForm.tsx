@@ -5,6 +5,8 @@ import { CheckCircle2, Eye, EyeOff } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
 import { Link, useNavigate } from "react-router-dom"
 
+import { toast } from "sonner"
+
 import { login } from "@/api/authApi"
 import { loginSchema, type LoginFormValues } from "@/utils/validation"
 
@@ -31,6 +33,12 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [success, setSuccess] = useState(false)
 
+  const handleForgotPassword = () => {
+    toast.info("Yêu cầu đặt lại mật khẩu", {
+      description: "Vui lòng liên hệ Bộ phận Chăm sóc Khách hàng (Hotline: 1900 3910) để được hỗ trợ cấp lại mật khẩu.",
+    })
+  }
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -45,7 +53,7 @@ function LoginForm() {
     setServerError("")
 
     try {
-      const data = await login(values.phone, values.password)
+      const data = await login(values.phone, values.password, "CUSTOMER")
 
       if (data?.token) {
         localStorage.setItem("token", data.token)
@@ -60,15 +68,20 @@ function LoginForm() {
       }, 1000)
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
+        if (error.response?.status === 403) {
           setServerError(
             error.response.data?.message ||
-              "Số điện thoại hoặc mật khẩu không đúng."
+              "Tài khoản Quản trị / Nhân viên không được đăng nhập tại Cổng Khách hàng. Vui lòng sang Cổng Nội Bộ!"
+          )
+        } else if (error.response?.status === 401) {
+          setServerError(
+            error.response.data?.message ||
+            "Số điện thoại hoặc mật khẩu không đúng."
           )
         } else {
           setServerError(
             error.response?.data?.message ||
-              "Đăng nhập thất bại. Vui lòng thử lại."
+            "Đăng nhập thất bại. Vui lòng thử lại."
           )
         }
       } else {
@@ -105,7 +118,7 @@ function LoginForm() {
   return (
     <div className="w-full">
       <div className="mb-6">
-        <h2 className="font-heading text-2xl font-semibold tracking-tight">
+        <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
           Đăng nhập
         </h2>
 
@@ -170,6 +183,17 @@ function LoginForm() {
                 </InputGroup>
 
                 <FieldError errors={[fieldState.error]} />
+
+                <div className="flex justify-end pt-1">
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={handleForgotPassword}
+                    className="h-auto p-0 text-xs font-medium text-blue-600 dark:text-blue-400"
+                  >
+                    Quên mật khẩu?
+                  </Button>
+                </div>
               </Field>
             )}
           />

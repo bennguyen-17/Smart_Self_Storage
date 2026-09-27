@@ -10,6 +10,6 @@ import java.util.Optional;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Integer> {
     List<Reservation> findByAccountId(Integer accountId);
-    List<Reservation> findByUnitIdAndStatus(Integer unitId, String status);
-    Optional<Reservation> findTopByUnitIdOrderByCreatedAtDesc(Integer unitId);
+    List<Reservation> findByUnitCodeAndStatus(String unitCode, String status);
+    Optional<Reservation> findTopByUnitCodeOrderByCreatedAtDesc(String unitCode);
 }

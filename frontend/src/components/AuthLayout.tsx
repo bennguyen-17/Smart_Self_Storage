@@ -22,7 +22,7 @@ function AuthLayout({ children }: AuthLayoutProps) {
         <div className="flex items-center gap-3">
           <Link
             to="/internal_login"
-            className="hidden items-center gap-2 rounded-lg border bg-background px-3.5 py-2 text-xs font-semibold shadow-sm transition hover:bg-muted sm:inline-flex"
+            className="hidden items-center gap-2 rounded-lg border bg-background px-3.5 py-2 text-xs font-semibold text-foreground shadow-sm transition hover:bg-muted sm:inline-flex"
           >
             <ShieldHalf className="size-3.5 text-primary" />
             <span>Cổng Nhân Viên &amp; Quản Lý</span>
@@ -40,7 +40,7 @@ function AuthLayout({ children }: AuthLayoutProps) {
             <div className="flex items-center justify-between border-b pb-3">
               <div className="flex items-center gap-2.5">
                 <span className="size-2.5 animate-pulse rounded-full bg-emerald-500" />
-                <h2 className="text-sm font-bold">
+                <h2 className="text-sm font-bold text-foreground">
                   Mạng lưới kho tự quản toàn quốc
                 </h2>
               </div>

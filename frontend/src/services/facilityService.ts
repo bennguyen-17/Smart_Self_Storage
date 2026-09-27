@@ -12,82 +12,139 @@ const MOCK_BRANCHES = [
 ];
 
 // Hàm sinh sơ đồ ô kho mẫu theo tầng
+// Global in-memory and localStorage state tracking held/rented units
+const heldUnitsState: Record<string, string> = {};
+
+export const getHeldUnitsMap = (): Record<string, string> => {
+  try {
+    const raw = localStorage.getItem('smart_storage_held_units');
+    const parsed = raw ? JSON.parse(raw) : {};
+    return { ...parsed, ...heldUnitsState };
+  } catch (e) {
+    return { ...heldUnitsState };
+  }
+};
+
+export const markUnitAsHeld = (unitId: string, status = 'HOLD') => {
+  if (!unitId) return;
+  heldUnitsState[unitId] = status;
+  try {
+    const current = getHeldUnitsMap();
+    current[unitId] = status;
+    localStorage.setItem('smart_storage_held_units', JSON.stringify(current));
+  } catch (e) {}
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('storage_units_updated', { detail: { unitId, status } }));
+  }
+};
+
+export const releaseUnit = (unitId: string) => {
+  if (!unitId) return;
+  heldUnitsState[unitId] = 'AVAILABLE';
+  try {
+    const current = getHeldUnitsMap();
+    current[unitId] = 'AVAILABLE';
+    localStorage.setItem('smart_storage_held_units', JSON.stringify(current));
+  } catch (e) {}
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('storage_units_updated', { detail: { unitId, status: 'AVAILABLE' } }));
+  }
+};
+
 const generateMockUnits = (facilityCode, currentFloor) => {
   const prefix = facilityCode.replace('-', '');
   const floorName = currentFloor === 1 ? 'Tầng trệt' : currentFloor === 2 ? 'Tầng 1' : 'Tầng 2';
   const weightLimit = currentFloor === 1 ? '1000 kg/m²' : '500 kg/m²';
   const units = [];
+  const localMap = getHeldUnitsMap();
 
   if (currentFloor === 1) {
     for (let i = 1; i <= 10; i++) {
+      const uId = `${prefix}-G-XL${i < 10 ? '0' + i : i}`;
+      const defaultStatus = (i === 3 || i === 7) ? 'OCCUPIED' : 'AVAILABLE';
       units.push({
-        id: `${prefix}-G-XL${i < 10 ? '0' + i : i}`,
+        id: uId,
         floor: 1, floorName, weightLimit,
         size: 'XL', dim: '2.5m × 4.0m',
-        price: 200000, deposit: 3000000,
-        status: (i === 3 || i === 7) ? 'OCCUPIED' : 'AVAILABLE'
+        price: 200000, monthlyPrice: 4000000, deposit: 3000000,
+        status: localMap[uId] || defaultStatus
       });
     }
   } else if (currentFloor === 2) {
     for (let i = 1; i <= 8; i++) {
+      const uId = `${prefix}-F1-S10${i}`;
+      const defaultStatus = (i === 2 || i === 6) ? 'OCCUPIED' : 'AVAILABLE';
       units.push({
-        id: `${prefix}-F1-S10${i}`,
+        id: uId,
         floor: 2, floorName, weightLimit,
         size: 'S', dim: '1.0m × 1.0m',
-        price: 30000, deposit: 500000,
-        status: (i === 2 || i === 6) ? 'OCCUPIED' : 'AVAILABLE'
+        price: 30000, monthlyPrice: 600000, deposit: 500000,
+        status: localMap[uId] || defaultStatus
       });
     }
     for (let i = 1; i <= 6; i++) {
+      const uId = `${prefix}-F1-M10${i}`;
+      const defaultStatus = i === 3 ? 'OCCUPIED' : 'AVAILABLE';
       units.push({
-        id: `${prefix}-F1-M10${i}`,
+        id: uId,
         floor: 2, floorName, weightLimit,
         size: 'M', dim: '1.5m × 2.0m',
-        price: 60000, deposit: 1000000,
-        status: i === 3 ? 'OCCUPIED' : 'AVAILABLE'
+        price: 60000, monthlyPrice: 1200000, deposit: 1000000,
+        status: localMap[uId] || defaultStatus
       });
     }
     for (let i = 1; i <= 4; i++) {
+      const uId = `${prefix}-F1-L10${i}`;
+      const defaultStatus = i === 2 ? 'OCCUPIED' : 'AVAILABLE';
       units.push({
-        id: `${prefix}-F1-L10${i}`,
+        id: uId,
         floor: 2, floorName, weightLimit,
         size: 'L', dim: '2.0m × 3.0m',
-        price: 120000, deposit: 2000000,
-        status: i === 2 ? 'OCCUPIED' : 'AVAILABLE'
+        price: 120000, monthlyPrice: 2400000, deposit: 2000000,
+        status: localMap[uId] || defaultStatus
       });
     }
   } else {
     for (let i = 1; i <= 6; i++) {
+      const uId = `${prefix}-F2-S20${i}`;
+      const defaultStatus = i === 4 ? 'OCCUPIED' : 'AVAILABLE';
       units.push({
-        id: `${prefix}-F2-S20${i}`,
+        id: uId,
         floor: 3, floorName, weightLimit,
         size: 'S', dim: '1.0m × 1.0m',
-        price: 30000, deposit: 500000,
-        status: i === 4 ? 'OCCUPIED' : 'AVAILABLE'
+        price: 30000, monthlyPrice: 600000, deposit: 500000,
+        status: localMap[uId] || defaultStatus
       });
     }
     for (let i = 1; i <= 8; i++) {
+      const uId = `${prefix}-F2-M20${i}`;
+      const defaultStatus = (i === 1 || i === 5) ? 'OCCUPIED' : 'AVAILABLE';
       units.push({
-        id: `${prefix}-F2-M20${i}`,
+        id: uId,
         floor: 3, floorName, weightLimit,
         size: 'M', dim: '1.5m × 2.0m',
-        price: 60000, deposit: 1000000,
-        status: (i === 1 || i === 5) ? 'OCCUPIED' : 'AVAILABLE'
+        price: 60000, monthlyPrice: 1200000, deposit: 1000000,
+        status: localMap[uId] || defaultStatus
       });
     }
     for (let i = 1; i <= 4; i++) {
+      const uId = `${prefix}-F2-L20${i}`;
+      const defaultStatus = i === 3 ? 'OCCUPIED' : 'AVAILABLE';
       units.push({
-        id: `${prefix}-F2-L20${i}`,
+        id: uId,
         floor: 3, floorName, weightLimit,
         size: 'L', dim: '2.0m × 3.0m',
-        price: 120000, deposit: 2000000,
-        status: i === 3 ? 'OCCUPIED' : 'AVAILABLE'
+        price: 120000, monthlyPrice: 2400000, deposit: 2000000,
+        status: localMap[uId] || defaultStatus
       });
     }
   }
 
   return units;
 };
+
 
 /**
  * Lấy danh sách toàn bộ 7 chi nhánh cơ sở
@@ -144,6 +201,7 @@ export const getStorageUnits = async (facilityCode: string, floor: number) => {
       params: { facilityId, floorId: floor }
     });
     const rawList = Array.isArray(res) ? res : (res?.data || []);
+    const localMap = getHeldUnitsMap();
     const units = rawList.map((u: any) => {
       const typeStr = (u.typeName || u.unitTypeName || '').toUpperCase();
       let size = 'M';
@@ -157,17 +215,23 @@ export const getStorageUnits = async (facilityCode: string, floor: number) => {
         size = 'M';
       }
 
+      const daily = Number(u.dailyPrice || u.pricePerDay || (size === 'S' ? 30000 : size === 'M' ? 60000 : size === 'L' ? 120000 : 200000));
+      const monthly = Number(u.monthlyPrice || (size === 'S' ? 600000 : size === 'M' ? 1200000 : size === 'L' ? 2400000 : 4000000));
+      const unitCode = u.unitCode || `U-${u.unitId || u.id}`;
+      const statusOverride = localMap[unitCode] || (u.unitCode ? localMap[u.unitCode] : undefined);
+
       return {
-        id: u.unitCode || `U-${u.unitId || u.id}`,
+        id: unitCode,
         unitId: u.unitId || u.id,
         floor: floor,
         floorName: u.floorName || (floor === 1 ? 'Tầng trệt' : `Tầng ${floor - 1}`),
         weightLimit: u.maxLoadKgM2 ? `${u.maxLoadKgM2} kg/m²` : (floor === 1 ? '1000 kg/m²' : '500 kg/m²'),
         size: size,
         dim: `${u.lengthM || 1.5}m × ${u.widthM || 2.0}m`,
-        price: Number(u.dailyPrice || u.pricePerDay || 60000),
-        deposit: Number(u.depositAmount || 1000000),
-        status: u.status || 'AVAILABLE',
+        price: daily,
+        monthlyPrice: monthly,
+        deposit: Number(u.depositAmount || (size === 'S' ? 500000 : size === 'M' ? 1000000 : size === 'L' ? 2000000 : 3000000)),
+        status: statusOverride || u.status || 'AVAILABLE',
         isClimate: u.isClimate || u.climateControl || false
       };
     });

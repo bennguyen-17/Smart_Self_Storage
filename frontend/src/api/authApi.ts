@@ -58,11 +58,12 @@ export const resendOtp = async (phone: string) => {
   return response.data;
 };
 
-export const login = async (identifier: string, password: string) => {
+export const login = async (identifier: string, password: string, portalType: string = "CUSTOMER") => {
   const response = await axios.post(`${API_BASE}/login`, {
     phone: identifier,
     identifier,
     password,
+    portalType,
   });
 
   return response.data;
