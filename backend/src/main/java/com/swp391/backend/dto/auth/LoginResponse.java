@@ -29,24 +29,24 @@ public class LoginResponse {
     }
 
     public static class UserInfo {
-        private Long id;
+        private Integer id;
         private String fullName;
         private String role;
 
         public UserInfo() {
         }
 
-        public UserInfo(Long id, String fullName, String role) {
+        public UserInfo(Integer id, String fullName, String role) {
             this.id = id;
             this.fullName = fullName;
             this.role = role;
         }
 
-        public Long getId() {
+        public Integer getId() {
             return id;
         }
 
-        public void setId(Long id) {
+        public void setId(Integer id) {
             this.id = id;
         }
 

@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long accountId;
+    private Integer accountId;
 
     @Column(nullable = false)
     private Long roleId;
@@ -45,7 +45,7 @@ public class Account {
     public Account() {
     }
 
-    public Account(Long accountId, Long roleId, String email, String phone, String fullName, String password, String status, LocalDateTime createdAt, LocalDateTime updatedAt, Integer failedAttempts, LocalDateTime firstFailedAt, LocalDateTime lockUntil) {
+    public Account(Integer accountId, Long roleId, String email, String phone, String fullName, String password, String status, LocalDateTime createdAt, LocalDateTime updatedAt, Integer failedAttempts, LocalDateTime firstFailedAt, LocalDateTime lockUntil) {
         this.accountId = accountId;
         this.roleId = roleId;
         this.email = email;
@@ -60,11 +60,11 @@ public class Account {
         this.lockUntil = lockUntil;
     }
 
-    public Long getAccountId() {
+    public Integer getAccountId() {
         return accountId;
     }
 
-    public void setAccountId(Long accountId) {
+    public void setAccountId(Integer accountId) {
         this.accountId = accountId;
     }
 

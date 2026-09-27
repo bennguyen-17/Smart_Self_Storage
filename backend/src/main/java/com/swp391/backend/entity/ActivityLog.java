@@ -1,42 +1,35 @@
 package com.swp391.backend.entity;
 
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
-@Entity 
-@Table (name = "ActivityLog")
+@Entity
+@Table(name = "ActivityLog")
 public class ActivityLog {
 
-    @Id 
-    @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private Long activityLogId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer activityLogId;
 
-    @Column (nullable = false)
-    private Long accountId;
+    @Column(nullable = false)
+    private Integer accountId;
 
-    @Column(nullable = false, columnDefinition = "NVARCHAR(50)")
+    @Column(nullable = false, length = 100)
     private String action;
 
-    @Column(columnDefinition = "NVARCHAR(500)")
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(columnDefinition = "NVARCHAR(50)")
+    @Column(length = 45)
     private String ipAddress;
 
     public ActivityLog() {
     }
 
-    public ActivityLog(Long activityLogId, Long accountId, String action, String description, LocalDateTime createdAt,
-            String ipAddress) {
+    public ActivityLog(Integer activityLogId, Integer accountId, String action, String description, LocalDateTime createdAt, String ipAddress) {
         this.activityLogId = activityLogId;
         this.accountId = accountId;
         this.action = action;
@@ -45,19 +38,19 @@ public class ActivityLog {
         this.ipAddress = ipAddress;
     }
 
-    public Long getActivityLogId() {
+    public Integer getActivityLogId() {
         return activityLogId;
     }
 
-    public void setActivityLogId(Long activityLogId) {
+    public void setActivityLogId(Integer activityLogId) {
         this.activityLogId = activityLogId;
     }
 
-    public Long getAccountId() {
+    public Integer getAccountId() {
         return accountId;
     }
 
-    public void setAccountId(Long accountId) {
+    public void setAccountId(Integer accountId) {
         this.accountId = accountId;
     }
 
@@ -92,9 +85,4 @@ public class ActivityLog {
     public void setIpAddress(String ipAddress) {
         this.ipAddress = ipAddress;
     }
-
-    
-
-    
-
 }
