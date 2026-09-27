@@ -1,14 +1,21 @@
-﻿# Frontend (React + Vite)
+# React + TypeScript + Vite + shadcn/ui
 
-Hướng dẫn chạy giao diện dành cho team Frontend.
+This is a template for a new Vite project with React, TypeScript, and shadcn/ui.
 
-Cách chạy code lần đầu:
-1. Máy tính bắt buộc phải cài đặt Node.js.
-2. Mở VS Code, chọn Open Folder -> Chọn thư mục gốc (Smart_Self_Storage).
-3. Mở Terminal (Ctrl + ~) và gõ lệnh để di chuyển vào thư mục frontend:
-   cd frontend
-4. Gõ lệnh tải thư viện:
-   npm install
-5. Gõ lệnh chạy trang web:
-   npm run dev
-6. Mở trình duyệt web và truy cập vào link hiện ra (thường là http://localhost:5173).
+## Adding components
+
+To add components to your app, run the following command:
+
+```bash
+npx shadcn@latest add button
+```
+
+This will place the ui components in the `src/components` directory.
+
+## Using components
+
+To use the components in your app, import them as follows:
+
+```tsx
+import { Button } from "@/components/ui/button"
+```

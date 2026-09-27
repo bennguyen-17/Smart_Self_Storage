@@ -4,9 +4,6 @@ import com.swp391.backend.dto.ApiResponse;
 import com.swp391.backend.dto.RegisterRequest;
 import com.swp391.backend.dto.ResendOtpRequest;
 import com.swp391.backend.dto.VerifyOtpRequest;
-import com.swp391.backend.dto.auth.LoginRequest;
-import com.swp391.backend.dto.auth.LoginResponse;
-import com.swp391.backend.entity.Account;
 import com.swp391.backend.entity.User;
 import com.swp391.backend.repository.AccountRepository;
 import com.swp391.backend.repository.UserRepository;
@@ -20,11 +17,9 @@ import java.util.Random;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final AccountRepository accountRepository;
 
     public AuthService(UserRepository userRepository, AccountRepository accountRepository) {
         this.userRepository = userRepository;
-        this.accountRepository = accountRepository;
     }
 
     // --- US-01: Đăng ký & OTP ---
@@ -122,25 +117,4 @@ public class AuthService {
         return new ApiResponse(true, "Mã OTP mới đã được gửi lại thành công! Vui lòng kiểm tra.");
     }
 
-    // --- US-02: Đăng nhập ---
-    public Optional<LoginResponse> login(LoginRequest request) {
-        Optional<Account> accountResult = accountRepository.findByEmail(request.getEmail());
-
-        if (accountResult.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Account account = accountResult.get();
-
-        if (!request.getPassword().equals(account.getPassword())) {
-            return Optional.empty();
-        }
-
-        return Optional.of(new LoginResponse(
-                account.getAccountId(),
-                account.getFullName(),
-                account.getEmail(),
-                account.getRoleId() == null ? null : account.getRoleId().toString()
-        ));
-    }
-}
+}
