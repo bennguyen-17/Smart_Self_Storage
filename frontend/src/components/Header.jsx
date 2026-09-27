@@ -1,6 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function Header({ isDarkMode, onToggleTheme, onOpenProfileModal }) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
   return (
     <header className="w-full h-18 sm:h-20 bg-white dark:bg-slate-900 border-b border-slate-300 dark:border-slate-800 px-6 sm:px-10 flex items-center justify-between shrink-0 sticky top-0 z-40 transition-colors shadow-xs">
       {/* BRAND LOGO */}
@@ -32,23 +35,42 @@ export default function Header({ isDarkMode, onToggleTheme, onOpenProfileModal }
 
         <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block"></div>
 
-        <button
-          onClick={onOpenProfileModal}
-          className="flex items-center space-x-2.5 px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white text-slate-900 hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 transition cursor-pointer shadow-xs group text-left"
-          title="Nhấn để xem Hồ sơ & Đăng xuất"
-          type="button"
-        >
-          <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-            NV
+        {!token ? (
+          <div className="flex items-center space-x-2">
+            <Link
+              to="/login"
+              className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 transition whitespace-nowrap"
+            >
+              <i className="fa-solid fa-right-to-bracket mr-1.5 text-xs text-blue-600"></i>
+              Đăng nhập
+            </Link>
+            <Link
+              to="/register"
+              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 transition shadow-xs whitespace-nowrap"
+            >
+              <i className="fa-solid fa-user-plus mr-1.5 text-xs"></i>
+              Đăng ký
+            </Link>
           </div>
-          <div className="text-left hidden md:block">
-            <div className="text-xs font-extrabold text-slate-900 dark:text-white leading-tight flex items-center space-x-1">
-              <span>Nguyễn Văn Khách</span>
-              <i className="fa-solid fa-chevron-down text-[9px] text-slate-400 group-hover:text-blue-600 transition-colors ml-0.5"></i>
+        ) : (
+          <button
+            onClick={onOpenProfileModal}
+            className="flex items-center space-x-2.5 px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white text-slate-900 hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 transition cursor-pointer shadow-xs group text-left"
+            title="Nhấn để xem Hồ sơ & Đăng xuất"
+            type="button"
+          >
+            <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+              NV
             </div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">Khách Hàng eKYC ✓</div>
-          </div>
-        </button>
+            <div className="text-left hidden md:block">
+              <div className="text-xs font-extrabold text-slate-900 dark:text-white leading-tight flex items-center space-x-1">
+                <span>Nguyễn Văn Khách</span>
+                <i className="fa-solid fa-chevron-down text-[9px] text-slate-400 group-hover:text-blue-600 transition-colors ml-0.5"></i>
+              </div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">Khách Hàng eKYC ✓</div>
+            </div>
+          </button>
+        )}
       </div>
     </header>
   );

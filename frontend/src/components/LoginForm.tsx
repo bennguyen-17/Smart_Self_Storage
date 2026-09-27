@@ -84,6 +84,13 @@ function LoginForm() {
         <p className="mt-2 text-sm text-muted-foreground">
           Chào mừng bạn trở lại với Smart Self Storage.
         </p>
+
+        <Link
+          to="/"
+          className="mt-6 inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors"
+        >
+          Truy cập Sơ đồ kho & Dịch vụ &rarr;
+        </Link>
       </div>
     )
   }

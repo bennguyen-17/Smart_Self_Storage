@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -170,16 +170,9 @@
   }
   body {
     @apply bg-background text-foreground;
-  }
-=======
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-@import "tailwindcss";
-
-@custom-variant dark (&:where(.dark, .dark *));
-
-body {
     font-family: 'Inter', sans-serif;
     transition: background-color 0.3s ease, color 0.3s ease;
+  }
 }
 
 /* BLUEPRINT CONTAINER STYLES */
@@ -262,7 +255,7 @@ html.dark .floor-corridor-strip {
     z-index: 25;
 }
 
-/* UNIT COLORS IN LIGHT MODE (ĐÃ CẬP NHẬT TƯƠI TẮN VÀ RÕ RÀNG HƠN) */
+/* UNIT COLORS IN LIGHT MODE */
 html:not(.dark) .unit-color-S:not(.unit-selected):not(.unit-occupied) {
     background-color: rgba(16, 185, 129, 0.1);
     border: 2px solid #10b981;
@@ -330,5 +323,4 @@ html.dark .unit-occupied {
 }
 .modal-animate-pop {
     animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
->>>>>>> origin/main
 }
