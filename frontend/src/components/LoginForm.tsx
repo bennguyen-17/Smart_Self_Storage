@@ -192,10 +192,20 @@ function LoginForm() {
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Chưa có tài khoản?{" "}
         <Link
-          to="/register"
+          to="/customer_login?tab=register"
           className="font-medium text-primary hover:underline"
         >
           Đăng ký ngay
+        </Link>
+      </p>
+
+      <p className="mt-3 text-center text-[12px] text-muted-foreground">
+        Bạn là nhân viên hoặc quản lý cơ sở?{" "}
+        <Link
+          to="/internal_login"
+          className="font-semibold text-blue-600 hover:underline dark:text-blue-400"
+        >
+          Vào cổng nội bộ
         </Link>
       </p>
     </div>
