@@ -46,6 +46,19 @@ public class Account {
 
     private LocalDateTime otpExpiryTime;
 
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (updatedAt == null) updatedAt = LocalDateTime.now();
+        if (failedAttempts == null) failedAttempts = 0;
+        if (roleId == null) roleId = 5L;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
     public Account() {
     }
 
