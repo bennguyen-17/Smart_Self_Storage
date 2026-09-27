@@ -4,6 +4,7 @@ import { Agentation } from "agentation";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import CustomerPortal from "@/pages/CustomerPortal";
+import ReservationManagementPage from "@/features/reservations/pages/ReservationManagementPage";
 
 function App() {
   return (
@@ -16,6 +17,9 @@ function App() {
         {/* Trang Xác thực: Đăng ký & Đăng nhập (Khánh & Vy) */}
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
+
+        {/* US-06: Quản lý đơn đặt cọc & No-Show (Vỹ) */}
+        <Route path="/staff/reservations" element={<ReservationManagementPage />} />
 
         {/* Đường dẫn lạ tự chuyển về trang chủ */}
         <Route path="*" element={<Navigate to="/" replace />} />
