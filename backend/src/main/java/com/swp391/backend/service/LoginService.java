@@ -10,6 +10,7 @@ import com.swp391.backend.entity.ActivityLog;
 import com.swp391.backend.repository.AccountRepository;
 import com.swp391.backend.repository.ActivityLogRepository;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,22 +27,25 @@ public class LoginService {
     private final AccountRepository accountRepository;
     private final JwtService jwtService;
     private final ActivityLogRepository activityLogRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public LoginService(
             AccountRepository accountRepository,
             JwtService jwtService,
-            ActivityLogRepository activityLogRepository) {
+            ActivityLogRepository activityLogRepository,
+            PasswordEncoder passwordEncoder) {
 
         this.accountRepository = accountRepository;
         this.jwtService = jwtService;
         this.activityLogRepository = activityLogRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public LoginResult login(LoginRequest request, String ipAddress) {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // find in db
+        // find in db (chỉ cho phép đăng nhập bằng số điện thoại)
         Optional<Account> result = accountRepository.findByPhone(request.getPhone());
 
         if (result.isEmpty()) {
@@ -51,6 +55,21 @@ public class LoginService {
         }
 
         Account account = result.get();
+
+        if ("UNVERIFIED".equalsIgnoreCase(account.getStatus())
+                || "INACTIVE".equalsIgnoreCase(account.getStatus())
+                || "PENDING_OTP".equalsIgnoreCase(account.getStatus())) {
+            return LoginResult.failure(
+                    "Tài khoản chưa được kích hoạt OTP. Vui lòng hoàn tất xác thực OTP trước!",
+                    401);
+        }
+
+        if ("CLOSED".equalsIgnoreCase(account.getStatus())
+                || "BANNED".equalsIgnoreCase(account.getStatus())) {
+            return LoginResult.failure(
+                    "Tài khoản đã bị đóng hoặc vô hiệu hóa vĩnh viễn.",
+                    403);
+        }
 
         // account suspended check
         if ("SUSPENDED".equals(account.getStatus())) {
@@ -72,9 +91,21 @@ public class LoginService {
             accountRepository.save(account);
         }
 
-        // check password
-        boolean passwordCorrect = request.getPassword() != null
-                && request.getPassword().equals(account.getPassword());
+        // check password (hỗ trợ BCrypt hash và fallback chuỗi thường cho dữ liệu cũ)
+        boolean passwordCorrect = false;
+        if (request.getPassword() != null && account.getPassword() != null) {
+            try {
+                if (passwordEncoder.matches(request.getPassword(), account.getPassword())) {
+                    passwordCorrect = true;
+                } else if (request.getPassword().equals(account.getPassword())) {
+                    passwordCorrect = true;
+                }
+            } catch (Exception e) {
+                if (request.getPassword().equals(account.getPassword())) {
+                    passwordCorrect = true;
+                }
+            }
+        }
 
         if (!passwordCorrect) {
 
@@ -171,7 +202,7 @@ public class LoginService {
             return new ApiResponse(false, "Mật khẩu mới không được để trống!");
         }
 
-        account.setPassword(request.getNewPassword());
+        account.setPassword(passwordEncoder.encode(request.getNewPassword()));
         account.setOtpCode(null);
         account.setOtpExpiryTime(null);
         accountRepository.save(account);

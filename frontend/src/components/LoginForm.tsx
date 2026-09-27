@@ -34,7 +34,7 @@ function LoginForm() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      identifier: "",
+      phone: "",
       password: "",
     },
   })
@@ -45,12 +45,12 @@ function LoginForm() {
     setServerError("")
 
     try {
-      const data = await login(values.identifier, values.password)
+      const data = await login(values.phone, values.password)
 
       if (data?.token) {
         localStorage.setItem("token", data.token)
-        if (data?.userInfo) {
-          localStorage.setItem("user", JSON.stringify(data.userInfo))
+        if (data?.userInfo || data?.user) {
+          localStorage.setItem("user", JSON.stringify(data.userInfo || data.user))
         }
       }
 
@@ -63,7 +63,7 @@ function LoginForm() {
         if (error.response?.status === 401) {
           setServerError(
             error.response.data?.message ||
-              "Email/số điện thoại hoặc mật khẩu không đúng."
+              "Số điện thoại hoặc mật khẩu không đúng."
           )
         } else {
           setServerError(
@@ -110,27 +110,27 @@ function LoginForm() {
         </h2>
 
         <p className="mt-1.5 text-sm text-muted-foreground">
-          Nhập thông tin tài khoản để truy cập hệ thống.
+          Nhập số điện thoại và mật khẩu để truy cập hệ thống.
         </p>
       </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
         <FieldGroup>
-          {/* Identifier */}
+          {/* Phone */}
           <Controller
-            name="identifier"
+            name="phone"
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>
-                  Email hoặc số điện thoại
-                </FieldLabel>
+                <FieldLabel htmlFor={field.name}>Số điện thoại</FieldLabel>
 
                 <Input
                   {...field}
                   id={field.name}
-                  placeholder="example@gmail.com hoặc 0988123456"
-                  autoComplete="username"
+                  placeholder="0988123456"
+                  inputMode="numeric"
+                  maxLength={10}
+                  autoComplete="tel"
                   aria-invalid={fieldState.invalid}
                 />
 
@@ -192,10 +192,20 @@ function LoginForm() {
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Chưa có tài khoản?{" "}
         <Link
-          to="/register"
+          to="/customer_login?tab=register"
           className="font-medium text-primary hover:underline"
         >
           Đăng ký ngay
+        </Link>
+      </p>
+
+      <p className="mt-3 text-center text-[12px] text-muted-foreground">
+        Bạn là nhân viên hoặc quản lý cơ sở?{" "}
+        <Link
+          to="/internal_login"
+          className="font-semibold text-blue-600 hover:underline dark:text-blue-400"
+        >
+          Vào cổng nội bộ
         </Link>
       </p>
     </div>

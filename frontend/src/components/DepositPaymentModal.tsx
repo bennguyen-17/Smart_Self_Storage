@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { checkBookingStatus } from '../services/bookingApi';
+import { checkBookingStatus, mockPayDeposit } from '../services/bookingApi';
 
 export default function DepositPaymentModal({ paymentData, onPaymentSuccess, onBack }) {
   const { bookingCode, depositAmount, bankInfo } = paymentData;
@@ -119,13 +119,30 @@ export default function DepositPaymentModal({ paymentData, onPaymentSuccess, onB
           </div>
         </div>
 
-        {/* Polling Indicator */}
-        <div className="flex items-center justify-center space-x-2 text-[11px] text-slate-500 dark:text-slate-400 py-1">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span>Đang lắng nghe kết quả từ Ngân hàng (mỗi 2s)...</span>
+        {/* Nút Demo Giả Lập Nộp Cọc Nhanh */}
+        <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await mockPayDeposit(bankInfo?.transferMemo || bookingCode);
+              } catch (e) {
+                console.error(e);
+              }
+            }}
+            className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-500/20 transition cursor-pointer flex items-center justify-center space-x-2"
+          >
+            <i className="fa-solid fa-bolt text-amber-300"></i>
+            <span>[Demo Test] Giả lập Nộp Cọc Thành Công Ngay</span>
+          </button>
+          
+          <div className="flex items-center justify-center space-x-2 text-[11px] text-slate-500 dark:text-slate-400 py-1">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span>Đang tự động lắng nghe kết quả từ Ngân hàng (2s/lần)...</span>
+          </div>
         </div>
       </div>
     </div>

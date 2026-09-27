@@ -119,33 +119,58 @@ export const getBranches = async () => {
   }
 };
 
+const FACILITY_CODE_TO_ID: Record<string, number> = {
+  'HN-01': 1,
+  'HN-02': 2,
+  'HCM-01': 3,
+  'HCM-02': 4,
+  'HCM-03': 5,
+  'DN-01': 6,
+  'CT-01': 7,
+};
+
 /**
  * Lấy danh sách ô kho trên sơ đồ 2D theo cơ sở và tầng
- * BACKEND ENDPOINT: GET /api/units/filter?facilityId=... hoặc /api/floors/{floorId}/units
+ * BACKEND ENDPOINT: GET /api/units/filter?facilityId=...&floorId=...
  */
-export const getStorageUnits = async (facilityCode, floor) => {
+export const getStorageUnits = async (facilityCode: string, floor: number) => {
   if (isMockMode()) {
     return { success: true, data: generateMockUnits(facilityCode, floor) };
   }
 
   try {
-    const res = await apiClient.get('/units/filter', {
-      params: { floorId: floor }
+    const facilityId = FACILITY_CODE_TO_ID[facilityCode] || 1;
+    const res: any = await apiClient.get('/units/filter', {
+      params: { facilityId, floorId: floor }
     });
     const rawList = Array.isArray(res) ? res : (res?.data || []);
-    const units = rawList.map((u) => ({
-      id: u.unitCode || `U-${u.id}`,
-      unitId: u.id,
-      floor: floor,
-      floorName: floor === 1 ? 'Tầng trệt' : `Tầng ${floor - 1}`,
-      weightLimit: u.maxLoadKgM2 ? `${u.maxLoadKgM2} kg/m²` : (floor === 1 ? '1000 kg/m²' : '500 kg/m²'),
-      size: u.unitTypeName ? u.unitTypeName.replace('Size ', '') : 'M',
-      dim: `${u.lengthM || 1.5}m × ${u.widthM || 2.0}m`,
-      price: u.pricePerDay || 60000,
-      deposit: u.depositAmount || 1000000,
-      status: u.status, // AVAILABLE, HOLD, OCCUPIED, RENTED, UNDER_MAINTENANCE
-      isClimate: u.climateControl || false
-    }));
+    const units = rawList.map((u: any) => {
+      const typeStr = (u.typeName || u.unitTypeName || '').toUpperCase();
+      let size = 'M';
+      if (typeStr.includes('XL')) {
+        size = 'XL';
+      } else if (typeStr.includes('SIZE S') || typeStr.startsWith('S ') || typeStr === 'S') {
+        size = 'S';
+      } else if (typeStr.includes('SIZE L') || typeStr.startsWith('L ') || typeStr === 'L') {
+        size = 'L';
+      } else if (typeStr.includes('SIZE M') || typeStr.startsWith('M ') || typeStr === 'M') {
+        size = 'M';
+      }
+
+      return {
+        id: u.unitCode || `U-${u.unitId || u.id}`,
+        unitId: u.unitId || u.id,
+        floor: floor,
+        floorName: u.floorName || (floor === 1 ? 'Tầng trệt' : `Tầng ${floor - 1}`),
+        weightLimit: u.maxLoadKgM2 ? `${u.maxLoadKgM2} kg/m²` : (floor === 1 ? '1000 kg/m²' : '500 kg/m²'),
+        size: size,
+        dim: `${u.lengthM || 1.5}m × ${u.widthM || 2.0}m`,
+        price: Number(u.dailyPrice || u.pricePerDay || 60000),
+        deposit: Number(u.depositAmount || 1000000),
+        status: u.status || 'AVAILABLE',
+        isClimate: u.isClimate || u.climateControl || false
+      };
+    });
     return { success: true, data: units.length > 0 ? units : generateMockUnits(facilityCode, floor) };
   } catch (error) {
     console.warn('API error, falling back to mock units:', error);

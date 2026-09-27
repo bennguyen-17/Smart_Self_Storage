@@ -43,8 +43,14 @@ CREATE TABLE Account (
     roleId INT NOT NULL,
     phone VARCHAR(15) NOT NULL UNIQUE,
     fullName VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NULL,
     password VARCHAR(255) NOT NULL,
-    status ENUM('ACTIVE', 'INACTIVE', 'BANNED') NOT NULL DEFAULT 'ACTIVE',
+    status ENUM('UNVERIFIED', 'ACTIVE', 'SUSPENDED', 'CLOSED') NOT NULL DEFAULT 'UNVERIFIED',
+    otpCode VARCHAR(10) NULL,
+    otpExpiryTime DATETIME NULL,
+    failedAttempts INT NOT NULL DEFAULT 0,
+    firstFailedAt DATETIME NULL,
+    lockUntil DATETIME NULL,
     createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_account_role FOREIGN KEY (roleId) REFERENCES Role (roleId) ON UPDATE CASCADE
@@ -362,16 +368,17 @@ INSERT INTO Facility (facilityId, facilityName, address, phone, status) VALUES
 (7, 'SmartStorage Ninh Kiều (CT-01)', 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', '02929100001', 'ACTIVE');
 
 -- 3. Accounts
--- Passwords sample: bcrypt hash of '123456' -> $2a$12$e80yq9j6K5j... (hoặc plaintext hash quy chuẩn cho dev)
-INSERT INTO Account (accountId, roleId, phone, fullName, password, status) VALUES
-(1, 1, '0900000001', 'System Administrator', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(2, 2, '0900000002', 'Board of Management Leader', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(3, 3, '0900000003', 'Trần Văn Quản Lý (HN-01)', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(4, 3, '0900000004', 'Lê Thị Quản Lý (HCM-01)', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(5, 4, '0900000005', 'Nguyễn Văn Nhân Viên 1', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(6, 4, '0900000006', 'Phạm Thị Nhân Viên 2', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(7, 5, '0912345678', 'Nguyễn Khách Hàng A', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(8, 5, '0987654321', 'Công Ty Cổ Phần SmartRetail', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE');
+-- Mật khẩu ban đầu cho toàn bộ tài khoản mẫu dev/test: 123456@Test (đã được băm bằng BCrypt)
+-- BCrypt Hash: $2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW
+INSERT INTO Account (accountId, roleId, phone, fullName, email, password, status) VALUES
+(1, 1, '0900000001', 'System Administrator', 'admin@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(2, 2, '0900000002', 'Board of Management Leader', 'bom@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(3, 3, '0900000003', 'Trần Văn Quản Lý (HN-01)', 'manager.hn@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(4, 3, '0900000004', 'Lê Thị Quản Lý (HCM-01)', 'manager.hcm@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(5, 4, '0900000005', 'Nguyễn Văn Nhân Viên 1', 'staff.hn@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(6, 4, '0900000006', 'Phạm Thị Nhân Viên 2', 'staff.hcm@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(7, 5, '0912345678', 'Nguyễn Khách Hàng A', 'customer.a@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(8, 5, '0987654321', 'Công Ty Cổ Phần SmartRetail', 'smartretail@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE');
 
 -- 4. CustomerProfiles (12 số CCCD)
 INSERT INTO CustomerProfile (customerId, accountId, identityNumber) VALUES
@@ -431,22 +438,66 @@ INSERT INTO Price (priceId, unitTypeId, dailyPrice, monthlyPrice, depositAmount,
 (5, 5, 150000.00, 2400000.00, 2400000.00, 20.00, '2026-01-01', NULL, 'ACTIVE'),
 (6, 6, 270000.00, 4500000.00, 4500000.00, 20.00, '2026-01-01', NULL, 'ACTIVE');
 
--- 9. StorageUnits mẫu
+-- 9. StorageUnits mẫu (Khớp 100% Sơ đồ mặt bằng 2D)
 INSERT INTO StorageUnit (unitId, floorId, unitTypeId, status) VALUES
--- Tầng Trệt HN-01 (Kho XL)
+-- === HN-01 TẦNG TRỆT (Floor 1): 10 Ô KHO XL (Dãy Mặt tiền 5 ô + Dãy Hậu cần 5 ô) ===
 (1, 1, 4, 'AVAILABLE'),
 (2, 1, 4, 'RENTED'),
--- Tầng 1 HN-01 (S, M, L)
+(11, 1, 4, 'AVAILABLE'),
+(12, 1, 4, 'AVAILABLE'),
+(13, 1, 4, 'MAINTENANCE'),
+(14, 1, 4, 'AVAILABLE'),
+(15, 1, 4, 'HOLD'),
+(16, 1, 4, 'AVAILABLE'),
+(17, 1, 4, 'RENTED'),
+(18, 1, 4, 'AVAILABLE'),
+
+-- === HN-01 TẦNG 1 (Floor 2): 8 ô S, 6 ô M, 4 ô L ===
 (3, 2, 1, 'AVAILABLE'),
 (4, 2, 1, 'HOLD'),
+(19, 2, 1, 'AVAILABLE'),
+(20, 2, 1, 'RENTED'),
+(21, 2, 1, 'AVAILABLE'),
+(22, 2, 1, 'AVAILABLE'),
+(23, 2, 1, 'MAINTENANCE'),
+(24, 2, 1, 'AVAILABLE'),
 (5, 2, 2, 'RENTED'),
+(25, 2, 2, 'AVAILABLE'),
+(26, 2, 2, 'AVAILABLE'),
+(27, 2, 2, 'HOLD'),
+(28, 2, 2, 'AVAILABLE'),
+(29, 2, 2, 'AVAILABLE'),
 (6, 2, 3, 'AVAILABLE'),
--- Tầng 2 HN-01
+(30, 2, 3, 'RENTED'),
+(31, 2, 3, 'AVAILABLE'),
+(32, 2, 3, 'AVAILABLE'),
+
+-- === HN-01 TẦNG 2 (Floor 3): 6 ô S, 8 ô M, 4 ô L ===
+(33, 3, 1, 'AVAILABLE'),
+(34, 3, 1, 'RENTED'),
+(35, 3, 1, 'AVAILABLE'),
+(36, 3, 1, 'AVAILABLE'),
+(37, 3, 1, 'AVAILABLE'),
+(38, 3, 1, 'AVAILABLE'),
 (7, 3, 2, 'AVAILABLE'),
+(39, 3, 2, 'AVAILABLE'),
+(40, 3, 2, 'RENTED'),
+(41, 3, 2, 'HOLD'),
+(42, 3, 2, 'AVAILABLE'),
+(43, 3, 2, 'AVAILABLE'),
+(44, 3, 2, 'AVAILABLE'),
+(45, 3, 2, 'AVAILABLE'),
 (8, 3, 3, 'MAINTENANCE'),
--- HCM-01 Tầng 1 (Kho mát VIP M & L)
+(46, 3, 3, 'AVAILABLE'),
+(47, 3, 3, 'RENTED'),
+(48, 3, 3, 'AVAILABLE'),
+
+-- === HCM-01 TẦNG 1 (Floor 8): Kho mát VIP Climate-Controlled (M & L) ===
 (9, 8, 5, 'RENTED'),
-(10, 8, 6, 'AVAILABLE');
+(10, 8, 6, 'AVAILABLE'),
+(49, 8, 5, 'AVAILABLE'),
+(50, 8, 5, 'HOLD'),
+(51, 8, 6, 'AVAILABLE');
 
 -- 10. Shifts
 INSERT INTO Shift (shiftId, shiftName, startTime, endTime, status) VALUES
