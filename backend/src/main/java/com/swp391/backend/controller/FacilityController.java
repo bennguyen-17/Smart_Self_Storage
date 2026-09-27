@@ -1,6 +1,6 @@
 package com.swp391.backend.controller;
 
-import com.swp391.backend.entity.Facility;
+import com.swp391.backend.dto.FacilityResponse;
 import com.swp391.backend.entity.Floor;
 import com.swp391.backend.service.StorageService;
 import org.springframework.http.ResponseEntity;
@@ -18,15 +18,15 @@ public class FacilityController {
         this.storageService = storageService;
     }
 
-    // --- US-03: Lấy danh sách toàn bộ 7 cơ sở ---
+    // --- US-03: Lấy danh sách toàn bộ 7 cơ sở (kèm mã code, shortCode, layout) ---
     @GetMapping
-    public ResponseEntity<List<Facility>> getAllFacilities() {
+    public ResponseEntity<List<FacilityResponse>> getAllFacilities() {
         return ResponseEntity.ok(storageService.getAllActiveFacilities());
     }
 
     // --- US-03: Lấy thông tin chi tiết 1 cơ sở ---
     @GetMapping("/{facilityId}")
-    public ResponseEntity<Facility> getFacilityById(@PathVariable Integer facilityId) {
+    public ResponseEntity<FacilityResponse> getFacilityById(@PathVariable Integer facilityId) {
         return storageService.getFacilityById(facilityId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

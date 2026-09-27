@@ -90,8 +90,8 @@ const generateMockUnits = (facilityCode, currentFloor) => {
 };
 
 /**
- * Lấy danh sách toàn bộ các chi nhánh cơ sở
- * SWAGGER ENDPOINT: GET /api/v1/branches
+ * Lấy danh sách toàn bộ 7 chi nhánh cơ sở
+ * BACKEND ENDPOINT: GET /api/facilities
  */
 export const getBranches = async () => {
   if (isMockMode()) {
@@ -99,8 +99,20 @@ export const getBranches = async () => {
   }
 
   try {
-    const res = await apiClient.get('/branches');
-    return { success: true, data: res.data || res };
+    const res = await apiClient.get('/facilities');
+    const rawList = Array.isArray(res) ? res : (res?.data || []);
+    const facilities = rawList.map((f) => ({
+      id: f.facilityCode || `FAC-${f.id}`,
+      backendId: f.id,
+      code: f.facilityCode,
+      shortCode: f.shortCode,
+      name: f.name,
+      address: f.address,
+      floors: f.floorCount || 3,
+      layoutType: f.layoutType,
+      isAllClimate: f.isAllClimate
+    }));
+    return { success: true, data: facilities.length > 0 ? facilities : MOCK_BRANCHES };
   } catch (error) {
     console.warn('API error, falling back to mock branches:', error);
     return { success: true, data: MOCK_BRANCHES };
@@ -109,7 +121,7 @@ export const getBranches = async () => {
 
 /**
  * Lấy danh sách ô kho trên sơ đồ 2D theo cơ sở và tầng
- * SWAGGER ENDPOINT: GET /api/v1/storage-units?branchCode={facilityCode}&floor={floor}
+ * BACKEND ENDPOINT: GET /api/units/filter?facilityId=... hoặc /api/floors/{floorId}/units
  */
 export const getStorageUnits = async (facilityCode, floor) => {
   if (isMockMode()) {
@@ -117,10 +129,24 @@ export const getStorageUnits = async (facilityCode, floor) => {
   }
 
   try {
-    const res = await apiClient.get('/storage-units', {
-      params: { branchCode: facilityCode, floor }
+    const res = await apiClient.get('/units/filter', {
+      params: { floorId: floor }
     });
-    return { success: true, data: res.data || res };
+    const rawList = Array.isArray(res) ? res : (res?.data || []);
+    const units = rawList.map((u) => ({
+      id: u.unitCode || `U-${u.id}`,
+      unitId: u.id,
+      floor: floor,
+      floorName: floor === 1 ? 'Tầng trệt' : `Tầng ${floor - 1}`,
+      weightLimit: u.maxLoadKgM2 ? `${u.maxLoadKgM2} kg/m²` : (floor === 1 ? '1000 kg/m²' : '500 kg/m²'),
+      size: u.unitTypeName ? u.unitTypeName.replace('Size ', '') : 'M',
+      dim: `${u.lengthM || 1.5}m × ${u.widthM || 2.0}m`,
+      price: u.pricePerDay || 60000,
+      deposit: u.depositAmount || 1000000,
+      status: u.status, // AVAILABLE, HOLD, OCCUPIED, RENTED, UNDER_MAINTENANCE
+      isClimate: u.climateControl || false
+    }));
+    return { success: true, data: units.length > 0 ? units : generateMockUnits(facilityCode, floor) };
   } catch (error) {
     console.warn('API error, falling back to mock units:', error);
     return { success: true, data: generateMockUnits(facilityCode, floor) };
