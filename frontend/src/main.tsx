@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom"
 
 import "./index.css"
 import App from "./App.tsx"
+import { AuthProvider } from "@/context/AuthContext.tsx"
 import { ThemeProvider } from "@/components/theme-provider.tsx"
 import { Toaster } from "@/components/ui/sonner"
 
@@ -13,10 +14,12 @@ if (rootElement) {
     <StrictMode>
       <ThemeProvider>
         <BrowserRouter>
-          <App />
+          <AuthProvider>
+            <App />
+          </AuthProvider>
         </BrowserRouter>
         <Toaster richColors position="top-center" />
       </ThemeProvider>
     </StrictMode>
   )
-}
+}
