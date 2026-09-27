@@ -1,1 +1,1 @@
-export { createDepositTransaction, checkBookingStatus } from './bookingService';
+export { createDepositTransaction, checkBookingStatus, mockPayDeposit } from './bookingService';
