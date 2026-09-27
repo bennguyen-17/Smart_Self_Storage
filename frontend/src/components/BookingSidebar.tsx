@@ -1,16 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
   const [selectedPkgDays, setSelectedPkgDays] = useState(360); // Default 12 Tháng như prototype screenshot
   const [isCustomDays, setIsCustomDays] = useState(false);
   const [customDaysVal, setCustomDaysVal] = useState('');
-  const [startDate, setStartDate] = useState('');
+  const [startDate, setStartDate] = useState(() => new Date().toISOString().split('T')[0]);
 
-  // Initialize start date to today formatted as YYYY-MM-DD
-  useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    setStartDate(today);
-  }, []);
 
   if (!selectedUnit) {
     return (

@@ -47,8 +47,19 @@ export default function MyStorageTab({ onOpenExtendModal }) {
 
   // Khởi tạo mã PIN ban đầu
   useEffect(() => {
-    fetchPinForFacility(gateFacility);
-  }, []);
+    let active = true;
+    getGatePin(gateFacility).then((res) => {
+      if (active && res?.success && res.data?.pin) {
+        setPinValue(res.data.pin);
+        setPinTimer(res.data.ttlSeconds || 15);
+      }
+    }).catch((err) => {
+      console.error('Lỗi lấy mã PIN mở cổng:', err);
+    });
+    return () => {
+      active = false;
+    };
+  }, [gateFacility]);
 
   // Đếm ngược 15s tự động lấy mã PIN mới
   useEffect(() => {

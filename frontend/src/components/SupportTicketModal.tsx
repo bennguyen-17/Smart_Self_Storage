@@ -24,6 +24,7 @@ export default function SupportTicketModal({ onClose }) {
         onClose();
       }
     } catch (err) {
+      console.error('Lỗi gửi yêu cầu hỗ trợ:', err);
       alert("Lỗi khi gửi yêu cầu hỗ trợ. Vui lòng thử lại!");
     } finally {
       setSubmitting(false);
@@ -142,10 +143,11 @@ export default function SupportTicketModal({ onClose }) {
           <button
             type="button"
             onClick={handleSubmit}
-            className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs py-3 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 cursor-pointer"
+            disabled={submitting}
+            className="flex-1 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-black text-xs py-3 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 cursor-pointer"
           >
             <i className="fa-solid fa-paper-plane text-xs"></i>
-            <span>Gửi Yêu Cầu Ngay</span>
+            <span>{submitting ? 'Đang gửi...' : 'Gửi Yêu Cầu Ngay'}</span>
           </button>
         </div>
       </div>

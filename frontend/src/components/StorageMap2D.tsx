@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getBranches, getStorageUnits } from '../services/facilityService';
+import { getStorageUnits } from '../services/facilityService';
 
 const facilityData = {
   'HN-01': { name: 'SmartStorage Cầu Giấy (HN-01)', address: 'Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội', floors: 3 },

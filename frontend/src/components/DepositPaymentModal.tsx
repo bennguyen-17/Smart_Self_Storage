@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { checkBookingStatus } from '../services/bookingApi';
 
 export default function DepositPaymentModal({ paymentData, onPaymentSuccess, onBack }) {
-  const { bookingCode, unitId, depositAmount, bankInfo } = paymentData;
+  const { bookingCode, depositAmount, bankInfo } = paymentData;
   const [copiedAmount, setCopiedAmount] = useState(false);
   const [copiedMemo, setCopiedMemo] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300); // 5 phút đếm ngược

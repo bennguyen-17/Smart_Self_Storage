@@ -4,7 +4,7 @@ import DepositPaymentModal from './DepositPaymentModal';
 import DepositSuccessModal from './DepositSuccessModal';
 import { createDepositTransaction } from '../services/bookingApi';
 
-export default function DepositPaymentFlow({ initialBookingData, onClose }) {
+export default function DepositPaymentFlow({ initialBookingData, onClose, onFinish }: { initialBookingData?: Record<string, unknown>; onClose?: () => void; onFinish?: () => void }) {
   const [step, setStep] = useState('CONTRACT'); // CONTRACT -> PAYMENT -> SUCCESS
   const [paymentData, setPaymentData] = useState(null);
   const [successData, setSuccessData] = useState(null);
@@ -26,7 +26,7 @@ export default function DepositPaymentFlow({ initialBookingData, onClose }) {
     <>
       {step === 'CONTRACT' && <DraftContractModal bookingData={initialBookingData} onProceedToPayment={handleProceedToPayment} onClose={onClose} />}
       {step === 'PAYMENT' && <DepositPaymentModal paymentData={paymentData} onPaymentSuccess={handlePaymentSuccess} onBack={() => setStep('CONTRACT')} />}
-      {step === 'SUCCESS' && <DepositSuccessModal successData={successData} onGoHome={onClose} />}
+      {step === 'SUCCESS' && <DepositSuccessModal successData={successData} onGoHome={() => { onFinish?.(); onClose?.(); }} />}
     </>
   );
 }
