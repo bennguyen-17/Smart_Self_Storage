@@ -20,10 +20,10 @@ public class StorageUnit {
     @Column(nullable = false, length = 30)
     private String status = "AVAILABLE"; // AVAILABLE, HOLD, RENTED, MAINTENANCE, OVERDUE
 
-    @Column(name = "hold_by_user_id", nullable = true)
+    @Column(name = "holdByUserId", nullable = true)
     private Integer holdByUserId;
 
-    @Column(name = "hold_expires_at", nullable = true)
+    @Column(name = "holdExpiresAt", nullable = true)
     private LocalDateTime holdExpiresAt;
 
     public StorageUnit() {
