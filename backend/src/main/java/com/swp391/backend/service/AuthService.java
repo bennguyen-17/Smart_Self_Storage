@@ -6,6 +6,7 @@ import com.swp391.backend.dto.ResendOtpRequest;
 import com.swp391.backend.dto.VerifyOtpRequest;
 import com.swp391.backend.entity.Account;
 import com.swp391.backend.repository.AccountRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,9 +17,11 @@ import java.util.Random;
 public class AuthService {
 
     private final AccountRepository accountRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthService(AccountRepository accountRepository) {
+    public AuthService(AccountRepository accountRepository, PasswordEncoder passwordEncoder) {
         this.accountRepository = accountRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // --- US-01: Đăng ký & OTP ---
@@ -36,8 +39,8 @@ public class AuthService {
             if ("ACTIVE".equalsIgnoreCase(account.getStatus())) {
                 return new ApiResponse(false, "Số điện thoại này đã được đăng ký và kích hoạt!");
             }
-            // Nếu CHƯA kích hoạt (PENDING_OTP), cho phép cập nhật lại thông tin & cấp OTP mới
-            account.setPassword(request.getPassword());
+            // Nếu CHƯA kích hoạt (INACTIVE), cho phép cập nhật lại thông tin & cấp OTP mới
+            account.setPassword(passwordEncoder.encode(request.getPassword()));
             account.setFullName(request.getFullName());
             if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
                 account.setEmail(request.getEmail().trim());
@@ -45,10 +48,10 @@ public class AuthService {
         } else {
             account = new Account();
             account.setPhone(request.getPhone().trim());
-            account.setPassword(request.getPassword());
+            account.setPassword(passwordEncoder.encode(request.getPassword()));
             account.setFullName(request.getFullName());
             account.setRoleId(5L); // Khách hàng
-            account.setStatus("PENDING_OTP");
+            account.setStatus("INACTIVE");
 
             String email = (request.getEmail() != null && !request.getEmail().trim().isEmpty())
                     ? request.getEmail().trim()

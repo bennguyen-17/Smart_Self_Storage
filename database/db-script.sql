@@ -43,8 +43,14 @@ CREATE TABLE Account (
     roleId INT NOT NULL,
     phone VARCHAR(15) NOT NULL UNIQUE,
     fullName VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NULL,
     password VARCHAR(255) NOT NULL,
     status ENUM('ACTIVE', 'INACTIVE', 'BANNED') NOT NULL DEFAULT 'ACTIVE',
+    otpCode VARCHAR(10) NULL,
+    otpExpiryTime DATETIME NULL,
+    failedAttempts INT NOT NULL DEFAULT 0,
+    firstFailedAt DATETIME NULL,
+    lockUntil DATETIME NULL,
     createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_account_role FOREIGN KEY (roleId) REFERENCES Role (roleId) ON UPDATE CASCADE
@@ -362,16 +368,17 @@ INSERT INTO Facility (facilityId, facilityName, address, phone, status) VALUES
 (7, 'SmartStorage Ninh Kiều (CT-01)', 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', '02929100001', 'ACTIVE');
 
 -- 3. Accounts
--- Passwords sample: bcrypt hash of '123456' -> $2a$12$e80yq9j6K5j... (hoặc plaintext hash quy chuẩn cho dev)
-INSERT INTO Account (accountId, roleId, phone, fullName, password, status) VALUES
-(1, 1, '0900000001', 'System Administrator', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(2, 2, '0900000002', 'Board of Management Leader', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(3, 3, '0900000003', 'Trần Văn Quản Lý (HN-01)', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(4, 3, '0900000004', 'Lê Thị Quản Lý (HCM-01)', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(5, 4, '0900000005', 'Nguyễn Văn Nhân Viên 1', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(6, 4, '0900000006', 'Phạm Thị Nhân Viên 2', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(7, 5, '0912345678', 'Nguyễn Khách Hàng A', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(8, 5, '0987654321', 'Công Ty Cổ Phần SmartRetail', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE');
+-- Mật khẩu ban đầu cho toàn bộ tài khoản mẫu dev/test: 123456@Test (đã được băm bằng BCrypt)
+-- BCrypt Hash: $2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW
+INSERT INTO Account (accountId, roleId, phone, fullName, email, password, status) VALUES
+(1, 1, '0900000001', 'System Administrator', 'admin@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(2, 2, '0900000002', 'Board of Management Leader', 'bom@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(3, 3, '0900000003', 'Trần Văn Quản Lý (HN-01)', 'manager.hn@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(4, 3, '0900000004', 'Lê Thị Quản Lý (HCM-01)', 'manager.hcm@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(5, 4, '0900000005', 'Nguyễn Văn Nhân Viên 1', 'staff.hn@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(6, 4, '0900000006', 'Phạm Thị Nhân Viên 2', 'staff.hcm@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(7, 5, '0912345678', 'Nguyễn Khách Hàng A', 'customer.a@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(8, 5, '0987654321', 'Công Ty Cổ Phần SmartRetail', 'smartretail@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE');
 
 -- 4. CustomerProfiles (12 số CCCD)
 INSERT INTO CustomerProfile (customerId, accountId, identityNumber) VALUES

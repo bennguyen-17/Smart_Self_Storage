@@ -9,41 +9,46 @@ import java.time.LocalDateTime;
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "accountId")
     private Integer accountId;
 
-    @Column(nullable = false)
+    @Column(name = "roleId", nullable = false)
     private Long roleId;
 
-    @Column(nullable = false, unique = true, columnDefinition = "NVARCHAR(255)")
+    @Column(name = "email", length = 255)
     private String email;
 
-    @Column(length = 20)
+    @Column(name = "phone", length = 20, nullable = false, unique = true)
     private String phone;
 
-    @Column(nullable = false, columnDefinition = "NVARCHAR(255)")
+    @Column(name = "fullName", nullable = false, length = 100)
     private String fullName;
 
-    @Column(nullable = false, columnDefinition = "NVARCHAR(255)")
+    @Column(name = "password", nullable = false, length = 255)
     private String password;
 
-    @Column(nullable = false, columnDefinition = "NVARCHAR(30)")
+    @Column(name = "status", nullable = false, length = 30)
     private String status;
 
-    @Column(nullable = false)
+    @Column(name = "createdAt")
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 
-    @Column(nullable = false)
+    @Column(name = "failedAttempts")
     private Integer failedAttempts = 0;
 
+    @Column(name = "firstFailedAt")
     private LocalDateTime firstFailedAt;
 
+    @Column(name = "lockUntil")
     private LocalDateTime lockUntil;
 
+    @Column(name = "otpCode")
     private String otpCode;
 
+    @Column(name = "otpExpiryTime")
     private LocalDateTime otpExpiryTime;
 
     @PrePersist
