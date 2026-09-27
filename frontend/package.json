@@ -12,7 +12,9 @@
   "dependencies": {
     "@tailwindcss/cli": "^4.3.3",
     "@tailwindcss/vite": "^4.3.3",
+    "@types/canvas-confetti": "^1.9.0",
     "axios": "^1.20.0",
+    "canvas-confetti": "^1.9.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4",

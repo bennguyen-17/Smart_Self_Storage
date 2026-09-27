@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Base URL lấy từ biến môi trường .env hoặc mặc định Spring Boot
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
+// Base URL lấy từ biến môi trường .env hoặc mặc định Spring Boot (KHÔNG CÓ /v1)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // Cờ bật tắt Mock Data: mặc định là true nếu chưa nối backend
 export const isMockMode = () => {
