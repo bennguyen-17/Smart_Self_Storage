@@ -11,6 +11,7 @@ import com.swp391.backend.repository.AccountRepository;
 import com.swp391.backend.repository.ActivityLogRepository;
 
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -26,15 +27,18 @@ public class LoginService {
     private final AccountRepository accountRepository;
     private final JwtService jwtService;
     private final ActivityLogRepository activityLogRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public LoginService(
             AccountRepository accountRepository,
             JwtService jwtService,
-            ActivityLogRepository activityLogRepository) {
+            ActivityLogRepository activityLogRepository,
+            PasswordEncoder passwordEncoder) {
 
         this.accountRepository = accountRepository;
         this.jwtService = jwtService;
         this.activityLogRepository = activityLogRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public LoginResult login(LoginRequest request, String ipAddress) {
@@ -80,7 +84,8 @@ public class LoginService {
 
         // check password
         boolean passwordCorrect = request.getPassword() != null
-                && request.getPassword().equals(account.getPassword());
+                && account.getPassword() != null
+                && passwordEncoder.matches(request.getPassword(), account.getPassword());
 
         if (!passwordCorrect) {
 
@@ -177,7 +182,7 @@ public class LoginService {
             return new ApiResponse(false, "Mật khẩu mới không được để trống!");
         }
 
-        account.setPassword(request.getNewPassword());
+        account.setPassword(passwordEncoder.encode(request.getNewPassword()));
         account.setOtpCode(null);
         account.setOtpExpiryTime(null);
         accountRepository.save(account);
