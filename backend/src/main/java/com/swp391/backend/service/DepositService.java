@@ -232,4 +232,18 @@ public class DepositService {
 
         return new ApiResponse(true, "Xác nhận nộp cọc thành công! Hợp đồng đã được kích hoạt và ô kho đã được bảo lưu.");
     }
+
+    // --- 3. Kiểm tra trạng thái thanh toán Cọc ---
+    public ApiResponse checkDepositStatus(String invoiceNumber) {
+        if (invoiceNumber == null || invoiceNumber.trim().isEmpty()) {
+            return new ApiResponse(false, "Mã hóa đơn không được để trống!");
+        }
+        Optional<Payment> paymentOpt = paymentRepository.findByInvoiceNumber(invoiceNumber.trim());
+        if (paymentOpt.isEmpty()) {
+            return new ApiResponse(false, "PENDING");
+        }
+        Payment p = paymentOpt.get();
+        boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus());
+        return new ApiResponse(true, isPaid ? "PAID" : "PENDING");
+    }
 }
