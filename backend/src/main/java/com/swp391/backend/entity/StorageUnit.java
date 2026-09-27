@@ -1,6 +1,7 @@
 package com.swp391.backend.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "StorageUnit")
@@ -18,6 +19,12 @@ public class StorageUnit {
 
     @Column(nullable = false, length = 30)
     private String status = "AVAILABLE"; // AVAILABLE, HOLD, RENTED, MAINTENANCE, OVERDUE
+
+    @Column(name = "hold_by_user_id", nullable = true)
+    private Integer holdByUserId;
+
+    @Column(name = "hold_expires_at", nullable = true)
+    private LocalDateTime holdExpiresAt;
 
     public StorageUnit() {
     }
@@ -59,5 +66,21 @@ public class StorageUnit {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Integer getHoldByUserId() {
+        return holdByUserId;
+    }
+
+    public void setHoldByUserId(Integer holdByUserId) {
+        this.holdByUserId = holdByUserId;
+    }
+
+    public LocalDateTime getHoldExpiresAt() {
+        return holdExpiresAt;
+    }
+
+    public void setHoldExpiresAt(LocalDateTime holdExpiresAt) {
+        this.holdExpiresAt = holdExpiresAt;
     }
 }
