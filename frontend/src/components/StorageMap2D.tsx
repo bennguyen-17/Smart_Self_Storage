@@ -17,7 +17,16 @@ export default function StorageMap2D({
   currentFloor,
   onSelectFloor,
   selectedUnit,
-  onSelectUnit
+  onSelectUnit,
+  refreshTrigger
+}: {
+  facility: string;
+  onFacilityChange: (fac: string) => void;
+  currentFloor: number;
+  onSelectFloor: (fl: number) => void;
+  selectedUnit: any;
+  onSelectUnit: (u: any) => void;
+  refreshTrigger?: number;
 }) {
   const currentFacilityObj = facilityData[facility] || facilityData['HN-01'];
   const [units, setUnits] = useState([]);
@@ -40,8 +49,18 @@ export default function StorageMap2D({
       }
     };
     fetchUnits();
-    return () => { isMounted = false; };
-  }, [facility, currentFloor]);
+
+    const handleUpdate = () => {
+      fetchUnits();
+    };
+    window.addEventListener('storage_units_updated', handleUpdate);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('storage_units_updated', handleUpdate);
+    };
+  }, [facility, currentFloor, refreshTrigger]);
+
 
   const renderUnitCard = (u) => {
     const isSelected = selectedUnit && selectedUnit.id === u.id;
@@ -61,8 +80,9 @@ export default function StorageMap2D({
     } else if (isHold) {
       cardBg = 'bg-amber-100 dark:bg-amber-950/40 border-amber-400 text-amber-800 dark:text-amber-200 cursor-not-allowed';
       statusDot = <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1 inline-block" />;
-      badgeText = 'Giữ 5p';
+      badgeText = 'Đã giữ chỗ';
     } else if (isMaintenance) {
+
       cardBg = 'bg-slate-200 dark:bg-slate-800 border-slate-400 text-slate-500 dark:text-slate-400 cursor-not-allowed opacity-60';
       statusDot = <span className="w-1.5 h-1.5 rounded-full bg-slate-500 mr-1 inline-block" />;
       badgeText = 'Bảo trì';
@@ -170,12 +190,12 @@ export default function StorageMap2D({
         {/* THÔNG TIN ĐỊA CHỈ & TẢI TRỌNG */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
           <div className="flex items-center space-x-2 text-slate-600 dark:text-slate-400">
-            <i className="fa-solid fa-map-pin text-blue-600 text-xs"></i>
-            <span className="font-medium">
-              <b className="text-blue-600">{currentFacilityObj.name}</b> • {currentFacilityObj.address}
+            <i className="fa-solid fa-map-pin text-blue-600 text-xs shrink-0"></i>
+            <span className="font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+              {currentFacilityObj.address}
             </span>
           </div>
-          <div className="flex items-center space-x-1.5 text-amber-600 font-bold bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/30">
+          <div className="flex items-center space-x-1.5 text-amber-600 font-bold bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/30 shrink-0">
             <i className="fa-solid fa-weight-hanging text-xs"></i>
             <span>
               {currentFloor === 1
@@ -200,12 +220,15 @@ export default function StorageMap2D({
               <span className="font-black text-xs text-emerald-700 dark:text-emerald-400">S</span>
               <span className="text-[8px] font-bold text-emerald-600 dark:text-emerald-300">1m²</span>
             </div>
-            <div className="text-xs leading-tight min-w-0">
-              <div className="font-black text-slate-900 dark:text-white truncate">Tủ Cá Nhân (1.0m × 1.0m)</div>
-              <div className="text-emerald-600 dark:text-emerald-400 font-extrabold text-[11px] mt-0.5">
+            <div className="text-xs leading-tight min-w-0 space-y-0.5">
+              <div className="font-black text-slate-900 dark:text-white truncate">Size S</div>
+              <div className="text-emerald-600 dark:text-emerald-400 font-extrabold text-[11px]">
                 30.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ ngày</span>
               </div>
-              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold mt-0.5">Cọc: 500.000đ</div>
+              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[11px]">
+                600.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ tháng</span>
+              </div>
+              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold pt-0.5">Cọc: 500.000đ</div>
             </div>
           </div>
 
@@ -215,12 +238,15 @@ export default function StorageMap2D({
               <span className="font-black text-xs text-indigo-700 dark:text-indigo-400">M</span>
               <span className="text-[8px] font-bold text-indigo-600 dark:text-indigo-300">3m²</span>
             </div>
-            <div className="text-xs leading-tight min-w-0">
-              <div className="font-black text-slate-900 dark:text-white truncate">Phòng Vừa (1.5m × 2.0m)</div>
-              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[11px] mt-0.5">
+            <div className="text-xs leading-tight min-w-0 space-y-0.5">
+              <div className="font-black text-slate-900 dark:text-white truncate">Size M</div>
+              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[11px]">
                 60.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ ngày</span>
               </div>
-              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold mt-0.5">Cọc: 1.000.000đ</div>
+              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[11px]">
+                1.200.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ tháng</span>
+              </div>
+              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold pt-0.5">Cọc: 1.000.000đ</div>
             </div>
           </div>
 
@@ -230,12 +256,15 @@ export default function StorageMap2D({
               <span className="font-black text-xs text-blue-700 dark:text-blue-400">L</span>
               <span className="text-[8px] font-bold text-blue-600 dark:text-blue-300">6m²</span>
             </div>
-            <div className="text-xs leading-tight min-w-0">
-              <div className="font-black text-slate-900 dark:text-white truncate">Phòng Lớn (2.0m × 3.0m)</div>
-              <div className="text-blue-600 dark:text-blue-400 font-extrabold text-[11px] mt-0.5">
+            <div className="text-xs leading-tight min-w-0 space-y-0.5">
+              <div className="font-black text-slate-900 dark:text-white truncate">Size L</div>
+              <div className="text-blue-600 dark:text-blue-400 font-extrabold text-[11px]">
                 120.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ ngày</span>
               </div>
-              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold mt-0.5">Cọc: 2.000.000đ</div>
+              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[11px]">
+                2.400.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ tháng</span>
+              </div>
+              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold pt-0.5">Cọc: 2.000.000đ</div>
             </div>
           </div>
 
@@ -245,12 +274,15 @@ export default function StorageMap2D({
               <span className="font-black text-xs text-amber-700 dark:text-amber-400">XL</span>
               <span className="text-[8px] font-bold text-amber-600 dark:text-amber-300">10m²</span>
             </div>
-            <div className="text-xs leading-tight min-w-0">
-              <div className="font-black text-slate-900 dark:text-white truncate">Kho DN (2.5m × 4.0m)</div>
-              <div className="text-amber-600 dark:text-amber-400 font-extrabold text-[11px] mt-0.5">
+            <div className="text-xs leading-tight min-w-0 space-y-0.5">
+              <div className="font-black text-slate-900 dark:text-white truncate">Size XL</div>
+              <div className="text-amber-600 dark:text-amber-400 font-extrabold text-[11px]">
                 200.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ ngày</span>
               </div>
-              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold mt-0.5">Cọc: 3.000.000đ</div>
+              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[11px]">
+                4.000.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ tháng</span>
+              </div>
+              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold pt-0.5">Cọc: 3.000.000đ</div>
             </div>
           </div>
         </div>

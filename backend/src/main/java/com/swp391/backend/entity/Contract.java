@@ -22,7 +22,7 @@ public class Contract {
     private LocalDateTime terminatedAt;
 
     @Column(nullable = false, length = 30)
-    private String status = "ACTIVE"; // ACTIVE, EXPIRED, TERMINATED, CANCELLED
+    private String status = "PENDING_CHECKIN"; // BR-21 States: INITIATED, PENDING_CHECKIN, ACTIVE, OVERDUE, TERMINATED, FORFEITED, CANCELED
 
     public Contract() {
     }

@@ -29,7 +29,7 @@ export default function CustomerProfileModal({ onClose, onLogout }) {
             <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow">
               <i className="fa-solid fa-id-card"></i>
             </div>
-            <h3 className="font-extrabold text-sm text-title">HỒ SƠ KHÁCH HÀNG</h3>
+            <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">HỒ SƠ KHÁCH HÀNG</h3>
           </div>
           <button
             type="button"
@@ -53,33 +53,39 @@ export default function CustomerProfileModal({ onClose, onLogout }) {
               </div>
               <div>
                 <h2 className="font-black text-base text-white">{profile?.fullName || 'Khách Hàng'}</h2>
-                <span className="bg-emerald-500 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full inline-block mt-0.5">
-                  <i className="fa-solid fa-shield-check mr-1"></i> {profile?.verificationBadge || 'ĐÃ XÁC THỰC CCCD TẠI QUẦY STAFF'}
-                </span>
+                {profile?.isVerified ? (
+                  <span className="bg-emerald-500 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full inline-block mt-0.5">
+                    <i className="fa-solid fa-shield-check mr-1"></i> {profile?.verificationBadge || 'ĐÃ XÁC THỰC THÔNG TIN'}
+                  </span>
+                ) : (
+                  <span className="bg-amber-500 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full inline-block mt-0.5">
+                    <i className="fa-solid fa-circle-exclamation mr-1"></i> {profile?.verificationBadge || 'CHƯA XÁC THỰC THÔNG TIN'}
+                  </span>
+                )}
               </div>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="inner-box p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
-                <div className="text-[10px] font-bold text-muted uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-1">
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
+                <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-1">
                   Thông tin Cá nhân & Liên hệ
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-title">
+                <div className="grid grid-cols-2 gap-2 text-slate-900 dark:text-white">
                   <div>
-                    <span className="text-muted block text-[10px]">Họ và Tên:</span>
-                    <span className="font-bold">{profile?.fullName}</span>
+                    <span className="text-slate-400 dark:text-slate-400 block text-[10px]">Họ và Tên:</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{profile?.fullName}</span>
                   </div>
                   <div>
-                    <span className="text-muted block text-[10px]">Mã CCCD:</span>
-                    <span className="font-bold font-mono text-xs">{profile?.identityNumber}</span>
+                    <span className="text-slate-400 dark:text-slate-400 block text-[10px]">Mã CCCD:</span>
+                    <span className="font-bold font-mono text-xs text-slate-900 dark:text-white">{profile?.identityNumber}</span>
                   </div>
                   <div>
-                    <span className="text-muted block text-[10px]">Số Điện Thoại:</span>
-                    <span className="font-bold">{profile?.phone}</span>
+                    <span className="text-slate-400 dark:text-slate-400 block text-[10px]">Số Điện Thoại:</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{profile?.phone}</span>
                   </div>
                   <div>
-                    <span className="text-muted block text-[10px]">Email:</span>
-                    <span className="font-bold text-[11px] truncate">{profile?.email}</span>
+                    <span className="text-slate-400 dark:text-slate-400 block text-[10px]">Email:</span>
+                    <span className="font-bold text-[11px] truncate text-slate-900 dark:text-white">{profile?.email}</span>
                   </div>
                 </div>
               </div>
@@ -87,18 +93,11 @@ export default function CustomerProfileModal({ onClose, onLogout }) {
           </>
         )}
 
-        <div className="pt-2 flex items-center space-x-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-extrabold text-xs py-2.5 rounded-xl transition cursor-pointer"
-          >
-            Đóng cửa sổ
-          </button>
+        <div className="pt-2">
           <button
             type="button"
             onClick={onLogout}
-            className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs py-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+            className="w-full bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs py-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
           >
             <i className="fa-solid fa-arrow-right-from-bracket text-xs"></i> Đăng xuất
           </button>

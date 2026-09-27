@@ -4,8 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class UnitDetailResponse {
-    private Integer unitId;
-    private String unitCode; // Biển số ô kho: e.g. "HN01-G-XL05" hoặc "XL05"
+    private String unitCode; // Mã ô kho trực quan: e.g. "HN01-G-XL05"
     private Integer floorId;
     private String floorName;
     private Integer unitTypeId;
@@ -28,12 +27,12 @@ public class UnitDetailResponse {
     public UnitDetailResponse() {
     }
 
-    public Integer getUnitId() {
-        return unitId;
+    public String getUnitId() {
+        return unitCode;
     }
 
-    public void setUnitId(Integer unitId) {
-        this.unitId = unitId;
+    public void setUnitId(String unitCode) {
+        this.unitCode = unitCode;
     }
 
     public String getUnitCode() {

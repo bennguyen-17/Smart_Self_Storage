@@ -49,7 +49,7 @@ function InternalLoginForm() {
     setServerError("")
 
     try {
-      const data = await login(values.phone, values.password)
+      const data = await login(values.phone, values.password, "INTERNAL")
 
       if (!data?.token || !data?.user) {
         setServerError("Phản hồi từ máy chủ không hợp lệ. Vui lòng thử lại sau.")
@@ -66,8 +66,16 @@ function InternalLoginForm() {
       const status = error.response?.status
       const payload = error.response?.data as LockedResponse | undefined
 
+      if (status === 403) {
+        setServerError(
+          payload?.message ||
+            "Tài khoản Khách hàng không có quyền truy cập Cổng Nội Bộ!"
+        )
+        return
+      }
+
       if (status === 401) {
-        setServerError("Email hoặc mật khẩu không chính xác")
+        setServerError("Số điện thoại hoặc mật khẩu không chính xác")
         return
       }
 
@@ -109,7 +117,7 @@ function InternalLoginForm() {
           <UserShield className="size-5" />
         </div>
 
-        <h1 className="text-xl font-bold">Đăng nhập nội bộ</h1>
+        <h1 className="text-xl font-bold text-foreground">Đăng nhập nội bộ</h1>
         <p className="text-xs text-muted-foreground">
           Dành cho Nhân viên, Quản lý chi nhánh, BOM, Admin
         </p>

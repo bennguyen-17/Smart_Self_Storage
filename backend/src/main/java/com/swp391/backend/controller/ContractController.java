@@ -21,18 +21,22 @@ public class ContractController {
     private final FacilityRepository facilityRepository;
     private final StorageService storageService;
 
+    private final UnitTypeRepository unitTypeRepository;
+
     public ContractController(ContractRepository contractRepository,
                               ReservationRepository reservationRepository,
                               StorageUnitRepository storageUnitRepository,
                               FloorRepository floorRepository,
                               FacilityRepository facilityRepository,
-                              StorageService storageService) {
+                              StorageService storageService,
+                              UnitTypeRepository unitTypeRepository) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
         this.floorRepository = floorRepository;
         this.facilityRepository = facilityRepository;
         this.storageService = storageService;
+        this.unitTypeRepository = unitTypeRepository;
     }
 
     @GetMapping("/contracts/my-contracts")
@@ -46,7 +50,7 @@ public class ContractController {
             if (contractOpt.isEmpty()) continue;
 
             Contract c = contractOpt.get();
-            Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitId());
+            Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitCode());
             if (unitOpt.isEmpty()) continue;
 
             StorageUnit unit = unitOpt.get();
@@ -64,22 +68,79 @@ public class ContractController {
             long daysLeft = ChronoUnit.DAYS.between(LocalDate.now(), res.getEndDate());
             if (daysLeft < 0) daysLeft = 0;
 
+            String size = "M";
+            String sizeLabel = "Size M";
+            Optional<UnitType> typeOpt = unitTypeRepository.findById(unit.getUnitTypeId());
+            if (typeOpt.isPresent()) {
+                UnitType ut = typeOpt.get();
+                size = ut.getSize() != null ? ut.getSize() : "M";
+                sizeLabel = ut.getTypeName() != null ? ut.getTypeName() : ("Size " + size);
+            }
+
+            String statusLabel;
+            if ("PENDING_CHECKIN".equalsIgnoreCase(c.getStatus())) {
+                statusLabel = "CHỜ CHECK-IN";
+            } else if ("ACTIVE".equalsIgnoreCase(c.getStatus())) {
+                statusLabel = "HIỆU LỰC";
+            } else if ("INITIATED".equalsIgnoreCase(c.getStatus())) {
+                statusLabel = "KHỞI TẠO";
+            } else if ("OVERDUE".equalsIgnoreCase(c.getStatus())) {
+                statusLabel = "QUÁ HẠN";
+            } else if ("TERMINATED".equalsIgnoreCase(c.getStatus())) {
+                statusLabel = "ĐÃ THANH LÝ";
+            } else if ("CANCELED".equalsIgnoreCase(c.getStatus())) {
+                statusLabel = "ĐÃ HỦY CỌC";
+            } else if ("FORFEITED".equalsIgnoreCase(c.getStatus())) {
+                statusLabel = "MẤT CỌC";
+            } else {
+                statusLabel = c.getStatus();
+            }
+
             Map<String, Object> map = new HashMap<>();
             map.put("contractId", "#HD-" + c.getContractId());
-            map.put("unitCode", "KHO-" + unit.getUnitId());
+            map.put("rawContractId", c.getContractId());
+            map.put("unitCode", unit.getUnitCode());
             map.put("branchName", branchName);
             map.put("branchCode", branchCode);
-            map.put("size", "M");
-            map.put("sizeLabel", "Size M");
+            map.put("size", size);
+            map.put("sizeLabel", sizeLabel);
             map.put("expiryDate", res.getEndDate().toString());
             map.put("daysLeft", daysLeft);
             map.put("status", c.getStatus());
-            map.put("statusLabel", "ACTIVE".equalsIgnoreCase(c.getStatus()) ? "HIỆU LỰC" : "ĐÃ HẾT HẠN");
+            map.put("statusLabel", statusLabel);
 
             result.add(map);
         }
 
         return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/contracts/{contractId}/cancel-deposit")
+    public ResponseEntity<Map<String, Object>> cancelDeposit(@PathVariable Integer contractId) {
+        Optional<Contract> contractOpt = contractRepository.findById(contractId);
+        if (contractOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Không tìm thấy hợp đồng!"));
+        }
+        Contract contract = contractOpt.get();
+        contract.setStatus("CANCELED");
+        contract.setTerminatedAt(java.time.LocalDateTime.now());
+        contractRepository.save(contract);
+
+        Optional<Reservation> resOpt = reservationRepository.findById(contract.getReservationId());
+        if (resOpt.isPresent()) {
+            Reservation res = resOpt.get();
+            res.setStatus("CANCELLED");
+            reservationRepository.save(res);
+
+            Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitCode());
+            if (unitOpt.isPresent()) {
+                StorageUnit unit = unitOpt.get();
+                unit.setStatus("AVAILABLE");
+                storageUnitRepository.save(unit);
+            }
+        }
+
+        return ResponseEntity.ok(Map.of("success", true, "message", "Hủy đặt cọc thành công! Ô kho đã được mở khóa và hoàn trả trạng thái trống."));
     }
 
     @GetMapping("/gate-pins/live")

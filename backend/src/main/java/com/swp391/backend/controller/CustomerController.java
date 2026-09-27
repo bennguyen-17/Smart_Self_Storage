@@ -35,10 +35,11 @@ public class CustomerController {
         data.put("fullName", account.getFullName());
         data.put("phone", account.getPhone());
         data.put("email", account.getEmail() != null ? account.getEmail() : account.getPhone() + "@smartstorage.vn");
+        boolean isActive = "ACTIVE".equalsIgnoreCase(account.getStatus());
         data.put("status", account.getStatus());
         data.put("identityNumber", "001201012345");
-        data.put("isVerified", true);
-        data.put("verificationBadge", "ĐÃ XÁC THỰC THÔNG TIN TẠI HỆ THỐNG");
+        data.put("isVerified", isActive);
+        data.put("verificationBadge", isActive ? "ĐÃ XÁC THỰC THÔNG TIN" : "CHƯA XÁC THỰC THÔNG TIN");
 
         return ResponseEntity.ok(data);
     }

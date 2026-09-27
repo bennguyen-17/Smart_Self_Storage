@@ -14,15 +14,9 @@ function BrandLogo({ internal = false }: BrandLogoProps) {
 
       <div>
         <div className="flex items-center gap-2">
-          <span className="text-base leading-tight font-bold">
+          <span className="text-base leading-tight font-bold text-foreground">
             Smart Storage
           </span>
-
-          {internal && (
-            <span className="rounded-md border bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-              NỘI BỘ
-            </span>
-          )}
         </div>
 
         <div className="text-[11px] font-medium text-muted-foreground">
