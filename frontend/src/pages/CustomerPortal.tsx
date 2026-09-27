@@ -86,9 +86,10 @@ export default function CustomerPortal() {
 
   const handleLogout = () => {
     if (window.confirm("Bạn có chắc chắn muốn đăng xuất khỏi Cổng Khách Hàng SmartStorage?")) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       setShowProfileModal(false);
-      alert("Đã đăng xuất tài khoản thành công!");
-      window.location.reload();
+      window.location.href = "/login";
     }
   };
 

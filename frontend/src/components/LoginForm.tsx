@@ -3,7 +3,7 @@ import axios from "axios"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CheckCircle2, Eye, EyeOff } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 import { login } from "@/api/authApi"
 import { loginSchema, type LoginFormValues } from "@/utils/validation"
@@ -26,6 +26,7 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 
 function LoginForm() {
+  const navigate = useNavigate()
   const [serverError, setServerError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -48,9 +49,15 @@ function LoginForm() {
 
       if (data?.token) {
         localStorage.setItem("token", data.token)
+        if (data?.userInfo) {
+          localStorage.setItem("user", JSON.stringify(data.userInfo))
+        }
       }
 
       setSuccess(true)
+      setTimeout(() => {
+        navigate("/portal")
+      }, 1000)
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 401) {
@@ -82,11 +89,11 @@ function LoginForm() {
         </h2>
 
         <p className="mt-2 text-sm text-muted-foreground">
-          Chào mừng bạn trở lại với Smart Self Storage.
+          Đang chuyển hướng vào Cổng đặt kho...
         </p>
 
         <Link
-          to="/"
+          to="/portal"
           className="mt-6 inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors"
         >
           Truy cập Sơ đồ kho & Dịch vụ &rarr;
