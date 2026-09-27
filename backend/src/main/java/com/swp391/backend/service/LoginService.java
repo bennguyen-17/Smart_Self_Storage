@@ -56,10 +56,19 @@ public class LoginService {
 
         Account account = result.get();
 
-        if ("INACTIVE".equalsIgnoreCase(account.getStatus())) {
+        if ("UNVERIFIED".equalsIgnoreCase(account.getStatus())
+                || "INACTIVE".equalsIgnoreCase(account.getStatus())
+                || "PENDING_OTP".equalsIgnoreCase(account.getStatus())) {
             return LoginResult.failure(
                     "Tài khoản chưa được kích hoạt OTP. Vui lòng hoàn tất xác thực OTP trước!",
                     401);
+        }
+
+        if ("CLOSED".equalsIgnoreCase(account.getStatus())
+                || "BANNED".equalsIgnoreCase(account.getStatus())) {
+            return LoginResult.failure(
+                    "Tài khoản đã bị đóng hoặc vô hiệu hóa vĩnh viễn.",
+                    403);
         }
 
         // account suspended check
