@@ -1,15 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { getCurrentCustomerProfile } from '../services/customerService';
 
-export default function CustomerProfileModal({ onClose, onLogout }) {
-  const [profile, setProfile] = useState(null);
+const getInitials = (name: string) => {
+  if (!name) return 'KH';
+  const words = name.trim().split(' ');
+  if (words.length >= 2) {
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+  } else if (words.length === 1 && words[0].length >= 2) {
+    return words[0].substring(0, 2).toUpperCase();
+  }
+  return 'KH';
+};
+
+export default function CustomerProfileModal({ onClose, onLogout }: { onClose: () => void; onLogout: () => void }) {
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const res = await getCurrentCustomerProfile();
-        if (res.success) {
+        if (res.success && res.data) {
           setProfile(res.data);
         }
       } catch (err) {
@@ -20,6 +31,14 @@ export default function CustomerProfileModal({ onClose, onLogout }) {
     };
     fetchProfile();
   }, []);
+
+  const fullName = profile?.fullName || 'Khách Hàng';
+  const avatarText = profile?.avatarText || getInitials(fullName);
+  const identityNumber = profile?.identityNumber || profile?.cccd || 'Đã xác minh';
+  const phone = profile?.phone || 'Chưa cập nhật';
+  const email = profile?.email || 'Chưa cập nhật';
+  const isVerified = profile?.isVerified ?? true;
+  const verificationBadge = profile?.verificationBadge || (isVerified ? 'ĐÃ XÁC THỰC THÔNG TIN' : 'CHƯA XÁC THỰC THÔNG TIN');
 
   return (
     <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -49,17 +68,17 @@ export default function CustomerProfileModal({ onClose, onLogout }) {
           <>
             <div className="bg-gradient-to-r from-slate-900 to-blue-950 p-4 rounded-2xl text-white flex items-center space-x-4 border border-slate-800 shadow-inner">
               <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-400 text-white font-black text-xl flex items-center justify-center shadow-lg border-2 border-blue-300 shrink-0">
-                {profile?.avatarText || profile?.fullName?.charAt(0) || 'KH'}
+                {avatarText}
               </div>
-              <div>
-                <h2 className="font-black text-base text-white">{profile?.fullName || 'Khách Hàng'}</h2>
-                {profile?.isVerified ? (
+              <div className="min-w-0 flex-1">
+                <h2 className="font-black text-base text-white truncate">{fullName}</h2>
+                {isVerified ? (
                   <span className="bg-emerald-500 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full inline-block mt-0.5">
-                    <i className="fa-solid fa-shield-check mr-1"></i> {profile?.verificationBadge || 'ĐÃ XÁC THỰC THÔNG TIN'}
+                    <i className="fa-solid fa-shield-check mr-1"></i> {verificationBadge}
                   </span>
                 ) : (
                   <span className="bg-amber-500 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full inline-block mt-0.5">
-                    <i className="fa-solid fa-circle-exclamation mr-1"></i> {profile?.verificationBadge || 'CHƯA XÁC THỰC THÔNG TIN'}
+                    <i className="fa-solid fa-circle-exclamation mr-1"></i> {verificationBadge}
                   </span>
                 )}
               </div>
@@ -73,19 +92,19 @@ export default function CustomerProfileModal({ onClose, onLogout }) {
                 <div className="grid grid-cols-2 gap-2 text-slate-900 dark:text-white">
                   <div>
                     <span className="text-slate-400 dark:text-slate-400 block text-[10px]">Họ và Tên:</span>
-                    <span className="font-bold text-slate-900 dark:text-white">{profile?.fullName}</span>
+                    <span className="font-bold text-slate-900 dark:text-white break-words">{fullName}</span>
                   </div>
                   <div>
                     <span className="text-slate-400 dark:text-slate-400 block text-[10px]">Mã CCCD:</span>
-                    <span className="font-bold font-mono text-xs text-slate-900 dark:text-white">{profile?.identityNumber}</span>
+                    <span className="font-bold font-mono text-xs text-slate-900 dark:text-white">{identityNumber}</span>
                   </div>
                   <div>
                     <span className="text-slate-400 dark:text-slate-400 block text-[10px]">Số Điện Thoại:</span>
-                    <span className="font-bold text-slate-900 dark:text-white">{profile?.phone}</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{phone}</span>
                   </div>
                   <div>
                     <span className="text-slate-400 dark:text-slate-400 block text-[10px]">Email:</span>
-                    <span className="font-bold text-[11px] truncate text-slate-900 dark:text-white">{profile?.email}</span>
+                    <span className="font-bold text-[11px] truncate text-slate-900 dark:text-white block">{email}</span>
                   </div>
                 </div>
               </div>

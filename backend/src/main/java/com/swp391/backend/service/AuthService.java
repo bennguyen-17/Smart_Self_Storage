@@ -5,7 +5,9 @@ import com.swp391.backend.dto.RegisterRequest;
 import com.swp391.backend.dto.ResendOtpRequest;
 import com.swp391.backend.dto.VerifyOtpRequest;
 import com.swp391.backend.entity.Account;
+import com.swp391.backend.entity.CustomerProfile;
 import com.swp391.backend.repository.AccountRepository;
+import com.swp391.backend.repository.CustomerProfileRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,10 +19,14 @@ import java.util.Random;
 public class AuthService {
 
     private final AccountRepository accountRepository;
+    private final CustomerProfileRepository customerProfileRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthService(AccountRepository accountRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(AccountRepository accountRepository, 
+                       CustomerProfileRepository customerProfileRepository,
+                       PasswordEncoder passwordEncoder) {
         this.accountRepository = accountRepository;
+        this.customerProfileRepository = customerProfileRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -65,7 +71,15 @@ public class AuthService {
         account.setOtpCode(otpCode);
         account.setOtpExpiryTime(LocalDateTime.now().plusMinutes(5));
 
-        accountRepository.save(account);
+        Account savedAccount = accountRepository.save(account);
+
+        // Lưu CCCD vào CustomerProfile nếu có
+        if (request.getCccd() != null && !request.getCccd().trim().isEmpty()) {
+            Optional<CustomerProfile> profileOpt = customerProfileRepository.findByAccountId(savedAccount.getAccountId());
+            CustomerProfile profile = profileOpt.orElseGet(() -> new CustomerProfile(savedAccount.getAccountId(), request.getCccd().trim()));
+            profile.setIdentityNumber(request.getCccd().trim());
+            customerProfileRepository.save(profile);
+        }
 
         // In mã OTP ra Console để dễ test
         System.out.println("==========================================");

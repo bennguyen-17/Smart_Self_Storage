@@ -20,7 +20,16 @@ const apiClient = axios.create({
 // Request Interceptor: Tự động đính kèm Token khi gọi Swagger API bảo mật
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    let token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (!token) {
+      try {
+        const rawAuth = localStorage.getItem('auth_session') || sessionStorage.getItem('auth_session');
+        if (rawAuth) {
+          const parsed = JSON.parse(rawAuth);
+          token = parsed?.token;
+        }
+      } catch (e) {}
+    }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
