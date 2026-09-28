@@ -25,17 +25,20 @@ public class LoginService {
     private static final int ATTEMPT_WINDOW_MINUTES = 10;
 
     private final AccountRepository accountRepository;
+    private final com.swp391.backend.repository.CustomerProfileRepository customerProfileRepository;
     private final JwtService jwtService;
     private final ActivityLogRepository activityLogRepository;
     private final PasswordEncoder passwordEncoder;
 
     public LoginService(
             AccountRepository accountRepository,
+            com.swp391.backend.repository.CustomerProfileRepository customerProfileRepository,
             JwtService jwtService,
             ActivityLogRepository activityLogRepository,
             PasswordEncoder passwordEncoder) {
 
         this.accountRepository = accountRepository;
+        this.customerProfileRepository = customerProfileRepository;
         this.jwtService = jwtService;
         this.activityLogRepository = activityLogRepository;
         this.passwordEncoder = passwordEncoder;
@@ -157,13 +160,21 @@ public class LoginService {
         // create JWT
         String token = jwtService.generateToken(account);
 
+        String identityNumber = customerProfileRepository.findByAccountId(account.getAccountId())
+                .map(com.swp391.backend.entity.CustomerProfile::getIdentityNumber)
+                .orElse("Chưa cập nhật");
+
         return LoginResult.success(
                 new LoginResponse(
                         token,
                         new LoginResponse.UserInfo(
                                 account.getAccountId(),
                                 account.getFullName(),
-                                account.getRoleId().toString())));
+                                account.getRoleId() != null ? account.getRoleId().toString() : "5",
+                                account.getPhone(),
+                                account.getEmail(),
+                                identityNumber,
+                                account.getStatus())));
     }
 
     public ApiResponse forgotPassword(ResendOtpRequest request) {

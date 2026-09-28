@@ -32,6 +32,10 @@ public class LoginResponse {
         private Integer id;
         private String fullName;
         private String role;
+        private String phone;
+        private String email;
+        private String identityNumber;
+        private String status;
 
         public UserInfo() {
         }
@@ -40,6 +44,16 @@ public class LoginResponse {
             this.id = id;
             this.fullName = fullName;
             this.role = role;
+        }
+
+        public UserInfo(Integer id, String fullName, String role, String phone, String email, String identityNumber, String status) {
+            this.id = id;
+            this.fullName = fullName;
+            this.role = role;
+            this.phone = phone;
+            this.email = email;
+            this.identityNumber = identityNumber;
+            this.status = status;
         }
 
         public Integer getId() {
@@ -64,6 +78,38 @@ public class LoginResponse {
 
         public void setRole(String role) {
             this.role = role;
+        }
+
+        public String getPhone() {
+            return phone;
+        }
+
+        public void setPhone(String phone) {
+            this.phone = phone;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getIdentityNumber() {
+            return identityNumber;
+        }
+
+        public void setIdentityNumber(String identityNumber) {
+            this.identityNumber = identityNumber;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
         }
     }
 }
