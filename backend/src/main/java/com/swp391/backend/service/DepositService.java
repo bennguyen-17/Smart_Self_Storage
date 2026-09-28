@@ -56,11 +56,11 @@ public class DepositService {
             return DepositInitiateResponse.error("Bạn bắt buộc phải tích chọn đồng ý với Điều khoản Hợp đồng thuê kho (Clickwrap) theo quy định!");
         }
 
-        if (request.getUnitId() == null || request.getAccountId() == null) {
+        if (request.getUnitCode() == null || request.getAccountId() == null) {
             return DepositInitiateResponse.error("Thông tin mã ô kho hoặc mã tài khoản không được để trống!");
         }
 
-        Optional<StorageUnit> unitOpt = storageUnitRepository.findById(request.getUnitId());
+        Optional<StorageUnit> unitOpt = storageUnitRepository.findByUnitCode(request.getUnitCode());
         if (unitOpt.isEmpty()) {
             return DepositInitiateResponse.error("Không tìm thấy ô kho yêu cầu!");
         }
@@ -104,7 +104,7 @@ public class DepositService {
         // Tạo bản ghi Đặt chỗ (Reservation)
         Reservation reservation = new Reservation();
         reservation.setAccountId(request.getAccountId());
-        reservation.setUnitId(unit.getUnitId());
+        reservation.setUnitCode(unit.getUnitCode());
         reservation.setStartDate(request.getStartDate() != null ? request.getStartDate() : LocalDate.now());
         reservation.setEndDate(request.getEndDate() != null ? request.getEndDate() : LocalDate.now().plusMonths(1));
         reservation.setRentalType(request.getRentalType() != null ? request.getRentalType() : "MONTHLY");
@@ -118,7 +118,7 @@ public class DepositService {
         String randomSuffix = String.format("%04X", new Random().nextInt(0xFFFF));
         String resCode = "RES-" + facilityCode + "-" + String.format("%04d", request.getAccountId() % 10000) + "-" + randomSuffix;
 
-        // Tạo Hợp đồng dự thảo (Draft Contract - BR-18)
+        // Tạo Hợp đồng dự thảo với trạng thái PENDING_CHECKIN (BR-21)
         Contract contract = new Contract();
         contract.setReservationId(reservation.getReservationId());
         contract.setPdfUrl("/contracts/DRAFT-" + resCode + ".pdf");
@@ -179,7 +179,7 @@ public class DepositService {
         return response;
     }
 
-    // --- 2. Webhook / Xác nhận thanh toán Cọc thành công (BR-16 & BR-37) ---
+    // --- 2. Webhook / Xác nhận thanh toán Cọc thành công (BR-16, BR-21 & BR-37) ---
     @Transactional
     public ApiResponse confirmDepositPayment(DepositWebhookRequest request) {
         if (request.getInvoiceNumber() == null || request.getInvoiceNumber().trim().isEmpty()) {
@@ -205,33 +205,34 @@ public class DepositService {
         payment.setPaidAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
-        // Cập nhật Contract
+        // Cập nhật Contract sang PENDING_CHECKIN (Chờ nhận kho tại cơ sở theo BR-21)
         Optional<Contract> contractOpt = contractRepository.findById(payment.getContractId());
         if (contractOpt.isPresent()) {
             Contract contract = contractOpt.get();
-            contract.setStatus("ACTIVE");
+            contract.setStatus("PENDING_CHECKIN"); // BR-21: Khách đã cọc 100%, chờ nhận kho
             contract.setActivatedAt(LocalDateTime.now());
             contractRepository.save(contract);
 
-            // Cập nhật Reservation
+            // Cập nhật Reservation sang CONFIRMED
             Optional<Reservation> resOpt = reservationRepository.findById(contract.getReservationId());
             if (resOpt.isPresent()) {
                 Reservation res = resOpt.get();
                 res.setStatus("CONFIRMED");
                 reservationRepository.save(res);
 
-                // Cập nhật StorageUnit sang RENTED
-                Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitId());
+                // Cập nhật StorageUnit sang HOLD (Bảo lưu giữ chỗ chờ ngày check-in theo BR-21)
+                Optional<StorageUnit> unitOpt = storageUnitRepository.findByUnitCode(res.getUnitCode());
                 if (unitOpt.isPresent()) {
                     StorageUnit unit = unitOpt.get();
-                    unit.setStatus("RENTED");
+                    unit.setStatus("HOLD"); // Bảo lưu ô kho chờ check-in
                     storageUnitRepository.save(unit);
                 }
             }
         }
 
-        return new ApiResponse(true, "Xác nhận nộp cọc thành công! Hợp đồng đã được kích hoạt và ô kho đã được bảo lưu.");
+        return new ApiResponse(true, "Xác nhận nộp cọc thành công! Hợp đồng ở trạng thái PENDING_CHECKIN và ô kho đã được bảo lưu giữ chỗ.");
     }
+
 
     // --- 3. Kiểm tra trạng thái thanh toán Cọc ---
     public ApiResponse checkDepositStatus(String invoiceNumber) {

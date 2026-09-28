@@ -9,8 +9,11 @@ import SupportTicketModal from '../components/SupportTicketModal';
 import ExtendContractModal from '../components/ExtendContractModal';
 import ChatbotWidget from '../components/ChatbotWidget';
 
+import { useTheme } from '@/components/theme-provider';
+
 export default function CustomerPortal() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const isDarkMode = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const [activeTab, setActiveTab] = useState('grid'); // 'grid' | 'access'
   const [facility, setFacility] = useState('HN-01');
   const [currentFloor, setCurrentFloor] = useState(1);
@@ -26,26 +29,14 @@ export default function CustomerPortal() {
   const [showExtendModal, setShowExtendModal] = useState(false);
   const [extendUnitContext, setExtendUnitContext] = useState(null);
 
-  // Mặc định ép ứng dụng chạy ở Giao diện Sáng (Light Mode) chuẩn nền trắng khi vừa mở
-  useEffect(() => {
-    document.documentElement.classList.remove('dark');
-    document.body.className = "light-mode antialiased min-h-screen flex flex-col bg-slate-50 text-slate-900";
-  }, []);
+  const [mapRefreshTrigger, setMapRefreshTrigger] = useState(0);
 
-  // Toggle giữa Sáng và Tối
+  // Toggle giữa Sáng và Tối thống nhất hệ thống
   const toggleTheme = () => {
-    const nextDark = !isDarkMode;
-    setIsDarkMode(nextDark);
-    if (nextDark) {
-      document.documentElement.classList.add('dark');
-      document.body.className = "dark-mode antialiased min-h-screen flex flex-col bg-slate-950 text-slate-100 dark";
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.body.className = "light-mode antialiased min-h-screen flex flex-col bg-slate-50 text-slate-900";
-    }
+    setTheme(isDarkMode ? 'light' : 'dark');
   };
 
-  const handleOpenDepositModal = () => {
+  const handleOpenDepositModal = (bookingPayload?: Record<string, any>) => {
     if (!selectedUnit) return;
     const facilityNameMap = {
       'HN-01': 'SmartStorage Cầu Giấy (HN-01)',
@@ -60,8 +51,11 @@ export default function CustomerPortal() {
     setDepositBookingData({
       facilityName: facilityNameMap[facility] || 'SmartStorage Cầu Giấy (HN-01)',
       unitId: selectedUnit.id,
-      unitSize: `Size ${selectedUnit.size} (${selectedUnit.dim})`,
-      startDate: new Date().toLocaleDateString('vi-VN'),
+      unitSize: `Size ${selectedUnit.size}`,
+      startDate: bookingPayload?.startDate || new Date().toLocaleDateString('vi-VN'),
+      endDate: bookingPayload?.endDate || '',
+      effectiveDays: bookingPayload?.effectiveDays || 360,
+      estimatedTotalRental: bookingPayload?.estimatedTotalRental || (selectedUnit.monthlyPrice ? selectedUnit.monthlyPrice * 12 : selectedUnit.price * 360),
       depositAmount: selectedUnit.deposit
     });
     setShowDepositFlow(true);
@@ -103,18 +97,18 @@ export default function CustomerPortal() {
       />
 
       {/* Main Body Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 w-full py-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 w-full py-6 sm:py-8">
         <div className="space-y-6">
           {/* CUSTOMER DASHBOARD HEADER BANNER */}
-          <div className="bg-white dark:bg-slate-900 px-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 py-6">
+          <div className="bg-white dark:bg-slate-900 px-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 py-7 sm:py-8">
             {/* AVATAR & GREETING */}
             <div className="flex items-center space-x-3.5 shrink-0">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-sm shadow-blue-500/20 shrink-0">
+              <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-sm shadow-blue-500/20 shrink-0">
                 <i className="fa-solid fa-user-check"></i>
               </div>
               <div>
-                <h1 className="font-extrabold text-base text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
-                  Xin chào, <span className="text-blue-600">Nguyễn Văn Khách</span>! 👋
+                <h1 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                  Xin chào, <span className="text-blue-600">Nguyễn Văn Khách</span>!
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Hệ thống kho tự quản thông minh 24/7</p>
               </div>
@@ -170,6 +164,7 @@ export default function CustomerPortal() {
                 <div className="lg:col-span-8">
                   <StorageMap2D
                     facility={facility}
+                    refreshTrigger={mapRefreshTrigger}
                     onFacilityChange={(fac) => {
                       setFacility(fac);
                       setSelectedUnit(null);
@@ -234,10 +229,12 @@ export default function CustomerPortal() {
           onClose={() => setShowDepositFlow(false)}
           onFinish={() => {
             setShowDepositFlow(false);
+            setSelectedUnit(null);
+            setMapRefreshTrigger(prev => prev + 1);
             setActiveTab('access');
           }}
         />
       )}
     </div>
   );
-}
+}

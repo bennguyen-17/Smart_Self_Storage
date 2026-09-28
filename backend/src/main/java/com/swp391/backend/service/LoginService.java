@@ -56,6 +56,20 @@ public class LoginService {
 
         Account account = result.get();
 
+        // Phân quyền Cổng Đăng nhập theo Role (BR-01 / Role-based access control)
+        // roleId: 1 = ADMIN, 2 = BOM, 3 = MANAGER, 4 = STAFF, 5 = CUSTOMER
+        boolean isInternalRole = account.getRoleId() != null && account.getRoleId() >= 1L && account.getRoleId() <= 4L;
+        if ("CUSTOMER".equalsIgnoreCase(request.getPortalType()) && isInternalRole) {
+            return LoginResult.failure(
+                    "Tài khoản Quản trị / Nhân viên không được đăng nhập tại Cổng Khách hàng. Vui lòng sang Cổng Nội Bộ!",
+                    403);
+        }
+        if ("INTERNAL".equalsIgnoreCase(request.getPortalType()) && !isInternalRole) {
+            return LoginResult.failure(
+                    "Tài khoản Khách hàng không có quyền truy cập Cổng Nội Bộ!",
+                    403);
+        }
+
         if ("UNVERIFIED".equalsIgnoreCase(account.getStatus())
                 || "INACTIVE".equalsIgnoreCase(account.getStatus())
                 || "PENDING_OTP".equalsIgnoreCase(account.getStatus())) {

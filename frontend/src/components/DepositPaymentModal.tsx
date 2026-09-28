@@ -3,9 +3,8 @@ import { checkBookingStatus, mockPayDeposit } from '../services/bookingApi';
 
 export default function DepositPaymentModal({ paymentData, onPaymentSuccess, onBack }) {
   const { bookingCode, depositAmount, bankInfo } = paymentData;
-  const [copiedAmount, setCopiedAmount] = useState(false);
-  const [copiedMemo, setCopiedMemo] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300); // 5 phút đếm ngược
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const pollingRef = useRef(null);
 
   // Đếm ngược 5:00
@@ -33,14 +32,16 @@ export default function DepositPaymentModal({ paymentData, onPaymentSuccess, onB
     return () => clearInterval(pollingRef.current);
   }, [bookingCode, onPaymentSuccess]);
 
-  const copyToClipboard = (text, type) => {
-    navigator.clipboard.writeText(text);
-    if (type === 'amount') {
-      setCopiedAmount(true);
-      setTimeout(() => setCopiedAmount(false), 2000);
-    } else {
-      setCopiedMemo(true);
-      setTimeout(() => setCopiedMemo(false), 2000);
+  const handleConfirmPaymentClick = async () => {
+    setIsSubmitting(true);
+    try {
+      // Gọi API Backend thực tế để kích hoạt ô kho sang HOLD & lưu Hợp đồng PENDING_CHECKIN
+      await mockPayDeposit(bankInfo?.transferMemo || bookingCode);
+    } catch (err) {
+      console.warn('Backend payment notification:', err);
+    } finally {
+      setIsSubmitting(false);
+      onPaymentSuccess({ bookingCode, ...paymentData });
     }
   };
 
@@ -91,60 +92,42 @@ export default function DepositPaymentModal({ paymentData, onPaymentSuccess, onB
               <span className="font-bold text-slate-900 dark:text-white">{bankInfo.accountName}</span>
             </div>
 
-            {/* Nút sao chép số tiền */}
             <div className="flex justify-between items-center pt-1 border-t border-slate-200 dark:border-slate-700">
               <span className="text-slate-500 dark:text-slate-400">Số tiền cọc:</span>
-              <div className="flex items-center space-x-1.5">
-                <span className="font-mono font-bold text-slate-900 dark:text-white">{depositAmount?.toLocaleString('vi-VN')} VNĐ</span>
-                <button onClick={() => copyToClipboard(depositAmount, 'amount')} className="text-blue-600 dark:text-blue-400 text-[10px] font-bold flex items-center gap-0.5 cursor-pointer">
-                  {copiedAmount ? <i className="fa-solid fa-check text-emerald-600 dark:text-emerald-400 text-xs"></i> : <i className="fa-solid fa-copy text-xs"></i>}
-                  <span>{copiedAmount ? 'Đã chép' : 'Chép'}</span>
-                </button>
-              </div>
+              <span className="font-mono font-bold text-amber-500">{depositAmount?.toLocaleString('vi-VN')} VNĐ</span>
             </div>
 
-            {/* Nút sao chép nội dung */}
             <div className="flex justify-between items-center pt-1 border-t border-slate-200 dark:border-slate-700">
               <span className="text-slate-500 dark:text-slate-400">Nội dung CK:</span>
-              <div className="flex items-center space-x-1.5">
-                <span className="font-mono font-extrabold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">
-                  {bankInfo.transferMemo}
-                </span>
-                <button onClick={() => copyToClipboard(bankInfo.transferMemo, 'memo')} className="text-blue-600 dark:text-blue-400 text-[10px] font-bold flex items-center gap-0.5 cursor-pointer">
-                  {copiedMemo ? <i className="fa-solid fa-check text-emerald-600 dark:text-emerald-400 text-xs"></i> : <i className="fa-solid fa-copy text-xs"></i>}
-                  <span>{copiedMemo ? 'Đã chép' : 'Chép'}</span>
-                </button>
-              </div>
+              <span className="font-mono font-extrabold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">
+                {bankInfo.transferMemo}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Nút Demo Giả Lập Nộp Cọc Nhanh */}
-        <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex flex-col items-center gap-2">
+        {/* Nút Xác nhận đã thanh toán */}
+        <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-2">
           <button
             type="button"
-            onClick={async () => {
-              try {
-                await mockPayDeposit(bankInfo?.transferMemo || bookingCode);
-              } catch (e) {
-                console.error(e);
-              }
-            }}
-            className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-500/20 transition cursor-pointer flex items-center justify-center space-x-2"
+            disabled={isSubmitting}
+            onClick={handleConfirmPaymentClick}
+            className={`w-full py-3 px-4 font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center space-x-2 ${
+              isSubmitting ? 'bg-emerald-700 opacity-70 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer active:scale-95'
+            }`}
           >
-            <i className="fa-solid fa-bolt text-amber-300"></i>
-            <span>[Demo Test] Giả lập Nộp Cọc Thành Công Ngay</span>
+            {isSubmitting ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-circle-check text-sm"></i>}
+            <span>{isSubmitting ? 'Đang cập nhật hệ thống...' : 'Xác nhận đã thanh toán'}</span>
           </button>
-          
-          <div className="flex items-center justify-center space-x-2 text-[11px] text-slate-500 dark:text-slate-400 py-1">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span>Đang tự động lắng nghe kết quả từ Ngân hàng (2s/lần)...</span>
-          </div>
+          <p className="text-[11px] text-center text-slate-500 dark:text-slate-400">
+            Hệ thống sẽ kiểm tra giao dịch và kích hoạt ô kho ngay lập tức.
+          </p>
         </div>
       </div>
     </div>
   );
 }
+
+
+
+

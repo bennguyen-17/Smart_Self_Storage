@@ -1,27 +1,36 @@
 import React, { useState } from 'react';
 
-export default function DraftContractModal({ bookingData, onProceedToPayment, onClose }) {
+export default function DraftContractModal({ bookingData, onProceedToPayment, onClose, isLoading }: { bookingData: any; onProceedToPayment: () => void; onClose?: () => void; isLoading?: boolean }) {
   const [agreed, setAgreed] = useState(false);
 
+  // Lay ngay check-out nguyen ban khong co chu (xx ngay)
+  const displayEndDate = bookingData.endDate ? bookingData.endDate.split(' ')[0] : 'Chưa xác định';
+
+  const handleConfirmClick = () => {
+    if (agreed && onProceedToPayment && !isLoading) {
+      onProceedToPayment();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] modal-animate-pop">
+    <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh] modal-animate-pop">
         
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/90">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow">
-              <i className="fa-solid fa-file-lines text-lg"></i>
-            </div>
-            <div>
-              <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">HỢP ĐỒNG DỰ THẢO & THỎA THUẬN ĐẶT CỌC</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Xem xét điều khoản trước khi thanh toán cọc</p>
-            </div>
+          <div>
+            <h3 className="font-extrabold text-slate-900 dark:text-white text-lg flex items-center gap-2">
+              <i className="fa-solid fa-file-signature text-amber-500"></i>
+              <span>Thỏa thuận đặt cọc kho</span>
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Vui lòng xem lại thông tin giữ chỗ và các quy định trước khi tiến hành thanh toán
+            </p>
           </div>
           {onClose && (
             <button 
               onClick={onClose} 
-              className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center text-sm transition cursor-pointer"
+              className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-sm transition cursor-pointer"
             >
               ✕
             </button>
@@ -30,96 +39,131 @@ export default function DraftContractModal({ bookingData, onProceedToPayment, on
 
         {/* Nội dung chính */}
         <div className="p-6 space-y-5 overflow-y-auto">
-          {/* Bảng tóm tắt thông tin */}
-          <div className="bg-blue-50/80 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-2xl p-4 space-y-3">
-            <div className="flex justify-between items-center border-b border-blue-200/50 dark:border-blue-800/40 pb-2">
-              <span className="text-xs font-bold text-blue-900 dark:text-blue-300 uppercase">Tóm tắt thông tin đặt chỗ</span>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-600 dark:bg-blue-500 text-white">
-                Cọc: {bookingData.depositAmount?.toLocaleString('vi-VN')} VNĐ
+          {/* Thông tin thuê kho */}
+          <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200 dark:border-slate-700/60">
+              <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <i className="fa-solid fa-box-archive text-amber-500"></i> Thông tin ô kho
+              </span>
+              <span className="text-slate-500 dark:text-slate-400">
+                Chi nhánh: <strong className="text-slate-900 dark:text-white">{bookingData.facilityName}</strong>
               </span>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-              <div className="bg-white dark:bg-slate-800/80 p-2.5 rounded-xl border border-blue-100 dark:border-slate-700/60">
-                <span className="text-slate-500 dark:text-slate-400 text-[10px] block flex items-center gap-1">
-                  <i className="fa-solid fa-location-dot text-rose-500"></i> Chi nhánh
-                </span>
-                <span className="font-bold text-slate-900 dark:text-white truncate block">{bookingData.facilityName}</span>
+              <div className="bg-white dark:bg-slate-800/80 p-3 rounded-lg border border-slate-200/80 dark:border-slate-700/70">
+                <span className="text-slate-500 dark:text-slate-400 text-[11px] block whitespace-nowrap">Mã kho</span>
+                <span className="font-mono font-bold text-amber-500 text-sm block mt-0.5">{bookingData.unitId}</span>
               </div>
-              <div className="bg-white dark:bg-slate-800/80 p-2.5 rounded-xl border border-blue-100 dark:border-slate-700/60">
-                <span className="text-slate-500 dark:text-slate-400 text-[10px] block flex items-center gap-1">
-                  <i className="fa-solid fa-box text-amber-500"></i> Mã ô kho
-                </span>
-                <span className="font-mono font-black text-blue-600 dark:text-blue-400 block">{bookingData.unitId}</span>
+
+              <div className="bg-white dark:bg-slate-800/80 p-3 rounded-lg border border-slate-200/80 dark:border-slate-700/70">
+                <span className="text-slate-500 dark:text-slate-400 text-[11px] block whitespace-nowrap">Ngày nhận (Check-in)</span>
+                <span className="font-semibold text-blue-600 dark:text-blue-400 block mt-0.5">{bookingData.startDate}</span>
               </div>
-              <div className="bg-white dark:bg-slate-800/80 p-2.5 rounded-xl border border-blue-100 dark:border-slate-700/60">
-                <span className="text-slate-500 dark:text-slate-400 text-[10px] block flex items-center gap-1">
-                  <i className="fa-solid fa-up-right-and-down-left-from-center text-emerald-500"></i> Diện tích
-                </span>
-                <span className="font-bold text-slate-900 dark:text-white block">{bookingData.unitSize}</span>
+
+              <div className="bg-white dark:bg-slate-800/80 p-3 rounded-lg border border-slate-200/80 dark:border-slate-700/70">
+                <span className="text-slate-500 dark:text-slate-400 text-[11px] block whitespace-nowrap">Hạn trả (Check-out)</span>
+                <span className="font-semibold text-indigo-600 dark:text-indigo-400 block mt-0.5">{displayEndDate}</span>
               </div>
-              <div className="bg-white dark:bg-slate-800/80 p-2.5 rounded-xl border border-blue-100 dark:border-slate-700/60">
-                <span className="text-slate-500 dark:text-slate-400 text-[10px] block flex items-center gap-1">
-                  <i className="fa-solid fa-calendar text-indigo-500"></i> Ngày nhận kho
+
+              <div className="bg-white dark:bg-slate-800/80 p-3 rounded-lg border border-slate-200/80 dark:border-slate-700/70">
+                <span className="text-slate-500 dark:text-slate-400 text-[11px] block whitespace-nowrap">Ước tính tiền thuê</span>
+                <span className="font-semibold text-slate-900 dark:text-white block mt-0.5">
+                  {bookingData.estimatedTotalRental ? `${bookingData.estimatedTotalRental.toLocaleString('vi-VN')} đ` : 'Chưa tính'}
                 </span>
-                <span className="font-bold text-slate-900 dark:text-white block">{bookingData.startDate}</span>
               </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-700/60 text-xs">
+              <span className="font-medium text-slate-700 dark:text-slate-300">Tiền cọc giữ chỗ:</span>
+              <span className="text-lg font-mono font-bold text-amber-500">
+                {bookingData.depositAmount?.toLocaleString('vi-VN')} VNĐ
+              </span>
             </div>
           </div>
 
-          {/* Khung Hợp đồng dự thảo (cho phép cuộn) */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-              <i className="fa-solid fa-shield-halved text-blue-600 dark:text-blue-400"></i> Điều khoản Hợp đồng dự thảo (Cuộn để xem):
+          {/* Điều khoản thỏa thuận */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              <i className="fa-solid fa-file-shield text-blue-500"></i> Điều khoản thuê & Quy định hủy cọc:
             </label>
-            <div className="h-44 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-slate-50 dark:bg-slate-950/60 text-slate-600 dark:text-slate-300 text-xs overflow-y-auto space-y-3 leading-relaxed shadow-inner">
-              <h4 className="font-bold text-slate-900 dark:text-white text-center uppercase border-b border-slate-200 dark:border-slate-800 pb-2">HỢP ĐỒNG THỎA THUẬN GIỮ CHỖ & THUÊ KHO TỰ PHỤC VỤ (DỰ THẢO)</h4>
-              <p><b>Điều 1: Mục đích Đặt cọc</b><br/>Bên thuê đồng ý đặt cọc khoản tiền nêu trên để giữ chỗ ô kho <b className="text-slate-900 dark:text-white">{bookingData.unitId}</b> tại chi nhánh {bookingData.facilityName}.</p>
-              <p><b>Điều 2: Quy chế Thuê kho & An toàn (BR-12)</b><br/>- Bên thuê cam kết không lưu trữ chất cấm, chất cháy nổ.<br/>- Hệ thống IoT & CCTV giám sát 24/7. Bên thuê tự bảo quản mã PIN truy cập cổng.</p>
-              <p><b>Điều 3: Chính sách Hoàn / Hủy cọc (BR-14)</b><br/>- Hủy trước 48h tính từ ngày hẹn nhận kho ({bookingData.startDate}): Hoàn 100% tiền cọc.<br/>- Hủy sau 48h hoặc không nhận kho đúng hạn: Tiền cọc không được hoàn lại.</p>
+
+            <div className="h-44 border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-slate-50 dark:bg-slate-950/50 text-slate-600 dark:text-slate-300 text-xs overflow-y-auto space-y-3 leading-relaxed border-slate-200 dark:border-slate-800 focus:outline-none [scrollbar-color:rgba(148,163,184,0.3)_transparent] [scrollbar-width:thin]">
+              <p className="font-bold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-1.5">
+                Các điều khoản chính khi đặt giữ chỗ kho
+              </p>
+
+              <p>
+                <strong>1. Mục đích cọc giữ chỗ:</strong> Khoản tiền cọc dùng để bảo lưu ô kho <strong>{bookingData.unitId}</strong> tại chi nhánh {bookingData.facilityName} cho bạn kể từ ngày nhận kho <strong>{bookingData.startDate}</strong>.
+              </p>
+
+              <div className="space-y-1">
+                <strong className="text-slate-900 dark:text-white block">2. Chính sách hủy cọc:</strong>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>Hủy trước ngày nhận kho từ 7 ngày trở lên: Bạn được hoàn lại 100% tiền cọc.</li>
+                  <li>Hủy trước ngày nhận kho dưới 7 ngày: Bạn sẽ bị tính phí hủy 50% tiền cọc và nhận lại 50% còn lại.</li>
+                </ul>
+              </div>
+
+              <div className="space-y-1">
+                <strong className="text-slate-900 dark:text-white block">3. Quy định nhận kho và không đến nhận:</strong>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>Giờ nhận kho tiêu chuẩn diễn ra từ 08:00 đến 20:00 trong ngày hẹn check-in ({bookingData.startDate}).</li>
+                  <li>Nếu sau 00:00 ngày tiếp theo bạn không đến nhận kho và không liên hệ xin gia hạn, hệ thống sẽ tự động hủy lịch đặt và không hoàn lại tiền cọc.</li>
+                </ul>
+              </div>
+
+              <p>
+                <strong>4. Quy định an toàn:</strong> Không lưu trữ hàng cấm, chất dễ cháy nổ, thực phẩm tươi sống hoặc hàng hóa vi phạm pháp luật. Khách hàng chịu trách nhiệm bảo mật mã PIN cá nhân để truy cập kho.
+              </p>
             </div>
           </div>
 
-          {/* Hộp kiểm Clickwrap */}
-          <div className="p-4 rounded-2xl bg-amber-500/10 dark:bg-amber-950/20 border border-amber-500/30 dark:border-amber-500/40">
-            <label className="flex items-start space-x-3 cursor-pointer select-none">
+          {/* Đồng ý điều khoản */}
+          <div className="p-3.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70">
+            <label className="flex items-start space-x-2.5 cursor-pointer select-none">
               <input 
                 type="checkbox"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                className="mt-0.5 w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500 cursor-pointer accent-amber-500"
               />
-              <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                Tôi đã đọc, hiểu rõ và đồng ý với <span className="text-blue-700 dark:text-blue-400 font-bold underline">Quy chế thuê kho</span> và <span className="text-blue-700 dark:text-blue-400 font-bold underline">Chính sách hoàn hủy cọc (BR-12, BR-14)</span>.
+              <span className="text-xs text-slate-700 dark:text-slate-300 leading-normal">
+                Tôi đã đọc và đồng ý với các điều khoản thuê kho, quy định hoàn hủy cọc và thời gian nhận kho nêu trên.
               </span>
             </label>
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div className="p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-end space-x-3">
+        <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-end space-x-3">
           {onClose && (
             <button 
               onClick={onClose} 
-              className="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+              className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
             >
-              Hủy bỏ
+              Hủy
             </button>
           )}
           <button
-            disabled={!agreed}
-            onClick={onProceedToPayment}
-            className={`px-6 py-3 rounded-xl font-extrabold text-xs shadow-lg transition flex items-center space-x-2 ${
-              agreed
-                ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer shadow-amber-500/20'
-                : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none'
+            type="button"
+            disabled={!agreed || isLoading}
+            onClick={handleConfirmClick}
+            className={`px-5 py-2.5 rounded-lg font-bold text-xs transition flex items-center gap-2 ${
+              agreed && !isLoading
+                ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer shadow-sm active:scale-95'
+                : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
             }`}
           >
-            <span>XÁC NHẬN & TIẾN HÀNH THANH TOÁN CỌC</span>
-            <i className="fa-solid fa-chevron-right text-xs"></i>
+            {isLoading && <i className="fa-solid fa-spinner animate-spin"></i>}
+            <span>{isLoading ? 'Đang khởi tạo mã cọc...' : 'Xác nhận & Thanh toán cọc'}</span>
           </button>
         </div>
       </div>
     </div>
   );
 }
+
+
+
+

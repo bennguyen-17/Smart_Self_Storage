@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public class HoldUnitResponse {
     private boolean success;
-    private Integer holdId;
+    private String holdId;
     private String message;
     private LocalDateTime holdExpiresAt;
 
@@ -26,11 +26,11 @@ public class HoldUnitResponse {
         this.success = success;
     }
 
-    public Integer getHoldId() {
+    public String getHoldId() {
         return holdId;
     }
 
-    public void setHoldId(Integer holdId) {
+    public void setHoldId(String holdId) {
         this.holdId = holdId;
     }
 

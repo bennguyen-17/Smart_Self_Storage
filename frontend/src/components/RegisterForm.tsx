@@ -215,7 +215,7 @@ function RegisterForm() {
   return (
     <div className="w-full">
       <div className="mb-4 space-y-1">
-        <h1 className="text-xl font-bold">Tạo tài khoản mới</h1>
+        <h1 className="text-xl font-bold text-foreground">Tạo tài khoản mới</h1>
         <p className="text-xs text-muted-foreground">
           Đăng ký nhanh chóng để nhận mã mở kho tự quản
         </p>

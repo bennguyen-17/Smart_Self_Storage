@@ -16,7 +16,7 @@ import java.util.Optional;
 @Repository
 public interface StorageUnitRepository extends JpaRepository<StorageUnit, Integer> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<StorageUnit> findByUnitId(Integer unitId);
+    Optional<StorageUnit> findByUnitCode(String unitCode);
 
     @Modifying
     @Query("UPDATE StorageUnit unit "

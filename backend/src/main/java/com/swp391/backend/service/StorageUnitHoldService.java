@@ -21,8 +21,8 @@ public class StorageUnitHoldService {
     }
 
     @Transactional
-    public HoldUnitResponse holdUnit(Integer unitId, Integer accountId) {
-        Optional<StorageUnit> unitOptional = storageUnitRepository.findByUnitId(unitId);
+    public HoldUnitResponse holdUnit(String unitCode, Integer accountId) {
+        Optional<StorageUnit> unitOptional = storageUnitRepository.findByUnitCode(unitCode);
 
         if (unitOptional.isEmpty()) {
             return HoldUnitResponse.error("Không tìm thấy kho lưu trữ.");
@@ -53,7 +53,7 @@ public class StorageUnitHoldService {
 
         HoldUnitResponse response = new HoldUnitResponse();
         response.setSuccess(true);
-        response.setHoldId(unit.getUnitId());
+        response.setHoldId(unit.getUnitCode());
         response.setMessage("Giữ chỗ kho lưu trữ thành công.");
         response.setHoldExpiresAt(holdExpiresAt);
 

@@ -1,16 +1,16 @@
 package com.swp391.backend.dto;
 
 public class HoldUnitRequest {
-    private Integer unitId;
+    private String unitId;
 
     public HoldUnitRequest() {
     }
 
-    public Integer getUnitId() {
+    public String getUnitId() {
         return unitId;
     }
 
-    public void setUnitId(Integer unitId) {
+    public void setUnitId(String unitId) {
         this.unitId = unitId;
     }
 

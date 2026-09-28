@@ -25,7 +25,7 @@ function ThemeToggle() {
         <Sun className="size-3.5 text-amber-500" />
       )}
 
-      <span className="text-[11px]">{isDark ? "Tối" : "Sáng"}</span>
+      <span className="text-[11px] text-foreground">{isDark ? "Tối" : "Sáng"}</span>
     </Button>
   )
 }

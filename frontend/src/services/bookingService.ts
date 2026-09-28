@@ -54,12 +54,32 @@ export const createDepositTransaction = async (bookingData: any) => {
       } catch (e) {}
     }
 
+    // Format YYYY-MM-DD tu chuoi dd/mm/yyyy hoac ISO
+    const parseToIsoDate = (dStr: string) => {
+      if (!dStr) return new Date().toISOString().split('T')[0];
+      if (dStr.includes('/')) {
+        const parts = dStr.split('/');
+        if (parts.length === 3) {
+          return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        }
+      }
+      return dStr.split(' ')[0];
+    };
+
+    const sDate = parseToIsoDate(bookingData.startDate);
+    let eDate = parseToIsoDate(bookingData.endDate);
+    if (!eDate || eDate === sDate) {
+      const d = new Date(sDate);
+      d.setDate(d.getDate() + (bookingData.effectiveDays || 30));
+      eDate = d.toISOString().split('T')[0];
+    }
+
     const payload = {
       accountId: accountId,
-      unitId: bookingData.unitId || bookingData.id || 1,
-      rentalType: bookingData.rentalType || 'MONTHLY',
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      unitCode: bookingData.unitId || bookingData.unitCode || bookingData.id || 'HN01-G-XL04',
+      rentalType: bookingData.effectiveDays && bookingData.effectiveDays < 30 ? 'DAILY' : 'MONTHLY',
+      startDate: sDate,
+      endDate: eDate,
       agreedClickwrap: true
     };
 
