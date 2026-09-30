@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react"
 
 import BrandLogo from "@/components/BrandLogo"
 import ThemeToggle from "@/components/ThemeToggle"
-import VantaFogBackground from "@/components/three-background/VantaFogBackground"
+import VantaDotsBackground from "@/components/three-background/VantaDotsBackground"
 
 interface InternalAuthLayoutProps {
   children: ReactNode
@@ -14,8 +14,8 @@ interface InternalAuthLayoutProps {
 function InternalAuthLayout({ children }: InternalAuthLayoutProps) {
   return (
     <div className="relative flex min-h-svh flex-col overflow-hidden">
-      {/* 3D VANTA FOG ANIMATED BACKGROUND */}
-      <VantaFogBackground />
+      {/* 3D VANTA DOTS ANIMATED BACKGROUND */}
+      <VantaDotsBackground />
 
       {/* HEADER */}
       <header className="sticky top-0 z-30 flex h-16 w-full shrink-0 items-center justify-between border-b border-sky-100/80 bg-white/75 px-6 backdrop-blur-md transition-colors sm:px-10 dark:border-slate-800 dark:bg-slate-950/75">
