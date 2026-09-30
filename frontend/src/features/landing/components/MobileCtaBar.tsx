@@ -8,7 +8,7 @@ import {
 
 import { CTA, ROUTES } from "../content/site"
 import { DURATION, EASE_OUT_QUART } from "../motion/presets"
-import { CallLink, LandingLink } from "./LandingButton"
+import { LandingLink } from "./LandingButton"
 
 /** Thanh CTA dính dưới đáy, chỉ hiện dưới md và sau khi đã cuộn qua hero. */
 export function MobileCtaBar() {
@@ -30,12 +30,9 @@ export function MobileCtaBar() {
           exit={{ y: "100%" }}
           transition={{ duration: DURATION.base, ease: EASE_OUT_QUART }}
         >
-          <div className="flex gap-3">
-            <LandingLink to={ROUTES.book} size="md" className="flex-1">
-              {CTA.book}
-            </LandingLink>
-            <CallLink size="md" label={CTA.callShort} />
-          </div>
+          <LandingLink to={ROUTES.book} size="md" className="w-full justify-center shadow-lg shadow-blue-500/25">
+            {CTA.book}
+          </LandingLink>
         </motion.div>
       )}
     </AnimatePresence>

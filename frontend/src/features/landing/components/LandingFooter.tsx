@@ -1,75 +1,125 @@
 import { Link } from "react-router-dom"
-import { Warehouse } from "lucide-react"
+import { ArrowRight, ChevronRight, MapPin, ShieldCheck, Warehouse } from "lucide-react"
 
 import { FOOTER } from "../content/copy"
 import { CITIES } from "../content/facilities"
 import { navSections } from "../content/sections"
-import { CTA, HOTLINE, ROUTES, SITE } from "../content/site"
-
-const linkClass =
-  "rounded-md outline-none transition-colors hover:text-(--l-link) focus-visible:ring-3 focus-visible:ring-ring/50"
+import { CTA, ROUTES, SITE } from "../content/site"
 
 export function LandingFooter() {
   return (
-    <footer className="border-t border-border pb-28 md:pb-0">
-      <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
-        <div className="flex flex-col gap-3">
-          <span className="flex items-center gap-3 text-lg font-semibold tracking-tight">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <Warehouse className="size-4.5" aria-hidden />
+    <footer className="relative overflow-hidden border-t border-border/80 bg-gradient-to-b from-transparent via-muted/30 to-muted/70 pb-28 backdrop-blur-sm md:pb-0 dark:via-card/20 dark:to-card/50">
+      <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8 lg:px-8">
+        {/* Cột 1: Thương hiệu & Giới thiệu */}
+        <div className="flex flex-col gap-4 lg:col-span-4">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/30">
+              <Warehouse className="size-5" aria-hidden />
             </span>
-            {SITE.brand}
-          </span>
-          <p className="text-muted-foreground">{FOOTER.tagline}</p>
-          <p>
-            <span className="text-muted-foreground">
-              {FOOTER.hotlineLabel}:{" "}
+            <span className="text-xl font-black tracking-tight text-foreground">
+              {SITE.brand}
             </span>
-            {HOTLINE.tel ? (
-              <a
-                href={`tel:${HOTLINE.tel}`}
-                className={`font-semibold tabular-nums ${linkClass}`}
-              >
-                {HOTLINE.display}
-              </a>
-            ) : (
-              <span className="font-semibold tabular-nums">
-                {HOTLINE.display}
-              </span>
-            )}
+          </div>
+
+          <p className="max-w-[34ch] text-[0.9375rem] leading-relaxed text-muted-foreground">
+            {FOOTER.tagline}
           </p>
+
+          <div className="flex items-center gap-2 pt-1 text-xs font-medium text-muted-foreground">
+            <span className="flex size-2 rounded-full bg-blue-500" />
+            <span>Mở cửa tự động & hỗ trợ trực tuyến 24/7</span>
+          </div>
         </div>
 
-        <nav aria-label="Liên kết cuối trang">
-          <ul className="flex flex-col gap-2.5">
-            {navSections.map((s) => (
-              <li key={s.id}>
-                <a href={`#${s.id}`} className={linkClass}>
-                  {s.navLabel}
+        {/* Cột 2: Khám phá dịch vụ */}
+        <div className="flex flex-col gap-4 lg:col-span-3">
+          <p className="text-sm font-bold tracking-wider uppercase text-foreground">
+            Khám phá dịch vụ
+          </p>
+          <nav aria-label="Khám phá dịch vụ">
+            <ul className="flex flex-col gap-3 text-[0.9375rem]">
+              {navSections.map((s) => (
+                <li key={s.id}>
+                  <a
+                    href={`#${s.id}`}
+                    className="group inline-flex items-center gap-1.5 text-muted-foreground transition-all duration-200 hover:translate-x-1 hover:text-blue-600 dark:hover:text-blue-400"
+                  >
+                    <ChevronRight className="size-3.5 text-muted-foreground/50 transition-colors group-hover:text-blue-500" />
+                    <span>{s.navLabel}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+
+        {/* Cột 3: Mạng lưới chi nhánh */}
+        <div className="flex flex-col gap-4 lg:col-span-3">
+          <p className="text-sm font-bold tracking-wider uppercase text-foreground">
+            Mạng lưới cơ sở
+          </p>
+          <ul className="flex flex-col gap-3 text-[0.9375rem]">
+            {CITIES.map((c) => (
+              <li key={c.id}>
+                <a
+                  href="#facilities"
+                  className="group inline-flex items-center gap-2 text-muted-foreground transition-all duration-200 hover:translate-x-1 hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  <MapPin className="size-4 text-blue-500/70 transition-colors group-hover:text-blue-500" />
+                  <span>{c.label}</span>
                 </a>
               </li>
             ))}
+          </ul>
+        </div>
+
+        {/* Cột 4: Truy cập nhanh */}
+        <div className="flex flex-col gap-4 lg:col-span-2">
+          <p className="text-sm font-bold tracking-wider uppercase text-foreground">
+            Tài khoản & Đặt kho
+          </p>
+          <ul className="flex flex-col gap-3 text-[0.9375rem]">
             <li>
-              <Link to={ROUTES.login} className={linkClass}>
-                {CTA.login}
+              <Link
+                to={ROUTES.book}
+                className="group inline-flex items-center gap-1.5 font-semibold text-blue-600 transition-all duration-200 hover:translate-x-1 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+              >
+                <span>{CTA.book}</span>
+                <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </li>
-          </ul>
-        </nav>
-
-        <div className="flex flex-col gap-2.5">
-          <p className="font-semibold">Có mặt tại</p>
-          <ul className="flex flex-col gap-2.5 text-muted-foreground">
-            {CITIES.map((c) => (
-              <li key={c.id}>{c.label}</li>
-            ))}
+            <li>
+              <Link
+                to={ROUTES.login}
+                className="group inline-flex items-center gap-1.5 text-muted-foreground transition-all duration-200 hover:translate-x-1 hover:text-blue-600 dark:hover:text-blue-400"
+              >
+                <ChevronRight className="size-3.5 text-muted-foreground/50 transition-colors group-hover:text-blue-500" />
+                <span>{CTA.login}</span>
+              </Link>
+            </li>
+            <li className="pt-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:bg-emerald-400/15 dark:text-emerald-400">
+                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                Hệ thống mở 24/7
+              </span>
+            </li>
           </ul>
         </div>
       </div>
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <p className="border-t border-border py-6 text-sm text-muted-foreground">
-          {FOOTER.copyright}
-        </p>
+
+      {/* Bottom Copyright Bar */}
+      <div className="relative z-10 border-t border-border/70">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
+          <p>{FOOTER.copyright}</p>
+          <div className="flex items-center gap-6">
+            <span className="inline-flex items-center gap-1">
+              <ShieldCheck className="size-3.5 text-blue-500" />
+              Bảo mật tiêu chuẩn quốc tế
+            </span>
+            <span>Điều khoản dịch vụ</span>
+            <span>Chính sách bảo mật</span>
+          </div>
+        </div>
       </div>
     </footer>
   )
