@@ -85,11 +85,11 @@ export const Carousel = ({ items, initialScroll = 0 }: CarouselProps) => {
     >
       <div className="relative w-full">
         <div
-          className="flex w-full overflow-x-auto overscroll-x-auto py-4 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="flex w-full overflow-x-auto overscroll-x-auto py-2 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           ref={carouselRef}
           onScroll={checkScrollability}
         >
-          <div className="flex flex-row justify-start gap-4 sm:gap-6 px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-row justify-start gap-4 sm:gap-6 pb-2">
             {items.map((item, index) => (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -112,22 +112,22 @@ export const Carousel = ({ items, initialScroll = 0 }: CarouselProps) => {
         </div>
 
         {/* Carousel Arrow Controls */}
-        <div className="flex justify-end gap-2 px-4 sm:px-6 lg:px-8 mt-4">
+        <div className="flex justify-end gap-2 mt-4">
           <button
-            className="relative z-40 flex h-11 w-11 items-center justify-center rounded-full border border-slate-200/80 bg-white/90 shadow-md backdrop-blur-md transition-all hover:bg-slate-100 hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 disabled:pointer-events-none cursor-pointer dark:border-slate-700 dark:bg-slate-800/90 dark:hover:bg-slate-700"
+            className="relative z-40 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/80 bg-card/90 shadow-sm backdrop-blur-md transition-all hover:bg-muted hover:scale-105 disabled:opacity-30 disabled:hover:scale-100 disabled:pointer-events-none cursor-pointer"
             onClick={scrollLeft}
             disabled={!canScrollLeft}
             aria-label="Cuộn sang trái"
           >
-            <ArrowLeft className="h-5 w-5 text-slate-700 dark:text-slate-200" />
+            <ArrowLeft className="h-4 w-4 text-foreground" />
           </button>
           <button
-            className="relative z-40 flex h-11 w-11 items-center justify-center rounded-full border border-slate-200/80 bg-white/90 shadow-md backdrop-blur-md transition-all hover:bg-slate-100 hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 disabled:pointer-events-none cursor-pointer dark:border-slate-700 dark:bg-slate-800/90 dark:hover:bg-slate-700"
+            className="relative z-40 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/80 bg-card/90 shadow-sm backdrop-blur-md transition-all hover:bg-muted hover:scale-105 disabled:opacity-30 disabled:hover:scale-100 disabled:pointer-events-none cursor-pointer"
             onClick={scrollRight}
             disabled={!canScrollRight}
             aria-label="Cuộn sang phải"
           >
-            <ArrowRight className="h-5 w-5 text-slate-700 dark:text-slate-200" />
+            <ArrowRight className="h-4 w-4 text-foreground" />
           </button>
         </div>
       </div>
@@ -227,7 +227,7 @@ export const Card = ({
       <motion.button
         layoutId={layout ? `card-${card.title}` : undefined}
         onClick={handleOpen}
-        className="group relative flex h-96 w-72 sm:h-[460px] sm:w-[320px] md:h-[500px] md:w-[350px] flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 bg-slate-100 text-left shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl cursor-pointer dark:border-slate-800 dark:bg-slate-900"
+        className="group relative flex h-96 w-[260px] sm:h-[440px] sm:w-[290px] md:h-[480px] md:w-[310px] flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 bg-slate-100 text-left shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl cursor-pointer dark:border-slate-800 dark:bg-slate-900"
       >
         {/* Background Image with Zoom on Hover */}
         <img
