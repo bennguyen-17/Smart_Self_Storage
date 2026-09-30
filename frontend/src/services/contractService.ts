@@ -2,34 +2,7 @@ import apiClient, { isMockMode } from './apiClient';
 import { releaseUnit } from './facilityService';
 
 // Dữ liệu mẫu danh sách hợp đồng kho của tôi (Khớp bảng Contract + StorageUnit trong MySQL)
-const MOCK_CONTRACTS = [
-  {
-    contractId: '#HD-1',
-    rawContractId: 1,
-    unitCode: 'HN01-G-XL02',
-    branchName: 'SmartStorage Cầu Giấy (HN-01)',
-    branchCode: 'HN-01',
-    size: 'XL',
-    sizeLabel: 'Size XL (Kho doanh nghiệp)',
-    expiryDate: '10/10/2026',
-    daysLeft: 30,
-    status: 'ACTIVE',
-    statusLabel: 'HIỆU LỰC'
-  },
-  {
-    contractId: '#HD-2',
-    rawContractId: 2,
-    unitCode: 'HN02-F1-M08',
-    branchName: 'SmartStorage Thanh Xuân (HN-02)',
-    branchCode: 'HN-02',
-    size: 'M',
-    sizeLabel: 'Size M',
-    expiryDate: '24/10/2026',
-    daysLeft: 44,
-    status: 'ACTIVE',
-    statusLabel: 'HIỆU LỰC'
-  }
-];
+const MOCK_CONTRACTS: any[] = [];
 
 // Mã PIN mẫu
 const MOCK_PINS = {
@@ -42,7 +15,14 @@ export const getLocalContracts = () => {
     const raw = localStorage.getItem('smart_storage_contracts');
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Lọc bỏ triệt để các mã mock bị fix cứng như #HD-2
+        const cleaned = parsed.filter((c: any) => c.contractId !== '#HD-2' && c.rawContractId !== 2);
+        if (cleaned.length !== parsed.length) {
+          localStorage.setItem('smart_storage_contracts', JSON.stringify(cleaned));
+        }
+        return cleaned;
+      }
     }
   } catch (e) {}
   return [...MOCK_CONTRACTS];
@@ -90,6 +70,7 @@ export const addNewBookingContract = (bookingData: any) => {
     branchCode: branchCode,
     size: bookingData.unitSize?.replace('Size ', '') || 'XL',
     sizeLabel: bookingData.unitSize || 'Size XL',
+    startDate: bookingData.startDate || new Date().toLocaleDateString('vi-VN'),
     expiryDate: bookingData.endDate ? bookingData.endDate.split(' ')[0] : '30 ngày tới',
     daysLeft: bookingData.effectiveDays || 30,
     status: 'PENDING_CHECKIN',
@@ -151,56 +132,74 @@ export const getMyContracts = async () => {
 
   try {
     const userStr = localStorage.getItem('user');
-    let accountId = 7;
+    let accountId: number | undefined = undefined;
     if (userStr) {
       try {
         const u = JSON.parse(userStr);
-        accountId = u.accountId || u.id || 7;
+        accountId = u.accountId || u.id;
       } catch (e) {}
     }
 
     const res: any = await apiClient.get('/contracts/my-contracts', {
-      params: { accountId }
+      params: accountId ? { accountId } : undefined
     });
     const apiData = res.data || res;
     if (Array.isArray(apiData) && apiData.length > 0) {
-      const mappedApiData = apiData.map((c: any) => {
-        let statusLabel = c.statusLabel || c.status;
-        if (c.status === 'PENDING_CHECKIN') statusLabel = 'CHỜ CHECK-IN';
-        else if (c.status === 'ACTIVE') statusLabel = 'HIỆU LỰC';
-        else if (c.status === 'CANCELED') statusLabel = 'ĐÃ HỦY CỌC';
+      const mappedApiData = apiData
+        .filter((c: any) => c.contractId !== '#HD-2' && c.rawContractId !== 2)
+        .map((c: any) => {
+          let statusLabel = c.statusLabel || c.status;
+          if (c.status === 'PENDING_CHECKIN') statusLabel = 'CHỜ CHECK-IN';
+          else if (c.status === 'ACTIVE') statusLabel = 'HIỆU LỰC';
+          else if (c.status === 'CANCELED') statusLabel = 'ĐÃ HỦY CỌC';
 
-        return {
-          ...c,
-          statusLabel
-        };
-      });
+          return {
+            ...c,
+            statusLabel
+          };
+        });
 
       // Merge newly added local pending contracts if not yet returned by backend
       const apiUnitCodes = new Set(mappedApiData.map((c: any) => c.unitCode));
-      const localOnly = localList.filter((c: any) => !apiUnitCodes.has(c.unitCode) && c.status === 'PENDING_CHECKIN');
+      const localOnly = localList.filter((c: any) => !apiUnitCodes.has(c.unitCode) && c.status === 'PENDING_CHECKIN' && c.contractId !== '#HD-2');
       const merged = [...localOnly, ...mappedApiData];
       saveLocalContracts(merged, false);
       return { success: true, data: merged };
     }
-    return { success: true, data: localList };
+    return { success: true, data: localList.filter((c: any) => c.contractId !== '#HD-2') };
   } catch (error) {
     console.warn('API error, falling back to local contracts:', error);
-    return { success: true, data: localList };
+    return { success: true, data: localList.filter((c: any) => c.contractId !== '#HD-2') };
   }
 };
 
 /**
  * Lấy mã PIN mở cổng IoT 24/7 của cơ sở
+ * QUY TẮC NGHIỆP VỤ BẮT BUỘC:
+ * - Chỉ cơ sở có hợp đồng đang có HIỆU LỰC (ACTIVE) mới được sinh mã PIN.
+ * - Cơ sở chỉ có hợp đồng CHỜ CHECK-IN hoặc ĐÃ HỦY CỌC sẽ bị từ chối cấp PIN.
  * SWAGGER ENDPOINT: GET /api/gate-pins/live?branchCode={code}
  */
 export const getGatePin = async (branchCode: string) => {
+  const localList = getLocalContracts();
+  const hasLocalActive = localList.some(
+    (c: any) => (c.branchCode === branchCode || c.unitCode?.startsWith(branchCode.replace('-', ''))) && c.status === 'ACTIVE'
+  );
+
   if (isMockMode()) {
+    if (!hasLocalActive) {
+      return {
+        success: false,
+        hasAccess: false,
+        message: `Cơ sở ${branchCode} không có hợp đồng nào đang có HIỆU LỰC. Không thể cấp mã PIN!`
+      };
+    }
     const pin = MOCK_PINS[branchCode] || `${Math.floor(100 + Math.random() * 900)} ${Math.floor(100 + Math.random() * 900)}`;
     return {
       success: true,
       data: {
         pin,
+        hasAccess: true,
         ttlSeconds: 15,
         branchCode
       }
@@ -208,19 +207,38 @@ export const getGatePin = async (branchCode: string) => {
   }
 
   try {
+    const userStr = localStorage.getItem('user');
+    let accountId: number | undefined = undefined;
+    if (userStr) {
+      try {
+        const u = JSON.parse(userStr);
+        accountId = u.accountId || u.id;
+      } catch (e) {}
+    }
+
     const res: any = await apiClient.get('/gate-pins/live', {
-      params: { branchCode }
-    });
-    return { success: true, data: res.data || res };
-  } catch (error) {
-    console.warn('API error, falling back to mock pin:', error);
-    return {
-      success: true,
-      data: {
-        pin: `${Math.floor(100 + Math.random() * 900)} ${Math.floor(100 + Math.random() * 900)}`,
-        ttlSeconds: 15,
-        branchCode
+      params: { 
+        branchCode,
+        ...(accountId ? { accountId } : {})
       }
+    });
+
+    const data = res.data || res;
+    if (data.hasAccess === false || data.success === false) {
+      return {
+        success: false,
+        hasAccess: false,
+        message: data.message || 'Cơ sở này không có hợp đồng hiệu lực để cấp mã PIN.'
+      };
+    }
+
+    return { success: true, data };
+  } catch (error: any) {
+    const msg = error.response?.data?.message || 'Cơ sở này hiện không có hợp đồng nào đang có HIỆU LỰC (ACTIVE). Không thể cấp mã PIN!';
+    return {
+      success: false,
+      hasAccess: false,
+      message: msg
     };
   }
 };

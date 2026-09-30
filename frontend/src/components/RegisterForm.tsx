@@ -130,6 +130,7 @@ function PasswordField({
               <InputGroupButton
                 onClick={onToggle}
                 aria-label={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                className="size-7"
               >
                 {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </InputGroupButton>
@@ -228,17 +229,17 @@ function RegisterForm() {
       </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-        <div className="space-y-2.5">
-          <TextField
-            control={form.control}
-            name="fullName"
-            label="Họ và tên đầy đủ"
-            placeholder="Nguyễn Văn A"
-            autoComplete="name"
-          />
+        <div className="space-y-2">
+          {/* Hàng 1: Họ và tên + Số CCCD */}
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            <TextField
+              control={form.control}
+              name="fullName"
+              label="Họ và tên đầy đủ"
+              placeholder="Nguyễn Văn A"
+              autoComplete="name"
+            />
 
-          {/* CCCD + SĐT */}
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <TextField
               control={form.control}
               name="identityNumber"
@@ -246,7 +247,10 @@ function RegisterForm() {
               placeholder="12 chữ số CCCD"
               maxLength={12}
             />
+          </div>
 
+          {/* Hàng 2: Số điện thoại + Email */}
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             <TextField
               control={form.control}
               name="phone"
@@ -256,10 +260,7 @@ function RegisterForm() {
               maxLength={10}
               autoComplete="tel"
             />
-          </div>
 
-          {/* Email + Mật khẩu */}
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <TextField
               control={form.control}
               name="email"
@@ -268,7 +269,10 @@ function RegisterForm() {
               type="email"
               autoComplete="email"
             />
+          </div>
 
+          {/* Hàng 3: Mật khẩu + Xác nhận mật khẩu */}
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             <PasswordField
               control={form.control}
               name="password"
@@ -279,33 +283,32 @@ function RegisterForm() {
               onFocus={() => setPasswordFocused(true)}
               onBlur={() => setPasswordFocused(false)}
             />
-          </div>
 
-          {/* Xác nhận mật khẩu */}
-          <PasswordField
-            control={form.control}
-            name="confirmPassword"
-            label="Xác nhận mật khẩu"
-            placeholder="Nhập lại mật khẩu"
-            visible={showConfirmPassword}
-            onToggle={() => setShowConfirmPassword((prev) => !prev)}
-          />
+            <PasswordField
+              control={form.control}
+              name="confirmPassword"
+              label="Xác nhận mật khẩu"
+              placeholder="Nhập lại mật khẩu"
+              visible={showConfirmPassword}
+              onToggle={() => setShowConfirmPassword((prev) => !prev)}
+            />
+          </div>
 
           {/* Checklist quy tắc mật khẩu */}
           {showPasswordRules && (
-            <ul className="space-y-1">
+            <ul className="space-y-0.5">
               {passwordRuleResults.map((rule) => (
                 <li
                   key={rule.label}
                   className={cn(
-                    "flex items-center gap-1.5 text-xs transition-colors",
+                    "flex items-center gap-1.5 text-[11px] transition-colors",
                     rule.met ? "text-primary" : "text-muted-foreground"
                   )}
                 >
                   {rule.met ? (
-                    <Check className="size-3.5" />
+                    <Check className="size-3" />
                   ) : (
-                    <Circle className="size-3.5" />
+                    <Circle className="size-3" />
                   )}
 
                   {rule.label}
@@ -357,7 +360,7 @@ function RegisterForm() {
           </div>
         </div>
 
-        {/* Register */}
+        {/* Register Button */}
         <Button
           type="submit"
           disabled={isSubmitting}
@@ -370,7 +373,7 @@ function RegisterForm() {
 
         {/* Lỗi từ Backend */}
         {serverError && (
-          <Alert variant="destructive" className="mt-4">
+          <Alert variant="destructive" className="mt-2.5 py-1.5 text-xs">
             <AlertDescription>{serverError}</AlertDescription>
           </Alert>
         )}

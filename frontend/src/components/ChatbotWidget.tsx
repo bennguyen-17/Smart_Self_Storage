@@ -36,7 +36,7 @@ export default function ChatbotWidget() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end">
+    <div className="fixed bottom-14 sm:bottom-16 right-4 sm:right-6 z-40 flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
         <div className="card-box w-72 sm:w-80 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col h-[360px] mb-2 transition-all duration-300 bg-white dark:bg-slate-900">

@@ -182,6 +182,7 @@ function LoginForm() {
                       aria-label={
                         showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"
                       }
+                      className="size-7"
                     >
                       {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </InputGroupButton>
@@ -190,7 +191,7 @@ function LoginForm() {
 
                 <FieldError errors={[fieldState.error]} />
 
-                <div className="flex justify-end pt-1">
+                <div className="flex justify-end pt-0.5">
                   <Button
                     type="button"
                     variant="link"
@@ -213,7 +214,7 @@ function LoginForm() {
 
         {/* Lỗi từ Backend */}
         {serverError && (
-          <Alert variant="destructive" className="mt-4">
+          <Alert variant="destructive" className="mt-3 py-2 text-xs">
             <AlertDescription>{serverError}</AlertDescription>
           </Alert>
         )}

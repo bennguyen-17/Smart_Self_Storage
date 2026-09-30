@@ -6,8 +6,10 @@ import AuthPage from "@/pages/AuthPage";
 import InternalLoginPage from "@/pages/InternalLoginPage";
 import CustomerPortal from "@/pages/CustomerPortal";
 import LandingPage from "@/features/landing/pages/LandingPage";
+import ReservationManagementPage from "@/features/reservations/pages/ReservationManagementPage";
+import FloorPlanPage from "@/features/floor-plan/pages/FloorPlanPage";
 
-// Route Guard: Bắt buộc phải đăng nhập thì mới được vào xem sơ đồ và đặt kho
+// Route Guard: Bắt buộc đăng nhập mới được vào xem sơ đồ và đặt kho
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   if (!token) {
@@ -20,16 +22,22 @@ function App() {
   return (
     <>
       <Routes>
-        {/* Trang chủ: Landing page (Vỹ) */}
+        {/* Trang chủ: Landing Page */}
         <Route path="/" element={<LandingPage />} />
 
-        {/* Các trang Xác thực khách hàng & nội bộ */}
+        {/* Các trang Xác thực khách hàng & Nội bộ */}
         <Route path="/customer_login" element={<AuthPage />} />
         <Route path="/login" element={<Navigate to="/customer_login" replace />} />
         <Route path="/register" element={<Navigate to="/customer_login?tab=register" replace />} />
         <Route path="/internal_login" element={<InternalLoginPage />} />
 
-        {/* Cổng Đặt kho & Sơ đồ 2D: Chỉ cho phép vào sau khi đã đăng nhập */}
+        {/* US-06: Quản lý đơn đặt cọc & No-Show */}
+        <Route path="/staff/reservations" element={<ReservationManagementPage />} />
+
+        {/* US-03: Sơ đồ 2D chọn ô kho */}
+        <Route path="/floor-plan" element={<FloorPlanPage />} />
+
+        {/* Cổng Đặt kho & Sơ đồ 2D (Bảo vệ bằng ProtectedRoute) */}
         <Route
           path="/portal"
           element={
@@ -47,4 +55,4 @@ function App() {
   );
 }
 
-export default App;
+export default App;

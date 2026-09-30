@@ -21,7 +21,7 @@ function AuthPage() {
   return (
     <AuthLayout>
       {/* TAB SWITCHER */}
-      <div role="tablist" className="mb-4 flex rounded-xl bg-muted/80 p-1">
+      <div role="tablist" className="mb-4 flex shrink-0 rounded-xl bg-muted/80 p-1">
         {TABS.map((tab) => {
           const isActive = tab.value === activeTab
 
@@ -36,7 +36,7 @@ function AuthPage() {
               className={cn(
                 "h-auto flex-1 rounded-lg py-2 text-xs sm:text-sm font-semibold transition-all cursor-pointer",
                 isActive
-                  ? "bg-card text-foreground shadow-sm hover:bg-card"
+                  ? "bg-card text-foreground shadow-xs hover:bg-card"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -50,10 +50,11 @@ function AuthPage() {
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -12 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="flex-1 flex flex-col justify-center"
         >
           {activeTab === "register" ? <RegisterForm /> : <LoginForm />}
         </motion.div>
