@@ -3,9 +3,9 @@ import { createRoot } from "react-dom/client"
 import { BrowserRouter } from "react-router-dom"
 
 import "./index.css"
-import App from "./App"
+import App from "./app/App"
 import { AuthProvider } from "@/context/AuthContext"
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from "@/components/common/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 
 const rootElement = document.getElementById("root")

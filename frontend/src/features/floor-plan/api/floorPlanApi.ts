@@ -1,8 +1,8 @@
-// US-03: API sơ đồ 2D, bám theo endpoint backend hiện có (không /v1).
+﻿// US-03: API sơ đồ 2D, bám theo endpoint backend hiện có (không /v1).
 // VITE_USE_MOCK=true → mock; false → backend. Không tự fallback về mock khi lỗi.
 
 import { unwrapApiData } from "@/lib/api"
-import apiClient, { isMockMode } from "@/services/apiClient"
+import apiClient, { isMockMode } from "@/lib/apiClient"
 
 import type { Facility, Floor, UnitDetailResponse, UnitQuery } from "../types"
 import {

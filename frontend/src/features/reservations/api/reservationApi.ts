@@ -1,8 +1,8 @@
-// US-06: API quản lý đơn đặt cọc & No-Show.
+﻿// US-06: API quản lý đơn đặt cọc & No-Show.
 // VITE_USE_MOCK=true → dùng mock; false → gọi backend. Không tự fallback về mock khi lỗi.
 
 import { unwrapApiData } from "@/lib/api"
-import apiClient, { isMockMode } from "@/services/apiClient"
+import apiClient, { isMockMode } from "@/lib/apiClient"
 
 import type {
   NoShowScanResult,

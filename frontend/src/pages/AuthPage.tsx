@@ -2,11 +2,11 @@ import { Navigate, useNavigate, useSearchParams } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
 import { cn } from "cn"
 
-import AuthLayout from "@/components/AuthLayout"
-import LoginForm from "@/components/LoginForm"
-import RegisterForm from "@/components/RegisterForm"
+import AuthLayout from "@/components/layouts/AuthLayout"
+import LoginForm from "@/features/auth/components/LoginForm"
+import RegisterForm from "@/features/auth/components/RegisterForm"
 import { Button } from "@/components/ui/button"
-import { getStoredToken } from "@/hooks/useAuthSession"
+import { isTokenValid } from "@/lib/apiClient"
 
 const TABS = [
   { label: "Đăng nhập", value: "login", href: "/customer_login" },
@@ -17,8 +17,8 @@ function AuthPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
-  const token = getStoredToken()
-  if (token) {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  if (isTokenValid(token)) {
     return <Navigate to="/portal" replace />
   }
 
