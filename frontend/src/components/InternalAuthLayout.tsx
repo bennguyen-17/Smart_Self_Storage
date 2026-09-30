@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react"
 
 import BrandLogo from "@/components/BrandLogo"
 import ThemeToggle from "@/components/ThemeToggle"
+import VantaFogBackground from "@/components/VantaFogBackground"
 
 interface InternalAuthLayoutProps {
   children: ReactNode
@@ -12,28 +13,18 @@ interface InternalAuthLayoutProps {
 
 function InternalAuthLayout({ children }: InternalAuthLayoutProps) {
   return (
-    <div className="relative flex min-h-svh flex-col overflow-hidden bg-gradient-to-b from-sky-50/70 via-blue-50/40 to-indigo-50/60 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      {/* DYNAMIC PASTEL BLUE RIBBON BACKGROUND */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <motion.div
-          animate={{
-            x: [0, 25, -20, 0],
-            y: [0, -20, 15, 0],
-            rotate: [0, 5, -3, 0],
-          }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-32 -left-32 h-[520px] w-[520px] rounded-full bg-gradient-to-tr from-sky-300/40 via-cyan-200/45 to-blue-200/35 blur-3xl dark:from-cyan-900/20 dark:via-blue-900/20 dark:to-transparent"
-        />
-        <motion.div
-          animate={{
-            x: [0, -30, 20, 0],
-            y: [0, 25, -15, 0],
-            rotate: [0, -6, 5, 0],
-          }}
-          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-36 -right-32 h-[580px] w-[580px] rounded-full bg-gradient-to-bl from-blue-300/45 via-indigo-200/40 to-teal-200/35 blur-3xl dark:from-indigo-900/20 dark:via-sky-900/20 dark:to-transparent"
-        />
-      </div>
+    <div className="relative flex min-h-svh flex-col overflow-hidden bg-slate-950/5">
+      {/* 3D VANTA FOG ANIMATED BACKGROUND */}
+      <VantaFogBackground
+        highlightColor={0xffc300}
+        midtoneColor={0xff1f00}
+        lowlightColor={0x2d00ff}
+        baseColor={0xffebeb}
+        blurFactor={0.6}
+        zoom={1.0}
+        speed={1.0}
+        className="pointer-events-auto absolute inset-0 z-0"
+      />
 
       {/* HEADER */}
       <header className="sticky top-0 z-30 flex h-16 w-full shrink-0 items-center justify-between border-b border-sky-100/80 bg-white/75 px-6 backdrop-blur-md transition-colors sm:px-10 dark:border-slate-800 dark:bg-slate-950/75">

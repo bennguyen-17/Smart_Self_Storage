@@ -7,6 +7,7 @@ import BrandLogo from "@/components/BrandLogo"
 import SiteFooter from "@/components/SiteFooter"
 import ThemeToggle from "@/components/ThemeToggle"
 import VietnamMap from "@/components/VietnamMap"
+import VantaFogBackground from "@/components/VantaFogBackground"
 import { Card, CardContent } from "@/components/ui/card"
 
 interface AuthLayoutProps {
@@ -15,72 +16,18 @@ interface AuthLayoutProps {
 
 function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="relative flex min-h-svh flex-col overflow-hidden bg-gradient-to-b from-sky-50/70 via-blue-50/40 to-indigo-50/60 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      {/* DYNAMIC PASTEL BLUE RIBBON BACKGROUND */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        {/* Ribbon 1: Top-Left flowing pastel cyan-blue wave */}
-        <motion.div
-          animate={{
-            x: [0, 30, -20, 0],
-            y: [0, -25, 20, 0],
-            rotate: [0, 6, -4, 0],
-          }}
-          transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-32 -left-32 h-[560px] w-[560px] rounded-full bg-gradient-to-tr from-sky-300/45 via-cyan-200/50 to-blue-200/40 blur-3xl dark:from-cyan-900/20 dark:via-blue-900/20 dark:to-transparent"
-        />
-
-        {/* Ribbon 2: Bottom-Right flowing pastel sky-indigo wave */}
-        <motion.div
-          animate={{
-            x: [0, -35, 25, 0],
-            y: [0, 30, -20, 0],
-            rotate: [0, -8, 6, 0],
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-40 -right-32 h-[640px] w-[640px] rounded-full bg-gradient-to-bl from-blue-300/50 via-indigo-200/45 to-teal-200/40 blur-3xl dark:from-indigo-900/20 dark:via-sky-900/20 dark:to-transparent"
-        />
-
-        {/* Ribbon 3: Center diagonal pastel ribbon streamer */}
-        <motion.div
-          animate={{
-            scale: [1, 1.1, 0.95, 1],
-            rotate: [-14, -8, -18, -14],
-          }}
-          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/3 left-1/2 h-[420px] w-[900px] -translate-x-1/2 rounded-[140px] bg-gradient-to-r from-teal-200/35 via-sky-200/45 to-indigo-200/35 blur-3xl dark:from-blue-900/15 dark:via-cyan-900/10 dark:to-transparent"
-        />
-
-        {/* Ribbon 4: Organic pastel wave vectors */}
-        <svg
-          className="absolute inset-0 h-full w-full opacity-45 dark:opacity-10"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 1440 900"
-          preserveAspectRatio="none"
-        >
-          <defs>
-            <linearGradient id="auth-ribbon-1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.5" />
-              <stop offset="50%" stopColor="#a5b4fc" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.3" />
-            </linearGradient>
-            <linearGradient id="auth-ribbon-2" x1="100%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.5" />
-              <stop offset="50%" stopColor="#99f6e4" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#c7d2fe" stopOpacity="0.3" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M-100,180 C320,40 640,320 1020,160 C1320,30 1520,220 1620,170 L1620,0 L-100,0 Z"
-            fill="url(#auth-ribbon-1)"
-            filter="blur(35px)"
-          />
-          <path
-            d="M-100,720 C420,580 720,860 1120,670 C1380,530 1520,740 1620,690 L1620,900 L-100,900 Z"
-            fill="url(#auth-ribbon-2)"
-            filter="blur(40px)"
-          />
-        </svg>
-      </div>
+    <div className="relative flex min-h-svh flex-col overflow-hidden bg-slate-950/5">
+      {/* 3D VANTA FOG ANIMATED BACKGROUND */}
+      <VantaFogBackground
+        highlightColor={0xffc300}
+        midtoneColor={0xff1f00}
+        lowlightColor={0x2d00ff}
+        baseColor={0xffebeb}
+        blurFactor={0.6}
+        zoom={1.0}
+        speed={1.0}
+        className="pointer-events-auto absolute inset-0 z-0"
+      />
 
       {/* HEADER */}
       <header className="sticky top-0 z-30 flex h-16 sm:h-18 w-full shrink-0 items-center justify-between border-b border-sky-100/80 bg-white/75 px-6 backdrop-blur-md transition-colors sm:px-10 lg:px-12 dark:border-slate-800 dark:bg-slate-950/75">
