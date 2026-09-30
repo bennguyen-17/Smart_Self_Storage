@@ -117,8 +117,8 @@ export function UseCasesSection({ onTry }: UseCasesSectionProps) {
             <article className="flex h-full flex-col">
               <div className="relative mb-5 h-44 w-full overflow-hidden rounded-2xl bg-muted sm:h-48">
                 <img
-                  src="https://images.unsplash.com/photo-1590247813693-5541d1c609fd?auto=format&fit=crop&w=800&q=80"
-                  alt="Sơ đồ kho 2D trực quan"
+                  src="https://images.unsplash.com/photo-1587293852726-70cdb56c2866?auto=format&fit=crop&w=800&q=80"
+                  alt="Hệ thống kho tự quản thông minh 2D"
                   loading="lazy"
                   className="size-full object-cover transition-transform duration-500 group-hover:scale-108"
                 />

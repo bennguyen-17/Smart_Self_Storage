@@ -53,8 +53,8 @@ export const USE_CASES: readonly UseCase[] = [
     size: "L",
     presetId: "apartment",
     image: {
-      src: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
-      alt: "Dọn nhà chuyển tổ ấm",
+      src: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80",
+      alt: "Thùng carton dọn nhà và nội thất",
     },
   },
   {
@@ -64,8 +64,8 @@ export const USE_CASES: readonly UseCase[] = [
     size: "S",
     presetId: "suitcase",
     image: {
-      src: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80",
-      alt: "Đồ dùng theo mùa và đồ gia đình gọn gàng",
+      src: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80",
+      alt: "Dụng cụ cắm trại dã ngoại và đồ đạc theo mùa",
     },
   },
   {
@@ -75,8 +75,8 @@ export const USE_CASES: readonly UseCase[] = [
     size: "M",
     presetId: "room",
     image: {
-      src: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80",
-      alt: "Sinh viên gửi đồ về quê nghỉ hè",
+      src: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80",
+      alt: "Balo và hành lý sinh viên dọn đồ về quê",
     },
   },
   {
@@ -86,8 +86,8 @@ export const USE_CASES: readonly UseCase[] = [
     size: "S",
     presetId: "suitcase",
     image: {
-      src: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=800&q=80",
-      alt: "Vali hành lý và hồ sơ an toàn",
+      src: "https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?auto=format&fit=crop&w=800&q=80",
+      alt: "Vali kéo hành lý và tủ lưu trữ an toàn",
     },
   },
   {
@@ -97,8 +97,8 @@ export const USE_CASES: readonly UseCase[] = [
     size: "XL",
     presetId: "house",
     image: {
-      src: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
-      alt: "Kho hàng kinh doanh và homestay",
+      src: "https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=800&q=80",
+      alt: "Thùng hàng kiện hàng kinh doanh thương mại điện tử",
     },
   },
 ]
