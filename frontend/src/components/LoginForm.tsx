@@ -116,26 +116,26 @@ function LoginForm() {
   }
 
   return (
-    <div className="w-full">
-      <div className="mb-6">
-        <h2 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+    <div className="w-full max-w-[420px] mx-auto">
+      <div className="mb-3">
+        <h2 className="font-heading text-lg font-bold tracking-tight text-foreground sm:text-xl">
           Đăng nhập
         </h2>
 
-        <p className="mt-2 text-base text-muted-foreground">
+        <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
           Nhập số điện thoại và mật khẩu để truy cập hệ thống.
         </p>
       </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-        <FieldGroup className="space-y-4">
+        <FieldGroup className="space-y-3">
           {/* Phone */}
           <Controller
             name="phone"
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name} className="text-sm font-semibold sm:text-base">
+                <FieldLabel htmlFor={field.name} className="text-xs font-semibold sm:text-sm">
                   Số điện thoại
                 </FieldLabel>
 
@@ -147,7 +147,7 @@ function LoginForm() {
                   maxLength={10}
                   autoComplete="tel"
                   aria-invalid={fieldState.invalid}
-                  className="h-12 text-base rounded-xl"
+                  className="h-9.5 text-xs sm:text-sm rounded-lg"
                 />
 
                 <FieldError errors={[fieldState.error]} />
@@ -161,11 +161,11 @@ function LoginForm() {
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name} className="text-sm font-semibold sm:text-base">
+                <FieldLabel htmlFor={field.name} className="text-xs font-semibold sm:text-sm">
                   Mật khẩu
                 </FieldLabel>
 
-                <InputGroup className="h-12 rounded-xl">
+                <InputGroup className="h-9.5 rounded-lg">
                   <InputGroupInput
                     {...field}
                     id={field.name}
@@ -173,7 +173,7 @@ function LoginForm() {
                     placeholder="Nhập mật khẩu"
                     autoComplete="current-password"
                     aria-invalid={fieldState.invalid}
-                    className="text-base"
+                    className="text-xs sm:text-sm"
                   />
 
                   <InputGroupAddon align="inline-end">
@@ -182,20 +182,21 @@ function LoginForm() {
                       aria-label={
                         showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"
                       }
+                      className="size-7"
                     >
-                      {showPassword ? <EyeOff /> : <Eye />}
+                      {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </InputGroupButton>
                   </InputGroupAddon>
                 </InputGroup>
 
                 <FieldError errors={[fieldState.error]} />
 
-                <div className="flex justify-end pt-1">
+                <div className="flex justify-end pt-0.5">
                   <Button
                     type="button"
                     variant="link"
                     onClick={handleForgotPassword}
-                    className="h-auto p-0 text-sm font-medium text-blue-600 dark:text-blue-400"
+                    className="h-auto p-0 text-xs font-medium text-blue-600 dark:text-blue-400"
                   >
                     Quên mật khẩu?
                   </Button>
@@ -205,7 +206,7 @@ function LoginForm() {
           />
         </FieldGroup>
 
-        <Button type="submit" disabled={isSubmitting} className="mt-6 h-12 w-full rounded-xl text-base font-bold shadow-md shadow-blue-500/20">
+        <Button type="submit" disabled={isSubmitting} className="mt-4 h-9.5 w-full rounded-lg text-xs sm:text-sm font-bold shadow-md shadow-blue-500/20">
           {isSubmitting && <Spinner />}
 
           {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
@@ -213,13 +214,13 @@ function LoginForm() {
 
         {/* Lỗi từ Backend */}
         {serverError && (
-          <Alert variant="destructive" className="mt-4">
+          <Alert variant="destructive" className="mt-3 py-2 text-xs">
             <AlertDescription>{serverError}</AlertDescription>
           </Alert>
         )}
       </form>
 
-      <p className="mt-6 text-center text-base text-muted-foreground">
+      <p className="mt-3.5 text-center text-xs sm:text-sm text-muted-foreground">
         Chưa có tài khoản?{" "}
         <Link
           to="/customer_login?tab=register"
@@ -229,7 +230,7 @@ function LoginForm() {
         </Link>
       </p>
 
-      <p className="mt-3 text-center text-sm text-muted-foreground">
+      <p className="mt-2 text-center text-xs text-muted-foreground">
         Bạn là nhân viên hoặc quản lý cơ sở?{" "}
         <Link
           to="/internal_login"

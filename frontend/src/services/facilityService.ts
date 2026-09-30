@@ -158,14 +158,15 @@ export const getBranches = async () => {
   try {
     const res = await apiClient.get('/facilities');
     const rawList = Array.isArray(res) ? res : (res?.data || []);
-    const facilities = rawList.map((f) => ({
-      id: f.facilityCode || `FAC-${f.id}`,
-      backendId: f.id,
-      code: f.facilityCode,
+    const facilities = rawList.map((f: any) => ({
+      id: f.facilityCode || (f.facilityId ? `FAC-${f.facilityId}` : f.id),
+      backendId: f.facilityId || f.id,
+      code: f.facilityCode || f.code,
       shortCode: f.shortCode,
-      name: f.name,
+      name: f.facilityName || f.name,
+      facilityName: f.facilityName || f.name,
       address: f.address,
-      floors: f.floorCount || 3,
+      floors: f.floorCount || f.floors || 3,
       layoutType: f.layoutType,
       isAllClimate: f.isAllClimate
     }));
