@@ -69,7 +69,7 @@ export default function LandingPage() {
     >
       <title>{SITE.title}</title>
       <meta name="description" content={SITE.description} />
-      <div id="top" className="landing min-h-svh bg-background text-foreground">
+      <div id="top" className="landing relative min-h-svh bg-background text-foreground">
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-(--l-z-sheet) focus:rounded-full focus:bg-background focus:px-4 focus:py-2 focus:ring-3 focus:ring-ring/50"

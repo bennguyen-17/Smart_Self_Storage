@@ -4,8 +4,9 @@
 import type { UnitSize } from "./units"
 
 export const HERO = {
-  title: "Nhà gọn lại, đồ vẫn ở gần",
-  lead: "Thuê kho tự quản theo ngày hoặc theo tháng, ra vào 24/7 bằng mã PIN. Giá niêm yết rõ, đặt online trong vài phút.",
+  badge: "✨ Giải pháp lưu kho thông minh 4.0",
+  title: "Thảnh thơi dọn phố, rộng chỗ an tâm",
+  lead: "Dịch vụ thuê kho tự quản thông minh theo ngày & tháng. Mở khóa 24/7 bằng mã PIN riêng biệt — Giá rõ ràng, an tâm gửi gắm!",
   image: {
     src: "https://images.unsplash.com/photo-1730154838368-c37b1fdebcf6?auto=format&fit=crop&w=1400&q=75",
     srcSet: [640, 960, 1400]
@@ -21,8 +22,8 @@ export const HERO = {
   },
   trust: [
     { icon: "clock", label: "Ra vào 24/7 bằng mã PIN" },
-    { icon: "thermometer", label: "Kho mát 22–25°C tại Quận 1" },
-    { icon: "shield", label: "Có bảo hiểm tài sản" },
+    { icon: "thermometer", label: "Kho mát 22–25°C tại mọi cơ sở" },
+    { icon: "shield", label: "Có bảo hiểm tài sản toàn diện" },
   ],
 } as const
 
@@ -38,50 +39,56 @@ export interface UseCase {
 }
 
 export const USE_CASES_SECTION = {
-  title: "Cất gì cũng có chỗ",
-  lead: "Chọn tình huống gần với bạn nhất, chúng tôi gợi ý cỡ kho ngay.",
-  tryLabel: "Tính thử",
+  badge: "Tình huống sử dụng",
+  title: "Cần bao nhiêu chỗ, có bấy nhiêu kho",
+  lead: "Chọn tình huống phù hợp với bạn, hệ thống thông minh sẽ gợi ý kích cỡ kho vừa vặn tức thì.",
+  tryLabel: "Tính thử ngay",
 } as const
 
 export const USE_CASES: readonly UseCase[] = [
   {
-    id: "moving",
-    title: "Chuyển nhà, sửa nhà",
-    body: "Gửi tạm nội thất vài tuần đến vài tháng, xong việc thì dọn về.",
-    size: "L",
-    presetId: "apartment",
+    id: "seasonal",
+    title: "Hết mùa cất lại, rộng rãi cả năm",
+    body: "Chăn đông, quạt mát, đồ trang trí Tết, dụng cụ cắm trại: dùng xong cất gọn, giải phóng tối đa không gian sống.",
+    size: "S",
+    presetId: "suitcase",
     image: {
-      src: "https://images.unsplash.com/photo-1714647211902-bb711d643a17?auto=format&fit=crop&w=900&q=70",
-      alt: "Cô gái bê thùng carton trong phòng khách đang dọn dẹp để chuyển nhà",
+      src: "https://images.unsplash.com/photo-1595079676339-1534801ad6cf?auto=format&fit=crop&w=800&q=80",
+      alt: "Tủ kho cá nhân mini lưu trữ an toàn",
     },
   },
   {
-    id: "seasonal",
-    title: "Đồ theo mùa",
-    body: "Chăn đông, quạt, đồ Tết, đồ cắm trại: dùng vài lần mỗi năm, đừng để chiếm tủ.",
-    size: "S",
-    presetId: "suitcase",
-  },
-  {
     id: "student",
-    title: "Sinh viên về quê hè",
-    body: "Gửi đồ phòng trọ 2–3 tháng, khỏi trả tiền phòng lúc không ở.",
+    title: "Về quê nhẹ gánh, tiết kiệm tiền phòng",
+    body: "Gửi trọn đồ đạc phòng trọ trong 2–3 tháng hè, không còn nỗi lo gánh nặng chi phí giữ phòng.",
     size: "M",
     presetId: "room",
+    image: {
+      src: "https://images.unsplash.com/photo-1590247813693-5541d1c609fd?auto=format&fit=crop&w=800&q=80",
+      alt: "Phòng kho tự quản vừa vặn sạch sẽ",
+    },
   },
   {
-    id: "travel",
-    title: "Vali, túi golf, giấy tờ",
-    body: "Tủ cá nhân nhỏ gọn, mở lúc nào cũng được.",
-    size: "S",
-    presetId: "suitcase",
+    id: "moving",
+    title: "Dọn nhà sửa tổ, gửi đồ liền tay",
+    body: "Gửi tạm toàn bộ nội thất và vật dụng từ vài tuần đến vài tháng, xong việc thảnh thơi dọn về tổ ấm mới.",
+    size: "L",
+    presetId: "apartment",
+    image: {
+      src: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80",
+      alt: "Phòng kho lớn chứa thùng đồ và nội thất gia đình",
+    },
   },
   {
     id: "homestay",
-    title: "Đồ homestay, hàng bán online",
-    body: "Nệm, đồ cồng kềnh, hàng tồn: cần chỗ rộng và xe tải vào được.",
+    title: "Kinh doanh kho bãi, buôn may bán đắt",
+    body: "Nệm êm, đồ cồng kềnh, hàng hóa kinh doanh online: lối đi rộng rãi, xe tải đỗ tận nơi bốc dỡ dễ dàng.",
     size: "XL",
     presetId: "house",
+    image: {
+      src: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
+      alt: "Kho hàng doanh nghiệp và homestay rộng rãi",
+    },
   },
 ]
 
@@ -94,60 +101,64 @@ export interface EstimatorPreset {
 }
 
 export const ESTIMATOR = {
-  title: "Bạn cần kho cỡ nào?",
-  lead: "Chọn gần đúng lượng đồ hoặc kéo thanh trượt. Kết quả chỉ để tham khảo, nhân viên sẽ tư vấn thêm nếu cần.",
+  badge: "Bộ ước tính thông minh",
+  title: "Đo đạc nhanh tay, chọn ngay kho chuẩn",
+  lead: "Chọn gần đúng lượng đồ hoặc kéo thanh trượt để tính toán không gian vừa vặn và tối ưu chi phí.",
   presets: [
-    { id: "suitcase", label: "Vali và giấy tờ", volumeM3: 1.5 },
-    { id: "room", label: "Phòng trọ", volumeM3: 5 },
+    { id: "suitcase", label: "Vali & Giấy tờ", volumeM3: 1.5 },
+    { id: "room", label: "Phòng trọ sinh viên", volumeM3: 5 },
     { id: "apartment", label: "Căn hộ 1–2 phòng ngủ", volumeM3: 11 },
-    { id: "house", label: "Nhà 3 phòng ngủ", volumeM3: 18 },
+    { id: "house", label: "Nhà phố 3 phòng ngủ", volumeM3: 18 },
   ] satisfies EstimatorPreset[],
   slider: { min: 0, max: 25, step: 0.5, label: "Lượng đồ ước tính (m³)" },
-  climateLabel: "Kho mát 22–25°C",
-  climateHint: "+20% đơn giá, chỉ có tại Quận 1",
-  emptyTitle: "Chưa có lượng đồ",
-  emptyBody: "Chọn một mục ở trên hoặc kéo thanh trượt để xem cỡ kho phù hợp.",
-  resultPrefix: "Gợi ý cho bạn",
+  climateLabel: "Kho mát điều hòa 22–25°C",
+  climateHint: "+20% đơn giá, sẵn sàng tại tất cả cơ sở",
+  emptyTitle: "Chưa chọn lượng đồ",
+  emptyBody: "Hãy chọn một mục nhanh ở trên hoặc kéo thanh trượt để tìm cỡ kho hoàn hảo cho bạn.",
+  resultPrefix: "Gợi ý tối ưu cho bạn",
   perMonth: "/ tháng",
-  depositLabel: "Tiền cọc",
-  overflowTitle: "Nhiều hơn một kho XL",
+  depositLabel: "Tiền cọc đảm bảo",
+  overflowTitle: "Cần diện tích lớn hơn 20 m³?",
   overflowBody:
-    "Hơn 20 m³ thì nên thuê 2 kho, hoặc gọi để chúng tôi xếp phương án gọn nhất.",
+    "Hệ thống luôn có sẵn các phương án ghép nhiều kho linh hoạt nhằm đáp ứng tối đa nhu cầu của bạn.",
 } as const
 
 export const PRICING_SECTION = {
-  title: "Giá niêm yết, không phí ẩn",
-  lead: "Bốn cỡ kho, cùng chiều cao 2 m. Thuê theo ngày hoặc theo tháng.",
+  badge: "Bảng giá niêm yết",
+  title: "Bảng giá minh bạch, chuẩn sạch không phí ẩn",
+  lead: "Bốn cỡ kho linh hoạt, trần cao 2m tiêu chuẩn. Thuê theo ngày tiện lợi, ưu đãi dài hạn theo tháng.",
   perMonth: "/ tháng",
   perDay: "Theo ngày",
   deposit: "Cọc",
-  suggested: "Hợp với lượng đồ của bạn",
+  suggested: "Vừa vặn với lượng đồ của bạn",
 } as const
 
 export const FACILITIES_SECTION = {
-  title: "7 cơ sở, 4 thành phố",
-  lead: "Chọn thành phố để xem cơ sở gần bạn.",
+  badge: "Hệ thống cơ sở",
+  title: "7 cơ sở hiện đại, khắp mọi nẻo đường",
+  lead: "Mạng lưới kho tự quản thông minh phủ sóng tại các vị trí đắc địa, thuận tiện giao thông.",
   climateBadge: "Kho mát",
 } as const
 
 export const PROCESS_SECTION = {
-  title: "Thuê kho trong 4 bước",
+  badge: "Quy trình đơn giản",
+  title: "4 bước chạm ngay, thuê kho liền tay",
   steps: [
     {
-      title: "Chọn cỡ và cơ sở",
-      body: "Xem sơ đồ kho, chọn ô còn trống ở cơ sở gần bạn.",
+      title: "Chọn kho ưng ý",
+      body: "Xem sơ đồ 2D trực quan theo thời gian thực, chọn ô kho còn trống ở vị trí gần bạn nhất.",
     },
     {
-      title: "Đặt và thanh toán online",
-      body: "Điền thông tin, xác minh số điện thoại, đặt cọc giữ chỗ.",
+      title: "Đặt chỗ tức thì",
+      body: "Điền thông tin trực tuyến, xác thực OTP nhanh gọn và thanh toán tiền cọc bảo mật.",
     },
     {
-      title: "Nhận mã PIN",
-      body: "Mã PIN mở cửa được gửi cho bạn ngay khi hợp đồng có hiệu lực.",
+      title: "Mã PIN trao tay",
+      body: "Nhận mã PIN mở cửa định danh riêng biệt gửi thẳng về điện thoại ngay sau khi đặt chỗ.",
     },
     {
-      title: "Ra vào 24/7",
-      body: "Tự mang đồ đến và lấy đồ bất cứ lúc nào, kể cả ngày lễ.",
+      title: "Tự do ra vào 24/7",
+      body: "Chủ động mang và lấy đồ bất kể ngày đêm hay lễ tết với không gian riêng tư tuyệt đối.",
     },
   ],
 } as const
@@ -159,28 +170,29 @@ export interface Testimonial {
 }
 
 export const TESTIMONIALS_SECTION = {
-  title: "Khách thuê nói gì",
+  badge: "Cảm nhận khách hàng",
+  title: "Khách gửi trọn niềm tin, vẹn tròn trải nghiệm",
   /** true = đánh giá minh họa (chưa có dữ liệu thật). Đổi thành false khi thay bằng đánh giá thật. */
   illustrative: true,
   illustrativeNote: "Đánh giá minh họa",
   items: [
     {
       quote:
-        "Sửa nhà ba tháng, tôi gửi hết sofa với tủ sách. Lấy về vẫn sạch, không có mùi ẩm.",
-      name: "Anh Q.",
-      context: "Thuê phòng lớn, Quận 7",
+        "Sửa nhà ba tháng, tôi gửi hết sofa với tủ sách. Lấy về vẫn sạch bóng, thơm tho không hề có mùi ẩm.",
+      name: "Anh Quang Minh",
+      context: "Thuê kho L, Quận 7",
     },
     {
       quote:
-        "Hè về quê, gửi đồ phòng trọ ở đây rẻ hơn giữ phòng. Tháng 9 lên lấy lại là xong.",
-      name: "Bạn T.",
-      context: "Thuê phòng vừa, Cầu Giấy",
+        "Hè về quê, gửi đồ phòng trọ ở đây vừa an tâm vừa rẻ hơn hẳn tiền giữ phòng. Đầu năm học quay lại lấy rất tiện!",
+      name: "Bạn Thu Trang",
+      context: "Thuê kho M, Cầu Giấy",
     },
     {
       quote:
-        "Mấy chiếc túi da với máy ảnh tôi để ở kho mát. Đi công tác dài ngày cũng yên tâm.",
-      name: "Chị G.",
-      context: "Thuê kho mát, Quận 1",
+        "Mấy bộ máy ảnh chuyên dụng và túi xách da tôi gửi vào kho mát. Đi công tác dài ngày cực kỳ an tâm.",
+      name: "Chị Gia Hân",
+      context: "Thuê kho mát điều hòa",
     },
   ] satisfies Testimonial[],
 } as const
@@ -192,48 +204,49 @@ export interface FaqItem {
 }
 
 export const FAQ_SECTION = {
-  title: "Câu hỏi thường gặp",
+  badge: "Hỏi đáp nhanh",
+  title: "Giải đáp tận tâm, an tâm trải nghiệm",
   items: [
     {
       id: "access",
       question: "Tôi có ra vào kho lúc nào cũng được không?",
       answer:
-        "Được. Cửa kho mở bằng mã PIN 24/7, kể cả ban đêm và ngày lễ. Mã PIN chỉ dùng được khi hợp đồng còn hiệu lực.",
+        "Hoàn toàn được! Cửa kho mở tự động bằng mã PIN 24/7/365, kể cả lúc nửa đêm hay ngày lễ tết. Bạn toàn quyền chủ động thời gian của mình.",
     },
     {
       id: "climate",
       question: "Đồ có bị ẩm mốc không? Kho mát có ở đâu?",
       answer:
-        "Kho tiêu chuẩn thoáng khí, hợp đồ gia dụng và đồ chuyển nhà. Kho mát giữ 22–25°C suốt ngày đêm, hiện có tại cơ sở Quận 1, hợp đồ điện tử, đồ da và tài liệu quan trọng.",
+        "Kho tiêu chuẩn luôn được thông gió thoáng đãng, phù hợp đồ gia dụng và dọn nhà. Kho mát kiểm soát nhiệt độ 22–25°C và độ ẩm tối ưu được trang bị tại tất cả các cơ sở, lý tưởng cho đồ điện tử, thiết bị quay chụp, túi da và tài liệu.",
     },
     {
       id: "duration",
-      question: "Thuê ngắn nhất bao lâu?",
+      question: "Thời gian thuê ngắn nhất là bao lâu?",
       answer:
-        "Tối thiểu 7 ngày. Từ 7 đến 29 ngày tính theo giá ngày. Từ 1 tháng trở lên có gói tháng; gói 3, 6, 12 tháng giảm 5%, 10%, 15%.",
+        "Thời gian thuê tối thiểu linh hoạt từ 7 ngày. Bạn có thể thuê theo ngày (7-29 ngày) hoặc theo tháng. Thuê từ 3, 6, 12 tháng được chiết khấu thêm 5%, 10%, 15%.",
     },
     {
       id: "banned",
-      question: "Có đồ nào không được gửi?",
+      question: "Có những mặt hàng nào không được gửi?",
       answer:
-        "Không nhận thực phẩm tươi sống hoặc đông lạnh, động vật sống, chất dễ cháy nổ, hóa chất độc hại, vũ khí và hàng cấm theo quy định. Khi đặt kho bạn sẽ xác nhận cam kết này.",
+        "Để đảm bảo an toàn tuyệt đối, chúng tôi không nhận: thực phẩm tươi sống/đông lạnh, động vật sống, chất dễ cháy nổ, hóa chất nguy hại, vũ khí và các loại hàng hóa thuộc danh mục cấm.",
     },
     {
       id: "booking",
-      question: "Đặt kho như thế nào?",
+      question: "Đặt kho trực tuyến như thế nào?",
       answer:
-        "Chọn ô kho trên sơ đồ, tạo tài khoản bằng số điện thoại, xác minh bằng mã OTP rồi đặt cọc online. Mọi bước làm trên web, không cần đến quầy.",
+        "Rất nhanh chóng! Bạn chỉ cần chọn ô kho trên sơ đồ 2D, xác thực số điện thoại qua OTP và đặt cọc trực tuyến. Toàn bộ quy trình hoàn tất trong 3 phút, không cần xếp hàng tại quầy.",
     },
   ] satisfies FaqItem[],
 } as const
 
 export const FINAL_CTA = {
-  title: "Dọn nhà gọn hơn, bắt đầu từ hôm nay",
-  lead: "Chọn ô kho trống ở cơ sở gần bạn, hoặc gọi để được tư vấn cỡ kho.",
+  badge: "Bắt đầu ngay hôm nay",
+  title: "Nhà thêm gọn gàng, đón vạn thảnh thơi",
+  lead: "Giải phóng không gian sống và trải nghiệm thuê kho thông minh ngay hôm nay. Đặt kho nhanh chóng, nhận trọn ưu đãi!",
 } as const
 
 export const FOOTER = {
-  tagline: "Kho tự quản thông minh, ra vào 24/7.",
-  hotlineLabel: "Hotline",
-  copyright: "© 2026 Smart Self Storage",
+  tagline: "Hệ thống kho tự quản thông minh hàng đầu, mở cửa 24/7.",
+  copyright: "© 2026 Smart Self Storage. All rights reserved.",
 } as const

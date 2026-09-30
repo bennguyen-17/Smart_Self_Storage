@@ -118,24 +118,26 @@ function LoginForm() {
   return (
     <div className="w-full">
       <div className="mb-6">
-        <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
+        <h2 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
           Đăng nhập
         </h2>
 
-        <p className="mt-1.5 text-sm text-muted-foreground">
+        <p className="mt-2 text-base text-muted-foreground">
           Nhập số điện thoại và mật khẩu để truy cập hệ thống.
         </p>
       </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-        <FieldGroup>
+        <FieldGroup className="space-y-4">
           {/* Phone */}
           <Controller
             name="phone"
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Số điện thoại</FieldLabel>
+                <FieldLabel htmlFor={field.name} className="text-sm font-semibold sm:text-base">
+                  Số điện thoại
+                </FieldLabel>
 
                 <Input
                   {...field}
@@ -145,6 +147,7 @@ function LoginForm() {
                   maxLength={10}
                   autoComplete="tel"
                   aria-invalid={fieldState.invalid}
+                  className="h-12 text-base rounded-xl"
                 />
 
                 <FieldError errors={[fieldState.error]} />
@@ -158,9 +161,11 @@ function LoginForm() {
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Mật khẩu</FieldLabel>
+                <FieldLabel htmlFor={field.name} className="text-sm font-semibold sm:text-base">
+                  Mật khẩu
+                </FieldLabel>
 
-                <InputGroup>
+                <InputGroup className="h-12 rounded-xl">
                   <InputGroupInput
                     {...field}
                     id={field.name}
@@ -168,6 +173,7 @@ function LoginForm() {
                     placeholder="Nhập mật khẩu"
                     autoComplete="current-password"
                     aria-invalid={fieldState.invalid}
+                    className="text-base"
                   />
 
                   <InputGroupAddon align="inline-end">
@@ -189,7 +195,7 @@ function LoginForm() {
                     type="button"
                     variant="link"
                     onClick={handleForgotPassword}
-                    className="h-auto p-0 text-xs font-medium text-blue-600 dark:text-blue-400"
+                    className="h-auto p-0 text-sm font-medium text-blue-600 dark:text-blue-400"
                   >
                     Quên mật khẩu?
                   </Button>
@@ -199,7 +205,7 @@ function LoginForm() {
           />
         </FieldGroup>
 
-        <Button type="submit" disabled={isSubmitting} className="mt-5 w-full">
+        <Button type="submit" disabled={isSubmitting} className="mt-6 h-12 w-full rounded-xl text-base font-bold shadow-md shadow-blue-500/20">
           {isSubmitting && <Spinner />}
 
           {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
@@ -213,17 +219,17 @@ function LoginForm() {
         )}
       </form>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
+      <p className="mt-6 text-center text-base text-muted-foreground">
         Chưa có tài khoản?{" "}
         <Link
           to="/customer_login?tab=register"
-          className="font-medium text-primary hover:underline"
+          className="font-semibold text-primary hover:underline"
         >
           Đăng ký ngay
         </Link>
       </p>
 
-      <p className="mt-3 text-center text-[12px] text-muted-foreground">
+      <p className="mt-3 text-center text-sm text-muted-foreground">
         Bạn là nhân viên hoặc quản lý cơ sở?{" "}
         <Link
           to="/internal_login"

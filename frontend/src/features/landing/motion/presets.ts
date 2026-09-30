@@ -13,7 +13,8 @@ export const STAGGER = 0.06
 /** Điểm bắt đầu của hiệu ứng hiện khi cuộn tới. Không bắt đầu từ opacity 0 để nội dung luôn đọc được. */
 export const REVEAL = { y: 16, fromOpacity: 0.4 } as const
 
-export const VIEWPORT = { once: true, amount: 0.25 } as const
+/** Cho phép hiệu ứng kích hoạt mỗi khi lướt tới (không chỉ 1 lần) */
+export const VIEWPORT = { once: false, amount: 0.15 } as const
 
 export const baseTransition: Transition = {
   duration: DURATION.base,
@@ -21,10 +22,11 @@ export const baseTransition: Transition = {
 }
 
 export const fadeUp: Variants = {
-  hidden: { opacity: REVEAL.fromOpacity, y: REVEAL.y },
+  hidden: { opacity: 0, y: 24, scale: 0.98 },
   shown: {
     opacity: 1,
     y: 0,
+    scale: 1,
     transition: { duration: DURATION.slow, ease: EASE_OUT_QUART },
   },
 }

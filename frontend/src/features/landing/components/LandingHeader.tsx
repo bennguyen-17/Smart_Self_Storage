@@ -51,21 +51,26 @@ export function LandingHeader() {
     >
       <div
         className={cn(
-          "mx-auto flex w-full max-w-7xl items-center justify-between gap-6 px-4 transition-[height] duration-400 ease-[cubic-bezier(0.25,1,0.5,1)] sm:px-6 lg:px-8",
+          "flex w-full items-center justify-between gap-6 px-6 transition-[height] duration-400 ease-[cubic-bezier(0.25,1,0.5,1)] sm:px-10 lg:px-12",
           scrolled ? "h-15" : "h-(--l-header-h)"
         )}
       >
         <a
           href="#top"
-          className="flex items-center gap-3 rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="flex items-center gap-3 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50 group"
         >
-          <span className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Warehouse className="size-5" aria-hidden />
+          <span className="flex size-10 sm:size-11 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+            <Warehouse className="size-5 sm:size-6" aria-hidden />
           </span>
-          <span className="text-lg font-semibold tracking-tight">
-            <span className="text-(--l-link)">Smart</span> Self Storage
-            <span className="sr-only">, về đầu trang</span>
-          </span>
+          <div>
+            <span className="text-lg sm:text-xl font-black tracking-tight text-foreground block leading-tight">
+              Smart Storage
+              <span className="sr-only">, về đầu trang</span>
+            </span>
+            <span className="text-[11px] sm:text-xs font-medium text-muted-foreground hidden sm:block">
+              Hệ thống cho thuê kho tự quản thông minh 24/7
+            </span>
+          </div>
         </a>
 
         <nav aria-label="Điều hướng trang" className="hidden lg:block">

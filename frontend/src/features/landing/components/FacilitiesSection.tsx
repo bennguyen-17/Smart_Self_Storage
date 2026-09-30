@@ -43,11 +43,12 @@ export function FacilitiesSection() {
     <section
       id="facilities"
       aria-labelledby="facilities-title"
-      className="py-(--l-section-space)"
+      className="relative overflow-hidden py-(--l-section-space)"
     >
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 sm:px-6 lg:px-8">
         <SectionHeading
           id="facilities-title"
+          badge={FACILITIES_SECTION.badge}
           title={FACILITIES_SECTION.title}
           lead={FACILITIES_SECTION.lead}
         />
@@ -56,7 +57,7 @@ export function FacilitiesSection() {
           <div
             role="tablist"
             aria-label="Chọn thành phố"
-            className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-full bg-(--l-surface-quiet) p-1"
+            className="flex w-fit max-w-full gap-1.5 overflow-x-auto rounded-full bg-muted/70 p-1.5 ring-1 ring-border/50 backdrop-blur-md dark:bg-card/70"
           >
             {CITIES.map((c, i) => {
               const selected = c.id === city
@@ -75,10 +76,10 @@ export function FacilitiesSection() {
                   onClick={() => setCity(c.id)}
                   onKeyDown={(e) => onKeyDown(e, i)}
                   className={cn(
-                    "relative isolate min-h-11 shrink-0 rounded-full px-5 text-[0.9375rem] font-medium transition-colors duration-200 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                    "relative isolate min-h-11 shrink-0 rounded-full px-5 text-[0.9375rem] font-semibold transition-colors duration-200 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                     selected
-                      ? "text-white"
-                      : "text-foreground hover:text-(--l-link)"
+                      ? "text-white shadow-md shadow-blue-500/30"
+                      : "text-foreground hover:text-blue-600 dark:hover:text-blue-400"
                   )}
                 >
                   {selected && (
@@ -107,40 +108,40 @@ export function FacilitiesSection() {
             <AnimatePresence mode="wait" initial={false}>
               <motion.ul
                 key={city}
-                className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                className="grid gap-5 md:grid-cols-2 lg:grid-cols-3"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: DURATION.fast, ease: EASE_OUT_QUART }}
               >
                 {list.map((f) => (
                   <li
                     key={f.code}
-                    className="flex flex-col gap-3 rounded-(--l-radius-card) bg-(--l-surface) p-7"
+                    className="flex flex-col gap-3.5 rounded-(--l-radius-card) l-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                   >
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-xl leading-[1.35] font-semibold">
+                      <h3 className="text-xl leading-[1.35] font-bold text-foreground">
                         {f.name}
                       </h3>
                       {f.isClimate && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-(--l-soft-bg) px-2.5 py-0.5 text-xs font-medium text-(--l-soft-fg)">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/10 px-2.5 py-0.5 text-xs font-semibold text-cyan-600 dark:bg-cyan-400/15 dark:text-cyan-300">
                           <Snowflake className="size-3.5" aria-hidden />
                           {FACILITIES_SECTION.climateBadge}
                         </span>
                       )}
                     </div>
                     <p className="flex gap-2 text-[0.9375rem] text-muted-foreground">
-                      <MapPin className="mt-1 size-4 shrink-0" aria-hidden />
-                      {f.address}
+                      <MapPin className="mt-1 size-4 shrink-0 text-blue-500" aria-hidden />
+                      <span>{f.address}</span>
                     </p>
-                    <ul className="flex flex-col gap-1.5 text-[0.9375rem]">
+                    <ul className="flex flex-col gap-2 pt-1 text-[0.9375rem] text-foreground/90">
                       {f.highlights.map((h) => (
-                        <li key={h} className="flex gap-2">
+                        <li key={h} className="flex items-center gap-2">
                           <span
                             aria-hidden
-                            className="mt-2.5 size-1.5 shrink-0 rounded-full bg-(--l-cta)"
+                            className="size-1.5 shrink-0 rounded-full bg-blue-500"
                           />
-                          {h}
+                          <span>{h}</span>
                         </li>
                       ))}
                     </ul>

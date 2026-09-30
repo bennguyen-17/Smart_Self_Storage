@@ -24,7 +24,7 @@ export const SECTIONS: readonly SectionConfig[] = [
   { id: "pricing", navLabel: "Bảng giá", enabled: true },
   { id: "facilities", navLabel: "Cơ sở", enabled: true },
   { id: "process", navLabel: "Cách thuê", enabled: true },
-  { id: "testimonials", enabled: true },
+  { id: "testimonials", enabled: false },
   { id: "faq", navLabel: "Hỏi đáp", enabled: true },
   { id: "final-cta", enabled: true },
 ]
