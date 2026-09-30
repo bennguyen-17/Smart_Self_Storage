@@ -139,10 +139,12 @@ export const Card = ({
   card,
   index,
   layout = false,
+  className,
 }: {
   card: CardType
   index: number
   layout?: boolean
+  className?: string
 }) => {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -227,7 +229,10 @@ export const Card = ({
       <motion.button
         layoutId={layout ? `card-${card.title}` : undefined}
         onClick={handleOpen}
-        className="group relative flex h-96 w-[260px] sm:h-[440px] sm:w-[290px] md:h-[480px] md:w-[310px] flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 bg-slate-100 text-left shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl cursor-pointer dark:border-slate-800 dark:bg-slate-900"
+        className={cn(
+          "group relative flex h-96 w-full sm:h-[440px] md:h-[480px] flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 bg-slate-100 text-left shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl cursor-pointer dark:border-slate-800 dark:bg-slate-900",
+          className
+        )}
       >
         {/* Background Image with Zoom on Hover */}
         <img
@@ -241,21 +246,21 @@ export const Card = ({
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/30 pointer-events-none" />
 
         {/* Top Tag */}
-        <div className="relative z-10 p-5 sm:p-6">
-          <span className="inline-flex items-center rounded-full border border-white/20 bg-black/40 px-3.5 py-1 text-xs font-semibold text-white backdrop-blur-md shadow-sm">
+        <div className="relative z-10 p-4 sm:p-5">
+          <span className="inline-flex items-center rounded-full border border-white/20 bg-black/40 px-3 py-0.5 text-[0.7rem] sm:text-xs font-semibold text-white backdrop-blur-md shadow-sm">
             {card.category}
           </span>
         </div>
 
         {/* Bottom Title & Learn More Hint */}
-        <div className="relative z-10 p-5 sm:p-6">
-          <h3 className="text-xl sm:text-2xl font-bold leading-snug text-white drop-shadow-md [text-wrap:balance]">
+        <div className="relative z-10 p-4 sm:p-5">
+          <h3 className="text-base sm:text-lg lg:text-xl font-bold leading-snug text-white drop-shadow-md [text-wrap:balance]">
             {card.title}
           </h3>
 
-          <div className="mt-3 flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-sky-300 transition group-hover:translate-x-1">
-            <span>Chạm để xem chi tiết</span>
-            <ArrowRight className="size-4" />
+          <div className="mt-2.5 flex items-center gap-1.5 text-xs font-semibold text-sky-300 transition group-hover:translate-x-1">
+            <span>Chạm xem chi tiết</span>
+            <ArrowRight className="size-3.5" />
           </div>
         </div>
       </motion.button>

@@ -7,7 +7,7 @@ import BrandLogo from "@/components/BrandLogo"
 import SiteFooter from "@/components/SiteFooter"
 import ThemeToggle from "@/components/ThemeToggle"
 import VietnamMap from "@/components/VietnamMap"
-import VantaFogBackground from "@/components/VantaFogBackground"
+import VantaFogBackground from "@/components/three-background/VantaFogBackground"
 import { Card, CardContent } from "@/components/ui/card"
 
 interface AuthLayoutProps {
@@ -16,18 +16,9 @@ interface AuthLayoutProps {
 
 function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="relative flex min-h-svh flex-col overflow-hidden bg-slate-950/5">
+    <div className="relative flex min-h-svh flex-col overflow-hidden">
       {/* 3D VANTA FOG ANIMATED BACKGROUND */}
-      <VantaFogBackground
-        highlightColor={0xffc300}
-        midtoneColor={0xff1f00}
-        lowlightColor={0x2d00ff}
-        baseColor={0xffebeb}
-        blurFactor={0.6}
-        zoom={1.0}
-        speed={1.0}
-        className="pointer-events-auto absolute inset-0 z-0"
-      />
+      <VantaFogBackground />
 
       {/* HEADER */}
       <header className="sticky top-0 z-30 flex h-16 sm:h-18 w-full shrink-0 items-center justify-between border-b border-sky-100/80 bg-white/75 px-6 backdrop-blur-md transition-colors sm:px-10 lg:px-12 dark:border-slate-800 dark:bg-slate-950/75">
