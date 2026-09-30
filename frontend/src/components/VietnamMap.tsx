@@ -25,7 +25,7 @@ const CARD_WIDTH = 260
 const CARD_GAP = 12
 const LABEL_WIDTH = 148
 
-// Khớp bảng Branch trong MySQL (Từ nhánh gia-bao)
+// Khớp bảng Branch trong MySQL (Dữ liệu từ phuong-vy)
 const PINS: MapPin[] = [
   {
     id: "hanoi",
@@ -201,7 +201,7 @@ export default function VietnamMap() {
       {/* Dynamic Ambient Glow (Từ main) */}
       <div className="absolute inset-0 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
 
-      {/* Floating S-Map Wrapper (Từ main + gia-bao) */}
+      {/* Floating S-Map Wrapper (Từ main) */}
       <motion.div
         animate={{ y: [-4, 4, -4] }}
         transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
@@ -214,7 +214,7 @@ export default function VietnamMap() {
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Giữ nguyên các thẻ <path> vẽ bản đồ SVG và các điểm ghim từ gia-bao */}
+          {/* Giữ lại toàn bộ các thẻ <g id="vietnam-provinces"> và các điểm ghim pin từ phuong-vy */}
         </svg>
 
         {/* Card hiển thị thông tin kho khi nhấp vào pin */}
