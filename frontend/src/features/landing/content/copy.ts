@@ -53,8 +53,8 @@ export const USE_CASES: readonly UseCase[] = [
     size: "L",
     presetId: "apartment",
     image: {
-      src: "https://images.unsplash.com/photo-1714647211902-bb711d643a17?auto=format&fit=crop&w=900&q=70",
-      alt: "Cô gái bê thùng carton trong phòng khách đang dọn dẹp để chuyển nhà",
+      src: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
+      alt: "Dọn nhà chuyển tổ ấm",
     },
   },
   {
@@ -63,6 +63,10 @@ export const USE_CASES: readonly UseCase[] = [
     body: "Chăn đông, quạt mát, đồ trang trí Tết, dụng cụ cắm trại: dùng xong cất gọn, giải phóng tối đa không gian sống.",
     size: "S",
     presetId: "suitcase",
+    image: {
+      src: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80",
+      alt: "Đồ dùng theo mùa và đồ gia đình gọn gàng",
+    },
   },
   {
     id: "student",
@@ -70,6 +74,10 @@ export const USE_CASES: readonly UseCase[] = [
     body: "Gửi trọn đồ đạc phòng trọ trong 2–3 tháng hè, không còn nỗi lo gánh nặng chi phí giữ phòng.",
     size: "M",
     presetId: "room",
+    image: {
+      src: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80",
+      alt: "Sinh viên gửi đồ về quê nghỉ hè",
+    },
   },
   {
     id: "travel",
@@ -77,6 +85,10 @@ export const USE_CASES: readonly UseCase[] = [
     body: "Tủ cá nhân bảo mật cao, camera giám sát 24/7, mở kho lấy đồ bất cứ lúc nào bạn cần.",
     size: "S",
     presetId: "suitcase",
+    image: {
+      src: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=800&q=80",
+      alt: "Vali hành lý và hồ sơ an toàn",
+    },
   },
   {
     id: "homestay",
@@ -84,6 +96,10 @@ export const USE_CASES: readonly UseCase[] = [
     body: "Nệm êm, đồ cồng kềnh, hàng hóa kinh doanh online: lối đi rộng rãi, xe tải đỗ tận nơi bốc dỡ dễ dàng.",
     size: "XL",
     presetId: "house",
+    image: {
+      src: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
+      alt: "Kho hàng kinh doanh và homestay",
+    },
   },
 ]
 
