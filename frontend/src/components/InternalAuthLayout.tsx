@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { Link } from "react-router-dom"
+import { motion } from "motion/react"
 import { ArrowLeft } from "lucide-react"
 
 import BrandLogo from "@/components/BrandLogo"
@@ -11,15 +12,37 @@ interface InternalAuthLayoutProps {
 
 function InternalAuthLayout({ children }: InternalAuthLayoutProps) {
   return (
-    <div className="flex min-h-svh flex-col bg-background">
+    <div className="relative flex min-h-svh flex-col overflow-hidden bg-gradient-to-b from-sky-50/70 via-blue-50/40 to-indigo-50/60 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      {/* DYNAMIC PASTEL BLUE RIBBON BACKGROUND */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <motion.div
+          animate={{
+            x: [0, 25, -20, 0],
+            y: [0, -20, 15, 0],
+            rotate: [0, 5, -3, 0],
+          }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-32 -left-32 h-[520px] w-[520px] rounded-full bg-gradient-to-tr from-sky-300/40 via-cyan-200/45 to-blue-200/35 blur-3xl dark:from-cyan-900/20 dark:via-blue-900/20 dark:to-transparent"
+        />
+        <motion.div
+          animate={{
+            x: [0, -30, 20, 0],
+            y: [0, 25, -15, 0],
+            rotate: [0, -6, 5, 0],
+          }}
+          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -bottom-36 -right-32 h-[580px] w-[580px] rounded-full bg-gradient-to-bl from-blue-300/45 via-indigo-200/40 to-teal-200/35 blur-3xl dark:from-indigo-900/20 dark:via-sky-900/20 dark:to-transparent"
+        />
+      </div>
+
       {/* HEADER */}
-      <header className="sticky top-0 z-30 flex h-16 w-full shrink-0 items-center justify-between border-b bg-card px-6 sm:px-10">
+      <header className="sticky top-0 z-30 flex h-16 w-full shrink-0 items-center justify-between border-b border-sky-100/80 bg-white/75 px-6 backdrop-blur-md transition-colors sm:px-10 dark:border-slate-800 dark:bg-slate-950/75">
         <BrandLogo internal />
 
         <div className="flex items-center gap-3">
           <Link
             to="/customer_login"
-            className="hidden items-center gap-1.5 rounded-lg border bg-background px-3.5 py-2 text-xs font-semibold text-foreground shadow-sm transition hover:bg-muted sm:inline-flex"
+            className="hidden items-center gap-1.5 rounded-lg border border-sky-200/60 bg-white/80 px-3.5 py-2 text-xs font-semibold text-foreground shadow-sm backdrop-blur-sm transition hover:bg-sky-50/80 dark:border-slate-700 dark:bg-slate-900/80 dark:hover:bg-slate-800 sm:inline-flex"
           >
             <ArrowLeft className="size-3" />
             <span>Cổng Khách Hàng</span>
@@ -30,14 +53,14 @@ function InternalAuthLayout({ children }: InternalAuthLayoutProps) {
       </header>
 
       {/* MAIN */}
-      <main className="flex flex-1 items-center justify-center p-4 sm:p-6">
-        <div className="w-full max-w-md rounded-2xl border bg-card p-7 shadow-sm sm:p-8">
+      <main className="relative z-10 flex flex-1 items-center justify-center p-4 sm:p-6">
+        <div className="w-full max-w-md rounded-3xl border border-sky-100/80 bg-white/90 p-7 shadow-xl shadow-sky-950/5 backdrop-blur-xl sm:p-8 dark:border-slate-800 dark:bg-slate-900/90 dark:shadow-none">
           {children}
         </div>
       </main>
 
       {/* FOOTER */}
-      <footer className="flex w-full shrink-0 flex-wrap items-center justify-between gap-y-1 border-t bg-card px-6 py-3 text-xs text-muted-foreground sm:px-10">
+      <footer className="relative z-10 flex w-full shrink-0 flex-wrap items-center justify-between gap-y-1 border-t border-sky-100/80 bg-white/75 px-6 py-3 text-xs text-muted-foreground backdrop-blur-md sm:px-10 dark:border-slate-800 dark:bg-slate-950/75">
         <div>© 2026 Smart Storage • Cổng thông tin nội bộ • FPT University</div>
         <div>• Bảo mật nội bộ</div>
       </footer>
