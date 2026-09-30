@@ -47,17 +47,6 @@ export const USE_CASES_SECTION = {
 
 export const USE_CASES: readonly UseCase[] = [
   {
-    id: "moving",
-    title: "Dọn nhà sửa tổ, gửi đồ liền tay",
-    body: "Gửi tạm toàn bộ nội thất và vật dụng từ vài tuần đến vài tháng, xong việc thảnh thơi dọn về tổ ấm mới.",
-    size: "L",
-    presetId: "apartment",
-    image: {
-      src: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80",
-      alt: "Thùng carton dọn nhà và nội thất",
-    },
-  },
-  {
     id: "seasonal",
     title: "Hết mùa cất lại, rộng rãi cả năm",
     body: "Chăn đông, quạt mát, đồ trang trí Tết, dụng cụ cắm trại: dùng xong cất gọn, giải phóng tối đa không gian sống.",
@@ -80,14 +69,14 @@ export const USE_CASES: readonly UseCase[] = [
     },
   },
   {
-    id: "travel",
-    title: "Giấy tờ vali, an toàn từng ly",
-    body: "Tủ cá nhân bảo mật cao, camera giám sát 24/7, mở kho lấy đồ bất cứ lúc nào bạn cần.",
-    size: "S",
-    presetId: "suitcase",
+    id: "moving",
+    title: "Dọn nhà sửa tổ, gửi đồ liền tay",
+    body: "Gửi tạm toàn bộ nội thất và vật dụng từ vài tuần đến vài tháng, xong việc thảnh thơi dọn về tổ ấm mới.",
+    size: "L",
+    presetId: "apartment",
     image: {
-      src: "https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?auto=format&fit=crop&w=800&q=80",
-      alt: "Vali kéo hành lý và tủ lưu trữ an toàn",
+      src: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80",
+      alt: "Thùng carton dọn nhà và nội thất",
     },
   },
   {
