@@ -53,8 +53,8 @@ export const USE_CASES: readonly UseCase[] = [
     size: "S",
     presetId: "suitcase",
     image: {
-      src: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80",
-      alt: "Dụng cụ cắm trại dã ngoại và đồ đạc theo mùa",
+      src: "https://images.unsplash.com/photo-1595079676339-1534801ad6cf?auto=format&fit=crop&w=800&q=80",
+      alt: "Tủ kho cá nhân mini lưu trữ an toàn",
     },
   },
   {
@@ -64,8 +64,8 @@ export const USE_CASES: readonly UseCase[] = [
     size: "M",
     presetId: "room",
     image: {
-      src: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80",
-      alt: "Balo và hành lý sinh viên dọn đồ về quê",
+      src: "https://images.unsplash.com/photo-1590247813693-5541d1c609fd?auto=format&fit=crop&w=800&q=80",
+      alt: "Phòng kho tự quản vừa vặn sạch sẽ",
     },
   },
   {
@@ -76,7 +76,7 @@ export const USE_CASES: readonly UseCase[] = [
     presetId: "apartment",
     image: {
       src: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80",
-      alt: "Thùng carton dọn nhà và nội thất",
+      alt: "Phòng kho lớn chứa thùng đồ và nội thất gia đình",
     },
   },
   {
@@ -86,8 +86,8 @@ export const USE_CASES: readonly UseCase[] = [
     size: "XL",
     presetId: "house",
     image: {
-      src: "https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=800&q=80",
-      alt: "Thùng hàng kiện hàng kinh doanh thương mại điện tử",
+      src: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
+      alt: "Kho hàng doanh nghiệp và homestay rộng rãi",
     },
   },
 ]
