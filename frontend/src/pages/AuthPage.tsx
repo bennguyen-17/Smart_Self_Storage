@@ -33,7 +33,7 @@ function AuthPage() {
               variant="ghost"
               onClick={() => navigate(tab.href)}
               className={cn(
-                "h-auto flex-1 rounded-xl py-2 text-xs font-semibold",
+                "h-auto flex-1 rounded-xl py-2.5 text-sm sm:text-base font-bold transition-all",
                 isActive
                   ? "bg-card text-foreground shadow-sm hover:bg-card"
                   : "text-muted-foreground hover:text-foreground"

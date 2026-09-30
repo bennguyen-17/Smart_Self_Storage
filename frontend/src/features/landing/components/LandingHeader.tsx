@@ -51,7 +51,7 @@ export function LandingHeader() {
     >
       <div
         className={cn(
-          "mx-auto flex w-full max-w-7xl items-center justify-between gap-6 px-4 transition-[height] duration-400 ease-[cubic-bezier(0.25,1,0.5,1)] sm:px-6 lg:px-8",
+          "flex w-full items-center justify-between gap-6 px-6 transition-[height] duration-400 ease-[cubic-bezier(0.25,1,0.5,1)] sm:px-10 lg:px-12",
           scrolled ? "h-15" : "h-(--l-header-h)"
         )}
       >

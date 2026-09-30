@@ -59,7 +59,9 @@ function TextField({
       control={control}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
-          <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+          <FieldLabel htmlFor={field.name} className="text-sm font-semibold sm:text-base">
+            {label}
+          </FieldLabel>
 
           <Input
             {...field}
@@ -69,6 +71,7 @@ function TextField({
             maxLength={maxLength}
             autoComplete={autoComplete}
             aria-invalid={fieldState.invalid}
+            className="h-11 text-base rounded-xl sm:h-12"
           />
 
           <FieldError errors={[fieldState.error]} />
@@ -103,9 +106,11 @@ function PasswordField({
       control={control}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
-          <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+          <FieldLabel htmlFor={field.name} className="text-sm font-semibold sm:text-base">
+            {label}
+          </FieldLabel>
 
-          <InputGroup>
+          <InputGroup className="h-11 rounded-xl sm:h-12">
             <InputGroupInput
               {...field}
               id={field.name}
@@ -113,6 +118,7 @@ function PasswordField({
               placeholder={placeholder}
               autoComplete="new-password"
               aria-invalid={fieldState.invalid}
+              className="text-base"
               onFocus={onFocus}
               onBlur={() => {
                 onBlur?.()
@@ -214,9 +220,9 @@ function RegisterForm() {
 
   return (
     <div className="w-full">
-      <div className="mb-4 space-y-1">
-        <h1 className="text-xl font-bold text-foreground">Tạo tài khoản mới</h1>
-        <p className="text-xs text-muted-foreground">
+      <div className="mb-5 space-y-1.5">
+        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Tạo tài khoản mới</h1>
+        <p className="text-sm text-muted-foreground sm:text-base">
           Đăng ký nhanh chóng để nhận mã mở kho tự quản
         </p>
       </div>
@@ -320,13 +326,13 @@ function RegisterForm() {
                 className="mt-0.5"
               />
 
-              <span className="text-[11px] leading-tight text-muted-foreground">
+              <span className="text-xs leading-normal text-muted-foreground sm:text-sm">
                 Tôi đồng ý với{" "}
                 <Button
                   type="button"
                   variant="link"
                   onClick={() => setPolicyTab("terms")}
-                  className="inline h-auto p-0 text-[11px] font-semibold text-blue-600 underline dark:text-blue-400"
+                  className="inline h-auto p-0 text-xs font-semibold text-blue-600 underline sm:text-sm dark:text-blue-400"
                 >
                   Điều khoản dịch vụ
                 </Button>{" "}
@@ -335,7 +341,7 @@ function RegisterForm() {
                   type="button"
                   variant="link"
                   onClick={() => setPolicyTab("privacy")}
-                  className="inline h-auto p-0 text-[11px] font-semibold text-blue-600 underline dark:text-blue-400"
+                  className="inline h-auto p-0 text-xs font-semibold text-blue-600 underline sm:text-sm dark:text-blue-400"
                 >
                   Chính sách bảo mật kho
                 </Button>
@@ -354,9 +360,8 @@ function RegisterForm() {
         {/* Register */}
         <Button
           type="submit"
-          size="lg"
           disabled={isSubmitting}
-          className="mt-3.5 w-full bg-emerald-600 text-white hover:bg-emerald-700"
+          className="mt-4.5 h-12 w-full rounded-xl bg-emerald-600 text-base font-bold text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-700"
         >
           {isSubmitting && <Spinner />}
 
@@ -371,7 +376,7 @@ function RegisterForm() {
         )}
       </form>
 
-      <p className="mt-5 text-center text-[11px] text-muted-foreground">
+      <p className="mt-5 text-center text-sm text-muted-foreground">
         Bạn là nhân viên hoặc quản lý cơ sở?{" "}
         <Link
           to="/internal_login"
