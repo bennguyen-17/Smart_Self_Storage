@@ -8,7 +8,7 @@ import { CTA, ROUTES, SITE } from "../content/site"
 
 export function LandingFooter() {
   return (
-    <footer className="relative overflow-hidden border-t border-border/80 bg-gradient-to-b from-transparent via-muted/30 to-muted/70 pb-28 backdrop-blur-sm md:pb-0 dark:via-card/20 dark:to-card/50">
+    <footer className="relative overflow-hidden border-t border-border/80 bg-gradient-to-b from-transparent via-muted/30 to-muted/70 pb-28 md:pb-0 dark:via-card/20 dark:to-card/50">
       <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8 lg:px-8">
         {/* Cột 1: Thương hiệu & Giới thiệu */}
         <div className="flex flex-col gap-4 lg:col-span-4">

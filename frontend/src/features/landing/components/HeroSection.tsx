@@ -1,5 +1,5 @@
 import { motion } from "motion/react"
-import { ArrowRight, Clock3, ShieldCheck, Sparkles, Thermometer } from "lucide-react"
+import { ArrowRight, Clock3, ShieldCheck, Sparkles } from "lucide-react"
 
 import { HERO, type TrustIcon } from "../content/copy"
 import { CTA, ROUTES } from "../content/site"
@@ -13,7 +13,6 @@ import { LandingLink } from "./LandingButton"
 
 const TRUST_ICONS: Record<TrustIcon, typeof Clock3> = {
   clock: Clock3,
-  thermometer: Thermometer,
   shield: ShieldCheck,
 }
 
@@ -29,14 +28,6 @@ export function HeroSection() {
           initial={initial}
           animate="shown"
         >
-          {/* Badge nổi bật */}
-          <motion.div variants={heroItem} className="w-fit">
-            <span className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-blue-600 shadow-sm backdrop-blur-md dark:border-blue-400/30 dark:bg-blue-400/10 dark:text-blue-300">
-              <Sparkles className="size-3.5 animate-pulse text-blue-500 dark:text-blue-400" />
-              {HERO.badge}
-            </span>
-          </motion.div>
-
           <motion.h1
             id="hero-title"
             variants={heroItem}
@@ -64,17 +55,17 @@ export function HeroSection() {
 
           <motion.ul
             variants={heroItem}
-            className="flex flex-wrap gap-x-6 gap-y-3 pt-4 text-[0.9375rem] font-medium text-foreground/90"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 text-[0.9375rem] font-medium text-foreground/90 max-w-xl"
           >
             {HERO.trust.map((t) => {
               const Icon = TRUST_ICONS[t.icon]
               return (
                 <li
                   key={t.label}
-                  className="flex items-center gap-2.5 rounded-full bg-muted/60 px-3.5 py-1.5 ring-1 ring-border/50 backdrop-blur-sm dark:bg-card/50"
+                  className="flex items-center gap-2.5 rounded-xl bg-muted/60 px-4 py-2 ring-1 ring-border/50 backdrop-blur-sm dark:bg-card/50 shadow-sm"
                 >
-                  <Icon className="size-4.5 text-blue-500 dark:text-blue-400" aria-hidden />
-                  <span>{t.label}</span>
+                  <Icon className="size-5 text-blue-500 dark:text-blue-400 shrink-0" aria-hidden />
+                  <span className="leading-tight">{t.label}</span>
                 </li>
               )
             })}
@@ -86,7 +77,7 @@ export function HeroSection() {
             variants={clipReveal}
             initial={initial}
             animate="shown"
-            className="group relative overflow-hidden rounded-(--l-radius-panel) p-2 shadow-2xl ring-1 ring-border/60 backdrop-blur-md transition-transform duration-500 hover:scale-[1.01]"
+            className="group relative overflow-hidden rounded-(--l-radius-panel) p-2 shadow-2xl ring-1 ring-border/60 transition-transform duration-500 hover:scale-[1.01]"
           >
             <div className="overflow-hidden rounded-[calc(var(--l-radius-panel)-8px)]">
               <img
@@ -103,9 +94,6 @@ export function HeroSection() {
               />
             </div>
           </motion.div>
-          <figcaption className="mt-2 text-right text-xs text-muted-foreground/80">
-            {HERO.image.credit}
-          </figcaption>
         </figure>
       </div>
     </section>

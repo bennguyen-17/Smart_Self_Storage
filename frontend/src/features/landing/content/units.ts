@@ -70,5 +70,4 @@ export const CLIMATE_SURCHARGE = 0.2
 export const PRICING_NOTES = [
   "Thuê tối thiểu 7 ngày. Từ 7 đến 29 ngày tính theo giá ngày.",
   "Gói 3 tháng giảm 5%, 6 tháng giảm 10%, 12 tháng giảm 15%.",
-  "Kho mát điều hòa 22–25°C (sẵn sàng tại tất cả cơ sở) cộng thêm 20% đơn giá.",
 ] as const

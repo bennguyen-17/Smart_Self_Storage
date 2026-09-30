@@ -123,7 +123,8 @@ export function UseCasesSection({ onTry }: UseCasesSectionProps) {
                     Cỡ {u.size}: {unit?.name} ({unit?.dimensions})
                   </h4>
                   <p className="text-sm text-muted-foreground">
-                    Diện tích {unit?.areaM2} m² • Thể tích {unit?.volumeM3} m³
+                    Diện tích {unit?.areaM2} m² 
+                    • Thể tích {unit?.volumeM3} m³
                   </p>
                 </div>
               </div>
@@ -173,7 +174,7 @@ export function UseCasesSection({ onTry }: UseCasesSectionProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <ThermometerSnowflake className="size-4 text-sky-500" />
-                  <span>Kho mát điều hòa 22-25°C</span>
+                  <span>Kho mát điều hòa 22-25°C</span>e
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="size-4 text-blue-500" />

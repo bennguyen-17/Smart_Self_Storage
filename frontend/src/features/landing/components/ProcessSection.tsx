@@ -53,7 +53,7 @@ export function ProcessSection() {
             <motion.li
               key={step.title}
               variants={fadeUp}
-              className="group relative flex flex-col items-center text-center gap-3.5 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl backdrop-blur-md border bg-white/85 border-slate-800/25 shadow-md hover:border-blue-700/60 hover:shadow-blue-500/10 dark:bg-slate-900/80 dark:border-cyan-200/35 dark:hover:border-cyan-300/70 dark:shadow-[0_8px_30px_rgba(56,189,248,0.12)]"
+              className="group relative flex flex-col items-center text-center gap-3.5 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl border bg-white/85 border-slate-800/25 shadow-md hover:border-blue-700/60 hover:shadow-blue-500/10 dark:bg-slate-900/80 dark:border-cyan-200/35 dark:hover:border-cyan-300/70 dark:shadow-[0_8px_30px_rgba(56,189,248,0.12)]"
             >
               {/* Nút số 1 2 3 4 hiệu ứng Gradient phát sáng */}
               <span className="relative z-10 flex size-12 sm:size-13 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600 text-lg sm:text-xl font-black text-white shadow-lg shadow-sky-500/30 ring-4 ring-white/90 dark:ring-slate-900/90 transition-transform duration-300 group-hover:scale-110">
