@@ -5,6 +5,7 @@ import { Agentation } from "agentation";
 import AuthPage from "@/pages/AuthPage";
 import InternalLoginPage from "@/pages/InternalLoginPage";
 import CustomerPortal from "@/pages/CustomerPortal";
+import LandingPage from "@/features/landing/pages/LandingPage";
 
 // Route Guard: Bắt buộc phải đăng nhập thì mới được vào xem sơ đồ và đặt kho
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -19,8 +20,8 @@ function App() {
   return (
     <>
       <Routes>
-        {/* Mặc định khi mở web: Bắt buộc vào trang Đăng nhập / Đăng ký trước */}
-        <Route path="/" element={<Navigate to="/customer_login" replace />} />
+        {/* Trang chủ: Landing page (Vỹ) */}
+        <Route path="/" element={<LandingPage />} />
 
         {/* Các trang Xác thực khách hàng & nội bộ */}
         <Route path="/customer_login" element={<AuthPage />} />
