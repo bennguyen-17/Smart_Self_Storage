@@ -186,28 +186,13 @@ export default function MyStorageTab({ onOpenExtendModal }) {
         <div className="lg:col-span-5 xl:col-span-4 space-y-4">
           <div className="card-box rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs p-5 sm:p-6 space-y-4 sm:space-y-5">
             {/* Header */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3.5">
-              <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+            <div className="flex flex-col items-start xl:flex-row xl:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+              <div className="flex items-center space-x-2.5 sm:space-x-3 w-full">
                 <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-base sm:text-lg font-bold border border-blue-100 dark:border-blue-800 shrink-0 shadow-xs">
                   <i className="fa-solid fa-key"></i>
                 </span>
-                <h2 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider whitespace-nowrap truncate">MÃ PIN CỬA CHÍNH 24/7</h2>
+                <h2 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">MÃ PIN CỬA CHÍNH 24/7</h2>
               </div>
-
-              {/* Status Badge */}
-              {currentFacPermission.hasAccess ? (
-                <span className="inline-flex items-center px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0 whitespace-nowrap shadow-xs">
-                  <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-emerald-500 mr-1.5 sm:mr-2 shrink-0 animate-ping"></span>Cho phép (HĐ Hiệu lực)
-                </span>
-              ) : currentFacPermission.isPending ? (
-                <span className="inline-flex items-center px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0 whitespace-nowrap shadow-xs">
-                  <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-amber-500 mr-1.5 sm:mr-2 shrink-0"></span>Chờ nhận kho (Chưa kích hoạt)
-                </span>
-              ) : (
-                <span className="inline-flex items-center px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0 whitespace-nowrap">
-                  Chưa có quyền
-                </span>
-              )}
             </div>
 
             {/* FACILITY SELECTOR */}
@@ -220,13 +205,11 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                   <select
                     value={gateFacility}
                     onChange={(e) => handleFacilityChange(e.target.value)}
-                    className="w-full text-xs sm:text-sm font-bold px-3.5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer transition shadow-xs"
+                    className="w-full text-sm font-bold px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white hover:border-slate-300 dark:hover:border-slate-600 focus:border-blue-500 dark:focus:border-blue-500 outline-none cursor-pointer shadow-sm transition-all"
                   >
                     {contractedFacilities.map((fac: any) => (
-                      <option key={fac.code} value={fac.code}>
-                        {fac.hasActive 
-                          ? `🟢 ${fac.name}` 
-                          : `🟡 ${fac.name}`}
+                      <option key={fac.code} value={fac.code} className="font-medium">
+                        {fac.name ? fac.name.replace(/\s*\([A-Z0-9-]+\)/g, '') : ''}
                       </option>
                     ))}
                   </select>
@@ -355,9 +338,9 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                               </span>
                             </div>
                             <div>
-                              <span className="text-slate-400 dark:text-slate-400 block text-[10px] uppercase font-bold">Kích cỡ</span>
+                              <span className="text-slate-400 dark:text-slate-400 block text-[10px] uppercase font-bold">Ngày nhận kho</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200 block mt-0.5">
-                                {item.size ? `Size ${item.size}` : item.sizeLabel}
+                                {item.startDate || '23/09/2026'}
                               </span>
                             </div>
                             <div>
@@ -432,7 +415,7 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                           <th className="py-2 px-2 text-center whitespace-nowrap">Mã Hợp Đồng</th>
                           <th className="py-2 px-2 text-center whitespace-nowrap">Mã Ô Kho</th>
                           <th className="py-2 px-2 text-center">Cơ Sở</th>
-                          <th className="py-2 px-2 text-center whitespace-nowrap">Kích Cỡ</th>
+                          <th className="py-2 px-2 text-center whitespace-nowrap">Ngày Nhận Kho</th>
                           <th className="py-2 px-2 text-center whitespace-nowrap">Ngày Trả Kho</th>
                           <th className="py-2 px-2 text-center whitespace-nowrap">Trạng Thái</th>
                           <th className="py-2 px-2 text-center whitespace-nowrap">Hành Động</th>
@@ -461,7 +444,7 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                                 </div>
                               </td>
                               <td className="py-2.5 px-2 whitespace-nowrap align-middle text-center">
-                                <span className="font-bold text-slate-900 dark:text-slate-100 text-[11px]">{item.size ? `Size ${item.size}` : item.sizeLabel}</span>
+                                <span className="font-bold text-slate-900 dark:text-slate-100 text-[11px]">{item.startDate || '23/09/2026'}</span>
                               </td>
                               <td className="py-2.5 px-2 whitespace-nowrap align-middle text-center">
                                 <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">{item.expiryDate}</div>

@@ -70,6 +70,7 @@ export const addNewBookingContract = (bookingData: any) => {
     branchCode: branchCode,
     size: bookingData.unitSize?.replace('Size ', '') || 'XL',
     sizeLabel: bookingData.unitSize || 'Size XL',
+    startDate: bookingData.startDate || new Date().toLocaleDateString('vi-VN'),
     expiryDate: bookingData.endDate ? bookingData.endDate.split(' ')[0] : '30 ngày tới',
     daysLeft: bookingData.effectiveDays || 30,
     status: 'PENDING_CHECKIN',

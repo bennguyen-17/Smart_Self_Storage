@@ -147,7 +147,7 @@ export default function StorageMap2D({
       <div className="card-box p-3 sm:p-3.5 rounded-2xl border shadow-xs space-y-2.5 w-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
         <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-2.5">
           {/* CHỌN CƠ SỞ */}
-          <div className="flex items-center gap-2 flex-1 min-w-[170px]">
+          <div className="flex items-center gap-2 flex-1 min-w-[170px] sm:max-w-[380px]">
             <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide flex items-center shrink-0">
               <i className="fa-solid fa-location-dot text-rose-500 mr-1.5 text-sm"></i> Cơ sở kho:
             </span>
