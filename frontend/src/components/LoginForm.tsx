@@ -116,19 +116,19 @@ function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-[420px] mx-auto">
-      <div className="mb-3">
-        <h2 className="font-heading text-lg font-bold tracking-tight text-foreground sm:text-xl">
+    <div className="w-full">
+      <div className="mb-5">
+        <h2 className="font-heading text-xl font-bold tracking-tight text-foreground sm:text-2xl">
           Đăng nhập
         </h2>
 
-        <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+        <p className="mt-1.5 text-xs text-muted-foreground sm:text-sm">
           Nhập số điện thoại và mật khẩu để truy cập hệ thống.
         </p>
       </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-        <FieldGroup className="space-y-3">
+        <FieldGroup className="space-y-3.5">
           {/* Phone */}
           <Controller
             name="phone"
@@ -147,7 +147,7 @@ function LoginForm() {
                   maxLength={10}
                   autoComplete="tel"
                   aria-invalid={fieldState.invalid}
-                  className="h-9.5 text-xs sm:text-sm rounded-lg"
+                  className="h-10 text-sm rounded-xl"
                 />
 
                 <FieldError errors={[fieldState.error]} />
@@ -165,7 +165,7 @@ function LoginForm() {
                   Mật khẩu
                 </FieldLabel>
 
-                <InputGroup className="h-9.5 rounded-lg">
+                <InputGroup className="h-10 rounded-xl">
                   <InputGroupInput
                     {...field}
                     id={field.name}
@@ -173,7 +173,7 @@ function LoginForm() {
                     placeholder="Nhập mật khẩu"
                     autoComplete="current-password"
                     aria-invalid={fieldState.invalid}
-                    className="text-xs sm:text-sm"
+                    className="text-sm"
                   />
 
                   <InputGroupAddon align="inline-end">
@@ -206,7 +206,7 @@ function LoginForm() {
           />
         </FieldGroup>
 
-        <Button type="submit" disabled={isSubmitting} className="mt-4 h-9.5 w-full rounded-lg text-xs sm:text-sm font-bold shadow-md shadow-blue-500/20">
+        <Button type="submit" disabled={isSubmitting} className="mt-5 h-10 w-full rounded-xl text-sm font-bold shadow-md shadow-blue-500/20">
           {isSubmitting && <Spinner />}
 
           {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
@@ -220,7 +220,7 @@ function LoginForm() {
         )}
       </form>
 
-      <p className="mt-3.5 text-center text-xs sm:text-sm text-muted-foreground">
+      <p className="mt-5 text-center text-xs text-muted-foreground sm:text-sm">
         Chưa có tài khoản?{" "}
         <Link
           to="/customer_login?tab=register"

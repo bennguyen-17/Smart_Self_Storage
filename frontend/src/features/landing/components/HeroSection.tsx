@@ -56,8 +56,8 @@ export function HeroSection() {
             variants={heroItem}
             className="flex flex-wrap items-center gap-3.5 pt-2"
           >
-            <LandingLink to={ROUTES.book} size="lg" className="shadow-lg shadow-blue-500/25">
-              {CTA.book}
+            <LandingLink href="#use-cases" size="lg" className="shadow-lg shadow-blue-500/25 cursor-pointer">
+              {CTA.explore}
               <ArrowRight aria-hidden className="size-5 transition-transform duration-200 group-hover:translate-x-1" />
             </LandingLink>
           </motion.div>

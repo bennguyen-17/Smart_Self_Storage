@@ -21,7 +21,7 @@ function AuthPage() {
   return (
     <AuthLayout>
       {/* TAB SWITCHER */}
-      <div role="tablist" className="mb-3 flex shrink-0 rounded-xl bg-muted p-1">
+      <div role="tablist" className="mb-4 flex shrink-0 rounded-xl bg-muted/80 p-1">
         {TABS.map((tab) => {
           const isActive = tab.value === activeTab
 
@@ -34,7 +34,7 @@ function AuthPage() {
               variant="ghost"
               onClick={() => navigate(tab.href)}
               className={cn(
-                "h-auto flex-1 rounded-lg py-2 text-xs sm:text-sm font-bold transition-all cursor-pointer",
+                "h-auto flex-1 rounded-lg py-2 text-xs sm:text-sm font-semibold transition-all cursor-pointer",
                 isActive
                   ? "bg-card text-foreground shadow-xs hover:bg-card"
                   : "text-muted-foreground hover:text-foreground"

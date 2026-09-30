@@ -71,7 +71,7 @@ function TextField({
             maxLength={maxLength}
             autoComplete={autoComplete}
             aria-invalid={fieldState.invalid}
-            className="h-9.5 text-xs sm:text-sm rounded-lg"
+            className="h-10 text-sm rounded-xl"
           />
 
           <FieldError errors={[fieldState.error]} />
@@ -110,7 +110,7 @@ function PasswordField({
             {label}
           </FieldLabel>
 
-          <InputGroup className="h-9.5 rounded-lg">
+          <InputGroup className="h-10 rounded-xl">
             <InputGroupInput
               {...field}
               id={field.name}
@@ -118,7 +118,7 @@ function PasswordField({
               placeholder={placeholder}
               autoComplete="new-password"
               aria-invalid={fieldState.invalid}
-              className="text-xs sm:text-sm"
+              className="text-sm"
               onFocus={onFocus}
               onBlur={() => {
                 onBlur?.()
@@ -221,8 +221,8 @@ function RegisterForm() {
 
   return (
     <div className="w-full">
-      <div className="mb-2.5 space-y-0.5">
-        <h1 className="text-lg font-bold text-foreground sm:text-xl">Tạo tài khoản mới</h1>
+      <div className="mb-4 space-y-1">
+        <h1 className="text-xl font-bold text-foreground sm:text-2xl">Tạo tài khoản mới</h1>
         <p className="text-xs text-muted-foreground sm:text-sm">
           Đăng ký nhanh chóng để nhận mã mở kho tự quản
         </p>
@@ -329,13 +329,13 @@ function RegisterForm() {
                 className="mt-0.5"
               />
 
-              <span className="text-[11px] leading-normal text-muted-foreground sm:text-xs">
+              <span className="text-xs leading-normal text-muted-foreground">
                 Tôi đồng ý với{" "}
                 <Button
                   type="button"
                   variant="link"
                   onClick={() => setPolicyTab("terms")}
-                  className="inline h-auto p-0 text-[11px] font-semibold text-blue-600 underline sm:text-xs dark:text-blue-400"
+                  className="inline h-auto p-0 text-xs font-semibold text-blue-600 underline dark:text-blue-400"
                 >
                   Điều khoản dịch vụ
                 </Button>{" "}
@@ -344,7 +344,7 @@ function RegisterForm() {
                   type="button"
                   variant="link"
                   onClick={() => setPolicyTab("privacy")}
-                  className="inline h-auto p-0 text-[11px] font-semibold text-blue-600 underline sm:text-xs dark:text-blue-400"
+                  className="inline h-auto p-0 text-xs font-semibold text-blue-600 underline dark:text-blue-400"
                 >
                   Chính sách bảo mật kho
                 </Button>
@@ -364,7 +364,7 @@ function RegisterForm() {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="mt-3.5 h-9.5 w-full rounded-lg bg-emerald-600 text-xs sm:text-sm font-bold text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-700"
+          className="mt-4 h-10 w-full rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-700"
         >
           {isSubmitting && <Spinner />}
 
@@ -379,7 +379,7 @@ function RegisterForm() {
         )}
       </form>
 
-      <p className="mt-2.5 text-center text-xs text-muted-foreground">
+      <p className="mt-4 text-center text-xs text-muted-foreground">
         Bạn là nhân viên hoặc quản lý cơ sở?{" "}
         <Link
           to="/internal_login"

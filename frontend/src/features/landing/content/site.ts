@@ -25,6 +25,7 @@ export const ROUTES = {
 
 export const CTA = {
   book: "Đặt kho ngay",
+  explore: "Khám phá ngay",
   bookThisSize: "Đặt kho cỡ này",
   call: "Gọi tư vấn",
   callShort: "Gọi",
