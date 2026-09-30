@@ -112,7 +112,7 @@ export function UseCasesSection({ onTry }: UseCasesSectionProps) {
                   </li>
                   <li className="flex items-center gap-2.5">
                     <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-xs font-bold text-blue-600 dark:text-blue-400">✓</span>
-                    <span>Bảo mật vân tay & camera an ninh 24/7</span>
+                    <span>Bảo mật mã PIN & camera an ninh 24/7</span>
                   </li>
                 </ul>
 
