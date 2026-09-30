@@ -57,13 +57,13 @@ export function LandingHeader() {
       >
         <a
           href="#top"
-          className="flex items-center gap-3 rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="flex items-center gap-3 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50 group"
         >
-          <span className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Warehouse className="size-5" aria-hidden />
+          <span className="flex size-10 sm:size-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+            <Warehouse className="size-5 sm:size-6" aria-hidden />
           </span>
-          <span className="text-lg font-semibold tracking-tight">
-            <span className="text-(--l-link)">Smart</span> Self Storage
+          <span className="text-lg sm:text-xl font-black tracking-tight text-foreground">
+            <span className="text-blue-600 dark:text-blue-500">Smart</span> Self Storage
             <span className="sr-only">, về đầu trang</span>
           </span>
         </a>
