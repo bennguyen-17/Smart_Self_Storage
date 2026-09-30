@@ -207,82 +207,82 @@ export default function StorageMap2D({
       </div>
 
       {/* BẢNG PHÂN LOẠI 4 KÍCH THƯỚC KHO TIÊU CHUẨN */}
-      <div className="card-box p-5 rounded-3xl border shadow-sm space-y-4 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800">
+      <div className="card-box p-4 sm:p-5 rounded-3xl border shadow-sm space-y-3 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800">
         <div className="flex items-center justify-between">
-          <span className="font-black text-sm sm:text-base text-slate-900 dark:text-white uppercase tracking-wider flex items-center">
-            <i className="fa-solid fa-layer-group text-blue-600 mr-2.5"></i> BẢNG PHÂN LOẠI 4 KÍCH THƯỚC KHO TIÊU CHUẨN
+          <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-wider flex items-center">
+            <i className="fa-solid fa-layer-group text-blue-600 mr-2"></i> BẢNG PHÂN LOẠI 4 KÍCH THƯỚC KHO TIÊU CHUẨN
           </span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* SIZE S */}
-          <div className="p-3.5 rounded-2xl border border-emerald-500/40 flex items-center space-x-3.5 bg-emerald-50/60 dark:bg-emerald-950/25 transition-transform duration-200 hover:-translate-y-1 hover:shadow-md">
-            <div className="w-12 h-12 rounded-xl border-2 border-emerald-500 bg-emerald-500/20 flex flex-col items-center justify-center shrink-0 shadow-xs">
-              <span className="font-black text-sm text-emerald-700 dark:text-emerald-400">S</span>
-              <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-300">1m²</span>
+          <div className="p-3 rounded-2xl border border-emerald-500/40 flex items-center space-x-3 bg-emerald-50/60 dark:bg-emerald-950/25 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md">
+            <div className="w-10 h-10 rounded-xl border-2 border-emerald-500 bg-emerald-500/20 flex flex-col items-center justify-center shrink-0 shadow-xs">
+              <span className="font-black text-xs text-emerald-700 dark:text-emerald-400">S</span>
+              <span className="text-[8px] font-bold text-emerald-600 dark:text-emerald-300">1m²</span>
             </div>
-            <div className="text-sm leading-tight min-w-0 space-y-1">
+            <div className="text-xs leading-tight min-w-0 space-y-0.5">
               <div className="font-black text-slate-900 dark:text-white truncate">Size S</div>
-              <div className="text-emerald-600 dark:text-emerald-400 font-extrabold text-xs">
-                30.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[11px]">/ ngày</span>
+              <div className="text-emerald-600 dark:text-emerald-400 font-extrabold text-[11px]">
+                30.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ ngày</span>
               </div>
-              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-xs">
-                600.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[11px]">/ tháng</span>
+              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[11px]">
+                600.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ tháng</span>
               </div>
-              <div className="text-[11px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 500.000đ</div>
+              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 500.000đ</div>
             </div>
           </div>
 
           {/* SIZE M */}
-          <div className="p-3.5 rounded-2xl border border-indigo-500/40 flex items-center space-x-3.5 bg-indigo-50/60 dark:bg-indigo-950/25 transition-transform duration-200 hover:-translate-y-1 hover:shadow-md">
-            <div className="w-12 h-12 rounded-xl border-2 border-indigo-500 bg-indigo-500/20 flex flex-col items-center justify-center shrink-0 shadow-xs">
-              <span className="font-black text-sm text-indigo-700 dark:text-indigo-400">M</span>
-              <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-300">3m²</span>
+          <div className="p-3 rounded-2xl border border-indigo-500/40 flex items-center space-x-3 bg-indigo-50/60 dark:bg-indigo-950/25 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md">
+            <div className="w-10 h-10 rounded-xl border-2 border-indigo-500 bg-indigo-500/20 flex flex-col items-center justify-center shrink-0 shadow-xs">
+              <span className="font-black text-xs text-indigo-700 dark:text-indigo-400">M</span>
+              <span className="text-[8px] font-bold text-indigo-600 dark:text-indigo-300">3m²</span>
             </div>
-            <div className="text-sm leading-tight min-w-0 space-y-1">
+            <div className="text-xs leading-tight min-w-0 space-y-0.5">
               <div className="font-black text-slate-900 dark:text-white truncate">Size M</div>
-              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-xs">
-                60.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[11px]">/ ngày</span>
+              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[11px]">
+                60.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ ngày</span>
               </div>
-              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-xs">
-                1.200.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[11px]">/ tháng</span>
+              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[11px]">
+                1.200.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ tháng</span>
               </div>
-              <div className="text-[11px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 1.000.000đ</div>
+              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 1.000.000đ</div>
             </div>
           </div>
 
           {/* SIZE L */}
-          <div className="p-3.5 rounded-2xl border border-blue-500/40 flex items-center space-x-3.5 bg-blue-50/60 dark:bg-blue-950/25 transition-transform duration-200 hover:-translate-y-1 hover:shadow-md">
-            <div className="w-12 h-12 rounded-xl border-2 border-blue-500 bg-blue-500/20 flex flex-col items-center justify-center shrink-0 shadow-xs">
-              <span className="font-black text-sm text-blue-700 dark:text-blue-400">L</span>
-              <span className="text-[9px] font-bold text-blue-600 dark:text-blue-300">6m²</span>
+          <div className="p-3 rounded-2xl border border-blue-500/40 flex items-center space-x-3 bg-blue-50/60 dark:bg-blue-950/25 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md">
+            <div className="w-10 h-10 rounded-xl border-2 border-blue-500 bg-blue-500/20 flex flex-col items-center justify-center shrink-0 shadow-xs">
+              <span className="font-black text-xs text-blue-700 dark:text-blue-400">L</span>
+              <span className="text-[8px] font-bold text-blue-600 dark:text-blue-300">6m²</span>
             </div>
-            <div className="text-sm leading-tight min-w-0 space-y-1">
+            <div className="text-xs leading-tight min-w-0 space-y-0.5">
               <div className="font-black text-slate-900 dark:text-white truncate">Size L</div>
-              <div className="text-blue-600 dark:text-blue-400 font-extrabold text-xs">
-                120.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[11px]">/ ngày</span>
+              <div className="text-blue-600 dark:text-blue-400 font-extrabold text-[11px]">
+                120.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ ngày</span>
               </div>
-              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-xs">
-                2.400.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[11px]">/ tháng</span>
+              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[11px]">
+                2.400.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ tháng</span>
               </div>
-              <div className="text-[11px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 2.000.000đ</div>
+              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 2.000.000đ</div>
             </div>
           </div>
 
           {/* SIZE XL */}
-          <div className="p-3.5 rounded-2xl border border-amber-500/40 flex items-center space-x-3.5 bg-amber-50/60 dark:bg-amber-950/25 transition-transform duration-200 hover:-translate-y-1 hover:shadow-md">
-            <div className="w-12 h-12 rounded-xl border-2 border-amber-500 bg-amber-500/20 flex flex-col items-center justify-center shrink-0 shadow-xs">
-              <span className="font-black text-sm text-amber-700 dark:text-amber-400">XL</span>
-              <span className="text-[9px] font-bold text-amber-600 dark:text-amber-300">10m²</span>
+          <div className="p-3 rounded-2xl border border-amber-500/40 flex items-center space-x-3 bg-amber-50/60 dark:bg-amber-950/25 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md">
+            <div className="w-10 h-10 rounded-xl border-2 border-amber-500 bg-amber-500/20 flex flex-col items-center justify-center shrink-0 shadow-xs">
+              <span className="font-black text-xs text-amber-700 dark:text-amber-400">XL</span>
+              <span className="text-[8px] font-bold text-amber-600 dark:text-amber-300">10m²</span>
             </div>
-            <div className="text-sm leading-tight min-w-0 space-y-1">
+            <div className="text-xs leading-tight min-w-0 space-y-0.5">
               <div className="font-black text-slate-900 dark:text-white truncate">Size XL</div>
-              <div className="text-amber-600 dark:text-amber-400 font-extrabold text-xs">
-                200.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[11px]">/ ngày</span>
+              <div className="text-amber-600 dark:text-amber-400 font-extrabold text-[11px]">
+                200.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ ngày</span>
               </div>
-              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-xs">
-                4.000.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[11px]">/ tháng</span>
+              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[11px]">
+                4.000.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ tháng</span>
               </div>
-              <div className="text-[11px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 3.000.000đ</div>
+              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 3.000.000đ</div>
             </div>
           </div>
         </div>

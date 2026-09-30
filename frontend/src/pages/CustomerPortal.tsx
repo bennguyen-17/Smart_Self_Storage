@@ -173,9 +173,9 @@ export default function CustomerPortal() {
                 transition={{ duration: 0.25 }}
                 className="space-y-6"
               >
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
+                <div className="grid grid-cols-1 lg:grid-cols-12 xl:grid-cols-12 gap-6 items-start w-full">
                   {/* Sơ đồ kho 2D */}
-                  <div className="lg:col-span-8">
+                  <div className="lg:col-span-8 xl:col-span-9">
                     <StorageMap2D
                       facility={facility}
                       refreshTrigger={mapRefreshTrigger}
@@ -194,7 +194,7 @@ export default function CustomerPortal() {
                   </div>
 
                   {/* Sidebar Giỏ hàng & Đặt cọc */}
-                  <div className="lg:col-span-4">
+                  <div className="lg:col-span-4 xl:col-span-3 sticky top-6">
                     <BookingSidebar
                       selectedUnit={selectedUnit}
                       onOpenDepositModal={handleOpenDepositModal}
