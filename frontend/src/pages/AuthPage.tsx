@@ -1,4 +1,5 @@
 import { useNavigate, useSearchParams } from "react-router-dom"
+import { AnimatePresence, motion } from "motion/react"
 import { cn } from "cn"
 
 import AuthLayout from "@/components/AuthLayout"
@@ -33,7 +34,7 @@ function AuthPage() {
               variant="ghost"
               onClick={() => navigate(tab.href)}
               className={cn(
-                "h-auto flex-1 rounded-xl py-2.5 text-sm sm:text-base font-bold transition-all",
+                "h-auto flex-1 rounded-xl py-2.5 text-sm sm:text-base font-bold transition-all cursor-pointer",
                 isActive
                   ? "bg-card text-foreground shadow-sm hover:bg-card"
                   : "text-muted-foreground hover:text-foreground"
@@ -45,7 +46,18 @@ function AuthPage() {
         })}
       </div>
 
-      {activeTab === "register" ? <RegisterForm /> : <LoginForm />}
+      {/* ANIMATED FORM CONTENT */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+        >
+          {activeTab === "register" ? <RegisterForm /> : <LoginForm />}
+        </motion.div>
+      </AnimatePresence>
     </AuthLayout>
   )
 }

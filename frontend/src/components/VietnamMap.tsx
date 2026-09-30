@@ -1,9 +1,36 @@
+import { motion } from 'motion/react';
+
 function VietnamMap() {
   return (
-      <svg className="w-full h-full max-h-[380px] select-none" viewBox="0 0 812 873" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <motion.div
+      initial={{ opacity: 0, y: 50, scale: 0.92 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
+      className="relative w-full h-full flex items-center justify-center"
+    >
+      {/* Dynamic Ambient Glow */}
+      <div className="absolute inset-0 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
 
+      {/* Floating S-Map Wrapper */}
+      <motion.div
+        animate={{ y: [-4, 4, -4] }}
+        transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+        className="w-full h-full flex items-center justify-center relative"
+      >
+        <svg className="w-full h-full max-h-[400px] select-none filter drop-shadow-sm" viewBox="0 0 812 873" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            {/* Linear gradient for radar scan effect */}
+            <linearGradient id="scanner-glow" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
+              <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </linearGradient>
+            <filter id="glow-pin" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.25"/>
+            </filter>
+          </defs>
 
-      <g id="vietnam-provinces">
+          <g id="vietnam-provinces">
       <path id='angiang' data-name='An Giang' d='m 154.57,674.49 -0.02,0.69 -0.75,1.08 0.18,0.22 2.56,-0.2 1.67,0.6 0,0 0.02,2.02 1.06,1.12 1.1,2.44 1.58,0.18 -0.08,1.05 0.18,0.6 0.62,0.35 1.31,0.09 0.27,0.27 -0.12,0.47 -1.27,0.86 0.08,0.48 0.96,0.35 2.01,-0.34 0.67,0.31 -0.34,2.27 0.05,1.91 1.33,3.22 1.21,0.39 1.25,0.98 1.51,-0.13 1.83,0.91 0.35,-0.33 1.4,-0.28 1.33,0.76 0.93,1.16 0.74,1.73 0.17,2.53 -1,-0.25 -0.33,0.25 -0.1,0.44 0.31,0.23 -0.68,0.19 -0.39,0.28 -0.11,0.39 -0.29,0.02 0.26,1.27 -0.43,0.33 0,0.35 -1.05,0.44 -0.46,0.45 -0.2,0.6 0.4,0.49 0,0 -0.43,0.08 -0.51,0.68 -2.64,0.41 0.77,1.75 -5.47,1.86 -1.21,-2.01 -0.33,0.19 -0.27,-0.43 -1.78,2.02 -0.32,-0.38 -0.34,0.33 -1.22,1.61 0,0 -0.18,-0.22 -1.13,1.56 -4.19,-3.67 -5.53,-3.38 -8.03,-1.99 -2.01,-2.64 0.12,-0.12 -1.61,-3.1 -1,-1.04 0.24,-0.86 -0.23,-0.78 0,0 4.67,-0.18 1.51,-1.35 1.92,-3.32 1.19,-1.42 7.36,-4.37 -0.32,-1.84 -0.86,-1.08 -0.64,-0.36 -0.07,-0.6 -0.32,-0.39 0.11,-0.86 -1.12,-2.35 -0.4,-1.44 0.79,-0.54 -0.13,-0.55 0.58,-0.28 -0.15,-0.5 0.23,-0.27 0.69,-0.38 0.59,0.09 0.25,-1.05 1.46,-0.28 0.24,0.21 z' className='province-path' />
       <path id='baria' data-name='Ba Ria–Vung Tau' d='m 235.05,789.7 0.28,0.53 -0.38,0.2 0.12,0.32 -0.08,0.37 -0.11,0.16 -0.89,-0.1 -0.33,0.77 1.15,1.28 -0.41,0.11 -0.4,-0.4 -0.56,-0.07 -0.33,0.65 -0.31,-0.16 -1.2,0.97 0.82,1.65 -1.92,-0.26 -0.65,0.36 -0.39,0.57 -0.4,-0.83 -0.35,-0.16 -0.08,-0.75 0.41,0.11 0.19,-0.31 0.39,0.68 0.85,-0.1 -0.81,-1.14 0.05,-0.36 0.4,-0.53 0.28,0.06 0.32,-0.78 0.51,0.02 -0.06,-0.58 0.25,-0.4 0.68,-0.2 0.28,-0.31 0.37,0.2 0.29,-0.35 -0.09,-0.32 1.49,-0.6 0.22,-0.28 0.4,-0.02 z m 26.21,-88.45 -0.12,-0.79 0.51,0.25 0.2,0.29 0.64,0.29 0.33,0.34 0.35,0.53 -0.55,0.19 -0.36,-0.13 -0.58,0.92 -0.39,0.06 -0.49,1.18 -1.53,0.69 -1.18,0.95 -1.24,1.96 -0.58,-0.67 0.07,-0.67 -0.69,-0.55 0.12,-0.52 -0.36,-0.42 0.1,-0.58 0.35,-0.04 0.46,0.41 0.53,-0.69 0.97,-0.09 0.39,-0.8 0.44,-0.16 0.23,0.23 0.29,-0.38 0.79,-0.07 0.13,-0.29 -1.27,0.09 -0.13,0.18 -0.26,-1.04 0.54,-0.32 -0.22,-0.61 0.79,-0.1 0.27,0.25 0.3,-0.74 0.3,0.04 0.13,0.45 -0.25,0.18 0.97,0.18 z m -4.81,-1.46 0.58,-0.12 0.39,0.13 -0.09,0.37 0.32,0.42 0.67,-0.79 0.29,0.69 -0.13,0.72 -0.46,0.23 -0.2,0.5 -0.74,-0.03 -0.29,0.26 -1.39,-0.82 -0.71,-1.02 1.76,-0.54 z m -1.78,0.11 -0.78,-0.09 -0.04,0.53 -0.36,-0.44 0.13,-0.42 -0.22,-0.66 -0.46,0.07 -0.35,-0.47 0.52,-0.36 0.26,-0.56 0.67,-0.9 -0.13,-0.6 -0.69,-0.26 0.77,-1.45 0.02,-0.54 -0.52,-1.12 -0.52,-0.19 -0.21,-0.42 -0.24,-0.2 0.33,-0.45 0.64,0.28 -0.14,-0.67 1.68,-0.71 2.57,0.29 0.25,-0.58 1.06,-0.55 0.21,-0.48 0.45,-0.16 0.37,-1.74 -0.09,-0.49 0.23,0.21 0.12,-0.31 -0.35,-0.12 -0.12,-0.64 0.92,0.01 0.77,-0.49 0.59,-0.72 1.19,-0.38 0.16,-0.01 -0.01,0.85 0.77,0.09 0.52,-0.36 0.7,0.21 -0.01,0.16 2.92,0.09 0.22,1.36 -0.17,-0.06 -0.04,0.6 0.26,0.22 -0.24,0.67 0.34,0.41 -0.41,0.51 0.93,0.82 0.73,-0.47 0.65,0.14 0,0 0.24,-0.13 0,0 0.27,-0.45 -0.25,-0.13 0.22,-0.44 -0.29,-0.48 0.52,-0.46 0.15,-0.69 0.56,-0.19 0.62,-1.04 0.45,-0.23 0.47,-0.7 0.67,-0.21 0,0 0.21,0.04 0,0 0.07,-0.09 0,0 0.07,-0.11 0,0 0.32,-0.56 0,0 0.21,-0.08 0,0 0.39,-0.63 0.55,-0.22 0.26,0.1 0.22,0.6 0.71,-0.13 0.67,1.29 0.61,0.09 0.47,-0.3 0,0 -0.24,1.39 0.44,0.1 1.22,1.13 0.52,0.86 0.12,0.63 -0.34,0.7 1.67,4.08 0.55,0.56 -0.19,0.4 0.09,0.46 0,0 -1.9,1.64 -1.55,2.29 -2.39,0.24 -1.29,1.51 -4.66,0.09 -2.51,1.69 -2.34,2.44 -0.16,0.42 -0.82,0.13 -1.25,-1.44 -2.1,0.22 0.64,-0.48 0.2,-0.51 0.58,0.22 0.35,-0.15 0.13,-0.29 -0.14,-1.01 -0.19,-0.28 -0.26,0.32 -1.2,-1.05 -0.53,-0.12 -0.51,-0.5 -1.03,0.18 -0.29,0.1 -0.5,0.03 -0.46,-0.44 -0.81,-0.54 -0.38,0.32 -0.3,-0.01 -0.56,0.1 -0.42,-0.34 -0.36,0.38 -0.68,0.01 -0.39,0.22 z' className='province-path' />
       <path id='baclieu' data-name='Bac Lieu' d='m 163.82,756.86 0.32,-0.22 0.41,0.44 0.54,0.1 -0.44,-1.51 -0.24,-0.1 -0.6,-1.11 -0.19,-1.42 0.15,-1.52 0.33,-0.86 0.26,0.16 0.25,-0.19 0.3,0.23 0,-0.41 0.39,-0.34 -0.18,-0.42 0.51,-0.15 -0.38,-0.91 0.07,-0.71 -0.84,0.13 0.26,-0.84 -0.9,-0.62 -0.47,-0.82 0.01,-1.35 0.29,-0.58 0.6,0.44 0.29,1.09 1.03,0.42 0.64,-0.7 0.05,0.45 0.3,0.23 -0.12,0.37 0.95,0.01 0.32,0.25 0,0 0.02,-0.34 0,0 0.15,-0.13 0,0 0.38,0.58 0.44,-0.24 0.33,0.1 0.17,-0.52 0.56,0.03 0.31,-0.23 0.11,0.49 0.54,-0.12 0.09,-0.3 0.56,0.3 0.31,-0.1 0.19,0.52 0.34,-0.18 0.3,0.18 0.43,-0.53 0.37,0.36 -0.12,0.29 0.71,0.13 0.22,-0.46 0.56,-0.02 0.01,0.26 0.42,0.11 0.1,-0.28 0.35,0.03 0.01,-0.3 0.7,-0.13 0.58,0.58 0,0 0.51,1.34 -0.63,4.72 0.08,1.05 1.83,2.07 0.42,-0.73 0.44,0.25 0.12,-0.2 0.83,0.91 0.26,-0.43 0.96,0.29 0.12,0.36 -0.22,0.31 0.56,0.06 0.12,0.4 0.34,0.12 0.87,-0.28 0.64,0.65 1.05,0.01 0.14,-0.86 0.8,0.22 0.25,-0.28 0.47,0.03 -0.02,-0.34 0.24,0.07 0.22,-0.31 0.3,-0.02 -0.04,-0.22 0.34,0.07 0.22,-0.22 0.19,0.2 0.35,-0.09 0.33,0.48 0.36,0.09 -0.44,0.39 0,0 0.07,0.14 0,0 0.38,0.4 0,0 0,0 0,0 0.25,-0.07 0.13,0.35 0.66,0.08 0,0 0.47,0.07 0,0 0.4,-0.57 -0.06,-0.43 0.59,0.11 0.14,-0.38 -0.19,0 0,0 0.05,-0.14 0,0 0.24,0.03 0,0 0.31,-0.15 0.3,0.78 0,0 0.42,0.28 -0.21,0.2 0.31,1.06 -2.42,1.06 0.72,3.28 -0.35,0.2 0.44,1.52 0,0 -2.04,0.9 -2.48,1.48 -0.74,0.14 -10.05,4.25 -2.76,1.72 -1.2,1.1 -1.69,2.12 -0.18,0.09 -0.22,-0.41 0,0 0.08,-0.6 -0.42,-0.32 -0.01,-0.4 -0.74,-0.48 -0.18,-0.35 -0.78,0.51 -1.04,-0.28 -0.05,-0.43 -0.83,-0.07 -0.33,0.31 -0.85,-0.28 -1.06,-0.93 -1.23,0.25 -0.58,-0.51 -0.5,0.17 -0.43,-0.48 0.28,-0.21 -0.18,-0.42 0.29,-1.19 0.49,-0.33 0.24,-0.94 0.71,-0.31 -0.3,-0.9 -0.68,0.23 -0.44,-1.06 -0.67,-0.11 -0.01,-0.44 -0.38,-0.25 0.01,-0.55 0.38,-0.08 0.94,-1.34 1.87,-1.48 -1.89,-1.81 -0.49,-1.07 z' className='province-path' />
@@ -73,54 +100,76 @@ function VietnamMap() {
       </g>
 
 
-      <g id="hoang-sa">
-      <circle cx="505" cy="350" r="4" fill="#d97706"/>
-      <circle cx="530" cy="360" r="3.5" fill="#d97706"/>
-      <circle cx="555" cy="355" r="4" fill="#d97706"/>
-      <circle cx="585" cy="370" r="3.5" fill="#d97706"/>
-      <circle cx="520" cy="385" r="3.5" fill="#d97706"/>
-      <circle cx="560" cy="395" r="4" fill="#d97706"/>
-      <text x="555" y="390" fontSize="10.5" fontWeight="bold" className="fill-amber-900 dark:fill-amber-300" textAnchor="middle" letterSpacing="0.5">HOÀNG SA</text>
+      {/* HOÀNG SA ISLAND GROUP WITH PULSE */}
+      <g id="hoang-sa" className="transition-transform duration-300 hover:scale-110">
+        <circle cx="505" cy="350" r="4" fill="#d97706" className="animate-pulse" />
+        <circle cx="530" cy="360" r="3.5" fill="#f59e0b" />
+        <circle cx="555" cy="355" r="4.5" fill="#d97706" className="animate-ping" opacity="0.4" />
+        <circle cx="555" cy="355" r="4" fill="#d97706" />
+        <circle cx="585" cy="370" r="3.5" fill="#f59e0b" />
+        <circle cx="520" cy="385" r="3.5" fill="#d97706" />
+        <circle cx="560" cy="395" r="4" fill="#d97706" className="animate-pulse" />
+        <rect x="490" y="375" width="130" height="20" rx="6" fill="#78350f" opacity="0.85" />
+        <text x="555" y="389" fontSize="10.5" fontWeight="900" fill="#fef3c7" textAnchor="middle" letterSpacing="0.8">★ QUẦN ĐẢO HOÀNG SA</text>
       </g>
 
-
-      <g id="truong-sa">
-      <circle cx="495" cy="615" r="4.5" fill="#059669"/>
-      <circle cx="525" cy="630" r="3.5" fill="#059669"/>
-      <circle cx="560" cy="620" r="4" fill="#059669"/>
-      <circle cx="595" cy="635" r="3.5" fill="#059669"/>
-      <circle cx="540" cy="660" r="4" fill="#059669"/>
-      <circle cx="580" cy="670" r="3.5" fill="#059669"/>
-      <circle cx="615" cy="655" r="4" fill="#059669"/>
-      <text x="557" y="678" fontSize="10.5" fontWeight="bold" className="fill-emerald-900 dark:fill-emerald-300" textAnchor="middle" letterSpacing="0.5">TRƯỜNG SA</text>
+      {/* TRƯỜNG SA ISLAND GROUP WITH PULSE */}
+      <g id="truong-sa" className="transition-transform duration-300 hover:scale-110">
+        <circle cx="495" cy="615" r="4.5" fill="#059669" className="animate-pulse" />
+        <circle cx="525" cy="630" r="3.5" fill="#10b981" />
+        <circle cx="560" cy="620" r="4.5" fill="#059669" className="animate-ping" opacity="0.4" />
+        <circle cx="560" cy="620" r="4" fill="#059669" />
+        <circle cx="595" cy="635" r="3.5" fill="#10b981" />
+        <circle cx="540" cy="660" r="4" fill="#059669" />
+        <circle cx="580" cy="670" r="3.5" fill="#10b981" />
+        <circle cx="615" cy="655" r="4" fill="#059669" className="animate-pulse" />
+        <rect x="492" y="663" width="130" height="20" rx="6" fill="#064e3b" opacity="0.85" />
+        <text x="557" y="677" fontSize="10.5" fontWeight="900" fill="#d1fae5" textAnchor="middle" letterSpacing="0.8">★ QUẦN ĐẢO TRƯỜNG SA</text>
       </g>
 
-
-      <g id="pin-hanoi" className="cursor-pointer">
-      <circle cx="185" cy="135" r="5" fill="#2563eb" stroke="#ffffff" strokeWidth="2"/>
-      <rect x="25" y="123" width="145" height="24" rx="6" fill="#1e40af"/>
-      <text x="97" y="139" fontSize="10" fontWeight="bold" fill="#ffffff" textAnchor="middle">📍 Hà Nội (2 Cơ sở)</text>
+      {/* PIN HÀ NỘI (2 CƠ SỞ) */}
+      <g id="pin-hanoi" className="cursor-pointer group" filter="url(#glow-pin)">
+        {/* Radar Wave Ping */}
+        <circle cx="185" cy="135" r="14" fill="#3b82f6" opacity="0.4" className="animate-ping" style={{ transformOrigin: '185px 135px' }} />
+        <circle cx="185" cy="135" r="8" fill="#60a5fa" opacity="0.7" />
+        <circle cx="185" cy="135" r="5" fill="#2563eb" stroke="#ffffff" strokeWidth="2" />
+        <rect x="25" y="123" width="145" height="24" rx="7" fill="#1e40af" stroke="#93c5fd" strokeWidth="1" className="group-hover:fill-blue-700 transition-colors" />
+        <text x="97" y="139" fontSize="10.5" fontWeight="900" fill="#ffffff" textAnchor="middle">📍 Hà Nội (2 Cơ sở)</text>
       </g>
 
-      <g id="pin-danang" className="cursor-pointer">
-      <circle cx="305" cy="405" r="5" fill="#d97706" stroke="#ffffff" strokeWidth="2"/>
-      <rect x="320" y="393" width="145" height="24" rx="6" fill="#92400e"/>
-      <text x="392" y="409" fontSize="10" fontWeight="bold" fill="#ffffff" textAnchor="middle">📍 Đà Nẵng (1 Cơ sở)</text>
+      {/* PIN ĐÀ NẴNG (1 CƠ SỞ) */}
+      <g id="pin-danang" className="cursor-pointer group" filter="url(#glow-pin)">
+        {/* Radar Wave Ping */}
+        <circle cx="305" cy="405" r="14" fill="#f59e0b" opacity="0.4" className="animate-ping" style={{ transformOrigin: '305px 405px', animationDelay: '0.6s' }} />
+        <circle cx="305" cy="405" r="8" fill="#fbbf24" opacity="0.7" />
+        <circle cx="305" cy="405" r="5" fill="#d97706" stroke="#ffffff" strokeWidth="2" />
+        <rect x="320" y="393" width="145" height="24" rx="7" fill="#92400e" stroke="#fde68a" strokeWidth="1" className="group-hover:fill-amber-800 transition-colors" />
+        <text x="392" y="409" fontSize="10.5" fontWeight="900" fill="#ffffff" textAnchor="middle">📍 Đà Nẵng (1 Cơ sở)</text>
       </g>
 
-      <g id="pin-hcm" className="cursor-pointer">
-      <circle cx="245" cy="700" r="5" fill="#e11d48" stroke="#ffffff" strokeWidth="2"/>
-      <rect x="260" y="688" width="145" height="24" rx="6" fill="#9f1239"/>
-      <text x="332" y="704" fontSize="10" fontWeight="bold" fill="#ffffff" textAnchor="middle">📍 TP.HCM (3 Cơ sở)</text>
+      {/* PIN TP.HCM (3 CƠ SỞ) */}
+      <g id="pin-hcm" className="cursor-pointer group" filter="url(#glow-pin)">
+        {/* Radar Wave Ping */}
+        <circle cx="245" cy="700" r="14" fill="#f43f5e" opacity="0.4" className="animate-ping" style={{ transformOrigin: '245px 700px', animationDelay: '1.2s' }} />
+        <circle cx="245" cy="700" r="8" fill="#fb7185" opacity="0.7" />
+        <circle cx="245" cy="700" r="5" fill="#e11d48" stroke="#ffffff" strokeWidth="2" />
+        <rect x="260" y="688" width="145" height="24" rx="7" fill="#9f1239" stroke="#fecdd3" strokeWidth="1" className="group-hover:fill-rose-800 transition-colors" />
+        <text x="332" y="704" fontSize="10.5" fontWeight="900" fill="#ffffff" textAnchor="middle">📍 TP.HCM (3 Cơ sở)</text>
       </g>
 
-      <g id="pin-cantho" className="cursor-pointer">
-      <circle cx="195" cy="745" r="5" fill="#059669" stroke="#ffffff" strokeWidth="2"/>
-      <rect x="35" y="733" width="145" height="24" rx="6" fill="#065f46"/>
-      <text x="107" y="749" fontSize="10" fontWeight="bold" fill="#ffffff" textAnchor="middle">📍 Cần Thơ (1 Cơ sở)</text>
+      {/* PIN CẦN THƠ (1 CƠ SỞ) */}
+      <g id="pin-cantho" className="cursor-pointer group" filter="url(#glow-pin)">
+        {/* Radar Wave Ping */}
+        <circle cx="195" cy="745" r="14" fill="#10b981" opacity="0.4" className="animate-ping" style={{ transformOrigin: '195px 745px', animationDelay: '1.8s' }} />
+        <circle cx="195" cy="745" r="8" fill="#34d399" opacity="0.7" />
+        <circle cx="195" cy="745" r="5" fill="#059669" stroke="#ffffff" strokeWidth="2" />
+        <rect x="35" y="733" width="145" height="24" rx="7" fill="#065f46" stroke="#a7f3d0" strokeWidth="1" className="group-hover:fill-emerald-800 transition-colors" />
+        <text x="107" y="749" fontSize="10.5" fontWeight="900" fill="#ffffff" textAnchor="middle">📍 Cần Thơ (1 Cơ sở)</text>
       </g>
-      </svg>
-  )
+    </svg>
+  </motion.div>
+</motion.div>
+  );
 }
 
-export default VietnamMap
+export default VietnamMap;
