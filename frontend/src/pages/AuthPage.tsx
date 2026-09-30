@@ -1,5 +1,4 @@
-import { useEffect } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
 import { cn } from "cn"
 
@@ -18,12 +17,10 @@ function AuthPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (isTokenValid(token)) {
-      navigate("/portal", { replace: true });
-    }
-  }, [navigate]);
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  if (isTokenValid(token)) {
+    return <Navigate to="/portal" replace />
+  }
 
   const activeTab = searchParams.get("tab") === "register" ? "register" : "login"
 

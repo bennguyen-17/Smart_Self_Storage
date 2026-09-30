@@ -3,6 +3,7 @@ import { MotionConfig } from "motion/react"
 
 import "../landing.css"
 import { ESTIMATOR, type EstimatorPresetId } from "../content/copy"
+import { type CityId } from "../content/facilities"
 import { enabledSections, type SectionId } from "../content/sections"
 import { SITE } from "../content/site"
 import { recommendUnit } from "../lib/estimate"
@@ -31,6 +32,7 @@ const INITIAL_ESTIMATE: EstimatorState = {
 
 export default function LandingPage() {
   const [estimate, setEstimate] = useState<EstimatorState>(INITIAL_ESTIMATE)
+  const [selectedCity, setSelectedCity] = useState<CityId>("HN")
   const rec = recommendUnit(estimate.volume)
   const suggested = rec.kind === "fit" ? rec.unit.size : null
 
@@ -50,7 +52,12 @@ export default function LandingPage() {
       case "pricing":
         return <PricingSection suggested={suggested} />
       case "facilities":
-        return <FacilitiesSection />
+        return (
+          <FacilitiesSection
+            selectedCity={selectedCity}
+            onCityChange={setSelectedCity}
+          />
+        )
       case "process":
         return <ProcessSection />
       case "testimonials":
@@ -83,7 +90,7 @@ export default function LandingPage() {
             <Fragment key={s.id}>{renderSection(s.id)}</Fragment>
           ))}
         </main>
-        <LandingFooter />
+        <LandingFooter onSelectCity={setSelectedCity} />
         <MobileCtaBar />
       </div>
     </MotionConfig>

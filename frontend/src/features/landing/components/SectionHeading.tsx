@@ -1,8 +1,9 @@
+import type { ReactNode } from "react"
 import { cn } from "@/lib/utils"
 
 interface SectionHeadingProps {
   id: string
-  title: string
+  title: ReactNode
   lead?: string
   badge?: string
   align?: "start" | "center"

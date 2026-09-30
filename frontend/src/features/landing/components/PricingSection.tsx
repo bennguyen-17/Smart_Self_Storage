@@ -27,7 +27,6 @@ export function PricingSection({ suggested }: PricingSectionProps) {
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
         <SectionHeading
           id="pricing-title"
-          badge={PRICING_SECTION.badge}
           title={PRICING_SECTION.title}
           lead={PRICING_SECTION.lead}
         />
@@ -53,7 +52,7 @@ export function PricingSection({ suggested }: PricingSectionProps) {
                     "relative flex h-full flex-col gap-5 rounded-(--l-radius-card) p-7 ring-1 transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-2 hover:shadow-xl motion-reduce:hover:translate-y-0",
                     isSuggested
                       ? "bg-blue-50/80 ring-blue-500/40 dark:bg-blue-950/40 dark:ring-blue-400/50"
-                      : "bg-background/90 ring-border/70 dark:bg-card/80"
+                      : "bg-card ring-border/70 dark:bg-card/80"
                   )}
                 >
                   <header className="flex flex-col gap-2">

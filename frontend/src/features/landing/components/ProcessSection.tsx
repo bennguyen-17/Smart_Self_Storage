@@ -23,7 +23,6 @@ export function ProcessSection() {
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 sm:px-6 lg:px-8">
         <SectionHeading
           id="process-title"
-          badge={PROCESS_SECTION.badge}
           title={PROCESS_SECTION.title}
         />
 

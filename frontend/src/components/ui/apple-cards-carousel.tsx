@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react"
+import { createPortal } from "react-dom"
 import { ArrowLeft, ArrowRight, X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 
@@ -16,7 +17,7 @@ export type CardType = {
   src: string
   title: string
   category: string
-  content: ReactNode
+  content: ReactNode | ((close: () => void) => ReactNode)
 }
 
 export const CarouselContext = createContext<{
@@ -183,48 +184,57 @@ export const Card = ({
 
   return (
     <>
-      <AnimatePresence>
-        {open && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 sm:p-6 lg:p-8">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={handleClose}
-              className="fixed inset-0 bg-black/70 backdrop-blur-md"
-            />
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {open && (
+              <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto p-4 sm:p-6 lg:p-8">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={handleClose}
+                  className="fixed inset-0 bg-black/75 backdrop-blur-md"
+                />
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.94, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: 20 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              ref={containerRef}
-              className="relative z-[60] my-auto max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl border border-slate-200/80 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 sm:p-8 md:p-10"
-            >
-              {/* Close Button */}
-              <button
-                className="sticky top-0 float-right -mt-2 -mr-2 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-700 shadow-md transition hover:bg-slate-200 hover:scale-105 cursor-pointer dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                onClick={handleClose}
-                aria-label="Đóng chi tiết"
-              >
-                <X className="h-5 w-5" />
-              </button>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.94, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.94, y: 20 }}
+                  transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                  ref={containerRef}
+                  className="relative z-[10000] my-auto max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl border border-slate-200/80 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 sm:p-8 md:p-10"
+                >
+                  {/* Close Button */}
+                  <button
+                    type="button"
+                    className="sticky top-0 float-right -mt-2 -mr-2 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-700 shadow-md transition hover:bg-slate-200 hover:scale-105 cursor-pointer dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                    onClick={handleClose}
+                    aria-label="Đóng chi tiết"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
 
-              <div className="clear-both">
-                <p className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3.5 py-1 text-xs sm:text-sm font-bold text-blue-600 dark:bg-blue-400/10 dark:text-blue-400">
-                  {card.category}
-                </p>
-                <h3 className="mt-3 text-2xl font-black tracking-tight text-foreground sm:text-3xl md:text-4xl">
-                  {card.title}
-                </h3>
+                  <div className="clear-both">
+                    <p className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3.5 py-1 text-xs sm:text-sm font-bold text-blue-600 dark:bg-blue-400/10 dark:text-blue-400">
+                      {card.category}
+                    </p>
+                    <h3 className="mt-3 text-2xl font-black tracking-tight text-foreground sm:text-3xl md:text-4xl">
+                      {card.title}
+                    </h3>
+                  </div>
+
+                  <div className="mt-6">
+                    {typeof card.content === "function"
+                      ? card.content(handleClose)
+                      : card.content}
+                  </div>
+                </motion.div>
               </div>
-
-              <div className="mt-6">{card.content}</div>
-            </motion.div>
-          </div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
 
       <motion.button
         layoutId={layout ? `card-${card.title}` : undefined}
