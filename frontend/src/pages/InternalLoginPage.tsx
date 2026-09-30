@@ -1,5 +1,5 @@
-import InternalAuthLayout from "@/components/InternalAuthLayout"
-import InternalLoginForm from "@/components/InternalLoginForm"
+﻿import InternalAuthLayout from "@/components/layouts/InternalAuthLayout"
+import InternalLoginForm from "@/features/auth/components/InternalLoginForm"
 
 function InternalLoginPage() {
   return (

@@ -8,7 +8,7 @@ import {
 } from "motion/react"
 import { Menu, Moon, Sun, Warehouse, X } from "lucide-react"
 
-import { useTheme } from "@/components/theme-provider"
+import { useTheme } from "@/components/common/theme-provider"
 import { cn } from "@/lib/utils"
 
 import { navSections } from "../content/sections"
@@ -17,6 +17,7 @@ import { DURATION, EASE_OUT_QUART } from "../motion/presets"
 import { useActiveSection } from "../hooks/useActiveSection"
 import { useSystemDark } from "../hooks/useSystemDark"
 import { LandingLink } from "./LandingButton"
+import { isTokenValid } from "@/lib/apiClient"
 
 const NAV_IDS = navSections.map((s) => s.id)
 
@@ -102,17 +103,17 @@ export function LandingHeader() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Link
-            to={ROUTES.login}
+            to={isTokenValid(localStorage.getItem("token")) ? "/portal" : ROUTES.login}
             className="hidden h-11 items-center rounded-full px-4 text-[0.9375rem] font-medium transition-colors outline-none hover:bg-(--l-surface-quiet) focus-visible:ring-3 focus-visible:ring-ring/50 sm:inline-flex"
           >
-            {CTA.login}
+            {isTokenValid(localStorage.getItem("token")) ? "Tài khoản" : CTA.login}
           </Link>
           <LandingLink
-            to={ROUTES.book}
+            to={isTokenValid(localStorage.getItem("token")) ? "/portal" : ROUTES.book}
             size="md"
             className="hidden sm:inline-flex"
           >
-            {CTA.book}
+            {isTokenValid(localStorage.getItem("token")) ? "Bảng điều khiển" : CTA.book}
           </LandingLink>
           <button
             ref={menuButtonRef}
@@ -161,10 +162,10 @@ export function LandingHeader() {
                 ))}
                 <li className="sm:hidden">
                   <Link
-                    to={ROUTES.login}
+                    to={isTokenValid(localStorage.getItem("token")) ? "/portal" : ROUTES.login}
                     className="flex min-h-12 items-center rounded-xl px-3 font-medium outline-none hover:bg-(--l-surface-quiet) focus-visible:ring-3 focus-visible:ring-ring/50"
                   >
-                    {CTA.login}
+                    {isTokenValid(localStorage.getItem("token")) ? "Tài khoản / Portal" : CTA.login}
                   </Link>
                 </li>
               </ul>
