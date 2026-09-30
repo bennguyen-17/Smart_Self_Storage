@@ -33,7 +33,7 @@ export default function Header({ isDarkMode, onToggleTheme, onOpenProfileModal }
   }
 
   return (
-    <header className="w-full h-16 sm:h-18 bg-white dark:bg-slate-900 border-b border-slate-300 dark:border-slate-800 px-6 sm:px-10 flex items-center justify-between shrink-0 sticky top-0 z-40 transition-colors shadow-xs">
+    <header className="w-full h-16 sm:h-18 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 sm:px-10 lg:px-12 flex items-center justify-between shrink-0 sticky top-0 z-40 transition-colors shadow-xs">
       {/* BRAND LOGO */}
       <BrandLogo />
 

@@ -93,19 +93,19 @@ export default function StorageMap2D({
     }
 
     const shortId = u.id.split('-').pop();
-    const heightClass = u.size === 'S' ? 'min-h-[54px]' : u.size === 'M' ? 'min-h-[68px]' : u.size === 'L' ? 'min-h-[82px]' : 'min-h-[94px]';
+    const heightClass = u.size === 'S' ? 'min-h-[58px]' : u.size === 'M' ? 'min-h-[74px]' : u.size === 'L' ? 'min-h-[88px]' : 'min-h-[102px]';
 
     return (
       <div
         key={u.id}
         onClick={() => isAvailable && onSelectUnit(isSelected ? null : u)}
-        className={`proportional-unit ${cardBg} ${heightClass} p-2 rounded-xl border shadow-xs text-center flex flex-col justify-between transition cursor-pointer hover:shadow-md group`}
+        className={`proportional-unit ${cardBg} ${heightClass} p-2.5 rounded-xl border shadow-xs text-center flex flex-col justify-between transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-md active:scale-95 group`}
       >
         <div className="flex justify-between items-center w-full">
-          <span className="font-black text-xs font-mono tracking-tight group-hover:text-blue-600 transition-colors">{shortId}</span>
-          <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-200 shadow-2xs border border-slate-200 dark:border-slate-700">{u.size}</span>
+          <span className="font-black text-sm font-mono tracking-tight group-hover:text-blue-600 transition-colors">{shortId}</span>
+          <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-200 shadow-xs border border-slate-200 dark:border-slate-700">{u.size}</span>
         </div>
-        <div className="text-[9px] font-bold flex items-center justify-center mt-1">
+        <div className="text-xs font-bold flex items-center justify-center mt-1">
           {statusDot}
           <span>{badgeText}</span>
         </div>
@@ -116,18 +116,18 @@ export default function StorageMap2D({
   return (
     <div className="space-y-6">
       {/* LOCATION & FLOOR CONTROLS */}
-      <div className="card-box p-4 rounded-2xl border shadow-sm space-y-3 w-full bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-3">
+      <div className="card-box p-5 rounded-3xl border shadow-sm space-y-4 w-full bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
           {/* CHỌN CƠ SỞ */}
-          <div className="flex items-center space-x-3 shrink-0">
-            <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center shrink-0">
-              <i className="fa-solid fa-location-dot text-rose-500 mr-1.5 text-sm"></i> Cơ sở kho:
+          <div className="flex items-center space-x-3 flex-wrap sm:flex-nowrap">
+            <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center shrink-0">
+              <i className="fa-solid fa-location-dot text-rose-500 mr-2 text-base"></i> Cơ sở kho:
             </span>
-            <div className="relative min-w-[240px]">
+            <div className="relative min-w-[240px] sm:min-w-[280px]">
               <select
                 value={facility}
                 onChange={(e) => onFacilityChange(e.target.value)}
-                className="w-full text-xs font-bold px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+                className="w-full text-sm font-bold px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer shadow-xs transition-colors"
               >
                 <optgroup label="📍 Hà Nội">
                   <option value="HN-01">SmartStorage Cầu Giấy (HN-01)</option>
@@ -149,16 +149,16 @@ export default function StorageMap2D({
           </div>
 
           {/* CHỌN TẦNG */}
-          <div className="flex items-center space-x-3 w-full lg:w-auto justify-start lg:justify-end">
-            <span className="text-xs font-black text-slate-700 dark:text-slate-400 uppercase tracking-wider flex items-center shrink-0">
-              <i className="fa-solid fa-layer-group text-blue-600 mr-1.5 text-xs"></i> Chọn Tầng:
+          <div className="flex items-center space-x-3 flex-wrap sm:flex-nowrap justify-start xl:justify-end">
+            <span className="text-sm sm:text-base font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center shrink-0">
+              <i className="fa-solid fa-layer-group text-blue-600 mr-2"></i> Chọn Tầng:
             </span>
-            <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 gap-1 w-full sm:w-auto">
+            <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 gap-1.5 flex-wrap sm:flex-nowrap">
               <button
                 type="button"
                 onClick={() => onSelectFloor(1)}
-                className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${
-                  currentFloor === 1 ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-700 dark:text-slate-400 hover:text-blue-600'
+                className={`px-4 sm:px-5 py-2 rounded-lg text-sm font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                  currentFloor === 1 ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-700'
                 }`}
               >
                 Tầng Trệt
@@ -166,8 +166,8 @@ export default function StorageMap2D({
               <button
                 type="button"
                 onClick={() => onSelectFloor(2)}
-                className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                  currentFloor === 2 ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-700 dark:text-slate-400 hover:text-blue-600'
+                className={`px-4 sm:px-5 py-2 rounded-lg text-sm font-bold transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                  currentFloor === 2 ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-700'
                 }`}
               >
                 Tầng 1
@@ -176,8 +176,8 @@ export default function StorageMap2D({
                 <button
                   type="button"
                   onClick={() => onSelectFloor(3)}
-                  className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                    currentFloor === 3 ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-700 dark:text-slate-400 hover:text-blue-600'
+                  className={`px-4 sm:px-5 py-2 rounded-lg text-sm font-bold transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                    currentFloor === 3 ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-700'
                   }`}
                 >
                   Tầng 2
@@ -188,15 +188,15 @@ export default function StorageMap2D({
         </div>
 
         {/* THÔNG TIN ĐỊA CHỈ & TẢI TRỌNG */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-sm">
           <div className="flex items-center space-x-2 text-slate-600 dark:text-slate-400">
-            <i className="fa-solid fa-map-pin text-blue-600 text-xs shrink-0"></i>
-            <span className="font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+            <i className="fa-solid fa-map-pin text-blue-600 text-sm shrink-0"></i>
+            <span className="font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
               {currentFacilityObj.address}
             </span>
           </div>
-          <div className="flex items-center space-x-1.5 text-amber-600 font-bold bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/30 shrink-0">
-            <i className="fa-solid fa-weight-hanging text-xs"></i>
+          <div className="flex items-center space-x-2 text-amber-600 font-bold bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/30 shrink-0">
+            <i className="fa-solid fa-weight-hanging text-sm"></i>
             <span>
               {currentFloor === 1
                 ? 'TẦNG TRỆT: Tối đa 1000 kg/m² (Kho XL Doanh Nghiệp)'
@@ -207,16 +207,16 @@ export default function StorageMap2D({
       </div>
 
       {/* BẢNG PHÂN LOẠI 4 KÍCH THƯỚC KHO TIÊU CHUẨN */}
-      <div className="card-box p-4 rounded-2xl border shadow-sm space-y-3 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800">
-        <div className="flex items-center justify-between text-xs">
-          <span className="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center">
+      <div className="card-box p-4 sm:p-5 rounded-3xl border shadow-sm space-y-3 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800">
+        <div className="flex items-center justify-between">
+          <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-wider flex items-center">
             <i className="fa-solid fa-layer-group text-blue-600 mr-2"></i> BẢNG PHÂN LOẠI 4 KÍCH THƯỚC KHO TIÊU CHUẨN
           </span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* SIZE S */}
-          <div className="p-3 rounded-xl border border-emerald-500/40 flex items-center space-x-3 bg-emerald-50/50 dark:bg-emerald-950/20">
-            <div className="w-10 h-10 rounded-lg border-2 border-emerald-500 bg-emerald-500/20 flex flex-col items-center justify-center shrink-0">
+          <div className="p-3 rounded-2xl border border-emerald-500/40 flex items-center space-x-3 bg-emerald-50/60 dark:bg-emerald-950/25 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md">
+            <div className="w-10 h-10 rounded-xl border-2 border-emerald-500 bg-emerald-500/20 flex flex-col items-center justify-center shrink-0 shadow-xs">
               <span className="font-black text-xs text-emerald-700 dark:text-emerald-400">S</span>
               <span className="text-[8px] font-bold text-emerald-600 dark:text-emerald-300">1m²</span>
             </div>
@@ -228,13 +228,13 @@ export default function StorageMap2D({
               <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[11px]">
                 600.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ tháng</span>
               </div>
-              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold pt-0.5">Cọc: 500.000đ</div>
+              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 500.000đ</div>
             </div>
           </div>
 
           {/* SIZE M */}
-          <div className="p-3 rounded-xl border border-indigo-500/40 flex items-center space-x-3 bg-indigo-50/50 dark:bg-indigo-950/20">
-            <div className="w-10 h-10 rounded-lg border-2 border-indigo-500 bg-indigo-500/20 flex flex-col items-center justify-center shrink-0">
+          <div className="p-3 rounded-2xl border border-indigo-500/40 flex items-center space-x-3 bg-indigo-50/60 dark:bg-indigo-950/25 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md">
+            <div className="w-10 h-10 rounded-xl border-2 border-indigo-500 bg-indigo-500/20 flex flex-col items-center justify-center shrink-0 shadow-xs">
               <span className="font-black text-xs text-indigo-700 dark:text-indigo-400">M</span>
               <span className="text-[8px] font-bold text-indigo-600 dark:text-indigo-300">3m²</span>
             </div>
@@ -246,13 +246,13 @@ export default function StorageMap2D({
               <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[11px]">
                 1.200.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ tháng</span>
               </div>
-              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold pt-0.5">Cọc: 1.000.000đ</div>
+              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 1.000.000đ</div>
             </div>
           </div>
 
           {/* SIZE L */}
-          <div className="p-3 rounded-xl border border-blue-500/40 flex items-center space-x-3 bg-blue-50/50 dark:bg-blue-950/20">
-            <div className="w-10 h-10 rounded-lg border-2 border-blue-500 bg-blue-500/20 flex flex-col items-center justify-center shrink-0">
+          <div className="p-3 rounded-2xl border border-blue-500/40 flex items-center space-x-3 bg-blue-50/60 dark:bg-blue-950/25 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md">
+            <div className="w-10 h-10 rounded-xl border-2 border-blue-500 bg-blue-500/20 flex flex-col items-center justify-center shrink-0 shadow-xs">
               <span className="font-black text-xs text-blue-700 dark:text-blue-400">L</span>
               <span className="text-[8px] font-bold text-blue-600 dark:text-blue-300">6m²</span>
             </div>
@@ -264,13 +264,13 @@ export default function StorageMap2D({
               <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[11px]">
                 2.400.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ tháng</span>
               </div>
-              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold pt-0.5">Cọc: 2.000.000đ</div>
+              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 2.000.000đ</div>
             </div>
           </div>
 
           {/* SIZE XL */}
-          <div className="p-3 rounded-xl border border-amber-500/40 flex items-center space-x-3 bg-amber-50/50 dark:bg-amber-950/20">
-            <div className="w-10 h-10 rounded-lg border-2 border-amber-500 bg-amber-500/20 flex flex-col items-center justify-center shrink-0">
+          <div className="p-3 rounded-2xl border border-amber-500/40 flex items-center space-x-3 bg-amber-50/60 dark:bg-amber-950/25 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md">
+            <div className="w-10 h-10 rounded-xl border-2 border-amber-500 bg-amber-500/20 flex flex-col items-center justify-center shrink-0 shadow-xs">
               <span className="font-black text-xs text-amber-700 dark:text-amber-400">XL</span>
               <span className="text-[8px] font-bold text-amber-600 dark:text-amber-300">10m²</span>
             </div>
@@ -282,7 +282,7 @@ export default function StorageMap2D({
               <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[11px]">
                 4.000.000đ <span className="text-slate-500 dark:text-slate-400 font-normal text-[10px]">/ tháng</span>
               </div>
-              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold pt-0.5">Cọc: 3.000.000đ</div>
+              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 3.000.000đ</div>
             </div>
           </div>
         </div>
