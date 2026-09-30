@@ -18,7 +18,6 @@ import {
   Field,
   FieldDescription,
   FieldError,
-  FieldLabel,
 } from "@/components/ui/field"
 import {
   InputOTP,
@@ -149,8 +148,6 @@ function OtpModal({ phone, onClose }: OtpModalProps) {
 
         {/* 6 ô OTP */}
         <Field data-invalid={Boolean(error)}>
-          <FieldLabel htmlFor="otp">Mã OTP</FieldLabel>
-
           <InputOTP
             id="otp"
             maxLength={OTP_LENGTH}

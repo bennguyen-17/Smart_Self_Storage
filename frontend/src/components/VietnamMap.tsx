@@ -1,6 +1,200 @@
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
+
+interface MapFacility {
+  code: string
+  name: string
+  address: string
+  floors: number
+}
+
+interface MapPin {
+  id: string
+  city: string
+  cx: number
+  cy: number
+  pinColor: string
+  labelColor: string
+  labelCenterX: number
+  facilities: MapFacility[]
+}
+
+const VIEW_W = 812
+const VIEW_H = 873
+const CARD_WIDTH = 260
+const CARD_GAP = 12
+const LABEL_WIDTH = 148
+
+// Khớp bảng Branch trong MySQL
+const PINS: MapPin[] = [
+  {
+    id: "hanoi",
+    city: "Hà Nội",
+    cx: 185,
+    cy: 135,
+    pinColor: "#2563eb",
+    labelColor: "#1e40af",
+    labelCenterX: 97,
+    facilities: [
+      {
+        code: "HN-01",
+        name: "SmartStorage Cầu Giấy",
+        address: "Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội",
+        floors: 3,
+      },
+      {
+        code: "HN-02",
+        name: "SmartStorage Thanh Xuân",
+        address: "Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội",
+        floors: 3,
+      },
+    ],
+  },
+  {
+    id: "danang",
+    city: "Đà Nẵng",
+    cx: 305,
+    cy: 405,
+    pinColor: "#d97706",
+    labelColor: "#92400e",
+    labelCenterX: 392,
+    facilities: [
+      {
+        code: "DN-01",
+        name: "SmartStorage Hải Châu",
+        address: "Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng",
+        floors: 2,
+      },
+    ],
+  },
+  {
+    id: "hcm",
+    city: "TP.HCM",
+    cx: 245,
+    cy: 700,
+    pinColor: "#e11d48",
+    labelColor: "#9f1239",
+    labelCenterX: 332,
+    facilities: [
+      {
+        code: "HCM-01",
+        name: "SmartStorage Quận 1",
+        address: "Số 123 Nguyễn Huệ, Quận 1, TP.HCM",
+        floors: 3,
+      },
+      {
+        code: "HCM-02",
+        name: "SmartStorage Quận 7",
+        address: "Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM",
+        floors: 2,
+      },
+      {
+        code: "HCM-03",
+        name: "SmartStorage Thủ Đức",
+        address: "Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM",
+        floors: 3,
+      },
+    ],
+  },
+  {
+    id: "cantho",
+    city: "Cần Thơ",
+    cx: 195,
+    cy: 745,
+    pinColor: "#059669",
+    labelColor: "#065f46",
+    labelCenterX: 107,
+    facilities: [
+      {
+        code: "CT-01",
+        name: "SmartStorage Ninh Kiều",
+        address: "Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ",
+        floors: 2,
+      },
+    ],
+  },
+]
+
 function VietnamMap() {
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
+  const tooltipRef = useRef<HTMLDivElement>(null)
+  const [activePin, setActivePin] = useState<MapPin | null>(null)
+  const [tipHeight, setTipHeight] = useState(0)
+  const [layout, setLayout] = useState({
+    scale: 1,
+    offsetX: 0,
+    offsetY: 0,
+    baseX: 0,
+    baseY: 0,
+    width: 0,
+    height: 0,
+  })
+
+  // Quy đổi toạ độ viewBox của SVG sang pixel để đặt tooltip HTML
+  useEffect(() => {
+    const svg = svgRef.current
+    const wrapper = wrapperRef.current
+    if (!svg || !wrapper) return
+
+    const update = () => {
+      const svgRect = svg.getBoundingClientRect()
+      const wrapperRect = wrapper.getBoundingClientRect()
+      const scale = Math.min(svgRect.width / VIEW_W, svgRect.height / VIEW_H)
+
+      setLayout({
+        scale,
+        offsetX: (svgRect.width - VIEW_W * scale) / 2,
+        offsetY: (svgRect.height - VIEW_H * scale) / 2,
+        baseX: svgRect.left - wrapperRect.left,
+        baseY: svgRect.top - wrapperRect.top,
+        width: wrapperRect.width,
+        height: wrapperRect.height,
+      })
+    }
+
+    update()
+
+    const observer = new ResizeObserver(update)
+    observer.observe(svg)
+    observer.observe(wrapper)
+    return () => observer.disconnect()
+  }, [])
+
+  // Đo chiều cao thật của card để tránh tràn khỏi khung bản đồ
+  useLayoutEffect(() => {
+    if (!activePin || !tooltipRef.current) return
+    setTipHeight(tooltipRef.current.offsetHeight)
+  }, [activePin])
+
+  const tipPosition = (pin: MapPin) => {
+    const anchorX = layout.baseX + layout.offsetX + pin.cx * layout.scale
+    const anchorY = layout.baseY + layout.offsetY + pin.cy * layout.scale
+    const halfCard = CARD_WIDTH / 2
+    const maxLeft =
+      layout.width > 0 ? layout.width - halfCard - 8 : anchorX + halfCard
+    const left = Math.min(Math.max(anchorX, halfCard + 8), maxLeft)
+
+    const above = anchorY - CARD_GAP - tipHeight
+    const below = anchorY + CARD_GAP
+    const fitsAbove = above >= 8
+    const fitsBelow = layout.height > 0 && below + tipHeight <= layout.height - 8
+
+    let top = fitsAbove || !fitsBelow ? above : below
+
+    if (layout.height > 0 && tipHeight > 0) {
+      const maxTop = Math.max(8, layout.height - tipHeight - 8)
+      top = Math.min(Math.max(top, 8), maxTop)
+    }
+
+    return { left, top, transform: "translateX(-50%)" }
+  }
+
   return (
-      <svg className="w-full h-full max-h-[380px] select-none" viewBox="0 0 812 873" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <div
+      ref={wrapperRef}
+      className="relative flex h-full w-full items-center justify-center"
+    >
+      <svg ref={svgRef} className="w-full h-full max-h-[380px] select-none" viewBox="0 0 812 873" fill="none" xmlns="http://www.w3.org/2000/svg">
 
 
       <g id="vietnam-provinces">
@@ -96,30 +290,108 @@ function VietnamMap() {
       </g>
 
 
-      <g id="pin-hanoi" className="cursor-pointer">
-      <circle cx="185" cy="135" r="5" fill="#2563eb" stroke="#ffffff" strokeWidth="2"/>
-      <rect x="25" y="123" width="145" height="24" rx="6" fill="#1e40af"/>
-      <text x="97" y="139" fontSize="10" fontWeight="bold" fill="#ffffff" textAnchor="middle">📍 Hà Nội (2 Cơ sở)</text>
-      </g>
+      {PINS.map((pin) => {
+        const isActive = activePin?.id === pin.id
 
-      <g id="pin-danang" className="cursor-pointer">
-      <circle cx="305" cy="405" r="5" fill="#d97706" stroke="#ffffff" strokeWidth="2"/>
-      <rect x="320" y="393" width="145" height="24" rx="6" fill="#92400e"/>
-      <text x="392" y="409" fontSize="10" fontWeight="bold" fill="#ffffff" textAnchor="middle">📍 Đà Nẵng (1 Cơ sở)</text>
-      </g>
-
-      <g id="pin-hcm" className="cursor-pointer">
-      <circle cx="245" cy="700" r="5" fill="#e11d48" stroke="#ffffff" strokeWidth="2"/>
-      <rect x="260" y="688" width="145" height="24" rx="6" fill="#9f1239"/>
-      <text x="332" y="704" fontSize="10" fontWeight="bold" fill="#ffffff" textAnchor="middle">📍 TP.HCM (3 Cơ sở)</text>
-      </g>
-
-      <g id="pin-cantho" className="cursor-pointer">
-      <circle cx="195" cy="745" r="5" fill="#059669" stroke="#ffffff" strokeWidth="2"/>
-      <rect x="35" y="733" width="145" height="24" rx="6" fill="#065f46"/>
-      <text x="107" y="749" fontSize="10" fontWeight="bold" fill="#ffffff" textAnchor="middle">📍 Cần Thơ (1 Cơ sở)</text>
-      </g>
+        return (
+          <g
+            key={pin.id}
+            id={`pin-${pin.id}`}
+            className="cursor-pointer outline-none"
+            role="button"
+            tabIndex={0}
+            aria-label={`${pin.city} - ${pin.facilities.length} cơ sở`}
+            onMouseEnter={() => setActivePin(pin)}
+            onMouseLeave={() => setActivePin(null)}
+            onFocus={() => setActivePin(pin)}
+            onBlur={() => setActivePin(null)}
+            onClick={() => setActivePin(pin)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault()
+                setActivePin(pin)
+              }
+            }}
+          >
+            <circle
+              cx={pin.cx}
+              cy={pin.cy}
+              r={isActive ? 6.5 : 5}
+              fill={pin.pinColor}
+              stroke="#ffffff"
+              strokeWidth="2"
+            />
+            <rect
+              x={pin.labelCenterX - LABEL_WIDTH / 2}
+              y={pin.cy - 13}
+              width={LABEL_WIDTH}
+              height="26"
+              rx="6"
+              fill={pin.labelColor}
+              opacity={isActive ? 1 : 0.9}
+            />
+            <text
+              x={pin.labelCenterX}
+              y={pin.cy + 4.5}
+              fontSize={12}
+              fontWeight="bold"
+              fill="#ffffff"
+              textAnchor="middle"
+            >
+              📍 {pin.city} ({pin.facilities.length} Cơ sở)
+            </text>
+          </g>
+        )
+      })}
       </svg>
+
+      {activePin && (
+        <div
+          ref={tooltipRef}
+          style={tipPosition(activePin)}
+          className="pointer-events-none absolute z-20 w-[260px] rounded-xl border bg-card p-2.5 shadow-xl"
+        >
+          <div
+            className="mb-2 flex h-[56px] items-center justify-center rounded-lg text-sm font-bold tracking-wide text-white"
+            style={{
+              backgroundImage: `linear-gradient(135deg, ${activePin.pinColor}, ${activePin.labelColor})`,
+            }}
+          >
+            {activePin.city}
+          </div>
+
+          <div className="mb-1.5 flex items-center justify-between">
+            <span className="text-xs font-bold text-foreground">
+              {activePin.city}
+            </span>
+            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              {activePin.facilities.length} cơ sở
+            </span>
+          </div>
+
+          <ul className="space-y-1.5">
+            {activePin.facilities.map((facility) => (
+              <li
+                key={facility.code}
+                className="rounded-lg border bg-muted/40 px-2 py-1.5"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-semibold text-foreground">
+                    {facility.name}
+                  </span>
+                  <span className="shrink-0 text-[10px] font-medium text-muted-foreground">
+                    {facility.floors} tầng
+                  </span>
+                </div>
+                <p className="mt-0.5 line-clamp-2 text-[10px] leading-tight text-muted-foreground">
+                  {facility.address}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   )
 }
 
