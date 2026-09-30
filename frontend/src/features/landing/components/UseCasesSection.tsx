@@ -51,7 +51,63 @@ export function UseCasesSection({ onTry }: UseCasesSectionProps) {
         />
 
         <RevealList className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* 4 Thẻ nhỏ cho 4 kích cỡ chuẩn S, M, L, XL */}
+          {/* 1 Thẻ to nổi bật nằm bên TRÁI (Col 1, trải dài 2 hàng) */}
+          <RevealItem className="group flex flex-col justify-between overflow-hidden rounded-(--l-radius-card) border border-blue-500/30 bg-gradient-to-br from-blue-600/10 via-indigo-600/5 to-transparent p-6 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl sm:p-7 md:col-span-2 lg:col-span-1 lg:row-span-2 dark:border-blue-400/30">
+            <article className="flex h-full flex-col justify-between">
+              <div>
+                <div className="relative mb-5 h-48 w-full overflow-hidden rounded-2xl bg-muted sm:h-56">
+                  <img
+                    src="https://images.unsplash.com/photo-1587293852726-70cdb56c2866?auto=format&fit=crop&w=800&q=80"
+                    alt="Hệ thống kho tự quản thông minh 2D"
+                    loading="lazy"
+                    className="size-full object-cover transition-transform duration-500 group-hover:scale-108"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-blue-950/85 via-blue-900/30 to-black/20" />
+
+                  <div className="absolute inset-x-3 top-3 flex items-center justify-between">
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/30">
+                      <Sparkles className="size-5 animate-pulse" aria-hidden />
+                    </span>
+                    <span className="inline-flex items-center rounded-full bg-blue-600/90 px-3.5 py-1 text-xs font-semibold text-white shadow-sm backdrop-blur-md">
+                      Linh hoạt 100%
+                    </span>
+                  </div>
+                </div>
+
+                <h3 className="mb-2 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                  Nhu cầu lưu kho khác?
+                </h3>
+                <p className="text-[0.9375rem] leading-relaxed text-muted-foreground">
+                  Khám phá sơ đồ kho 2D tương tác để tự do lựa chọn vị trí và kích cỡ ô kho ưng ý nhất theo nhu cầu thực tế của bạn.
+                </p>
+
+                {/* Tiện ích nổi bật */}
+                <ul className="my-5 space-y-2.5 text-sm text-foreground/80">
+                  <li className="flex items-center gap-2">
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold text-xs">✓</span>
+                    <span>Tự do chọn vị trí ô kho qua sơ đồ 2D</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold text-xs">✓</span>
+                    <span>Hỗ trợ ghép nhiều kho diện tích lớn</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold text-xs">✓</span>
+                    <span>Kho mát 22–25°C sẵn sàng tại 7 cơ sở</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="pt-4">
+                <LandingLink to={ROUTES.book} size="md" className="w-full justify-center shadow-lg shadow-blue-500/25">
+                  {CTA.book}
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                </LandingLink>
+              </div>
+            </article>
+          </RevealItem>
+
+          {/* 4 Thẻ nhỏ cho 4 kích cỡ chuẩn S, M, L, XL nằm bên PHẢI (2x2) */}
           {USE_CASES.map((u) => {
             const Icon = USE_CASE_ICONS[u.id] || Sparkles
             const unit = UNITS.find((unit) => unit.size === u.size)
@@ -112,62 +168,6 @@ export function UseCasesSection({ onTry }: UseCasesSectionProps) {
               </RevealItem>
             )
           })}
-
-          {/* 1 Thẻ to nổi bật cho Tùy chọn không gian / Sơ đồ 2D */}
-          <RevealItem className="group flex flex-col justify-between overflow-hidden rounded-(--l-radius-card) border border-blue-500/30 bg-gradient-to-br from-blue-600/10 via-indigo-600/5 to-transparent p-6 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl sm:p-7 md:col-span-2 lg:col-start-3 lg:row-start-1 lg:row-span-2 dark:border-blue-400/30">
-            <article className="flex h-full flex-col justify-between">
-              <div>
-                <div className="relative mb-5 h-48 w-full overflow-hidden rounded-2xl bg-muted sm:h-56">
-                  <img
-                    src="https://images.unsplash.com/photo-1587293852726-70cdb56c2866?auto=format&fit=crop&w=800&q=80"
-                    alt="Hệ thống kho tự quản thông minh 2D"
-                    loading="lazy"
-                    className="size-full object-cover transition-transform duration-500 group-hover:scale-108"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-blue-950/85 via-blue-900/30 to-black/20" />
-
-                  <div className="absolute inset-x-3 top-3 flex items-center justify-between">
-                    <span className="flex size-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/30">
-                      <Sparkles className="size-5 animate-pulse" aria-hidden />
-                    </span>
-                    <span className="inline-flex items-center rounded-full bg-blue-600/90 px-3.5 py-1 text-xs font-semibold text-white shadow-sm backdrop-blur-md">
-                      Linh hoạt 100%
-                    </span>
-                  </div>
-                </div>
-
-                <h3 className="mb-2 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                  Nhu cầu lưu kho khác?
-                </h3>
-                <p className="text-[0.9375rem] leading-relaxed text-muted-foreground">
-                  Khám phá sơ đồ kho 2D tương tác để tự do lựa chọn vị trí và kích cỡ ô kho ưng ý nhất theo nhu cầu thực tế của bạn.
-                </p>
-
-                {/* Tiện ích nổi bật */}
-                <ul className="my-5 space-y-2.5 text-sm text-foreground/80">
-                  <li className="flex items-center gap-2">
-                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold text-xs">✓</span>
-                    <span>Tự do chọn vị trí ô kho qua sơ đồ 2D</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold text-xs">✓</span>
-                    <span>Hỗ trợ ghép nhiều kho diện tích lớn</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold text-xs">✓</span>
-                    <span>Kho mát 22–25°C sẵn sàng tại 7 cơ sở</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="pt-4">
-                <LandingLink to={ROUTES.book} size="md" className="w-full justify-center shadow-lg shadow-blue-500/25">
-                  {CTA.book}
-                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-                </LandingLink>
-              </div>
-            </article>
-          </RevealItem>
         </RevealList>
       </div>
     </section>
