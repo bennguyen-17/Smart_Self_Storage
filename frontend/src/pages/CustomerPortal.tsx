@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import Header from '../components/Header';
-import StorageMap2D from '../components/StorageMap2D';
-import BookingSidebar from '../components/BookingSidebar';
-import MyStorageTab from '../components/MyStorageTab';
-import DepositPaymentFlow from '../components/DepositPaymentFlow';
-import CustomerProfileModal from '../components/CustomerProfileModal';
-import SupportTicketModal from '../components/SupportTicketModal';
-import ExtendContractModal from '../components/ExtendContractModal';
-import ChatbotWidget from '../components/ChatbotWidget';
-import SiteFooter from '../components/SiteFooter';
+import Header from '@/components/common/Header';
+import StorageMap2D from '@/features/portal/components/StorageMap2D';
+import BookingSidebar from '@/features/portal/components/BookingSidebar';
+import MyStorageTab from '@/features/portal/components/MyStorageTab';
+import DepositPaymentFlow from '@/features/portal/components/modals/DepositPaymentFlow';
+import CustomerProfileModal from '@/features/portal/components/modals/CustomerProfileModal';
+import SupportTicketModal from '@/features/portal/components/modals/SupportTicketModal';
+import ExtendContractModal from '@/features/portal/components/modals/ExtendContractModal';
+import ChatbotWidget from '@/components/common/ChatbotWidget';
+import SiteFooter from '@/components/common/SiteFooter';
 
-import { useTheme } from '@/components/theme-provider';
-import { getCurrentCustomerProfile } from '../services/customerService';
-import { getBranches } from '../services/facilityService';
+import { useTheme } from '@/components/common/theme-provider';
+import { getCurrentCustomerProfile } from '@/features/portal/services/customerService';
+import { getBranches } from '@/features/portal/services/facilityService';
 
 export default function CustomerPortal() {
   const { theme, setTheme } = useTheme();
