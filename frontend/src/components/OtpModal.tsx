@@ -79,7 +79,7 @@ function OtpModal({ phone, onClose }: OtpModalProps) {
         description: "Tài khoản của bạn đã được kích hoạt.",
       })
 
-      navigate("/login")
+      navigate("/customer_login")
     } catch (err) {
       if (axios.isAxiosError(err)) {
         setError(

@@ -3,7 +3,9 @@ import axios from "axios"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CheckCircle2, Eye, EyeOff } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
+
+import { toast } from "sonner"
 
 import { login } from "@/api/authApi"
 import { loginSchema, type LoginFormValues } from "@/utils/validation"
@@ -26,14 +28,21 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 
 function LoginForm() {
+  const navigate = useNavigate()
   const [serverError, setServerError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [success, setSuccess] = useState(false)
 
+  const handleForgotPassword = () => {
+    toast.info("Yêu cầu đặt lại mật khẩu", {
+      description: "Vui lòng liên hệ Bộ phận Chăm sóc Khách hàng (Hotline: 1900 3910) để được hỗ trợ cấp lại mật khẩu.",
+    })
+  }
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      identifier: "",
+      phone: "",
       password: "",
     },
   })
@@ -44,24 +53,35 @@ function LoginForm() {
     setServerError("")
 
     try {
-      const data = await login(values.identifier, values.password)
+      const data = await login(values.phone, values.password, "CUSTOMER")
 
       if (data?.token) {
         localStorage.setItem("token", data.token)
+        if (data?.userInfo || data?.user) {
+          localStorage.setItem("user", JSON.stringify(data.userInfo || data.user))
+        }
       }
 
       setSuccess(true)
+      setTimeout(() => {
+        navigate("/portal")
+      }, 1000)
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
+        if (error.response?.status === 403) {
           setServerError(
             error.response.data?.message ||
-              "Email/số điện thoại hoặc mật khẩu không đúng."
+              "Tài khoản Quản trị / Nhân viên không được đăng nhập tại Cổng Khách hàng. Vui lòng sang Cổng Nội Bộ!"
+          )
+        } else if (error.response?.status === 401) {
+          setServerError(
+            error.response.data?.message ||
+            "Số điện thoại hoặc mật khẩu không đúng."
           )
         } else {
           setServerError(
             error.response?.data?.message ||
-              "Đăng nhập thất bại. Vui lòng thử lại."
+            "Đăng nhập thất bại. Vui lòng thử lại."
           )
         }
       } else {
@@ -82,11 +102,11 @@ function LoginForm() {
         </h2>
 
         <p className="mt-2 text-sm text-muted-foreground">
-          Chào mừng bạn trở lại với Smart Self Storage.
+          Đang chuyển hướng vào Cổng đặt kho...
         </p>
 
         <Link
-          to="/"
+          to="/portal"
           className="mt-6 inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors"
         >
           Truy cập Sơ đồ kho & Dịch vụ &rarr;
@@ -98,32 +118,32 @@ function LoginForm() {
   return (
     <div className="w-full">
       <div className="mb-6">
-        <h2 className="font-heading text-2xl font-semibold tracking-tight">
+        <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
           Đăng nhập
         </h2>
 
         <p className="mt-1.5 text-sm text-muted-foreground">
-          Nhập thông tin tài khoản để truy cập hệ thống.
+          Nhập số điện thoại và mật khẩu để truy cập hệ thống.
         </p>
       </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
         <FieldGroup>
-          {/* Identifier */}
+          {/* Phone */}
           <Controller
-            name="identifier"
+            name="phone"
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>
-                  Email hoặc số điện thoại
-                </FieldLabel>
+                <FieldLabel htmlFor={field.name}>Số điện thoại</FieldLabel>
 
                 <Input
                   {...field}
                   id={field.name}
-                  placeholder="example@gmail.com hoặc 0988123456"
-                  autoComplete="username"
+                  placeholder="0988123456"
+                  inputMode="numeric"
+                  maxLength={10}
+                  autoComplete="tel"
                   aria-invalid={fieldState.invalid}
                 />
 
@@ -163,6 +183,17 @@ function LoginForm() {
                 </InputGroup>
 
                 <FieldError errors={[fieldState.error]} />
+
+                <div className="flex justify-end pt-1">
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={handleForgotPassword}
+                    className="h-auto p-0 text-xs font-medium text-blue-600 dark:text-blue-400"
+                  >
+                    Quên mật khẩu?
+                  </Button>
+                </div>
               </Field>
             )}
           />
@@ -185,10 +216,20 @@ function LoginForm() {
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Chưa có tài khoản?{" "}
         <Link
-          to="/register"
+          to="/customer_login?tab=register"
           className="font-medium text-primary hover:underline"
         >
           Đăng ký ngay
+        </Link>
+      </p>
+
+      <p className="mt-3 text-center text-[12px] text-muted-foreground">
+        Bạn là nhân viên hoặc quản lý cơ sở?{" "}
+        <Link
+          to="/internal_login"
+          className="font-semibold text-blue-600 hover:underline dark:text-blue-400"
+        >
+          Vào cổng nội bộ
         </Link>
       </p>
     </div>

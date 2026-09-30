@@ -43,8 +43,14 @@ CREATE TABLE Account (
     roleId INT NOT NULL,
     phone VARCHAR(15) NOT NULL UNIQUE,
     fullName VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NULL,
     password VARCHAR(255) NOT NULL,
-    status ENUM('ACTIVE', 'INACTIVE', 'BANNED') NOT NULL DEFAULT 'ACTIVE',
+    status ENUM('UNVERIFIED', 'ACTIVE', 'SUSPENDED', 'CLOSED') NOT NULL DEFAULT 'UNVERIFIED',
+    otpCode VARCHAR(10) NULL,
+    otpExpiryTime DATETIME NULL,
+    failedAttempts INT NOT NULL DEFAULT 0,
+    firstFailedAt DATETIME NULL,
+    lockUntil DATETIME NULL,
     createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_account_role FOREIGN KEY (roleId) REFERENCES Role (roleId) ON UPDATE CASCADE
@@ -129,7 +135,7 @@ CREATE TABLE UnitType (
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS StorageUnit;
 CREATE TABLE StorageUnit (
-    unitId INT AUTO_INCREMENT PRIMARY KEY,
+    unitCode VARCHAR(50) PRIMARY KEY,
     floorId INT NOT NULL,
     unitTypeId INT NOT NULL,
     status ENUM('AVAILABLE', 'HOLD', 'RENTED', 'MAINTENANCE', 'OVERDUE') NOT NULL DEFAULT 'AVAILABLE',
@@ -215,7 +221,7 @@ DROP TABLE IF EXISTS Reservation;
 CREATE TABLE Reservation (
     reservationId INT AUTO_INCREMENT PRIMARY KEY,
     accountId INT NOT NULL,
-    unitId INT NOT NULL,
+    unitCode VARCHAR(50) NOT NULL,
     startDate DATE NOT NULL,
     endDate DATE NOT NULL,
     rentalType ENUM('DAILY', 'MONTHLY') NOT NULL,
@@ -225,11 +231,11 @@ CREATE TABLE Reservation (
     createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     holdExpiresAt DATETIME,
     CONSTRAINT fk_reservation_account FOREIGN KEY (accountId) REFERENCES Account (accountId) ON UPDATE CASCADE,
-    CONSTRAINT fk_reservation_unit FOREIGN KEY (unitId) REFERENCES StorageUnit (unitId) ON UPDATE CASCADE
+    CONSTRAINT fk_reservation_unit FOREIGN KEY (unitCode) REFERENCES StorageUnit (unitCode) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 17. TABLE: Contract (Hợp đồng thuê kho)
+-- 17. TABLE: Contract (Hợp đồng thuê kho - BR-21 Chu trình 7 trạng thái)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Contract;
 CREATE TABLE Contract (
@@ -238,9 +244,10 @@ CREATE TABLE Contract (
     pdfUrl VARCHAR(255),
     activatedAt DATETIME,
     terminatedAt DATETIME,
-    status ENUM('ACTIVE', 'EXPIRED', 'TERMINATED', 'CANCELLED') NOT NULL DEFAULT 'ACTIVE',
+    status ENUM('INITIATED', 'PENDING_CHECKIN', 'ACTIVE', 'OVERDUE', 'TERMINATED', 'FORFEITED', 'CANCELED') NOT NULL DEFAULT 'INITIATED',
     CONSTRAINT fk_contract_reservation FOREIGN KEY (reservationId) REFERENCES Reservation (reservationId) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 -- ----------------------------------------------------------------------------
 -- 18. TABLE: Payment (Hóa đơn và Thanh toán)
@@ -256,7 +263,7 @@ CREATE TABLE Payment (
     issuedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     dueAt DATETIME NOT NULL,
     status ENUM('PENDING', 'PAID', 'OVERDUE', 'CANCELLED') NOT NULL DEFAULT 'PENDING',
-    paymentMethod ENUM('VNPAY', 'MOMO', 'BANK_TRANSFER', 'CASH'),
+    paymentMethod ENUM('VNPAY', 'MOMO', 'BANK_TRANSFER', 'CASH', 'VIETQR'),
     transactionCode VARCHAR(100),
     paymentStatus ENUM('PENDING', 'SUCCESS', 'FAILED') NOT NULL DEFAULT 'PENDING',
     gatewayTransactionId VARCHAR(100),
@@ -362,16 +369,17 @@ INSERT INTO Facility (facilityId, facilityName, address, phone, status) VALUES
 (7, 'SmartStorage Ninh Kiều (CT-01)', 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', '02929100001', 'ACTIVE');
 
 -- 3. Accounts
--- Passwords sample: bcrypt hash of '123456' -> $2a$12$e80yq9j6K5j... (hoặc plaintext hash quy chuẩn cho dev)
-INSERT INTO Account (accountId, roleId, phone, fullName, password, status) VALUES
-(1, 1, '0900000001', 'System Administrator', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(2, 2, '0900000002', 'Board of Management Leader', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(3, 3, '0900000003', 'Trần Văn Quản Lý (HN-01)', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(4, 3, '0900000004', 'Lê Thị Quản Lý (HCM-01)', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(5, 4, '0900000005', 'Nguyễn Văn Nhân Viên 1', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(6, 4, '0900000006', 'Phạm Thị Nhân Viên 2', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(7, 5, '0912345678', 'Nguyễn Khách Hàng A', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE'),
-(8, 5, '0987654321', 'Công Ty Cổ Phần SmartRetail', '$2a$12$W9x2V7KkR1KkJq7Zq5jOeOY5.e4K3Z9j9l3G9p1B.5f6A8y0H1234', 'ACTIVE');
+-- Mật khẩu ban đầu cho toàn bộ tài khoản mẫu dev/test: 123456@Test (đã được băm bằng BCrypt)
+-- BCrypt Hash: $2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW
+INSERT INTO Account (accountId, roleId, phone, fullName, email, password, status) VALUES
+(1, 1, '0900000001', 'System Administrator', 'admin@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(2, 2, '0900000002', 'Board of Management Leader', 'bom@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(3, 3, '0900000003', 'Trần Văn Quản Lý (HN-01)', 'manager.hn@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(4, 3, '0900000004', 'Lê Thị Quản Lý (HCM-01)', 'manager.hcm@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(5, 4, '0900000005', 'Nguyễn Văn Nhân Viên 1', 'staff.hn@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(6, 4, '0900000006', 'Phạm Thị Nhân Viên 2', 'staff.hcm@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(7, 5, '0912345678', 'Nguyễn Khách Hàng A', 'customer.a@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(8, 5, '0987654321', 'Công Ty Cổ Phần SmartRetail', 'smartretail@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE');
 
 -- 4. CustomerProfiles (12 số CCCD)
 INSERT INTO CustomerProfile (customerId, accountId, identityNumber) VALUES
@@ -385,68 +393,112 @@ INSERT INTO EmployeeProfile (employeeId, accountId, facilityId) VALUES
 (3, 5, 1), -- Nhân viên HN-01
 (4, 6, 3); -- Nhân viên HCM-01
 
--- 6. Floors cho 7 Cơ sở
+-- 6. Floors cho 7 Cơ sở (Chuẩn 1000 kg/m² Tầng Trệt, 500 kg/m² Tầng trên)
 INSERT INTO Floor (floorId, facilityId, floorName, maxLoadPerM2, status) VALUES
--- HN-01 (Mẫu A - 3 tầng)
-(1, 1, 'Tầng Trệt (Sảnh & Kho XL)', 1500.00, 'ACTIVE'),
+-- HN-01
+(1, 1, 'Tầng Trệt (Sảnh & Kho XL)', 1000.00, 'ACTIVE'),
 (2, 1, 'Tầng 1 (Kho S, M, L)', 500.00, 'ACTIVE'),
 (3, 1, 'Tầng 2 (Kho S, M, L)', 500.00, 'ACTIVE'),
--- HN-02 (Mẫu B - 3 tầng)
-(4, 2, 'Tầng Trệt (Logistics Mặt tiền)', 2000.00, 'ACTIVE'),
-(5, 2, 'Tầng 1', 1000.00, 'ACTIVE'),
-(6, 2, 'Tầng 2', 800.00, 'ACTIVE'),
--- HCM-01 (Mẫu A - 3 tầng Kho mát Climate-Controlled)
-(7, 3, 'Tầng Trệt (Sảnh VIP & Kho Mát)', 1200.00, 'ACTIVE'),
-(8, 3, 'Tầng 1 (Kho Mát VIP)', 600.00, 'ACTIVE'),
-(9, 3, 'Tầng 2 (Kho Mát VIP)', 600.00, 'ACTIVE'),
--- HCM-02 (Mẫu B - 2 tầng)
-(10, 4, 'Tầng Trệt (Kho Pallet Cảng)', 2500.00, 'ACTIVE'),
-(11, 4, 'Tầng 1 (Kho Hàng E-Commerce)', 1000.00, 'ACTIVE'),
--- HCM-03 (Mẫu B - 3 tầng Khu Công Nghệ Cao)
-(12, 5, 'Tầng Trệt (Grid Matrix Hub)', 2000.00, 'ACTIVE'),
-(13, 5, 'Tầng 1', 1000.00, 'ACTIVE'),
-(14, 5, 'Tầng 2', 800.00, 'ACTIVE'),
--- DN-01 (Mẫu A - 2 tầng)
-(15, 6, 'Tầng Trệt (Đồ Homestay/Nội Thất)', 1000.00, 'ACTIVE'),
-(16, 6, 'Tầng 1 (Tủ Du Lịch Vali S)', 400.00, 'ACTIVE'),
--- CT-01 (Mẫu B - 2 tầng)
-(17, 7, 'Tầng Trệt (Kho Hàng Nông Sản Mẫu)', 1500.00, 'ACTIVE'),
-(18, 7, 'Tầng 1 (Tủ Cá Nhân Sinh Viên/Hồ Sơ)', 400.00, 'ACTIVE');
+-- HN-02
+(4, 2, 'Tầng Trệt (Kho XL)', 1000.00, 'ACTIVE'),
+(5, 2, 'Tầng 1', 500.00, 'ACTIVE'),
+(6, 2, 'Tầng 2', 500.00, 'ACTIVE'),
+-- HCM-01
+(7, 3, 'Tầng Trệt (Kho Mát XL)', 1000.00, 'ACTIVE'),
+(8, 3, 'Tầng 1 (Kho Mát VIP)', 500.00, 'ACTIVE'),
+(9, 3, 'Tầng 2 (Kho Mát VIP)', 500.00, 'ACTIVE'),
+-- HCM-02
+(10, 4, 'Tầng Trệt (Kho XL)', 1000.00, 'ACTIVE'),
+(11, 4, 'Tầng 1 (Kho S, M, L)', 500.00, 'ACTIVE'),
+-- HCM-03
+(12, 5, 'Tầng Trệt (Kho XL)', 1000.00, 'ACTIVE'),
+(13, 5, 'Tầng 1', 500.00, 'ACTIVE'),
+(14, 5, 'Tầng 2', 500.00, 'ACTIVE'),
+-- DN-01
+(15, 6, 'Tầng Trệt (Kho XL)', 1000.00, 'ACTIVE'),
+(16, 6, 'Tầng 1 (Kho S, M, L)', 500.00, 'ACTIVE'),
+-- CT-01
+(17, 7, 'Tầng Trệt (Kho XL)', 1000.00, 'ACTIVE'),
+(18, 7, 'Tầng 1 (Kho S, M, L)', 500.00, 'ACTIVE');
 
--- 7. UnitTypes
+-- 7. UnitTypes (BR-08: Chuẩn 4 kích thước chiều cao 2.0m)
 INSERT INTO UnitType (unitTypeId, typeName, size, storageCondition, status) VALUES
-(1, 'Size S (Locker mini)', '1m x 1m x 1.2m', 'NORMAL', 'ACTIVE'),
-(2, 'Size M (Phòng vừa)', '2m x 2m x 2.5m', 'NORMAL', 'ACTIVE'),
-(3, 'Size L (Phòng lớn)', '3m x 3m x 3.0m', 'NORMAL', 'ACTIVE'),
-(4, 'Size XL (Kho doanh nghiệp)', '5m x 4m x 3.5m', 'NORMAL', 'ACTIVE'),
-(5, 'Size M - Climate (Kho mát VIP)', '2m x 2m x 2.5m', 'CLIMATE_CONTROLLED', 'ACTIVE'),
-(6, 'Size L - Climate (Kho mát VIP)', '3m x 3m x 3.0m', 'CLIMATE_CONTROLLED', 'ACTIVE');
+(1, 'Size S (Tủ cá nhân)', '1.0m x 1.0m x 2.0m', 'NORMAL', 'ACTIVE'),
+(2, 'Size M (Phòng vừa)', '1.5m x 2.0m x 2.0m', 'NORMAL', 'ACTIVE'),
+(3, 'Size L (Phòng lớn)', '2.0m x 3.0m x 2.0m', 'NORMAL', 'ACTIVE'),
+(4, 'Size XL (Kho doanh nghiệp)', '2.5m x 4.0m x 2.0m', 'NORMAL', 'ACTIVE'),
+(5, 'Size M - Climate (Kho mát VIP)', '1.5m x 2.0m x 2.0m', 'CLIMATE_CONTROLLED', 'ACTIVE'),
+(6, 'Size L - Climate (Kho mát VIP)', '2.0m x 3.0m x 2.0m', 'CLIMATE_CONTROLLED', 'ACTIVE');
 
--- 8. Prices
+-- 8. Prices (BR-08: Giá ngày, Giá tháng, Tiền cọc chuẩn & Phụ phí kho mát 20%)
 INSERT INTO Price (priceId, unitTypeId, dailyPrice, monthlyPrice, depositAmount, climateSurchargePercent, effectiveFrom, effectiveTo, status) VALUES
-(1, 1, 50000.00, 800000.00, 800000.00, 0.00, '2026-01-01', NULL, 'ACTIVE'),
-(2, 2, 120000.00, 2000000.00, 2000000.00, 0.00, '2026-01-01', NULL, 'ACTIVE'),
-(3, 3, 220000.00, 3800000.00, 3800000.00, 0.00, '2026-01-01', NULL, 'ACTIVE'),
-(4, 4, 450000.00, 7500000.00, 7500000.00, 0.00, '2026-01-01', NULL, 'ACTIVE'),
-(5, 5, 150000.00, 2400000.00, 2400000.00, 20.00, '2026-01-01', NULL, 'ACTIVE'),
-(6, 6, 270000.00, 4500000.00, 4500000.00, 20.00, '2026-01-01', NULL, 'ACTIVE');
+(1, 1, 30000.00, 600000.00, 500000.00, 0.00, '2026-01-01', NULL, 'ACTIVE'),
+(2, 2, 60000.00, 1200000.00, 1000000.00, 0.00, '2026-01-01', NULL, 'ACTIVE'),
+(3, 3, 120000.00, 2400000.00, 2000000.00, 0.00, '2026-01-01', NULL, 'ACTIVE'),
+(4, 4, 200000.00, 4000000.00, 3000000.00, 0.00, '2026-01-01', NULL, 'ACTIVE'),
+(5, 5, 60000.00, 1200000.00, 1000000.00, 20.00, '2026-01-01', NULL, 'ACTIVE'),
+(6, 6, 120000.00, 2400000.00, 2000000.00, 20.00, '2026-01-01', NULL, 'ACTIVE');
 
--- 9. StorageUnits mẫu
-INSERT INTO StorageUnit (unitId, floorId, unitTypeId, status) VALUES
--- Tầng Trệt HN-01 (Kho XL)
-(1, 1, 4, 'AVAILABLE'),
-(2, 1, 4, 'RENTED'),
--- Tầng 1 HN-01 (S, M, L)
-(3, 2, 1, 'AVAILABLE'),
-(4, 2, 1, 'HOLD'),
-(5, 2, 2, 'RENTED'),
-(6, 2, 3, 'AVAILABLE'),
--- Tầng 2 HN-01
-(7, 3, 2, 'AVAILABLE'),
-(8, 3, 3, 'MAINTENANCE'),
--- HCM-01 Tầng 1 (Kho mát VIP M & L)
-(9, 8, 5, 'RENTED'),
-(10, 8, 6, 'AVAILABLE');
+-- 9. StorageUnits mẫu (Khớp 100% Sơ đồ mặt bằng 2D)
+INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
+-- === HN-01 TẦNG TRỆT (Floor 1): 10 Ô KHO XL (Dãy Mặt tiền 5 ô + Dãy Hậu cần 5 ô) ===
+('HN01-G-XL01', 1, 4, 'AVAILABLE'),
+('HN01-G-XL02', 1, 4, 'RENTED'),
+('HN01-G-XL03', 1, 4, 'AVAILABLE'),
+('HN01-G-XL04', 1, 4, 'AVAILABLE'),
+('HN01-G-XL05', 1, 4, 'MAINTENANCE'),
+('HN01-G-XL06', 1, 4, 'AVAILABLE'),
+('HN01-G-XL07', 1, 4, 'HOLD'),
+('HN01-G-XL08', 1, 4, 'AVAILABLE'),
+('HN01-G-XL09', 1, 4, 'RENTED'),
+('HN01-G-XL10', 1, 4, 'AVAILABLE'),
+
+-- === HN-01 TẦNG 1 (Floor 2): 8 ô S, 6 ô M, 4 ô L ===
+('HN01-F1-S01', 2, 1, 'AVAILABLE'),
+('HN01-F1-S02', 2, 1, 'HOLD'),
+('HN01-F1-S03', 2, 1, 'AVAILABLE'),
+('HN01-F1-S04', 2, 1, 'RENTED'),
+('HN01-F1-S05', 2, 1, 'AVAILABLE'),
+('HN01-F1-S06', 2, 1, 'AVAILABLE'),
+('HN01-F1-S07', 2, 1, 'MAINTENANCE'),
+('HN01-F1-S08', 2, 1, 'AVAILABLE'),
+('HN01-F1-M01', 2, 2, 'RENTED'),
+('HN01-F1-M02', 2, 2, 'AVAILABLE'),
+('HN01-F1-M03', 2, 2, 'AVAILABLE'),
+('HN01-F1-M04', 2, 2, 'HOLD'),
+('HN01-F1-M05', 2, 2, 'AVAILABLE'),
+('HN01-F1-M06', 2, 2, 'AVAILABLE'),
+('HN01-F1-L01', 2, 3, 'AVAILABLE'),
+('HN01-F1-L02', 2, 3, 'RENTED'),
+('HN01-F1-L03', 2, 3, 'AVAILABLE'),
+('HN01-F1-L04', 2, 3, 'AVAILABLE'),
+
+-- === HN-01 TẦNG 2 (Floor 3): 6 ô S, 8 ô M, 4 ô L ===
+('HN01-F2-S01', 3, 1, 'AVAILABLE'),
+('HN01-F2-S02', 3, 1, 'RENTED'),
+('HN01-F2-S03', 3, 1, 'AVAILABLE'),
+('HN01-F2-S04', 3, 1, 'AVAILABLE'),
+('HN01-F2-S05', 3, 1, 'AVAILABLE'),
+('HN01-F2-S06', 3, 1, 'AVAILABLE'),
+('HN01-F2-M01', 3, 2, 'AVAILABLE'),
+('HN01-F2-M02', 3, 2, 'AVAILABLE'),
+('HN01-F2-M03', 3, 2, 'RENTED'),
+('HN01-F2-M04', 3, 2, 'HOLD'),
+('HN01-F2-M05', 3, 2, 'AVAILABLE'),
+('HN01-F2-M06', 3, 2, 'AVAILABLE'),
+('HN01-F2-M07', 3, 2, 'AVAILABLE'),
+('HN01-F2-M08', 3, 2, 'AVAILABLE'),
+('HN01-F2-L01', 3, 3, 'MAINTENANCE'),
+('HN01-F2-L02', 3, 3, 'AVAILABLE'),
+('HN01-F2-L03', 3, 3, 'RENTED'),
+('HN01-F2-L04', 3, 3, 'AVAILABLE'),
+
+-- === HCM-01 TẦNG 1 (Floor 8): Kho mát VIP Climate-Controlled (M & L) ===
+('HCM01-F1-M01', 8, 5, 'RENTED'),
+('HCM01-F1-L01', 8, 6, 'AVAILABLE'),
+('HCM01-F1-M02', 8, 5, 'AVAILABLE'),
+('HCM01-F1-M03', 8, 5, 'HOLD'),
+('HCM01-F1-L02', 8, 6, 'AVAILABLE');
 
 -- 10. Shifts
 INSERT INTO Shift (shiftId, shiftName, startTime, endTime, status) VALUES
@@ -480,10 +532,10 @@ INSERT INTO FeeItem (feeItemId, feeName, unitPrice, description, status) VALUES
 (5, 'Phí đền bù hư hỏng cửa cuốn', 1200000.00, 'Hư hỏng nan cửa cuốn, kẹt ray do ngoại lực', 'ACTIVE');
 
 -- 15. Reservations mẫu
-INSERT INTO Reservation (reservationId, accountId, unitId, startDate, endDate, rentalType, rentalAmount, depositAmount, status, createdAt, holdExpiresAt) VALUES
-(1, 7, 2, '2026-09-01', '2026-10-01', 'MONTHLY', 7500000.00, 7500000.00, 'CONFIRMED', '2026-08-30 09:00:00', NULL),
-(2, 8, 5, '2026-09-15', '2026-12-15', 'MONTHLY', 6000000.00, 2000000.00, 'CONFIRMED', '2026-09-14 14:30:00', NULL),
-(3, 7, 4, '2026-09-25', '2026-09-30', 'DAILY', 250000.00, 800000.00, 'PENDING', '2026-09-25 10:00:00', '2026-09-25 10:30:00');
+INSERT INTO Reservation (reservationId, accountId, unitCode, startDate, endDate, rentalType, rentalAmount, depositAmount, status, createdAt, holdExpiresAt) VALUES
+(1, 7, 'HN01-G-XL02', '2026-09-01', '2026-10-01', 'MONTHLY', 7500000.00, 7500000.00, 'CONFIRMED', '2026-08-30 09:00:00', NULL),
+(2, 8, 'HN01-F1-M01', '2026-09-15', '2026-12-15', 'MONTHLY', 6000000.00, 2000000.00, 'CONFIRMED', '2026-09-14 14:30:00', NULL),
+(3, 7, 'HN01-F1-S02', '2026-09-25', '2026-09-30', 'DAILY', 250000.00, 800000.00, 'PENDING', '2026-09-25 10:00:00', '2026-09-25 10:30:00');
 
 -- 16. Contracts mẫu
 INSERT INTO Contract (contractId, reservationId, pdfUrl, activatedAt, terminatedAt, status) VALUES

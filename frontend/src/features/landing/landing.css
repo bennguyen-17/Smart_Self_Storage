@@ -1,0 +1,101 @@
+/* Token riêng của landing. Chỉ có tác dụng bên trong .landing,
+   không ảnh hưởng các trang khác. Chỉnh màu, bo góc, khoảng cách theo feedback ở đây. */
+
+.landing {
+  /* Màu: CTA có chữ dùng tông đậm để đạt AA (chữ trắng ~5.2:1). */
+  --l-cta: oklch(0.5461 0.2152 262.8809);
+  --l-cta-hover: oklch(0.3791 0.1378 265.5222);
+  --l-link: oklch(0.5461 0.2152 262.8809);
+  --l-soft-bg: var(--accent);
+  --l-soft-fg: var(--accent-foreground);
+  --l-surface: var(--muted);
+  --l-surface-quiet: var(--secondary);
+  --l-shadow-lift: 0 16px 40px -20px oklch(0.5461 0.2152 262.8809 / 0.28);
+
+  /* Hình khối */
+  --l-radius-field: 14px;
+  --l-radius-card: 20px;
+  --l-radius-panel: 28px;
+  --l-section-space: clamp(4rem, 3rem + 5vw, 7rem);
+  --l-header-h: 72px;
+
+  /* Thang z-index có tên */
+  --l-z-sticky: 30;
+  --l-z-mobile-bar: 40;
+  --l-z-sheet: 50;
+
+  font-size: 1.0625rem;
+  line-height: 1.65;
+}
+
+.dark .landing {
+  --l-cta-hover: oklch(0.47 0.2 264);
+  --l-link: var(--accent-foreground);
+  --l-shadow-lift: 0 16px 40px -20px oklch(0 0 0 / 0.6);
+}
+
+.landing :is(h1, h2, h3) {
+  text-wrap: balance;
+}
+
+.landing p {
+  text-wrap: pretty;
+}
+
+.landing section[id] {
+  scroll-margin-top: calc(var(--l-header-h) + 8px);
+}
+
+html:has(.landing) {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:has(.landing) {
+    scroll-behavior: auto;
+  }
+}
+
+/* Slider của bộ ước tính */
+.landing .l-range {
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    var(--l-cta) 0 var(--fill, 0%),
+    var(--l-surface-quiet) var(--fill, 0%) 100%
+  );
+  outline: none;
+}
+
+.landing .l-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: var(--background);
+  border: 3px solid var(--l-cta);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.landing .l-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: var(--background);
+  border: 3px solid var(--l-cta);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+
+.landing .l-range:active::-webkit-slider-thumb {
+  transform: scale(1.1);
+}
+
+.landing .l-range:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent);
+}

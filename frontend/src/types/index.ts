@@ -73,7 +73,7 @@ export interface UnitType {
 }
 
 export interface UnitDetailResponse {
-  unitId: number;
+  unitId: string | number;
   unitCode: string; // Mã ô kho: "HN01-G-XL05", "XL05"
   floorId: number;
   floorName?: string;
@@ -120,7 +120,7 @@ export interface CalculatePriceResponse {
 // --- 3. US-05: Deposit, VietQR & Clickwrap Agreement ---
 export interface DepositInitiateRequest {
   accountId: number;
-  unitId: number;
+  unitCode: string;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
   rentalType: RentalType;

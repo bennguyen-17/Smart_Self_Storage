@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 public class DepositInitiateRequest {
     private Integer accountId;
-    private Integer unitId;
+    private String unitCode;
     private LocalDate startDate;
     private LocalDate endDate;
     private String rentalType; // "DAILY", "MONTHLY"
@@ -22,12 +22,12 @@ public class DepositInitiateRequest {
         this.accountId = accountId;
     }
 
-    public Integer getUnitId() {
-        return unitId;
+    public String getUnitCode() {
+        return unitCode;
     }
 
-    public void setUnitId(Integer unitId) {
-        this.unitId = unitId;
+    public void setUnitCode(String unitCode) {
+        this.unitCode = unitCode;
     }
 
     public LocalDate getStartDate() {

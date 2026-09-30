@@ -53,4 +53,11 @@ public class DepositController {
         }
         return ResponseEntity.badRequest().body(response);
     }
+
+    // --- US-05: API Kiểm tra trạng thái nộp cọc theo mã hóa đơn ---
+    @GetMapping("/status")
+    public ResponseEntity<ApiResponse> checkDepositStatus(@RequestParam String invoiceNumber) {
+        ApiResponse response = depositService.checkDepositStatus(invoiceNumber);
+        return ResponseEntity.ok(response);
+    }
 }

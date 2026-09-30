@@ -16,8 +16,8 @@ public class Reservation {
     @Column(nullable = false)
     private Integer accountId;
 
-    @Column(nullable = false)
-    private Integer unitId;
+    @Column(nullable = false, length = 50)
+    private String unitCode;
 
     @Column(nullable = false)
     private LocalDate startDate;
@@ -45,10 +45,10 @@ public class Reservation {
     public Reservation() {
     }
 
-    public Reservation(Integer reservationId, Integer accountId, Integer unitId, LocalDate startDate, LocalDate endDate, String rentalType, BigDecimal rentalAmount, BigDecimal depositAmount, String status, LocalDateTime createdAt, LocalDateTime holdExpiresAt) {
+    public Reservation(Integer reservationId, Integer accountId, String unitCode, LocalDate startDate, LocalDate endDate, String rentalType, BigDecimal rentalAmount, BigDecimal depositAmount, String status, LocalDateTime createdAt, LocalDateTime holdExpiresAt) {
         this.reservationId = reservationId;
         this.accountId = accountId;
-        this.unitId = unitId;
+        this.unitCode = unitCode;
         this.startDate = startDate;
         this.endDate = endDate;
         this.rentalType = rentalType;
@@ -75,12 +75,12 @@ public class Reservation {
         this.accountId = accountId;
     }
 
-    public Integer getUnitId() {
-        return unitId;
+    public String getUnitCode() {
+        return unitCode;
     }
 
-    public void setUnitId(Integer unitId) {
-        this.unitId = unitId;
+    public void setUnitCode(String unitCode) {
+        this.unitCode = unitCode;
     }
 
     public LocalDate getStartDate() {
