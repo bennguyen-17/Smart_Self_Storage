@@ -380,7 +380,7 @@ html.dark .unit-occupied {
 .dark ::-webkit-scrollbar-thumb {
   background: rgba(51, 65, 85, 0.6);
   border-radius: 9999px;
-}
+}       
 
 .dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.8);

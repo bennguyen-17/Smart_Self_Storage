@@ -37,7 +37,7 @@ export function ProcessSection() {
           {/* Đường nối các bước: vẽ dần từ trái sang khi cuộn tới (desktop). */}
           <motion.span
             aria-hidden
-            className="absolute top-7 right-[12.5%] left-[12.5%] hidden h-1 origin-left rounded-full bg-blue-500/25 md:block"
+            className="absolute top-10 right-[12.5%] left-[12.5%] hidden h-1 origin-left rounded-full bg-gradient-to-r from-sky-400/40 via-blue-500/40 to-indigo-500/40 md:block"
             variants={{
               hidden: { scaleX: 0 },
               shown: {
@@ -53,15 +53,20 @@ export function ProcessSection() {
             <motion.li
               key={step.title}
               variants={fadeUp}
-              className="relative flex flex-col gap-3.5 rounded-2xl l-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:items-center md:text-center md:bg-transparent md:backdrop-blur-none md:border-none md:shadow-none md:p-0"
+              className="group relative flex flex-col items-center text-center gap-3.5 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl backdrop-blur-md border bg-white/85 border-slate-800/25 shadow-md hover:border-blue-700/60 hover:shadow-blue-500/10 dark:bg-slate-900/80 dark:border-cyan-200/35 dark:hover:border-cyan-300/70 dark:shadow-[0_8px_30px_rgba(56,189,248,0.12)]"
             >
-              <span className="flex size-14 items-center justify-center rounded-2xl bg-blue-600 text-xl font-black text-white shadow-lg shadow-blue-500/30 ring-4 ring-background">
+              {/* Nút số 1 2 3 4 hiệu ứng Gradient phát sáng */}
+              <span className="relative z-10 flex size-12 sm:size-13 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600 text-lg sm:text-xl font-black text-white shadow-lg shadow-sky-500/30 ring-4 ring-white/90 dark:ring-slate-900/90 transition-transform duration-300 group-hover:scale-110">
                 {i + 1}
               </span>
-              <h3 className="text-xl leading-[1.35] font-bold text-foreground">
+
+              <h3 className="text-base sm:text-lg leading-[1.35] font-bold text-foreground transition-colors group-hover:text-blue-600 dark:group-hover:text-sky-400">
                 {step.title}
               </h3>
-              <p className="max-w-[28ch] text-[0.9375rem] leading-relaxed text-muted-foreground">{step.body}</p>
+
+              <p className="max-w-[28ch] text-xs sm:text-sm leading-relaxed text-muted-foreground">
+                {step.body}
+              </p>
             </motion.li>
           ))}
         </motion.ol>

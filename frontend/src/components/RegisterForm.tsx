@@ -59,7 +59,7 @@ function TextField({
       control={control}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
-          <FieldLabel htmlFor={field.name} className="text-sm font-semibold sm:text-base">
+          <FieldLabel htmlFor={field.name} className="text-xs font-semibold sm:text-sm">
             {label}
           </FieldLabel>
 
@@ -71,7 +71,7 @@ function TextField({
             maxLength={maxLength}
             autoComplete={autoComplete}
             aria-invalid={fieldState.invalid}
-            className="h-11 text-base rounded-xl sm:h-12"
+            className="h-10 text-sm rounded-xl"
           />
 
           <FieldError errors={[fieldState.error]} />
@@ -106,11 +106,11 @@ function PasswordField({
       control={control}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
-          <FieldLabel htmlFor={field.name} className="text-sm font-semibold sm:text-base">
+          <FieldLabel htmlFor={field.name} className="text-xs font-semibold sm:text-sm">
             {label}
           </FieldLabel>
 
-          <InputGroup className="h-11 rounded-xl sm:h-12">
+          <InputGroup className="h-10 rounded-xl">
             <InputGroupInput
               {...field}
               id={field.name}
@@ -118,7 +118,7 @@ function PasswordField({
               placeholder={placeholder}
               autoComplete="new-password"
               aria-invalid={fieldState.invalid}
-              className="text-base"
+              className="text-sm"
               onFocus={onFocus}
               onBlur={() => {
                 onBlur?.()
@@ -131,7 +131,7 @@ function PasswordField({
                 onClick={onToggle}
                 aria-label={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               >
-                {visible ? <EyeOff /> : <Eye />}
+                {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </InputGroupButton>
             </InputGroupAddon>
           </InputGroup>
@@ -220,9 +220,9 @@ function RegisterForm() {
 
   return (
     <div className="w-full">
-      <div className="mb-5 space-y-1.5">
-        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Tạo tài khoản mới</h1>
-        <p className="text-sm text-muted-foreground sm:text-base">
+      <div className="mb-4 space-y-1">
+        <h1 className="text-xl font-bold text-foreground sm:text-2xl">Tạo tài khoản mới</h1>
+        <p className="text-xs text-muted-foreground sm:text-sm">
           Đăng ký nhanh chóng để nhận mã mở kho tự quản
         </p>
       </div>
@@ -326,13 +326,13 @@ function RegisterForm() {
                 className="mt-0.5"
               />
 
-              <span className="text-xs leading-normal text-muted-foreground sm:text-sm">
+              <span className="text-xs leading-normal text-muted-foreground">
                 Tôi đồng ý với{" "}
                 <Button
                   type="button"
                   variant="link"
                   onClick={() => setPolicyTab("terms")}
-                  className="inline h-auto p-0 text-xs font-semibold text-blue-600 underline sm:text-sm dark:text-blue-400"
+                  className="inline h-auto p-0 text-xs font-semibold text-blue-600 underline dark:text-blue-400"
                 >
                   Điều khoản dịch vụ
                 </Button>{" "}
@@ -341,7 +341,7 @@ function RegisterForm() {
                   type="button"
                   variant="link"
                   onClick={() => setPolicyTab("privacy")}
-                  className="inline h-auto p-0 text-xs font-semibold text-blue-600 underline sm:text-sm dark:text-blue-400"
+                  className="inline h-auto p-0 text-xs font-semibold text-blue-600 underline dark:text-blue-400"
                 >
                   Chính sách bảo mật kho
                 </Button>
@@ -350,7 +350,7 @@ function RegisterForm() {
             </label>
 
             {agreementError && (
-              <p role="alert" className="mt-1.5 text-sm text-destructive">
+              <p role="alert" className="mt-1 text-xs text-destructive">
                 {agreementError}
               </p>
             )}
@@ -361,7 +361,7 @@ function RegisterForm() {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="mt-4.5 h-12 w-full rounded-xl bg-emerald-600 text-base font-bold text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-700"
+          className="mt-4 h-10 w-full rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-700"
         >
           {isSubmitting && <Spinner />}
 
@@ -376,7 +376,7 @@ function RegisterForm() {
         )}
       </form>
 
-      <p className="mt-5 text-center text-sm text-muted-foreground">
+      <p className="mt-4 text-center text-xs text-muted-foreground">
         Bạn là nhân viên hoặc quản lý cơ sở?{" "}
         <Link
           to="/internal_login"

@@ -117,25 +117,25 @@ function LoginForm() {
 
   return (
     <div className="w-full">
-      <div className="mb-6">
-        <h2 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+      <div className="mb-5">
+        <h2 className="font-heading text-xl font-bold tracking-tight text-foreground sm:text-2xl">
           Đăng nhập
         </h2>
 
-        <p className="mt-2 text-base text-muted-foreground">
+        <p className="mt-1.5 text-xs text-muted-foreground sm:text-sm">
           Nhập số điện thoại và mật khẩu để truy cập hệ thống.
         </p>
       </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-        <FieldGroup className="space-y-4">
+        <FieldGroup className="space-y-3.5">
           {/* Phone */}
           <Controller
             name="phone"
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name} className="text-sm font-semibold sm:text-base">
+                <FieldLabel htmlFor={field.name} className="text-xs font-semibold sm:text-sm">
                   Số điện thoại
                 </FieldLabel>
 
@@ -147,7 +147,7 @@ function LoginForm() {
                   maxLength={10}
                   autoComplete="tel"
                   aria-invalid={fieldState.invalid}
-                  className="h-12 text-base rounded-xl"
+                  className="h-10 text-sm rounded-xl"
                 />
 
                 <FieldError errors={[fieldState.error]} />
@@ -161,11 +161,11 @@ function LoginForm() {
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name} className="text-sm font-semibold sm:text-base">
+                <FieldLabel htmlFor={field.name} className="text-xs font-semibold sm:text-sm">
                   Mật khẩu
                 </FieldLabel>
 
-                <InputGroup className="h-12 rounded-xl">
+                <InputGroup className="h-10 rounded-xl">
                   <InputGroupInput
                     {...field}
                     id={field.name}
@@ -173,7 +173,7 @@ function LoginForm() {
                     placeholder="Nhập mật khẩu"
                     autoComplete="current-password"
                     aria-invalid={fieldState.invalid}
-                    className="text-base"
+                    className="text-sm"
                   />
 
                   <InputGroupAddon align="inline-end">
@@ -183,7 +183,7 @@ function LoginForm() {
                         showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"
                       }
                     >
-                      {showPassword ? <EyeOff /> : <Eye />}
+                      {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </InputGroupButton>
                   </InputGroupAddon>
                 </InputGroup>
@@ -195,7 +195,7 @@ function LoginForm() {
                     type="button"
                     variant="link"
                     onClick={handleForgotPassword}
-                    className="h-auto p-0 text-sm font-medium text-blue-600 dark:text-blue-400"
+                    className="h-auto p-0 text-xs font-medium text-blue-600 dark:text-blue-400"
                   >
                     Quên mật khẩu?
                   </Button>
@@ -205,7 +205,7 @@ function LoginForm() {
           />
         </FieldGroup>
 
-        <Button type="submit" disabled={isSubmitting} className="mt-6 h-12 w-full rounded-xl text-base font-bold shadow-md shadow-blue-500/20">
+        <Button type="submit" disabled={isSubmitting} className="mt-5 h-10 w-full rounded-xl text-sm font-bold shadow-md shadow-blue-500/20">
           {isSubmitting && <Spinner />}
 
           {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
@@ -219,7 +219,7 @@ function LoginForm() {
         )}
       </form>
 
-      <p className="mt-6 text-center text-base text-muted-foreground">
+      <p className="mt-5 text-center text-xs text-muted-foreground sm:text-sm">
         Chưa có tài khoản?{" "}
         <Link
           to="/customer_login?tab=register"
@@ -229,7 +229,7 @@ function LoginForm() {
         </Link>
       </p>
 
-      <p className="mt-3 text-center text-sm text-muted-foreground">
+      <p className="mt-2 text-center text-xs text-muted-foreground">
         Bạn là nhân viên hoặc quản lý cơ sở?{" "}
         <Link
           to="/internal_login"
