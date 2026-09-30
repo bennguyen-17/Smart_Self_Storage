@@ -368,6 +368,8 @@ html.dark .unit-occupied {
   background: transparent;
 }
 
+
+
 ::-webkit-scrollbar-thumb {
   background: rgba(148, 163, 184, 0.3);
   border-radius: 9999px;
@@ -393,4 +395,4 @@ html.dark .unit-occupied {
 
 .dark * {
   scrollbar-color: rgba(51, 65, 85, 0.6) transparent;
-}
+}
