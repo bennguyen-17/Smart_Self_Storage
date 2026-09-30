@@ -58,49 +58,7 @@ export function EstimatorSection({ state, onChange }: EstimatorSectionProps) {
         <Reveal className="grid gap-8 rounded-(--l-radius-panel) l-card p-6 shadow-xl sm:p-9 lg:grid-cols-[1.1fr_1fr] lg:gap-12 lg:p-12">
           {/* CỘT TRÁI: PRESETS & SLIDER */}
           <div className="flex flex-col gap-8">
-            <fieldset className="flex flex-col gap-3">
-              <legend className="mb-2 text-sm font-semibold tracking-wide text-foreground/80">
-                Gợi ý chọn nhanh theo nhu cầu
-              </legend>
-              <div className="flex flex-wrap gap-2.5">
-                {ESTIMATOR.presets.map((p) => {
-                  const selected = state.presetId === p.id
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() =>
-                        onChange({
-                          ...state,
-                          volume: p.volumeM3,
-                          presetId: p.id,
-                        })
-                      }
-                      className={cn(
-                        "relative isolate inline-flex min-h-11 items-center rounded-full px-4 text-[0.9375rem] font-medium transition-all duration-200 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-                        selected
-                          ? "text-white shadow-md shadow-blue-500/30"
-                          : "bg-muted/70 text-foreground hover:bg-muted dark:bg-card/70 dark:hover:bg-card"
-                      )}
-                    >
-                      {selected && (
-                        <motion.span
-                          layoutId="estimator-chip"
-                          className="absolute inset-0 -z-10 rounded-full bg-blue-600"
-                          transition={{
-                            duration: DURATION.base,
-                            ease: EASE_OUT_QUART,
-                          }}
-                        />
-                      )}
-                      {p.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </fieldset>
-
+            {/* Thanh trượt Lượng đồ ước tính (Lên trên) */}
             <div className="flex flex-col gap-3.5 rounded-2xl bg-muted/30 p-5 ring-1 ring-border/50 dark:bg-card/30">
               <div className="flex items-baseline justify-between gap-4">
                 <label
@@ -142,6 +100,50 @@ export function EstimatorSection({ state, onChange }: EstimatorSectionProps) {
                 <span>{max} m³</span>
               </div>
             </div>
+
+            {/* Gợi ý chọn nhanh theo nhu cầu (Xuống dưới) */}
+            <fieldset className="flex flex-col gap-3">
+              <legend className="mb-2 text-sm font-semibold tracking-wide text-foreground/80">
+                Gợi ý chọn nhanh theo nhu cầu
+              </legend>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {ESTIMATOR.presets.map((p) => {
+                  const selected = state.presetId === p.id
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() =>
+                        onChange({
+                          ...state,
+                          volume: p.volumeM3,
+                          presetId: p.id,
+                        })
+                      }
+                      className={cn(
+                        "relative isolate flex w-full min-h-11 items-center justify-center text-center rounded-xl px-3 text-[0.9375rem] font-medium transition-all duration-200 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                        selected
+                          ? "text-white shadow-md shadow-blue-500/30"
+                          : "bg-muted/70 text-foreground hover:bg-muted dark:bg-card/70 dark:hover:bg-card"
+                      )}
+                    >
+                      {selected && (
+                        <motion.span
+                          layoutId="estimator-chip"
+                          className="absolute inset-0 -z-10 rounded-xl bg-blue-600"
+                          transition={{
+                            duration: DURATION.base,
+                            ease: EASE_OUT_QUART,
+                          }}
+                        />
+                      )}
+                      {p.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </fieldset>
           </div>
 
           {/* CỘT PHẢI: KẾT QUẢ TÍNH TOÁN */}

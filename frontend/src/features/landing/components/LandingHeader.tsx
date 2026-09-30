@@ -242,4 +242,26 @@ export function LandingHeader() {
 function ThemeToggle() {
   // Suy ra từ state của ThemeProvider (không đọc class trên <html>, vì class
   // chỉ được gắn trong effect của provider, sau lần render đầu của component này).
-  const
+  const { theme, setTheme } = useTheme()
+  const systemDark = useSystemDark()
+  const isDark = theme === "dark" || (theme === "system" && systemDark)
+
+  const toggle = () => setTheme(isDark ? "light" : "dark")
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={
+        isDark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"
+      }
+      className="inline-flex size-11 items-center justify-center rounded-full transition-colors outline-none hover:bg-(--l-surface-quiet) focus-visible:ring-3 focus-visible:ring-ring/50"
+    >
+      {isDark ? (
+        <Sun className="size-5" aria-hidden />
+      ) : (
+        <Moon className="size-5" aria-hidden />
+      )}
+    </button>
+  )
+}

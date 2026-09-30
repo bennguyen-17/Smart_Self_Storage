@@ -15,7 +15,7 @@ import java.util.Map;
 
 @Service
 public class JwtService {
-    private static final long TOKEN_LIFETIME_MILLIS = 24 * 60 * 60 * 1000L;
+    private static final long TOKEN_LIFETIME_MILLIS = 30 * 1000L; // 30 seconds (for testing)
 
     private final SecretKey signingKey;
 
