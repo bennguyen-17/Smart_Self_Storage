@@ -33,35 +33,35 @@ export default function Header({ isDarkMode, onToggleTheme, onOpenProfileModal }
   }
 
   return (
-    <header className="w-full h-16 sm:h-18 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 sm:px-10 lg:px-12 flex items-center justify-between shrink-0 sticky top-0 z-40 transition-colors shadow-xs">
+    <header className="w-full h-13 sm:h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between shrink-0 sticky top-0 z-40 transition-colors shadow-xs">
       {/* BRAND LOGO */}
       <BrandLogo />
 
       {/* CONTROLS & USER PROFILE */}
-      <div className="flex items-center space-x-3 shrink-0">
+      <div className="flex items-center space-x-2.5 shrink-0">
         <button
           onClick={onToggleTheme}
-          className="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center space-x-2 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 transition whitespace-nowrap cursor-pointer shadow-xs"
+          className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 transition whitespace-nowrap cursor-pointer shadow-xs"
           type="button"
         >
           <i className={`fa-solid ${isDarkMode ? 'fa-moon text-amber-400' : 'fa-sun text-amber-500'}`}></i>
-          <span className="whitespace-nowrap text-xs">{isDarkMode ? 'Giao diện Tối' : 'Giao diện Sáng'}</span>
+          <span className="whitespace-nowrap text-xs">{isDarkMode ? 'Tối' : 'Sáng'}</span>
         </button>
 
-        <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block"></div>
+        <div className="h-5 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block"></div>
 
         {!token ? (
           <div className="flex items-center space-x-2">
             <Link
               to="/login"
-              className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 transition whitespace-nowrap"
+              className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 transition whitespace-nowrap"
             >
               <i className="fa-solid fa-right-to-bracket mr-1.5 text-xs text-blue-600"></i>
               Đăng nhập
             </Link>
             <Link
               to="/register"
-              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 transition shadow-xs whitespace-nowrap"
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 transition shadow-xs whitespace-nowrap"
             >
               <i className="fa-solid fa-user-plus mr-1.5 text-xs"></i>
               Đăng ký
@@ -70,11 +70,11 @@ export default function Header({ isDarkMode, onToggleTheme, onOpenProfileModal }
         ) : (
           <button
             onClick={onOpenProfileModal}
-            className="flex items-center space-x-2.5 px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white text-slate-900 hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 transition cursor-pointer shadow-xs group text-left"
+            className="flex items-center space-x-2 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white text-slate-900 hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 transition cursor-pointer shadow-xs group text-left"
             title="Nhấn để xem Hồ sơ & Đăng xuất"
             type="button"
           >
-            <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+            <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
               {userInitials}
             </div>
             <div className="text-left hidden md:block">
