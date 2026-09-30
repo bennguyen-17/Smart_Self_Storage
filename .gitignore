@@ -49,3 +49,6 @@ frontend/*.local
 node_modules/
 .env
 
+# --- [DOCKER] ---
+docker-compose.yml
+
