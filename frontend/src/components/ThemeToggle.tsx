@@ -1,7 +1,6 @@
 import { Moon, Sun } from "lucide-react"
 
 import { useTheme } from "@/components/theme-provider"
-import { Button } from "@/components/ui/button"
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme()
@@ -11,22 +10,22 @@ function ThemeToggle() {
     (theme === "system" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches)
 
+  const toggle = () => setTheme(isDark ? "light" : "dark")
+
   return (
-    <Button
+    <button
       type="button"
-      variant="outline"
-      onClick={() => setTheme(isDark ? "light" : "dark")}
-      title="Chuyển chế độ Sáng / Tối"
-      className="h-auto gap-1.5 px-3 py-2 text-xs font-semibold shadow-sm dark:border-border dark:bg-background dark:hover:bg-muted"
+      onClick={toggle}
+      aria-label={isDark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
+      title={isDark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
+      className="inline-flex size-10 items-center justify-center rounded-full transition-colors outline-none hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:ring-3 focus-visible:ring-ring/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
     >
       {isDark ? (
-        <Moon className="size-3.5 text-blue-400" />
+        <Sun className="size-5" aria-hidden />
       ) : (
-        <Sun className="size-3.5 text-amber-500" />
+        <Moon className="size-5" aria-hidden />
       )}
-
-      <span className="text-[11px] text-foreground">{isDark ? "Tối" : "Sáng"}</span>
-    </Button>
+    </button>
   )
 }
 

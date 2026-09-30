@@ -123,12 +123,7 @@ export function FacilitiesSection() {
                       <h3 className="text-xl leading-[1.35] font-bold text-foreground">
                         {f.name}
                       </h3>
-                      {f.isClimate && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/10 px-2.5 py-0.5 text-xs font-semibold text-cyan-600 dark:bg-cyan-400/15 dark:text-cyan-300">
-                          <Snowflake className="size-3.5" aria-hidden />
-                          {FACILITIES_SECTION.climateBadge}
-                        </span>
-                      )}
+
                     </div>
                     <p className="flex gap-2 text-[0.9375rem] text-muted-foreground">
                       <MapPin className="mt-1 size-4 shrink-0 text-blue-500" aria-hidden />

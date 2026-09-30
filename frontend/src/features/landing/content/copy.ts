@@ -22,7 +22,6 @@ export const HERO = {
   },
   trust: [
     { icon: "clock", label: "Ra vào 24/7 bằng mã PIN" },
-    { icon: "thermometer", label: "Kho mát 22–25°C tại mọi cơ sở" },
     { icon: "shield", label: "Có bảo hiểm tài sản toàn diện" },
   ],
 } as const
@@ -111,8 +110,6 @@ export const ESTIMATOR = {
     { id: "house", label: "Nhà phố 3 phòng ngủ", volumeM3: 18 },
   ] satisfies EstimatorPreset[],
   slider: { min: 0, max: 25, step: 0.5, label: "Lượng đồ ước tính (m³)" },
-  climateLabel: "Kho mát điều hòa 22–25°C",
-  climateHint: "+20% đơn giá, sẵn sàng tại tất cả cơ sở",
   emptyTitle: "Chưa chọn lượng đồ",
   emptyBody: "Hãy chọn một mục nhanh ở trên hoặc kéo thanh trượt để tìm cỡ kho hoàn hảo cho bạn.",
   resultPrefix: "Gợi ý tối ưu cho bạn",
@@ -137,7 +134,6 @@ export const FACILITIES_SECTION = {
   badge: "Hệ thống cơ sở",
   title: "7 cơ sở hiện đại, khắp mọi nẻo đường",
   lead: "Mạng lưới kho tự quản thông minh phủ sóng tại các vị trí đắc địa, thuận tiện giao thông.",
-  climateBadge: "Kho mát",
 } as const
 
 export const PROCESS_SECTION = {
@@ -190,9 +186,9 @@ export const TESTIMONIALS_SECTION = {
     },
     {
       quote:
-        "Mấy bộ máy ảnh chuyên dụng và túi xách da tôi gửi vào kho mát. Đi công tác dài ngày cực kỳ an tâm.",
+        "Mấy bộ máy ảnh chuyên dụng và túi xách da tôi gửi vào đây. Đi công tác dài ngày cực kỳ an tâm vì an ninh đảm bảo.",
       name: "Chị Gia Hân",
-      context: "Thuê kho mát điều hòa",
+      context: "Thuê kho dài hạn",
     },
   ] satisfies Testimonial[],
 } as const
@@ -215,9 +211,9 @@ export const FAQ_SECTION = {
     },
     {
       id: "climate",
-      question: "Đồ có bị ẩm mốc không? Kho mát có ở đâu?",
+      question: "Đồ có bị ẩm mốc không?",
       answer:
-        "Kho tiêu chuẩn luôn được thông gió thoáng đãng, phù hợp đồ gia dụng và dọn nhà. Kho mát kiểm soát nhiệt độ 22–25°C và độ ẩm tối ưu được trang bị tại tất cả các cơ sở, lý tưởng cho đồ điện tử, thiết bị quay chụp, túi da và tài liệu.",
+        "Kho tiêu chuẩn luôn được thông gió thoáng đãng, được thiết kế an toàn tối đa để bảo quản đồ gia dụng, dọn nhà, tài liệu và hàng hóa.",
     },
     {
       id: "duration",

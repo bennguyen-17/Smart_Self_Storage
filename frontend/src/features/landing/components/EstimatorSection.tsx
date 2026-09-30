@@ -137,30 +137,7 @@ export function EstimatorSection({ state, onChange }: EstimatorSectionProps) {
               </div>
             </div>
 
-            <label
-              htmlFor={climateId}
-              className="flex min-h-12 cursor-pointer items-center gap-3.5 rounded-(--l-radius-field) bg-background/90 px-4 py-3.5 shadow-sm ring-1 ring-border/70 transition-colors hover:border-blue-500/40"
-            >
-              <input
-                id={climateId}
-                type="checkbox"
-                checked={state.climate}
-                onChange={(e) =>
-                  onChange({ ...state, climate: e.target.checked })
-                }
-                className="size-5 shrink-0 accent-(--l-cta)"
-              />
-              <Snowflake
-                className="size-5 shrink-0 text-cyan-500"
-                aria-hidden
-              />
-              <span className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2">
-                <span className="font-semibold text-foreground">{ESTIMATOR.climateLabel}</span>
-                <span className="text-xs text-muted-foreground">
-                  {ESTIMATOR.climateHint}
-                </span>
-              </span>
-            </label>
+
           </div>
 
           <div

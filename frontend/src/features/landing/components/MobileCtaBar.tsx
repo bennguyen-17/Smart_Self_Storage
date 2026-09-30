@@ -24,7 +24,7 @@ export function MobileCtaBar() {
       {visible && (
         <motion.div
           key="mobile-cta"
-          className="fixed inset-x-0 bottom-0 z-(--l-z-mobile-bar) border-t border-border bg-background/90 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md md:hidden"
+          className="fixed inset-x-0 bottom-0 z-(--l-z-mobile-bar) border-t border-border bg-background/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:hidden"
           initial={{ y: "100%" }}
           animate={{ y: 0 }}
           exit={{ y: "100%" }}
