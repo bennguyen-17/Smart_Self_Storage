@@ -16,18 +16,18 @@ interface AuthLayoutProps {
 
 function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="relative flex min-h-svh flex-col overflow-hidden">
+    <div className="relative flex min-h-svh flex-col overflow-hidden bg-slate-950 text-slate-100">
       {/* 3D VANTA DOTS ANIMATED BACKGROUND */}
       <VantaDotsBackground />
 
       {/* HEADER */}
-      <header className="sticky top-0 z-30 flex h-16 sm:h-18 w-full shrink-0 items-center justify-between border-b border-sky-100/80 bg-white/75 px-6 backdrop-blur-md transition-colors sm:px-10 lg:px-12 dark:border-slate-800 dark:bg-slate-950/75">
+      <header className="sticky top-0 z-30 flex h-16 sm:h-18 w-full shrink-0 items-center justify-between border-b border-white/10 bg-slate-950/75 px-6 backdrop-blur-md transition-colors sm:px-10 lg:px-12">
         <BrandLogo />
 
         <div className="flex items-center gap-3">
           <Link
             to="/internal_login"
-            className="hidden items-center gap-2 rounded-xl border border-sky-200/60 bg-white/80 px-4 py-2.5 text-sm font-semibold text-foreground shadow-sm backdrop-blur-sm transition hover:bg-sky-50/80 dark:border-slate-700 dark:bg-slate-900/80 dark:hover:bg-slate-800 sm:inline-flex"
+            className="hidden items-center gap-2 rounded-xl border border-white/15 bg-slate-900/80 px-4 py-2.5 text-sm font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-slate-800 sm:inline-flex"
           >
             <ShieldHalf className="size-4 text-primary" />
             <span>Cổng Nhân Viên &amp; Quản Lý</span>
@@ -45,20 +45,20 @@ function AuthLayout({ children }: AuthLayoutProps) {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="relative hidden h-[540px] flex-col justify-between overflow-hidden rounded-3xl border border-sky-100/80 bg-white/85 p-6 shadow-xl shadow-sky-950/5 backdrop-blur-xl group lg:col-span-7 lg:flex dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
+            className="relative hidden h-[540px] flex-col justify-between overflow-hidden rounded-3xl border border-white/15 bg-slate-900/80 p-6 shadow-2xl backdrop-blur-xl group lg:col-span-7 lg:flex"
           >
             {/* Ambient Inside Glow */}
-            <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-sky-400/15 blur-3xl transition-all duration-700 group-hover:bg-sky-400/25 dark:bg-blue-500/10 dark:group-hover:bg-blue-500/20" />
+            <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-blue-500/15 blur-3xl transition-all duration-700 group-hover:bg-blue-500/25" />
 
-            <div className="z-10 flex items-center justify-between border-b border-sky-100/70 pb-3.5 dark:border-slate-800">
+            <div className="z-10 flex items-center justify-between border-b border-white/10 pb-3.5">
               <div className="flex items-center gap-2.5">
                 <span className="size-3 animate-pulse rounded-full bg-emerald-500" />
-                <h2 className="text-base font-bold text-foreground sm:text-lg">
+                <h2 className="text-base font-bold text-white sm:text-lg">
                   Mạng lưới kho tự quản toàn quốc
                 </h2>
               </div>
 
-              <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary sm:text-sm">
+              <span className="rounded-full border border-primary/30 bg-primary/20 px-3 py-1 text-xs font-semibold text-primary sm:text-sm">
                 7/7 Cơ sở trực tuyến 24/7
               </span>
             </div>
@@ -67,8 +67,8 @@ function AuthLayout({ children }: AuthLayoutProps) {
               <VietnamMap />
             </div>
 
-            <div className="z-10 flex items-center justify-between border-t border-sky-100/70 pt-3 text-sm text-muted-foreground dark:border-slate-800">
-              <span className="flex items-center gap-2 font-semibold text-emerald-600 dark:text-emerald-400">
+            <div className="z-10 flex items-center justify-between border-t border-white/10 pt-3 text-sm text-slate-300">
+              <span className="flex items-center gap-2 font-semibold text-emerald-400">
                 <CheckCircle2 className="size-4" />
                 Kho thông minh mở cửa 24/7
               </span>
@@ -82,7 +82,7 @@ function AuthLayout({ children }: AuthLayoutProps) {
             transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="col-span-1 w-full lg:col-span-5"
           >
-            <Card className="w-full rounded-3xl border border-sky-100/80 bg-white/90 shadow-xl shadow-sky-950/5 backdrop-blur-xl [--card-spacing:--spacing(6)] dark:border-slate-800 dark:bg-slate-900/90 dark:shadow-none">
+            <Card className="w-full rounded-3xl border border-white/15 bg-slate-900/85 shadow-2xl backdrop-blur-xl [--card-spacing:--spacing(6)] text-slate-100">
               <CardContent>{children}</CardContent>
             </Card>
           </motion.section>

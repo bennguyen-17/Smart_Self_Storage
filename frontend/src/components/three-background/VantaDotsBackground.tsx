@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
+if (typeof window !== "undefined") {
+    (window as any).THREE = THREE;
+}
+
 interface VantaDotsBackgroundProps {
     backgroundColor?: number;
     color?: number;
@@ -18,7 +22,7 @@ export default function VantaDotsBackground({
     backgroundColor = 0x0f172a,
     color = 0x38bdf8,
     color2 = 0x818cf8,
-    size = 3.2,
+    size = 3.5,
     spacing = 35.0,
     showLines = true,
     scale = 1.0,
@@ -30,8 +34,16 @@ export default function VantaDotsBackground({
     useEffect(() => {
         let effect: any = null;
 
+        if (typeof window !== "undefined") {
+            (window as any).THREE = THREE;
+        }
+
         const loadVanta = async () => {
             try {
+                if (typeof window !== "undefined") {
+                    (window as any).THREE = THREE;
+                }
+
                 // @ts-ignore
                 const vantaModule = await import("vanta/dist/vanta.dots.min");
                 const DOTS = vantaModule.default || vantaModule;
@@ -65,13 +77,20 @@ export default function VantaDotsBackground({
 
         // Dọn dẹp bộ nhớ khi component bị unmount
         return () => {
-            if (effect) effect.destroy();
+            if (effect) {
+                try {
+                    effect.destroy();
+                } catch {
+                    // ignore
+                }
+            }
         };
     }, [backgroundColor, color, color2, size, spacing, showLines, scale, scaleMobile]);
 
     return (
         <div
             ref={vantaRef}
+            className="fixed inset-0 pointer-events-none"
             style={{
                 position: "fixed",
                 top: 0,
@@ -83,3 +102,4 @@ export default function VantaDotsBackground({
         />
     );
 }
+
