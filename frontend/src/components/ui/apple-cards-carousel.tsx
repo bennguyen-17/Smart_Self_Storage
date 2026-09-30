@@ -139,10 +139,12 @@ export const Card = ({
   card,
   index,
   layout = false,
+  className,
 }: {
   card: CardType
   index: number
   layout?: boolean
+  className?: string
 }) => {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -227,7 +229,10 @@ export const Card = ({
       <motion.button
         layoutId={layout ? `card-${card.title}` : undefined}
         onClick={handleOpen}
-        className="group relative flex h-96 w-[260px] sm:h-[440px] sm:w-[290px] md:h-[480px] md:w-[310px] flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 bg-slate-100 text-left shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl cursor-pointer dark:border-slate-800 dark:bg-slate-900"
+        className={cn(
+          "group relative flex h-96 w-full sm:h-[440px] md:h-[480px] flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 bg-slate-100 text-left shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl cursor-pointer dark:border-slate-800 dark:bg-slate-900",
+          className
+        )}
       >
         {/* Background Image with Zoom on Hover */}
         <img

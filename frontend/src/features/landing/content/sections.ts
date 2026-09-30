@@ -26,7 +26,7 @@ export const SECTIONS: readonly SectionConfig[] = [
   { id: "process", navLabel: "Cách thuê", enabled: true },
   { id: "testimonials", enabled: false },
   { id: "faq", navLabel: "Hỏi đáp", enabled: true },
-  { id: "final-cta", enabled: true },
+  { id: "final-cta", enabled: false },
 ]
 
 export const enabledSections = SECTIONS.filter((s) => s.enabled)
