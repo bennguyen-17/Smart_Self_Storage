@@ -10,8 +10,22 @@ import { DURATION, EASE_OUT_QUART } from "../motion/presets"
 import { Reveal } from "./Reveal"
 import { SectionHeading } from "./SectionHeading"
 
-export function FacilitiesSection() {
-  const [city, setCity] = useState<CityId>(CITIES[0].id)
+interface FacilitiesSectionProps {
+  selectedCity?: CityId
+  onCityChange?: (city: CityId) => void
+}
+
+export function FacilitiesSection({
+  selectedCity,
+  onCityChange,
+}: FacilitiesSectionProps) {
+  const [internalCity, setInternalCity] = useState<CityId>(CITIES[0].id)
+  const city = selectedCity ?? internalCity
+  const handleCitySelect = (cId: CityId) => {
+    setInternalCity(cId)
+    onCityChange?.(cId)
+  }
+
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
   const baseId = useId()
   const list = FACILITIES.filter((f) => f.city === city)
@@ -35,7 +49,7 @@ export function FacilitiesSection() {
               : null
     if (next === null) return
     e.preventDefault()
-    setCity(CITIES[next].id)
+    handleCitySelect(CITIES[next].id)
     tabRefs.current[next]?.focus()
   }
 
@@ -48,7 +62,6 @@ export function FacilitiesSection() {
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 sm:px-6 lg:px-8">
         <SectionHeading
           id="facilities-title"
-          badge={FACILITIES_SECTION.badge}
           title={FACILITIES_SECTION.title}
           lead={FACILITIES_SECTION.lead}
         />
@@ -73,7 +86,7 @@ export function FacilitiesSection() {
                   aria-selected={selected}
                   aria-controls={`${baseId}-panel`}
                   tabIndex={selected ? 0 : -1}
-                  onClick={() => setCity(c.id)}
+                  onClick={() => handleCitySelect(c.id)}
                   onKeyDown={(e) => onKeyDown(e, i)}
                   className={cn(
                     "relative isolate min-h-11 shrink-0 rounded-full px-5 text-[0.9375rem] font-semibold transition-colors duration-200 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",

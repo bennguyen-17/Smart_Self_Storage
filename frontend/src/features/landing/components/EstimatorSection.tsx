@@ -1,6 +1,6 @@
 import { useId } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { ArrowRight, Sparkles, Snowflake } from "lucide-react"
+import { ArrowRight, Sparkles } from "lucide-react"
 
 import { formatVnd } from "../lib/format"
 import { cn } from "@/lib/utils"
@@ -31,7 +31,6 @@ const formatPrice = (n: number) => formatVnd(Math.round(n / 1000) * 1000)
 
 export function EstimatorSection({ state, onChange }: EstimatorSectionProps) {
   const sliderId = useId()
-  const climateId = useId()
   const rec = recommendUnit(state.volume)
   const { min, max, step } = ESTIMATOR.slider
   const fill = `${((state.volume - min) / (max - min)) * 100}%`
@@ -45,12 +44,19 @@ export function EstimatorSection({ state, onChange }: EstimatorSectionProps) {
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
         <SectionHeading
           id="estimator-title"
-          badge={ESTIMATOR.badge}
-          title={ESTIMATOR.title}
+          title={
+            <span>
+              Đo đạc nhanh tay,{" "}
+              <span className="l-gradient-title font-black">
+                chọn ngay kho chuẩn
+              </span>
+            </span>
+          }
           lead={ESTIMATOR.lead}
         />
 
         <Reveal className="grid gap-8 rounded-(--l-radius-panel) l-card p-6 shadow-xl sm:p-9 lg:grid-cols-[1.1fr_1fr] lg:gap-12 lg:p-12">
+          {/* CỘT TRÁI: PRESETS & SLIDER */}
           <div className="flex flex-col gap-8">
             <fieldset className="flex flex-col gap-3">
               <legend className="mb-2 text-sm font-semibold tracking-wide text-foreground/80">
@@ -81,7 +87,7 @@ export function EstimatorSection({ state, onChange }: EstimatorSectionProps) {
                       {selected && (
                         <motion.span
                           layoutId="estimator-chip"
-                          className="absolute inset-0 -z-10 rounded-full bg-(--l-cta)"
+                          className="absolute inset-0 -z-10 rounded-full bg-blue-600"
                           transition={{
                             duration: DURATION.base,
                             ease: EASE_OUT_QUART,
@@ -136,10 +142,9 @@ export function EstimatorSection({ state, onChange }: EstimatorSectionProps) {
                 <span>{max} m³</span>
               </div>
             </div>
-
-
           </div>
 
+          {/* CỘT PHẢI: KẾT QUẢ TÍNH TOÁN */}
           <div
             aria-live="polite"
             className="flex min-h-[20rem] flex-col rounded-(--l-radius-card) bg-background p-6 shadow-md ring-1 ring-border/60 sm:p-8 dark:bg-card"
@@ -173,7 +178,9 @@ export function EstimatorSection({ state, onChange }: EstimatorSectionProps) {
                       {ESTIMATOR.overflowBody}
                     </p>
                     <div className="mt-auto flex flex-wrap gap-3 pt-2">
-                      <LandingLink to={ROUTES.book} size="lg">{CTA.book}</LandingLink>
+                      <LandingLink to={ROUTES.book} size="lg">
+                        {CTA.book}
+                      </LandingLink>
                     </div>
                   </>
                 )}
@@ -190,7 +197,7 @@ export function EstimatorSection({ state, onChange }: EstimatorSectionProps) {
                       Cỡ {rec.unit.size} · {rec.unit.name}
                     </h3>
                     <p className="text-[0.9375rem] leading-relaxed text-muted-foreground">
-                      {rec.unit.dimensions} · {rec.unit.volumeM3} m³.{" "}
+                      {rec.unit.dimensions} · {rec.unit.areaM2} m² · {rec.unit.volumeM3} m³.{" "}
                       {rec.unit.fits}
                     </p>
                     <dl className="mt-auto grid grid-cols-2 gap-4 border-t border-border/70 pt-5">
@@ -219,9 +226,16 @@ export function EstimatorSection({ state, onChange }: EstimatorSectionProps) {
                         </dd>
                       </div>
                     </dl>
-                    <LandingLink to={ROUTES.book} size="lg" className="self-start shadow-md shadow-blue-500/25">
+                    <LandingLink
+                      to={ROUTES.book}
+                      size="lg"
+                      className="self-start shadow-md shadow-blue-500/25"
+                    >
                       {CTA.bookThisSize}
-                      <ArrowRight aria-hidden className="size-5 transition-transform group-hover:translate-x-1" />
+                      <ArrowRight
+                        aria-hidden
+                        className="size-5 transition-transform group-hover:translate-x-1"
+                      />
                     </LandingLink>
                   </>
                 )}
@@ -233,3 +247,6 @@ export function EstimatorSection({ state, onChange }: EstimatorSectionProps) {
     </section>
   )
 }
+
+
+

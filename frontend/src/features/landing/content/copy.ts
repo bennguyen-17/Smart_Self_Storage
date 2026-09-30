@@ -20,13 +20,7 @@ export const HERO = {
     alt: "Những thùng carton ghi nhãn tay xếp gọn cạnh chậu cây xanh trong căn phòng sáng đèn",
     credit: "Ảnh: Dina Badamshina / Unsplash",
   },
-  trust: [
-    { icon: "clock", label: "Ra vào 24/7 bằng mã PIN" },
-    { icon: "shield", label: "Có bảo hiểm tài sản toàn diện" },
-  ],
 } as const
-
-export type TrustIcon = (typeof HERO.trust)[number]["icon"]
 
 export interface UseCase {
   id: string
@@ -38,7 +32,6 @@ export interface UseCase {
 }
 
 export const USE_CASES_SECTION = {
-  badge: "Tình huống sử dụng",
   title: "Cần bao nhiêu chỗ, có bấy nhiêu kho",
   lead: "Chọn tình huống phù hợp với bạn, hệ thống thông minh sẽ gợi ý kích cỡ kho vừa vặn tức thì.",
   tryLabel: "Tính thử ngay",
@@ -52,8 +45,8 @@ export const USE_CASES: readonly UseCase[] = [
     size: "S",
     presetId: "suitcase",
     image: {
-      src: "https://images.unsplash.com/photo-1595079676339-1534801ad6cf?auto=format&fit=crop&w=800&q=80",
-      alt: "Tủ kho cá nhân mini lưu trữ an toàn",
+      src: "https://images.unsplash.com/photo-1590247813693-5541d1c609fd?auto=format&fit=crop&w=800&q=80",
+      alt: "Dãy tủ kho tự quản mini sạch sẽ và thông thoáng",
     },
   },
   {
@@ -63,8 +56,8 @@ export const USE_CASES: readonly UseCase[] = [
     size: "M",
     presetId: "room",
     image: {
-      src: "https://images.unsplash.com/photo-1590247813693-5541d1c609fd?auto=format&fit=crop&w=800&q=80",
-      alt: "Phòng kho tự quản vừa vặn sạch sẽ",
+      src: "/images/personal-storage-boxes.jpg",
+      alt: "Thùng carton và đồ dùng cá nhân đóng gói ngăn nắp trong kho",
     },
   },
   {
@@ -74,8 +67,8 @@ export const USE_CASES: readonly UseCase[] = [
     size: "L",
     presetId: "apartment",
     image: {
-      src: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80",
-      alt: "Phòng kho lớn chứa thùng đồ và nội thất gia đình",
+      src: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
+      alt: "Phòng kho chứa đồ đạc gia đình và vật dụng nội thất",
     },
   },
   {
@@ -85,8 +78,8 @@ export const USE_CASES: readonly UseCase[] = [
     size: "XL",
     presetId: "house",
     image: {
-      src: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
-      alt: "Kho hàng doanh nghiệp và homestay rộng rãi",
+      src: "https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=800&q=80",
+      alt: "Kho hàng kinh doanh rộng rãi với kệ pallet hiện đại",
     },
   },
 ]
@@ -100,7 +93,6 @@ export interface EstimatorPreset {
 }
 
 export const ESTIMATOR = {
-  badge: "Bộ ước tính thông minh",
   title: "Đo đạc nhanh tay, chọn ngay kho chuẩn",
   lead: "Chọn gần đúng lượng đồ hoặc kéo thanh trượt để tính toán không gian vừa vặn và tối ưu chi phí.",
   presets: [
@@ -109,19 +101,18 @@ export const ESTIMATOR = {
     { id: "apartment", label: "Căn hộ 1–2 phòng ngủ", volumeM3: 11 },
     { id: "house", label: "Nhà phố 3 phòng ngủ", volumeM3: 18 },
   ] satisfies EstimatorPreset[],
-  slider: { min: 0, max: 25, step: 0.5, label: "Lượng đồ ước tính (m³)" },
+  slider: { min: 0, max: 20, step: 0.5, label: "Lượng đồ ước tính (m³)" },
   emptyTitle: "Chưa chọn lượng đồ",
   emptyBody: "Hãy chọn một mục nhanh ở trên hoặc kéo thanh trượt để tìm cỡ kho hoàn hảo cho bạn.",
   resultPrefix: "Gợi ý tối ưu cho bạn",
   perMonth: "/ tháng",
   depositLabel: "Tiền cọc đảm bảo",
-  overflowTitle: "Cần diện tích lớn hơn 20 m³?",
+  overflowTitle: "Cần diện tích lớn hơn 10 m² (20 m³)?",
   overflowBody:
     "Hệ thống luôn có sẵn các phương án ghép nhiều kho linh hoạt nhằm đáp ứng tối đa nhu cầu của bạn.",
 } as const
 
 export const PRICING_SECTION = {
-  badge: "Bảng giá niêm yết",
   title: "Bảng giá minh bạch, chuẩn sạch không phí ẩn",
   lead: "Bốn cỡ kho linh hoạt, trần cao 2m tiêu chuẩn. Thuê theo ngày tiện lợi, ưu đãi dài hạn theo tháng.",
   perMonth: "/ tháng",
@@ -131,13 +122,11 @@ export const PRICING_SECTION = {
 } as const
 
 export const FACILITIES_SECTION = {
-  badge: "Hệ thống cơ sở",
   title: "7 cơ sở hiện đại, khắp mọi nẻo đường",
   lead: "Mạng lưới kho tự quản thông minh phủ sóng tại các vị trí đắc địa, thuận tiện giao thông.",
 } as const
 
 export const PROCESS_SECTION = {
-  badge: "Quy trình đơn giản",
   title: "4 bước chạm ngay, thuê kho liền tay",
   steps: [
     {
@@ -200,7 +189,6 @@ export interface FaqItem {
 }
 
 export const FAQ_SECTION = {
-  badge: "Hỏi đáp nhanh",
   title: "Giải đáp tận tâm, an tâm trải nghiệm",
   items: [
     {

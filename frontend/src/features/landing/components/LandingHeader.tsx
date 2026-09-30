@@ -6,9 +6,10 @@ import {
   useMotionValueEvent,
   useScroll,
 } from "motion/react"
-import { Menu, Moon, Sun, Warehouse, X } from "lucide-react"
+import { LogOut, Menu, Moon, Sun, User, Warehouse, X } from "lucide-react"
 
 import { useTheme } from "@/components/theme-provider"
+import { useAuthSession } from "@/hooks/useAuthSession"
 import { cn } from "@/lib/utils"
 
 import { navSections } from "../content/sections"
@@ -27,6 +28,7 @@ export function LandingHeader() {
   const menuId = useId()
   const active = useActiveSection(NAV_IDS)
   const { scrollY } = useScroll()
+  const { isAuthenticated, user, logout } = useAuthSession()
 
   useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 24))
 
@@ -101,19 +103,45 @@ export function LandingHeader() {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Link
-            to={ROUTES.login}
-            className="hidden h-11 items-center rounded-full px-4 text-[0.9375rem] font-medium transition-colors outline-none hover:bg-(--l-surface-quiet) focus-visible:ring-3 focus-visible:ring-ring/50 sm:inline-flex"
-          >
-            {CTA.login}
-          </Link>
+
+          {!isAuthenticated ? (
+            <Link
+              to={ROUTES.login}
+              className="hidden h-11 items-center rounded-full px-4 text-[0.9375rem] font-medium transition-colors outline-none hover:bg-(--l-surface-quiet) focus-visible:ring-3 focus-visible:ring-ring/50 sm:inline-flex"
+            >
+              {CTA.login}
+            </Link>
+          ) : (
+            <div className="hidden sm:flex items-center gap-1.5">
+              <Link
+                to={ROUTES.book}
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-blue-200/80 bg-blue-50/70 px-3.5 text-xs sm:text-sm font-semibold text-blue-700 transition hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60 shadow-xs"
+                title="Vào Cổng Khách Hàng / Quản lý kho"
+              >
+                <div className="flex size-6 items-center justify-center rounded-full bg-blue-600 text-white font-black text-[11px]">
+                  {user?.fullName ? user.fullName[0].toUpperCase() : <User className="size-3.5" />}
+                </div>
+                <span className="max-w-[120px] truncate">{user?.fullName || "Kho của tôi"}</span>
+              </Link>
+              <button
+                type="button"
+                onClick={logout}
+                title="Đăng xuất"
+                className="inline-flex size-10 items-center justify-center rounded-full text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition outline-none"
+              >
+                <LogOut className="size-4" />
+              </button>
+            </div>
+          )}
+
           <LandingLink
             to={ROUTES.book}
             size="md"
             className="hidden sm:inline-flex"
           >
-            {CTA.book}
+            {isAuthenticated ? "Vào quản lý kho" : CTA.book}
           </LandingLink>
+
           <button
             ref={menuButtonRef}
             type="button"
@@ -159,14 +187,49 @@ export function LandingHeader() {
                     </a>
                   </li>
                 ))}
-                <li className="sm:hidden">
-                  <Link
-                    to={ROUTES.login}
-                    className="flex min-h-12 items-center rounded-xl px-3 font-medium outline-none hover:bg-(--l-surface-quiet) focus-visible:ring-3 focus-visible:ring-ring/50"
-                  >
-                    {CTA.login}
-                  </Link>
-                </li>
+
+                {!isAuthenticated ? (
+                  <li className="sm:hidden">
+                    <Link
+                      to={ROUTES.login}
+                      onClick={() => setMenuOpen(false)}
+                      className="flex min-h-12 items-center rounded-xl px-3 font-medium outline-none hover:bg-(--l-surface-quiet) focus-visible:ring-3 focus-visible:ring-ring/50"
+                    >
+                      {CTA.login}
+                    </Link>
+                  </li>
+                ) : (
+                  <>
+                    <li className="sm:hidden">
+                      <Link
+                        to={ROUTES.book}
+                        onClick={() => setMenuOpen(false)}
+                        className="flex min-h-12 items-center justify-between rounded-xl px-3 font-semibold text-blue-600 outline-none hover:bg-blue-50/50 dark:text-blue-400 dark:hover:bg-blue-950/30"
+                      >
+                        <div className="flex items-center gap-2">
+                          <User className="size-4" />
+                          <span>{user?.fullName ? user.fullName : "Quản lý kho của tôi"}</span>
+                        </div>
+                        <span className="text-xs font-bold text-blue-600 bg-blue-100 dark:bg-blue-900/60 dark:text-blue-300 px-2 py-0.5 rounded-full">
+                          Vào kho
+                        </span>
+                      </Link>
+                    </li>
+                    <li className="sm:hidden">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false)
+                          logout()
+                        }}
+                        className="flex w-full min-h-12 items-center gap-2 rounded-xl px-3 font-medium text-rose-600 outline-none hover:bg-rose-50/50 focus-visible:ring-3 focus-visible:ring-ring/50 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                      >
+                        <LogOut className="size-4" />
+                        <span>Đăng xuất</span>
+                      </button>
+                    </li>
+                  </>
+                )}
               </ul>
             </nav>
           </motion.div>

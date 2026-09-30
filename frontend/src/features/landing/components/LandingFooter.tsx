@@ -2,11 +2,30 @@ import { Link } from "react-router-dom"
 import { ArrowRight, ChevronRight, MapPin, ShieldCheck, Warehouse } from "lucide-react"
 
 import { FOOTER } from "../content/copy"
-import { CITIES } from "../content/facilities"
+import { type CityId, CITIES } from "../content/facilities"
 import { navSections } from "../content/sections"
 import { CTA, ROUTES, SITE } from "../content/site"
+import { useAuthSession } from "@/hooks/useAuthSession"
 
-export function LandingFooter() {
+interface LandingFooterProps {
+  onSelectCity?: (cityId: CityId) => void
+}
+
+export function LandingFooter({ onSelectCity }: LandingFooterProps) {
+  const { isAuthenticated } = useAuthSession()
+
+  const handleCityClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    cityId: CityId
+  ) => {
+    e.preventDefault()
+    onSelectCity?.(cityId)
+    const facilitiesEl = document.getElementById("facilities")
+    if (facilitiesEl) {
+      facilitiesEl.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+  }
+
   return (
     <footer className="relative overflow-hidden border-t border-border/80 bg-gradient-to-b from-transparent via-muted/30 to-muted/70 pb-28 md:pb-0 dark:via-card/20 dark:to-card/50">
       <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8 lg:px-8">
@@ -63,7 +82,8 @@ export function LandingFooter() {
               <li key={c.id}>
                 <a
                   href="#facilities"
-                  className="group inline-flex items-center gap-2 text-muted-foreground transition-all duration-200 hover:translate-x-1 hover:text-blue-600 dark:hover:text-blue-400"
+                  onClick={(e) => handleCityClick(e, c.id)}
+                  className="group inline-flex cursor-pointer items-center gap-2 text-muted-foreground transition-all duration-200 hover:translate-x-1 hover:text-blue-600 dark:hover:text-blue-400"
                 >
                   <MapPin className="size-4 text-blue-500/70 transition-colors group-hover:text-blue-500" />
                   <span>{c.label}</span>
@@ -89,13 +109,23 @@ export function LandingFooter() {
               </Link>
             </li>
             <li>
-              <Link
-                to={ROUTES.login}
-                className="group inline-flex items-center gap-1.5 text-muted-foreground transition-all duration-200 hover:translate-x-1 hover:text-blue-600 dark:hover:text-blue-400"
-              >
-                <ChevronRight className="size-3.5 text-muted-foreground/50 transition-colors group-hover:text-blue-500" />
-                <span>{CTA.login}</span>
-              </Link>
+              {!isAuthenticated ? (
+                <Link
+                  to={ROUTES.login}
+                  className="group inline-flex items-center gap-1.5 text-muted-foreground transition-all duration-200 hover:translate-x-1 hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  <ChevronRight className="size-3.5 text-muted-foreground/50 transition-colors group-hover:text-blue-500" />
+                  <span>{CTA.login}</span>
+                </Link>
+              ) : (
+                <Link
+                  to={ROUTES.book}
+                  className="group inline-flex items-center gap-1.5 text-muted-foreground transition-all duration-200 hover:translate-x-1 hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  <ChevronRight className="size-3.5 text-muted-foreground/50 transition-colors group-hover:text-blue-500" />
+                  <span>Quản lý kho của tôi</span>
+                </Link>
+              )}
             </li>
             <li className="pt-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:bg-emerald-400/15 dark:text-emerald-400">

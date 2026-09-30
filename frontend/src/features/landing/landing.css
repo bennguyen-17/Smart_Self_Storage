@@ -2,6 +2,20 @@
    không ảnh hưởng các trang khác. Chỉnh màu, bo góc, khoảng cách theo feedback ở đây. */
 
 .landing {
+  /* Giao diện sáng (Light mode): Tông xám nhạt êm dịu mắt thay vì trắng tinh */
+  --background: #f1f5f9;
+  --foreground: #1e293b;
+  --card: #ffffff;
+  --card-foreground: #1e293b;
+  --popover: #ffffff;
+  --popover-foreground: #1e293b;
+  --muted: #e2e8f0;
+  --muted-foreground: #64748b;
+  --secondary: #e2e8f0;
+  --secondary-foreground: #334155;
+  --border: #cbd5e1;
+  --input: #cbd5e1;
+
   /* Màu: CTA có chữ dùng tông xanh đậm công nghệ & rực rỡ */
   --l-cta: oklch(0.55 0.22 255);
   --l-cta-hover: oklch(0.45 0.22 255);
@@ -29,18 +43,31 @@
   font-size: 1.0625rem;
   line-height: 1.65;
 
-  /* Nền họa tiết lưới công nghệ và các dải sáng mờ mềm mại (Không bao giờ bị lỗi ô vuông) */
+  /* Nền họa tiết lưới công nghệ và các dải sáng mờ mềm mại */
   background-color: var(--background);
   background-image:
-    radial-gradient(ellipse 65% 35% at 50% 0%, color-mix(in oklch, var(--l-cta) 12%, transparent), transparent 70%),
-    radial-gradient(ellipse 50% 30% at 85% 35%, color-mix(in oklch, var(--l-link) 10%, transparent), transparent 60%),
-    radial-gradient(ellipse 50% 30% at 15% 65%, color-mix(in oklch, var(--l-cta) 10%, transparent), transparent 60%),
-    radial-gradient(color-mix(in oklch, var(--foreground) 6%, transparent) 1.2px, transparent 1.2px);
+    radial-gradient(ellipse 65% 35% at 50% 0%, color-mix(in oklch, var(--l-cta) 10%, transparent), transparent 70%),
+    radial-gradient(ellipse 50% 30% at 85% 35%, color-mix(in oklch, var(--l-link) 8%, transparent), transparent 60%),
+    radial-gradient(ellipse 50% 30% at 15% 65%, color-mix(in oklch, var(--l-cta) 8%, transparent), transparent 60%),
+    radial-gradient(color-mix(in oklch, var(--foreground) 8%, transparent) 1.2px, transparent 1.2px);
   background-size: 100% 100%, 100% 100%, 100% 100%, 28px 28px;
   background-position: center top;
 }
 
 .dark .landing {
+  --background: oklch(0.2046 0 0);
+  --foreground: oklch(0.9219 0 0);
+  --card: oklch(0.2686 0 0);
+  --card-foreground: oklch(0.9219 0 0);
+  --popover: oklch(0.2686 0 0);
+  --popover-foreground: oklch(0.9219 0 0);
+  --muted: oklch(0.2393 0 0);
+  --muted-foreground: oklch(0.7155 0 0);
+  --secondary: oklch(0.2686 0 0);
+  --secondary-foreground: oklch(0.9219 0 0);
+  --border: oklch(0.3715 0 0);
+  --input: oklch(0.3715 0 0);
+
   --l-cta: oklch(0.6 0.22 255);
   --l-cta-hover: oklch(0.68 0.2 255);
   --l-link: oklch(0.72 0.18 250);
@@ -78,6 +105,50 @@ html:has(.landing) {
   html:has(.landing) {
     scroll-behavior: auto;
   }
+}
+
+/* Nút CTA Khám phá ngay hiệu ứng chuyển màu sống động */
+@keyframes rainbowText {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes heroPulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 25px -5px rgba(59, 130, 246, 0.5), 0 0 50px -10px rgba(99, 102, 241, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 35px 2px rgba(14, 165, 233, 0.7), 0 0 65px 0px rgba(168, 85, 247, 0.4);
+  }
+}
+
+.landing .l-hero-cta-btn {
+  position: relative;
+  background: linear-gradient(135deg, #2563eb, #4f46e5, #7c3aed, #0284c7);
+  background-size: 300% 300%;
+  animation: rainbowText 6s ease infinite, heroPulseGlow 3s ease-in-out infinite;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+}
+
+.landing .l-hero-cta-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  background-position: right center;
+  box-shadow: 0 0 45px 5px rgba(56, 189, 248, 0.8), 0 0 80px 5px rgba(168, 85, 247, 0.5);
+}
+
+.landing .l-hero-cta-text {
+  color: #ffffff;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
 /* Thẻ kính mờ hiện đại (Glassmorphic Card) */
