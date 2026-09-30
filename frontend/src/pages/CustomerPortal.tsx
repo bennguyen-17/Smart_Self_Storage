@@ -97,15 +97,15 @@ export default function CustomerPortal() {
         onOpenProfileModal={() => setShowProfileModal(true)}
       />
 
-      {/* Main Body Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 w-full py-6 sm:py-8">
-        <div className="space-y-6">
+      {/* Main Body Container: Full width expansion */}
+      <main className="w-full px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 flex-1 py-6 sm:py-8">
+        <div className="space-y-6 w-full">
           {/* CUSTOMER DASHBOARD HEADER BANNER */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-white dark:bg-slate-900 px-6 sm:px-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col xl:flex-row items-start xl:items-center justify-between gap-5 py-6 sm:py-7"
+            className="bg-white dark:bg-slate-900 px-6 sm:px-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col xl:flex-row items-start xl:items-center justify-between gap-5 py-6 sm:py-7 w-full"
           >
             {/* AVATAR & GREETING */}
             <div className="flex items-center space-x-4 shrink-0">

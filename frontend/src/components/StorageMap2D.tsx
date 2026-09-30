@@ -117,13 +117,13 @@ export default function StorageMap2D({
     <div className="space-y-6">
       {/* LOCATION & FLOOR CONTROLS */}
       <div className="card-box p-5 rounded-3xl border shadow-sm space-y-4 w-full bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
           {/* CHỌN CƠ SỞ */}
-          <div className="flex items-center space-x-3 shrink-0">
+          <div className="flex items-center space-x-3 flex-wrap sm:flex-nowrap">
             <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center shrink-0">
               <i className="fa-solid fa-location-dot text-rose-500 mr-2 text-base"></i> Cơ sở kho:
             </span>
-            <div className="relative min-w-[260px]">
+            <div className="relative min-w-[240px] sm:min-w-[280px]">
               <select
                 value={facility}
                 onChange={(e) => onFacilityChange(e.target.value)}
@@ -149,15 +149,15 @@ export default function StorageMap2D({
           </div>
 
           {/* CHỌN TẦNG */}
-          <div className="flex items-center space-x-3 w-full lg:w-auto justify-start lg:justify-end">
+          <div className="flex items-center space-x-3 flex-wrap sm:flex-nowrap justify-start xl:justify-end">
             <span className="text-sm sm:text-base font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center shrink-0">
               <i className="fa-solid fa-layer-group text-blue-600 mr-2"></i> Chọn Tầng:
             </span>
-            <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 gap-1.5 w-full sm:w-auto">
+            <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 gap-1.5 flex-wrap sm:flex-nowrap">
               <button
                 type="button"
                 onClick={() => onSelectFloor(1)}
-                className={`flex-1 sm:flex-initial px-5 py-2 rounded-lg text-sm font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                className={`px-4 sm:px-5 py-2 rounded-lg text-sm font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
                   currentFloor === 1 ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-700'
                 }`}
               >
@@ -166,7 +166,7 @@ export default function StorageMap2D({
               <button
                 type="button"
                 onClick={() => onSelectFloor(2)}
-                className={`flex-1 sm:flex-initial px-5 py-2 rounded-lg text-sm font-bold transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                className={`px-4 sm:px-5 py-2 rounded-lg text-sm font-bold transition-all duration-200 cursor-pointer whitespace-nowrap ${
                   currentFloor === 2 ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-700'
                 }`}
               >
@@ -176,7 +176,7 @@ export default function StorageMap2D({
                 <button
                   type="button"
                   onClick={() => onSelectFloor(3)}
-                  className={`flex-1 sm:flex-initial px-5 py-2 rounded-lg text-sm font-bold transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                  className={`px-4 sm:px-5 py-2 rounded-lg text-sm font-bold transition-all duration-200 cursor-pointer whitespace-nowrap ${
                     currentFloor === 3 ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-700'
                   }`}
                 >
