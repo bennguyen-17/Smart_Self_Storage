@@ -9,6 +9,7 @@ import CustomerProfileModal from '../components/CustomerProfileModal';
 import SupportTicketModal from '../components/SupportTicketModal';
 import ExtendContractModal from '../components/ExtendContractModal';
 import ChatbotWidget from '../components/ChatbotWidget';
+import SiteFooter from '../components/SiteFooter';
 
 import { useTheme } from '@/components/theme-provider';
 
@@ -216,6 +217,9 @@ export default function CustomerPortal() {
           </AnimatePresence>
         </div>
       </main>
+
+      {/* Footer for Customer Portal */}
+      <SiteFooter />
 
       {/* Floating Chatbot AI 24/7 Widget */}
       <ChatbotWidget />

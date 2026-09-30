@@ -59,13 +59,18 @@ export function LandingHeader() {
           href="#top"
           className="flex items-center gap-3 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50 group"
         >
-          <span className="flex size-10 sm:size-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+          <span className="flex size-10 sm:size-11 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
             <Warehouse className="size-5 sm:size-6" aria-hidden />
           </span>
-          <span className="text-lg sm:text-xl font-black tracking-tight text-foreground">
-            <span className="text-blue-600 dark:text-blue-500">Smart</span> Self Storage
-            <span className="sr-only">, về đầu trang</span>
-          </span>
+          <div>
+            <span className="text-lg sm:text-xl font-black tracking-tight text-foreground block leading-tight">
+              Smart Storage
+              <span className="sr-only">, về đầu trang</span>
+            </span>
+            <span className="text-[11px] sm:text-xs font-medium text-muted-foreground hidden sm:block">
+              Hệ thống cho thuê kho tự quản thông minh 24/7
+            </span>
+          </div>
         </a>
 
         <nav aria-label="Điều hướng trang" className="hidden lg:block">
