@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { getMyContracts, getGatePin, cancelDepositContract } from '@/features/portal/services/contractService';
 import ContractDetailModal from '@/features/portal/components/modals/ContractDetailModal';
+import { formatDate } from '@/lib/format';
 
 export default function MyStorageTab({ onOpenExtendModal }) {
   const [contracts, setContracts] = useState([]);
@@ -21,7 +22,7 @@ export default function MyStorageTab({ onOpenExtendModal }) {
       const res = await getMyContracts();
       if (res.success && Array.isArray(res.data)) {
         // Lọc bỏ triệt để các mã mock fix cứng như #HD-2
-        const validList = res.data.filter((c: any) => c.contractId !== '#HD-2' && c.rawContractId !== 2);
+        const validList = res.data.filter((c: any) => c.contractId !== '#HD-2' && c.rawContractId !== 2).sort((a: any, b: any) => (b.rawContractId || 0) - (a.rawContractId || 0));
         setContracts(validList);
       }
     } catch (err) {
@@ -348,13 +349,13 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                             <div>
                               <span className="text-slate-400 dark:text-slate-400 block text-[10px] uppercase font-bold">Ngày nhận kho</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200 block mt-0.5">
-                                {item.startDate || '23/09/2026'}
+                                {formatDate(item.startDate)}
                               </span>
                             </div>
                             <div>
                               <span className="text-slate-400 dark:text-slate-400 block text-[10px] uppercase font-bold">Ngày trả kho</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200 block mt-0.5">
-                                {item.expiryDate}
+                                {formatDate(item.expiryDate)}
                               </span>
                             </div>
                           </div>
@@ -381,7 +382,8 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                                   expiry: item.expiryDate,
                                   daysLeft: item.daysLeft || 30,
                                   size: item.size,
-                                  unitCode: item.unitCode
+                                          unitCode: item.unitCode,
+                                          rentalFee: item.rentalFee
                                 })}
                                 className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-600 hover:text-white border border-blue-200 dark:border-blue-700 transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap active:scale-95"
                               >
@@ -402,7 +404,8 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                                   expiry: item.expiryDate,
                                   daysLeft: item.daysLeft || 0,
                                   size: item.size,
-                                  unitCode: item.unitCode
+                                          unitCode: item.unitCode,
+                                          rentalFee: item.rentalFee
                                 })}
                                 className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-600 hover:text-white border border-amber-200 dark:border-amber-800 transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap active:scale-95"
                               >
@@ -458,10 +461,10 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                                 </div>
                               </td>
                               <td className="py-2.5 px-2 whitespace-nowrap align-middle text-center">
-                                <span className="font-bold text-slate-900 dark:text-slate-100 text-[11px]">{item.startDate || '23/09/2026'}</span>
+                                <span className="font-bold text-slate-900 dark:text-slate-100 text-[11px]">{formatDate(item.startDate)}</span>
                               </td>
                               <td className="py-2.5 px-2 whitespace-nowrap align-middle text-center">
-                                <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">{item.expiryDate}</div>
+                                <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">{formatDate(item.expiryDate)}</div>
                               </td>
                               <td className="py-2.5 px-2 whitespace-nowrap align-middle text-center">
                                 <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-black border shadow-xs ${
@@ -501,7 +504,8 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                                         expiry: item.expiryDate,
                                         daysLeft: item.daysLeft || 30,
                                         size: item.size,
-                                        unitCode: item.unitCode
+                                          unitCode: item.unitCode,
+                                          rentalFee: item.rentalFee
                                       })}
                                       className="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-600 hover:text-white border border-blue-200 dark:border-blue-700 transition cursor-pointer flex items-center justify-center gap-1 shadow-xs whitespace-nowrap active:scale-95"
                                     >
@@ -522,7 +526,8 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                                         expiry: item.expiryDate,
                                         daysLeft: item.daysLeft || 0,
                                         size: item.size,
-                                        unitCode: item.unitCode
+                                          unitCode: item.unitCode,
+                                          rentalFee: item.rentalFee
                                       })}
                                       className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-600 hover:text-white border border-amber-200 dark:border-amber-800 transition cursor-pointer flex items-center justify-center gap-1 shadow-xs whitespace-nowrap active:scale-95"
                                     >

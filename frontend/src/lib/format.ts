@@ -26,7 +26,10 @@ export function formatVnd(amount: number | null | undefined): string {
 /** "2026-09-26" (ngày thuần) → "26/09/2026", không bị lệch ngày do timezone */
 export function formatDate(isoDate: string | null | undefined): string {
   if (!isoDate) return "—"
-  const [year, month, day] = isoDate.slice(0, 10).split("-")
+  if (isoDate.includes('/')) return isoDate; // Already formatted as DD/MM/YYYY
+  const parts = isoDate.slice(0, 10).split("-")
+  if (parts.length !== 3) return isoDate;
+  const [year, month, day] = parts
   return `${day}/${month}/${year}`
 }
 

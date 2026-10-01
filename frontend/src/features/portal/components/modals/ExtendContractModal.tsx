@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+﻿import { formatDate } from '@/lib/format';
+import React, { useState } from 'react';
 
 const unitDailyRates = {
   'S': 30000,
@@ -41,8 +42,8 @@ export default function ExtendContractModal({ unitContext, onClose, onConfirmPay
       : 7
     : selectedDays;
 
-  const dailyRate = unitDailyRates[size] || 200000;
-  const rawTotal = dailyRate * effectiveDays;
+  const monthlyRate = unitContext?.rentalFee || 0;
+  const rawTotal = (monthlyRate / 30) * effectiveDays;
   const discountAmount = rawTotal * (isCustomDays ? 0 : discountRate);
   const finalTotal = Math.round(rawTotal - discountAmount);
 
@@ -81,8 +82,8 @@ export default function ExtendContractModal({ unitContext, onClose, onConfirmPay
               <i className="fa-solid fa-arrows-rotate"></i>
             </div>
             <div>
-              <h3 className="font-extrabold text-sm text-title uppercase">GIA HẠN HỢP ĐỒNG THUÊ KHO</h3>
-              <p className="text-[10px] text-muted">Thanh toán gia hạn trực tuyến để tự động tăng hạn kho</p>
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase">GIA HẠN HỢP ĐỒNG THUÊ KHO</h3>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">Thanh toán gia hạn trực tuyến để tự động tăng hạn kho</p>
             </div>
           </div>
           <button
@@ -95,11 +96,11 @@ export default function ExtendContractModal({ unitContext, onClose, onConfirmPay
         </div>
 
         <div className="inner-box p-3.5 rounded-2xl border space-y-1.5 bg-blue-500/5 border-blue-500/20 text-xs">
-          <div className="flex justify-between font-bold text-title">
+          <div className="flex justify-between font-bold text-slate-900 dark:text-white">
             <span>{name}</span>
             <span className="text-blue-600 font-extrabold">Cơ sở {branch}</span>
           </div>
-          <div className="text-[11px] text-muted flex justify-between">
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 flex justify-between">
             <span>Hạn hiện tại: <b>{expiry}</b></span>
             <span className="text-slate-600 dark:text-slate-300 font-bold">Còn {daysLeft} ngày</span>
           </div>
@@ -107,7 +108,7 @@ export default function ExtendContractModal({ unitContext, onClose, onConfirmPay
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <label className="block text-xs font-bold text-title">Chọn Gói Gia Hạn Thêm:</label>
+            <label className="block text-xs font-bold text-slate-900 dark:text-white">Chọn Gói Gia Hạn Thêm:</label>
             {isCustomDays && (
               <span className="text-[10px] text-amber-600 font-extrabold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
                 (Tối thiểu 7 ngày)
@@ -121,7 +122,7 @@ export default function ExtendContractModal({ unitContext, onClose, onConfirmPay
               className={`rental-pkg-btn text-xs py-2.5 rounded-xl text-center font-bold transition cursor-pointer border ${
                 !isCustomDays && selectedDays === 30
                   ? 'border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
-                  : 'inner-box border-slate-200 dark:border-slate-800 text-title hover:border-amber-400'
+                  : 'inner-box border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white hover:border-amber-400'
               }`}
             >
               <div>1 Tháng</div>
@@ -133,7 +134,7 @@ export default function ExtendContractModal({ unitContext, onClose, onConfirmPay
               className={`rental-pkg-btn text-xs py-2.5 rounded-xl text-center font-bold transition cursor-pointer border ${
                 !isCustomDays && selectedDays === 60
                   ? 'border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
-                  : 'inner-box border-slate-200 dark:border-slate-800 text-title hover:border-amber-400'
+                  : 'inner-box border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white hover:border-amber-400'
               }`}
             >
               <div>2 Tháng</div>
@@ -145,7 +146,7 @@ export default function ExtendContractModal({ unitContext, onClose, onConfirmPay
               className={`rental-pkg-btn text-xs py-2.5 rounded-xl text-center font-bold transition cursor-pointer border ${
                 !isCustomDays && selectedDays === 90
                   ? 'border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
-                  : 'inner-box border-slate-200 dark:border-slate-800 text-title hover:border-amber-400'
+                  : 'inner-box border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white hover:border-amber-400'
               }`}
             >
               <div>3 Tháng</div>
@@ -158,7 +159,7 @@ export default function ExtendContractModal({ unitContext, onClose, onConfirmPay
               className={`rental-pkg-btn text-xs py-2.5 rounded-xl text-center font-bold transition cursor-pointer border ${
                 !isCustomDays && selectedDays === 180
                   ? 'border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
-                  : 'inner-box border-slate-200 dark:border-slate-800 text-title hover:border-amber-400'
+                  : 'inner-box border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white hover:border-amber-400'
               }`}
             >
               <div>6 Tháng</div>
@@ -171,7 +172,7 @@ export default function ExtendContractModal({ unitContext, onClose, onConfirmPay
               className={`rental-pkg-btn text-xs py-2.5 rounded-xl text-center font-bold transition cursor-pointer border ${
                 !isCustomDays && selectedDays === 360
                   ? 'border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
-                  : 'inner-box border-slate-200 dark:border-slate-800 text-title hover:border-amber-400'
+                  : 'inner-box border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white hover:border-amber-400'
               }`}
             >
               <div>12 Tháng</div>
@@ -184,7 +185,7 @@ export default function ExtendContractModal({ unitContext, onClose, onConfirmPay
               className={`rental-pkg-btn text-xs py-2.5 rounded-xl text-center font-bold transition cursor-pointer border ${
                 isCustomDays
                   ? 'border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
-                  : 'inner-box border-slate-200 dark:border-slate-800 text-title hover:border-amber-400'
+                  : 'inner-box border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white hover:border-amber-400'
               }`}
             >
               <div>Tùy chọn</div>
@@ -200,20 +201,20 @@ export default function ExtendContractModal({ unitContext, onClose, onConfirmPay
                   value={customDaysInput}
                   onChange={(e) => setCustomDaysInput(e.target.value)}
                   placeholder="Nhập số ngày (vd: 14, 45...)"
-                  className="w-full border font-bold text-xs px-3 py-2 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none inner-box text-title border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
+                  className="w-full border font-bold text-xs px-3 py-2 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none inner-box text-slate-900 dark:text-white border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
                 />
-                <span className="text-xs text-muted font-bold whitespace-nowrap">ngày</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap">ngày</span>
               </div>
             </div>
           )}
         </div>
 
         <div className="inner-box p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
-          <div className="flex justify-between text-muted">
+          <div className="flex justify-between text-slate-500 dark:text-slate-400">
             <span>Thời gian gia hạn thêm:</span>
-            <span className="font-bold text-title">{effectiveDays} Ngày ({isCustomDays ? 'Tùy chọn' : packageLabel})</span>
+            <span className="font-bold text-slate-900 dark:text-white">{effectiveDays} Ngày ({isCustomDays ? 'Tùy chọn' : packageLabel})</span>
           </div>
-          <div className="flex justify-between text-muted">
+          <div className="flex justify-between text-slate-500 dark:text-slate-400">
             <span>Số tiền gia hạn:</span>
             <span className="font-bold text-blue-600 text-sm">
               {finalTotal.toLocaleString('vi-VN')} VNĐ
@@ -222,7 +223,7 @@ export default function ExtendContractModal({ unitContext, onClose, onConfirmPay
               )}
             </span>
           </div>
-          <div className="border-t border-slate-200 dark:border-slate-800 pt-1.5 flex justify-between font-bold text-title text-xs">
+          <div className="border-t border-slate-200 dark:border-slate-800 pt-1.5 flex justify-between font-bold text-slate-900 dark:text-white text-xs">
             <span>Hạn trả kho mới sau gia hạn:</span>
             <span className="text-emerald-600 font-extrabold">{calculateNewExpiryDate()}</span>
           </div>

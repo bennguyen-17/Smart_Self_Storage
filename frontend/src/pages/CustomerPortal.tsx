@@ -5,6 +5,7 @@ import StorageMap2D from '@/features/portal/components/StorageMap2D';
 import BookingSidebar from '@/features/portal/components/BookingSidebar';
 import MyStorageTab from '@/features/portal/components/MyStorageTab';
 import DepositPaymentFlow from '@/features/portal/components/modals/DepositPaymentFlow';
+import ExtendPaymentFlow from '@/features/portal/components/modals/ExtendPaymentFlow';
 import CustomerProfileModal from '@/features/portal/components/modals/CustomerProfileModal';
 import SupportTicketModal from '@/features/portal/components/modals/SupportTicketModal';
 import ExtendContractModal from '@/features/portal/components/modals/ExtendContractModal';
@@ -27,6 +28,8 @@ export default function CustomerPortal() {
 
   // Modals
   const [showDepositFlow, setShowDepositFlow] = useState(false);
+  const [showExtendPaymentFlow, setShowExtendPaymentFlow] = useState(false);
+  const [extendPaymentData, setExtendPaymentData] = useState<any>(null);
   const [depositBookingData, setDepositBookingData] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
@@ -284,7 +287,18 @@ export default function CustomerPortal() {
         />
       )}
 
-      {/* VietQR Deposit Flow Modal */}
+              {showExtendPaymentFlow && extendPaymentData && (
+          <ExtendPaymentFlow
+            initialBookingData={extendPaymentData}
+            onClose={() => setShowExtendPaymentFlow(false)}
+            onFinish={() => {
+              setShowExtendPaymentFlow(false);
+              setMapRefreshTrigger(prev => prev + 1);
+            }}
+          />
+        )}
+
+        {/* VietQR Deposit Flow Modal */}
       {showDepositFlow && depositBookingData && (
         <DepositPaymentFlow
           initialBookingData={depositBookingData}

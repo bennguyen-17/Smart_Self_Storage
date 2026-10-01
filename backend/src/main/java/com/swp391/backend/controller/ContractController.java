@@ -131,7 +131,10 @@ public class ContractController {
             map.put("branchCode", branchCode);
             map.put("size", size);
             map.put("sizeLabel", sizeLabel);
+            map.put("startDate", res.getStartDate().toString());
             map.put("expiryDate", res.getEndDate().toString());
+            map.put("rentalFee", res.getRentalAmount());
+            map.put("depositFee", res.getDepositAmount());
             map.put("daysLeft", daysLeft);
             map.put("status", c.getStatus());
             map.put("statusLabel", statusLabel);
@@ -252,13 +255,13 @@ public class ContractController {
         }
 
         // Khi có hợp đồng ACTIVE: Sinh mã PIN 6 số an toàn và lưu/cập nhật vào bảng gatepin trong MySQL
-        long sec = System.currentTimeMillis() / 30000;
+        long sec = System.currentTimeMillis() / 15000;
         int seed = Math.abs((int) (sec ^ (targetBranch.hashCode() + activeContract.getContractId() * 31)));
         int p1 = (seed % 900) + 100;
         int p2 = ((seed / 900) % 900) + 100;
         String rawPin = String.format("%03d%03d", p1, p2);
         String formattedPin = p1 + " " + p2;
-        int ttlSeconds = 30 - (int) ((System.currentTimeMillis() / 1000) % 30);
+        int ttlSeconds = 15 - (int) ((System.currentTimeMillis() / 1000) % 15);
 
         try {
             LocalDateTime now = LocalDateTime.now();

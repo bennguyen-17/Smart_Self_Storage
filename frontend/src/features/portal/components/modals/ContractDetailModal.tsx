@@ -1,15 +1,16 @@
 import React from 'react';
+import { formatDate } from '@/lib/format';
 
 export default function ContractDetailModal({ contract, onClose }: { contract: any; onClose: () => void }) {
   if (!contract) return null;
 
-  const branchName = contract.branchName || contract.facilityName || 'SmartStorage Cầu Giấy (HN-01)';
-  const unitCode = contract.unitCode || contract.unitNumber || 'HN01-G-XL01';
-  const startDate = contract.startDate || contract.checkInDate || '01/10/2026';
-  const endDate = contract.endDate || contract.expiryDate || contract.checkOutDate || '31/10/2026';
+  const branchName = contract.branchName;
+  const unitCode = contract.unitCode;
+  const startDate = formatDate(contract.startDate);
+  const endDate = formatDate(contract.expiryDate || contract.endDate);
   
-  const rentalFee = contract.totalPrice || contract.estimatedTotalRental || contract.rentalFee || 4000000;
-  const depositFee = contract.depositAmount || contract.deposit || 3000000;
+  const rentalFee = contract.rentalFee || 0;
+  const depositFee = contract.depositFee || 0;
 
   return (
     <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
