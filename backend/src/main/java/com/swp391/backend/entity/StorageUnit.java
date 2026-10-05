@@ -1,6 +1,9 @@
 package com.swp391.backend.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "StorageUnit")
@@ -17,7 +20,7 @@ public class StorageUnit {
     private Integer unitTypeId;
 
     @Column(nullable = false, length = 30)
-    private String status = "AVAILABLE"; // AVAILABLE, HOLD, RENTED, MAINTENANCE, OVERDUE
+    private String status = "AVAILABLE"; // AVAILABLE, HOLD, RESERVED, MAINTENANCE, OVERDUE
 
     public StorageUnit() {
     }
