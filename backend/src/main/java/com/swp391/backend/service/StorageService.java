@@ -1,17 +1,32 @@
 package com.swp391.backend.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+
 import com.swp391.backend.dto.CalculatePriceRequest;
 import com.swp391.backend.dto.CalculatePriceResponse;
 import com.swp391.backend.dto.FacilityResponse;
 import com.swp391.backend.dto.UnitDetailResponse;
-import com.swp391.backend.entity.*;
-import com.swp391.backend.repository.*;
-import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.swp391.backend.entity.ActivityLog;
+import com.swp391.backend.entity.Facility;
+import com.swp391.backend.entity.Floor;
+import com.swp391.backend.entity.Price;
+import com.swp391.backend.entity.StorageUnit;
+import com.swp391.backend.entity.UnitType;
+import com.swp391.backend.repository.ActivityLogRepository;
+import com.swp391.backend.repository.FacilityRepository;
+import com.swp391.backend.repository.FloorRepository;
+import com.swp391.backend.repository.PriceRepository;
+import com.swp391.backend.repository.StorageUnitRepository;
+import com.swp391.backend.repository.UnitTypeRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class StorageService {
@@ -21,20 +36,23 @@ public class StorageService {
     private final UnitTypeRepository unitTypeRepository;
     private final StorageUnitRepository storageUnitRepository;
     private final PriceRepository priceRepository;
+    private final ActivityLogRepository activityLogRepository;
 
     public StorageService(FacilityRepository facilityRepository,
-                          FloorRepository floorRepository,
-                          UnitTypeRepository unitTypeRepository,
-                          StorageUnitRepository storageUnitRepository,
-                          PriceRepository priceRepository) {
+            FloorRepository floorRepository,
+            UnitTypeRepository unitTypeRepository,
+            StorageUnitRepository storageUnitRepository,
+            PriceRepository priceRepository,
+            ActivityLogRepository activityLogRepository) {
         this.facilityRepository = facilityRepository;
         this.floorRepository = floorRepository;
         this.unitTypeRepository = unitTypeRepository;
         this.storageUnitRepository = storageUnitRepository;
         this.priceRepository = priceRepository;
+        this.activityLogRepository = activityLogRepository;
     }
 
-    // --- 1. Lấy danh sách Cơ sở kèm mã code, shortCode và layout ---
+    //Lấy danh sách Cơ sở kèm mã code, shortCode và layout
     public List<FacilityResponse> getAllActiveFacilities() {
         return facilityRepository.findByStatus("ACTIVE").stream()
                 .map(this::mapFacilityToResponse)
@@ -45,18 +63,18 @@ public class StorageService {
         return facilityRepository.findById(facilityId).map(this::mapFacilityToResponse);
     }
 
-    // --- 2. Lấy danh sách Tầng theo Cơ sở ---
+    //Lấy danh sách Tầng theo Cơ sở
     public List<Floor> getFloorsByFacilityId(Integer facilityId) {
         return floorRepository.findByFacilityIdAndStatus(facilityId, "ACTIVE");
     }
 
-    // --- 3. Lấy danh sách Ô kho theo Tầng (kèm unitCode, kích thước, tải trọng, giá) ---
+    //Lấy danh sách Ô kho theo Tầng (kèm unitCode, kích thước, tải trọng, giá)
     public List<UnitDetailResponse> getUnitsByFloorId(Integer floorId) {
         List<StorageUnit> units = storageUnitRepository.findByFloorId(floorId);
         return mapToUnitDetailResponses(units);
     }
 
-    // --- 4. Bộ lọc Ô kho linh hoạt ---
+    //Bộ lọc Ô kho
     public List<UnitDetailResponse> filterUnits(Integer facilityId, Integer floorId, Integer unitTypeId, String storageCondition, String status) {
         List<StorageUnit> allUnits;
 
@@ -91,7 +109,9 @@ public class StorageService {
                 .filter(u -> status == null || status.trim().isEmpty() || u.getStatus().equalsIgnoreCase(status))
                 .filter(u -> unitTypeId == null || u.getUnitTypeId().equals(unitTypeId))
                 .filter(u -> {
-                    if (storageCondition == null || storageCondition.trim().isEmpty()) return true;
+                    if (storageCondition == null || storageCondition.trim().isEmpty()) {
+                        return true;
+                    }
                     UnitType ut = unitTypeMap.get(u.getUnitTypeId());
                     return ut != null && ut.getStorageCondition().equalsIgnoreCase(storageCondition);
                 })
@@ -99,10 +119,10 @@ public class StorageService {
                 .collect(Collectors.toList());
     }
 
-    // --- 5. Tính giá thuê và tiền cọc tự động (BR-08 & BR-13) ---
+    //Tính giá thuê và tiền cọc tự động
     public CalculatePriceResponse calculateRentalPrice(CalculatePriceRequest request) {
         if (request.getUnitTypeId() == null) {
-            return CalculatePriceResponse.error("Vui lòng chọn loại kho (unitTypeId)!");
+            return CalculatePriceResponse.error("Vui lòng chọn loại kho !");
         }
 
         Optional<Price> priceOpt = priceRepository.findByUnitTypeIdAndStatus(request.getUnitTypeId(), "ACTIVE");
@@ -126,7 +146,7 @@ public class StorageService {
 
         if ("DAILY".equals(rentalType)) {
             if (duration < 7) {
-                return CalculatePriceResponse.error("Thời hạn thuê theo ngày tối thiểu là 7 ngày (theo BR-13)!");
+                return CalculatePriceResponse.error("Thời hạn thuê theo ngày tối thiểu là 7 ngày!");
             }
             baseUnitPrice = price.getDailyPrice();
             baseTotal = baseUnitPrice.multiply(BigDecimal.valueOf(duration));
@@ -181,7 +201,6 @@ public class StorageService {
         return response;
     }
 
-    // --- Helper Mappers ---
     public FacilityResponse mapFacilityToResponse(Facility f) {
         FacilityResponse res = new FacilityResponse();
         res.setFacilityId(f.getFacilityId());
@@ -252,6 +271,125 @@ public class StorageService {
         return res;
     }
 
+    // --- US-13: Lấy danh sách ô kho của cơ sở cho Facility Manager ---
+    public List<UnitDetailResponse> getManagerUnits(Integer managerFacilityId, Integer floorId, String status, String size, String storageCondition) {
+        if (managerFacilityId == null) {
+            throw new AccessDeniedException("Vui lòng cung cấp mã cơ sở của Quản lý!");
+        }
+        return filterUnits(managerFacilityId, floorId, null, storageCondition, status);
+    }
+
+    // --- US-13: Cấu hình đổi loại kho (Thường <=> Điều hòa) kèm ghi log và check size ---
+    @Transactional
+    public StorageUnit changeUnitType(String unitCode, Integer newUnitTypeId, Integer managerFacilityId, Integer accountId) {
+        StorageUnit unit = storageUnitRepository.findById(unitCode)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy ô kho: " + unitCode));
+
+        Floor floor = floorRepository.findById(unit.getFloorId())
+                .orElseThrow(() -> new RuntimeException("Lỗi dữ liệu tầng của ô kho!"));
+
+        if (managerFacilityId != null && !floor.getFacilityId().equals(managerFacilityId)) {
+            throw new AccessDeniedException("Bạn không có quyền quản lý ô kho thuộc cơ sở này!");
+        }
+
+        if (!"AVAILABLE".equalsIgnoreCase(unit.getStatus())) {
+            throw new RuntimeException("Chỉ được đổi loại kho khi ô đang trống (AVAILABLE)! Trạng thái hiện tại: " + unit.getStatus());
+        }
+
+        UnitType oldType = unitTypeRepository.findById(unit.getUnitTypeId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin loại kho cũ!"));
+        UnitType newType = unitTypeRepository.findById(newUnitTypeId)
+                .orElseThrow(() -> new RuntimeException("Loại kho mới không tồn tại!"));
+
+        if (!oldType.getSize().equalsIgnoreCase(newType.getSize())) {
+            throw new RuntimeException("Không thể thay đổi kích thước vật lý của ô kho (từ " + oldType.getSize() + " sang " + newType.getSize() + ")! Chỉ được chuyển đổi giữa Kho Thường và Kho Điều Hòa cùng Size.");
+        }
+
+        Integer oldTypeId = unit.getUnitTypeId();
+        unit.setUnitTypeId(newUnitTypeId);
+        StorageUnit saved = storageUnitRepository.save(unit);
+
+        if (activityLogRepository != null && accountId != null) {
+            ActivityLog log = new ActivityLog();
+            log.setAccountId(accountId);
+            log.setAction("CHANGE_UNIT_TYPE");
+            log.setDescription("Đổi loại ô kho " + unitCode + " từ typeId " + oldTypeId + " sang " + newUnitTypeId);
+            log.setCreatedAt(java.time.LocalDateTime.now());
+            activityLogRepository.save(log);
+        }
+
+        return saved;
+    }
+
+    // --- US-14: Đưa ô kho vào trạng thái bảo trì / dọn dẹp ---
+    @Transactional
+    public StorageUnit putUnderMaintenance(String unitCode, Integer managerFacilityId, Integer accountId) {
+        StorageUnit unit = storageUnitRepository.findById(unitCode)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy ô kho: " + unitCode));
+
+        Floor floor = floorRepository.findById(unit.getFloorId())
+                .orElseThrow(() -> new RuntimeException("Lỗi dữ liệu tầng!"));
+
+        if (managerFacilityId != null && !floor.getFacilityId().equals(managerFacilityId)) {
+            throw new AccessDeniedException("Bạn không có quyền quản lý ô kho thuộc cơ sở này!");
+        }
+
+        if ("OCCUPIED".equalsIgnoreCase(unit.getStatus()) || "RESERVED".equalsIgnoreCase(unit.getStatus()) || "HOLD".equalsIgnoreCase(unit.getStatus())) {
+            throw new RuntimeException("Không thể đưa vào bảo trì khi ô kho đang có khách đặt hoặc đang thuê! Trạng thái: " + unit.getStatus());
+        }
+
+        unit.setStatus("UNDER_MAINTENANCE");
+        StorageUnit saved = storageUnitRepository.save(unit);
+
+        if (activityLogRepository != null && accountId != null) {
+            ActivityLog log = new ActivityLog();
+            log.setAccountId(accountId);
+            log.setAction("PUT_MAINTENANCE");
+            log.setDescription("Đưa ô kho " + unitCode + " vào trạng thái bảo trì UNDER_MAINTENANCE");
+            log.setCreatedAt(java.time.LocalDateTime.now());
+            activityLogRepository.save(log);
+        }
+
+        return saved;
+    }
+
+    // --- US-14: Nghiệm thu hoàn tất dọn dẹp / bảo trì, đưa ô về AVAILABLE ---
+    @Transactional
+    public StorageUnit completeMaintenance(String unitCode, Integer staffFacilityId, Integer accountId) {
+        StorageUnit unit = storageUnitRepository.findById(unitCode)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy ô kho: " + unitCode));
+
+        Floor floor = floorRepository.findById(unit.getFloorId())
+                .orElseThrow(() -> new RuntimeException("Lỗi dữ liệu tầng!"));
+
+        if (staffFacilityId != null && !floor.getFacilityId().equals(staffFacilityId)) {
+            throw new AccessDeniedException("Bạn không có quyền quản lý ô kho thuộc cơ sở này!");
+        }
+
+        if (!"UNDER_MAINTENANCE".equalsIgnoreCase(unit.getStatus()) && !"MAINTENANCE".equalsIgnoreCase(unit.getStatus())) {
+            throw new RuntimeException("Chỉ có thể nghiệm thu ô kho đang ở trạng thái bảo trì (UNDER_MAINTENANCE)! Trạng thái hiện tại: " + unit.getStatus());
+        }
+
+        unit.setStatus("AVAILABLE");
+        StorageUnit saved = storageUnitRepository.save(unit);
+
+        if (activityLogRepository != null && accountId != null) {
+            ActivityLog log = new ActivityLog();
+            log.setAccountId(accountId);
+            log.setAction("COMPLETE_MAINTENANCE");
+            log.setDescription("Nghiệm thu hoàn tất bảo trì, mở lại ô kho " + unitCode + " thành AVAILABLE");
+            log.setCreatedAt(java.time.LocalDateTime.now());
+            activityLogRepository.save(log);
+        }
+
+        return saved;
+    }
+
+    // --- US-14: Lấy danh sách ô kho đang bảo trì của cơ sở ---
+    public List<UnitDetailResponse> getMaintenanceUnits(Integer facilityId) {
+        return filterUnits(facilityId, null, null, null, "UNDER_MAINTENANCE");
+    }
+
     private List<UnitDetailResponse> mapToUnitDetailResponses(List<StorageUnit> units) {
         return units.stream().map(this::mapSingleUnit).collect(Collectors.toList());
     }
@@ -264,7 +402,7 @@ public class StorageService {
         dto.setUnitTypeId(u.getUnitTypeId());
         dto.setStatus(u.getStatus());
 
-        // Lấy thông tin Tầng và Tải trọng sàn (BR-10)
+        // Lấy thông tin Tầng và Tải trọng sàn
         String floorPrefix = "G";
         String facCode = "HN01";
         Optional<Floor> floorOpt = floorRepository.findById(u.getFloorId());
@@ -289,7 +427,7 @@ public class StorageService {
             }
         }
 
-        // Lấy thông tin Loại kho và Kích thước chuẩn (BR-08)
+        // Lấy thông tin Loại kho và Kích thước chuẩn
         String sizeCode = "M";
         Optional<UnitType> unitTypeOpt = unitTypeRepository.findById(u.getUnitTypeId());
         if (unitTypeOpt.isPresent()) {
@@ -341,4 +479,5 @@ public class StorageService {
 
         return dto;
     }
+
 }
