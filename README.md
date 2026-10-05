@@ -1,8 +1,5 @@
 # Smart Self Storage (Hệ thống quản lý kho lưu trữ tự phục vụ thông minh)
 
-Hệ thống quản trị và đặt chỗ kho tự lưu trữ thông minh (Smart Self-Storage Management System) - Đồ án tốt nghiệp môn **SWP391** tại Đại học FPT.
-
----
 
 ## 👥 Thành viên nhóm (Team Members)
 - **Bảo** - Backend Developer
