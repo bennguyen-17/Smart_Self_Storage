@@ -20,24 +20,21 @@ Hệ thống quản trị và đặt chỗ kho tự lưu trữ thông minh (Smar
 
 ---
 
-## 📌 QUY CHUẨN COMMIT CODE (GITHUB DESKTOP)
+## 📌 QUY CHUẨN COMMIT CODE & PULL REQUEST (PR)
 
-Để phục vụ chấm điểm Git Log và kiểm tra tiến độ Sprint, cả nhóm thống nhất chuẩn commit bằng **Tiếng Anh** gắn với mã **User Story (US)**.
+Để phục vụ chấm điểm Git Log, quy trình làm việc nhóm và tiến độ Sprint, cả nhóm thống nhất **dùng chung 1 cú pháp tiếng Anh duy nhất** cho cả **Commit Message (Summary)** trên GitHub Desktop và **Tiêu đề Pull Request (PR Title)** trên GitHub.
 
-### 1. Quy định 2 ô nhập liệu trên GitHub Desktop
-* **`Summary (required)` (BẮT BUỘC):** Tiêu đề commit bằng tiếng Anh, viết đúng theo cú pháp bên dưới (tối đa dưới 72 ký tự).
-* **`Description` (TÙY CHỌN):** Không bắt buộc. Chỉ điền khi làm task dài, cần gạch đầu dòng giải thích chi tiết các file đã sửa hoặc logic nghiệp vụ.
-
-### 2. Cú pháp chuẩn trong ô Summary
+### 1. Cú pháp chuẩn duy nhất (Commit Summary & PR Title)
 ```text
 <type>(us-xx-be): <short summary in english>
 <type>(us-xx-fe): <short summary in english>
 ```
-*(Nếu là công việc chung không thuộc riêng US nào thì thay scope bằng: `be`, `fe` hoặc `db`)*
+* **Khi tạo PR tổng kết Sprint:** `<type>(sprint2-be): <short summary in english>`
+* **Khi làm task chung không thuộc riêng US nào:** Thay scope bằng `(be)`, `(fe)` hoặc `(db)`.
 
-### 3. Danh sách `type` và ví dụ mẫu (1 ví dụ mỗi loại)
+### 2. Danh sách `type` và ví dụ mẫu (1 ví dụ mỗi loại)
 
-| Type | Mục đích sử dụng | Ví dụ mẫu trong ô Summary |
+| Type | Mục đích sử dụng | Ví dụ mẫu (Commit & PR Title) |
 | :--- | :--- | :--- |
 | **`feat`** | Thêm tính năng mới, API mới, tạo màn hình/component mới | `feat(us-13-be): add API to change storage unit type` |
 | **`fix`** | Sửa lỗi, fix bug logic hoặc lỗi giao diện | `fix(us-13-be): fix facility permission check` |
@@ -46,10 +43,20 @@ Hệ thống quản trị và đặt chỗ kho tự lưu trữ thông minh (Smar
 | **`chore`** | Cập nhật file SQL, cài thư viện, sửa file config | `chore(db): update support ticket table script` |
 | **`docs`** | Viết tài liệu README, chú thích Swagger API | `docs(be): update contract API documentation` |
 
-### 4. Lưu ý bắt buộc để không bị trừ điểm
+### 3. Quy định nhập liệu trên GitHub Desktop
+* **`Summary (required)` (BẮT BUỘC):** Nhập đúng cú pháp chuẩn ở trên (tối đa dưới 72 ký tự).
+* **`Description` (TÙY CHỌN):** Không bắt buộc. Chỉ điền khi làm task dài cần gạch đầu dòng giải thích chi tiết các file đã sửa hoặc logic nghiệp vụ.
+
+### 4. Quy trình tạo Pull Request (PR) trên GitHub
+1. **Chọn nhánh:** Luôn tạo PR từ nhánh cá nhân (ví dụ: `gia-bao`, `tam-fe`) merge vào nhánh chung (`develop` hoặc `sprint-2`). **Tuyệt đối KHÔNG merge thẳng vào nhánh `main`**.
+2. **Tiêu đề PR (PR Title):** Áp dụng đúng cú pháp: `<type>(us-xx-be/fe): <mô tả>` hoặc `<type>(sprint2-be): <mô tả>`.
+3. **Mô tả PR (PR Description):** Gạch đầu dòng tóm tắt các User Stories đã làm xong và cách test nhanh.
+4. **Review & Merge:** Bắt buộc tag ít nhất 1 thành viên trong team vào review và bấm **Approve** trước khi bấm **Merge Pull Request**.
+
+### 5. Lưu ý bắt buộc để không bị trừ điểm
 1. **Luôn dùng tiếng Anh**, bắt đầu bằng động từ nguyên mẫu: `add`, `create`, `update`, `fix`, `implement`, `remove`...
 2. **Viết chữ thường sau dấu hai chấm**, không có dấu chấm ở cuối câu.
-3. **Tuyệt đối không commit vô nghĩa:** Không ghi `update`, `fix bug`, `done`, `test`, `abcxyz`.
+3. **Tuyệt đối không commit hoặc đặt tên PR vô nghĩa:** Cấm hoàn toàn `update`, `fix bug`, `done`, `test`, `abcxyz`.
 
 ---
 
@@ -85,4 +92,4 @@ Hệ thống quản trị và đặt chỗ kho tự lưu trữ thông minh (Smar
 ## 📋 Quy tắc làm việc của Team
 1. Nhận task nào trên Jira thì vào GitHub Desktop chuyển sang đúng nhánh (Branch) đó để code.
 2. Code xong ngày nào phải Commit và Push lên GitHub ngày đó theo đúng quy chuẩn commit ở trên.
-3. Trước khi merge code vào nhánh chính (`main`/`develop`), bắt buộc phải tạo Pull Request (PR) và test kỹ để không làm gãy luồng của người khác.
+3. Trước khi merge code vào nhánh chung, bắt buộc phải tạo Pull Request (PR) và test kỹ để không làm conflict code của cả nhóm.
