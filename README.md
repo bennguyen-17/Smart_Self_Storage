@@ -9,7 +9,7 @@ Team Member
 
 # Tech Stack
 - **Frontend:** React.js (Vite) + Tailwind CSS
-- **Backend:** Java Spring Boot 3 + Spring Security
+- **Backend:** Java Spring Boot 3 + Spring Security (JDK 25 LTS)
 - **Database:** MySQL
 
 # Quy tắc làm việc

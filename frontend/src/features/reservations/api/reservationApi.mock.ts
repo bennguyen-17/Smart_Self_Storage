@@ -162,7 +162,7 @@ const SEEDS: Seed[] = [
     cancelReason: null,
     checkinOffsetDays: -15,
   },
-  // Khách tự hủy < 7 ngày trước ngày hẹn → mất 50% cọc (BR-13)
+  // Khách tự hủy < 7 ngày trước ngày hẹn → mất 50% cọc (BR-17) - Đang chờ kế toán hoàn 50%
   {
     reservationCode: "RES-TX-1100-C7YU",
     customerName: "Lý Hải Phong",
@@ -176,6 +176,32 @@ const SEEDS: Seed[] = [
     cancelReason: "CUSTOMER_REQUEST",
     checkinOffsetDays: 4,
     forfeitRate: 0.5,
+    refundStatus: "PENDING",
+    bankAccount: "190367891234 (Techcombank) - Lý Hải Phong",
+    bankName: "Techcombank",
+  },
+  // Khách hủy ≥ 7 ngày trước ngày hẹn → hoàn 100% cọc (BR-17/BR-35) - Đã đối soát & hoàn tiền (REFUNDED)
+  {
+    reservationCode: "RES-CG-9922-OKRF",
+    customerName: "Nguyễn Hoàng Mai",
+    customerEmail: "mai.nguyen@example.com",
+    cccd: "001198007722",
+    facilityCode: "HN-01",
+    facilityName: "SmartStorage Cầu Giấy",
+    unitCode: "U-102",
+    depositAmount: 1_000_000,
+    status: "CANCELED",
+    cancelReason: "CUSTOMER_REQUEST",
+    checkinOffsetDays: 8,
+    forfeitRate: 0,
+    refundStatus: "REFUNDED",
+    refundAmount: 1_000_000,
+    refundEvidenceUrl: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=80",
+    refundedAt: "2026-10-02T14:20:00.000Z",
+    refundStaffName: "Trần Thị Thu (Kế toán Back-office)",
+    refundNote: "FT2610028891 - Đã chuyển hoàn 100% qua Internet Banking VCB",
+    bankAccount: "0011004567890 (Vietcombank) - Nguyễn Hoàng Mai",
+    bankName: "Vietcombank",
   },
 ]
 
@@ -191,15 +217,31 @@ function buildStore(): Reservation[] {
     const createdAt = vnMidnightIso(addDays(checkinDate, -7))
     let canceledAt: string | null = null
     let forfeitedAmount: number | null = null
+    let refundAmount: number | null = seed.refundAmount ?? null
+    let refundStatus: any = seed.refundStatus ?? "NONE"
+
     if (seed.cancelReason === "NO_SHOW") {
       // Cron 00:00 ngày kế tiếp ngày hẹn
       canceledAt = vnMidnightIso(addDays(checkinDate, 1))
       forfeitedAmount = seed.depositAmount
+      refundAmount = 0
+      refundStatus = "NONE"
     } else if (seed.cancelReason === "CUSTOMER_REQUEST") {
       canceledAt = vnMidnightIso(addDays(today, -1))
       forfeitedAmount = seed.depositAmount * (forfeitRate ?? 0)
+      const calculatedRefund = seed.depositAmount - forfeitedAmount
+      refundAmount = seed.refundAmount ?? calculatedRefund
+      refundStatus = seed.refundStatus ?? (refundAmount > 0 ? "PENDING" : "NONE")
     }
-    return { ...seed, checkinDate, createdAt, canceledAt, forfeitedAmount }
+    return {
+      ...seed,
+      checkinDate,
+      createdAt,
+      canceledAt,
+      forfeitedAmount,
+      refundAmount,
+      refundStatus,
+    }
   })
 }
 
@@ -266,4 +308,25 @@ export function mockRunNoShowScan(): Promise<NoShowScanResult> {
     canceledCount: reservationCodes.length,
     reservationCodes,
   })
+}
+
+/** Giả lập quy trình Back-office hoàn tiền cọc & lưu biên lai (BR-35) */
+export function mockConfirmRefund(
+  code: string,
+  payload: { evidenceUrl: string; note?: string; staffName?: string }
+): Promise<Reservation> {
+  const index = store.findIndex((r) => r.reservationCode === code)
+  if (index === -1) {
+    return Promise.reject(new Error(`Không tìm thấy đơn ${code}`))
+  }
+  const updated: Reservation = {
+    ...store[index],
+    refundStatus: "REFUNDED",
+    refundEvidenceUrl: payload.evidenceUrl,
+    refundedAt: new Date().toISOString(),
+    refundStaffName: payload.staffName || "Trần Thị Thu (Kế toán Back-office)",
+    refundNote: payload.note || "Đã chuyển khoản ngoài và lưu biên lai đối soát thành công",
+  }
+  store[index] = updated
+  return delay(updated)
 }

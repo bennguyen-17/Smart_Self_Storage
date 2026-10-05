@@ -31,6 +31,7 @@ export default function StorageMap2D({
   const [branches, setBranches] = useState<any[]>([]);
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedStorageType, setSelectedStorageType] = useState<'ALL' | 'STANDARD' | 'CLIMATE_CONTROLLED'>('ALL');
 
   // Tải danh sách chi nhánh cơ sở từ Database
   useEffect(() => {
@@ -97,6 +98,9 @@ export default function StorageMap2D({
     const isMaintenance = u.status === 'MAINTENANCE' || u.status === 'UNDER_MAINTENANCE';
     const isAvailable = !isOccupied && !isHold && !isMaintenance;
 
+    const matchesFilter = selectedStorageType === 'ALL' || u.storageType === selectedStorageType;
+    const filterClass = !matchesFilter ? 'opacity-30 scale-95 saturate-50 hover:opacity-80' : '';
+
     let cardBg = `unit-color-${u.size}`;
     let statusDot = <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 inline-block" />;
     let badgeText = 'Trống';
@@ -110,7 +114,6 @@ export default function StorageMap2D({
       statusDot = <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1 inline-block" />;
       badgeText = 'Đã giữ chỗ';
     } else if (isMaintenance) {
-
       cardBg = 'bg-slate-200 dark:bg-slate-800 border-slate-400 text-slate-500 dark:text-slate-400 cursor-not-allowed opacity-60';
       statusDot = <span className="w-1.5 h-1.5 rounded-full bg-slate-500 mr-1 inline-block" />;
       badgeText = 'Bảo trì';
@@ -121,28 +124,210 @@ export default function StorageMap2D({
     }
 
     const shortId = u.id.split('-').pop();
-    const heightClass = u.size === 'S' ? 'min-h-[42px]' : u.size === 'M' ? 'min-h-[50px]' : u.size === 'L' ? 'min-h-[60px]' : 'min-h-[68px] sm:min-h-[72px]';
+    const heightClass = u.size === 'S' ? 'min-h-[44px]' : u.size === 'M' ? 'min-h-[52px]' : u.size === 'L' ? 'min-h-[62px]' : 'min-h-[70px] sm:min-h-[74px]';
 
     return (
       <div
         key={u.id}
         onClick={() => isAvailable && onSelectUnit(isSelected ? null : u)}
-        className={`proportional-unit ${cardBg} ${heightClass} p-1.5 sm:p-2 rounded-lg border shadow-xs text-center flex flex-col justify-between transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-md active:scale-95 group`}
+        className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p-2 rounded-lg border shadow-xs text-center flex flex-col justify-between transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-md active:scale-95 group`}
       >
         <div className="flex justify-between items-center w-full">
-          <span className="font-black text-xs sm:text-sm font-mono tracking-tight group-hover:text-blue-600 transition-colors">{shortId}</span>
+          <span className="font-black text-xs sm:text-sm font-mono tracking-tight group-hover:text-blue-600 transition-colors flex items-center gap-1">
+            {u.isClimate ? <span className="text-[10px] text-cyan-600 dark:text-cyan-400" title="Kho mát điều hòa 22-25°C">❄️</span> : null}
+            {shortId}
+          </span>
           <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-200 shadow-xs border border-slate-200 dark:border-slate-700">{u.size}</span>
         </div>
-        <div className="text-[10px] sm:text-[11px] font-bold flex items-center justify-center mt-0.5">
-          {statusDot}
-          <span>{badgeText}</span>
+        <div className="text-[10px] sm:text-[11px] font-bold flex items-center justify-between mt-0.5 px-0.5">
+          <div className="flex items-center">
+            {statusDot}
+            <span>{badgeText}</span>
+          </div>
+          <span className={`text-[8px] sm:text-[9px] font-extrabold ${u.isClimate ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-500 dark:text-slate-400'}`}>
+            {u.isClimate ? '❄️ 22-25°C' : '📦 Chuẩn'}
+          </span>
         </div>
       </div>
     );
   };
 
+  const isClimateSelected = selectedStorageType === 'CLIMATE_CONTROLLED';
+  const priceS = isClimateSelected ? { daily: '36k/ngày', monthly: '720k/tháng' } : { daily: '30k/ngày', monthly: '600k/tháng' };
+  const priceM = isClimateSelected ? { daily: '72k/ngày', monthly: '1.44tr/tháng' } : { daily: '60k/ngày', monthly: '1.2tr/tháng' };
+  const priceL = isClimateSelected ? { daily: '144k/ngày', monthly: '2.88tr/tháng' } : { daily: '120k/ngày', monthly: '2.4tr/tháng' };
+  const priceXL = isClimateSelected ? { daily: '240k/ngày', monthly: '4.8tr/tháng' } : { daily: '200k/ngày', monthly: '4tr/tháng' };
+
   return (
     <div className="space-y-3">
+      {/* BƯỚC 1: LỰA CHỌN LOẠI KHO THEO NHU CẦU LƯU TRỮ */}
+      <div className="card-box p-3.5 sm:p-4 rounded-2xl border shadow-xs space-y-3 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2.5">
+          <div className="flex items-center space-x-2.5">
+            <span className="w-6 h-6 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-sm">1</span>
+            <div>
+              <h2 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                BƯỚC 1: CHỌN NHU CẦU LƯU TRỮ (LOẠI KHO)
+              </h2>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Chọn loại kho theo đặc tính hàng hóa để hệ thống phân loại & lọc ô kho trên sơ đồ</p>
+            </div>
+          </div>
+
+          <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 gap-1 shrink-0 self-end sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setSelectedStorageType('ALL')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                selectedStorageType === 'ALL'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-blue-600'
+              }`}
+            >
+              Xem tất cả
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedStorageType('STANDARD')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                selectedStorageType === 'STANDARD'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-blue-600'
+              }`}
+            >
+              📦 Kho Thường
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedStorageType('CLIMATE_CONTROLLED')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                selectedStorageType === 'CLIMATE_CONTROLLED'
+                  ? 'bg-cyan-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-cyan-600'
+              }`}
+            >
+              ❄️ Kho Mát (22-25°C)
+            </button>
+          </div>
+        </div>
+
+        {/* 2 LỰA CHỌN KHO CARD TO */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* OPTION 1: KHO TIÊU CHUẨN */}
+          <div
+            onClick={() => setSelectedStorageType(selectedStorageType === 'STANDARD' ? 'ALL' : 'STANDARD')}
+            className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+              selectedStorageType === 'STANDARD'
+                ? 'border-2 border-blue-600 bg-blue-50/70 dark:bg-blue-950/40 shadow-sm ring-2 ring-blue-500/20'
+                : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700'
+            }`}
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2.5">
+                  <span className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center text-lg shrink-0">
+                    📦
+                  </span>
+                  <div>
+                    <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                      Kho Tiêu Chuẩn (Standard)
+                      {selectedStorageType === 'STANDARD' && (
+                        <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded-md font-bold">Đang lọc</span>
+                      )}
+                    </h3>
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Đơn giá niêm yết chuẩn</span>
+                  </div>
+                </div>
+                <input
+                  type="radio"
+                  name="storageTypeRadio"
+                  checked={selectedStorageType === 'STANDARD'}
+                  onChange={() => {}}
+                  className="w-4 h-4 text-blue-600 cursor-pointer pointer-events-none"
+                />
+              </div>
+
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                Nhiệt độ phòng tự nhiên, hệ thống thông gió đối lưu liên tục, chống bụi và kiểm soát an toàn PCCC tiêu chuẩn.
+              </p>
+
+              <div className="flex flex-wrap gap-1 text-[10px]">
+                <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-slate-700 dark:text-slate-300">
+                  🏠 Đồ nội thất, bàn ghế
+                </span>
+                <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-slate-700 dark:text-slate-300">
+                  🚚 Đồ chuyển nhà
+                </span>
+                <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-slate-700 dark:text-slate-300">
+                  📦 Hàng hóa gia dụng
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-2.5 pt-2 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs">
+              <span className="text-slate-500 dark:text-slate-400 text-[11px]">Đơn giá thuê ngày:</span>
+              <span className="font-extrabold text-blue-600 dark:text-blue-400">Từ 30.000đ/ngày (600k/tháng)</span>
+            </div>
+          </div>
+
+          {/* OPTION 2: KHO KIỂM SOÁT NHIỆT ĐỘ & ĐỘ ẨM */}
+          <div
+            onClick={() => setSelectedStorageType(selectedStorageType === 'CLIMATE_CONTROLLED' ? 'ALL' : 'CLIMATE_CONTROLLED')}
+            className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+              selectedStorageType === 'CLIMATE_CONTROLLED'
+                ? 'border-2 border-cyan-500 bg-cyan-50/70 dark:bg-cyan-950/40 shadow-sm ring-2 ring-cyan-500/20'
+                : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700'
+            }`}
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2.5">
+                  <span className="w-9 h-9 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 flex items-center justify-center text-lg shrink-0">
+                    ❄️
+                  </span>
+                  <div>
+                    <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                      Kho Kiểm Soát Nhiệt Độ & Độ Ẩm (22-25°C)
+                      {selectedStorageType === 'CLIMATE_CONTROLLED' && (
+                        <span className="text-[10px] bg-cyan-600 text-white px-1.5 py-0.2 rounded-md font-bold">Đang lọc</span>
+                      )}
+                    </h3>
+                    <span className="text-[11px] font-bold text-cyan-600 dark:text-cyan-400">+20% phụ phí điều hòa (BR-47)</span>
+                  </div>
+                </div>
+                <input
+                  type="radio"
+                  name="storageTypeRadio"
+                  checked={selectedStorageType === 'CLIMATE_CONTROLLED'}
+                  onChange={() => {}}
+                  className="w-4 h-4 text-cyan-600 cursor-pointer pointer-events-none"
+                />
+              </div>
+
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                Máy lạnh biến tần & máy hút ẩm công nghiệp 24/7 duy trì 22 - 25°C, độ ẩm &lt; 55% ngăn nấm mốc & chập vi mạch.
+              </p>
+
+              <div className="flex flex-wrap gap-1 text-[10px]">
+                <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-cyan-200 dark:border-cyan-800 font-semibold text-cyan-700 dark:text-cyan-300">
+                  💻 Đồ điện tử, linh kiện
+                </span>
+                <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-cyan-200 dark:border-cyan-800 font-semibold text-cyan-700 dark:text-cyan-300">
+                  📚 Tài liệu, sách quý
+                </span>
+                <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-cyan-200 dark:border-cyan-800 font-semibold text-cyan-700 dark:text-cyan-300">
+                  👜 Đồ da, mỹ phẩm, dược phẩm
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-2.5 pt-2 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs">
+              <span className="text-slate-500 dark:text-slate-400 text-[11px]">Đơn giá thuê ngày:</span>
+              <span className="font-extrabold text-cyan-600 dark:text-cyan-400">Từ 36.000đ/ngày (720k/tháng)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* LOCATION & FLOOR CONTROLS */}
       <div className="card-box p-3 sm:p-3.5 rounded-2xl border shadow-xs space-y-2.5 w-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
         <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-2.5">
@@ -210,7 +395,7 @@ export default function StorageMap2D({
           {/* CHỌN TẦNG */}
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center shrink-0">
-              <i className="fa-solid fa-layer-group text-blue-600 mr-1 text-sm"></i> Chọn Tầng:
+              <i className="fa-solid fa-layer-group text-blue-600 mr-1.5 text-sm"></i> Chọn Tầng:
             </span>
             <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 gap-1.5 shrink-0">
               <button
@@ -262,17 +447,28 @@ export default function StorageMap2D({
             </span>
             <span>
               Tầng này đang trống {units.filter(u => u.status === 'AVAILABLE').length} / {units.length} ô kho
+              {selectedStorageType !== 'ALL' && (
+                <span className="ml-1 text-slate-500 dark:text-slate-400">
+                  ({units.filter(u => u.status === 'AVAILABLE' && u.storageType === selectedStorageType).length} ô phù hợp)
+                </span>
+              )}
             </span>
           </div>
         </div>
       </div>
 
-      {/* BẢNG PHÂN LOẠI 4 KÍCH THƯỚC KHO TIÊU CHUẨN */}
+      {/* BẢNG PHÂN LOẠI 4 KÍCH THƯỚC KHO */}
       <div className="card-box p-2.5 sm:p-3 rounded-2xl border shadow-xs space-y-1.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
         <div className="flex items-center justify-between">
-          <span className="font-black text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center">
-            <i className="fa-solid fa-layer-group text-blue-600 mr-1.5"></i> BẢNG PHÂN LOẠI 4 KÍCH THƯỚC KHO TIÊU CHUẨN
-          </span>
+          {isClimateSelected ? (
+            <span className="font-black text-xs text-cyan-600 dark:text-cyan-400 uppercase tracking-wider flex items-center">
+              <i className="fa-solid fa-snowflake text-cyan-500 mr-1.5"></i> BẢNG GIÁ KHO KIỂM SOÁT NHIỆT ĐỘ & ĐỘ ẨM (22-25°C) • ĐÃ GỒM +20% PHỤ PHÍ
+            </span>
+          ) : (
+            <span className="font-black text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center">
+              <i className="fa-solid fa-layer-group text-blue-600 mr-1.5"></i> BẢNG PHÂN LOẠI 4 KÍCH THƯỚC KHO TIÊU CHUẨN
+            </span>
+          )}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {/* SIZE S */}
@@ -284,8 +480,8 @@ export default function StorageMap2D({
             <div className="text-[11px] leading-tight min-w-0">
               <div className="font-black text-slate-900 dark:text-white truncate">Size S (1m²)</div>
               <div className="text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px]">
-                30k/ngày <br/>
-                600k/tháng
+                {priceS.daily} <br/>
+                {priceS.monthly}
               </div>
               <div className="text-[9px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 500k</div>
             </div>
@@ -300,8 +496,8 @@ export default function StorageMap2D({
             <div className="text-[11px] leading-tight min-w-0">
               <div className="font-black text-slate-900 dark:text-white truncate">Size M (3m²)</div>
               <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px]">
-                60k/ngày <br/>
-                1.2tr/tháng
+                {priceM.daily} <br/>
+                {priceM.monthly}
               </div>
               <div className="text-[9px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 1tr</div>
             </div>
@@ -316,8 +512,8 @@ export default function StorageMap2D({
             <div className="text-[11px] leading-tight min-w-0">
               <div className="font-black text-slate-900 dark:text-white truncate">Size L (6m²)</div>
               <div className="text-blue-600 dark:text-blue-400 font-extrabold text-[10px]">
-                120k/ngày <br/>
-                2.4tr/tháng
+                {priceL.daily} <br/>
+                {priceL.monthly}
               </div>
               <div className="text-[9px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 2tr</div>
             </div>
@@ -332,8 +528,8 @@ export default function StorageMap2D({
             <div className="text-[11px] leading-tight min-w-0">
               <div className="font-black text-slate-900 dark:text-white truncate">Size XL (10m²)</div>
               <div className="text-amber-600 dark:text-amber-400 font-extrabold text-[10px]">
-                200k/ngày <br/>
-                4tr/tháng
+                {priceXL.daily} <br/>
+                {priceXL.monthly}
               </div>
               <div className="text-[9px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 3tr</div>
             </div>

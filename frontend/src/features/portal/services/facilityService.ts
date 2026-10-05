@@ -1,4 +1,4 @@
-﻿import apiClient, { isMockMode } from '@/lib/apiClient';
+import apiClient, { isMockMode } from '@/lib/apiClient';
 
 // Dữ liệu mẫu Chi Nhánh (Khớp bảng Branch trong MySQL)
 const MOCK_BRANCHES = [
@@ -64,11 +64,20 @@ const generateMockUnits = (facilityCode, currentFloor) => {
     for (let i = 1; i <= 10; i++) {
       const uId = `${prefix}-G-XL${i < 10 ? '0' + i : i}`;
       const defaultStatus = (i === 3 || i === 7) ? 'OCCUPIED' : 'AVAILABLE';
+      // Dãy 1 (1-5): Kho Tiêu chuẩn; Dãy 2 (6-10): Kho Mát Điều Hòa 22-25°C (+20% phụ phí BR-47)
+      const isClimate = i > 5;
+      const baseDaily = 200000;
+      const baseMonthly = 4000000;
+      const dailyPrice = isClimate ? Math.round(baseDaily * 1.2) : baseDaily;
+      const monthlyPrice = isClimate ? Math.round(baseMonthly * 1.2) : baseMonthly;
       units.push({
         id: uId,
         floor: 1, floorName, weightLimit,
         size: 'XL', dim: '2.5m × 4.0m',
-        price: 200000, monthlyPrice: 4000000, deposit: 3000000,
+        storageType: isClimate ? 'CLIMATE_CONTROLLED' : 'STANDARD',
+        isClimate,
+        typeLabel: isClimate ? 'Kho Mát Điều Hòa (22-25°C)' : 'Kho Tiêu Chuẩn',
+        price: dailyPrice, monthlyPrice, deposit: 3000000,
         status: localMap[uId] || defaultStatus
       });
     }
@@ -76,33 +85,57 @@ const generateMockUnits = (facilityCode, currentFloor) => {
     for (let i = 1; i <= 8; i++) {
       const uId = `${prefix}-F1-S10${i}`;
       const defaultStatus = (i === 2 || i === 6) ? 'OCCUPIED' : 'AVAILABLE';
+      const isClimate = i > 4;
+      const baseDaily = 30000;
+      const baseMonthly = 600000;
       units.push({
         id: uId,
         floor: 2, floorName, weightLimit,
         size: 'S', dim: '1.0m × 1.0m',
-        price: 30000, monthlyPrice: 600000, deposit: 500000,
+        storageType: isClimate ? 'CLIMATE_CONTROLLED' : 'STANDARD',
+        isClimate,
+        typeLabel: isClimate ? 'Kho Mát Điều Hòa (22-25°C)' : 'Kho Tiêu Chuẩn',
+        price: isClimate ? Math.round(baseDaily * 1.2) : baseDaily,
+        monthlyPrice: isClimate ? Math.round(baseMonthly * 1.2) : baseMonthly,
+        deposit: 500000,
         status: localMap[uId] || defaultStatus
       });
     }
     for (let i = 1; i <= 6; i++) {
       const uId = `${prefix}-F1-M10${i}`;
       const defaultStatus = i === 3 ? 'OCCUPIED' : 'AVAILABLE';
+      const isClimate = i > 3;
+      const baseDaily = 60000;
+      const baseMonthly = 1200000;
       units.push({
         id: uId,
         floor: 2, floorName, weightLimit,
         size: 'M', dim: '1.5m × 2.0m',
-        price: 60000, monthlyPrice: 1200000, deposit: 1000000,
+        storageType: isClimate ? 'CLIMATE_CONTROLLED' : 'STANDARD',
+        isClimate,
+        typeLabel: isClimate ? 'Kho Mát Điều Hòa (22-25°C)' : 'Kho Tiêu Chuẩn',
+        price: isClimate ? Math.round(baseDaily * 1.2) : baseDaily,
+        monthlyPrice: isClimate ? Math.round(baseMonthly * 1.2) : baseMonthly,
+        deposit: 1000000,
         status: localMap[uId] || defaultStatus
       });
     }
     for (let i = 1; i <= 4; i++) {
       const uId = `${prefix}-F1-L10${i}`;
       const defaultStatus = i === 2 ? 'OCCUPIED' : 'AVAILABLE';
+      const isClimate = i > 2;
+      const baseDaily = 120000;
+      const baseMonthly = 2400000;
       units.push({
         id: uId,
         floor: 2, floorName, weightLimit,
         size: 'L', dim: '2.0m × 3.0m',
-        price: 120000, monthlyPrice: 2400000, deposit: 2000000,
+        storageType: isClimate ? 'CLIMATE_CONTROLLED' : 'STANDARD',
+        isClimate,
+        typeLabel: isClimate ? 'Kho Mát Điều Hòa (22-25°C)' : 'Kho Tiêu Chuẩn',
+        price: isClimate ? Math.round(baseDaily * 1.2) : baseDaily,
+        monthlyPrice: isClimate ? Math.round(baseMonthly * 1.2) : baseMonthly,
+        deposit: 2000000,
         status: localMap[uId] || defaultStatus
       });
     }
@@ -110,33 +143,57 @@ const generateMockUnits = (facilityCode, currentFloor) => {
     for (let i = 1; i <= 6; i++) {
       const uId = `${prefix}-F2-S20${i}`;
       const defaultStatus = i === 4 ? 'OCCUPIED' : 'AVAILABLE';
+      const isClimate = i > 3;
+      const baseDaily = 30000;
+      const baseMonthly = 600000;
       units.push({
         id: uId,
         floor: 3, floorName, weightLimit,
         size: 'S', dim: '1.0m × 1.0m',
-        price: 30000, monthlyPrice: 600000, deposit: 500000,
+        storageType: isClimate ? 'CLIMATE_CONTROLLED' : 'STANDARD',
+        isClimate,
+        typeLabel: isClimate ? 'Kho Mát Điều Hòa (22-25°C)' : 'Kho Tiêu Chuẩn',
+        price: isClimate ? Math.round(baseDaily * 1.2) : baseDaily,
+        monthlyPrice: isClimate ? Math.round(baseMonthly * 1.2) : baseMonthly,
+        deposit: 500000,
         status: localMap[uId] || defaultStatus
       });
     }
     for (let i = 1; i <= 8; i++) {
       const uId = `${prefix}-F2-M20${i}`;
       const defaultStatus = (i === 1 || i === 5) ? 'OCCUPIED' : 'AVAILABLE';
+      const isClimate = i > 4;
+      const baseDaily = 60000;
+      const baseMonthly = 1200000;
       units.push({
         id: uId,
         floor: 3, floorName, weightLimit,
         size: 'M', dim: '1.5m × 2.0m',
-        price: 60000, monthlyPrice: 1200000, deposit: 1000000,
+        storageType: isClimate ? 'CLIMATE_CONTROLLED' : 'STANDARD',
+        isClimate,
+        typeLabel: isClimate ? 'Kho Mát Điều Hòa (22-25°C)' : 'Kho Tiêu Chuẩn',
+        price: isClimate ? Math.round(baseDaily * 1.2) : baseDaily,
+        monthlyPrice: isClimate ? Math.round(baseMonthly * 1.2) : baseMonthly,
+        deposit: 1000000,
         status: localMap[uId] || defaultStatus
       });
     }
     for (let i = 1; i <= 4; i++) {
       const uId = `${prefix}-F2-L20${i}`;
       const defaultStatus = i === 3 ? 'OCCUPIED' : 'AVAILABLE';
+      const isClimate = i > 2;
+      const baseDaily = 120000;
+      const baseMonthly = 2400000;
       units.push({
         id: uId,
         floor: 3, floorName, weightLimit,
         size: 'L', dim: '2.0m × 3.0m',
-        price: 120000, monthlyPrice: 2400000, deposit: 2000000,
+        storageType: isClimate ? 'CLIMATE_CONTROLLED' : 'STANDARD',
+        isClimate,
+        typeLabel: isClimate ? 'Kho Mát Điều Hòa (22-25°C)' : 'Kho Tiêu Chuẩn',
+        price: isClimate ? Math.round(baseDaily * 1.2) : baseDaily,
+        monthlyPrice: isClimate ? Math.round(baseMonthly * 1.2) : baseMonthly,
+        deposit: 2000000,
         status: localMap[uId] || defaultStatus
       });
     }
@@ -233,7 +290,9 @@ export const getStorageUnits = async (facilityCode: string, floor: number) => {
         monthlyPrice: monthly,
         deposit: Number(u.depositAmount || (size === 'S' ? 500000 : size === 'M' ? 1000000 : size === 'L' ? 2000000 : 3000000)),
         status: statusOverride || u.status || 'AVAILABLE',
-        isClimate: u.isClimate || u.climateControl || false
+        isClimate: Boolean(u.isClimate || u.climateControl),
+        storageType: (u.isClimate || u.climateControl) ? 'CLIMATE_CONTROLLED' : 'STANDARD',
+        typeLabel: (u.isClimate || u.climateControl) ? 'Kho Mát Điều Hòa (22-25°C)' : 'Kho Tiêu Chuẩn',
       };
     });
     return { success: true, data: units.length > 0 ? units : generateMockUnits(facilityCode, floor) };

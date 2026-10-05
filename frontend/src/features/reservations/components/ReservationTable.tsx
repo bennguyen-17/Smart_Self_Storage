@@ -34,7 +34,11 @@ const codeColumn = (onOpen: (code: string) => void): Column => ({
 const statusColumn: Column = {
   header: "Trạng thái",
   render: (r) => (
-    <ReservationStatusBadge status={r.status} cancelReason={r.cancelReason} />
+    <ReservationStatusBadge
+      status={r.status}
+      cancelReason={r.cancelReason}
+      refundStatus={r.refundStatus}
+    />
   ),
 }
 

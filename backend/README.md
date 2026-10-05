@@ -2,6 +2,8 @@
 
 Hướng dẫn chạy server dành cho team Backend.
 
+Yêu cầu JDK 25 LTS để chạy và build backend.
+
 LƯU Ý QUAN TRỌNG TRƯỚC KHI CHẠY:
 Vì dự án có sử dụng MySQL và Spring Data JPA, server sẽ BÁO LỖI VÀ KHÔNG CHẠY ĐƯỢC nếu bạn chưa cấu hình Database.
 Bạn cần bật MySQL dưới máy tính, tạo sẵn một database, sau đó mở file:

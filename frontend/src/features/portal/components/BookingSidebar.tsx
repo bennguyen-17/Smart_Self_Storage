@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 
 export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
   const [selectedPkgDays, setSelectedPkgDays] = useState(30); // Mặc định 1 Tháng (30 ngày)
@@ -39,22 +39,26 @@ export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
             </div>
           </div>
 
-          {/* HƯỚNG DẪN 3 BƯỚC ĐẶT KHO */}
+          {/* HƯỚNG DẪN 4 BƯỚC ĐẶT KHO */}
           <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
             <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              Quy trình thuê kho 3 bước:
+              Quy trình thuê kho 4 bước:
             </span>
             <div className="space-y-1.5">
               <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800">
                 <span className="w-5 h-5 rounded-lg bg-blue-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">1</span>
-                <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Chọn ô kho phù hợp diện tích & tầng</span>
+                <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Chọn nhu cầu: Kho thường hoặc Kho mát (22-25°C)</span>
               </div>
               <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800">
                 <span className="w-5 h-5 rounded-lg bg-blue-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">2</span>
-                <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Chọn thời hạn thuê từ 1 đến 12 tháng</span>
+                <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Chọn ô kho phù hợp diện tích & tầng</span>
               </div>
               <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800">
                 <span className="w-5 h-5 rounded-lg bg-blue-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">3</span>
+                <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Chọn thời hạn thuê từ 1 đến 12 tháng</span>
+              </div>
+              <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800">
+                <span className="w-5 h-5 rounded-lg bg-blue-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">4</span>
                 <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Quét mã VietQR cọc giữ chỗ tức thì</span>
               </div>
             </div>
@@ -165,6 +169,21 @@ export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
             <span className="text-slate-600 dark:text-slate-400 font-bold text-xs">Mã ô kho đã chọn</span>
             <span className="text-base font-black text-amber-500 font-mono tracking-wider">{selectedUnit.id}</span>
           </div>
+
+          {/* LOẠI KHO BADGE */}
+          <div className="flex justify-between items-center py-0.5">
+            <span className="text-slate-500 dark:text-slate-400 text-[10px] font-semibold">Loại kho:</span>
+            {selectedUnit.isClimate ? (
+              <span className="text-[10px] font-extrabold text-cyan-700 dark:text-cyan-300 bg-cyan-100 dark:bg-cyan-950/60 px-2 py-0.5 rounded-md border border-cyan-300 dark:border-cyan-800 flex items-center gap-1">
+                <i className="fa-solid fa-snowflake text-[9px]"></i> Kho Mát (22-25°C)
+              </span>
+            ) : (
+              <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700/60 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-600 flex items-center gap-1">
+                <i className="fa-solid fa-box text-[9px]"></i> Kho Tiêu Chuẩn
+              </span>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div>
               <span className="text-slate-500 dark:text-slate-400 text-[10px] block font-semibold">Kích thước sàn</span>
@@ -179,6 +198,9 @@ export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
             <div>
               <span className="text-slate-500 dark:text-slate-400 text-[10px] block font-semibold">Đơn giá ngày:</span>
               <span className="font-bold text-blue-600 dark:text-blue-400 text-[11px]">{selectedUnit.price.toLocaleString('vi-VN')}đ/ngày</span>
+              {selectedUnit.isClimate && (
+                <span className="text-[9px] text-cyan-600 dark:text-cyan-400 font-bold block">(+20% phụ phí điều hòa)</span>
+              )}
               <span className="text-slate-500 dark:text-slate-400 text-[10px] block mt-0.5 font-semibold">Đơn giá tháng:</span>
               <span className="font-black text-indigo-600 dark:text-indigo-400 text-[11px]">
                 {(selectedUnit.monthlyPrice || selectedUnit.price * 20).toLocaleString('vi-VN')}đ/tháng
@@ -391,7 +413,10 @@ export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
                 startDate: formatDisplayDate(startDate),
                 endDate: calculateCheckOutDate(),
                 effectiveDays,
-                estimatedTotalRental
+                estimatedTotalRental,
+                storageType: selectedUnit.storageType || (selectedUnit.isClimate ? 'CLIMATE_CONTROLLED' : 'STANDARD'),
+                typeLabel: selectedUnit.typeLabel || (selectedUnit.isClimate ? 'Kho Mát Điều Hòa (22-25°C)' : 'Kho Tiêu Chuẩn'),
+                isClimate: selectedUnit.isClimate
               })
             }
             className="w-full font-black text-xs py-2 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center space-x-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer shadow-amber-500/25 active:scale-[0.98]"
