@@ -138,7 +138,7 @@ CREATE TABLE StorageUnit (
     unitCode VARCHAR(50) PRIMARY KEY,
     floorId INT NOT NULL,
     unitTypeId INT NOT NULL,
-    status ENUM('AVAILABLE', 'HOLD', 'RENTED', 'MAINTENANCE', 'OVERDUE') NOT NULL DEFAULT 'AVAILABLE',
+    status ENUM('AVAILABLE', 'HOLD', 'OCCUPIED', 'UNDER_MAINTENANCE', 'RENTED', 'MAINTENANCE', 'OVERDUE') NOT NULL DEFAULT 'AVAILABLE',
     CONSTRAINT fk_unit_floor FOREIGN KEY (floorId) REFERENCES Floor (floorId) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_unit_type FOREIGN KEY (unitTypeId) REFERENCES UnitType (unitTypeId) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -227,6 +227,7 @@ CREATE TABLE Reservation (
     rentalType ENUM('DAILY', 'MONTHLY') NOT NULL,
     rentalAmount DECIMAL(12, 2) NOT NULL,
     depositAmount DECIMAL(12, 2) NOT NULL,
+    penaltyAmount DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
     status ENUM('PENDING', 'CONFIRMED', 'CANCELLED', 'EXPIRED') NOT NULL DEFAULT 'PENDING',
     createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     holdExpiresAt DATETIME,
@@ -257,8 +258,10 @@ CREATE TABLE Payment (
     paymentId INT AUTO_INCREMENT PRIMARY KEY,
     contractId INT NOT NULL,
     invoiceNumber VARCHAR(50) NOT NULL UNIQUE,
-    invoiceType ENUM('INITIAL_RENTAL', 'MONTHLY_RENEWAL', 'OVERDUE_FEE', 'INSPECTION_DAMAGE') NOT NULL,
+    invoiceType ENUM('DEP', 'REF', 'INITIAL_RENTAL', 'MONTHLY_RENEWAL', 'OVERDUE_FEE', 'INSPECTION_DAMAGE') NOT NULL,
     amount DECIMAL(12, 2) NOT NULL,
+    paidAmount DECIMAL(12, 2),
+    remainingAmount DECIMAL(12, 2),
     pdfUrl VARCHAR(255),
     issuedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     dueAt DATETIME NOT NULL,
@@ -543,9 +546,9 @@ INSERT INTO Contract (contractId, reservationId, pdfUrl, activatedAt, terminated
 (2, 2, '/contracts/HD-20260915-002.pdf', '2026-09-15 00:00:00', NULL, 'ACTIVE');
 
 -- 17. Payments mẫu
-INSERT INTO Payment (paymentId, contractId, invoiceNumber, invoiceType, amount, pdfUrl, issuedAt, dueAt, status, paymentMethod, transactionCode, paymentStatus, gatewayTransactionId, paidAt) VALUES
-(1, 1, 'INV-202609-001', 'INITIAL_RENTAL', 15000000.00, '/invoices/INV-202609-001.pdf', '2026-08-30 09:15:00', '2026-09-01 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_998811', 'SUCCESS', 'VNP14882711', '2026-08-30 09:20:00'),
-(2, 2, 'INV-202609-002', 'INITIAL_RENTAL', 8000000.00, '/invoices/INV-202609-002.pdf', '2026-09-14 14:40:00', '2026-09-15 23:59:59', 'PAID', 'BANK_TRANSFER', 'MB_BANK_882910', 'SUCCESS', 'FT2625718991', '2026-09-14 14:45:00');
+INSERT INTO Payment (paymentId, contractId, invoiceNumber, invoiceType, amount, paidAmount, remainingAmount, pdfUrl, issuedAt, dueAt, status, paymentMethod, transactionCode, paymentStatus, gatewayTransactionId, paidAt) VALUES
+(1, 1, 'INV-202609-001', 'INITIAL_RENTAL', 15000000.00, 15000000.00, 0.00, '/invoices/INV-202609-001.pdf', '2026-08-30 09:15:00', '2026-09-01 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_998811', 'SUCCESS', 'VNP14882711', '2026-08-30 09:20:00'),
+(2, 2, 'INV-202609-002', 'INITIAL_RENTAL', 8000000.00, 8000000.00, 0.00, '/invoices/INV-202609-002.pdf', '2026-09-14 14:40:00', '2026-09-15 23:59:59', 'PAID', 'BANK_TRANSFER', 'MB_BANK_882910', 'SUCCESS', 'FT2625718991', '2026-09-14 14:45:00');
 
 -- 18. GatePins (Mã PIN động mẫu)
 INSERT INTO GatePin (gatePinId, contractId, pinCode, status, generatedAt, expiresAt) VALUES
