@@ -117,8 +117,8 @@ public class StaffReservationService {
         if (!belongsToFacility(oldUnit, staffFacilityId) || !belongsToFacility(newUnit, staffFacilityId)) {
             return failure("Both storage units must belong to the staff member's facility.");
         }
-        if (!"HOLD".equals(oldUnit.getStatus())) {
-            return failure("Current storage unit must have HOLD status.");
+        if (!"RESERVED".equals(oldUnit.getStatus())) {
+            return failure("Current storage unit must have RESERVED status.");
         }
         if (!"AVAILABLE".equals(newUnit.getStatus())) {
             return failure("New storage unit must have AVAILABLE status.");
@@ -157,7 +157,7 @@ public class StaffReservationService {
         reservation.setRentalAmount(newPrice.getFinalRentalAmount());
         reservation.setDepositAmount(newPrice.getDepositAmount());
         oldUnit.setStatus("AVAILABLE");
-        newUnit.setStatus("HOLD");
+        newUnit.setStatus("RESERVED");
         storageUnitRepository.save(oldUnit);
         storageUnitRepository.save(newUnit);
         reservationRepository.save(reservation);
@@ -208,8 +208,8 @@ public class StaffReservationService {
         if (!belongsToFacility(unit, staffFacilityId)) {
             return failure("Reservation storage unit does not belong to the staff member's facility.");
         }
-        if (!"HOLD".equals(unit.getStatus())) {
-            return failure("Reservation storage unit must have HOLD status to be released.");
+        if (!"RESERVED".equals(unit.getStatus())) {
+            return failure("Reservation storage unit must have RESERVED status to be released.");
         }
 
         List<Payment> depositInvoices = findDepositInvoices(contract.getContractId());
