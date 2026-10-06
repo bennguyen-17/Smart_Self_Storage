@@ -20,8 +20,7 @@ public class StorageUnit {
     private Integer unitTypeId;
 
     @Column(nullable = false, length = 30)
-    private String status = "AVAILABLE"; // AVAILABLE, HOLD, RESERVED, MAINTENANCE, OVERDUE
-
+<  private String status = "AVAILABLE"; //AVAILABLE, HOLD, RESERVED, OCCUPIED, UNDER_MAINTENANCE
     public StorageUnit() {
     }
 

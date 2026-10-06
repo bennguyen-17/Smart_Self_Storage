@@ -19,10 +19,18 @@ public class Payment {
     private String invoiceNumber;
 
     @Column(nullable = false, length = 50)
-    private String invoiceType; // INITIAL_RENTAL, MONTHLY_RENEWAL, OVERDUE_FEE, INSPECTION_DAMAGE
+    private String invoiceType; // DEP, REF, INITIAL_RENTAL (legacy), MONTHLY_RENEWAL, OVERDUE_FEE, INSPECTION_DAMAGE
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
+
+    // For DEP, amount is the current invoice total; these track collections and outstanding balance.
+    // For non-DEP invoice types, including REF, these values may be null.
+    @Column(precision = 12, scale = 2)
+    private BigDecimal paidAmount;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal remainingAmount;
 
     @Column(length = 255)
     private String pdfUrl;
@@ -108,6 +116,22 @@ public class Payment {
 
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
+    }
+
+    public BigDecimal getPaidAmount() {
+        return paidAmount;
+    }
+
+    public void setPaidAmount(BigDecimal paidAmount) {
+        this.paidAmount = paidAmount;
+    }
+
+    public BigDecimal getRemainingAmount() {
+        return remainingAmount;
+    }
+
+    public void setRemainingAmount(BigDecimal remainingAmount) {
+        this.remainingAmount = remainingAmount;
     }
 
     public String getPdfUrl() {
