@@ -17,7 +17,7 @@ public class StorageUnit {
     private Integer unitTypeId;
 
     @Column(nullable = false, length = 30)
-    private String status = "AVAILABLE"; // AVAILABLE, HOLD, RENTED, MAINTENANCE, OVERDUE
+    private String status = "AVAILABLE"; // AVAILABLE, HOLD, OCCUPIED, UNDER_MAINTENANCE; legacy RENTED, MAINTENANCE, OVERDUE remain supported
 
     public StorageUnit() {
     }

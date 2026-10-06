@@ -34,6 +34,9 @@ public class Reservation {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal depositAmount;
 
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal penaltyAmount = BigDecimal.ZERO;
+
     @Column(nullable = false, length = 30)
     private String status = "PENDING"; // PENDING, CONFIRMED, CANCELLED, EXPIRED
 
@@ -121,6 +124,14 @@ public class Reservation {
 
     public void setDepositAmount(BigDecimal depositAmount) {
         this.depositAmount = depositAmount;
+    }
+
+    public BigDecimal getPenaltyAmount() {
+        return penaltyAmount;
+    }
+
+    public void setPenaltyAmount(BigDecimal penaltyAmount) {
+        this.penaltyAmount = penaltyAmount;
     }
 
     public String getStatus() {
