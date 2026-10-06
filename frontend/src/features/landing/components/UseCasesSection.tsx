@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import personalStorageBoxesImg from "@/assets/landing/personal-storage-boxes.jpg"
+import qrScanStorageImg from "@/assets/landing/qr-scan-storage.jpg"
 import {
-  USE_CASES,
   USE_CASES_SECTION,
   type EstimatorPresetId,
 } from "../content/copy"
@@ -27,7 +28,7 @@ export function UseCasesSection({ onTry: _onTry }: UseCasesSectionProps) {
     },
     {
       title: "Mở cửa kho tự động 24/7 bằng quét mã QR & mã PIN",
-      src: "/images/qr-scan-storage.jpg",
+      src: qrScanStorageImg,
     },
     {
       title: "Hành lang kho tự quản hiện đại, sạch sẽ & thông thoáng",
@@ -39,7 +40,7 @@ export function UseCasesSection({ onTry: _onTry }: UseCasesSectionProps) {
     },
     {
       title: "Hết mùa cất lại, bảo quản đồ cá nhân & thùng chuyển dọn",
-      src: "/images/personal-storage-boxes.jpg",
+      src: personalStorageBoxesImg,
     },
     {
       title: "Dọn nhà sửa tổ, gửi đồ nội thất gia đình liền tay",
