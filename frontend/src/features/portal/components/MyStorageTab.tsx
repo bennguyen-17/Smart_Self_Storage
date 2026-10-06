@@ -580,7 +580,7 @@ export default function MyStorageTab({ onOpenExtendModal }) {
 
             <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-800 dark:text-amber-300 space-y-2">
               <span className="font-bold flex items-center gap-1.5 text-xs">
-                <i className="fa-solid fa-file-invoice"></i> Chính sách hủy cọc:
+                <i className="fa-solid fa-file-invoice"></i> Chính sách hủy cọc & Quy trình hoàn tiền Back-office:
               </span>
               <ul className="list-disc pl-4 space-y-1">
                 <li><strong className="font-semibold">Hủy trước ngày nhận kho từ 7 ngày trở lên:</strong> Bạn được hoàn lại 100% tiền cọc.</li>
@@ -589,7 +589,7 @@ export default function MyStorageTab({ onOpenExtendModal }) {
               <div className="pt-2 mt-2 border-t border-amber-200/60 dark:border-amber-800/60">
                 <p className="flex gap-1.5">
                   <i className="fa-solid fa-triangle-exclamation mt-0.5 text-[10px]"></i>
-                  <span>Lưu ý: Hành động này không thể hoàn tác. Quá trình hoàn tiền (nếu có) sẽ được xử lý tự động vào phương thức thanh toán ban đầu của quý khách trong vòng <strong>48 giờ làm việc</strong>.</span>
+                  <span>Lưu ý: Hệ thống sẽ tự động lập Yêu cầu hoàn cọc (Hóa đơn REF ở trạng thái PENDING). Kế toán / Back-office sẽ chuyển khoản hoàn tiền trong vòng <strong>24 - 48 giờ làm việc</strong>, đính kèm biên lai xác nhận và gửi email thông báo cho bạn (theo BR-35).</span>
                 </p>
               </div>
             </div>

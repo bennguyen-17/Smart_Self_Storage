@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 
 export default function DraftContractModal({ bookingData, onProceedToPayment, onClose, isLoading }: { bookingData: any; onProceedToPayment: () => void; onClose?: () => void; isLoading?: boolean }) {
   const [agreed, setAgreed] = useState(false);
@@ -45,9 +45,14 @@ export default function DraftContractModal({ bookingData, onProceedToPayment, on
               <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                 <i className="fa-solid fa-box-archive text-amber-500"></i> Thông tin ô kho
               </span>
-              <span className="text-slate-500 dark:text-slate-400">
-                Chi nhánh: <strong className="text-slate-900 dark:text-white">{bookingData.facilityName}</strong>
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 dark:text-slate-400">
+                  Chi nhánh: <strong className="text-slate-900 dark:text-white">{bookingData.facilityName}</strong>
+                </span>
+                <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${bookingData.isClimate ? 'bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800' : 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200'}`}>
+                  {bookingData.isClimate ? '❄️ Kho Mát (22-25°C)' : '📦 Kho Tiêu Chuẩn'}
+                </span>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
@@ -94,14 +99,15 @@ export default function DraftContractModal({ bookingData, onProceedToPayment, on
               </p>
 
               <p>
-                <strong>1. Mục đích cọc giữ chỗ:</strong> Khoản tiền cọc dùng để bảo lưu ô kho <strong>{bookingData.unitId}</strong> tại chi nhánh {bookingData.facilityName} cho bạn kể từ ngày nhận kho <strong>{bookingData.startDate}</strong>.
+                <strong>1. Mục đích cọc giữ chỗ:</strong> Khoản tiền cọc dùng để bảo lưu ô kho <strong>{bookingData.unitId}</strong> ({bookingData.isClimate ? 'Kho Mát Kiểm Soát Nhiệt Độ 22-25°C' : 'Kho Tiêu Chuẩn'}) tại chi nhánh {bookingData.facilityName} cho bạn kể từ ngày nhận kho <strong>{bookingData.startDate}</strong>.
               </p>
 
               <div className="space-y-1">
-                <strong className="text-slate-900 dark:text-white block">2. Chính sách hủy cọc:</strong>
+                <strong className="text-slate-900 dark:text-white block">2. Chính sách hủy cọc & Hoàn tiền:</strong>
                 <ul className="list-disc pl-4 space-y-1">
                   <li>Hủy trước ngày nhận kho từ 7 ngày trở lên: Bạn được hoàn lại 100% tiền cọc.</li>
-                  <li>Hủy trước ngày nhận kho dưới 7 ngày: Bạn sẽ bị tính phí hủy 50% tiền cọc và nhận lại 50% còn lại.</li>
+                  <li>Hủy trước ngày nhận kho dưới 7 ngày: Bạn bị tính phí phạt 50% tiền cọc và nhận lại 50% còn lại.</li>
+                  <li>Quy trình hoàn tiền: Yêu cầu hoàn cọc được bộ phận Back-office đối soát và chuyển khoản trong vòng 24 - 48 giờ làm việc, kèm biên lai xác nhận gửi qua email (BR-35).</li>
                 </ul>
               </div>
 

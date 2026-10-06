@@ -48,18 +48,27 @@ public class LoginService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // find in db (chỉ cho phép đăng nhập bằng số điện thoại)
-        Optional<Account> result = accountRepository.findByPhone(request.getPhone());
+        // Đăng nhập bằng Email hoặc Số điện thoại
+        String identifier = (request.getEmail() != null && !request.getEmail().trim().isEmpty())
+                ? request.getEmail().trim()
+                : (request.getPhone() != null ? request.getPhone().trim() : null);
 
-        if (result.isEmpty()) {
+        if (identifier == null) {
+            return LoginResult.failure("Vui lòng nhập Email hoặc Số điện thoại.", 400);
+        }
+
+        Account result = accountRepository.findByEmail(identifier)
+                .orElseGet(() -> accountRepository.findByPhone(identifier).orElse(null));
+
+        if (result == null) {
             return LoginResult.failure(
-                    "Số điện thoại hoặc mật khẩu không đúng.",
+                    "Email / Số điện thoại hoặc mật khẩu không đúng.",
                     401);
         }
 
-        Account account = result.get();
+        Account account = result;
 
-        // Phân quyền Cổng Đăng nhập theo Role (BR-01 / Role-based access control)
+        // Phân quyền Cổng Đăng nhập theo Role
         // roleId: 1 = ADMIN, 2 = BOM, 3 = MANAGER, 4 = STAFF, 5 = CUSTOMER
         boolean isInternalRole = account.getRoleId() != null && account.getRoleId() >= 1L && account.getRoleId() <= 4L;
         if ("CUSTOMER".equalsIgnoreCase(request.getPortalType()) && isInternalRole) {

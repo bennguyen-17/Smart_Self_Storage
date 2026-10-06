@@ -3,9 +3,11 @@ import { cn } from "cn"
 
 import type { Reservation } from "../types"
 
-type BadgeInput = Pick<Reservation, "status" | "cancelReason">
+type BadgeInput = Pick<Reservation, "status" | "cancelReason"> & {
+  refundStatus?: Reservation["refundStatus"]
+}
 
-function getBadge({ status, cancelReason }: BadgeInput) {
+function getBadge({ status, cancelReason, refundStatus }: BadgeInput) {
   if (status === "CANCELED" && cancelReason === "NO_SHOW") {
     return {
       label: "HỦY CỌC (QUÁ HẠN CHECK-IN)",
@@ -15,6 +17,22 @@ function getBadge({ status, cancelReason }: BadgeInput) {
     }
   }
   if (status === "CANCELED") {
+    if (refundStatus === "REFUNDED") {
+      return {
+        label: "KHÁCH HỦY • ĐÃ HOÀN TIỀN (REFUNDED)",
+        Icon: CircleCheckIcon,
+        className:
+          "border-emerald-400 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
+      }
+    }
+    if (refundStatus === "PENDING") {
+      return {
+        label: "KHÁCH HỦY • CHỜ HOÀN TIỀN (PENDING)",
+        Icon: ClockIcon,
+        className:
+          "border-amber-400 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-950/70 dark:text-amber-300",
+      }
+    }
     return {
       label: "KHÁCH TỰ HỦY",
       Icon: UserXIcon,

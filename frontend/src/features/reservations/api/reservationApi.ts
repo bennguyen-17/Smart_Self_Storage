@@ -1,4 +1,4 @@
-﻿// US-06: API quản lý đơn đặt cọc & No-Show.
+// US-06: API quản lý đơn đặt cọc & No-Show.
 // VITE_USE_MOCK=true → dùng mock; false → gọi backend. Không tự fallback về mock khi lỗi.
 
 import { unwrapApiData } from "@/lib/api"
@@ -11,6 +11,7 @@ import type {
   ReservationFilter,
 } from "../types"
 import {
+  mockConfirmRefund,
   mockGetReservation,
   mockListReservations,
   mockRunNoShowScan,
@@ -37,4 +38,16 @@ export async function runNoShowScan(): Promise<NoShowScanResult> {
   if (isMockMode()) return mockRunNoShowScan()
   const body = await apiClient.post("/admin/jobs/no-show-scan")
   return unwrapApiData<NoShowScanResult>(body)
+}
+
+/** POST /api/reservations/{code}/refund: Back-office xác nhận hoàn tiền & lưu ảnh chứng từ (BR-35) */
+export async function confirmRefund(
+  code: string,
+  payload: { evidenceUrl: string; note?: string; staffName?: string }
+): Promise<Reservation> {
+  if (isMockMode()) {
+    return mockConfirmRefund(code, payload)
+  }
+  const body = await apiClient.post(`/reservations/${encodeURIComponent(code)}/refund`, payload)
+  return unwrapApiData<Reservation>(body)
 }

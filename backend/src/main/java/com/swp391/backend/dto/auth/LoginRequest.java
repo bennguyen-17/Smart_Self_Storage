@@ -1,6 +1,7 @@
 package com.swp391.backend.dto.auth;
 
 public class LoginRequest {
+    private String email;
     private String phone;
     private String password;
     private String portalType; // "CUSTOMER" or "INTERNAL"
@@ -11,6 +12,14 @@ public class LoginRequest {
     public LoginRequest(String phone, String password) {
         this.phone = phone;
         this.password = password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPhone() {
