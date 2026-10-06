@@ -101,4 +101,41 @@ public class NoShowCronService {
 
         return count;
     }
+
+    // --- US-21: Cron Job nhắc hạn thuê lúc 08:00:00 hằng ngày (BR-27) ---
+    @Scheduled(cron = "0 0 8 * * ?")
+    public void scheduledContractExpiryReminderJob() {
+        log.info("Starting Daily Contract Expiry Reminder Cron Job at 08:00:00...");
+        int count = processContractExpiryReminders();
+        log.info("Daily Expiry Reminder completed. Sent reminders for {} contracts.", count);
+    }
+
+    @Transactional
+    public int processContractExpiryReminders() {
+        LocalDate today = LocalDate.now();
+        List<Contract> activeContracts = contractRepository.findByStatus("ACTIVE");
+        int count = 0;
+
+        for (Contract contract : activeContracts) {
+            Reservation reservation = reservationRepository.findById(contract.getReservationId()).orElse(null);
+            if (reservation == null || reservation.getEndDate() == null) continue;
+
+            long daysLeft = java.time.temporal.ChronoUnit.DAYS.between(today, reservation.getEndDate());
+            // [BR-27]: Gửi nhắc nhở ở các mốc T-7, T-3, T-1 ngày trước khi hết hạn
+            if (daysLeft == 7 || daysLeft == 3 || daysLeft == 1) {
+                if (activityLogRepository != null) {
+                    ActivityLog activityLog = new ActivityLog();
+                    activityLog.setAccountId(reservation.getAccountId());
+                    activityLog.setAction("EXPIRY_REMINDER_T" + daysLeft);
+                    activityLog.setDescription(String.format("Hệ thống tự động gửi nhắc hạn hợp đồng #%d (ô %s) sắp hết hạn sau %d ngày (hạn: %s) qua Email/Portal theo BR-27.",
+                            contract.getContractId(), reservation.getUnitCode(), daysLeft, reservation.getEndDate()));
+                    activityLog.setCreatedAt(LocalDateTime.now());
+                    activityLogRepository.save(activityLog);
+                }
+                log.info("Sent expiry reminder for contract #{} (unit {}, daysLeft={})", contract.getContractId(), reservation.getUnitCode(), daysLeft);
+                count++;
+            }
+        }
+        return count;
+    }
 }

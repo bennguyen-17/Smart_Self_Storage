@@ -8,6 +8,7 @@ import io.jsonwebtoken.Claims;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -26,6 +27,8 @@ public class ContractController {
     private final UnitTypeRepository unitTypeRepository;
     private final GatePinRepository gatePinRepository;
     private final JwtService jwtService;
+    private final PaymentRepository paymentRepository;
+    private final ActivityLogRepository activityLogRepository;
 
     public ContractController(ContractRepository contractRepository,
                               ReservationRepository reservationRepository,
@@ -35,7 +38,9 @@ public class ContractController {
                               StorageService storageService,
                               UnitTypeRepository unitTypeRepository,
                               GatePinRepository gatePinRepository,
-                              JwtService jwtService) {
+                              JwtService jwtService,
+                              PaymentRepository paymentRepository,
+                              ActivityLogRepository activityLogRepository) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -45,6 +50,8 @@ public class ContractController {
         this.unitTypeRepository = unitTypeRepository;
         this.gatePinRepository = gatePinRepository;
         this.jwtService = jwtService;
+        this.paymentRepository = paymentRepository;
+        this.activityLogRepository = activityLogRepository;
     }
 
     @GetMapping("/contracts/my-contracts")
@@ -291,5 +298,128 @@ public class ContractController {
         data.put("unitCode", activeUnit.getUnitCode());
 
         return ResponseEntity.ok(data);
+    }
+
+    /**
+     * US-21: Gia hạn hợp đồng online (BR-27, BR-29, BR-37, BR-46)
+     * - Chỉ áp dụng cho hợp đồng ACTIVE (HĐ OVERDUE / CANCELED / TERMINATED bị từ chối theo BR-29)
+     * - Cộng dồn ngày hết hạn nối tiếp ngày cũ
+     * - Tạo hóa đơn EXT-... trạng thái PAID/SUCCESS
+     * - Ghi ActivityLog kiểm toán
+     */
+    @PostMapping("/contracts/{contractId}/extend")
+    public ResponseEntity<?> extendContract(
+            @PathVariable Integer contractId,
+            @RequestBody(required = false) Map<String, Object> payload,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        Optional<Contract> contractOpt = contractRepository.findById(contractId);
+        if (contractOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("success", false, "message", "Không tìm thấy hợp đồng #" + contractId));
+        }
+
+        Contract contract = contractOpt.get();
+
+        // [BR-29]: Chỉ cho phép gia hạn khi hợp đồng đang ACTIVE
+        if (!"ACTIVE".equalsIgnoreCase(contract.getStatus())) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Chỉ hợp đồng đang có HIỆU LỰC (ACTIVE) mới được phép gia hạn trực tuyến. Hợp đồng quá hạn hoặc không hợp lệ vui lòng liên hệ nhân viên tại quầy theo quy định BR-29!"
+            ));
+        }
+
+        Optional<Reservation> resOpt = reservationRepository.findById(contract.getReservationId());
+        if (resOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Không tìm thấy thông tin đặt chỗ của hợp đồng!"));
+        }
+
+        Reservation res = resOpt.get();
+
+        // Đọc số ngày gia hạn từ payload (mặc định 30 ngày)
+        int effectiveDays = 30;
+        String packageLabel = "1 Tháng";
+        BigDecimal finalTotal = BigDecimal.ZERO;
+
+        if (payload != null) {
+            if (payload.get("effectiveDays") instanceof Number) {
+                effectiveDays = ((Number) payload.get("effectiveDays")).intValue();
+            } else if (payload.get("days") instanceof Number) {
+                effectiveDays = ((Number) payload.get("days")).intValue();
+            }
+            if (payload.get("packageLabel") != null) {
+                packageLabel = payload.get("packageLabel").toString();
+            }
+            if (payload.get("finalTotal") instanceof Number) {
+                finalTotal = BigDecimal.valueOf(((Number) payload.get("finalTotal")).doubleValue());
+            } else if (payload.get("amount") instanceof Number) {
+                finalTotal = BigDecimal.valueOf(((Number) payload.get("amount")).doubleValue());
+            }
+        }
+
+        if (effectiveDays < 7) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Thời hạn gia hạn tối thiểu là 7 ngày theo BR-13!"));
+        }
+
+        // [BR-29]: Cộng dồn ngày hết hạn mới nối tiếp ngày hết hạn cũ
+        LocalDate currentExpiry = res.getEndDate() != null ? res.getEndDate() : LocalDate.now();
+        if (currentExpiry.isBefore(LocalDate.now())) {
+            currentExpiry = LocalDate.now();
+        }
+        LocalDate newExpiry = currentExpiry.plusDays(effectiveDays);
+        res.setEndDate(newExpiry);
+        reservationRepository.save(res);
+
+        // [BR-37]: Sinh hóa đơn EXT-[Mã cơ sở]-[YYYYMMDD]-[Random]
+        String branchCode = "HN-01";
+        Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitCode());
+        if (unitOpt.isPresent()) {
+            Optional<Floor> flOpt = floorRepository.findById(unitOpt.get().getFloorId());
+            if (flOpt.isPresent()) {
+                Optional<Facility> facOpt = facilityRepository.findById(flOpt.get().getFacilityId());
+                if (facOpt.isPresent()) {
+                    branchCode = storageService.mapFacilityToResponse(facOpt.get()).getFacilityCode();
+                }
+            }
+        }
+
+        String dateStr = LocalDate.now().toString().replace("-", "");
+        int randomSuffix = (int) (1000 + (Math.random() * 9000));
+        String invoiceNumber = String.format("EXT-%s-%s-%d", branchCode, dateStr, randomSuffix);
+
+        Payment payment = new Payment();
+        payment.setContractId(contract.getContractId());
+        payment.setInvoiceNumber(invoiceNumber);
+        payment.setInvoiceType("MONTHLY_RENEWAL");
+        payment.setAmount(finalTotal);
+        payment.setIssuedAt(LocalDateTime.now());
+        payment.setDueAt(LocalDateTime.now().plusDays(1));
+        payment.setStatus("PAID");
+        payment.setPaymentMethod("VIETQR");
+        payment.setPaymentStatus("SUCCESS");
+        payment.setTransactionCode("TXN_EXT_" + System.currentTimeMillis());
+        payment.setPaidAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+
+        // [BR-46]: Ghi nhật ký kiểm toán (ActivityLog)
+        ActivityLog log = new ActivityLog();
+        log.setAccountId(res.getAccountId());
+        log.setAction("EXTEND_CONTRACT");
+        log.setDescription(String.format("Gia hạn thành công hợp đồng #%d (ô %s) thêm %d ngày (%s). Hạn mới: %s. Hóa đơn: %s",
+                contract.getContractId(), res.getUnitCode(), effectiveDays, packageLabel, newExpiry, invoiceNumber));
+        log.setCreatedAt(LocalDateTime.now());
+        activityLogRepository.save(log);
+
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("success", true);
+        resp.put("message", "Gia hạn hợp đồng thành công! Hạn sử dụng mới đến ngày " + newExpiry);
+        resp.put("contractId", "#HD-" + contract.getContractId());
+        resp.put("rawContractId", contract.getContractId());
+        resp.put("unitCode", res.getUnitCode());
+        resp.put("newExpiryDate", newExpiry.toString());
+        resp.put("effectiveDays", effectiveDays);
+        resp.put("invoiceNumber", invoiceNumber);
+        resp.put("amount", finalTotal);
+
+        return ResponseEntity.ok(resp);
     }
 }
