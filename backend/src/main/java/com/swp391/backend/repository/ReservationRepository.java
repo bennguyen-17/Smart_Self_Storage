@@ -13,6 +13,19 @@ import java.util.Optional;
 
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Integer> {
+    Optional<Reservation> findByReservationCode(String reservationCode);
+    boolean existsByReservationCode(String reservationCode);
+
+    @Query("""
+            select reservation
+            from Reservation reservation, StorageUnit unit, Floor floor
+            where reservation.unitCode = unit.unitCode
+              and unit.floorId = floor.floorId
+              and floor.facilityId = :facilityId
+            order by reservation.startDate asc
+            """)
+    List<Reservation> findByFacilityId(@Param("facilityId") Integer facilityId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select reservation from Reservation reservation where reservation.reservationId = :reservationId")
     Optional<Reservation> findByReservationIdForUpdate(@Param("reservationId") Integer reservationId);

@@ -13,6 +13,9 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer reservationId;
 
+    @Column(nullable = false, unique = true, length = 50)
+    private String reservationCode;
+
     @Column(nullable = false)
     private Integer accountId;
 
@@ -64,6 +67,14 @@ public class Reservation {
 
     public Integer getReservationId() {
         return reservationId;
+    }
+
+    public String getReservationCode() {
+        return reservationCode;
+    }
+
+    public void setReservationCode(String reservationCode) {
+        this.reservationCode = reservationCode;
     }
 
     public void setReservationId(Integer reservationId) {
