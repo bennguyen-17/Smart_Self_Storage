@@ -9,6 +9,7 @@ import com.swp391.backend.dto.StaffCheckInResponse;
 import com.swp391.backend.dto.StaffReservationListResponse;
 import com.swp391.backend.dto.StaffReservationLookupResponse;
 import com.swp391.backend.service.StaffReservationService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,7 +34,7 @@ public class StaffReservationController {
         StaffReservationListResponse response = staffReservationService.listReservations();
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
-                : ResponseEntity.badRequest().body(response);
+                : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
     }
 
     @GetMapping("/lookup")
@@ -42,7 +43,7 @@ public class StaffReservationController {
         StaffReservationLookupResponse response = staffReservationService.lookupReservation(reservationCode);
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
-                : ResponseEntity.badRequest().body(response);
+                : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
     }
 
     @PostMapping("/{reservationId}/check-in")
@@ -52,7 +53,7 @@ public class StaffReservationController {
         StaffCheckInResponse response = staffReservationService.checkIn(reservationId, request);
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
-                : ResponseEntity.badRequest().body(response);
+                : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
     }
 
     @PostMapping("/{reservationId}/change-unit")
@@ -62,7 +63,7 @@ public class StaffReservationController {
         StaffChangeUnitResponse response = staffReservationService.changeUnit(reservationId, request.getNewUnitCode());
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
-                : ResponseEntity.badRequest().body(response);
+                : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
     }
 
     @PostMapping("/{reservationId}/cancel")
@@ -72,6 +73,29 @@ public class StaffReservationController {
         StaffCancelReservationResponse response = staffReservationService.cancelReservation(reservationId);
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
-                : ResponseEntity.badRequest().body(response);
+                : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
+    }
+
+    private HttpStatus resolveErrorStatus(String message) {
+        if (message == null) {
+            return HttpStatus.BAD_REQUEST;
+        }
+        String lower = message.toLowerCase();
+
+        if (lower.contains("not found")
+                || lower.contains("does not belong to the staff member's facility")) {
+            return HttpStatus.NOT_FOUND;
+        }
+
+        if (lower.contains("pending_checkin")
+                || lower.contains("not in a changeable status")
+                || lower.contains("not in a cancellable status")
+                || lower.contains("reserved")
+                || lower.contains("available")
+                || lower.contains("status is required")) {
+            return HttpStatus.CONFLICT;
+        }
+
+        return HttpStatus.BAD_REQUEST;
     }
 }
