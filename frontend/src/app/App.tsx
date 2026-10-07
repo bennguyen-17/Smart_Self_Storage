@@ -7,6 +7,7 @@ import InternalLoginPage from "@/pages/InternalLoginPage";
 import CustomerPortal from "@/pages/CustomerPortal";
 import LandingPage from "@/features/landing/pages/LandingPage";
 import ReservationManagementPage from "@/features/reservations/pages/ReservationManagementPage";
+import StaffCheckinPage from "@/features/checkin/pages/StaffCheckinPage";
 import FloorPlanPage from "@/features/floor-plan/pages/FloorPlanPage";
 import { isTokenValid } from "@/lib/apiClient";
 
@@ -40,6 +41,9 @@ function App() {
 
         {/* US-06: Quản lý đơn đặt cọc & No-Show */}
         <Route path="/staff/reservations" element={<ReservationManagementPage />} />
+
+        {/* US-16: Check-in tại quầy (tra cứu mã, đổi ô kho, hủy tại quầy) */}
+        <Route path="/staff/checkin" element={<StaffCheckinPage />} />
 
         {/* US-03: Sơ đồ 2D chọn ô kho */}
         <Route path="/floor-plan" element={<FloorPlanPage />} />

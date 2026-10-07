@@ -3,6 +3,7 @@ import axios from "axios"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Eye, EyeOff, Lock, Phone, UserShield } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
+import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
 import { login, type LockedResponse } from "@/features/auth/api/authApi"
@@ -31,6 +32,7 @@ import { Spinner } from "@/components/ui/spinner"
 
 function InternalLoginForm() {
   const { user, isAuthenticated, signIn } = useAuth()
+  const navigate = useNavigate()
 
   const [serverError, setServerError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -57,6 +59,8 @@ function InternalLoginForm() {
       }
 
       signIn({ token: data.token, user: data.user }, false)
+      // Vào thẳng cổng vận hành (Staff check-in) sau khi đăng nhập nội bộ
+      navigate("/staff/checkin")
     } catch (error) {
       if (!axios.isAxiosError(error)) {
         setServerError("Có lỗi xảy ra. Vui lòng thử lại.")
@@ -105,6 +109,14 @@ function InternalLoginForm() {
       <SignedInPanel
         fullName={user.fullName}
         description="Bạn đang truy cập cổng thông tin nội bộ."
+        action={
+          <Link
+            to="/staff/checkin"
+            className="flex w-full items-center justify-center rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-blue-700"
+          >
+            Vào cổng vận hành (Check-in) →
+          </Link>
+        }
       />
     )
   }
