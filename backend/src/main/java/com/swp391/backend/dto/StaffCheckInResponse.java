@@ -10,7 +10,8 @@ public class StaffCheckInResponse {
     private String contractStatus;
     private String unitStatus;
     private BigDecimal collectedAmount;
-    private BigDecimal remainingAmount;
+    private String gatePin;
+    private BigDecimal remainingDue;
 
     public StaffCheckInResponse() {}
 
@@ -33,6 +34,10 @@ public class StaffCheckInResponse {
     public void setUnitStatus(String unitStatus) { this.unitStatus = unitStatus; }
     public BigDecimal getCollectedAmount() { return collectedAmount; }
     public void setCollectedAmount(BigDecimal collectedAmount) { this.collectedAmount = collectedAmount; }
-    public BigDecimal getRemainingAmount() { return remainingAmount; }
-    public void setRemainingAmount(BigDecimal remainingAmount) { this.remainingAmount = remainingAmount; }
+    public String getGatePin() { return gatePin; }
+    public void setGatePin(String gatePin) { this.gatePin = gatePin; }
+    public BigDecimal getRemainingAmount() { return remainingDue; }
+    public void setRemainingAmount(BigDecimal remainingAmount) { this.remainingDue = remainingAmount; }
+    public BigDecimal getRemainingDue() { return remainingDue; }
+    public void setRemainingDue(BigDecimal remainingDue) { this.remainingDue = remainingDue; }
 }

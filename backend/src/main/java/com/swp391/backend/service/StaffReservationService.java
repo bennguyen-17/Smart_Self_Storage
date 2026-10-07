@@ -1,8 +1,9 @@
 package com.swp391.backend.service;
 
-import com.swp391.backend.dto.ApiResponse;
 import com.swp391.backend.dto.CalculatePriceRequest;
 import com.swp391.backend.dto.CalculatePriceResponse;
+import com.swp391.backend.dto.StaffCancelReservationResponse;
+import com.swp391.backend.dto.StaffChangeUnitResponse;
 import com.swp391.backend.dto.StaffCheckInRequest;
 import com.swp391.backend.dto.StaffCheckInResponse;
 import com.swp391.backend.dto.StaffReservationListItemResponse;
@@ -238,65 +239,65 @@ public class StaffReservationService {
     }
 
     @Transactional
-    public ApiResponse changeUnit(Integer reservationId, String newUnitCode) {
+    public StaffChangeUnitResponse changeUnit(Integer reservationId, String newUnitCode) {
         Integer staffAccountId = getAuthenticatedAccountId();
         if (staffAccountId == null) {
-            return failure("Authenticated staff account was not found in SecurityContext.");
+            return changeUnitFailure("Authenticated staff account was not found in SecurityContext.");
         }
 
         Optional<EmployeeProfile> employee = employeeProfileRepository.findByAccountId(staffAccountId);
         if (employee.isEmpty()) {
-            return failure("Employee profile was not found for the authenticated account.");
+            return changeUnitFailure("Employee profile was not found for the authenticated account.");
         }
         Integer staffFacilityId = employee.get().getFacilityId();
 
         Optional<Reservation> reservationOpt = reservationRepository.findByReservationIdForUpdate(reservationId);
         if (reservationOpt.isEmpty()) {
-            return failure("Reservation was not found.");
+            return changeUnitFailure("Reservation was not found.");
         }
         Reservation reservation = reservationOpt.get();
         if (!isChangeableReservation(reservation)) {
-            return failure("Reservation is not in a changeable status.");
+            return changeUnitFailure("Reservation is not in a changeable status.");
         }
 
         Optional<Contract> contractOpt = contractRepository.findByReservationId(reservation.getReservationId());
         if (contractOpt.isEmpty() || !CONTRACT_PENDING_CHECKIN.equals(contractOpt.get().getStatus())) {
-            return failure("A PENDING_CHECKIN contract is required to change the storage unit.");
+            return changeUnitFailure("A PENDING_CHECKIN contract is required to change the storage unit.");
         }
         Contract contract = contractOpt.get();
 
         String oldUnitCode = reservation.getUnitCode();
         if (newUnitCode == null || newUnitCode.isBlank()) {
-            return failure("New unit code is required.");
+            return changeUnitFailure("New unit code is required.");
         }
         newUnitCode = newUnitCode.trim();
         if (oldUnitCode.equals(newUnitCode)) {
-            return failure("New unit must be different from the current unit.");
+            return changeUnitFailure("New unit must be different from the current unit.");
         }
 
         LockedUnits lockedUnits = lockUnitsInStableOrder(oldUnitCode, newUnitCode);
         if (lockedUnits.oldUnit().isEmpty()) {
-            return failure("Current storage unit was not found.");
+            return changeUnitFailure("Current storage unit was not found.");
         }
         if (lockedUnits.newUnit().isEmpty()) {
-            return failure("New storage unit was not found.");
+            return changeUnitFailure("New storage unit was not found.");
         }
         StorageUnit oldUnit = lockedUnits.oldUnit().get();
         StorageUnit newUnit = lockedUnits.newUnit().get();
 
         if (!belongsToFacility(oldUnit, staffFacilityId) || !belongsToFacility(newUnit, staffFacilityId)) {
-            return failure("Both storage units must belong to the staff member's facility.");
+            return changeUnitFailure("Both storage units must belong to the staff member's facility.");
         }
         if (!"RESERVED".equals(oldUnit.getStatus())) {
-            return failure("Current storage unit must have RESERVED status.");
+            return changeUnitFailure("Current storage unit must have RESERVED status.");
         }
         if (!"AVAILABLE".equals(newUnit.getStatus())) {
-            return failure("New storage unit must have AVAILABLE status.");
+            return changeUnitFailure("New storage unit must have AVAILABLE status.");
         }
 
         List<Payment> depositInvoices = findDepositInvoices(contract.getContractId());
         if (depositInvoices.size() != 1) {
-            return failure("Exactly one DEP or legacy INITIAL_RENTAL invoice is required to recalculate the deposit.");
+            return changeUnitFailure("Exactly one DEP or legacy INITIAL_RENTAL invoice is required to recalculate the deposit.");
         }
         Payment depositInvoice = depositInvoices.get(0);
 
@@ -304,7 +305,7 @@ public class StaffReservationService {
         CalculatePriceResponse newPrice = storageService.calculateRentalPrice(
                 new CalculatePriceRequest(newUnit.getUnitTypeId(), reservation.getRentalType(), duration));
         if (!newPrice.isSuccess()) {
-            return failure("Unable to calculate the new unit price: " + newPrice.getMessage());
+            return changeUnitFailure("Unable to calculate the new unit price: " + newPrice.getMessage());
         }
 
         BigDecimal totalNew = zeroIfNull(newPrice.getFinalRentalAmount()).add(zeroIfNull(newPrice.getDepositAmount()));
@@ -314,7 +315,9 @@ public class StaffReservationService {
         depositInvoice.setAmount(totalNew);
         depositInvoice.setPaidAmount(paid);
         depositInvoice.setRemainingAmount(remaining.max(BigDecimal.ZERO));
-        depositInvoice.setStatus(remaining.signum() > 0 ? "PENDING" : "PAID");
+        depositInvoice.setStatus(remaining.signum() <= 0
+                ? "PAID"
+                : (paid.signum() > 0 ? "PARTIALLY_PAID" : "PENDING"));
         paymentRepository.save(depositInvoice);
 
         BigDecimal refundAmount = BigDecimal.ZERO;
@@ -339,47 +342,48 @@ public class StaffReservationService {
                 "RES " + reservation.getReservationId() + ": old unit " + oldUnitCode
                         + " -> new unit " + newUnit.getUnitCode() + "; " + result + "; result=SUCCESS");
 
-        return new ApiResponse(true, "Storage unit changed. " + result + ".");
+        return new StaffChangeUnitResponse(true, "Storage unit changed. " + result + ".",
+                reservationId, newUnit.getUnitCode(), remaining.max(BigDecimal.ZERO), refundAmount);
     }
 
     @Transactional
-    public ApiResponse cancelReservation(Integer reservationId) {
+    public StaffCancelReservationResponse cancelReservation(Integer reservationId) {
         Integer staffAccountId = getAuthenticatedAccountId();
         if (staffAccountId == null) {
-            return failure("Authenticated staff account was not found in SecurityContext.");
+            return cancelReservationFailure("Authenticated staff account was not found in SecurityContext.");
         }
 
         Optional<EmployeeProfile> employee = employeeProfileRepository.findByAccountId(staffAccountId);
         if (employee.isEmpty()) {
-            return failure("Employee profile was not found for the authenticated account.");
+            return cancelReservationFailure("Employee profile was not found for the authenticated account.");
         }
         Integer staffFacilityId = employee.get().getFacilityId();
 
         Optional<Reservation> reservationOpt = reservationRepository.findByReservationIdForUpdate(reservationId);
         if (reservationOpt.isEmpty()) {
-            return failure("Reservation was not found.");
+            return cancelReservationFailure("Reservation was not found.");
         }
         Reservation reservation = reservationOpt.get();
         if (!isChangeableReservation(reservation)) {
-            return failure("Reservation is not in a cancellable status.");
+            return cancelReservationFailure("Reservation is not in a cancellable status.");
         }
 
         Optional<Contract> contractOpt = contractRepository.findByReservationId(reservation.getReservationId());
         if (contractOpt.isEmpty() || !CONTRACT_PENDING_CHECKIN.equals(contractOpt.get().getStatus())) {
-            return failure("A PENDING_CHECKIN contract is required to cancel the reservation.");
+            return cancelReservationFailure("A PENDING_CHECKIN contract is required to cancel the reservation.");
         }
         Contract contract = contractOpt.get();
 
         Optional<StorageUnit> unitOpt = storageUnitRepository.findByUnitCodeForUpdate(reservation.getUnitCode());
         if (unitOpt.isEmpty()) {
-            return failure("Reservation storage unit was not found.");
+            return cancelReservationFailure("Reservation storage unit was not found.");
         }
         StorageUnit unit = unitOpt.get();
         if (!belongsToFacility(unit, staffFacilityId)) {
-            return failure("Reservation storage unit does not belong to the staff member's facility.");
+            return cancelReservationFailure("Reservation storage unit does not belong to the staff member's facility.");
         }
         if (!"RESERVED".equals(unit.getStatus())) {
-            return failure("Reservation storage unit must have RESERVED status to be released.");
+            return cancelReservationFailure("Reservation storage unit must have RESERVED status to be released.");
         }
 
         List<Payment> depositInvoices = findDepositInvoices(contract.getContractId());
@@ -417,8 +421,9 @@ public class StaffReservationService {
                 "RES " + reservation.getReservationId() + ": refund amount=" + refundAmount
                         + "; penalty amount=" + penaltyAmount + "; result=SUCCESS");
 
-        return new ApiResponse(true,
-                "Reservation cancelled. Refund request=" + refundAmount + ", penalty=" + penaltyAmount + ".");
+        return new StaffCancelReservationResponse(true,
+                "Reservation cancelled. Refund request=" + refundAmount + ", penalty=" + penaltyAmount + ".",
+                reservationId, reservation.getReservationCode(), refundAmount, penaltyAmount);
     }
 
     private LockedUnits lockUnitsInStableOrder(String oldUnitCode, String newUnitCode) {
@@ -564,8 +569,12 @@ public class StaffReservationService {
         return amount == null ? BigDecimal.ZERO : amount;
     }
 
-    private ApiResponse failure(String message) {
-        return new ApiResponse(false, message);
+    private StaffChangeUnitResponse changeUnitFailure(String message) {
+        return new StaffChangeUnitResponse(false, message, null, null, null, null);
+    }
+
+    private StaffCancelReservationResponse cancelReservationFailure(String message) {
+        return new StaffCancelReservationResponse(false, message, null, null, null, null);
     }
 
     private record LockedUnits(Optional<StorageUnit> oldUnit, Optional<StorageUnit> newUnit) {
