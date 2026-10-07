@@ -395,3 +395,137 @@ html.dark .unit-occupied {
 .dark * {
   scrollbar-color: rgba(51, 65, 85, 0.6) transparent;
 }
+
+/* ==========================================================================
+   US-16 STAFF PORTAL — bám sát prototype staff.html (light/dark theo theme app)
+   ========================================================================== */
+.staff-portal {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+html.dark .staff-portal {
+  background-color: #0b1120;
+  color: #f8fafc;
+}
+
+.staff-portal .card-box {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow:
+    0 4px 15px -3px rgba(0, 0, 0, 0.06),
+    0 2px 6px -2px rgba(0, 0, 0, 0.04) !important;
+  color: #0f172a !important;
+}
+html.dark .staff-portal .card-box {
+  background-color: #151e32 !important;
+  border-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+.staff-portal .inner-box {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+html.dark .staff-portal .inner-box {
+  background-color: #0b1120 !important;
+  border-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+.staff-portal .text-title {
+  color: #0f172a !important;
+}
+html.dark .staff-portal .text-title {
+  color: #ffffff !important;
+}
+.staff-portal .text-muted {
+  color: #64748b !important;
+}
+html.dark .staff-portal .text-muted {
+  color: #94a3b8 !important;
+}
+
+.staff-portal header.portal-topbar {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+}
+html.dark .staff-portal header.portal-topbar {
+  background-color: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+.staff-portal table thead tr {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+}
+.staff-portal table thead th {
+  color: #334155 !important;
+  font-weight: 800 !important;
+}
+.staff-portal table tbody tr {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+.staff-portal table tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+html.dark .staff-portal table thead tr {
+  background-color: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom: 1px solid #1e293b !important;
+}
+html.dark .staff-portal table thead th {
+  color: #cbd5e1 !important;
+}
+html.dark .staff-portal table tbody tr {
+  background-color: #151e32 !important;
+  color: #f8fafc !important;
+  border-bottom: 1px solid #1e293b !important;
+}
+html.dark .staff-portal table tbody tr:hover {
+  background-color: #1e293b !important;
+}
+
+.staff-portal .portal-input {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+html.dark .staff-portal .portal-input {
+  background-color: #0b1120 !important;
+  border-color: #1e293b !important;
+  color: #ffffff !important;
+}
+
+.staff-portal .pin-display-box {
+  background-color: #0f172a !important;
+  color: #34d399 !important;
+  border-color: #1e293b !important;
+}
+html.dark .staff-portal .pin-display-box {
+  background-color: #0b1120 !important;
+  color: #34d399 !important;
+  border-color: #1e293b !important;
+}
+
+.staff-portal .keypad-btn {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+.staff-portal .keypad-btn:hover {
+  background-color: #e2e8f0 !important;
+}
+html.dark .staff-portal .keypad-btn {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+html.dark .staff-portal .keypad-btn:hover {
+  background-color: #334155 !important;
+}
