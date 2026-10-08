@@ -42,7 +42,7 @@ public class Payment {
     private LocalDateTime dueAt;
 
     @Column(nullable = false, length = 30)
-    private String status = "PENDING"; // PENDING, PAID, OVERDUE, CANCELLED
+    private String status = "PENDING"; // PENDING, PARTIALLY_PAID, PAID, OVERDUE, CANCELLED
 
     @Column(length = 50)
     private String paymentMethod; // VIETQR, VNPAY, MOMO, BANK_TRANSFER, CASH

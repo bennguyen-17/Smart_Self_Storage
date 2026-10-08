@@ -55,3 +55,7 @@ node_modules/
 # --- [DOCKER] ---
 docker-compose.yml
 
+# Local project references - DO NOT COMMIT
+business-rule/
+prototype/
+

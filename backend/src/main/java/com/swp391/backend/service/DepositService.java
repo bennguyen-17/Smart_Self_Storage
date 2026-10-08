@@ -112,11 +112,15 @@ public class DepositService {
         reservation.setDepositAmount(priceRes.getDepositAmount());
         reservation.setStatus("PENDING");
         reservation.setHoldExpiresAt(LocalDateTime.now().plusMinutes(15)); // Giữ chỗ 15 phút để thanh toán
-        reservation = reservationRepository.save(reservation);
 
         // Sinh mã Reservation Code theo BR-15: [Mã Cơ Sở]-[4 số cuối]-[4 ký tự random]
-        String randomSuffix = String.format("%04X", new Random().nextInt(0xFFFF));
-        String resCode = "RES-" + facilityCode + "-" + String.format("%04d", request.getAccountId() % 10000) + "-" + randomSuffix;
+        String resCode;
+        do {
+            String randomSuffix = String.format("%04X", new Random().nextInt(0xFFFF));
+            resCode = "RES-" + facilityCode + "-" + String.format("%04d", request.getAccountId() % 10000) + "-" + randomSuffix;
+        } while (reservationRepository.existsByReservationCode(resCode));
+        reservation.setReservationCode(resCode);
+        reservation = reservationRepository.save(reservation);
 
         // Tạo Hợp đồng dự thảo với trạng thái PENDING_CHECKIN (BR-21)
         Contract contract = new Contract();
@@ -132,8 +136,13 @@ public class DepositService {
         Payment payment = new Payment();
         payment.setContractId(contract.getContractId());
         payment.setInvoiceNumber(invoiceNumber);
-        payment.setInvoiceType("INITIAL_RENTAL");
-        payment.setAmount(priceRes.getDepositAmount());
+        BigDecimal depositAmount = priceRes.getDepositAmount();
+        BigDecimal initialRentalAmount = priceRes.getFinalRentalAmount();
+        BigDecimal totalAmount = depositAmount.add(initialRentalAmount);
+        payment.setInvoiceType("DEP");
+        payment.setAmount(totalAmount);
+        payment.setPaidAmount(BigDecimal.ZERO);
+        payment.setRemainingAmount(totalAmount);
         payment.setDueAt(LocalDateTime.now().plusMinutes(15));
         payment.setStatus("PENDING");
         payment.setPaymentMethod("VIETQR");
@@ -192,12 +201,38 @@ public class DepositService {
         }
 
         Payment payment = paymentOpt.get();
-        if ("PAID".equalsIgnoreCase(payment.getStatus())) {
+        if ("SUCCESS".equalsIgnoreCase(payment.getPaymentStatus())
+                && ("PARTIALLY_PAID".equalsIgnoreCase(payment.getStatus())
+                || "PAID".equalsIgnoreCase(payment.getStatus()))) {
             return new ApiResponse(true, "Hóa đơn này đã được xác nhận thanh toán trước đó!");
         }
 
+        Optional<Contract> contractOpt = contractRepository.findById(payment.getContractId());
+        if (contractOpt.isEmpty()) {
+            return new ApiResponse(false, "Không tìm thấy hợp đồng liên quan đến hóa đơn.");
+        }
+        Contract contract = contractOpt.get();
+        Optional<Reservation> resOpt = reservationRepository.findById(contract.getReservationId());
+        if (resOpt.isEmpty()) {
+            return new ApiResponse(false, "Không tìm thấy reservation liên quan đến hợp đồng.");
+        }
+        Reservation res = resOpt.get();
+
+        BigDecimal depositAmount = res.getDepositAmount();
+        BigDecimal initialRentalAmount = res.getRentalAmount();
+        BigDecimal totalAmount = depositAmount.add(initialRentalAmount);
+
+        Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitCode());
+        if (unitOpt.isEmpty() || !"HOLD".equalsIgnoreCase(unitOpt.get().getStatus())) {
+            return new ApiResponse(false, "Ô kho không ở trạng thái HOLD để xác nhận reservation.");
+        }
+        StorageUnit unit = unitOpt.get();
+
         // Cập nhật Payment
-        payment.setStatus("PAID");
+        payment.setAmount(totalAmount);
+        payment.setPaidAmount(depositAmount);
+        payment.setRemainingAmount(initialRentalAmount);
+        payment.setStatus("PARTIALLY_PAID");
         payment.setPaymentStatus("SUCCESS");
         payment.setPaymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod() : "VIETQR");
         payment.setTransactionCode(request.getTransactionCode() != null ? request.getTransactionCode() : "TXN_" + System.currentTimeMillis());
@@ -206,29 +241,17 @@ public class DepositService {
         paymentRepository.save(payment);
 
         // Cập nhật Contract sang PENDING_CHECKIN (Chờ nhận kho tại cơ sở theo BR-21)
-        Optional<Contract> contractOpt = contractRepository.findById(payment.getContractId());
-        if (contractOpt.isPresent()) {
-            Contract contract = contractOpt.get();
-            contract.setStatus("PENDING_CHECKIN"); // BR-21: Khách đã cọc 100%, chờ nhận kho
-            contract.setActivatedAt(LocalDateTime.now());
-            contractRepository.save(contract);
+        contract.setStatus("PENDING_CHECKIN"); // BR-21: Khách đã cọc online, chờ nhận kho
+        contract.setActivatedAt(LocalDateTime.now());
+        contractRepository.save(contract);
 
-            // Cập nhật Reservation sang CONFIRMED
-            Optional<Reservation> resOpt = reservationRepository.findById(contract.getReservationId());
-            if (resOpt.isPresent()) {
-                Reservation res = resOpt.get();
-                res.setStatus("CONFIRMED");
-                reservationRepository.save(res);
+        // Cập nhật Reservation sang CONFIRMED
+        res.setStatus("CONFIRMED");
+        reservationRepository.save(res);
 
-                // Cập nhật StorageUnit sang HOLD (Bảo lưu giữ chỗ chờ ngày check-in theo BR-21)
-                Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitCode());
-                if (unitOpt.isPresent()) {
-                    StorageUnit unit = unitOpt.get();
-                    unit.setStatus("HOLD"); // Bảo lưu ô kho chờ check-in
-                    storageUnitRepository.save(unit);
-                }
-            }
-        }
+        // Ô kho chuyển từ HOLD sang RESERVED sau khi cọc online thành công.
+        unit.setStatus("RESERVED");
+        storageUnitRepository.save(unit);
 
         return new ApiResponse(true, "Xác nhận nộp cọc thành công! Hợp đồng ở trạng thái PENDING_CHECKIN và ô kho đã được bảo lưu giữ chỗ.");
     }
@@ -244,7 +267,9 @@ public class DepositService {
             return new ApiResponse(false, "PENDING");
         }
         Payment p = paymentOpt.get();
-        boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus());
+        boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus())
+                || ("PARTIALLY_PAID".equalsIgnoreCase(p.getStatus())
+                && "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()));
         return new ApiResponse(true, isPaid ? "PAID" : "PENDING");
     }
 }
