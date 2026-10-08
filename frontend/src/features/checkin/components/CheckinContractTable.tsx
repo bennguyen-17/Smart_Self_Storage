@@ -1,32 +1,32 @@
-import { EyeIcon, UserCheckIcon, InboxIcon } from "lucide-react"
+import { EyeIcon, InboxIcon, UserCheckIcon } from "lucide-react"
 import { cn } from "cn"
 import { toast } from "sonner"
 
-import type { CheckinContract, ContractStatus } from "../types"
+import type { StaffReservationItem } from "../types"
 
 interface CheckinContractTableProps {
-  rows: CheckinContract[] | undefined
+  rows: StaffReservationItem[] | undefined
   isLoading: boolean
   error: string | undefined
   onRetry: () => void
-  onOpenDetail: (contract: CheckinContract) => void
-  onCheckin: (contract: CheckinContract) => void
+  onOpenDetail: (item: StaffReservationItem) => void
+  onCheckin: (item: StaffReservationItem) => void
 }
 
-const CODE_COLOR: Record<ContractStatus, string> = {
+const CODE_COLOR: Record<string, string> = {
   PENDING_CHECKIN: "text-blue-600",
   ACTIVE: "text-emerald-600",
   OVERDUE: "text-rose-600",
   CANCELED: "text-slate-500",
 }
 
-function subNote(contract: CheckinContract): string | null {
-  if (contract.status === "OVERDUE") return "Quá hạn 3 ngày"
-  if (contract.status === "CANCELED") return "Đã hoàn tiền cọc"
+function subNote(item: StaffReservationItem): string | null {
+  if (item.contractStatus === "OVERDUE") return "Quá hạn"
+  if (item.contractStatus === "CANCELED") return "Đã hủy đơn"
   return null
 }
 
-/** Bảng hợp đồng — bám prototype staff.html */
+/** Bảng hợp đồng — bám prototype staff.html, dữ liệu theo DTO BE-16 */
 function CheckinContractTable({
   rows,
   isLoading,
@@ -79,66 +79,67 @@ function CheckinContractTable({
             <tr>
               <td colSpan={5} className="px-4 py-12 text-center">
                 <InboxIcon className="mx-auto mb-2 size-8 text-muted" />
-                <p className="font-medium text-muted">
-                  Không có hợp đồng nào
-                </p>
+                <p className="font-medium text-muted">Không có hợp đồng nào</p>
               </td>
             </tr>
           )}
 
           {!isLoading &&
-            rows?.map((contract) => (
+            rows?.map((item) => (
               <tr
-                key={contract.code}
+                key={item.reservationId}
                 className="transition-colors"
-                data-status={contract.status}
+                data-status={item.contractStatus ?? ""}
               >
                 <td className="px-4 py-3.5 align-middle">
                   <span
                     className={cn(
                       "block font-mono font-bold",
-                      CODE_COLOR[contract.status]
+                      CODE_COLOR[item.contractStatus ?? ""] ?? "text-slate-600"
                     )}
                   >
-                    {contract.code}
+                    {item.reservationCode}
                   </span>
-                  {subNote(contract) && (
+                  {subNote(item) && (
                     <span
                       className={cn(
                         "block text-[11px] font-bold",
-                        contract.status === "OVERDUE"
+                        item.contractStatus === "OVERDUE"
                           ? "text-rose-600"
                           : "text-muted"
                       )}
                     >
-                      {subNote(contract)}
+                      {subNote(item)}
                     </span>
                   )}
                 </td>
 
                 <td className="px-4 py-3.5 align-middle">
                   <div className="text-sm font-extrabold text-title">
-                    {contract.customerName}
+                    {item.customerName ?? "—"}
+                  </div>
+                  <div className="text-[11px] text-muted">
+                    {item.customerPhone ?? ""}
                   </div>
                 </td>
 
                 <td className="px-4 py-3.5 align-middle">
                   <span className="block font-bold text-blue-600">
-                    Kho {contract.unitCode}
+                    Kho {item.unitCode ?? "—"}
                   </span>
                   <span className="block text-[11px] text-muted">
-                    {contract.floorName} • {contract.sizeLabel}
+                    {item.floorName ?? ""}
                   </span>
                 </td>
 
                 <td className="px-4 py-3.5 align-middle">
-                  <StatusAction contract={contract} onCheckin={onCheckin} />
+                  <StatusAction item={item} onCheckin={onCheckin} />
                 </td>
 
                 <td className="px-4 py-3.5 text-center align-middle">
                   <button
                     type="button"
-                    onClick={() => onOpenDetail(contract)}
+                    onClick={() => onOpenDetail(item)}
                     className="mx-auto flex cursor-pointer items-center space-x-1 rounded-xl bg-slate-200 px-3 py-1.5 text-[11px] font-bold text-slate-700 transition hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-200"
                   >
                     <EyeIcon className="size-3.5" />
@@ -154,17 +155,17 @@ function CheckinContractTable({
 }
 
 function StatusAction({
-  contract,
+  item,
   onCheckin,
 }: {
-  contract: CheckinContract
-  onCheckin: (contract: CheckinContract) => void
+  item: StaffReservationItem
+  onCheckin: (item: StaffReservationItem) => void
 }) {
-  if (contract.status === "PENDING_CHECKIN") {
+  if (item.contractStatus === "PENDING_CHECKIN") {
     return (
       <button
         type="button"
-        onClick={() => onCheckin(contract)}
+        onClick={() => onCheckin(item)}
         className="flex w-36 cursor-pointer items-center justify-center space-x-1.5 rounded-xl bg-blue-600 px-3 py-2 text-[11px] font-extrabold whitespace-nowrap text-white shadow-sm transition hover:bg-blue-700"
       >
         <UserCheckIcon className="size-3.5" />
@@ -173,7 +174,7 @@ function StatusAction({
     )
   }
 
-  if (contract.status === "ACTIVE") {
+  if (item.contractStatus === "ACTIVE") {
     return (
       <button
         type="button"
@@ -184,23 +185,22 @@ function StatusAction({
         }
         className="flex w-36 cursor-pointer items-center justify-center space-x-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-[11px] font-extrabold whitespace-nowrap text-white shadow-sm transition hover:bg-emerald-700"
       >
-        <UserCheckIcon className="size-3.5" />
         <span>Xác nhận trả kho</span>
       </button>
     )
   }
 
-  if (contract.status === "OVERDUE") {
+  if (item.contractStatus === "OVERDUE") {
     return (
-      <span className="flex w-36 items-center justify-center space-x-1.5 rounded-xl border border-rose-300 bg-rose-100 px-3 py-2 text-[11px] font-extrabold whitespace-nowrap text-rose-800 shadow-sm dark:border-rose-800 dark:bg-rose-950/80 dark:text-rose-300">
-        <span>QUÁ HẠN</span>
+      <span className="flex w-36 items-center justify-center rounded-xl border border-rose-300 bg-rose-100 px-3 py-2 text-[11px] font-extrabold whitespace-nowrap text-rose-800 shadow-sm dark:border-rose-800 dark:bg-rose-950/80 dark:text-rose-300">
+        QUÁ HẠN
       </span>
     )
   }
 
   return (
-    <span className="flex w-36 items-center justify-center space-x-1.5 rounded-xl border border-slate-300 bg-slate-200 px-3 py-2 text-[11px] font-extrabold whitespace-nowrap text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-      <span>ĐÃ HỦY ĐƠN</span>
+    <span className="flex w-36 items-center justify-center rounded-xl border border-slate-300 bg-slate-200 px-3 py-2 text-[11px] font-extrabold whitespace-nowrap text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+      ĐÃ HỦY ĐƠN
     </span>
   )
 }

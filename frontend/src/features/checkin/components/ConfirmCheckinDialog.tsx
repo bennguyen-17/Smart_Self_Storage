@@ -2,18 +2,18 @@ import { useState } from "react"
 import { KeyRoundIcon } from "lucide-react"
 import { toast } from "sonner"
 
-import { getErrorMessage } from "@/lib/api"
 import { formatVnd } from "@/lib/format"
 
-import { confirmCheckin } from "../api/checkinApi"
+import { checkinErrorMessage, confirmCheckin } from "../api/checkinApi"
 import { CHECKIN_HOURS, isWithinCheckinHours } from "../constants"
-import type { CheckinContract } from "../types"
+import type { StaffCheckInResponse } from "../types"
+import type { CheckinTarget } from "./StaffCustomerDetailModal"
 import ProtoModal from "./ProtoModal"
 
 interface ConfirmCheckinDialogProps {
-  contract: CheckinContract | null
+  contract: CheckinTarget | null
   onClose: () => void
-  onConfirmed: (updated: CheckinContract) => void
+  onConfirmed: (response: StaffCheckInResponse) => void
 }
 
 function ConfirmCheckinDialog({
@@ -26,7 +26,11 @@ function ConfirmCheckinDialog({
       open={contract !== null}
       onClose={onClose}
       title="Xác nhận Check-in & Bàn giao kho"
-      subtitle={contract ? `${contract.code} · ${contract.customerName}` : undefined}
+      subtitle={
+        contract
+          ? `${contract.reservationCode} · ${contract.customerName ?? ""}`
+          : undefined
+      }
       icon={<KeyRoundIcon className="size-5" />}
     >
       {contract && (
@@ -45,30 +49,35 @@ function Body({
   onClose,
   onConfirmed,
 }: {
-  contract: CheckinContract
+  contract: CheckinTarget
   onClose: () => void
-  onConfirmed: (updated: CheckinContract) => void
+  onConfirmed: (response: StaffCheckInResponse) => void
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "BANK_TRANSFER">(
+    "CASH"
+  )
 
-  const collectAmount = contract.remainingAmount
+  const collectAmount = contract.depRemainingAmount ?? 0
+  const canCollect = collectAmount > 0
   const outsideHours = !isWithinCheckinHours()
 
   async function handleConfirm() {
+    if (!canCollect) return
     setIsSubmitting(true)
     setErrorMsg(null)
     try {
-      const updated = await confirmCheckin(contract.code, {
+      const response = await confirmCheckin(contract.reservationId, {
         collectedAmount: collectAmount,
-        paymentMethod: "CASH",
+        paymentMethod,
       })
       toast.success("Check-in thành công", {
-        description: `Hợp đồng ${updated.code} đã chuyển sang ĐANG THUÊ. PIN cổng: ${updated.gatePin}`,
+        description: `Hợp đồng ${response.reservationCode ?? contract.reservationCode} đã chuyển sang ĐANG THUÊ.`,
       })
-      onConfirmed(updated)
+      onConfirmed(response)
     } catch (error) {
-      setErrorMsg(getErrorMessage(error))
+      setErrorMsg(checkinErrorMessage(error))
     } finally {
       setIsSubmitting(false)
     }
@@ -77,27 +86,39 @@ function Body({
   return (
     <>
       <div className="inner-box space-y-2 rounded-2xl border p-3.5 text-xs">
-        <Row
-          label="Tiền thuê lần đầu (thu tại quầy)"
-          value={formatVnd(contract.rentalAmount)}
-        />
-        <Row
-          label="Tiền cọc đã thu (online)"
-          value={formatVnd(contract.paidAmount)}
-        />
+        <Row label="Tổng tiền (DEP)" value={formatVnd(contract.depAmount)} />
+        <Row label="Đã thu" value={formatVnd(contract.depPaidAmount)} />
         <Row
           label="Tổng cần thu tại quầy"
           value={formatVnd(collectAmount)}
           strong
         />
-        <Row label="Hình thức thanh toán" value="Tiền mặt (CASH)" />
+        <div className="flex items-center justify-between gap-4 border-t border-slate-200 pt-1.5 dark:border-slate-800">
+          <span className="text-muted">Hình thức thanh toán</span>
+          <select
+            value={paymentMethod}
+            onChange={(event) =>
+              setPaymentMethod(event.target.value as "CASH" | "BANK_TRANSFER")
+            }
+            className="portal-input h-8 rounded-lg border px-2.5 text-xs outline-none"
+          >
+            <option value="CASH">Tiền mặt (CASH)</option>
+            <option value="BANK_TRANSFER">Chuyển khoản (BANK_TRANSFER)</option>
+          </select>
+        </div>
       </div>
+
+      {!canCollect && (
+        <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-xs font-semibold text-rose-700 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-300">
+          Hợp đồng không có khoản nào cần thu (DEP remaining ≤ 0) → không thể
+          check-in.
+        </div>
+      )}
 
       {outsideHours && (
         <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
           <b>Ngoài khung giờ Check-in (BR-19):</b> khung giờ bàn giao chuẩn là{" "}
-          {CHECKIN_HOURS.start}:00 – {CHECKIN_HOURS.end}:00 hằng ngày. Vẫn có thể
-          xác nhận nếu có thỏa thuận riêng với khách.
+          {CHECKIN_HOURS.start}:00 – {CHECKIN_HOURS.end}:00 hằng ngày.
         </div>
       )}
 
@@ -119,7 +140,7 @@ function Body({
         <button
           type="button"
           onClick={handleConfirm}
-          disabled={isSubmitting}
+          disabled={isSubmitting || !canCollect}
           className="flex flex-1 cursor-pointer items-center justify-center space-x-1.5 rounded-xl bg-blue-600 py-3 text-xs font-extrabold text-white shadow-md transition hover:bg-blue-700 disabled:opacity-60"
         >
           <KeyRoundIcon className="size-4" />

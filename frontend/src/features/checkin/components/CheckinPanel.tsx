@@ -1,25 +1,24 @@
 import { useState } from "react"
 import { useSearchParams } from "react-router-dom"
-import { IdCardIcon, SearchIcon } from "lucide-react"
+import { IdCardIcon, RotateCwIcon, SearchIcon } from "lucide-react"
 import { cn } from "cn"
 
 import { useAsyncData } from "@/hooks/useAsyncData"
-import { getErrorMessage } from "@/lib/api"
 
-import { listCheckinContracts, lookupContract } from "../api/checkinApi"
 import {
-  CHECKIN_TABS,
-  PAGE_SIZE,
-  findCheckinTab,
-  type CheckinTabKey,
-} from "../constants"
-import type { CheckinContract } from "../types"
-import { CheckinApiError } from "../types"
+  checkinErrorMessage,
+  listCheckinContracts,
+  lookupContract,
+} from "../api/checkinApi"
+import { CHECKIN_TABS, findCheckinTab, type CheckinTabKey } from "../constants"
+import type { StaffReservationItem } from "../types"
 import CheckinContractTable from "./CheckinContractTable"
 import ChangeUnitDialog from "./ChangeUnitDialog"
 import ConfirmCheckinDialog from "./ConfirmCheckinDialog"
 import CounterCancelDialog from "./CounterCancelDialog"
-import StaffCustomerDetailModal from "./StaffCustomerDetailModal"
+import StaffCustomerDetailModal, {
+  type CheckinTarget,
+} from "./StaffCustomerDetailModal"
 
 const TAB_COLORS: Record<CheckinTabKey, string> = {
   all: "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300",
@@ -33,37 +32,46 @@ const TAB_COLORS: Record<CheckinTabKey, string> = {
     "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300",
 }
 
+const STATUS_LABEL: Record<string, string> = {
+  PENDING_CHECKIN: "CHỜ CHECK-IN",
+  ACTIVE: "ĐANG THUÊ",
+  OVERDUE: "QUÁ HẠN",
+  CANCELED: "ĐÃ HỦY",
+}
+
+function matches(item: StaffReservationItem, keyword: string): boolean {
+  if (!keyword) return true
+  return (
+    (item.reservationCode ?? "").toLowerCase().includes(keyword) ||
+    (item.customerName ?? "").toLowerCase().includes(keyword) ||
+    (item.customerPhone ?? "").includes(keyword) ||
+    (item.unitCode ?? "").toLowerCase().includes(keyword)
+  )
+}
+
 /** Tab "Dịch vụ khách hàng" — tra cứu mã, check-in, đổi ô, hủy tại quầy (US-16) */
 function CheckinPanel() {
   const [searchParams, setSearchParams] = useSearchParams()
   const tab = findCheckinTab(searchParams.get("tab"))
 
-  const [reloadCount, setReloadCount] = useState(0)
+  const [reload, setReload] = useState(0)
   const [query, setQuery] = useState("")
   const [lookupError, setLookupError] = useState<string | null>(null)
   const [isLookingUp, setIsLookingUp] = useState(false)
 
-  const [detailContract, setDetailContract] = useState<CheckinContract | null>(null)
-  const [checkinContract, setCheckinContract] = useState<CheckinContract | null>(null)
-  const [changeContract, setChangeContract] = useState<CheckinContract | null>(null)
-  const [cancelContract, setCancelContract] = useState<CheckinContract | null>(null)
+  const [detailContract, setDetailContract] = useState<CheckinTarget | null>(null)
+  const [checkinContract, setCheckinContract] = useState<CheckinTarget | null>(null)
+  const [changeContract, setChangeContract] = useState<CheckinTarget | null>(null)
+  const [cancelContract, setCancelContract] = useState<CheckinTarget | null>(null)
 
-  const { data, error, isLoading } = useAsyncData(
-    `${tab.key}|${reloadCount}`,
-    () =>
-      listCheckinContracts({ status: tab.status, page: 0, size: PAGE_SIZE })
+  const { data, error, isLoading } = useAsyncData(`checkin:${tab.key}|${reload}`, () =>
+    listCheckinContracts()
   )
 
   const keyword = query.trim().toLowerCase()
-  const rows = data?.content.filter((c) => {
-    if (!keyword) return true
-    return (
-      c.code.toLowerCase().includes(keyword) ||
-      c.customerName.toLowerCase().includes(keyword) ||
-      c.customerPhone.includes(keyword) ||
-      c.unitCode.toLowerCase().includes(keyword)
-    )
-  })
+  const rows = (data ?? [])
+    .filter((item) => !tab.contractStatus || item.contractStatus === tab.contractStatus)
+    .filter((item) => matches(item, keyword))
 
   async function handleLookup() {
     const code = query.trim()
@@ -72,18 +80,23 @@ function CheckinPanel() {
     setLookupError(null)
     try {
       const found = await lookupContract(code)
+      if (found.contractStatus !== "PENDING_CHECKIN") {
+        const label = STATUS_LABEL[found.contractStatus ?? ""] ?? found.contractStatus
+        setLookupError(
+          `Hợp đồng ${found.reservationCode} đang ở trạng thái ${label} — không thể check-in.`
+        )
+        return
+      }
       setDetailContract(found)
     } catch (err) {
-      setLookupError(
-        err instanceof CheckinApiError ? err.message : getErrorMessage(err)
-      )
+      setLookupError(checkinErrorMessage(err))
     } finally {
       setIsLookingUp(false)
     }
   }
 
   function refresh() {
-    setReloadCount((n) => n + 1)
+    setReload((n) => n + 1)
   }
 
   return (
@@ -97,7 +110,6 @@ function CheckinPanel() {
         </h3>
       </div>
 
-      {/* SEARCH & FILTER TOOLBAR */}
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div className="flex max-w-xl flex-1 space-x-2">
           <div className="relative flex-1">
@@ -109,7 +121,7 @@ function CheckinPanel() {
               onKeyDown={(event) => {
                 if (event.key === "Enter") handleLookup()
               }}
-              placeholder="Tìm theo Mã HĐ, Tên khách hàng, SĐT hoặc Mã kho..."
+              placeholder="Nhập Mã Đặt Chỗ, VD: RES-CG-8899-K7X2"
               className="inner-box w-full rounded-xl border px-3.5 py-2.5 pl-9 font-mono text-xs font-bold text-title outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -121,9 +133,16 @@ function CheckinPanel() {
           >
             {isLookingUp ? "Đang tìm..." : "Tra cứu"}
           </button>
+          <button
+            type="button"
+            onClick={refresh}
+            title="Tải lại danh sách"
+            className="shrink-0 cursor-pointer rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-600 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          >
+            <RotateCwIcon className={cn("size-4", isLoading && "animate-spin")} />
+          </button>
         </div>
 
-        {/* FILTER STATUS PILLS */}
         <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 text-[11px] font-extrabold sm:pb-0">
           {CHECKIN_TABS.map((t) => {
             const active = t.key === tab.key
