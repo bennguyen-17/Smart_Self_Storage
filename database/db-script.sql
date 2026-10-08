@@ -138,7 +138,7 @@ CREATE TABLE StorageUnit (
     unitCode VARCHAR(50) PRIMARY KEY,
     floorId INT NOT NULL,
     unitTypeId INT NOT NULL,
-    status ENUM('AVAILABLE', 'HOLD', 'RENTED', 'MAINTENANCE', 'OVERDUE') NOT NULL DEFAULT 'AVAILABLE',
+    status ENUM('AVAILABLE', 'HOLD', 'RESERVED', 'RENTED', 'MAINTENANCE', 'OVERDUE') NOT NULL DEFAULT 'AVAILABLE',
     CONSTRAINT fk_unit_floor FOREIGN KEY (floorId) REFERENCES Floor (floorId) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_unit_type FOREIGN KEY (unitTypeId) REFERENCES UnitType (unitTypeId) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -220,6 +220,7 @@ CREATE TABLE StaffShift (
 DROP TABLE IF EXISTS Reservation;
 CREATE TABLE Reservation (
     reservationId INT AUTO_INCREMENT PRIMARY KEY,
+    reservationCode VARCHAR(50) NOT NULL UNIQUE,
     accountId INT NOT NULL,
     unitCode VARCHAR(50) NOT NULL,
     startDate DATE NOT NULL,
@@ -265,7 +266,7 @@ CREATE TABLE Payment (
     pdfUrl VARCHAR(255),
     issuedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     dueAt DATETIME NOT NULL,
-    status ENUM('PENDING', 'PAID', 'OVERDUE', 'CANCELLED') NOT NULL DEFAULT 'PENDING',
+    status ENUM('PENDING', 'PARTIALLY_PAID', 'PAID', 'OVERDUE', 'CANCELLED') NOT NULL DEFAULT 'PENDING',
     paymentMethod ENUM('VNPAY', 'MOMO', 'BANK_TRANSFER', 'CASH', 'VIETQR'),
     transactionCode VARCHAR(100),
     paymentStatus ENUM('PENDING', 'SUCCESS', 'FAILED') NOT NULL DEFAULT 'PENDING',
@@ -535,10 +536,10 @@ INSERT INTO FeeItem (feeItemId, feeName, unitPrice, description, status) VALUES
 (5, 'Phí đền bù hư hỏng cửa cuốn', 1200000.00, 'Hư hỏng nan cửa cuốn, kẹt ray do ngoại lực', 'ACTIVE');
 
 -- 15. Reservations mẫu
-INSERT INTO Reservation (reservationId, accountId, unitCode, startDate, endDate, rentalType, rentalAmount, depositAmount, status, createdAt, holdExpiresAt) VALUES
-(1, 7, 'HN01-G-XL02', '2026-09-01', '2026-10-01', 'MONTHLY', 7500000.00, 7500000.00, 'CONFIRMED', '2026-08-30 09:00:00', NULL),
-(2, 8, 'HN01-F1-M01', '2026-09-15', '2026-12-15', 'MONTHLY', 6000000.00, 2000000.00, 'CONFIRMED', '2026-09-14 14:30:00', NULL),
-(3, 7, 'HN01-F1-S02', '2026-09-25', '2026-09-30', 'DAILY', 250000.00, 800000.00, 'PENDING', '2026-09-25 10:00:00', '2026-09-25 10:30:00');
+INSERT INTO Reservation (reservationId, reservationCode, accountId, unitCode, startDate, endDate, rentalType, rentalAmount, depositAmount, status, createdAt, holdExpiresAt) VALUES
+(1, 'RES-LEGACY-000001', 7, 'HN01-G-XL02', '2026-09-01', '2026-10-01', 'MONTHLY', 7500000.00, 7500000.00, 'CONFIRMED', '2026-08-30 09:00:00', NULL),
+(2, 'RES-LEGACY-000002', 8, 'HN01-F1-M01', '2026-09-15', '2026-12-15', 'MONTHLY', 6000000.00, 2000000.00, 'CONFIRMED', '2026-09-14 14:30:00', NULL),
+(3, 'RES-LEGACY-000003', 7, 'HN01-F1-S02', '2026-09-25', '2026-09-30', 'DAILY', 250000.00, 800000.00, 'PENDING', '2026-09-25 10:00:00', '2026-09-25 10:30:00');
 
 -- 16. Contracts mẫu
 INSERT INTO Contract (contractId, reservationId, pdfUrl, activatedAt, terminatedAt, status) VALUES
