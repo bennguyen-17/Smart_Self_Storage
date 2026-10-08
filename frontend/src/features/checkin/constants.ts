@@ -15,10 +15,10 @@ export interface CheckinTab {
 
 export const CHECKIN_TABS: CheckinTab[] = [
   { key: "all", label: "Tất cả" },
-  { key: "pending", label: "Chờ Check-in", contractStatus: "PENDING_CHECKIN" },
-  { key: "active", label: "Đang thuê", contractStatus: "ACTIVE" },
-  { key: "overdue", label: "Quá hạn", contractStatus: "OVERDUE" },
-  { key: "canceled", label: "Đã hủy", contractStatus: "CANCELED" },
+  { key: "pending", label: "⌛ Chờ Check-in", contractStatus: "PENDING_CHECKIN" },
+  { key: "active", label: "🟢 Đang thuê", contractStatus: "ACTIVE" },
+  { key: "overdue", label: "🚨 Quá hạn", contractStatus: "OVERDUE" },
+  { key: "canceled", label: "❌ Đã hủy", contractStatus: "CANCELED" },
 ]
 
 export function findCheckinTab(key: string | null): CheckinTab {

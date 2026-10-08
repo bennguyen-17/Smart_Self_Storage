@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useSearchParams } from "react-router-dom"
-import { IdCardIcon, RotateCwIcon, SearchIcon } from "lucide-react"
+import { RotateCwIcon, SearchIcon, UsersIcon } from "lucide-react"
 import { cn } from "cn"
 
 import { useAsyncData } from "@/hooks/useAsyncData"
@@ -21,7 +21,7 @@ import StaffCustomerDetailModal, {
 } from "./StaffCustomerDetailModal"
 
 const TAB_COLORS: Record<CheckinTabKey, string> = {
-  all: "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300",
+  all: "bg-blue-600 text-white",
   pending:
     "bg-amber-100 text-amber-900 hover:bg-amber-200 dark:bg-amber-950 dark:text-amber-300",
   active:
@@ -49,7 +49,7 @@ function matches(item: StaffReservationItem, keyword: string): boolean {
   )
 }
 
-/** Tab "Dịch vụ khách hàng" — tra cứu mã, check-in, đổi ô, hủy tại quầy (US-16) */
+/** TAB 1: Dịch vụ khách hàng & hợp đồng — tra cứu, check-in, đổi ô, hủy (US-16) */
 function CheckinPanel() {
   const [searchParams, setSearchParams] = useSearchParams()
   const tab = findCheckinTab(searchParams.get("tab"))
@@ -64,14 +64,21 @@ function CheckinPanel() {
   const [changeContract, setChangeContract] = useState<CheckinTarget | null>(null)
   const [cancelContract, setCancelContract] = useState<CheckinTarget | null>(null)
 
-  const { data, error, isLoading } = useAsyncData(`checkin:${tab.key}|${reload}`, () =>
+  const { data, error, isLoading } = useAsyncData(`checkin:${reload}`, () =>
     listCheckinContracts()
   )
 
+  const all = data ?? []
   const keyword = query.trim().toLowerCase()
-  const rows = (data ?? [])
+  const rows = all
     .filter((item) => !tab.contractStatus || item.contractStatus === tab.contractStatus)
     .filter((item) => matches(item, keyword))
+
+  function countOf(status?: string): number {
+    return status
+      ? all.filter((item) => item.contractStatus === status).length
+      : all.length
+  }
 
   async function handleLookup() {
     const code = query.trim()
@@ -101,15 +108,25 @@ function CheckinPanel() {
 
   return (
     <div className="card-box space-y-5 rounded-3xl border p-5 shadow-xl sm:p-6">
-      <div className="border-b pb-4">
-        <h3 className="flex items-center space-x-2 text-sm font-extrabold text-title sm:text-base">
-          <IdCardIcon className="size-4 text-blue-600" />
-          <span>
-            QUẢN LÝ DANH SÁCH KHÁCH HÀNG & HỖ TRỢ CHECK-IN BÀN GIAO KHO
-          </span>
-        </h3>
+      <div className="flex flex-col items-start justify-between gap-3 border-b pb-4 sm:flex-row sm:items-center">
+        <div>
+          <h3 className="flex items-center space-x-2 text-sm font-extrabold text-title sm:text-base">
+            <UsersIcon className="size-4 text-blue-600" />
+            <span>
+              QUẢN LÝ DANH SÁCH KHÁCH HÀNG & HỖ TRỢ CHECK-IN BÀN GIAO KHO
+            </span>
+          </h3>
+          <p className="mt-0.5 text-[11px] text-muted">
+            Kiểm tra thông tin đặt chỗ khách hàng, lọc hợp đồng cần check-in và
+            thực hiện bàn giao kho lưu trữ, chìa khóa vật lý, thẻ từ hoặc mã PIN.
+          </p>
+        </div>
+        <span className="rounded-full border border-blue-300 bg-blue-100 px-3 py-1 text-[10px] font-extrabold text-blue-800 dark:border-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+          BR-11, BR-16, BR-18, BR-26
+        </span>
       </div>
 
+      {/* SEARCH & FILTER TOOLBAR */}
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div className="flex max-w-xl flex-1 space-x-2">
           <div className="relative flex-1">
@@ -121,7 +138,7 @@ function CheckinPanel() {
               onKeyDown={(event) => {
                 if (event.key === "Enter") handleLookup()
               }}
-              placeholder="Nhập Mã Đặt Chỗ, VD: RES-CG-8899-K7X2"
+              placeholder="Tìm theo Mã HĐ, Tên khách hàng, SĐT hoặc Mã kho..."
               className="inner-box w-full rounded-xl border px-3.5 py-2.5 pl-9 font-mono text-xs font-bold text-title outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -139,7 +156,9 @@ function CheckinPanel() {
             title="Tải lại danh sách"
             className="shrink-0 cursor-pointer rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-600 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
           >
-            <RotateCwIcon className={cn("size-4", isLoading && "animate-spin")} />
+            <RotateCwIcon
+              className={cn("size-4", isLoading && "animate-spin")}
+            />
           </button>
         </div>
 
@@ -154,12 +173,11 @@ function CheckinPanel() {
                 onClick={() => setSearchParams({ tab: t.key })}
                 className={cn(
                   "cursor-pointer rounded-xl border px-3 py-1.5 whitespace-nowrap shadow-sm transition",
-                  active
-                    ? "border-blue-600 bg-blue-600 text-white"
-                    : TAB_COLORS[t.key]
+                  TAB_COLORS[t.key],
+                  active && "ring-2 ring-blue-500/40"
                 )}
               >
-                {t.label}
+                {t.label} ({countOf(t.contractStatus)})
               </button>
             )
           })}
