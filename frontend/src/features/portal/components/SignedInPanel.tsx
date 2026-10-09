@@ -1,4 +1,5 @@
-﻿import { CheckCircle2 } from "lucide-react"
+﻿import type { ReactNode } from "react"
+import { CheckCircle2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/AuthContext"
@@ -6,9 +7,11 @@ import { useAuth } from "@/context/AuthContext"
 interface SignedInPanelProps {
   fullName: string
   description: string
+  /** Hành động điều hướng tuỳ biến (VD: vào cổng vận hành) */
+  action?: ReactNode
 }
 
-function SignedInPanel({ fullName, description }: SignedInPanelProps) {
+function SignedInPanel({ fullName, description, action }: SignedInPanelProps) {
   const { signOut } = useAuth()
 
   return (
@@ -25,7 +28,9 @@ function SignedInPanel({ fullName, description }: SignedInPanelProps) {
 
       <p className="mt-1 text-sm text-muted-foreground">{description}</p>
 
-      <Button variant="outline" className="mt-6" onClick={signOut}>
+      {action && <div className="mt-6 w-full">{action}</div>}
+
+      <Button variant="outline" className="mt-3" onClick={signOut}>
         Đăng xuất
       </Button>
     </div>
