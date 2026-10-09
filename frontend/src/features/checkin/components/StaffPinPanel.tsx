@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react"
-import { ClockIcon, RefreshCwIcon, ShieldCheckIcon } from "lucide-react"
+import {
+  HistoryIcon,
+  HourglassIcon,
+  RefreshCwIcon,
+  ShieldCheckIcon,
+} from "lucide-react"
 
 function randomPin(): string {
   return String(Math.floor(100000 + Math.random() * 900000))
@@ -26,14 +31,14 @@ function StaffPinPanel() {
 
   return (
     <div className="mx-auto my-3 max-w-xl space-y-2.5">
-      <div className="card-box relative space-y-2.5 overflow-hidden rounded-2xl border border-blue-500 p-4 text-center shadow-xl">
+      <div className="card-box pin-gate-card relative space-y-2.5 overflow-hidden rounded-2xl border border-blue-500 p-4 text-center shadow-xl">
         <div className="flex items-center justify-center space-x-1 text-[10px] font-black tracking-wider text-blue-600 uppercase dark:text-blue-400">
           <ShieldCheckIcon className="size-3.5" />
           <span>Staff PIN Entry Pass • Cổng tòa nhà 24/7</span>
         </div>
 
         <div className="pin-display-box relative mx-auto flex h-24 w-full flex-col items-center justify-center space-y-0.5 rounded-xl border p-2.5 shadow-inner">
-          <div className="text-[9px] font-bold tracking-widest uppercase">
+          <div className="text-[9px] font-bold tracking-widest text-white uppercase">
             Mã PIN xác thực cổng
           </div>
           <div className="font-mono text-3xl font-black tracking-widest sm:text-4xl">
@@ -42,7 +47,7 @@ function StaffPinPanel() {
 
           {expired && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center space-y-1 rounded-xl bg-slate-950/95 p-2 text-center text-white backdrop-blur-sm">
-              <ClockIcon className="size-5 animate-bounce text-amber-400" />
+              <HistoryIcon className="size-5 animate-bounce text-amber-400" />
               <span className="text-[10px] font-black text-amber-300">
                 MÃ PIN ĐÃ HẾT HẠN (30S)!
               </span>
@@ -60,7 +65,7 @@ function StaffPinPanel() {
 
         <div className="flex items-center justify-between px-1 text-[10px] font-bold text-slate-700 dark:text-slate-300">
           <div className="flex items-center space-x-1.5">
-            <ClockIcon className="size-3.5 text-amber-500" />
+            <HourglassIcon className="size-3.5 text-amber-500" />
             <span>
               Mã PIN tự đổi sau:{" "}
               <b className="font-mono text-xs text-blue-600 dark:text-blue-400">
