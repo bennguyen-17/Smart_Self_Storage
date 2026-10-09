@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -403,6 +403,8 @@ html.dark .unit-occupied {
   min-height: 100vh;
   background-color: #f8fafc;
   color: #0f172a;
+  font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
 }
 html.dark .staff-portal {
   background-color: #0b1120;
@@ -511,6 +513,14 @@ html.dark .staff-portal .pin-display-box {
   background-color: #0b1120 !important;
   color: #34d399 !important;
   border-color: #1e293b !important;
+}
+
+/* Thẻ PIN cổng staff — giữ viền xanh biển của prototype (đè border-color của card-box) */
+.staff-portal .card-box.pin-gate-card {
+  border-color: #3b82f6 !important;
+}
+html.dark .staff-portal .card-box.pin-gate-card {
+  border-color: #3b82f6 !important;
 }
 
 .staff-portal .keypad-btn {
