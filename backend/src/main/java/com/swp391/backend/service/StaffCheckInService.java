@@ -1,5 +1,6 @@
 package com.swp391.backend.service;
 
+import com.swp391.backend.dto.GatePinResult;
 import com.swp391.backend.dto.StaffCheckInRequest;
 import com.swp391.backend.dto.StaffCheckInResponse;
 import com.swp391.backend.entity.ActivityLog;
@@ -40,6 +41,7 @@ public class StaffCheckInService {
     private final EmployeeProfileRepository employeeProfileRepository;
     private final FloorRepository floorRepository;
     private final ActivityLogRepository activityLogRepository;
+    private final GatePinService gatePinService;
 
     public StaffCheckInService(
             ReservationRepository reservationRepository,
@@ -48,7 +50,8 @@ public class StaffCheckInService {
             StorageUnitRepository storageUnitRepository,
             EmployeeProfileRepository employeeProfileRepository,
             FloorRepository floorRepository,
-            ActivityLogRepository activityLogRepository) {
+            ActivityLogRepository activityLogRepository,
+            GatePinService gatePinService) {
         this.reservationRepository = reservationRepository;
         this.contractRepository = contractRepository;
         this.paymentRepository = paymentRepository;
@@ -56,6 +59,7 @@ public class StaffCheckInService {
         this.employeeProfileRepository = employeeProfileRepository;
         this.floorRepository = floorRepository;
         this.activityLogRepository = activityLogRepository;
+        this.gatePinService = gatePinService;
     }
 
     @Transactional
@@ -142,6 +146,7 @@ public class StaffCheckInService {
         contract.setStatus("ACTIVE");
         contract.setActivatedAt(now);
         unit.setStatus("OCCUPIED");
+        GatePinResult gatePin = gatePinService.generatePin(contract);
         contractRepository.save(contract);
         storageUnitRepository.save(unit);
 
@@ -156,6 +161,8 @@ public class StaffCheckInService {
         response.setContractStatus(contract.getStatus());
         response.setUnitStatus(unit.getStatus());
         response.setCollectedAmount(request.getCollectedAmount());
+        response.setGatePin(gatePin.getPin());
+        response.setInvoicePdfUrl(contract.getPdfUrl());
         response.setRemainingAmount(BigDecimal.ZERO);
         return response;
     }
