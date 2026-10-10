@@ -6,6 +6,7 @@ import { addDays, todayInVietnam } from "@/lib/format"
 import type {
   NoShowScanResult,
   PageResponse,
+  RefundStatus,
   Reservation,
   ReservationFilter,
 } from "../types"
@@ -162,7 +163,8 @@ const SEEDS: Seed[] = [
     cancelReason: null,
     checkinOffsetDays: -15,
   },
-  // Khách tự hủy < 7 ngày trước ngày hẹn → mất 50% cọc (BR-17) - Đang chờ kế toán hoàn 50%
+  // Khách tự hủy < 4 ngày trước ngày hẹn → mất 50% cọc (BR-17) - Đang chờ kế toán hoàn 50%
+  // (hủy hôm qua, hẹn hôm nay + 2 → hủy trước 3 ngày)
   {
     reservationCode: "RES-TX-1100-C7YU",
     customerName: "Lý Hải Phong",
@@ -174,13 +176,13 @@ const SEEDS: Seed[] = [
     depositAmount: 1_000_000,
     status: "CANCELED",
     cancelReason: "CUSTOMER_REQUEST",
-    checkinOffsetDays: 4,
+    checkinOffsetDays: 2,
     forfeitRate: 0.5,
     refundStatus: "PENDING",
     bankAccount: "190367891234 (Techcombank) - Lý Hải Phong",
     bankName: "Techcombank",
   },
-  // Khách hủy ≥ 7 ngày trước ngày hẹn → hoàn 100% cọc (BR-17/BR-35) - Đã đối soát & hoàn tiền (REFUNDED)
+  // Khách hủy ≥ 4 ngày trước ngày hẹn → hoàn 100% cọc (BR-17/BR-35) - Đã đối soát & hoàn tiền (REFUNDED)
   {
     reservationCode: "RES-CG-9922-OKRF",
     customerName: "Nguyễn Hoàng Mai",
@@ -218,7 +220,7 @@ function buildStore(): Reservation[] {
     let canceledAt: string | null = null
     let forfeitedAmount: number | null = null
     let refundAmount: number | null = seed.refundAmount ?? null
-    let refundStatus: any = seed.refundStatus ?? "NONE"
+    let refundStatus: RefundStatus = seed.refundStatus ?? "NONE"
 
     if (seed.cancelReason === "NO_SHOW") {
       // Cron 00:00 ngày kế tiếp ngày hẹn
@@ -287,7 +289,7 @@ export function mockGetReservation(code: string): Promise<Reservation> {
   return delay(found)
 }
 
-/** Giả lập cron BR-13: hủy các đơn PENDING_CHECKIN có ngày hẹn trước hôm nay */
+/** Giả lập cron BR-17: hủy các đơn PENDING_CHECKIN có ngày hẹn trước hôm nay */
 export function mockRunNoShowScan(): Promise<NoShowScanResult> {
   const today = todayInVietnam()
   const scannedAt = new Date().toISOString()

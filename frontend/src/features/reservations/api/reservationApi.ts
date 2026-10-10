@@ -33,7 +33,7 @@ export async function getReservation(code: string): Promise<Reservation> {
   return unwrapApiData<Reservation>(body)
 }
 
-/** POST /api/admin/jobs/no-show-scan (chỉ ADMIN + profile dev/demo): chạy tay cron BR-13 */
+/** POST /api/admin/jobs/no-show-scan (chỉ ADMIN + profile dev/demo): chạy tay cron No-Show (BR-17) */
 export async function runNoShowScan(): Promise<NoShowScanResult> {
   if (isMockMode()) return mockRunNoShowScan()
   const body = await apiClient.post("/admin/jobs/no-show-scan")
