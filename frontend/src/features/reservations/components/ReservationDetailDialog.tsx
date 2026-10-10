@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { useAsyncData } from "@/hooks/useAsyncData"
+import { getErrorMessage } from "@/lib/api"
 import { formatDate, formatDateTime, formatVnd } from "@/lib/format"
 
 import { confirmRefund, getReservation } from "../api/reservationApi"
@@ -251,8 +252,8 @@ function RefundBackOfficeSection({
         staffName,
       })
       onRefundSuccess()
-    } catch (err: any) {
-      setErrorMsg(err?.message || "Có lỗi xảy ra khi xác nhận hoàn tiền")
+    } catch (err) {
+      setErrorMsg(getErrorMessage(err))
     } finally {
       setIsSubmitting(false)
     }

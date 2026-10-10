@@ -1,4 +1,4 @@
-// Mẫu email HTML gửi khách khi đơn bị hủy do No-Show (BR-13).
+// Mẫu email HTML gửi khách khi đơn bị hủy do No-Show (BR-17).
 // Viết theo chuẩn email: bố cục bảng, CSS inline, không dùng JS, rộng tối đa 600px.
 // Backend có thể dùng lại cấu trúc này khi gửi email thật.
 
