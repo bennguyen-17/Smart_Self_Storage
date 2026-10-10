@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 
 export default function DraftContractModal({ bookingData, onProceedToPayment, onClose, isLoading }: { bookingData: any; onProceedToPayment: () => void; onClose?: () => void; isLoading?: boolean }) {
+  // US-07: bắt buộc tích đủ 2 xác nhận mới được thanh toán cọc
+  // (1) cam kết không lưu trữ hàng cấm (BR-09), (2) đồng ý điều khoản hợp đồng clickwrap (BR-18)
+  const [noProhibitedGoods, setNoProhibitedGoods] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const canProceed = noProhibitedGoods && agreed;
 
   // Lay ngay check-out nguyen ban khong co chu (xx ngay)
   const displayEndDate = bookingData.endDate ? bookingData.endDate.split(' ')[0] : 'Chưa xác định';
 
   const handleConfirmClick = () => {
-    if (agreed && onProceedToPayment && !isLoading) {
+    if (canProceed && onProceedToPayment && !isLoading) {
       onProceedToPayment();
     }
   };
@@ -105,8 +109,8 @@ export default function DraftContractModal({ bookingData, onProceedToPayment, on
               <div className="space-y-1">
                 <strong className="text-slate-900 dark:text-white block">2. Chính sách hủy cọc & Hoàn tiền:</strong>
                 <ul className="list-disc pl-4 space-y-1">
-                  <li>Hủy trước ngày nhận kho từ 7 ngày trở lên: Bạn được hoàn lại 100% tiền cọc.</li>
-                  <li>Hủy trước ngày nhận kho dưới 7 ngày: Bạn bị tính phí phạt 50% tiền cọc và nhận lại 50% còn lại.</li>
+                  <li>Hủy trước ngày nhận kho từ 4 ngày trở lên: Bạn được hoàn lại 100% tiền cọc.</li>
+                  <li>Hủy trước ngày nhận kho dưới 4 ngày: Bạn bị tính phí phạt 50% tiền cọc và nhận lại 50% còn lại.</li>
                   <li>Quy trình hoàn tiền: Yêu cầu hoàn cọc được bộ phận Back-office đối soát và chuyển khoản trong vòng 24 - 48 giờ làm việc, kèm biên lai xác nhận gửi qua email (BR-35).</li>
                 </ul>
               </div>
@@ -125,8 +129,19 @@ export default function DraftContractModal({ bookingData, onProceedToPayment, on
             </div>
           </div>
 
-          {/* Đồng ý điều khoản */}
-          <div className="p-3.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70">
+          {/* Đồng ý điều khoản: 2 xác nhận bắt buộc (US-07) */}
+          <div className="p-3.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70 space-y-2.5">
+            <label className="flex items-start space-x-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={noProhibitedGoods}
+                onChange={(e) => setNoProhibitedGoods(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500 cursor-pointer accent-amber-500"
+              />
+              <span className="text-xs text-slate-700 dark:text-slate-300 leading-normal">
+                Tôi cam kết không lưu trữ hàng cấm: thực phẩm tươi sống/đông lạnh, động vật sống, chất dễ cháy nổ, hóa chất độc hại, vũ khí và hàng hóa vi phạm pháp luật.
+              </span>
+            </label>
             <label className="flex items-start space-x-2.5 cursor-pointer select-none">
               <input 
                 type="checkbox"
@@ -153,10 +168,10 @@ export default function DraftContractModal({ bookingData, onProceedToPayment, on
           )}
           <button
             type="button"
-            disabled={!agreed || isLoading}
+            disabled={!canProceed || isLoading}
             onClick={handleConfirmClick}
             className={`px-5 py-2.5 rounded-lg font-bold text-xs transition flex items-center gap-2 ${
-              agreed && !isLoading
+              canProceed && !isLoading
                 ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer shadow-sm active:scale-95'
                 : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
             }`}
