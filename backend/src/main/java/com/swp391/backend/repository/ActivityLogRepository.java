@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ActivityLogRepository
-                extends JpaRepository<ActivityLog, Long> {
+                extends JpaRepository<ActivityLog, Integer> {
         @Query("""
                         SELECT COUNT(a)
                         FROM ActivityLog a
