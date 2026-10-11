@@ -162,7 +162,6 @@ public class StaffCheckInService {
         response.setUnitStatus(unit.getStatus());
         response.setCollectedAmount(request.getCollectedAmount());
         response.setGatePin(gatePin.getPin());
-        response.setInvoicePdfUrl(contract.getPdfUrl());
         response.setRemainingAmount(BigDecimal.ZERO);
         return response;
     }

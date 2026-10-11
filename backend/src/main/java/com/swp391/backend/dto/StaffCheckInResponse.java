@@ -11,7 +11,6 @@ public class StaffCheckInResponse {
     private String unitStatus;
     private BigDecimal collectedAmount;
     private String gatePin;
-    private String invoicePdfUrl;
     private BigDecimal remainingDue;
 
     public StaffCheckInResponse() {}
@@ -41,13 +40,4 @@ public class StaffCheckInResponse {
     public void setRemainingAmount(BigDecimal remainingAmount) { this.remainingDue = remainingAmount; }
     public BigDecimal getRemainingDue() { return remainingDue; }
     public void setRemainingDue(BigDecimal remainingDue) { this.remainingDue = remainingDue; }
-
-    public String getInvoicePdfUrl() {
-        return invoicePdfUrl;
-    }
-
-    public void setInvoicePdfUrl(String invoicePdfUrl) {
-        this.invoicePdfUrl = invoicePdfUrl;
-    }
-    
 }
