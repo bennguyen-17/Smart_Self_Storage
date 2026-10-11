@@ -21,7 +21,7 @@ public class ManagerDashboardResponse {
     private long overdueContracts;
     private long terminatedContracts;
 
-    // 3. Thống kê Doanh thu theo công thức chuẩn BR-51
+    // 3. Thống kê Doanh thu
     private BigDecimal rentalRevenue = BigDecimal.ZERO;
     private BigDecimal extensionRevenue = BigDecimal.ZERO;
     private BigDecimal penaltyRevenue = BigDecimal.ZERO;
@@ -29,10 +29,10 @@ public class ManagerDashboardResponse {
     private BigDecimal totalRefunds = BigDecimal.ZERO;
     private BigDecimal netRevenue = BigDecimal.ZERO; // (Rental + Ext + Penalty + CMP) - TotalRefunds
 
-    // Các dòng báo cáo riêng theo quy định BR-51
+    // Các dòng báo cáo riêng
     private BigDecimal depositHolding = BigDecimal.ZERO; // Tiền cọc đang bảo lưu
     private BigDecimal forfeitedDeposit = BigDecimal.ZERO; // Tiền cọc tịch thu (No-Show)
-    private BigDecimal waivedAmount = BigDecimal.ZERO; // Tiền phí được miễn/giảm theo BR-48
+    private BigDecimal waivedAmount = BigDecimal.ZERO; // Tiền phí được miễn/giảm
 
     // 4. Thống kê Support Ticket & SLA
     private long totalTickets;

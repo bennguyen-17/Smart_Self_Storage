@@ -23,7 +23,7 @@ interface StaffInspectionModalProps {
   onClose: () => void
 }
 
-/** Bảng giá hư hại chuẩn BR-28 */
+/** Bảng giá hư hại niêm yết */
 const DAMAGE_ITEMS = [
   { id: "cleaning", label: "1. Vệ sinh kho (rác/bẩn nặng)", fee: 150_000 },
   { id: "key", label: "2. Mất chìa khóa cơ", fee: 200_000 },
@@ -40,8 +40,8 @@ function StaffInspectionModal({ target, onClose }: StaffInspectionModalProps) {
       open={target !== null}
       onClose={onClose}
       maxWidth="max-w-2xl"
-      title="Biên bản nghiệm thu hiện trạng trả kho (BR-28)"
-      subtitle="Kiểm tra hư hại đối chiếu bảng giá niêm yết & Quyết toán cọc (BR-29)"
+      title="Biên bản nghiệm thu hiện trạng trả kho"
+      subtitle="Kiểm tra hư hại đối chiếu bảng giá niêm yết & Quyết toán cọc"
       icon={<ClipboardCheckIcon className="size-5" />}
     >
       {target && (
@@ -81,11 +81,11 @@ function Body({
   function submit() {
     if (balance < 0) {
       toast.warning(
-        `Cọc âm (BR-29): thu thêm ${formatVnd(Math.abs(balance))} tại quầy trước khi mang đồ ra.`
+        `Cọc âm: thu thêm ${formatVnd(Math.abs(balance))} tại quầy trước khi mang đồ ra.`
       )
     } else {
       toast.success(
-        `Đã chốt biên bản nghiệm thu — hoàn cọc ${formatVnd(balance)} (BR-28/29).`
+        `Đã chốt biên bản nghiệm thu — hoàn cọc ${formatVnd(balance)}.`
       )
     }
     onClose()
@@ -132,7 +132,7 @@ function Body({
         <div className="flex items-center justify-between">
           <span className="text-title flex items-center gap-1.5 text-xs font-black tracking-wide uppercase">
             <ListChecksIcon className="size-3.5 text-blue-600" /> Danh mục Kiểm
-            tra Hư hại (Bảng giá chuẩn BR-28):
+            tra Hư hại (Bảng giá niêm yết):
           </span>
           <span className="text-[10px] text-muted">
             Tích chọn nếu phát hiện vi phạm
@@ -230,7 +230,7 @@ function Body({
                   Hoàn lại: {formatVnd(balance)}
                 </span>
                 <p className="text-[10px] text-muted">
-                  Hệ thống chuyển khoản tự động trong 24-48h (BR-30)
+                  Hệ thống chuyển khoản tự động trong 24-48h
                 </p>
               </>
             ) : (

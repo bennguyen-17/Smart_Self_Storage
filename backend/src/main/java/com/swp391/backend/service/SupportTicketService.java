@@ -71,7 +71,7 @@ public class SupportTicketService {
     // --- US-21: 2. Khách tạo Ticket Sự cố (INCIDENT) - Chặn ngoài giờ 08:00 - 20:00 ---
     @Transactional
     public SupportTicket createIncidentTicket(CreateIncidentRequest req, Integer customerId) {
-        // [BR-41]: Khung giờ làm việc của Staff 08:00 - 20:00
+        // Khung giờ làm việc của Staff 08:00 - 20:00
         LocalTime now = LocalTime.now();
         if (now.isBefore(LocalTime.of(8, 0)) || now.isAfter(LocalTime.of(20, 0))) {
             throw new IllegalArgumentException("Đã hết giờ làm việc của nhân viên (08:00 - 20:00), vui lòng liên hệ lại sau 08:00 sáng mai");
@@ -87,7 +87,7 @@ public class SupportTicketService {
         ticket.setTitle(req.getTitle() != null ? req.getTitle() : "Báo sự cố ô kho");
         ticket.setDescription(req.getDescription());
         ticket.setCreatedAt(LocalDateTime.now());
-        // [BR-40]: Cam kết phản hồi SLA 15 phút
+        // Cam kết phản hồi SLA 15 phút
         ticket.setSlaDeadline(LocalDateTime.now().plusMinutes(15));
         ticket.setIsSlaBreached(false);
         ticket.setIdentityVerified(false);
@@ -268,13 +268,13 @@ public class SupportTicketService {
             throw new AccessDeniedException("Bạn không có quyền xử lý ticket của cơ sở khác!");
         }
 
-        // [BR-39]: Bắt buộc phải tích xác nhận CCCD trùng khớp 100%
+        // Bắt buộc phải tích xác nhận CCCD trùng khớp 100%
         if (!Boolean.TRUE.equals(req.getIdentityVerified())) {
             throw new IllegalArgumentException("Bắt buộc phải tích xác nhận 'Đã kiểm tra và đối chiếu CCCD trùng khớp 100%' trước khi mở khóa hộ!");
         }
 
         if ("RESOLVED".equalsIgnoreCase(ticket.getStatus())) {
-            throw new IllegalArgumentException("Ticket này đã hoàn tất đóng trước đó (không cho phép Reopen theo BR-42)!");
+            throw new IllegalArgumentException("Ticket này đã hoàn tất đóng trước đó (không cho phép mở lại ticket đã hoàn tất)!");
         }
 
         ticket.setStatus("RESOLVED");

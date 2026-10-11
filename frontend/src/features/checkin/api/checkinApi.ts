@@ -23,7 +23,7 @@ import {
   mockLookupReservation,
 } from "./checkinApi.mock"
 
-/** GET /api/staff/reservations — BE tự lọc theo cơ sở của Staff (BR-06). */
+/** GET /api/staff/reservations — BE tự lọc theo cơ sở của Staff. */
 export async function listCheckinContracts(): Promise<StaffReservationItem[]> {
   if (isMockMode()) return mockListReservations()
   const body = await apiClient.get("/staff/reservations")
@@ -41,7 +41,7 @@ export async function lookupContract(
   return unwrapApiData<StaffReservationLookup>(body)
 }
 
-/** POST /api/staff/reservations/{id}/check-in — thu tiền, HĐ → ACTIVE, ô → RENTED (BR-20). */
+/** POST /api/staff/reservations/{id}/check-in — thu tiền, HĐ → ACTIVE, ô → RENTED. */
 export async function confirmCheckin(
   reservationId: number,
   payload: StaffCheckInRequest
@@ -54,7 +54,7 @@ export async function confirmCheckin(
   return unwrapApiData<StaffCheckInResponse>(body)
 }
 
-/** POST /api/staff/reservations/{id}/change-unit — đổi ô, BE tính lại tiền/cọc (BR-20). */
+/** POST /api/staff/reservations/{id}/change-unit — đổi ô, BE tính lại tiền/cọc. */
 export async function changeUnit(
   reservationId: number,
   payload: { newUnitCode: string }
@@ -67,7 +67,7 @@ export async function changeUnit(
   return unwrapApiData<StaffChangeUnitResponse>(body)
 }
 
-/** POST /api/staff/reservations/{id}/cancel — hủy tại quầy, hoàn theo BR-17. */
+/** POST /api/staff/reservations/{id}/cancel — hủy tại quầy. */
 export async function counterCancel(
   reservationId: number
 ): Promise<StaffCancelReservationResponse> {

@@ -159,7 +159,7 @@ public class StorageService {
             baseUnitPrice = price.getMonthlyPrice();
             baseTotal = baseUnitPrice.multiply(BigDecimal.valueOf(duration));
 
-            // Chiết khấu gói tháng theo BR-13
+            // Chiết khấu gói tháng
             if (duration >= 12) {
                 discountPercent = BigDecimal.valueOf(15); // Giảm 15%
             } else if (duration >= 6) {
@@ -171,7 +171,7 @@ public class StorageService {
 
         BigDecimal discountAmount = baseTotal.multiply(discountPercent).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
-        // Phụ phí kho mát (Climate Controlled +20% theo BR-08) nếu có
+        // Phụ phí kho mát (Climate Controlled +20%) nếu có
         BigDecimal climateSurchargeAmount = BigDecimal.ZERO;
         if ("CLIMATE_CONTROLLED".equalsIgnoreCase(unitType.getStorageCondition())) {
             BigDecimal surchargeRate = price.getClimateSurchargePercent() != null && price.getClimateSurchargePercent().compareTo(BigDecimal.ZERO) > 0
@@ -196,7 +196,7 @@ public class StorageService {
         response.setClimateSurchargeAmount(climateSurchargeAmount);
         response.setFinalRentalAmount(finalRentalAmount);
         response.setDepositAmount(depositAmount);
-        response.setTotalInitialPayment(depositAmount); // Đặt cọc 100% online theo BR-16
+        response.setTotalInitialPayment(depositAmount); // Đặt cọc 100% online
 
         return response;
     }
@@ -437,7 +437,7 @@ public class StorageService {
             dto.setStorageCondition(ut.getStorageCondition());
             dto.setIsClimate("CLIMATE_CONTROLLED".equalsIgnoreCase(ut.getStorageCondition()));
 
-            // Gán kích thước chuẩn Dài x Rộng x Cao (BR-08)
+            // Gán kích thước chuẩn Dài x Rộng x Cao
             String lowerType = ut.getTypeName().toLowerCase();
             if (lowerType.contains("xl")) {
                 sizeCode = "XL";

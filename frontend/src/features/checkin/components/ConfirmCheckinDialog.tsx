@@ -33,7 +33,7 @@ function ConfirmCheckinDialog({
   )
 }
 
-/** US-17: sau khi bàn giao, hiển thị PIN đã kích hoạt + link hóa đơn PDF trước khi đóng. */
+/** US-17: sau khi bàn giao, hiển thị PIN đã kích hoạt và thông tin hoàn tất bàn giao trước khi đóng. */
 function CheckinDialogBody({
   contract,
   onClose,
@@ -150,7 +150,7 @@ function Body({
 
       {outsideHours && (
         <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
-          <b>Ngoài khung giờ Check-in (BR-19):</b> khung giờ bàn giao chuẩn là{" "}
+          <b>Ngoài khung giờ Check-in:</b> khung giờ bàn giao quy định là{" "}
           {CHECKIN_HOURS.start}:00 – {CHECKIN_HOURS.end}:00 hằng ngày.
         </div>
       )}
@@ -188,7 +188,7 @@ function Body({
   )
 }
 
-/** US-17: xác nhận bàn giao — PIN đã kích hoạt + link hóa đơn PDF (BR-22, BR-37). */
+/** US-17: xác nhận bàn giao — PIN đã kích hoạt và biên lai thanh toán. */
 function SuccessPanel({
   result,
   onDone,
@@ -205,7 +205,7 @@ function SuccessPanel({
         </div>
         <p className="text-emerald-800/90 dark:text-emerald-300/90">
           Hợp đồng đã chuyển ACTIVE và ô kho đã bàn giao cho khách. Email xác
-          nhận kèm link hóa đơn PDF đã được gửi.
+          nhận và biên lai thanh toán đã được gửi đến khách hàng.
         </p>
       </div>
 
@@ -222,7 +222,7 @@ function SuccessPanel({
 
       <div className="rounded-2xl border border-blue-300 bg-blue-50 p-3.5 text-xs dark:border-blue-800 dark:bg-blue-950/30">
         <div className="text-[10px] font-bold tracking-wider text-blue-700 uppercase dark:text-blue-400">
-          Bàn giao vật tư & kích hoạt PIN (BR-22)
+          Bàn giao vật tư & kích hoạt PIN
         </div>
         <div className="mt-1.5 flex items-center justify-between gap-4">
           <span className="text-muted">Chìa khóa cơ</span>
@@ -239,17 +239,6 @@ function SuccessPanel({
           vào.
         </p>
       </div>
-
-      {result.invoicePdfUrl && (
-        <a
-          href={result.invoicePdfUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="block w-full truncate rounded-xl border border-slate-300 bg-white py-2.5 text-center text-xs font-bold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-        >
-          📄 Hóa đơn PDF: {result.invoicePdfUrl}
-        </a>
-      )}
 
       <div className="pt-2">
         <button

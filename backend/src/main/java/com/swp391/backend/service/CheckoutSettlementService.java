@@ -54,7 +54,7 @@ public class CheckoutSettlementService {
     }
 
     /**
-     * US-28 & US-29: Tính toán dự thảo quyết toán trả kho & hoàn cọc (BR-30, BR-33, BR-34, BR-36)
+     * US-28 & US-29: Tính toán dự thảo quyết toán trả kho & hoàn cọc
      */
     public CheckoutPreviewResponse calculateCheckoutPreview(Integer contractId) {
         Optional<Contract> contractOpt = contractRepository.findById(contractId);
@@ -63,7 +63,7 @@ public class CheckoutSettlementService {
         }
 
         Contract contract = contractOpt.get();
-        // [BR-21, BR-36]: Cho phép trả kho khi hợp đồng ACTIVE hoặc OVERDUE
+        // Cho phép trả kho khi hợp đồng ACTIVE hoặc OVERDUE
         if (!"ACTIVE".equalsIgnoreCase(contract.getStatus()) && !"OVERDUE".equalsIgnoreCase(contract.getStatus())) {
             return CheckoutPreviewResponse.error("Hợp đồng #" + contractId + " đang ở trạng thái " + contract.getStatus() + ", không thể thực hiện thủ tục trả kho!");
         }
@@ -90,17 +90,17 @@ public class CheckoutSettlementService {
         BigDecimal rentalPaid = res.getRentalAmount() != null ? res.getRentalAmount() : BigDecimal.ZERO;
         BigDecimal depositAmount = res.getDepositAmount() != null ? res.getDepositAmount() : BigDecimal.ZERO;
 
-        // [BR-36]: Tiền thuê chưa dùng = Tiền thuê đã trả ÷ Tổng số ngày × Số ngày còn lại
+        // Tiền thuê chưa dùng = Tiền thuê đã trả ÷ Tổng số ngày × Số ngày còn lại
         BigDecimal unusedRental = BigDecimal.ZERO;
         BigDecimal unusedRentalRefund = BigDecimal.ZERO;
         if (daysRemaining > 0 && totalDays > 0) {
             BigDecimal dailyRate = rentalPaid.divide(BigDecimal.valueOf(totalDays), 2, RoundingMode.HALF_UP);
             unusedRental = dailyRate.multiply(BigDecimal.valueOf(daysRemaining));
-            // Hoàn 50% tiền thuê chưa dùng (50% còn lại là phí vi phạm hợp đồng trả sớm theo BR-36)
+            // Hoàn 50% tiền thuê chưa dùng (50% còn lại là phí vi phạm hợp đồng trả sớm)
             unusedRentalRefund = unusedRental.multiply(BigDecimal.valueOf(0.5)).setScale(0, RoundingMode.HALF_UP);
         }
 
-        // [BR-30, BR-34]: Quét các khoản phạt còn nợ (UNPAID) của hợp đồng này
+        // Quét các khoản phạt còn nợ (UNPAID) của hợp đồng này
         List<Payment> payments = paymentRepository.findByContractId(contractId);
         BigDecimal unpaidPenalties = BigDecimal.ZERO;
         for (Payment p : payments) {
@@ -111,7 +111,7 @@ public class CheckoutSettlementService {
 
         BigDecimal damageAndCleaningFee = BigDecimal.ZERO; // Mặc định preview là 0, Staff sẽ nhập khi xác nhận
 
-        // Tổng khấu trừ theo thứ tự BR-34: Phạt UNPAID + Phí hư hại/vệ sinh
+        // Tổng khấu trừ theo thứ tự: Phạt UNPAID + Phí hư hại/vệ sinh
         BigDecimal totalDeductions = unpaidPenalties.add(damageAndCleaningFee);
         // Tổng tiền có: (Tiền thuê chưa dùng × 50%) + Tiền cọc gốc
         BigDecimal totalCredits = unusedRentalRefund.add(depositAmount);
@@ -164,12 +164,12 @@ public class CheckoutSettlementService {
     }
 
     /**
-     * US-28 & US-29: Xác nhận nhận bàn giao trả kho & chốt quyết toán (BR-11, BR-12, BR-21, BR-24, BR-34, BR-35, BR-36, BR-37)
+     * US-28 & US-29: Xác nhận nhận bàn giao trả kho & chốt quyết toán
      */
     @Transactional
     public CheckoutConfirmResponse confirmCheckout(Integer contractId, CheckoutConfirmRequest request, Integer staffAccountId, Integer staffFacilityId) {
         if (request == null || !request.isConfirmInspection()) {
-            return CheckoutConfirmResponse.error("Bắt buộc phải tích xác nhận biên bản kiểm tra thực tế theo quy định [BR-33] trước khi hoàn tất!");
+            return CheckoutConfirmResponse.error("Bắt buộc phải tích xác nhận biên bản kiểm tra thực tế theo quy định trước khi hoàn tất!");
         }
 
         Optional<Contract> contractOpt = contractRepository.findById(contractId);
@@ -199,7 +199,7 @@ public class CheckoutSettlementService {
         Integer unitFacilityId = floorOpt.map(Floor::getFacilityId).orElse(1);
 
         if (staffFacilityId != null && !staffFacilityId.equals(unitFacilityId)) {
-            return CheckoutConfirmResponse.error("Bạn không có quyền tiếp nhận trả kho của cơ sở khác [BR-06]!");
+            return CheckoutConfirmResponse.error("Bạn không có quyền tiếp nhận trả kho của cơ sở khác!");
         }
 
         // 2. Tính toán tài chính quyết toán
@@ -246,7 +246,7 @@ public class CheckoutSettlementService {
         String dateStr = LocalDate.now().toString().replace("-", "");
         int randomSuffix = (int) (1000 + (Math.random() * 9000));
 
-        // [BR-34]: Nếu tiền cọc + hoàn < tổng khấu trừ -> Bị âm tiền (Khách phải nộp thêm truy thu CMP)
+        // Nếu tiền cọc + hoàn < tổng khấu trừ -> Bị âm tiền (Khách phải nộp thêm truy thu CMP)
         if (netAmount.compareTo(BigDecimal.ZERO) < 0) {
             BigDecimal compensationDue = netAmount.abs();
             String cmpInvoice = String.format("CMP-%s-%s-%d", branchCode, dateStr, randomSuffix);
@@ -263,10 +263,10 @@ public class CheckoutSettlementService {
             cmpPayment.setPaymentMethod(request.getRefundPaymentMethod());
             paymentRepository.save(cmpPayment);
 
-            // [BR-34]: "chỉ khi CMP = PAID mới cho chuyển TERMINATED"
+            // "chỉ khi CMP = PAID mới cho chuyển TERMINATED"
             CheckoutConfirmResponse resp = new CheckoutConfirmResponse();
             resp.setSuccess(false);
-            resp.setMessage(String.format("Khách hàng còn thiếu khoản truy thu hư hại/vệ sinh %s VNĐ (Hóa đơn %s). Khách cần thanh toán hóa đơn này trước khi chuyển hợp đồng sang TERMINATED theo BR-34!",
+            resp.setMessage(String.format("Khách hàng còn thiếu khoản truy thu hư hại/vệ sinh %s VNĐ (Hóa đơn %s). Khách cần thanh toán hóa đơn này trước khi chuyển hợp đồng sang TERMINATED theo quy định!",
                     compensationDue, cmpInvoice));
             resp.setContractId(contract.getContractId());
             resp.setContractStatus(contract.getStatus());
@@ -280,23 +280,26 @@ public class CheckoutSettlementService {
             return resp;
         }
 
-        // [BR-21, BR-36]: Tiền cọc đủ bù -> Hoàn tất chuyển TERMINATED hợp đồng
+        // Tiền cọc đủ bù -> Hoàn tất chuyển TERMINATED hợp đồng
         contract.setStatus("TERMINATED");
+        if (daysRemaining > 0) {
+            contract.setCancelReason("EARLY_TERMINATION");
+        }
         contract.setTerminatedAt(LocalDateTime.now());
         contractRepository.save(contract);
 
-        // [BR-12]: Ô kho chuyển ngay sang UNDER_MAINTENANCE để Staff dọn dẹp
+        // Ô kho chuyển ngay sang UNDER_MAINTENANCE để Staff dọn dẹp
         unit.setStatus("UNDER_MAINTENANCE");
         storageUnitRepository.save(unit);
 
-        // [BR-24, BR-36]: Vô hiệu hóa toàn bộ mã PIN của khách tại cơ sở này ngay lập tức
+        // Vô hiệu hóa toàn bộ mã PIN của khách tại cơ sở này ngay lập tức
         List<GatePin> pins = gatePinRepository.findByContractId(contract.getContractId());
         for (GatePin p : pins) {
             p.setStatus("EXPIRED");
             gatePinRepository.save(p);
         }
 
-        // [BR-35, BR-37]: Sinh lệnh hoàn tiền REF trạng thái PENDING (chờ giải ngân trong 24-48h)
+        // Sinh lệnh hoàn tiền REF trạng thái PENDING (chờ giải ngân trong 24-48h)
         String refInvoice = null;
         if (netAmount.compareTo(BigDecimal.ZERO) > 0) {
             refInvoice = String.format("REF-%s-%s-%d", branchCode, dateStr, randomSuffix);
@@ -306,7 +309,7 @@ public class CheckoutSettlementService {
             refPayment.setInvoiceType("INSPECTION_DAMAGE");
             refPayment.setAmount(netAmount);
             refPayment.setIssuedAt(LocalDateTime.now());
-            refPayment.setDueAt(LocalDateTime.now().plusDays(2)); // 24-48h theo BR-35
+            refPayment.setDueAt(LocalDateTime.now().plusDays(2)); // 24-48h làm việc
             refPayment.setStatus("PENDING");
             refPayment.setPaymentStatus("PENDING");
             refPayment.setPaymentMethod(request.getRefundPaymentMethod());
@@ -330,7 +333,7 @@ public class CheckoutSettlementService {
             }
         }
 
-        // [BR-46]: Ghi nhật ký kiểm toán
+        // Ghi nhật ký kiểm toán
         if (activityLogRepository != null) {
             ActivityLog act = new ActivityLog();
             act.setAccountId(staffAccountId != null ? staffAccountId : res.getAccountId());
@@ -363,7 +366,7 @@ public class CheckoutSettlementService {
      * US-29: Xác nhận đã hoàn tiền (Staff / Manager chuyển REF từ PENDING -> PAID/REFUNDED)
      */
     @Transactional
-    public boolean confirmRefundExecution(Integer paymentId, Integer staffAccountId) {
+    public boolean confirmRefundExecution(Integer paymentId, Integer staffAccountId, String receiptUrl) {
         Optional<Payment> paymentOpt = paymentRepository.findById(paymentId);
         if (paymentOpt.isEmpty()) return false;
 
@@ -375,13 +378,20 @@ public class CheckoutSettlementService {
         p.setStatus("PAID");
         p.setPaymentStatus("SUCCESS");
         p.setPaidAt(LocalDateTime.now());
+        if (receiptUrl != null && !receiptUrl.isBlank()) {
+            p.setPdfUrl(receiptUrl.trim());
+        }
         paymentRepository.save(p);
 
         if (activityLogRepository != null) {
             ActivityLog act = new ActivityLog();
             act.setAccountId(staffAccountId != null ? staffAccountId : 1);
             act.setAction("CONFIRM_REFUND_EXECUTED");
-            act.setDescription("Đã chi tiền hoàn cọc hóa đơn " + p.getInvoiceNumber() + ", số tiền: " + p.getAmount() + " VNĐ");
+            String desc = "Đã chi tiền hoàn cọc hóa đơn " + p.getInvoiceNumber() + ", số tiền: " + p.getAmount() + " VNĐ";
+            if (receiptUrl != null && !receiptUrl.isBlank()) {
+                desc += " (Đính kèm biên lai: " + receiptUrl.trim() + ")";
+            }
+            act.setDescription(desc);
             act.setCreatedAt(LocalDateTime.now());
             activityLogRepository.save(act);
         }
@@ -390,12 +400,12 @@ public class CheckoutSettlementService {
     }
 
     /**
-     * US-31: Miễn / Giảm phí (Facility Manager duyệt theo BR-48)
+     * US-31: Miễn / Giảm phí (Facility Manager duyệt)
      */
     @Transactional
     public Payment applyFeeDiscount(Integer paymentId, FeeDiscountRequest request, Integer managerAccountId, Integer managerFacilityId) {
         if (request == null || request.getReason() == null || request.getReason().trim().isEmpty()) {
-            throw new IllegalArgumentException("Bắt buộc phải nhập lý do miễn / giảm phí theo quy định [BR-48]!");
+            throw new IllegalArgumentException("Bắt buộc phải nhập lý do miễn / giảm phí theo quy định!");
         }
 
         Optional<Payment> paymentOpt = paymentRepository.findById(paymentId);
@@ -417,7 +427,7 @@ public class CheckoutSettlementService {
         BigDecimal newAmount = originalAmount;
 
         if (request.getDiscountPercent() != null && request.getDiscountPercent() >= 100) {
-            // [BR-48]: Miễn 100% -> Khoản phí chuyển sang CANCELLED
+            // Miễn 100% -> Khoản phí chuyển sang CANCELLED
             p.setStatus("CANCELLED");
             p.setPaymentStatus("FAILED");
             p.setAmount(BigDecimal.ZERO);
@@ -438,7 +448,7 @@ public class CheckoutSettlementService {
 
         paymentRepository.save(p);
 
-        // Ghi nhật ký kiểm toán [BR-46]
+        // Ghi nhật ký kiểm toán
         if (activityLogRepository != null) {
             ActivityLog act = new ActivityLog();
             act.setAccountId(managerAccountId != null ? managerAccountId : 1);

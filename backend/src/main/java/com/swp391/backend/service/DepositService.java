@@ -48,10 +48,10 @@ public class DepositService {
         this.accountRepository = accountRepository;
     }
 
-    // --- 1. Tạo đơn Đặt cọc 100% Online & Thỏa thuận Clickwrap (BR-15, BR-16, BR-18, BR-37) ---
+    // --- 1. Tạo đơn Đặt cọc 100% Online & Thỏa thuận Clickwrap ---
     @Transactional
     public DepositInitiateResponse initiateDeposit(DepositInitiateRequest request) {
-        // Kiểm tra Clickwrap bắt buộc (BR-18)
+        // Kiểm tra Clickwrap bắt buộc
         if (request.getAgreedClickwrap() == null || !request.getAgreedClickwrap()) {
             return DepositInitiateResponse.error("Bạn bắt buộc phải tích chọn đồng ý với Điều khoản Hợp đồng thuê kho (Clickwrap) theo quy định!");
         }
@@ -113,7 +113,7 @@ public class DepositService {
         reservation.setStatus("PENDING");
         reservation.setHoldExpiresAt(LocalDateTime.now().plusMinutes(15)); // Giữ chỗ 15 phút để thanh toán
 
-        // Sinh mã Reservation Code theo BR-15: [Mã Cơ Sở]-[4 số cuối]-[4 ký tự random]
+        // Sinh mã Reservation Code: [Mã Cơ Sở]-[4 số cuối]-[4 ký tự random]
         String resCode;
         do {
             String randomSuffix = String.format("%04X", new Random().nextInt(0xFFFF));
@@ -122,14 +122,14 @@ public class DepositService {
         reservation.setReservationCode(resCode);
         reservation = reservationRepository.save(reservation);
 
-        // Tạo Hợp đồng dự thảo với trạng thái PENDING_CHECKIN (BR-21)
+        // Tạo Hợp đồng dự thảo với trạng thái PENDING_CHECKIN
         Contract contract = new Contract();
         contract.setReservationId(reservation.getReservationId());
         contract.setPdfUrl("/contracts/DRAFT-" + resCode + ".pdf");
         contract.setStatus("PENDING_CHECKIN");
         contract = contractRepository.save(contract);
 
-        // Tạo Hóa đơn tiền cọc (Payment - BR-37): DEP-[Facility]-[YYYYMMDD]-[4 số random]
+        // Tạo Hóa đơn tiền cọc (Payment): DEP-[Facility]-[YYYYMMDD]-[4 số random]
         String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String invoiceNumber = "DEP-" + facilityCode + "-" + dateStr + "-" + String.format("%04d", new Random().nextInt(10000));
 
@@ -149,7 +149,7 @@ public class DepositService {
         payment.setPaymentStatus("PENDING");
         payment = paymentRepository.save(payment);
 
-        // Lưu vết Clickwrap Audit Log (BR-18)
+        // Lưu vết Clickwrap Audit Log
         ActivityLog log = new ActivityLog();
         log.setAccountId(request.getAccountId());
         log.setAction("CLICKWRAP_E_CONTRACT_SIGNED");
@@ -188,7 +188,7 @@ public class DepositService {
         return response;
     }
 
-    // --- 2. Webhook / Xác nhận thanh toán Cọc thành công (BR-16, BR-21 & BR-37) ---
+    // --- 2. Webhook / Xác nhận thanh toán Cọc thành công ---
     @Transactional
     public ApiResponse confirmDepositPayment(DepositWebhookRequest request) {
         if (request.getInvoiceNumber() == null || request.getInvoiceNumber().trim().isEmpty()) {
@@ -240,8 +240,8 @@ public class DepositService {
         payment.setPaidAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
-        // Cập nhật Contract sang PENDING_CHECKIN (Chờ nhận kho tại cơ sở theo BR-21)
-        contract.setStatus("PENDING_CHECKIN"); // BR-21: Khách đã cọc online, chờ nhận kho
+        // Cập nhật Contract sang PENDING_CHECKIN (Chờ nhận kho tại cơ sở)
+        contract.setStatus("PENDING_CHECKIN"); // Khách đã cọc online, chờ nhận kho
         contract.setActivatedAt(LocalDateTime.now());
         contractRepository.save(contract);
 

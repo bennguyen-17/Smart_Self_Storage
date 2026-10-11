@@ -18,7 +18,7 @@ public class DepositController {
         this.depositService = depositService;
     }
 
-    // --- US-05: Khởi tạo Đặt cọc 100% Online, thỏa thuận Clickwrap & Sinh mã VietQR (BR-15, BR-16, BR-18, BR-37) ---
+    // --- US-05: Khởi tạo Đặt cọc 100% Online, thỏa thuận Clickwrap & Sinh mã VietQR ---
     @PostMapping("/initiate")
     public ResponseEntity<DepositInitiateResponse> initiateDeposit(@RequestBody DepositInitiateRequest request) {
         DepositInitiateResponse response = depositService.initiateDeposit(request);

@@ -4,7 +4,7 @@ import type { StatusGroup, UnitDetailResponse, UnitSize } from "./types"
 
 export const UNIT_SIZES: UnitSize[] = ["S", "M", "L", "XL"]
 
-/** Diện tích chuẩn theo BR-06, dùng làm nhãn bộ lọc và giá trị dự phòng */
+/** Diện tích chuẩn, dùng làm nhãn bộ lọc và giá trị dự phòng */
 export const SIZE_AREA_M2: Record<UnitSize, number> = {
   S: 1,
   M: 3,
@@ -42,7 +42,7 @@ export function unitDimensionsOf(
 
 /**
  * Gom trạng thái backend về 4 màu. Enum main: AVAILABLE | HOLD | RENTED | MAINTENANCE | OVERDUE.
- * Chấp nhận thêm tên theo BR (OCCUPIED, RESERVED, UNDER_MAINTENANCE) để không vỡ khi BE đổi enum.
+ * Chấp nhận thêm tên chuẩn (OCCUPIED, RESERVED, UNDER_MAINTENANCE) để không vỡ khi BE đổi enum.
  */
 export function statusGroupOf(status: string): StatusGroup {
   switch (status) {
