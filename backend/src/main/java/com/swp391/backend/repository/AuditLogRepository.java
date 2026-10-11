@@ -1,0 +1,16 @@
+package com.swp391.backend.repository;
+
+import com.swp391.backend.entity.AuditLog;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface AuditLogRepository
+        extends JpaRepository<AuditLog, Integer> {
+
+    List<AuditLog> findByFacilityIdAndActionOrderByCreatedAtDesc(
+            Integer facilityId,
+            String action
+    );
+}
+
