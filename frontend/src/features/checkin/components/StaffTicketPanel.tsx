@@ -57,7 +57,7 @@ const TICKETS: Ticket[] = [
       { label: "Khách hàng:", value: "Trần Thị B • 0912 345 678" },
     ],
     quote:
-      "Đã dọn đồ xong trước hạn theo BR-38/39, hẹn nhân viên cùng ra kho kiểm tra hiện trạng và thanh lý cọc.",
+      "Đã dọn đồ xong trước hạn, hẹn nhân viên cùng ra kho kiểm tra hiện trạng và thanh lý cọc.",
   },
   {
     id: "9902",
@@ -127,7 +127,7 @@ function StaffTicketPanel() {
                   TRUNG TÂM TIẾP NHẬN &amp; XỬ LÝ SỰ CỐ (SUPPORT TICKETS)
                 </h3>
                 <p className="text-xs text-muted">
-                  Cam kết thời gian phản hồi SLA 15 phút (BR-32, BR-41) • Khung
+                  Cam kết thời gian phản hồi SLA 15 phút • Khung
                   giờ làm việc: 08:00 - 20:00 hàng ngày
                 </p>
               </div>
@@ -317,7 +317,7 @@ function TicketCard({
             className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700"
           >
             <IdCardIcon className="size-3.5" />
-            <span>Đối Chiếu CCCD &amp; Mở Khóa (BR-31)</span>
+            <span>Đối Chiếu CCCD &amp; Mở Khóa</span>
           </button>
         )}
 
@@ -328,7 +328,7 @@ function TicketCard({
             className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2 text-xs font-extrabold text-white shadow-sm transition hover:bg-emerald-700"
           >
             <ClipboardCheckIcon className="size-3.5" />
-            <span>Mở Biên Bản Nghiệm Thu &amp; Quyết Toán (BR-28/29)</span>
+            <span>Mở Biên Bản Nghiệm Thu &amp; Quyết Toán</span>
           </button>
         )}
 

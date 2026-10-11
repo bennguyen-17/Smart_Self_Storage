@@ -88,6 +88,32 @@ export default function ContractDetailModal({ contract, onClose }: { contract: a
             </div>
           </div>
 
+          {/* Thông tin hoàn tiền cọc (nếu có) */}
+          {contract.refundAccountNumber && (
+            <div className="bg-emerald-50/70 dark:bg-emerald-950/30 p-4 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/60 text-xs space-y-2 text-emerald-900 dark:text-emerald-200">
+              <h4 className="font-bold flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
+                <i className="fa-solid fa-building-columns"></i> Thông tin thụ hưởng hoàn tiền cọc
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-[11px]">
+                <div>
+                  <span className="text-slate-500 dark:text-slate-400 block">Ngân hàng:</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">{contract.refundBankName || 'Ngân hàng'}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 dark:text-slate-400 block">Số tài khoản:</span>
+                  <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{contract.refundAccountNumber}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 dark:text-slate-400 block">Chủ tài khoản:</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{contract.refundAccountName}</span>
+                </div>
+              </div>
+              <p className="text-[10.5px] text-emerald-700/80 dark:text-emerald-300/80 italic pt-1 border-t border-emerald-200/60 dark:border-emerald-800/40">
+                * Trạng thái hoàn tiền: Kế toán đang xử lý lệnh chuyển khoản REF trong 24 - 48 giờ làm việc.
+              </p>
+            </div>
+          )}
+
           {/* Quy định & Lưu ý */}
           <div className="bg-blue-50/50 dark:bg-blue-950/30 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/50 text-xs space-y-2 text-slate-700 dark:text-slate-300">
             <h4 className="font-bold text-blue-700 dark:text-blue-400 flex items-center gap-1.5">

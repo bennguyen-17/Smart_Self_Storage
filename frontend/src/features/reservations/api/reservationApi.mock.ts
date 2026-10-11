@@ -163,7 +163,7 @@ const SEEDS: Seed[] = [
     cancelReason: null,
     checkinOffsetDays: -15,
   },
-  // Khách tự hủy < 4 ngày trước ngày hẹn → mất 50% cọc (BR-17) - Đang chờ kế toán hoàn 50%
+  // Khách tự hủy < 4 ngày trước ngày hẹn → mất 50% cọc - Đang chờ kế toán hoàn 50%
   // (hủy hôm qua, hẹn hôm nay + 2 → hủy trước 3 ngày)
   {
     reservationCode: "RES-TX-1100-C7YU",
@@ -182,7 +182,7 @@ const SEEDS: Seed[] = [
     bankAccount: "190367891234 (Techcombank) - Lý Hải Phong",
     bankName: "Techcombank",
   },
-  // Khách hủy ≥ 4 ngày trước ngày hẹn → hoàn 100% cọc (BR-17/BR-35) - Đã đối soát & hoàn tiền (REFUNDED)
+  // Khách hủy ≥ 4 ngày trước ngày hẹn → hoàn 100% cọc - Đã đối soát & hoàn tiền (REFUNDED)
   {
     reservationCode: "RES-CG-9922-OKRF",
     customerName: "Nguyễn Hoàng Mai",
@@ -289,7 +289,7 @@ export function mockGetReservation(code: string): Promise<Reservation> {
   return delay(found)
 }
 
-/** Giả lập cron BR-17: hủy các đơn PENDING_CHECKIN có ngày hẹn trước hôm nay */
+/** Giả lập cron: hủy các đơn PENDING_CHECKIN có ngày hẹn trước hôm nay */
 export function mockRunNoShowScan(): Promise<NoShowScanResult> {
   const today = todayInVietnam()
   const scannedAt = new Date().toISOString()
@@ -312,7 +312,7 @@ export function mockRunNoShowScan(): Promise<NoShowScanResult> {
   })
 }
 
-/** Giả lập quy trình Back-office hoàn tiền cọc & lưu biên lai (BR-35) */
+/** Giả lập quy trình Back-office hoàn tiền cọc & lưu biên lai */
 export function mockConfirmRefund(
   code: string,
   payload: { evidenceUrl: string; note?: string; staffName?: string }

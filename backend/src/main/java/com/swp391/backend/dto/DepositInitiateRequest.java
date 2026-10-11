@@ -8,7 +8,7 @@ public class DepositInitiateRequest {
     private LocalDate startDate;
     private LocalDate endDate;
     private String rentalType; // "DAILY", "MONTHLY"
-    private Boolean agreedClickwrap; // Bắt buộc true theo BR-18
+    private Boolean agreedClickwrap; // Bắt buộc true để đồng ý điều khoản
     private String ipAddress;
 
     public DepositInitiateRequest() {

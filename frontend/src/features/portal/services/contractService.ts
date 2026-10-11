@@ -1,4 +1,4 @@
-﻿import apiClient, { isMockMode } from '@/lib/apiClient';
+import apiClient, { isMockMode } from '@/lib/apiClient';
 import { releaseUnit } from './facilityService';
 
 // Dữ liệu mẫu danh sách hợp đồng kho của tôi (Khớp bảng Contract + StorageUnit trong MySQL)
@@ -83,18 +83,21 @@ export const addNewBookingContract = (bookingData: any) => {
 };
 
 /**
- * Hủy đặt cọc hợp đồng (BR-17, BR-21):
+ * Hủy đặt cọc hợp đồng:
  * - Đổi trạng thái Hợp đồng sang CANCELED
  * - Mở khóa ô kho về AVAILABLE trên bản đồ
  */
-export const cancelDepositContract = async (contract: any) => {
+export const cancelDepositContract = async (
+  contract: any,
+  bankInfo?: { bankName?: string; bankAccountNumber?: string; bankAccountName?: string }
+) => {
   const currentList = getLocalContracts();
   const rawId = contract.rawContractId || (typeof contract.contractId === 'string' ? contract.contractId.replace('#HD-', '') : contract.contractId);
   const unitCode = contract.unitCode;
 
   try {
     if (rawId) {
-      await apiClient.post(`/contracts/${rawId}/cancel-deposit`);
+      await apiClient.post(`/contracts/${rawId}/cancel-deposit`, bankInfo || {});
     }
   } catch (err) {
     console.warn('Backend cancel-deposit fallback to local state:', err);
@@ -105,7 +108,11 @@ export const cancelDepositContract = async (contract: any) => {
       return {
         ...c,
         status: 'CANCELED',
-        statusLabel: 'ĐÃ HỦY CỌC'
+        statusLabel: 'ĐÃ HỦY CỌC',
+        cancelReason: 'CUSTOMER_REQUEST',
+        refundBankName: bankInfo?.bankName,
+        refundAccountNumber: bankInfo?.bankAccountNumber,
+        refundAccountName: bankInfo?.bankAccountName
       };
     }
     return c;

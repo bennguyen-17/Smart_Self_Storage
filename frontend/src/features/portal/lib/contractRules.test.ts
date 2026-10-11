@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { canExtendOnline } from "./contractRules"
 
-describe("canExtendOnline: chỉ hợp đồng ACTIVE mới được gia hạn online (US-12, BR-29)", () => {
+describe("canExtendOnline: chỉ hợp đồng ACTIVE mới được gia hạn online", () => {
   test.each([
     { status: "ACTIVE", expected: true },
     { status: "OVERDUE", expected: false },

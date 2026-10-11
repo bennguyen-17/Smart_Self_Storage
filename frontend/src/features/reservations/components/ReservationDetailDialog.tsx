@@ -108,7 +108,7 @@ function DetailBody({ code }: { code: string }) {
           />
           <DetailFields reservation={data} />
 
-          {/* QUY TRÌNH HOÀN TIỀN BACK-OFFICE (BR-35) */}
+          {/* QUY TRÌNH HOÀN TIỀN BACK-OFFICE */}
           {data.status === "CANCELED" &&
             (data.cancelReason === "CUSTOMER_REQUEST" ||
               (data.refundAmount !== undefined &&
@@ -202,7 +202,7 @@ function DetailFields({ reservation: r }: { reservation: Reservation }) {
   )
 }
 
-/** Component xử lý hoàn cọc Back-office & Upload biên lai đối soát (BR-35) */
+/** Component xử lý hoàn cọc Back-office & Upload biên lai đối soát */
 function RefundBackOfficeSection({
   reservation,
   onRefundSuccess,
@@ -271,7 +271,7 @@ function RefundBackOfficeSection({
             <CheckCircle2Icon className="size-5 text-emerald-600 dark:text-emerald-400" />
             <div>
               <h4 className="text-sm font-bold text-emerald-900 dark:text-emerald-200">
-                Chứng Từ Hoàn Cọc Đã Xác Nhận (BR-35)
+                Chứng Từ Hoàn Cọc Đã Xác Nhận
               </h4>
               <p className="text-xs text-emerald-700 dark:text-emerald-400">
                 Đã chuyển khoản ngoài và đối soát chứng từ thành công
@@ -360,7 +360,7 @@ function RefundBackOfficeSection({
           <FileCheck2Icon className="size-5 text-amber-600 dark:text-amber-400" />
           <div>
             <h4 className="text-sm font-bold text-amber-950 dark:text-amber-200">
-              Quy Trình Hoàn Tiền Cọc Back-office (BR-35)
+              Quy Trình Hoàn Tiền Cọc Back-office
             </h4>
             <p className="text-xs text-amber-800/80 dark:text-amber-300/80">
               Chuyển khoản bên ngoài và tải biên lai xác nhận chuyển trạng thái sang REFUNDED

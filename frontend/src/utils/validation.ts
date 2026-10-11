@@ -10,7 +10,7 @@ export interface PasswordRule {
 }
 
 /**
- * Nguồn duy nhất cho các quy tắc mật khẩu (BR-02).
+ * Nguồn duy nhất cho các quy tắc mật khẩu.
  * Vừa dùng để render checklist trực tiếp, vừa dùng để build Zod schema bên dưới.
  */
 export const passwordRules: PasswordRule[] = [

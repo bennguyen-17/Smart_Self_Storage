@@ -42,7 +42,7 @@ public class DashboardService {
     }
 
     /**
-     * US-33: Dashboard & Báo cáo cơ sở cho Facility Manager (BR-06, BR-37, BR-45, BR-51)
+     * US-33: Dashboard & Báo cáo cơ sở cho Facility Manager
      */
     public ManagerDashboardResponse getManagerDashboard(Integer facilityId) {
         Optional<Facility> facOpt = facilityRepository.findById(facilityId);
@@ -85,7 +85,7 @@ public class DashboardService {
         long overdueContracts = contracts.stream().filter(c -> "OVERDUE".equalsIgnoreCase(c.getStatus())).count();
         long terminatedContracts = contracts.stream().filter(c -> "TERMINATED".equalsIgnoreCase(c.getStatus())).count();
 
-        // 3. Thống kê Tài chính Doanh thu theo chuẩn BR-51
+        // 3. Thống kê Tài chính Doanh thu
         Set<Integer> contractIds = contracts.stream().map(Contract::getContractId).collect(Collectors.toSet());
         List<Payment> payments = paymentRepository.findAll().stream()
                 .filter(p -> contractIds.contains(p.getContractId()))

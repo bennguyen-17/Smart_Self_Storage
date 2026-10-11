@@ -211,7 +211,7 @@ export function mockCheckIn(
     collectedAmount: payload.collectedAmount,
     gatePin: "839201",
     remainingDue: 0,
-    invoicePdfUrl: "/invoices/DEP-HN-01-20261007-4719.pdf",
+    invoicePdfUrl: null,
   })
 }
 

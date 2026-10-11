@@ -145,6 +145,10 @@ public class ContractController {
             map.put("daysLeft", daysLeft);
             map.put("status", c.getStatus());
             map.put("statusLabel", statusLabel);
+            map.put("cancelReason", c.getCancelReason());
+            map.put("refundBankName", c.getRefundBankName());
+            map.put("refundAccountNumber", c.getRefundAccountNumber());
+            map.put("refundAccountName", c.getRefundAccountName());
 
             result.add(map);
         }
@@ -153,31 +157,125 @@ public class ContractController {
     }
 
     @PostMapping("/contracts/{contractId}/cancel-deposit")
-    public ResponseEntity<Map<String, Object>> cancelDeposit(@PathVariable Integer contractId) {
+    public ResponseEntity<Map<String, Object>> cancelDeposit(
+            @PathVariable Integer contractId,
+            @RequestBody(required = false) Map<String, Object> body) {
         Optional<Contract> contractOpt = contractRepository.findById(contractId);
         if (contractOpt.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Không tìm thấy hợp đồng!"));
         }
         Contract contract = contractOpt.get();
-        contract.setStatus("CANCELED");
-        contract.setTerminatedAt(java.time.LocalDateTime.now());
-        contractRepository.save(contract);
 
-        Optional<Reservation> resOpt = reservationRepository.findById(contract.getReservationId());
-        if (resOpt.isPresent()) {
-            Reservation res = resOpt.get();
-            res.setStatus("CANCELLED");
-            reservationRepository.save(res);
-
-            Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitCode());
-            if (unitOpt.isPresent()) {
-                StorageUnit unit = unitOpt.get();
-                unit.setStatus("AVAILABLE");
-                storageUnitRepository.save(unit);
-            }
+        if (!"PENDING_CHECKIN".equalsIgnoreCase(contract.getStatus()) && !"INITIATED".equalsIgnoreCase(contract.getStatus())) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Chỉ có thể hủy đặt cọc trước ngày nhận kho khi chưa check-in!"));
         }
 
-        return ResponseEntity.ok(Map.of("success", true, "message", "Hủy đặt cọc thành công! Ô kho đã được mở khóa và hoàn trả trạng thái trống."));
+        Optional<Reservation> resOpt = reservationRepository.findById(contract.getReservationId());
+        if (resOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Không tìm thấy thông tin đặt chỗ!"));
+        }
+
+        Reservation res = resOpt.get();
+        LocalDate today = LocalDate.now();
+        LocalDate startDate = res.getStartDate();
+        long daysUntilStart = startDate != null ? ChronoUnit.DAYS.between(today, startDate) : 0;
+
+        String bankName = null;
+        String bankAccountNumber = null;
+        String bankAccountName = null;
+        if (body != null) {
+            if (body.get("bankName") != null) bankName = body.get("bankName").toString().trim();
+            if (body.get("bankAccountNumber") != null) bankAccountNumber = body.get("bankAccountNumber").toString().trim();
+            if (body.get("bankAccountName") != null) bankAccountName = body.get("bankAccountName").toString().trim().toUpperCase();
+        }
+
+        contract.setStatus("CANCELED");
+        contract.setCancelReason("CUSTOMER_REQUEST");
+        contract.setTerminatedAt(LocalDateTime.now());
+        if (bankName != null) contract.setRefundBankName(bankName);
+        if (bankAccountNumber != null) contract.setRefundAccountNumber(bankAccountNumber);
+        if (bankAccountName != null) contract.setRefundAccountName(bankAccountName);
+        contractRepository.save(contract);
+
+        res.setStatus("CANCELLED");
+        reservationRepository.save(res);
+
+        Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitCode());
+        if (unitOpt.isPresent()) {
+            StorageUnit unit = unitOpt.get();
+            unit.setStatus("AVAILABLE");
+            storageUnitRepository.save(unit);
+        }
+
+        boolean isRefundEligible = daysUntilStart >= 4;
+        BigDecimal depositAmount = res.getDepositAmount() != null ? res.getDepositAmount() : BigDecimal.valueOf(500000);
+
+        if (isRefundEligible) {
+            // Hủy trước ngày nhận kho >= 4 ngày: Hoàn 100% tiền cọc (sinh hóa đơn REF)
+            Payment refPayment = new Payment();
+            refPayment.setContractId(contract.getContractId());
+            refPayment.setInvoiceNumber("REF-" + System.currentTimeMillis() % 10000000);
+            refPayment.setInvoiceType("REF");
+            refPayment.setAmount(depositAmount);
+            refPayment.setDueAt(LocalDateTime.now().plusDays(2));
+            refPayment.setStatus("PENDING");
+            refPayment.setPaymentStatus("PENDING");
+            refPayment.setPaymentMethod("BANK_TRANSFER");
+            refPayment.setIssuedAt(LocalDateTime.now());
+            if (bankAccountNumber != null && !bankAccountNumber.isBlank()) {
+                String bankDesc = String.format("%s - %s - %s",
+                        bankName != null ? bankName : "Ngân hàng",
+                        bankAccountNumber,
+                        bankAccountName != null ? bankAccountName : "");
+                if (bankDesc.length() > 100) bankDesc = bankDesc.substring(0, 100);
+                refPayment.setTransactionCode(bankDesc);
+                refPayment.setGatewayTransactionId(bankAccountNumber);
+            }
+            paymentRepository.save(refPayment);
+
+            if (activityLogRepository != null) {
+                ActivityLog log = new ActivityLog();
+                log.setAccountId(res.getAccountId());
+                log.setAction("CUSTOMER_CANCEL_DEPOSIT_REFUND");
+                log.setDescription(String.format("Khách hủy đặt cọc HĐ #%d trước %d ngày (>= 4 ngày). Yêu cầu hoàn cọc %s: %s VNĐ về TK: %s.",
+                        contract.getContractId(), daysUntilStart, refPayment.getInvoiceNumber(), depositAmount,
+                        refPayment.getTransactionCode() != null ? refPayment.getTransactionCode() : "Chưa cung cấp"));
+                log.setCreatedAt(LocalDateTime.now());
+                activityLogRepository.save(log);
+            }
+
+            Map<String, Object> respMap = new HashMap<>();
+            respMap.put("success", true);
+            respMap.put("refundEligible", true);
+            respMap.put("refundAmount", depositAmount);
+            respMap.put("daysUntilStart", daysUntilStart);
+            respMap.put("refundBankName", bankName != null ? bankName : "");
+            respMap.put("refundAccountNumber", bankAccountNumber != null ? bankAccountNumber : "");
+            respMap.put("refundAccountName", bankAccountName != null ? bankAccountName : "");
+            respMap.put("message", String.format("Hủy đặt cọc thành công! Do bạn hủy trước ngày nhận kho %d ngày (từ 4 ngày trở lên), bạn được hoàn lại 100%% tiền cọc (%s VNĐ). Kế toán sẽ xử lý hoàn tiền về tài khoản %s trong 24-48 giờ làm việc.",
+                    daysUntilStart, depositAmount, bankAccountNumber != null ? bankAccountNumber : "ngân hàng"));
+            return ResponseEntity.ok(respMap);
+        } else {
+            // Hủy trước ngày nhận kho < 4 ngày: Tịch thu 100% tiền cọc
+            if (activityLogRepository != null) {
+                ActivityLog log = new ActivityLog();
+                log.setAccountId(res.getAccountId());
+                log.setAction("CUSTOMER_CANCEL_DEPOSIT_FORFEIT");
+                log.setDescription(String.format("Khách hủy đặt cọc HĐ #%d trước %d ngày (< 4 ngày). Tịch thu 100%% tiền cọc: %s VNĐ.",
+                        contract.getContractId(), daysUntilStart, depositAmount));
+                log.setCreatedAt(LocalDateTime.now());
+                activityLogRepository.save(log);
+            }
+
+            Map<String, Object> respMap = new HashMap<>();
+            respMap.put("success", true);
+            respMap.put("refundEligible", false);
+            respMap.put("refundAmount", BigDecimal.ZERO);
+            respMap.put("daysUntilStart", daysUntilStart);
+            respMap.put("message", String.format("Hủy đặt cọc thành công! Do bạn hủy trước ngày nhận kho dưới 4 ngày (%d ngày), toàn bộ tiền cọc (%s VNĐ) sẽ bị khấu trừ theo chính sách hủy cọc.",
+                    daysUntilStart, depositAmount));
+            return ResponseEntity.ok(respMap);
+        }
     }
 
     /**
@@ -301,8 +399,8 @@ public class ContractController {
     }
 
     /**
-     * US-21: Gia hạn hợp đồng online (BR-27, BR-29, BR-37, BR-46)
-     * - Chỉ áp dụng cho hợp đồng ACTIVE (HĐ OVERDUE / CANCELED / TERMINATED bị từ chối theo BR-29)
+     * US-21: Gia hạn hợp đồng online
+     * - Chỉ áp dụng cho hợp đồng ACTIVE (HĐ quá hạn hoặc đã đóng bị từ chối)
      * - Cộng dồn ngày hết hạn nối tiếp ngày cũ
      * - Tạo hóa đơn EXT-... trạng thái PAID/SUCCESS
      * - Ghi ActivityLog kiểm toán
@@ -320,11 +418,11 @@ public class ContractController {
 
         Contract contract = contractOpt.get();
 
-        // [BR-29]: Chỉ cho phép gia hạn khi hợp đồng đang ACTIVE
+        // Chỉ cho phép gia hạn khi hợp đồng đang ACTIVE
         if (!"ACTIVE".equalsIgnoreCase(contract.getStatus())) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", "Chỉ hợp đồng đang có HIỆU LỰC (ACTIVE) mới được phép gia hạn trực tuyến. Hợp đồng quá hạn hoặc không hợp lệ vui lòng liên hệ nhân viên tại quầy theo quy định BR-29!"
+                    "message", "Chỉ hợp đồng đang có HIỆU LỰC (ACTIVE) mới được phép gia hạn trực tuyến. Hợp đồng quá hạn hoặc không hợp lệ vui lòng liên hệ nhân viên tại quầy để được hỗ trợ!"
             ));
         }
 
@@ -357,10 +455,10 @@ public class ContractController {
         }
 
         if (effectiveDays < 7) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Thời hạn gia hạn tối thiểu là 7 ngày theo BR-13!"));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Thời hạn gia hạn tối thiểu là 7 ngày!"));
         }
 
-        // [BR-29]: Cộng dồn ngày hết hạn mới nối tiếp ngày hết hạn cũ
+        // Cộng dồn ngày hết hạn mới nối tiếp ngày hết hạn cũ
         LocalDate currentExpiry = res.getEndDate() != null ? res.getEndDate() : LocalDate.now();
         if (currentExpiry.isBefore(LocalDate.now())) {
             currentExpiry = LocalDate.now();
@@ -369,7 +467,7 @@ public class ContractController {
         res.setEndDate(newExpiry);
         reservationRepository.save(res);
 
-        // [BR-37]: Sinh hóa đơn EXT-[Mã cơ sở]-[YYYYMMDD]-[Random]
+        // Sinh hóa đơn EXT-[Mã cơ sở]-[YYYYMMDD]-[Random]
         String branchCode = "HN-01";
         Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitCode());
         if (unitOpt.isPresent()) {
@@ -400,7 +498,7 @@ public class ContractController {
         payment.setPaidAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
-        // [BR-46]: Ghi nhật ký kiểm toán (ActivityLog)
+        // Ghi nhật ký kiểm toán (ActivityLog)
         ActivityLog log = new ActivityLog();
         log.setAccountId(res.getAccountId());
         log.setAction("EXTEND_CONTRACT");

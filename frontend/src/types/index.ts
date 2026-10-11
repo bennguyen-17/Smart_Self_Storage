@@ -124,7 +124,7 @@ export interface DepositInitiateRequest {
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
   rentalType: RentalType;
-  agreedClickwrap: boolean; // Bắt buộc true theo BR-18
+  agreedClickwrap: boolean; // Bắt buộc true
   ipAddress?: string;
 }
 
@@ -132,12 +132,12 @@ export interface DepositInitiateResponse {
   success: boolean;
   message: string;
   reservationId: number;
-  reservationCode: string; // RES-CG-8899-K7X2 (BR-15)
+  reservationCode: string; // RES-CG-8899-K7X2
   contractId: number;
-  contractDraftUrl: string; // /contracts/DRAFT-RES-XXXX.pdf (BR-18)
+  contractDraftUrl: string; // /contracts/DRAFT-RES-XXXX.pdf
   paymentId: number;
-  invoiceNumber: string; // DEP-CG-20260927-4719 (BR-37)
-  depositAmount: number; // 100% tiền cọc (BR-16)
+  invoiceNumber: string; // DEP-CG-20260927-4719
+  depositAmount: number; // 100% tiền cọc
   rentalAmount: number;
   vietQrUrl: string; // Link ảnh VietQR QuickPay
   bankAccount: string;

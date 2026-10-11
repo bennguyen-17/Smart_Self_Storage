@@ -2,7 +2,6 @@ import { Fragment, useState, type ReactNode } from "react"
 import { MotionConfig } from "motion/react"
 
 import "../landing.css"
-import { ESTIMATOR, type EstimatorPresetId } from "../content/copy"
 import { type CityId } from "../content/facilities"
 import { enabledSections, type SectionId } from "../content/sections"
 import { SITE } from "../content/site"
@@ -36,17 +35,11 @@ export default function LandingPage() {
   const rec = recommendUnit(estimate.volume)
   const suggested = rec.kind === "fit" ? rec.unit.size : null
 
-  const applyPreset = (presetId: EstimatorPresetId) => {
-    const preset = ESTIMATOR.presets.find((p) => p.id === presetId)
-    if (preset)
-      setEstimate((s) => ({ ...s, volume: preset.volumeM3, presetId }))
-  }
-
   // Thứ tự và bật/tắt section lấy từ content/sections.ts.
   const renderSection = (id: SectionId): ReactNode => {
     switch (id) {
       case "use-cases":
-        return <UseCasesSection onTry={applyPreset} />
+        return <UseCasesSection />
       case "estimator":
         return <EstimatorSection state={estimate} onChange={setEstimate} />
       case "pricing":

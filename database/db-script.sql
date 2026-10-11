@@ -147,7 +147,7 @@ CREATE TABLE StorageUnit (
     unitCode VARCHAR(50) PRIMARY KEY,
     floorId INT NOT NULL,
     unitTypeId INT NOT NULL,
-    status ENUM('AVAILABLE', 'HOLD', 'RESERVED', 'RENTED', 'MAINTENANCE', 'OVERDUE') NOT NULL DEFAULT 'AVAILABLE',
+    status ENUM('AVAILABLE', 'HOLD', 'RESERVED', 'OCCUPIED', 'UNDER_MAINTENANCE', 'RENTED', 'MAINTENANCE', 'OVERDUE') NOT NULL DEFAULT 'AVAILABLE',
     CONSTRAINT fk_unit_floor FOREIGN KEY (floorId) REFERENCES Floor (floorId) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_unit_type FOREIGN KEY (unitTypeId) REFERENCES UnitType (unitTypeId) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -246,7 +246,7 @@ CREATE TABLE Reservation (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 17. TABLE: Contract (Hợp đồng thuê kho - BR-21 Chu trình 7 trạng thái)
+-- 17. TABLE: Contract (Hợp đồng thuê kho - Chu trình 7 trạng thái)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Contract;
 CREATE TABLE Contract (
@@ -256,6 +256,10 @@ CREATE TABLE Contract (
     activatedAt DATETIME,
     terminatedAt DATETIME,
     status ENUM('INITIATED', 'PENDING_CHECKIN', 'ACTIVE', 'OVERDUE', 'TERMINATED', 'FORFEITED', 'CANCELED') NOT NULL DEFAULT 'INITIATED',
+    cancelReason VARCHAR(50),
+    refundBankName VARCHAR(100),
+    refundAccountNumber VARCHAR(50),
+    refundAccountName VARCHAR(100),
     CONSTRAINT fk_contract_reservation FOREIGN KEY (reservationId) REFERENCES Reservation (reservationId) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -434,7 +438,7 @@ INSERT INTO Floor (floorId, facilityId, floorName, maxLoadPerM2, status) VALUES
 (17, 7, 'Tầng Trệt (Kho XL)', 1000.00, 'ACTIVE'),
 (18, 7, 'Tầng 1 (Kho S, M, L)', 500.00, 'ACTIVE');
 
--- 7. UnitTypes (BR-08: Chuẩn 4 kích thước chiều cao 2.0m)
+-- 7. UnitTypes (Chuẩn 4 kích thước chiều cao 2.0m)
 INSERT INTO UnitType (unitTypeId, typeName, size, storageCondition, status) VALUES
 (1, 'Size S (Tủ cá nhân)', '1.0m x 1.0m x 2.0m', 'NORMAL', 'ACTIVE'),
 (2, 'Size M (Phòng vừa)', '1.5m x 2.0m x 2.0m', 'NORMAL', 'ACTIVE'),
@@ -443,7 +447,7 @@ INSERT INTO UnitType (unitTypeId, typeName, size, storageCondition, status) VALU
 (5, 'Size M - Climate (Kho mát VIP)', '1.5m x 2.0m x 2.0m', 'CLIMATE_CONTROLLED', 'ACTIVE'),
 (6, 'Size L - Climate (Kho mát VIP)', '2.0m x 3.0m x 2.0m', 'CLIMATE_CONTROLLED', 'ACTIVE');
 
--- 8. Prices (BR-08: Giá ngày, Giá tháng, Tiền cọc chuẩn & Phụ phí kho mát 20%)
+-- 8. Prices (Giá ngày, Giá tháng, Tiền cọc chuẩn & Phụ phí kho mát 20%)
 INSERT INTO Price (priceId, unitTypeId, dailyPrice, monthlyPrice, depositAmount, climateSurchargePercent, effectiveFrom, effectiveTo, status) VALUES
 (1, 1, 30000.00, 600000.00, 500000.00, 0.00, '2026-01-01', NULL, 'ACTIVE'),
 (2, 2, 60000.00, 1200000.00, 1000000.00, 0.00, '2026-01-01', NULL, 'ACTIVE'),
@@ -456,58 +460,58 @@ INSERT INTO Price (priceId, unitTypeId, dailyPrice, monthlyPrice, depositAmount,
 INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 -- === HN-01 TẦNG TRỆT (Floor 1): 10 Ô KHO XL (Dãy Mặt tiền 5 ô + Dãy Hậu cần 5 ô) ===
 ('HN01-G-XL01', 1, 4, 'AVAILABLE'),
-('HN01-G-XL02', 1, 4, 'RENTED'),
+('HN01-G-XL02', 1, 4, 'OCCUPIED'),
 ('HN01-G-XL03', 1, 4, 'AVAILABLE'),
 ('HN01-G-XL04', 1, 4, 'AVAILABLE'),
-('HN01-G-XL05', 1, 4, 'MAINTENANCE'),
+('HN01-G-XL05', 1, 4, 'UNDER_MAINTENANCE'),
 ('HN01-G-XL06', 1, 4, 'AVAILABLE'),
 ('HN01-G-XL07', 1, 4, 'HOLD'),
 ('HN01-G-XL08', 1, 4, 'AVAILABLE'),
-('HN01-G-XL09', 1, 4, 'RENTED'),
+('HN01-G-XL09', 1, 4, 'OCCUPIED'),
 ('HN01-G-XL10', 1, 4, 'AVAILABLE'),
 
 -- === HN-01 TẦNG 1 (Floor 2): 8 ô S, 6 ô M, 4 ô L ===
 ('HN01-F1-S01', 2, 1, 'AVAILABLE'),
 ('HN01-F1-S02', 2, 1, 'HOLD'),
 ('HN01-F1-S03', 2, 1, 'AVAILABLE'),
-('HN01-F1-S04', 2, 1, 'RENTED'),
+('HN01-F1-S04', 2, 1, 'OCCUPIED'),
 ('HN01-F1-S05', 2, 1, 'AVAILABLE'),
 ('HN01-F1-S06', 2, 1, 'AVAILABLE'),
-('HN01-F1-S07', 2, 1, 'MAINTENANCE'),
+('HN01-F1-S07', 2, 1, 'UNDER_MAINTENANCE'),
 ('HN01-F1-S08', 2, 1, 'AVAILABLE'),
-('HN01-F1-M01', 2, 2, 'RENTED'),
+('HN01-F1-M01', 2, 2, 'OCCUPIED'),
 ('HN01-F1-M02', 2, 2, 'AVAILABLE'),
 ('HN01-F1-M03', 2, 2, 'AVAILABLE'),
 ('HN01-F1-M04', 2, 2, 'HOLD'),
 ('HN01-F1-M05', 2, 2, 'AVAILABLE'),
 ('HN01-F1-M06', 2, 2, 'AVAILABLE'),
 ('HN01-F1-L01', 2, 3, 'AVAILABLE'),
-('HN01-F1-L02', 2, 3, 'RENTED'),
+('HN01-F1-L02', 2, 3, 'OCCUPIED'),
 ('HN01-F1-L03', 2, 3, 'AVAILABLE'),
 ('HN01-F1-L04', 2, 3, 'AVAILABLE'),
 
 -- === HN-01 TẦNG 2 (Floor 3): 6 ô S, 8 ô M, 4 ô L ===
 ('HN01-F2-S01', 3, 1, 'AVAILABLE'),
-('HN01-F2-S02', 3, 1, 'RENTED'),
+('HN01-F2-S02', 3, 1, 'OCCUPIED'),
 ('HN01-F2-S03', 3, 1, 'AVAILABLE'),
 ('HN01-F2-S04', 3, 1, 'AVAILABLE'),
 ('HN01-F2-S05', 3, 1, 'AVAILABLE'),
 ('HN01-F2-S06', 3, 1, 'AVAILABLE'),
 ('HN01-F2-M01', 3, 2, 'AVAILABLE'),
 ('HN01-F2-M02', 3, 2, 'AVAILABLE'),
-('HN01-F2-M03', 3, 2, 'RENTED'),
+('HN01-F2-M03', 3, 2, 'OCCUPIED'),
 ('HN01-F2-M04', 3, 2, 'HOLD'),
 ('HN01-F2-M05', 3, 2, 'AVAILABLE'),
 ('HN01-F2-M06', 3, 2, 'AVAILABLE'),
 ('HN01-F2-M07', 3, 2, 'AVAILABLE'),
 ('HN01-F2-M08', 3, 2, 'AVAILABLE'),
-('HN01-F2-L01', 3, 3, 'MAINTENANCE'),
+('HN01-F2-L01', 3, 3, 'UNDER_MAINTENANCE'),
 ('HN01-F2-L02', 3, 3, 'AVAILABLE'),
-('HN01-F2-L03', 3, 3, 'RENTED'),
+('HN01-F2-L03', 3, 3, 'OCCUPIED'),
 ('HN01-F2-L04', 3, 3, 'AVAILABLE'),
 
 -- === HCM-01 TẦNG 1 (Floor 8): Kho mát VIP Climate-Controlled (M & L) ===
-('HCM01-F1-M01', 8, 5, 'RENTED'),
+('HCM01-F1-M01', 8, 5, 'OCCUPIED'),
 ('HCM01-F1-L01', 8, 6, 'AVAILABLE'),
 ('HCM01-F1-M02', 8, 5, 'AVAILABLE'),
 ('HCM01-F1-M03', 8, 5, 'HOLD'),

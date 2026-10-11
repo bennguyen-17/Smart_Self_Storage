@@ -18,7 +18,7 @@ public class DashboardController {
         this.dashboardService = dashboardService;
     }
 
-    // --- US-33: Dashboard cơ sở cho Facility Manager (BR-06, BR-45, BR-51) ---
+    // --- US-33: Dashboard cơ sở cho Facility Manager ---
     @GetMapping("/manager/dashboard/overview")
     public ResponseEntity<?> getManagerDashboardOverview(
             @RequestHeader(value = "X-Facility-Id", required = false) Integer managerFacilityId,
@@ -39,7 +39,7 @@ public class DashboardController {
         }
     }
 
-    // --- US-33: Dashboard toàn chuỗi 7 cơ sở cho Ban Giám Đốc (BOM / Admin theo BR-45) ---
+    // --- US-33: Dashboard toàn chuỗi 7 cơ sở cho Ban Giám Đốc (BOM / Admin) ---
     @GetMapping("/admin/dashboard/chain-overview")
     public ResponseEntity<ChainDashboardResponse> getChainDashboardOverview() {
         ChainDashboardResponse response = dashboardService.getChainDashboard();

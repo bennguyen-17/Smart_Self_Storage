@@ -1,4 +1,4 @@
-// Cỡ kho và bảng giá theo Business Rule BR-08 (docs/Business_Rule.pdf).
+// Cỡ kho và bảng giá niêm yết.
 // Khi BE có API giá, thay mảng này bằng dữ liệu từ API.
 
 export type UnitSize = "S" | "M" | "L" | "XL"
