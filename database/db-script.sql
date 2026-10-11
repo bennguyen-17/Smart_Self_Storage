@@ -100,9 +100,18 @@ DROP TABLE IF EXISTS AuditLog;
 CREATE TABLE AuditLog (
     auditLogId INT AUTO_INCREMENT PRIMARY KEY,
     accountId INT NOT NULL,
+    facilityId INT NULL,
+    customerId INT NULL,
     action VARCHAR(100) NOT NULL,
+    openedAt DATETIME NULL,
+    reason VARCHAR(500) NULL,
     createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_audit_account FOREIGN KEY (accountId) REFERENCES Account (accountId) ON DELETE CASCADE ON UPDATE CASCADE
+
+    CONSTRAINT fk_audit_account
+        FOREIGN KEY (accountId)
+        REFERENCES Account (accountId)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------

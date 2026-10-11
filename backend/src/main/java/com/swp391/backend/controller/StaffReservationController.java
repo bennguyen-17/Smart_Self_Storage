@@ -9,6 +9,7 @@ import com.swp391.backend.dto.StaffCheckInResponse;
 import com.swp391.backend.dto.StaffReservationListResponse;
 import com.swp391.backend.dto.StaffReservationLookupResponse;
 import com.swp391.backend.service.StaffReservationService;
+import com.swp391.backend.service.StaffCheckInService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,9 +25,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class StaffReservationController {
 
     private final StaffReservationService staffReservationService;
+    private final StaffCheckInService staffCheckInService;
 
-    public StaffReservationController(StaffReservationService staffReservationService) {
+    public StaffReservationController(StaffReservationService staffReservationService,
+                                      StaffCheckInService staffCheckInService) {
         this.staffReservationService = staffReservationService;
+        this.staffCheckInService = staffCheckInService;
     }
 
     @GetMapping
@@ -50,7 +54,7 @@ public class StaffReservationController {
     public ResponseEntity<StaffCheckInResponse> checkIn(
             @PathVariable Integer reservationId,
             @RequestBody StaffCheckInRequest request) {
-        StaffCheckInResponse response = staffReservationService.checkIn(reservationId, request);
+        StaffCheckInResponse response = staffCheckInService.checkIn(reservationId, request);
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);

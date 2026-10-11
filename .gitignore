@@ -58,4 +58,10 @@ docker-compose.yml
 # Local project references - DO NOT COMMIT
 business-rule/
 prototype/
+AGENTS.md
+GEMINI.md
+
+--- [LOCAL BUILD OUTPUT & MAVEN CACHE] ---
+backend/.m2/
+out/
 
