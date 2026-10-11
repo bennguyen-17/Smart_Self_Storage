@@ -3,10 +3,7 @@
 
 /** Trạng thái hợp đồng (Contract.status) */
 export type ContractStatus =
-  | "PENDING_CHECKIN"
-  | "ACTIVE"
-  | "OVERDUE"
-  | "CANCELED"
+  "PENDING_CHECKIN" | "ACTIVE" | "OVERDUE" | "CANCELED"
 
 /** Dòng danh sách trả về từ BE (StaffReservationListItemResponse). */
 export interface StaffReservationItem {
@@ -55,6 +52,8 @@ export interface StaffCheckInResponse {
   collectedAmount: number | null
   gatePin: string | null
   remainingDue: number | null
+  /** Link PDF hóa đơn DEP (BE bổ sung khi bàn giao). Chưa có thì ẩn. */
+  invoicePdfUrl?: string | null
 }
 
 export interface StaffChangeUnitResponse {

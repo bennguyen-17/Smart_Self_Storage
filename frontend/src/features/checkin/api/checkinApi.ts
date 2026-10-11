@@ -93,8 +93,9 @@ export async function fetchAllUnits(): Promise<UnitDetailResponse[]> {
 export function checkinErrorMessage(error: unknown): string {
   if (isAxiosError(error)) {
     const status = error.response?.status
-    const serverMessage = (error.response?.data as { message?: string } | undefined)
-      ?.message
+    const serverMessage = (
+      error.response?.data as { message?: string } | undefined
+    )?.message
     if (status === 404) {
       return "Không tìm thấy mã đặt chỗ (mã sai hoặc thuộc cơ sở khác)."
     }

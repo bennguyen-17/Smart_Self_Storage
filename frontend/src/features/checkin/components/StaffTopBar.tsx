@@ -1,122 +1,88 @@
+import { useState } from "react"
 import {
-  BuildingIcon,
-  ChartPieIcon,
-  IdCardIcon,
-  MonitorIcon,
+  ChevronDownIcon,
   MoonIcon,
   SunIcon,
   UserCogIcon,
   WarehouseIcon,
 } from "lucide-react"
-import { useNavigate } from "react-router-dom"
-import { toast } from "sonner"
-import { cn } from "cn"
+
+import StaffProfileModal from "./StaffProfileModal"
 
 interface StaffTopBarProps {
   isDark: boolean
   onToggleTheme: () => void
 }
 
-const ROLES = [
-  { key: "customer", label: "Web Portal (Khách)", Icon: MonitorIcon, to: "/customer_login" },
-  { key: "staff", label: "Staff", Icon: IdCardIcon },
-  { key: "manager", label: "Manager Chi Nhánh", Icon: ChartPieIcon },
-  { key: "bom", label: "Quản Lý Hệ Thống (BOM)", Icon: BuildingIcon },
-  { key: "admin", label: "Admin Hệ Thống", Icon: UserCogIcon },
-] as const
-
-/** Top navigation — bám prototype self_storage_prototype.html */
+/** Header nhân viên vận hành — bám prototype staff_portal.html (full-width, px-6 sm:px-10) */
 function StaffTopBar({ isDark, onToggleTheme }: StaffTopBarProps) {
-  const navigate = useNavigate()
-
-  function handleRole(key: string, to?: string) {
-    if (key === "staff") return
-    if (key === "customer" && to) {
-      navigate(to)
-      return
-    }
-    toast.info("Vai trò này chưa có trang riêng trong app (chỉ có ở prototype).")
-  }
+  const [profileOpen, setProfileOpen] = useState(false)
 
   return (
-    <header className="portal-topbar sticky top-0 z-50 border-b transition-all">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* LOGO & BRAND */}
+    <>
+      <header className="portal-topbar sticky top-0 z-50 flex h-16 w-full shrink-0 items-center justify-between border-b px-6 shadow-sm transition-colors sm:px-10">
+        {/* BRAND */}
         <div className="flex shrink-0 items-center space-x-3">
-          <div className="flex shrink-0 items-center justify-center rounded-xl bg-blue-600 p-2 font-bold text-white shadow-md">
-            <WarehouseIcon className="size-5" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md">
+            <WarehouseIcon className="size-5" strokeWidth={2.5} />
           </div>
-          <div className="flex-shrink-0 whitespace-nowrap">
-            <span className="text-title block text-lg leading-tight font-black tracking-wider whitespace-nowrap">
-              SELF-STORAGE 391
+          <div>
+            <span className="text-title block text-base leading-tight font-bold">
+              Smart Storage
             </span>
-            <span className="block text-[10px] font-bold tracking-widest text-blue-600 uppercase whitespace-nowrap">
-              Proportional Floor Plan System
+            <span className="text-muted block text-[11px] font-medium">
+              Hệ thống cho thuê kho tự quản thông minh 24/7
             </span>
           </div>
         </div>
 
-        {/* THEME TOGGLE & ROLE SWITCHER */}
-        <div className="flex shrink-0 items-center space-x-3 overflow-x-auto">
+        {/* CONTROLS */}
+        <div className="flex shrink-0 items-center space-x-3">
           <button
             type="button"
             onClick={onToggleTheme}
-            className="inner-box flex shrink-0 items-center space-x-2 rounded-xl border px-3.5 py-1.5 text-xs font-bold shadow-sm transition whitespace-nowrap"
+            className="inner-box flex cursor-pointer items-center space-x-2 rounded-xl border px-3.5 py-1.5 text-xs font-bold whitespace-nowrap shadow-sm transition hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             {isDark ? (
               <MoonIcon className="size-3.5 shrink-0 text-indigo-400" />
             ) : (
               <SunIcon className="size-3.5 shrink-0 text-amber-500" />
             )}
-            <span className="text-title whitespace-nowrap">
+            <span className="text-title text-xs whitespace-nowrap">
               {isDark ? "Giao diện Tối" : "Giao diện Sáng"}
             </span>
           </button>
 
-          <div className="h-6 w-px shrink-0 bg-slate-300 dark:bg-slate-700" />
+          <div className="hidden h-6 w-px bg-slate-200 sm:block dark:bg-slate-700" />
 
-          {/* ROLE SWITCHER */}
-          <div className="inner-box flex shrink-0 overflow-x-auto rounded-xl border p-1">
-            {ROLES.map(({ key, label, Icon, ...rest }) => {
-              const active = key === "staff"
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleRole(key, "to" in rest ? rest.to : undefined)}
-                  className={cn(
-                    "flex cursor-pointer items-center gap-1 rounded-lg px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all",
-                    active
-                      ? "bg-blue-600 text-white shadow-md"
-                      : "text-muted hover:text-blue-600 dark:hover:text-blue-400"
-                  )}
-                >
-                  <Icon className="size-3.5" />
-                  {label}
-                </button>
-              )
-            })}
-          </div>
-
-          {/* OVERDUE SIMULATOR (prototype-only) */}
-          <div className="inner-box flex shrink-0 items-center space-x-2 rounded-xl border px-3 py-1.5">
-            <span className="text-muted text-xs font-semibold whitespace-nowrap">
-              Quá hạn:
-            </span>
-            <button
-              type="button"
-              aria-label="Giả lập quá hạn (prototype)"
-              onClick={() =>
-                toast.info("Nút giả lập Quá hạn chỉ có ở prototype.")
-              }
-              className="relative inline-flex h-5 w-9 cursor-pointer items-center rounded-full bg-slate-300 transition dark:bg-slate-700"
-            >
-              <span className="absolute left-[2px] h-4 w-4 rounded-full border border-slate-300 bg-white transition" />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setProfileOpen(true)}
+            title="Nhấn để xem Hồ sơ Nhân viên Vận hành"
+            className="inner-box group flex cursor-pointer items-center space-x-2.5 rounded-xl border px-3 py-1.5 text-left shadow-sm transition hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-slate-800"
+          >
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-xs font-black text-white shadow-sm transition-transform group-hover:scale-105">
+              NV
+            </div>
+            <div className="hidden text-left md:block">
+              <div className="text-title flex items-center space-x-1 text-xs leading-tight font-extrabold">
+                <span>Nguyễn Văn Staff</span>
+                <ChevronDownIcon className="text-muted size-2.5 transition-colors group-hover:text-blue-600" />
+              </div>
+              <div className="flex items-center space-x-1 text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                <UserCogIcon className="size-2.5" />
+                <span>Chuyên viên Vận hành</span>
+              </div>
+            </div>
+          </button>
         </div>
-      </div>
-    </header>
+      </header>
+
+      <StaffProfileModal
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
+      />
+    </>
   )
 }
 
