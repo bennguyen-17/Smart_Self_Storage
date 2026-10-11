@@ -35,9 +35,9 @@ export function findTab(key: string | null): ReservationTab {
 }
 
 export const NO_SHOW_REASON_TEXT =
-  "Đơn bị hủy tự động do khách hàng không đến nhận kho đúng ngày hẹn theo quy định BR-13."
+  "Đơn bị hủy tự động do khách hàng không đến nhận kho đúng ngày hẹn theo quy định BR-17."
 
-/** Tóm tắt quy định No-Show của BR-13 */
+/** Tóm tắt quy định No-Show của BR-17 */
 export const NO_SHOW_RULES = [
   "Khách phải đến nhận kho trong khung giờ 08:00 – 20:00 của ngày hẹn.",
   "Đến 00:00 ngày kế tiếp mà khách chưa check-in và không báo gia hạn, hệ thống tự động hủy đơn.",

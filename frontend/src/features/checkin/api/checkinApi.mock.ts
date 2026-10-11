@@ -180,9 +180,7 @@ export function mockLookupReservation(
   code: string
 ): Promise<StaffReservationLookup> {
   const normalized = code.trim().toUpperCase()
-  const seed = store.find(
-    (s) => s.reservationCode.toUpperCase() === normalized
-  )
+  const seed = store.find((s) => s.reservationCode.toUpperCase() === normalized)
   if (!seed || seed.facilityCode !== MOCK_STAFF_FACILITY) {
     return fail("Reservation was not found.")
   }
@@ -190,7 +188,8 @@ export function mockLookupReservation(
     ...toItem(seed),
     success: true,
     message: "Reservation found.",
-    unitStatus: seed.contractStatus === "PENDING_CHECKIN" ? "RESERVED" : "RENTED",
+    unitStatus:
+      seed.contractStatus === "PENDING_CHECKIN" ? "RESERVED" : "RENTED",
     contractPdfUrl: null,
   })
 }
@@ -210,8 +209,9 @@ export function mockCheckIn(
     contractStatus: "ACTIVE",
     unitStatus: "RENTED",
     collectedAmount: payload.collectedAmount,
-    gatePin: null,
+    gatePin: "839201",
     remainingDue: 0,
+    invoicePdfUrl: "/invoices/DEP-HN-01-20261007-4719.pdf",
   })
 }
 

@@ -22,7 +22,7 @@ interface RunNoShowScanButtonProps {
 }
 
 /**
- * Công cụ demo khi bảo vệ đồ án: chạy tay cron No-Show (BR-13) thay vì chờ 00:00.
+ * Công cụ demo khi bảo vệ đồ án: chạy tay cron No-Show (BR-17) thay vì chờ 00:00.
  * Chỉ hiện khi VITE_ENABLE_DEMO_TOOLS=true (xem nơi dùng).
  */
 function RunNoShowScanButton({ onCompleted }: RunNoShowScanButtonProps) {

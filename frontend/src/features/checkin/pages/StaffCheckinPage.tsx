@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react"
-import { IdCardIcon, KeyRoundIcon, UserCogIcon, WrenchIcon } from "lucide-react"
+import { IdCardIcon, KeyIcon, UserCogIcon, WrenchIcon } from "lucide-react"
 import { cn } from "cn"
 
 import { useTheme } from "@/components/common/theme-provider"
@@ -9,7 +9,7 @@ import StaffPinPanel from "../components/StaffPinPanel"
 import StaffTicketPanel from "../components/StaffTicketPanel"
 import StaffTopBar from "../components/StaffTopBar"
 
-type StaffTab = "checkin" | "ticket"
+type StaffTab = "checkin" | "ticket" | "pin"
 
 function resolveIsDark(theme: string): boolean {
   if (theme === "dark") return true
@@ -20,11 +20,10 @@ function resolveIsDark(theme: string): boolean {
   )
 }
 
-/** US-16: Cổng nhân viên vận hành — bám prototype self_storage_prototype.html */
+/** Cổng nhân viên vận hành — bám prototype staff_portal.html */
 function StaffCheckinPage() {
   const { theme, setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState<StaffTab>("checkin")
-  const [pinOpen, setPinOpen] = useState(false)
 
   const isDark = resolveIsDark(theme)
 
@@ -45,52 +44,67 @@ function StaffCheckinPage() {
               </div>
               <div>
                 <h2 className="flex items-center space-x-2 text-sm font-black tracking-wide text-white sm:text-base">
-                  <span>
-                    BÀN TRỰC CA & VẬN HÀNH NHÂN VIÊN (STAFF COCKPIT)
-                  </span>
-                  <span className="rounded-full border border-blue-400/30 bg-blue-500/20 px-2 py-0.5 text-[10px] font-bold text-blue-300">
-                    Trực ca Cơ sở
+                  <span className="inline-flex items-center space-x-2 rounded-xl border border-slate-700 bg-slate-800/80 px-3 py-1.5">
+                    <span className="text-xs font-semibold text-slate-300">
+                      Chuyên viên:
+                    </span>
+                    <span>Nguyễn Văn Staff</span>
                   </span>
                 </h2>
                 <p className="text-[11px] text-slate-300">
-                  Xử lý Hợp đồng Khách hàng, Tiếp nhận Ticket SLA, Bảo trì ô kho
-                  & Cấp PIN mở cổng khẩn cấp.
+                  Xử lý Hợp đồng Khách hàng, Tiếp nhận Ticket, Bảo trì ô kho
+                  &amp; Cấp PIN mở cổng khẩn cấp.
                 </p>
               </div>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setPinOpen((v) => !v)}
-              className="flex w-full shrink-0 cursor-pointer animate-pulse items-center justify-center space-x-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-extrabold text-white shadow transition hover:bg-blue-500 sm:w-auto"
-            >
-              <KeyRoundIcon className="size-3.5" />
-              <span>⚡ LẤY MÃ PIN CỔNG TÒA NHÀ (30S)</span>
-            </button>
           </div>
 
-          {pinOpen && <StaffPinPanel />}
-
-          {/* 2 OPERATIONAL TABS */}
-          <div className="flex items-center space-x-3 border-b border-slate-200 pb-3 text-xs font-extrabold dark:border-slate-800">
+          {/* 3 OPERATIONAL TABS */}
+          <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 pb-3 text-xs font-extrabold dark:border-slate-800">
             <TabButton
               active={activeTab === "checkin"}
+              activeClass="bg-blue-600 text-white"
               onClick={() => setActiveTab("checkin")}
-              icon={<IdCardIcon className="size-4 text-blue-600" />}
-              activeIcon={<IdCardIcon className="size-4" />}
-              label="TAB 1: DỊCH VỤ KHÁCH HÀNG & HỢP ĐỒNG (CHECK-IN / TRẢ KHO / THU PHẠT)"
+              icon={
+                <IdCardIcon
+                  className="size-4 text-blue-600"
+                  strokeWidth={2.5}
+                />
+              }
+              activeIcon={<IdCardIcon className="size-4" strokeWidth={2.5} />}
+              label="DỊCH VỤ KHÁCH HÀNG"
             />
             <TabButton
               active={activeTab === "ticket"}
+              activeClass="bg-blue-600 text-white"
               onClick={() => setActiveTab("ticket")}
-              icon={<WrenchIcon className="size-4 text-amber-500" />}
-              activeIcon={<WrenchIcon className="size-4" />}
-              label="TAB 2: KHO BÃI, SỰ CỐ SLA & BẢO TRÌ (IOT & FACILITY FEED)"
+              icon={
+                <WrenchIcon
+                  className="size-4 text-amber-500"
+                  strokeWidth={2.5}
+                />
+              }
+              activeIcon={<WrenchIcon className="size-4" strokeWidth={2.5} />}
+              label="HỖ TRỢ & XỬ LÝ TICKET (SLA)"
+            />
+            <TabButton
+              active={activeTab === "pin"}
+              activeClass="bg-emerald-600 text-white"
+              onClick={() => setActiveTab("pin")}
+              icon={
+                <KeyIcon
+                  className="size-4 text-emerald-500"
+                  strokeWidth={2.5}
+                />
+              }
+              activeIcon={<KeyIcon className="size-4" strokeWidth={2.5} />}
+              label="LẤY MÃ PIN"
             />
           </div>
 
           {activeTab === "checkin" && <CheckinPanel />}
           {activeTab === "ticket" && <StaffTicketPanel />}
+          {activeTab === "pin" && <StaffPinPanel />}
         </div>
       </main>
     </div>
@@ -99,12 +113,14 @@ function StaffCheckinPage() {
 
 function TabButton({
   active,
+  activeClass,
   onClick,
   icon,
   activeIcon,
   label,
 }: {
   active: boolean
+  activeClass: string
   onClick: () => void
   icon: ReactNode
   activeIcon: ReactNode
@@ -118,8 +134,8 @@ function TabButton({
       className={cn(
         "flex cursor-pointer items-center space-x-2 rounded-xl border px-4 py-2.5 transition",
         active
-          ? "border-blue-600 bg-blue-600 text-white shadow"
-          : "text-title hover:shadow hover:text-blue-600"
+          ? cn("border-transparent shadow", activeClass)
+          : "text-title border-white hover:text-blue-600 hover:shadow"
       )}
     >
       {active ? activeIcon : icon}

@@ -1,6 +1,6 @@
 import { useId, useRef, useState, type KeyboardEvent } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { MapPin, Snowflake } from "lucide-react"
+import { MapPin } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 

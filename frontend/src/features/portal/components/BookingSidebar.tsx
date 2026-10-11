@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
+import {
+  calcRentalTotal,
+  clampRentalDays,
+  getCheckInDates,
+  MAX_CUSTOM_DAYS,
+  MIN_CUSTOM_DAYS,
+} from '@/features/portal/lib/bookingRules';
 
 export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
   const [selectedPkgDays, setSelectedPkgDays] = useState(30); // Mặc định 1 Tháng (30 ngày)
   const [isCustomDays, setIsCustomDays] = useState(false);
   const [customDaysVal, setCustomDaysVal] = useState('');
-  // Generate local YYYY-MM-DD string helper
-  const getLocalDateStr = (d: Date = new Date()) => {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  };
-
-  const [startDate, setStartDate] = useState(() => getLocalDateStr());
+  // BR-17: ngày Check-in hợp lệ từ Hôm nay+1 đến Hôm nay+7 (giờ VN). Mặc định chọn ngày sớm nhất.
+  const [startDate, setStartDate] = useState(() => getCheckInDates(new Date())[0]);
 
 
   if (!selectedUnit) {
@@ -69,7 +69,8 @@ export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
   }
 
   // Calculate check-out date
-  const effectiveDays = isCustomDays ? (parseInt(customDaysVal) >= 7 ? parseInt(customDaysVal) : 7) : selectedPkgDays;
+  // BR-13: thuê theo ngày từ 7 đến 29 ngày
+  const effectiveDays = isCustomDays ? clampRentalDays(customDaysVal) : selectedPkgDays;
 
   const calculateCheckOutDate = () => {
     if (!startDate) return '';
@@ -93,44 +94,26 @@ export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
     if (!customDaysVal) setCustomDaysVal('7');
   };
 
+  // Luôn ghi lại giá trị đã ép về 7–29, để ô nhập không bao giờ hiện số khác với số ngày dùng tính tiền
   const handleIncrementDays = () => {
-    const current = parseInt(customDaysVal) || 7;
-    setCustomDaysVal(String(current + 1));
+    setCustomDaysVal(String(clampRentalDays(String(clampRentalDays(customDaysVal) + 1))));
   };
 
   const handleDecrementDays = () => {
-    const current = parseInt(customDaysVal) || 7;
-    if (current > 7) {
-      setCustomDaysVal(String(current - 1));
-    }
+    setCustomDaysVal(String(clampRentalDays(String(clampRentalDays(customDaysVal) - 1))));
   };
 
-  // Calculate rental cost based on package selection (Monthly rate for months, Daily rate for custom days)
-  let rawRentalCost = 0;
-  let discountRate = 0;
+  // BR-13: tiền thuê ước tính theo gói tháng (có chiết khấu) hoặc theo ngày lẻ.
+  // Giá tháng lấy từ dữ liệu ô kho; thiếu thì dùng giá ngày × 20 như hiển thị phía trên.
+  const rental = calcRentalTotal({
+    dailyPrice: selectedUnit.price,
+    monthlyPrice: selectedUnit.monthlyPrice || selectedUnit.price * 20,
+    days: effectiveDays,
+  });
+  const discountRate = rental.discountRate;
+  const estimatedTotalRental = rental.total;
 
-  if (selectedUnit) {
-    const monthlyRate = selectedUnit.price * 20; // BR-08: Đơn giá tháng = Đơn giá ngày * 20
-    if (!isCustomDays) {
-      const months = selectedPkgDays / 30;
-      rawRentalCost = monthlyRate * months;
-      if (selectedPkgDays === 90) discountRate = 0.05;
-      else if (selectedPkgDays === 180) discountRate = 0.10;
-      else if (selectedPkgDays === 360) discountRate = 0.15;
-    } else {
-      rawRentalCost = selectedUnit.price * effectiveDays;
-    }
-  }
-
-  const estimatedDiscount = rawRentalCost * discountRate;
-  const estimatedTotalRental = rawRentalCost - estimatedDiscount;
-
-  // Generate min/max dates for check-in constraint (within 7 days from today)
-  const todayObj = new Date();
-  const todayStr = todayObj.toISOString().split('T')[0];
-  const maxCheckInObj = new Date(todayObj);
-  maxCheckInObj.setDate(maxCheckInObj.getDate() + 7);
-  const maxCheckInStr = maxCheckInObj.toISOString().split('T')[0];
+  const checkInDates = getCheckInDates(new Date());
 
   const formatDisplayDate = (dStr) => {
     if (!dStr) return '';
@@ -140,18 +123,6 @@ export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
     }
     return dStr;
   };
-
-  // Generate 7 quick-select days options
-  const checkInQuickOptions = Array.from({ length: 8 }, (_, i) => {
-    const d = new Date(todayObj);
-    d.setDate(d.getDate() + i);
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    const val = `${yyyy}-${mm}-${dd}`;
-    const label = i === 0 ? 'Hôm nay' : i === 1 ? 'Ngày mai' : `${dd}/${mm}`;
-    return { val, label, dd, mm };
-  });
 
   return (
     <div className="card-box p-3.5 sm:p-4 rounded-2xl border shadow-xs space-y-3.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
@@ -304,7 +275,7 @@ export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
                   <i className="fa-solid fa-sliders text-amber-500 text-xs"></i> Số ngày thuê tùy chọn:
                 </span>
                 <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-md">
-                  Tối thiểu 7 ngày
+                  Từ {MIN_CUSTOM_DAYS} đến {MAX_CUSTOM_DAYS} ngày
                 </span>
               </div>
               <div className="flex items-center space-x-2">
@@ -318,9 +289,12 @@ export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
                 <div className="relative flex-1">
                   <input
                     type="number"
-                    min="7"
+                    min={MIN_CUSTOM_DAYS}
+                    max={MAX_CUSTOM_DAYS}
+                    aria-label="Số ngày thuê tùy chọn"
                     value={customDaysVal}
                     onChange={(e) => setCustomDaysVal(e.target.value)}
+                    onBlur={() => setCustomDaysVal(String(clampRentalDays(customDaysVal)))}
                     className="w-full border font-black text-center text-sm py-1 px-2.5 rounded-lg outline-none bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 dark:text-slate-400 font-bold pointer-events-none">
@@ -346,7 +320,7 @@ export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
               <span>Ngày nhận kho (Check-in):</span>
             </label>
             <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded-full">
-              Tối đa 7 ngày tới
+              Từ ngày mai, tối đa 7 ngày
             </span>
           </div>
 
@@ -354,22 +328,14 @@ export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
           <select
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
+            aria-label="Ngày nhận kho (Check-in)"
             className="w-full border font-bold text-xs px-2.5 py-1.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white cursor-pointer shadow-xs"
           >
-            {Array.from({ length: 8 }, (_, i) => {
-              const d = new Date(todayObj);
-              d.setDate(d.getDate() + i);
-              const yyyy = d.getFullYear();
-              const mm = String(d.getMonth() + 1).padStart(2, '0');
-              const dd = String(d.getDate()).padStart(2, '0');
-              const val = `${yyyy}-${mm}-${dd}`;
-              const displayLabel = `${dd}/${mm}/${yyyy}`;
-              return (
-                <option key={val} value={val}>
-                  {displayLabel}
-                </option>
-              );
-            })}
+            {checkInDates.map((val) => (
+              <option key={val} value={val}>
+                {formatDisplayDate(val)}
+              </option>
+            ))}
           </select>
 
           {/* THÔNG TIN HẠN TRẢ KHO & TỔNG TIỀN THUÊ */}

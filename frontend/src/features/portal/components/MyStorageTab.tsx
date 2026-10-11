@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { getMyContracts, getGatePin, cancelDepositContract } from '@/features/portal/services/contractService';
 import ContractDetailModal from '@/features/portal/components/modals/ContractDetailModal';
 import { formatDate } from '@/lib/format';
+import { canExtendOnline } from '@/features/portal/lib/contractRules';
 
 export default function MyStorageTab({ onOpenExtendModal }) {
   const [contracts, setContracts] = useState([]);
@@ -373,7 +374,8 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                               </button>
                             )}
 
-                            {isActive && (
+                            {/* US-12 / BR-29: chỉ HĐ ACTIVE mới được gia hạn online */}
+                            {canExtendOnline(item.status) && (
                               <button
                                 type="button"
                                 onClick={() => onOpenExtendModal({
@@ -395,22 +397,11 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                               <span className="text-xs text-slate-400 italic">Đã hủy cọc</span>
                             )}
 
-                            {!isPending && !isActive && !isCanceled && (
-                              <button
-                                type="button"
-                                onClick={() => onOpenExtendModal({
-                                  name: `Kho: ${item.unitCode}`,
-                                  branch: item.branchName,
-                                  expiry: item.expiryDate,
-                                  daysLeft: item.daysLeft || 0,
-                                  size: item.size,
-                                          unitCode: item.unitCode,
-                                          rentalFee: item.rentalFee
-                                })}
-                                className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-600 hover:text-white border border-amber-200 dark:border-amber-800 transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap active:scale-95"
-                              >
-                                <i className="fa-solid fa-credit-card text-xs"></i> Gia Hạn
-                              </button>
+                            {/* US-12 / BR-29: HĐ OVERDUE không gia hạn online, phải ra quầy nộp phạt (US-20) */}
+                            {item.status === 'OVERDUE' && (
+                              <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                                <i className="fa-solid fa-store text-xs"></i> Quá hạn: vui lòng gia hạn tại quầy
+                              </span>
                             )}
                           </div>
                         </div>
@@ -495,7 +486,8 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                                     </button>
                                   )}
 
-                                  {isActive && (
+                                  {/* US-12 / BR-29: chỉ HĐ ACTIVE mới được gia hạn online */}
+                                  {canExtendOnline(item.status) && (
                                     <button
                                       type="button"
                                       onClick={() => onOpenExtendModal({
@@ -517,22 +509,14 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                                     <span className="text-xs text-slate-400 italic">Đã hủy cọc</span>
                                   )}
 
-                                  {!isPending && !isActive && !isCanceled && (
-                                    <button
-                                      type="button"
-                                      onClick={() => onOpenExtendModal({
-                                        name: `Kho: ${item.unitCode}`,
-                                        branch: item.branchName,
-                                        expiry: item.expiryDate,
-                                        daysLeft: item.daysLeft || 0,
-                                        size: item.size,
-                                          unitCode: item.unitCode,
-                                          rentalFee: item.rentalFee
-                                      })}
-                                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-600 hover:text-white border border-amber-200 dark:border-amber-800 transition cursor-pointer flex items-center justify-center gap-1 shadow-xs whitespace-nowrap active:scale-95"
+                                  {/* US-12 / BR-29: HĐ OVERDUE không gia hạn online, phải ra quầy nộp phạt (US-20) */}
+                                  {item.status === 'OVERDUE' && (
+                                    <span
+                                      className="text-xs font-semibold text-amber-700 dark:text-amber-300 flex items-center gap-1"
+                                      title="Hợp đồng quá hạn không gia hạn online được. Vui lòng đến quầy để nộp phạt và gia hạn."
                                     >
-                                      <i className="fa-solid fa-credit-card text-[11px]"></i> Gia Hạn
-                                    </button>
+                                      <i className="fa-solid fa-store text-[11px]"></i> Gia hạn tại quầy
+                                    </span>
                                   )}
                                 </div>
                               </td>

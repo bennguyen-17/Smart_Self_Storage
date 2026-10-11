@@ -60,7 +60,7 @@ function ReservationManagementPage() {
           </h1>
           <p className="text-sm text-muted-foreground">
             Theo dõi đơn giữ chỗ chờ nhận kho và các đơn bị hệ thống tự động hủy
-            do khách không đến nhận kho (BR-13).
+            do khách không đến nhận kho (BR-17).
           </p>
         </header>
 

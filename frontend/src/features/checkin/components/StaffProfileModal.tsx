@@ -8,7 +8,7 @@ interface StaffProfileModalProps {
   onClose: () => void
 }
 
-/** Hồ sơ Nhân viên Vận hành — bám prototype staff.html */
+/** Hồ sơ Nhân viên Vận hành — bám prototype staff_portal.html */
 function StaffProfileModal({ open, onClose }: StaffProfileModalProps) {
   return (
     <ProtoModal
@@ -29,6 +29,7 @@ function StaffProfileModal({ open, onClose }: StaffProfileModalProps) {
               Nguyễn Văn Staff
             </h2>
             <span className="ml-2 inline-flex shrink-0 items-center rounded-full bg-emerald-500 px-2.5 py-0.5 text-[9.5px] font-black text-slate-950 shadow-sm">
+              <span className="mr-1.5 size-1.5 animate-pulse rounded-full bg-slate-950" />
               ĐANG TRONG CA TRỰC
             </span>
           </div>
