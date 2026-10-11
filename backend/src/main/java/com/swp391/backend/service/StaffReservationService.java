@@ -4,8 +4,6 @@ import com.swp391.backend.dto.CalculatePriceRequest;
 import com.swp391.backend.dto.CalculatePriceResponse;
 import com.swp391.backend.dto.StaffCancelReservationResponse;
 import com.swp391.backend.dto.StaffChangeUnitResponse;
-import com.swp391.backend.dto.StaffCheckInRequest;
-import com.swp391.backend.dto.StaffCheckInResponse;
 import com.swp391.backend.dto.StaffReservationListItemResponse;
 import com.swp391.backend.dto.StaffReservationListResponse;
 import com.swp391.backend.dto.StaffReservationLookupResponse;
@@ -141,100 +139,6 @@ public class StaffReservationService {
                 .ifPresent(contract -> response.setContractPdfUrl(contract.getPdfUrl()));
         response.setSuccess(true);
         response.setMessage("Reservation found.");
-        return response;
-    }
-
-    @Transactional
-    public StaffCheckInResponse checkIn(Integer reservationId, StaffCheckInRequest request) {
-        Integer staffAccountId = getAuthenticatedAccountId();
-        if (staffAccountId == null) {
-            return checkInFailure("Authenticated staff account was not found.");
-        }
-        Optional<EmployeeProfile> employee = employeeProfileRepository.findByAccountId(staffAccountId);
-        if (employee.isEmpty()) {
-            return checkInFailure("Employee profile was not found.");
-        }
-        if (request == null || request.getCollectedAmount() == null
-                || request.getCollectedAmount().signum() <= 0) {
-            return checkInFailure("A positive collectedAmount is required.");
-        }
-        String paymentMethod = request.getPaymentMethod() == null
-                ? "" : request.getPaymentMethod().trim().toUpperCase();
-        if (!"CASH".equals(paymentMethod) && !"BANK_TRANSFER".equals(paymentMethod)) {
-            return checkInFailure("paymentMethod must be CASH or BANK_TRANSFER.");
-        }
-
-        Optional<Reservation> reservationOpt = reservationRepository.findByReservationIdForUpdate(reservationId);
-        if (reservationOpt.isEmpty()) {
-            return checkInFailure("Reservation was not found.");
-        }
-        Reservation reservation = reservationOpt.get();
-
-        Optional<Contract> contractOpt = contractRepository.findByReservationIdForUpdate(reservationId);
-        if (contractOpt.isEmpty()) {
-            return checkInFailure("Contract was not found.");
-        }
-        Contract contract = contractOpt.get();
-        if (!CONTRACT_PENDING_CHECKIN.equals(contract.getStatus())) {
-            return checkInFailure("Contract must be PENDING_CHECKIN to check in.");
-        }
-
-        Optional<StorageUnit> unitOpt = storageUnitRepository.findByUnitCodeForUpdate(reservation.getUnitCode());
-        if (unitOpt.isEmpty()) {
-            return checkInFailure("Reservation storage unit was not found.");
-        }
-        StorageUnit unit = unitOpt.get();
-
-        List<Payment> deposits = paymentRepository.findPartiallyPaidDepByContractIdForUpdate(contract.getContractId())
-                .stream()
-                .filter(payment -> "SUCCESS".equalsIgnoreCase(payment.getPaymentStatus()))
-                .toList();
-        if (deposits.size() != 1) {
-            return checkInFailure("Exactly one successful DEP invoice in PARTIALLY_PAID status is required.");
-        }
-        Payment deposit = deposits.get(0);
-
-        if (!belongsToFacility(unit, employee.get().getFacilityId())) {
-            return checkInFailure("Reservation was not found in the staff member's facility.");
-        }
-        if (!"RESERVED".equals(unit.getStatus())) {
-            return checkInFailure("Storage unit must be RESERVED to check in.");
-        }
-        BigDecimal remainingAmount = deposit.getRemainingAmount();
-        if (remainingAmount == null || remainingAmount.signum() <= 0) {
-            return checkInFailure("DEP must have a positive remainingAmount.");
-        }
-        if (request.getCollectedAmount().compareTo(remainingAmount) != 0) {
-            return checkInFailure("collectedAmount must equal the DEP remainingAmount of " + remainingAmount + ".");
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-        deposit.setPaidAmount(deposit.getAmount());
-        deposit.setRemainingAmount(BigDecimal.ZERO);
-        deposit.setStatus("PAID");
-        deposit.setPaymentStatus("SUCCESS");
-        deposit.setPaymentMethod(paymentMethod);
-        deposit.setPaidAt(now);
-        paymentRepository.save(deposit);
-
-        contract.setStatus("ACTIVE");
-        contract.setActivatedAt(now);
-        unit.setStatus("RENTED");
-        contractRepository.save(contract);
-        storageUnitRepository.save(unit);
-
-        writeActivityLog(staffAccountId, "STAFF_RESERVATION_CHECK_IN",
-                "RES " + reservation.getReservationCode() + " (id=" + reservationId
-                        + "): collected " + request.getCollectedAmount() + " via " + paymentMethod
-                        + "; contract=ACTIVE; unit=RENTED; result=SUCCESS");
-
-        StaffCheckInResponse response = new StaffCheckInResponse(true, "Check-in completed.");
-        response.setReservationId(reservationId);
-        response.setReservationCode(reservation.getReservationCode());
-        response.setContractStatus(contract.getStatus());
-        response.setUnitStatus(unit.getStatus());
-        response.setCollectedAmount(request.getCollectedAmount());
-        response.setRemainingAmount(BigDecimal.ZERO);
         return response;
     }
 
@@ -550,10 +454,6 @@ public class StaffReservationService {
         target.setDepAmount(source.getDepAmount());
         target.setDepPaidAmount(source.getDepPaidAmount());
         target.setDepRemainingAmount(source.getDepRemainingAmount());
-    }
-
-    private StaffCheckInResponse checkInFailure(String message) {
-        return new StaffCheckInResponse(false, message);
     }
 
     private Integer getAuthenticatedAccountId() {
