@@ -5,6 +5,7 @@ import com.swp391.backend.entity.AuditLog;
 import com.swp391.backend.entity.EmployeeProfile;
 import com.swp391.backend.repository.AuditLogRepository;
 import com.swp391.backend.repository.EmployeeProfileRepository;
+import com.swp391.backend.repository.CustomerProfileRepository;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,12 +22,16 @@ public class AuditLogService {
 
     private final AuditLogRepository auditLogRepository;
     private final EmployeeProfileRepository employeeProfileRepository;
+    private final CustomerProfileRepository customerProfileRepository;
 
     public AuditLogService(
             AuditLogRepository auditLogRepository,
-            EmployeeProfileRepository employeeProfileRepository) {
+            EmployeeProfileRepository employeeProfileRepository,
+            CustomerProfileRepository customerProfileRepository) {
         this.auditLogRepository = auditLogRepository;
         this.employeeProfileRepository = employeeProfileRepository;
+        this.customerProfileRepository = customerProfileRepository;
+
     }
 
     @Transactional
@@ -54,6 +59,11 @@ public class AuditLogService {
                     HttpStatus.BAD_REQUEST,
                     "Customer ID, opening time and valid reason are required");
         }
+
+        customerProfileRepository.findById(request.getCustomerId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Customer not found"));
 
         AuditLog log = new AuditLog();
         log.setAccountId(accountId);

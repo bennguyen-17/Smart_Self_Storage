@@ -42,15 +42,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (accountId != null) {
                     boolean isStaff = "4".equals(role) || "STAFF".equalsIgnoreCase(role);
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    accountId,
-                                    null,
-                                    isStaff
-                                            ? List.of(new SimpleGrantedAuthority("ROLE_STAFF"))
-                                            : List.of(new SimpleGrantedAuthority("ROLE_AUTHENTICATED")));
+
+                    boolean isManager = "3".equals(role) || "MANAGER".equalsIgnoreCase(role);
+
+                    String authority;
+
+                    if (isStaff) {
+                        authority = "ROLE_STAFF";
+                    } else if (isManager) {
+                        authority = "ROLE_MANAGER";
+                    } else {
+                        authority = "ROLE_AUTHENTICATED";
+                    }
+
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            accountId,
+                            null,
+                            List.of(new SimpleGrantedAuthority(authority)));
+
                     authentication.setDetails(
                             new WebAuthenticationDetailsSource().buildDetails(request));
+
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             } catch (Exception ignored) {
