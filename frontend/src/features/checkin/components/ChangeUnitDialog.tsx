@@ -4,23 +4,23 @@ import { toast } from "sonner"
 import { cn } from "cn"
 
 import { useAsyncData } from "@/hooks/useAsyncData"
-import { getErrorMessage } from "@/lib/api"
 import { formatVnd } from "@/lib/format"
-import { getFloors } from "@/features/floor-plan/api/floorPlanApi"
 import { unitAreaOf, unitSizeOf } from "@/features/floor-plan/unitDisplay"
-import type { UnitSize } from "@/features/floor-plan/types"
 
-import { changeUnit, getAvailableUnits } from "../api/checkinApi"
-import type { ChangeUnitPreview, CheckinContract } from "../types"
+import {
+  changeUnit,
+  checkinErrorMessage,
+  fetchAllUnits,
+} from "../api/checkinApi"
+import type { StaffChangeUnitResponse } from "../types"
+import type { CheckinTarget } from "./StaffCustomerDetailModal"
 import ProtoModal from "./ProtoModal"
 
 interface ChangeUnitDialogProps {
-  contract: CheckinContract | null
+  contract: CheckinTarget | null
   onClose: () => void
-  onChanged: (updated: CheckinContract) => void
+  onChanged: (response: StaffChangeUnitResponse) => void
 }
-
-const SIZE_OPTIONS: ("ALL" | UnitSize)[] = ["ALL", "XL", "L", "M", "S"]
 
 function ChangeUnitDialog({
   contract,
@@ -34,7 +34,7 @@ function ChangeUnitDialog({
       title="Đổi ô kho tại quầy"
       subtitle={
         contract
-          ? `Ô hiện tại ${contract.unitCode} · ${contract.customerName}`
+          ? `Ô hiện tại ${contract.unitCode ?? "—"} · ${contract.customerName ?? ""}`
           : undefined
       }
       icon={<RepeatIcon className="size-5" />}
@@ -52,84 +52,49 @@ function Body({
   onClose,
   onChanged,
 }: {
-  contract: CheckinContract
+  contract: CheckinTarget
   onClose: () => void
-  onChanged: (updated: CheckinContract) => void
+  onChanged: (response: StaffChangeUnitResponse) => void
 }) {
-  const [floorId, setFloorId] = useState<number>(contract.floorId)
-  const [sizeFilter, setSizeFilter] = useState<"ALL" | UnitSize>("ALL")
-  const [selectedUnitCode, setSelectedUnitCode] = useState<string | null>(null)
+  const [newUnitCode, setNewUnitCode] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  const { data: floorsData } = useAsyncData(`floors|${contract.facilityId}`, () =>
-    getFloors(contract.facilityId)
+  // Gợi ý ô trống cùng tầng với ô hiện tại (BE không trả facilityId cho FE).
+  const { data: units } = useAsyncData("checkin:all-units", fetchAllUnits)
+  const currentUnit = useMemo(
+    () => (units ?? []).find((u) => u.unitCode === contract.unitCode) ?? null,
+    [units, contract.unitCode]
   )
-  const floors = floorsData ?? []
-
-  const {
-    data: unitsData,
-    error: unitsError,
-    isLoading: isLoadingUnits,
-  } = useAsyncData(`units|${contract.facilityId}|${floorId}`, () =>
-    getAvailableUnits({ facilityId: contract.facilityId, floorId })
-  )
-
-  const units = useMemo(
-    () =>
-      (unitsData ?? []).filter(
-        (u) => u.status === "AVAILABLE" && u.unitCode !== contract.unitCode
-      ),
-    [unitsData, contract.unitCode]
-  )
-
-  const visibleUnits = useMemo(
-    () =>
-      units.filter((u) => sizeFilter === "ALL" || unitSizeOf(u) === sizeFilter),
-    [units, sizeFilter]
-  )
-
-  const selectedUnit = useMemo(
-    () => units.find((u) => u.unitCode === selectedUnitCode) ?? null,
-    [units, selectedUnitCode]
-  )
-
-  const preview = useMemo<ChangeUnitPreview | null>(() => {
-    if (!selectedUnit) return null
-    const newRentalAmount =
-      (contract.rentalType === "MONTHLY"
-        ? selectedUnit.monthlyPrice
-        : selectedUnit.dailyPrice) ?? 0
-    const newDepositAmount = selectedUnit.depositAmount ?? 0
-    const newTotal = newRentalAmount + newDepositAmount
-    const remaining = newTotal - contract.paidAmount
-    return {
-      newUnit: selectedUnit,
-      newRentalAmount,
-      newDepositAmount,
-      newTotal,
-      paidAmount: contract.paidAmount,
-      remainingAmount: Math.max(remaining, 0),
-      refundAmount: remaining < 0 ? -remaining : 0,
-    }
-  }, [selectedUnit, contract])
+  const suggestions = useMemo(() => {
+    if (!currentUnit) return []
+    return (units ?? []).filter(
+      (u) =>
+        u.status === "AVAILABLE" &&
+        u.floorId === currentUnit.floorId &&
+        u.unitCode !== contract.unitCode
+    )
+  }, [units, currentUnit, contract.unitCode])
 
   async function handleConfirm() {
-    if (!preview) return
+    const code = newUnitCode.trim()
+    if (!code) return
     setIsSubmitting(true)
     setErrorMsg(null)
     try {
-      const updated = await changeUnit(contract.code, {
-        newUnitCode: preview.newUnit.unitCode,
-        newRentalAmount: preview.newRentalAmount,
-        newDepositAmount: preview.newDepositAmount,
+      const response = await changeUnit(contract.reservationId, {
+        newUnitCode: code,
       })
+      const detail =
+        response.refundAmount && response.refundAmount > 0
+          ? `Hoàn phần dư: ${formatVnd(response.refundAmount)}`
+          : `Còn phải thu: ${formatVnd(response.remainingDue ?? 0)}`
       toast.success("Đổi ô kho thành công", {
-        description: `${contract.unitCode} → ${preview.newUnit.unitCode}`,
+        description: `${contract.unitCode} → ${response.newUnitCode}. ${detail}`,
       })
-      onChanged(updated)
+      onChanged(response)
     } catch (error) {
-      setErrorMsg(getErrorMessage(error))
+      setErrorMsg(checkinErrorMessage(error))
     } finally {
       setIsSubmitting(false)
     }
@@ -138,139 +103,81 @@ function Body({
   return (
     <>
       <p className="text-xs text-muted">
-        Ô mới chuyển thẳng AVAILABLE → RESERVED (ngoại lệ BR-11, không qua HOLD).
+        Nhập mã ô kho mới (ô phải đang AVAILABLE cùng cơ sở). Hệ thống tự tính
+        lại tiền thuê/cọc và hoàn phần dư nếu có.
       </p>
 
-      {/* BỘ LỌC TẦNG / SIZE */}
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <label className="font-medium text-muted" htmlFor="change-unit-floor">
-          Tầng:
-        </label>
-        <select
-          id="change-unit-floor"
-          value={floorId}
-          onChange={(event) => setFloorId(Number(event.target.value))}
-          className="portal-input h-8 rounded-lg border px-2.5 text-xs outline-none"
-        >
-          {floors.map((floor) => (
-            <option key={floor.floorId} value={floor.floorId}>
-              {floor.floorName}
-            </option>
-          ))}
-        </select>
-
-        <label className="font-medium text-muted" htmlFor="change-unit-size">
-          Size:
-        </label>
-        <select
-          id="change-unit-size"
-          value={sizeFilter}
-          onChange={(event) =>
-            setSizeFilter(event.target.value as "ALL" | UnitSize)
-          }
-          className="portal-input h-8 rounded-lg border px-2.5 text-xs outline-none"
-        >
-          {SIZE_OPTIONS.map((size) => (
-            <option key={size} value={size}>
-              {size === "ALL" ? "Tất cả size" : `Size ${size}`}
-            </option>
-          ))}
-        </select>
+      <div className="flex items-center justify-between gap-3 rounded-2xl border p-3.5 text-xs">
+        <span className="text-muted">Ô hiện tại</span>
+        <span className="font-mono font-bold text-title">
+          {contract.unitCode ?? "—"}
+        </span>
       </div>
 
-      {/* DANH SÁCH Ô TRỐNG */}
-      <div className="max-h-56 overflow-y-auto rounded-2xl border p-2">
-        {isLoadingUnits && (
-          <p className="px-2 py-6 text-xs text-muted">Đang tải ô kho trống…</p>
-        )}
-        {!isLoadingUnits && unitsError && (
-          <p className="px-2 py-4 text-xs text-rose-600">{unitsError}</p>
-        )}
-        {!isLoadingUnits && !unitsError && visibleUnits.length === 0 && (
-          <p className="px-2 py-4 text-xs text-muted">
-            Không có ô kho trống phù hợp ở tầng này.
-          </p>
-        )}
-        {!isLoadingUnits && !unitsError && visibleUnits.length > 0 && (
-          <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-            {visibleUnits.map((unit) => {
-              const isSelected = selectedUnitCode === unit.unitCode
-              const area = unitAreaOf(unit)
-              return (
-                <li key={String(unit.unitId)}>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedUnitCode(unit.unitCode)}
-                    aria-pressed={isSelected}
-                    className={cn(
-                      "flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border-2 px-3 py-2 text-left text-xs transition-colors",
-                      isSelected
-                        ? "border-blue-600 bg-blue-500/10"
-                        : "border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
-                    )}
-                  >
-                    <span className="flex flex-col">
-                      <span className="font-mono font-bold text-title">
-                        {unit.unitCode}
-                      </span>
-                      <span className="flex items-center gap-1 text-[11px] text-muted">
-                        {unit.typeName ?? unitSizeOf(unit) ?? ""}
-                        {area != null ? ` · ${area} m²` : ""}
-                        {unit.isClimate && (
-                          <SnowflakeIcon className="size-3" />
-                        )}
-                      </span>
-                    </span>
-                    <span className="text-right text-[11px]">
-                      <span className="block font-bold text-title">
-                        {formatVnd(unit.monthlyPrice)}/tháng
-                      </span>
-                      <span className="block text-muted">
-                        Cọc {formatVnd(unit.depositAmount)}
-                      </span>
-                    </span>
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        )}
+      <div className="space-y-1.5">
+        <label
+          className="text-xs font-medium text-muted"
+          htmlFor="change-unit-code"
+        >
+          Mã ô kho mới <span className="text-rose-500">*</span>
+        </label>
+        <input
+          id="change-unit-code"
+          value={newUnitCode}
+          onChange={(event) => setNewUnitCode(event.target.value)}
+          placeholder="VD: F2-M206"
+          spellCheck={false}
+          className="portal-input w-full rounded-xl border px-3 py-2.5 font-mono text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500"
+        />
       </div>
 
-      {/* BẢNG CHÊNH LỆCH */}
-      {preview && (
-        <div className="inner-box space-y-2 rounded-2xl border p-3.5 text-xs">
-          <Row
-            label="Ô mới"
-            value={`${preview.newUnit.unitCode} · ${preview.newUnit.typeName ?? ""}`}
-          />
-          <Row
-            label="Tiền thuê mới"
-            value={formatVnd(preview.newRentalAmount)}
-          />
-          <Row label="Cọc mới" value={formatVnd(preview.newDepositAmount)} />
-          <Row
-            label="Tổng mới (thuê + cọc)"
-            value={formatVnd(preview.newTotal)}
-          />
-          <Row
-            label="Đã thu (giữ nguyên)"
-            value={formatVnd(preview.paidAmount)}
-          />
-          {preview.refundAmount > 0 ? (
-            <Row
-              label="Hoàn phần dư cho khách"
-              value={formatVnd(preview.refundAmount)}
-              valueClass="text-emerald-600 dark:text-emerald-400"
-            />
-          ) : (
-            <Row
-              label="Còn phải thu tại quầy"
-              value={formatVnd(preview.remainingAmount)}
-              valueClass="text-blue-600 dark:text-blue-400"
-              strong
-            />
-          )}
+      {suggestions.length > 0 && (
+        <div className="rounded-2xl border p-2">
+          <div className="px-1 pb-1 text-[10px] font-bold tracking-wider text-muted uppercase">
+            Gợi ý ô trống cùng tầng ({suggestions.length}) — bấm để chọn
+          </div>
+          <div className="max-h-40 overflow-y-auto">
+            <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+              {suggestions.map((unit) => {
+                const area = unitAreaOf(unit)
+                return (
+                  <li key={String(unit.unitId)}>
+                    <button
+                      type="button"
+                      onClick={() => setNewUnitCode(unit.unitCode)}
+                      className={cn(
+                        "flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border-2 px-3 py-2 text-left text-xs transition-colors",
+                        newUnitCode === unit.unitCode
+                          ? "border-blue-600 bg-blue-500/10"
+                          : "border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
+                      )}
+                    >
+                      <span className="flex flex-col">
+                        <span className="font-mono font-bold text-title">
+                          {unit.unitCode}
+                        </span>
+                        <span className="flex items-center gap-1 text-[11px] text-muted">
+                          {unit.typeName ?? unitSizeOf(unit) ?? ""}
+                          {area != null ? ` · ${area} m²` : ""}
+                          {unit.isClimate && (
+                            <SnowflakeIcon className="size-3" />
+                          )}
+                        </span>
+                      </span>
+                      <span className="text-right text-[11px]">
+                        <span className="block font-bold text-title">
+                          {formatVnd(unit.monthlyPrice)}/tháng
+                        </span>
+                        <span className="block text-muted">
+                          Cọc {formatVnd(unit.depositAmount)}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
         </div>
       )}
 
@@ -292,7 +199,7 @@ function Body({
         <button
           type="button"
           onClick={handleConfirm}
-          disabled={isSubmitting || !selectedUnit}
+          disabled={isSubmitting || newUnitCode.trim().length === 0}
           className="flex flex-1 cursor-pointer items-center justify-center space-x-1.5 rounded-xl bg-blue-600 py-3 text-xs font-extrabold text-white shadow-md transition hover:bg-blue-700 disabled:opacity-60"
         >
           <RepeatIcon className="size-4" />
@@ -300,33 +207,6 @@ function Body({
         </button>
       </div>
     </>
-  )
-}
-
-function Row({
-  label,
-  value,
-  valueClass,
-  strong,
-}: {
-  label: string
-  value: string
-  valueClass?: string
-  strong?: boolean
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 border-t border-slate-200 pt-1.5 first:border-t-0 first:pt-0 dark:border-slate-800">
-      <span className="text-muted">{label}</span>
-      <span
-        className={cn(
-          "font-bold text-title",
-          strong && "text-base font-black",
-          valueClass
-        )}
-      >
-        {value}
-      </span>
-    </div>
   )
 }
 

@@ -1,28 +1,27 @@
 import { useState } from "react"
 import { useSearchParams } from "react-router-dom"
-import { IdCardIcon, SearchIcon } from "lucide-react"
+import { RotateCwIcon, SearchIcon, UsersIcon } from "lucide-react"
 import { cn } from "cn"
 
 import { useAsyncData } from "@/hooks/useAsyncData"
-import { getErrorMessage } from "@/lib/api"
 
-import { listCheckinContracts, lookupContract } from "../api/checkinApi"
 import {
-  CHECKIN_TABS,
-  PAGE_SIZE,
-  findCheckinTab,
-  type CheckinTabKey,
-} from "../constants"
-import type { CheckinContract } from "../types"
-import { CheckinApiError } from "../types"
+  checkinErrorMessage,
+  listCheckinContracts,
+  lookupContract,
+} from "../api/checkinApi"
+import { CHECKIN_TABS, findCheckinTab, type CheckinTabKey } from "../constants"
+import type { StaffReservationItem } from "../types"
 import CheckinContractTable from "./CheckinContractTable"
 import ChangeUnitDialog from "./ChangeUnitDialog"
 import ConfirmCheckinDialog from "./ConfirmCheckinDialog"
 import CounterCancelDialog from "./CounterCancelDialog"
-import StaffCustomerDetailModal from "./StaffCustomerDetailModal"
+import StaffCustomerDetailModal, {
+  type CheckinTarget,
+} from "./StaffCustomerDetailModal"
 
 const TAB_COLORS: Record<CheckinTabKey, string> = {
-  all: "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300",
+  all: "bg-blue-600 text-white",
   pending:
     "bg-amber-100 text-amber-900 hover:bg-amber-200 dark:bg-amber-950 dark:text-amber-300",
   active:
@@ -33,37 +32,53 @@ const TAB_COLORS: Record<CheckinTabKey, string> = {
     "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300",
 }
 
-/** Tab "Dịch vụ khách hàng" — tra cứu mã, check-in, đổi ô, hủy tại quầy (US-16) */
+const STATUS_LABEL: Record<string, string> = {
+  PENDING_CHECKIN: "CHỜ CHECK-IN",
+  ACTIVE: "ĐANG THUÊ",
+  OVERDUE: "QUÁ HẠN",
+  CANCELED: "ĐÃ HỦY",
+}
+
+function matches(item: StaffReservationItem, keyword: string): boolean {
+  if (!keyword) return true
+  return (
+    (item.reservationCode ?? "").toLowerCase().includes(keyword) ||
+    (item.customerName ?? "").toLowerCase().includes(keyword) ||
+    (item.customerPhone ?? "").includes(keyword) ||
+    (item.unitCode ?? "").toLowerCase().includes(keyword)
+  )
+}
+
+/** TAB 1: Dịch vụ khách hàng & hợp đồng — tra cứu, check-in, đổi ô, hủy (US-16) */
 function CheckinPanel() {
   const [searchParams, setSearchParams] = useSearchParams()
   const tab = findCheckinTab(searchParams.get("tab"))
 
-  const [reloadCount, setReloadCount] = useState(0)
+  const [reload, setReload] = useState(0)
   const [query, setQuery] = useState("")
   const [lookupError, setLookupError] = useState<string | null>(null)
   const [isLookingUp, setIsLookingUp] = useState(false)
 
-  const [detailContract, setDetailContract] = useState<CheckinContract | null>(null)
-  const [checkinContract, setCheckinContract] = useState<CheckinContract | null>(null)
-  const [changeContract, setChangeContract] = useState<CheckinContract | null>(null)
-  const [cancelContract, setCancelContract] = useState<CheckinContract | null>(null)
+  const [detailContract, setDetailContract] = useState<CheckinTarget | null>(null)
+  const [checkinContract, setCheckinContract] = useState<CheckinTarget | null>(null)
+  const [changeContract, setChangeContract] = useState<CheckinTarget | null>(null)
+  const [cancelContract, setCancelContract] = useState<CheckinTarget | null>(null)
 
-  const { data, error, isLoading } = useAsyncData(
-    `${tab.key}|${reloadCount}`,
-    () =>
-      listCheckinContracts({ status: tab.status, page: 0, size: PAGE_SIZE })
+  const { data, error, isLoading } = useAsyncData(`checkin:${reload}`, () =>
+    listCheckinContracts()
   )
 
+  const all = data ?? []
   const keyword = query.trim().toLowerCase()
-  const rows = data?.content.filter((c) => {
-    if (!keyword) return true
-    return (
-      c.code.toLowerCase().includes(keyword) ||
-      c.customerName.toLowerCase().includes(keyword) ||
-      c.customerPhone.includes(keyword) ||
-      c.unitCode.toLowerCase().includes(keyword)
-    )
-  })
+  const rows = all
+    .filter((item) => !tab.contractStatus || item.contractStatus === tab.contractStatus)
+    .filter((item) => matches(item, keyword))
+
+  function countOf(status?: string): number {
+    return status
+      ? all.filter((item) => item.contractStatus === status).length
+      : all.length
+  }
 
   async function handleLookup() {
     const code = query.trim()
@@ -72,29 +87,43 @@ function CheckinPanel() {
     setLookupError(null)
     try {
       const found = await lookupContract(code)
+      if (found.contractStatus !== "PENDING_CHECKIN") {
+        const label = STATUS_LABEL[found.contractStatus ?? ""] ?? found.contractStatus
+        setLookupError(
+          `Hợp đồng ${found.reservationCode} đang ở trạng thái ${label} — không thể check-in.`
+        )
+        return
+      }
       setDetailContract(found)
     } catch (err) {
-      setLookupError(
-        err instanceof CheckinApiError ? err.message : getErrorMessage(err)
-      )
+      setLookupError(checkinErrorMessage(err))
     } finally {
       setIsLookingUp(false)
     }
   }
 
   function refresh() {
-    setReloadCount((n) => n + 1)
+    setReload((n) => n + 1)
   }
 
   return (
     <div className="card-box space-y-5 rounded-3xl border p-5 shadow-xl sm:p-6">
-      <div className="border-b pb-4">
-        <h3 className="flex items-center space-x-2 text-sm font-extrabold text-title sm:text-base">
-          <IdCardIcon className="size-4 text-blue-600" />
-          <span>
-            QUẢN LÝ DANH SÁCH KHÁCH HÀNG & HỖ TRỢ CHECK-IN BÀN GIAO KHO
-          </span>
-        </h3>
+      <div className="flex flex-col items-start justify-between gap-3 border-b pb-4 sm:flex-row sm:items-center">
+        <div>
+          <h3 className="flex items-center space-x-2 text-sm font-extrabold text-title sm:text-base">
+            <UsersIcon className="size-4 text-blue-600" />
+            <span>
+              QUẢN LÝ DANH SÁCH KHÁCH HÀNG & HỖ TRỢ CHECK-IN BÀN GIAO KHO
+            </span>
+          </h3>
+          <p className="mt-0.5 text-[11px] text-muted">
+            Kiểm tra thông tin đặt chỗ khách hàng, lọc hợp đồng cần check-in và
+            thực hiện bàn giao kho lưu trữ, chìa khóa vật lý, thẻ từ hoặc mã PIN.
+          </p>
+        </div>
+        <span className="rounded-full border border-blue-300 bg-blue-100 px-3 py-1 text-[10px] font-extrabold text-blue-800 dark:border-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+          BR-11, BR-16, BR-18, BR-26
+        </span>
       </div>
 
       {/* SEARCH & FILTER TOOLBAR */}
@@ -121,9 +150,18 @@ function CheckinPanel() {
           >
             {isLookingUp ? "Đang tìm..." : "Tra cứu"}
           </button>
+          <button
+            type="button"
+            onClick={refresh}
+            title="Tải lại danh sách"
+            className="shrink-0 cursor-pointer rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-600 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          >
+            <RotateCwIcon
+              className={cn("size-4", isLoading && "animate-spin")}
+            />
+          </button>
         </div>
 
-        {/* FILTER STATUS PILLS */}
         <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 text-[11px] font-extrabold sm:pb-0">
           {CHECKIN_TABS.map((t) => {
             const active = t.key === tab.key
@@ -135,12 +173,11 @@ function CheckinPanel() {
                 onClick={() => setSearchParams({ tab: t.key })}
                 className={cn(
                   "cursor-pointer rounded-xl border px-3 py-1.5 whitespace-nowrap shadow-sm transition",
-                  active
-                    ? "border-blue-600 bg-blue-600 text-white"
-                    : TAB_COLORS[t.key]
+                  TAB_COLORS[t.key],
+                  active && "ring-2 ring-blue-500/40"
                 )}
               >
-                {t.label}
+                {t.label} ({countOf(t.contractStatus)})
               </button>
             )
           })}

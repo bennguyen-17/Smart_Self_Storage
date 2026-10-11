@@ -2,18 +2,18 @@ import { useState } from "react"
 import { TriangleAlertIcon, XCircleIcon } from "lucide-react"
 import { toast } from "sonner"
 
-import { getErrorMessage } from "@/lib/api"
 import { formatVnd } from "@/lib/format"
 
-import { counterCancel } from "../api/checkinApi"
+import { checkinErrorMessage, counterCancel } from "../api/checkinApi"
 import { CANCEL_FORFEIT_RATE, CANCEL_POLICY_TEXT } from "../constants"
-import type { CheckinContract, CounterCancelResult } from "../types"
+import type { StaffCancelReservationResponse } from "../types"
+import type { CheckinTarget } from "./StaffCustomerDetailModal"
 import ProtoModal from "./ProtoModal"
 
 interface CounterCancelDialogProps {
-  contract: CheckinContract | null
+  contract: CheckinTarget | null
   onClose: () => void
-  onCanceled: (result: CounterCancelResult) => void
+  onCanceled: (response: StaffCancelReservationResponse) => void
 }
 
 function CounterCancelDialog({
@@ -27,7 +27,9 @@ function CounterCancelDialog({
       onClose={onClose}
       title="Hủy hợp đồng tại quầy"
       subtitle={
-        contract ? `${contract.code} · ${contract.customerName}` : undefined
+        contract
+          ? `${contract.reservationCode} · ${contract.customerName ?? ""}`
+          : undefined
       }
       icon={<XCircleIcon className="size-5" />}
     >
@@ -43,31 +45,29 @@ function Body({
   onClose,
   onCanceled,
 }: {
-  contract: CheckinContract
+  contract: CheckinTarget
   onClose: () => void
-  onCanceled: (result: CounterCancelResult) => void
+  onCanceled: (response: StaffCancelReservationResponse) => void
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  const refundAmount = Math.round(
-    contract.depositAmount * (1 - CANCEL_FORFEIT_RATE)
-  )
-  const forfeitedAmount = contract.depositAmount - refundAmount
+  // Ước tính theo BR-17 (hủy tại quầy); BE là nơi tính con số cuối cùng.
+  const paid = contract.depPaidAmount ?? 0
+  const estimatedRefund = Math.round(paid * (1 - CANCEL_FORFEIT_RATE))
+  const estimatedPenalty = paid - estimatedRefund
 
   async function handleConfirm() {
     setIsSubmitting(true)
     setErrorMsg(null)
     try {
-      const result = await counterCancel(contract.code, {
-        reason: "COUNTER_CANCEL",
-      })
+      const response = await counterCancel(contract.reservationId)
       toast.success("Đã hủy tại quầy", {
-        description: `Hoàn ${formatVnd(result.refundAmount)} · Quỹ phạt giữ ${formatVnd(result.forfeitedAmount)}`,
+        description: `Hoàn ${formatVnd(response.refundAmount)} · Quỹ phạt giữ ${formatVnd(response.penaltyAmount)}`,
       })
-      onCanceled(result)
+      onCanceled(response)
     } catch (error) {
-      setErrorMsg(getErrorMessage(error))
+      setErrorMsg(checkinErrorMessage(error))
     } finally {
       setIsSubmitting(false)
     }
@@ -88,20 +88,21 @@ function Body({
       </div>
 
       <div className="inner-box space-y-2 rounded-2xl border p-3.5 text-xs">
+        <Row label="Tiền cọc đã thu" value={formatVnd(paid)} />
         <Row
-          label="Tiền cọc đã thu"
-          value={formatVnd(contract.depositAmount)}
-        />
-        <Row
-          label="Hoàn lại cho khách (50%)"
-          value={formatVnd(refundAmount)}
+          label="Hoàn lại cho khách (dự kiến 50%)"
+          value={formatVnd(estimatedRefund)}
           valueClass="text-emerald-600 dark:text-emerald-400"
         />
         <Row
-          label="Ghi nhận quỹ phạt giữ chỗ (50%)"
-          value={formatVnd(forfeitedAmount)}
+          label="Ghi nhận quỹ phạt giữ chỗ (dự kiến 50%)"
+          value={formatVnd(estimatedPenalty)}
           valueClass="text-rose-600 dark:text-rose-400"
         />
+        <p className="pt-1 text-[11px] text-muted">
+          * Số tiền cuối cùng do hệ thống tính lại (BR-17: hoàn 100% nếu hủy ≥ 4
+          ngày trước ngày nhận kho).
+        </p>
       </div>
 
       {errorMsg && (
@@ -127,9 +128,7 @@ function Body({
         >
           <XCircleIcon className="size-4" />
           <span>
-            {isSubmitting
-              ? "Đang xử lý..."
-              : `Xác nhận hủy & hoàn ${formatVnd(refundAmount)}`}
+            {isSubmitting ? "Đang xử lý..." : "Xác nhận hủy tại quầy"}
           </span>
         </button>
       </div>

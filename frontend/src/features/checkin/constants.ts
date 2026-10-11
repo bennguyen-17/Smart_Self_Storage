@@ -1,7 +1,5 @@
 import type { ContractStatus } from "./types"
 
-export const PAGE_SIZE = 10
-
 export type CheckinTabKey =
   | "all"
   | "pending"
@@ -12,29 +10,19 @@ export type CheckinTabKey =
 export interface CheckinTab {
   key: CheckinTabKey
   label: string
-  status?: ContractStatus
+  contractStatus?: ContractStatus
 }
 
 export const CHECKIN_TABS: CheckinTab[] = [
   { key: "all", label: "Tất cả" },
-  { key: "pending", label: "Chờ Check-in", status: "PENDING_CHECKIN" },
-  { key: "active", label: "Đang thuê", status: "ACTIVE" },
-  { key: "overdue", label: "Quá hạn", status: "OVERDUE" },
-  { key: "canceled", label: "Đã hủy", status: "CANCELED" },
+  { key: "pending", label: "⌛ Chờ Check-in", contractStatus: "PENDING_CHECKIN" },
+  { key: "active", label: "🟢 Đang thuê", contractStatus: "ACTIVE" },
+  { key: "overdue", label: "🚨 Quá hạn", contractStatus: "OVERDUE" },
+  { key: "canceled", label: "❌ Đã hủy", contractStatus: "CANCELED" },
 ]
 
 export function findCheckinTab(key: string | null): CheckinTab {
   return CHECKIN_TABS.find((tab) => tab.key === key) ?? CHECKIN_TABS[0]
-}
-
-/**
- * Cơ sở của Staff đang đăng nhập.
- * Mock cố định — khi nối backend sẽ lấy từ JWT/session (BR-06).
- */
-export const STAFF_FACILITY = {
-  facilityId: 1,
-  facilityCode: "HN-01",
-  facilityName: "SmartStorage Cầu Giấy (HN-01)",
 }
 
 /** BR-19: khung giờ check-in bàn giao 08:00 – 20:00 hằng ngày */
