@@ -3,6 +3,7 @@ package com.swp391.backend.service;
 import com.swp391.backend.dto.GatePinResult;
 import com.swp391.backend.dto.StaffCheckInRequest;
 import com.swp391.backend.dto.StaffCheckInResponse;
+import com.swp391.backend.entity.Account;
 import com.swp391.backend.entity.ActivityLog;
 import com.swp391.backend.entity.Contract;
 import com.swp391.backend.entity.EmployeeProfile;
@@ -10,6 +11,7 @@ import com.swp391.backend.entity.Payment;
 import com.swp391.backend.entity.Reservation;
 import com.swp391.backend.entity.StorageUnit;
 import com.swp391.backend.repository.ActivityLogRepository;
+import com.swp391.backend.repository.AccountRepository;
 import com.swp391.backend.repository.ContractRepository;
 import com.swp391.backend.repository.EmployeeProfileRepository;
 import com.swp391.backend.repository.FloorRepository;
@@ -17,8 +19,11 @@ import com.swp391.backend.repository.PaymentRepository;
 import com.swp391.backend.repository.ReservationRepository;
 import com.swp391.backend.repository.StorageUnitRepository;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.mail.MailException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -31,6 +36,8 @@ import java.util.Optional;
 @Service
 public class StaffCheckInService {
 
+    private static final Logger log = LoggerFactory.getLogger(StaffCheckInService.class);
+
     private static final String CONTRACT_PENDING_CHECKIN = "PENDING_CHECKIN";
     private static final String RESERVATION_CONFIRMED = "CONFIRMED";
 
@@ -41,7 +48,9 @@ public class StaffCheckInService {
     private final EmployeeProfileRepository employeeProfileRepository;
     private final FloorRepository floorRepository;
     private final ActivityLogRepository activityLogRepository;
+    private final AccountRepository accountRepository;
     private final GatePinService gatePinService;
+    private final EmailService emailService;
 
     public StaffCheckInService(
             ReservationRepository reservationRepository,
@@ -51,7 +60,9 @@ public class StaffCheckInService {
             EmployeeProfileRepository employeeProfileRepository,
             FloorRepository floorRepository,
             ActivityLogRepository activityLogRepository,
-            GatePinService gatePinService) {
+            AccountRepository accountRepository,
+            GatePinService gatePinService,
+            EmailService emailService) {
         this.reservationRepository = reservationRepository;
         this.contractRepository = contractRepository;
         this.paymentRepository = paymentRepository;
@@ -59,7 +70,9 @@ public class StaffCheckInService {
         this.employeeProfileRepository = employeeProfileRepository;
         this.floorRepository = floorRepository;
         this.activityLogRepository = activityLogRepository;
+        this.accountRepository = accountRepository;
         this.gatePinService = gatePinService;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -155,6 +168,8 @@ public class StaffCheckInService {
                         + "): collected " + request.getCollectedAmount() + " via " + paymentMethod
                         + "; contract=ACTIVE; unit=OCCUPIED; result=SUCCESS");
 
+        sendCheckInEmail(reservation, contract, gatePin.getPin());
+
         StaffCheckInResponse response = new StaffCheckInResponse(true, "Check-in completed.");
         response.setReservationId(reservationId);
         response.setReservationCode(reservation.getReservationCode());
@@ -164,6 +179,36 @@ public class StaffCheckInService {
         response.setGatePin(gatePin.getPin());
         response.setRemainingAmount(BigDecimal.ZERO);
         return response;
+    }
+
+    private void sendCheckInEmail(Reservation reservation, Contract contract, String gatePin) {
+        Optional<Account> accountOpt = accountRepository.findAccountByAccountId(reservation.getAccountId());
+        if (accountOpt.isEmpty() || accountOpt.get().getEmail() == null
+                || accountOpt.get().getEmail().isBlank()) {
+            log.warn("Cannot send check-in email: customer email was not found for accountId={}",
+                    reservation.getAccountId());
+            return;
+        }
+
+        Account account = accountOpt.get();
+        String content = "Hello " + account.getFullName() + ",\n\n"
+                + "Your storage check-in has been completed successfully.\n"
+                + "Reservation code: " + reservation.getReservationCode() + "\n"
+                + "Storage unit: " + reservation.getUnitCode() + "\n"
+                + "Contract status: " + contract.getStatus() + "\n"
+                + "Gate PIN: " + gatePin + "\n\n"
+                + "Thank you for using Smart Storage.";
+
+        try {
+            emailService.sendTextEmail(
+                    account.getEmail(),
+                    "Smart Storage - Check-in completed",
+                    content
+            );
+        } catch (MailException exception) {
+            log.warn("Check-in completed but confirmation email could not be sent to {}",
+                    account.getEmail(), exception);
+        }
     }
 
     private StaffCheckInResponse checkInFailure(String message) {
