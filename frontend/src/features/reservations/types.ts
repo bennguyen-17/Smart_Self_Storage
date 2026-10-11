@@ -1,10 +1,10 @@
-// US-06: Đơn đặt cọc giữ chỗ & xử lý No-Show (BR-13).
+// US-06: Đơn đặt cọc giữ chỗ & xử lý No-Show (BR-17).
 // Contract FE đề xuất, chờ Bảo chốt DTO backend.
 
 /** PENDING_CHECKIN: đã cọc, chờ khách đến nhận kho. ACTIVE: đã check-in. */
 export type ReservationStatus = "PENDING_CHECKIN" | "ACTIVE" | "CANCELED"
 
-/** NO_SHOW: hệ thống tự hủy do quá hạn check-in (BR-13/BR-17). CUSTOMER_REQUEST: khách hủy trước ngày check-in. */
+/** NO_SHOW: hệ thống tự hủy do quá hạn check-in (BR-17). CUSTOMER_REQUEST: khách hủy trước ngày check-in. */
 export type CancelReason = "NO_SHOW" | "CUSTOMER_REQUEST"
 
 /** Trạng thái hoàn tiền cọc qua quy trình Back-office (BR-35) */
