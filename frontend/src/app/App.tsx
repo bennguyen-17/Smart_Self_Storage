@@ -11,6 +11,22 @@ import StaffCheckinPage from "@/features/checkin/pages/StaffCheckinPage"
 import FloorPlanPage from "@/features/floor-plan/pages/FloorPlanPage"
 import ManagerPortalPage from "@/features/manager-portal/pages/ManagerPortalPage"
 import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
+import { isTokenValid } from "@/lib/apiClient"
+
+// Route Guard độc lập cho Cổng Khách Hàng (không phụ thuộc vào cổng nội bộ)
+function CustomerProtectedRoute({ children }: { children: React.ReactNode }) {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+
+  if (!isTokenValid(token)) {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token")
+      localStorage.removeItem("user")
+    }
+    return <Navigate to="/customer_login" replace />
+  }
+
+  return <>{children}</>
+}
 
 function App() {
   return (
@@ -34,13 +50,13 @@ function App() {
         {/* US-03: Sơ đồ 2D chọn ô kho */}
         <Route path="/floor-plan" element={<FloorPlanPage />} />
 
-        {/* Cổng Khách Hàng (Bảo vệ bằng RoleProtectedRoute - Role CUSTOMER) */}
+        {/* Cổng Khách Hàng (Bảo vệ độc lập bằng token khách hàng) */}
         <Route
           path="/portal"
           element={
-            <RoleProtectedRoute allowedRoles={["CUSTOMER"]}>
+            <CustomerProtectedRoute>
               <CustomerPortal />
-            </RoleProtectedRoute>
+            </CustomerProtectedRoute>
           }
         />
 
