@@ -51,4 +51,7 @@ export const bomApi = {
   getFacilities: async (): Promise<FacilityApiItem[]> => {
     return apiClient.get('/facilities')
   },
+  getUnits: async (): Promise<any[]> => {
+    return apiClient.get('/units/filter')
+  },
 }

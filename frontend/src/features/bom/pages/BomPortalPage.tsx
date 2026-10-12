@@ -30,12 +30,8 @@ import {
 import { useTheme } from "@/components/common/theme-provider"
 import { useAuth } from "@/context/AuthContext"
 import ThreeBackground from "../components/ThreeBackground"
-import { bomApi, type ChainDashboardData } from "../api/bomApi"
+import { bomApi, type ChainDashboardData, type FacilityBreakdownItem } from "../api/bomApi"
 import {
-  INITIAL_FACILITIES,
-  INITIAL_PRICING,
-  INITIAL_SURCHARGES,
-  INITIAL_SYSTEM_REPORTS,
   type FacilityPerformance,
   type UnitPricing,
   type SurchargeItem,
@@ -56,27 +52,31 @@ export default function BomPortalPage() {
   const [isLoadingApi, setIsLoadingApi] = useState<boolean>(true)
   const [isApiConnected, setIsApiConnected] = useState<boolean>(false)
 
-  // State Data
-  const [facilities, setFacilities] = useState<FacilityPerformance[]>(INITIAL_FACILITIES)
-  const [pricingList, setPricingList] = useState<UnitPricing[]>(INITIAL_PRICING)
-  const [surcharges, setSurcharges] = useState<SurchargeItem[]>(INITIAL_SURCHARGES)
+  // State Data (100% dữ liệu từ API, mặc định rỗng / 0)
+  const [facilities, setFacilities] = useState<FacilityPerformance[]>([])
+  const [pricingList, setPricingList] = useState<UnitPricing[]>([])
+  const [surcharges, setSurcharges] = useState<SurchargeItem[]>([])
   const [searchSurcharge, setSearchSurcharge] = useState("")
   const [surchargeFilter, setSurchargeFilter] = useState<"all" | "surcharge" | "penalty" | "discount">("all")
 
-  // Fetch Live Data từ Spring Boot Backend (/api/admin/dashboard/chain-overview & /api/facilities)
+  // Fetch Live Data từ Spring Boot Backend (/api/admin/dashboard/chain-overview, /api/facilities, /api/units/filter)
   useEffect(() => {
     let isMounted = true
 
     const loadLiveData = async () => {
       try {
         setIsLoadingApi(true)
-        const [overview, apiFacilities] = await Promise.all([
+        const [overview, apiFacilities, apiUnits] = await Promise.all([
           bomApi.getChainDashboard().catch((err) => {
-            console.warn("API /api/admin/dashboard/chain-overview lỗi, dùng dữ liệu dự phòng:", err)
+            console.warn("API /api/admin/dashboard/chain-overview lỗi:", err)
             return null
           }),
           bomApi.getFacilities().catch((err) => {
-            console.warn("API /api/facilities lỗi, dùng dữ liệu dự phòng:", err)
+            console.warn("API /api/facilities lỗi:", err)
+            return null
+          }),
+          bomApi.getUnits().catch((err) => {
+            console.warn("API /api/units/filter lỗi:", err)
             return null
           }),
         ])
@@ -90,7 +90,7 @@ export default function BomPortalPage() {
 
         if (apiFacilities && apiFacilities.length > 0) {
           setIsApiConnected(true)
-          const breakdownMap = new Map(
+          const breakdownMap = new Map<number, FacilityBreakdownItem>(
             (overview?.facilityBreakdown || []).map((b) => [b.facilityId, b])
           )
 
@@ -105,14 +105,51 @@ export default function BomPortalPage() {
               managerEmail: `manager.${(f.shortCode || f.facilityCode).toLowerCase()}@smartstorage.vn`,
               totalUnits: bd ? Number(bd.totalUnits) : 0,
               rentedUnits: bd ? Number(bd.occupiedUnits) : 0,
-              floorArea: (bd ? Number(bd.totalUnits) : 30) * 15,
+              floorArea: (bd ? Number(bd.totalUnits) : 0) * 15,
               monthlyRevenue: bd ? Number(bd.netRevenue || bd.rentalRevenue) : 0,
               overdueUnits: bd ? Number(bd.overdueContracts) : 0,
               status: f.status,
-              rating: "4.8",
+              rating: bd && bd.occupancyRate >= 80 ? "5.0" : bd && bd.occupancyRate > 0 ? "4.5" : "—",
             }
           })
           setFacilities(mergedFacilities)
+        }
+
+        if (apiUnits && apiUnits.length > 0) {
+          const sizeMap = new Map<string, UnitPricing>()
+          apiUnits.forEach((u: any) => {
+            let sizeKey: "S" | "M" | "L" | "XL" = "M"
+            if (u.typeName?.includes("Size S") || u.size?.startsWith("1.0m")) sizeKey = "S"
+            else if (u.typeName?.includes("Size M") || u.size?.startsWith("1.5m")) sizeKey = "M"
+            else if (u.typeName?.includes("Size L") || u.size?.startsWith("2.0m")) sizeKey = "L"
+            else if (u.typeName?.includes("Size XL") || u.size?.startsWith("2.5m")) sizeKey = "XL"
+
+            if (!sizeMap.has(sizeKey)) {
+              sizeMap.set(sizeKey, {
+                id: `PRICE-${sizeKey}`,
+                size: sizeKey,
+                name: `Size ${sizeKey}`,
+                description: u.typeName || `Kho lưu trữ chuẩn Size ${sizeKey}`,
+                dimensions: u.size || "",
+                area: `${u.areaM2 || 0} m²`,
+                normPrice: Number(u.monthlyPrice) || 0,
+                acPrice: Math.round(Number(u.monthlyPrice) * (1 + (Number(u.climateSurchargePercent) || 20) / 100)),
+                depositText: `₫${Number(u.depositAmount || 0).toLocaleString("vi-VN")}`,
+                status: "Đang Áp Dụng",
+              })
+            } else {
+              const item = sizeMap.get(sizeKey)!
+              if (u.storageCondition === "CLIMATE_CONTROLLED" || u.isClimate) {
+                item.acPrice = Number(u.monthlyPrice) || item.acPrice
+              } else {
+                item.normPrice = Number(u.monthlyPrice) || item.normPrice
+              }
+            }
+          })
+          const sortedList: UnitPricing[] = (["S", "M", "L", "XL"] as const)
+            .filter((s) => sizeMap.has(s))
+            .map((s) => sizeMap.get(s)!)
+          setPricingList(sortedList)
         }
       } catch (err) {
         console.error("Lỗi nạp dữ liệu BOM từ API:", err)
@@ -352,7 +389,7 @@ export default function BomPortalPage() {
                 QUẢN LÝ VẬN HÀNH TOÀN HỆ THỐNG
               </h1>
               <p className="text-sky-300 font-semibold text-base sm:text-lg max-w-2xl mx-auto drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
-                Trung tâm điều hành cấp cao &amp; giám sát {chainOverview?.chainTotalFacilities || facilities.length} cụm cơ sở kho thông minh 24/7
+                Trung tâm điều hành cấp cao &amp; giám sát {chainOverview ? chainOverview.chainTotalFacilities : facilities.length} cụm cơ sở kho thông minh 24/7
               </p>
             </div>
 
@@ -375,7 +412,7 @@ export default function BomPortalPage() {
                 <div className="text-[11px] text-slate-400 font-medium">
                   {chainOverview
                     ? `${chainOverview.chainTotalUnits.toLocaleString("vi-VN")} Tổng số kho vận hành`
-                    : "1,240 Tổng số kho vận hành"}
+                    : "0 Tổng số kho vận hành"}
                 </div>
               </div>
 
@@ -389,13 +426,13 @@ export default function BomPortalPage() {
                 </div>
                 <div className="my-1.5">
                   <div className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight drop-shadow-md">
-                    {chainOverview ? `${chainOverview.chainAverageOccupancyRate}%` : "88.5%"}
+                    {chainOverview ? `${chainOverview.chainAverageOccupancyRate}%` : "0%"}
                   </div>
                 </div>
                 <div className="text-[11px] text-slate-400 font-medium">
                   {chainOverview
                     ? `${chainOverview.chainTotalActiveContracts} Hợp đồng đang thuê`
-                    : "1,098 / 1,240 kho đang thuê"}
+                    : "0 Hợp đồng đang thuê"}
                 </div>
               </div>
 
@@ -409,13 +446,13 @@ export default function BomPortalPage() {
                 </div>
                 <div className="my-1.5">
                   <div className="text-2xl sm:text-3xl font-black text-amber-400 tracking-tight drop-shadow-md">
-                    {chainOverview ? formatShortCurrency(chainOverview.chainNetRevenue) : "₫1.85 Tỷ"}
+                    {chainOverview ? formatShortCurrency(chainOverview.chainNetRevenue) : "₫0"}
                   </div>
                 </div>
                 <div className="text-[11px] text-slate-400 font-medium">
                   {chainOverview
                     ? `Thực thu: ₫${Number(chainOverview.chainNetRevenue).toLocaleString("vi-VN")}`
-                    : "+14.2% so với tháng trước"}
+                    : "₫0"}
                 </div>
               </div>
 
@@ -429,12 +466,14 @@ export default function BomPortalPage() {
                 </div>
                 <div className="my-1.5">
                   <div className="text-2xl sm:text-3xl font-black text-rose-400 tracking-tight drop-shadow-md flex items-baseline gap-1.5">
-                    <span>{chainOverview ? totalOverdueCount : 12}</span>
+                    <span>{chainOverview ? totalOverdueCount : 0}</span>
                     <span className="text-xs sm:text-sm font-bold text-rose-300">Kho</span>
                   </div>
                 </div>
                 <div className="text-[11px] text-slate-400 font-medium">
-                  {totalOverdueCount > 0 ? "Cần kích hoạt BR-18 / BR-21" : "An toàn - Không có nợ quá hạn"}
+                  {chainOverview
+                    ? (totalOverdueCount > 0 ? "Cần kích hoạt BR-18 / BR-21" : "An toàn - Không có nợ quá hạn")
+                    : "0 Đơn quá hạn"}
                 </div>
               </div>
             </div>
@@ -689,49 +728,57 @@ export default function BomPortalPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800 font-medium text-slate-300">
-                    {facilities.map((fac) => (
-                      <tr key={fac.id} className="hover:bg-slate-900/60 transition">
-                        <td className="py-4 px-4">
-                          <div className="font-extrabold text-white text-xs">{fac.name}</div>
-                          <div className="text-[11px] text-slate-400 mt-0.5">{fac.address}</div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="font-bold text-white text-xs">{fac.managerName}</div>
-                          <div className="text-[11px] text-slate-400 mt-0.5">{fac.managerEmail}</div>
-                        </td>
-                        <td className="py-4 px-4 text-center font-bold text-slate-200">
-                          {fac.totalUnits} Kho
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <span className="font-black text-emerald-400">
-                            {fac.rentedUnits}
-                          </span>
-                          <span className="text-slate-400">/{fac.totalUnits}</span>
-                        </td>
-                        <td className="py-4 px-4 text-center font-black text-sky-400 font-mono text-xs">
-                          ₫{fac.monthlyRevenue.toLocaleString("vi-VN").replace(/,/g, ".")}
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <span
-                            className={`font-semibold px-3 py-1 rounded-full text-[10px] inline-block ${
-                              fac.overdueUnits > 0
-                                ? "bg-rose-950/60 text-rose-300 border border-rose-800/40"
-                                : "bg-emerald-950/60 text-emerald-300 border border-emerald-800/40"
-                            }`}
-                          >
-                            {fac.overdueUnits > 0 ? `${fac.overdueUnits} Đơn quá hạn` : "0 Đơn"}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <button
-                            onClick={() => handleOpenFacilityModal(fac)}
-                            className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs px-4 py-1.5 rounded-full shadow-xs transition cursor-pointer"
-                          >
-                            Chi tiết
-                          </button>
+                    {facilities.length > 0 ? (
+                      facilities.map((fac) => (
+                        <tr key={fac.id} className="hover:bg-slate-900/60 transition">
+                          <td className="py-4 px-4">
+                            <div className="font-extrabold text-white text-xs">{fac.name}</div>
+                            <div className="text-[11px] text-slate-400 mt-0.5">{fac.address}</div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="font-bold text-white text-xs">{fac.managerName}</div>
+                            <div className="text-[11px] text-slate-400 mt-0.5">{fac.managerEmail}</div>
+                          </td>
+                          <td className="py-4 px-4 text-center font-bold text-slate-200">
+                            {fac.totalUnits} Kho
+                          </td>
+                          <td className="py-4 px-4 text-center">
+                            <span className="font-black text-emerald-400">
+                              {fac.rentedUnits}
+                            </span>
+                            <span className="text-slate-400">/{fac.totalUnits}</span>
+                          </td>
+                          <td className="py-4 px-4 text-center font-black text-sky-400 font-mono text-xs">
+                            ₫{fac.monthlyRevenue.toLocaleString("vi-VN").replace(/,/g, ".")}
+                          </td>
+                          <td className="py-4 px-4 text-center">
+                            <span
+                              className={`font-semibold px-3 py-1 rounded-full text-[10px] inline-block ${
+                                fac.overdueUnits > 0
+                                  ? "bg-rose-950/60 text-rose-300 border border-rose-800/40"
+                                  : "bg-emerald-950/60 text-emerald-300 border border-emerald-800/40"
+                              }`}
+                            >
+                              {fac.overdueUnits > 0 ? `${fac.overdueUnits} Đơn quá hạn` : "0 Đơn"}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 text-center">
+                            <button
+                              onClick={() => handleOpenFacilityModal(fac)}
+                              className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs px-4 py-1.5 rounded-full shadow-xs transition cursor-pointer"
+                            >
+                              Chi tiết
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={7} className="py-8 text-center text-slate-400 italic">
+                          Chưa có dữ liệu cơ sở từ hệ thống
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -757,8 +804,9 @@ export default function BomPortalPage() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {facilities.map((fac) => (
+              {facilities.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {facilities.map((fac) => (
                   <div
                     key={fac.id}
                     className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-4 hover:border-blue-400 transition"
@@ -800,9 +848,14 @@ export default function BomPortalPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            ) : (
+              <div className="p-12 text-center text-slate-400 italic">
+                Chưa có dữ liệu cơ sở kho từ hệ thống
+              </div>
+            )}
           </div>
-        )}
+        </div>
+      )}
 
         {/* SUBTAB 3: QUY ĐỊNH & CHÍNH SÁCH THUÊ CHUNG */}
         {activeTab === "policies" && (
@@ -1076,40 +1129,48 @@ export default function BomPortalPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-semibold">
-                      {pricingList.map((item) => (
-                        <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                          <td className="p-3.5">
-                            <div className="font-extrabold text-slate-900 dark:text-white">{item.name}</div>
-                            <div className="text-[11px] text-slate-500">{item.description}</div>
-                          </td>
-                          <td className="p-3.5 text-center font-mono">
-                            <span className="font-bold">{item.dimensions}</span>
-                            <span className="text-slate-400 block text-[10px]">({item.area})</span>
-                          </td>
-                          <td className="p-3.5 text-right font-black font-mono text-emerald-600 text-sm">
-                            ₫{item.normPrice.toLocaleString("vi-VN")} / tháng
-                          </td>
-                          <td className="p-3.5 text-right font-black font-mono text-blue-600 text-sm">
-                            ₫{item.acPrice.toLocaleString("vi-VN")} / tháng
-                          </td>
-                          <td className="p-3.5 text-center font-bold text-slate-700 dark:text-slate-300">
-                            {item.depositText}
-                          </td>
-                          <td className="p-3.5 text-center">
-                            <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 font-bold px-2.5 py-0.5 rounded-full text-[10px] border border-emerald-200 dark:border-emerald-800">
-                              {item.status}
-                            </span>
-                          </td>
-                          <td className="p-3.5 text-center">
-                            <button
-                              onClick={() => handleOpenPricingModal(item)}
-                              className="text-indigo-600 dark:text-indigo-400 font-black hover:underline cursor-pointer"
-                            >
-                              Sửa Giá
-                            </button>
+                      {pricingList.length > 0 ? (
+                        pricingList.map((item) => (
+                          <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                            <td className="p-3.5">
+                              <div className="font-extrabold text-slate-900 dark:text-white">{item.name}</div>
+                              <div className="text-[11px] text-slate-500">{item.description}</div>
+                            </td>
+                            <td className="p-3.5 text-center font-mono">
+                              <span className="font-bold">{item.dimensions}</span>
+                              <span className="text-slate-400 block text-[10px]">({item.area})</span>
+                            </td>
+                            <td className="p-3.5 text-right font-black font-mono text-emerald-600 text-sm">
+                              ₫{item.normPrice.toLocaleString("vi-VN")} / tháng
+                            </td>
+                            <td className="p-3.5 text-right font-black font-mono text-blue-600 text-sm">
+                              ₫{item.acPrice.toLocaleString("vi-VN")} / tháng
+                            </td>
+                            <td className="p-3.5 text-center font-bold text-slate-700 dark:text-slate-300">
+                              {item.depositText}
+                            </td>
+                            <td className="p-3.5 text-center">
+                              <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 font-bold px-2.5 py-0.5 rounded-full text-[10px] border border-emerald-200 dark:border-emerald-800">
+                                {item.status}
+                              </span>
+                            </td>
+                            <td className="p-3.5 text-center">
+                              <button
+                                onClick={() => handleOpenPricingModal(item)}
+                                className="text-indigo-600 dark:text-indigo-400 font-black hover:underline cursor-pointer"
+                              >
+                                Sửa Giá
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={7} className="p-8 text-center text-slate-400 italic">
+                            Chưa có dữ liệu bảng giá từ API
                           </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1171,20 +1232,28 @@ export default function BomPortalPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-semibold">
-                      {filteredSurcharges.map((sc) => (
-                        <tr key={sc.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                          <td className="p-3">
-                            <span className="font-bold text-slate-500 text-[11px] block">{sc.categoryLabel}</span>
-                            <span className="font-bold text-blue-600 dark:text-blue-400">{sc.type}</span>
+                      {filteredSurcharges.length > 0 ? (
+                        filteredSurcharges.map((sc) => (
+                          <tr key={sc.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                            <td className="p-3">
+                              <span className="font-bold text-slate-500 text-[11px] block">{sc.categoryLabel}</span>
+                              <span className="font-bold text-blue-600 dark:text-blue-400">{sc.type}</span>
+                            </td>
+                            <td className="p-3 font-extrabold text-slate-900 dark:text-white">{sc.name}</td>
+                            <td className="p-3 font-black font-mono text-slate-900 dark:text-white">{sc.rate}</td>
+                            <td className="p-3 text-center">
+                              <CheckCircle className="size-4 text-emerald-500 mx-auto" />
+                            </td>
+                            <td className="p-3 text-slate-500 text-xs">{sc.note}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="p-8 text-center text-slate-400 italic">
+                            Chưa có dữ liệu phụ phí / 0 phụ phí
                           </td>
-                          <td className="p-3 font-extrabold text-slate-900 dark:text-white">{sc.name}</td>
-                          <td className="p-3 font-black font-mono text-slate-900 dark:text-white">{sc.rate}</td>
-                          <td className="p-3 text-center">
-                            <CheckCircle className="size-4 text-emerald-500 mx-auto" />
-                          </td>
-                          <td className="p-3 text-slate-500 text-xs">{sc.note}</td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1209,11 +1278,10 @@ export default function BomPortalPage() {
                 <div>
                   <label className="text-[10px] uppercase text-slate-400 block mb-1">Cơ Sở Kho:</label>
                   <select className="w-full p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold">
-                    <option>Tất Cả Các Cơ Sở (Toàn Hệ Thống)</option>
-                    <option>SelfStorage Trụ Sở Quận 1</option>
-                    <option>SelfStorage Nam Sài Gòn Q.7</option>
-                    <option>SelfStorage TP. Thủ Đức</option>
-                    <option>SelfStorage Sân Bay Tân Bình</option>
+                    <option value="all">Tất Cả Các Cơ Sở ({facilities.length} Cơ Sở)</option>
+                    {facilities.map((f) => (
+                      <option key={f.id} value={f.code}>{f.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -1260,68 +1328,95 @@ export default function BomPortalPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-semibold">
-                    {INITIAL_SYSTEM_REPORTS.map((row) => (
-                      <tr key={row.code} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                        <td className="p-3">
-                          <div className="font-extrabold text-slate-900 dark:text-white">{row.name}</div>
-                          <div className="text-[11px] text-slate-500">
-                            {row.address} • Mã: <span className="font-mono text-blue-600 font-bold">{row.code}</span>
-                          </div>
-                        </td>
-                        <td className="p-3">
-                          <div className="font-bold text-slate-900 dark:text-white">{row.sizeDetail}</div>
-                          <div className="text-[11px] text-blue-600">{row.typeDetail}</div>
-                        </td>
-                        <td className="p-3 text-center">
-                          <span className="font-mono font-bold">{row.totalUnits} Kho</span>
-                          <span className="text-[11px] text-emerald-600 block font-bold">{row.rentedUnits} Đang thuê</span>
-                        </td>
-                        <td className="p-3 text-center font-mono">
-                          <span className="font-black text-blue-600 dark:text-blue-400 text-sm block">
-                            {row.occupancyRate}
-                          </span>
-                          <span className="text-[10px] text-slate-400">
-                            {row.vacantUnits} trống • {row.overdueUnits} quá hạn
-                          </span>
-                        </td>
-                        <td className="p-3 text-right font-mono font-bold">
-                          ₫{row.rentalRevenue.toLocaleString("vi-VN")}
-                        </td>
-                        <td className="p-3 text-right font-mono font-bold text-slate-500">
-                          ₫{row.depositRevenue.toLocaleString("vi-VN")}
-                        </td>
-                        <td className="p-3 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">
-                          ₫{row.netRevenue.toLocaleString("vi-VN")}
-                        </td>
-                        <td className="p-3 text-center">
-                          <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 font-extrabold px-2.5 py-1 rounded-full text-[10px]">
-                            {row.performanceBadge}
-                          </span>
+                    {chainOverview && chainOverview.facilityBreakdown && chainOverview.facilityBreakdown.length > 0 ? (
+                      chainOverview.facilityBreakdown.map((row) => {
+                        const matchedFacility = facilities.find(
+                          (f) => f.code === row.facilityCode || f.id === `CS-${row.facilityId}`
+                        )
+                        return (
+                          <tr key={row.facilityCode || row.facilityId} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                            <td className="p-3">
+                              <div className="font-extrabold text-slate-900 dark:text-white">{row.facilityName}</div>
+                              <div className="text-[11px] text-slate-500">
+                                {matchedFacility?.address || "Hệ thống cơ sở kho"} • Mã: <span className="font-mono text-blue-600 font-bold">{row.facilityCode}</span>
+                              </div>
+                            </td>
+                            <td className="p-3">
+                              <div className="font-bold text-slate-900 dark:text-white">Tất Cả Loại Kho</div>
+                              <div className="text-[11px] text-blue-600">Standard / Climate</div>
+                            </td>
+                            <td className="p-3 text-center">
+                              <span className="font-mono font-bold">{row.totalUnits} Kho</span>
+                              <span className="text-[11px] text-emerald-600 block font-bold">{row.occupiedUnits} Đang thuê</span>
+                            </td>
+                            <td className="p-3 text-center font-mono">
+                              <span className="font-black text-blue-600 dark:text-blue-400 text-sm block">
+                                {row.occupancyRate}%
+                              </span>
+                              <span className="text-[10px] text-slate-400">
+                                {row.availableUnits} trống • {row.overdueContracts} quá hạn
+                              </span>
+                            </td>
+                            <td className="p-3 text-right font-mono font-bold">
+                              ₫{Number(row.rentalRevenue || 0).toLocaleString("vi-VN")}
+                            </td>
+                            <td className="p-3 text-right font-mono font-bold text-slate-500">
+                              ₫{Number(row.depositHolding || 0).toLocaleString("vi-VN")}
+                            </td>
+                            <td className="p-3 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                              ₫{Number(row.netRevenue || 0).toLocaleString("vi-VN")}
+                            </td>
+                            <td className="p-3 text-center">
+                              <span
+                                className={`font-extrabold px-2.5 py-1 rounded-full text-[10px] ${
+                                  row.occupancyRate >= 80
+                                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300"
+                                    : row.occupancyRate > 0
+                                    ? "bg-sky-50 text-sky-700 dark:bg-sky-950/80 dark:text-sky-300"
+                                    : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                                }`}
+                              >
+                                {row.occupancyRate >= 80
+                                  ? "★★★★★ Tối ưu"
+                                  : row.occupancyRate >= 50
+                                  ? "★★★★☆ Tiêu chuẩn"
+                                  : row.occupancyRate > 0
+                                  ? "★★★☆☆ Đang lấp đầy"
+                                  : "Chưa có hợp đồng"}
+                              </span>
+                            </td>
+                          </tr>
+                        )
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={8} className="p-8 text-center text-slate-400 italic">
+                          Chưa có dữ liệu báo cáo từ API
                         </td>
                       </tr>
-                    ))}
-                    {/* TOTAL SUMMARY ROW */}
+                    )}
+                    {/* TOTAL SUMMARY ROW - 100% TỪ LIVE API / 0 */}
                     <tr className="bg-blue-50/60 dark:bg-slate-800 font-black border-t-2 border-indigo-300 dark:border-indigo-700">
                       <td className="p-3 text-blue-900 dark:text-blue-200 uppercase">TỔNG CỘNG TOÀN HỆ THỐNG</td>
                       <td className="p-3 text-blue-900 dark:text-blue-200">Tất Cả Loại Kho (S, M, L, XL, AC)</td>
                       <td className="p-3 text-center font-mono text-blue-900 dark:text-blue-200">
-                        1,240 Kho / 1,098 Rented
+                        {chainOverview ? `${chainOverview.chainTotalUnits} Kho / ${chainOverview.chainTotalActiveContracts} Đang thuê` : "0 Kho / 0 Đang thuê"}
                       </td>
                       <td className="p-3 text-center text-emerald-600 dark:text-emerald-400 font-mono">
-                        88.5% Lấp Đầy TB (12 Quá Hạn)
+                        {chainOverview ? `${chainOverview.chainAverageOccupancyRate}% Lấp Đầy TB (${totalOverdueCount} Quá Hạn)` : "0% Lấp Đầy TB (0 Quá Hạn)"}
                       </td>
                       <td className="p-3 text-right font-mono font-black text-blue-900 dark:text-blue-200">
-                        ₫1,650,000,000
+                        ₫{chainOverview ? Number(chainOverview.chainTotalRevenue || 0).toLocaleString("vi-VN") : "0"}
                       </td>
                       <td className="p-3 text-right font-mono font-black text-blue-900 dark:text-blue-200">
-                        ₫1,850,000,000
+                        ₫{chainOverview ? Number(chainOverview.chainDepositHolding || 0).toLocaleString("vi-VN") : "0"}
                       </td>
                       <td className="p-3 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">
-                        ₫1,850,000,000
+                        ₫{chainOverview ? Number(chainOverview.chainNetRevenue || 0).toLocaleString("vi-VN") : "0"}
                       </td>
                       <td className="p-3 text-center">
                         <span className="bg-blue-600 text-white font-black px-2.5 py-1 rounded-full text-[10px]">
-                          ▲ +14.2% Growth
+                          {chainOverview ? `${chainOverview.chainAverageOccupancyRate}% Tỷ lệ lấp đầy` : "0%"}
                         </span>
                       </td>
                     </tr>
