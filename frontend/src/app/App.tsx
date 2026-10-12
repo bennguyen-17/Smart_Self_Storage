@@ -9,6 +9,7 @@ import LandingPage from "@/features/landing/pages/LandingPage"
 import ReservationManagementPage from "@/features/reservations/pages/ReservationManagementPage"
 import StaffCheckinPage from "@/features/checkin/pages/StaffCheckinPage"
 import FloorPlanPage from "@/features/floor-plan/pages/FloorPlanPage"
+import ManagerPortalPage from "@/features/manager-portal/pages/ManagerPortalPage"
 import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
 
 function App() {
@@ -68,7 +69,8 @@ function App() {
           path="/manager"
           element={
             <RoleProtectedRoute allowedRoles={["MANAGER", "ADMIN"]}>
-              <RolePortalPlaceholderPage portalType="MANAGER" />
+              {/* Khung Cổng Quản lý cơ sở (builder: Vỹ) */}
+              <ManagerPortalPage />
             </RoleProtectedRoute>
           }
         />
