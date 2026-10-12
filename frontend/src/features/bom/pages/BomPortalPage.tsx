@@ -184,7 +184,7 @@ export default function BomPortalPage() {
       {/* Top Header */}
       <header className="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-8 py-3 flex items-center justify-between shadow-xs">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-md">
+          <div className="w-10 h-10 rounded-2xl bg-[#1d4ed8] text-white flex items-center justify-center font-bold text-lg shadow-sm">
             <Warehouse className="size-5" />
           </div>
           <div>
@@ -200,26 +200,26 @@ export default function BomPortalPage() {
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+            className="px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs"
           >
             {theme === "dark" ? (
               <>
-                <Sun className="size-4 text-amber-400" />
-                <span className="hidden sm:inline">Giao diện Sáng</span>
+                <Sun className="size-3.5 text-amber-400" />
+                <span className="text-slate-700 dark:text-slate-200">Giao diện Sáng</span>
               </>
             ) : (
               <>
-                <Moon className="size-4 text-indigo-500" />
-                <span className="hidden sm:inline">Giao diện Tối</span>
+                <Moon className="size-3.5 text-indigo-600" />
+                <span className="text-slate-700 dark:text-slate-200">Giao diện Tối</span>
               </>
             )}
           </button>
 
           <button
             onClick={() => setIsProfileModalOpen(true)}
-            className="flex items-center space-x-2.5 p-1.5 sm:px-3 sm:py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 transition cursor-pointer"
+            className="flex items-center space-x-2.5 p-1 sm:px-3 sm:py-1.5 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 transition cursor-pointer shadow-xs"
           >
-            <div className="w-8 h-8 rounded-lg bg-blue-600 text-white font-extrabold text-xs flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-[#1d4ed8] text-white font-black text-xs flex items-center justify-center">
               NV
             </div>
             <div className="hidden sm:block text-left text-xs">
@@ -364,14 +364,14 @@ export default function BomPortalPage() {
         {activeTab === "dashboard" && (
           <div className="space-y-6">
             <div className="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-slate-900 dark:text-white">
                   <TrendingUp className="size-4 text-blue-600" />
                   <span>BẢNG SO SÁNH HIỆU SUẤT HOẠT ĐỘNG GIỮA CÁC CƠ SỞ KHO</span>
                 </h3>
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs text-slate-500 font-bold">Tháng báo cáo:</span>
-                  <select className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold bg-white dark:bg-slate-950 text-slate-900 dark:text-white">
+                  <span className="text-xs text-slate-500 font-semibold">Tháng báo cáo:</span>
+                  <select className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold bg-white dark:bg-slate-950 text-slate-900 dark:text-white outline-none cursor-pointer">
                     <option value="09/2026">Tháng 09 / 2026</option>
                     <option value="08/2026">Tháng 08 / 2026</option>
                   </select>
@@ -381,54 +381,54 @@ export default function BomPortalPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-800/60 uppercase font-black text-slate-600 dark:text-slate-300 text-[10px]">
-                      <th className="p-3">Cơ Sở Kho</th>
-                      <th className="p-3">Quản Lý Chi Nhánh</th>
-                      <th className="p-3 text-center">Quy Mô Kho</th>
-                      <th className="p-3 text-center">Đang Thuê</th>
-                      <th className="p-3 text-right">Doanh Thu Tháng</th>
-                      <th className="p-3 text-center">Đơn Quá Hạn</th>
-                      <th className="p-3 text-right">Thao Tác</th>
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-black text-[10px]">
+                      <th className="py-3 px-4">CƠ SỞ KHO</th>
+                      <th className="py-3 px-4">QUẢN LÝ CHI NHÁNH</th>
+                      <th className="py-3 px-4 text-center">QUY MÔ KHO</th>
+                      <th className="py-3 px-4 text-center">ĐANG THUÊ</th>
+                      <th className="py-3 px-4 text-center">DOANH THU THÁNG</th>
+                      <th className="py-3 px-4 text-center">ĐƠN QUÁ HẠN</th>
+                      <th className="py-3 px-4 text-center">THAO TÁC</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-semibold">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-700 dark:text-slate-300">
                     {facilities.map((fac) => (
-                      <tr key={fac.id} className="hover:bg-blue-50/40 dark:hover:bg-slate-800/40 transition">
-                        <td className="p-3">
-                          <div className="font-extrabold text-slate-900 dark:text-white">{fac.name}</div>
-                          <div className="text-[11px] text-slate-500">{fac.address}</div>
+                      <tr key={fac.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
+                        <td className="py-4 px-4">
+                          <div className="font-extrabold text-slate-900 dark:text-white text-xs">{fac.name}</div>
+                          <div className="text-[11px] text-slate-400 mt-0.5">{fac.address}</div>
                         </td>
-                        <td className="p-3">
-                          <div className="font-bold text-slate-900 dark:text-white">{fac.managerName}</div>
-                          <div className="text-[11px] text-slate-500">{fac.managerEmail}</div>
+                        <td className="py-4 px-4">
+                          <div className="font-bold text-slate-900 dark:text-white text-xs">{fac.managerName}</div>
+                          <div className="text-[11px] text-slate-400 mt-0.5">{fac.managerEmail}</div>
                         </td>
-                        <td className="p-3 text-center">
-                          <span className="font-mono font-bold">{fac.totalUnits}</span> Kho
+                        <td className="py-4 px-4 text-center font-bold text-slate-800 dark:text-slate-200">
+                          {fac.totalUnits} Kho
                         </td>
-                        <td className="p-3 text-center">
-                          <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                        <td className="py-4 px-4 text-center">
+                          <span className="font-black text-emerald-600 dark:text-emerald-400">
                             {fac.rentedUnits}
                           </span>
-                          <span className="text-slate-400 font-bold">/{fac.totalUnits}</span>
+                          <span className="text-slate-400">/{fac.totalUnits}</span>
                         </td>
-                        <td className="p-3 text-right font-black text-blue-700 dark:text-blue-400 font-mono text-sm">
-                          ₫{fac.monthlyRevenue.toLocaleString("vi-VN")}
+                        <td className="py-4 px-4 text-center font-black text-blue-600 dark:text-blue-400 font-mono text-xs">
+                          ₫{fac.monthlyRevenue.toLocaleString("vi-VN").replace(/,/g, ".")}
                         </td>
-                        <td className="p-3 text-center">
+                        <td className="py-4 px-4 text-center">
                           <span
-                            className={`font-bold px-2.5 py-0.5 rounded-full text-[10px] border ${
+                            className={`font-semibold px-3 py-1 rounded-full text-[10px] inline-block ${
                               fac.overdueUnits > 0
-                                ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-800"
-                                : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800"
+                                ? "bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300"
+                                : "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-300"
                             }`}
                           >
                             {fac.overdueUnits > 0 ? `${fac.overdueUnits} Đơn quá hạn` : "0 Đơn"}
                           </span>
                         </td>
-                        <td className="p-3 text-right">
+                        <td className="py-4 px-4 text-center">
                           <button
                             onClick={() => handleOpenFacilityModal(fac)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-3.5 py-1.5 rounded-xl shadow-xs transition cursor-pointer"
+                            className="bg-[#1d4ed8] hover:bg-blue-700 text-white font-bold text-xs px-4 py-1.5 rounded-full shadow-xs transition cursor-pointer"
                           >
                             Chi tiết
                           </button>
