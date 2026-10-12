@@ -40,10 +40,10 @@ export default function BomPortalPage() {
   const { signOut } = useAuth()
   const navigate = useNavigate()
 
-  // State Tabs
+  // State Tabs: mặc định 'home' chỉ hiện Banner + 4 Thẻ chỉ số
   const [activeTab, setActiveTab] = useState<
-    "dashboard" | "facilities" | "policies" | "pricing" | "reports"
-  >("dashboard")
+    "home" | "dashboard" | "facilities" | "policies" | "pricing" | "reports"
+  >("home")
 
   // State Data
   const [facilities, setFacilities] = useState<FacilityPerformance[]>(INITIAL_FACILITIES)
@@ -300,7 +300,7 @@ export default function BomPortalPage() {
         {/* NAVIGATION SUBTABS BAR (Dạng pill pills như ảnh chụp) */}
         <div className="flex items-center space-x-2.5 overflow-x-auto text-xs font-extrabold no-scrollbar pt-1">
           <button
-            onClick={() => setActiveTab("dashboard")}
+            onClick={() => setActiveTab(activeTab === "dashboard" ? "home" : "dashboard")}
             className={`px-4 py-2.5 rounded-2xl border transition flex items-center space-x-2 whitespace-nowrap cursor-pointer shadow-xs ${
               activeTab === "dashboard"
                 ? "bg-[#1d4ed8] text-white border-[#1d4ed8]"
@@ -312,7 +312,7 @@ export default function BomPortalPage() {
           </button>
 
           <button
-            onClick={() => setActiveTab("facilities")}
+            onClick={() => setActiveTab(activeTab === "facilities" ? "home" : "facilities")}
             className={`px-4 py-2.5 rounded-2xl border transition flex items-center space-x-2 whitespace-nowrap cursor-pointer shadow-xs ${
               activeTab === "facilities"
                 ? "bg-[#1d4ed8] text-white border-[#1d4ed8]"
@@ -324,7 +324,7 @@ export default function BomPortalPage() {
           </button>
 
           <button
-            onClick={() => setActiveTab("policies")}
+            onClick={() => setActiveTab(activeTab === "policies" ? "home" : "policies")}
             className={`px-4 py-2.5 rounded-2xl border transition flex items-center space-x-2 whitespace-nowrap cursor-pointer shadow-xs ${
               activeTab === "policies"
                 ? "bg-[#1d4ed8] text-white border-[#1d4ed8]"
@@ -336,7 +336,7 @@ export default function BomPortalPage() {
           </button>
 
           <button
-            onClick={() => setActiveTab("pricing")}
+            onClick={() => setActiveTab(activeTab === "pricing" ? "home" : "pricing")}
             className={`px-4 py-2.5 rounded-2xl border transition flex items-center space-x-2 whitespace-nowrap cursor-pointer shadow-xs ${
               activeTab === "pricing"
                 ? "bg-[#1d4ed8] text-white border-[#1d4ed8]"
@@ -348,7 +348,7 @@ export default function BomPortalPage() {
           </button>
 
           <button
-            onClick={() => setActiveTab("reports")}
+            onClick={() => setActiveTab(activeTab === "reports" ? "home" : "reports")}
             className={`px-4 py-2.5 rounded-2xl border transition flex items-center space-x-2 whitespace-nowrap cursor-pointer shadow-xs ${
               activeTab === "reports"
                 ? "bg-[#1d4ed8] text-white border-[#1d4ed8]"
