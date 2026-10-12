@@ -438,45 +438,45 @@ export default function BomPortalPage() {
               </div>
             </div>
 
-            {/* 5 NÚT BẤM DẠNG PILL ĐỒNG BỘ 1 MÀU BO VIỀN (CYAN / SKY BLUE NEON) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-2 max-w-5xl mx-auto">
+            {/* 5 NÚT BẤM DẠNG PILL ĐỒNG BỘ 1 MÀU BO VIỀN (CYAN / SKY BLUE NEON) - KÍCH THƯỚC LỚN, RỘNG RÃI */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5 pt-4 w-full max-w-7xl mx-auto">
               <button
                 onClick={() => setActiveTab("dashboard")}
-                className="py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-slate-100 hover:text-white shadow-[0_0_20px_rgba(56,189,248,0.25)] backdrop-blur-xs"
+                className="py-5 sm:py-6 px-6 sm:px-8 min-h-[76px] sm:min-h-[82px] rounded-full font-black text-sm sm:text-base lg:text-lg tracking-wide whitespace-nowrap flex items-center justify-center space-x-3 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.04] border-2 border-sky-400/90 bg-slate-950/60 hover:bg-sky-500/25 text-slate-100 hover:text-white shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.55)] backdrop-blur-md"
               >
-                <TrendingUp className="size-5 shrink-0 text-sky-400" />
+                <TrendingUp className="size-6 sm:size-7 shrink-0 text-sky-400" />
                 <span>Giám Sát Cơ Sở</span>
               </button>
 
               <button
                 onClick={() => setActiveTab("facilities")}
-                className="py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-slate-100 hover:text-white shadow-[0_0_20px_rgba(56,189,248,0.25)] backdrop-blur-xs"
+                className="py-5 sm:py-6 px-6 sm:px-8 min-h-[76px] sm:min-h-[82px] rounded-full font-black text-sm sm:text-base lg:text-lg tracking-wide whitespace-nowrap flex items-center justify-center space-x-3 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.04] border-2 border-sky-400/90 bg-slate-950/60 hover:bg-sky-500/25 text-slate-100 hover:text-white shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.55)] backdrop-blur-md"
               >
-                <Warehouse className="size-5 shrink-0 text-sky-400" />
+                <Warehouse className="size-6 sm:size-7 shrink-0 text-sky-400" />
                 <span>Danh Sách Cơ Sở</span>
               </button>
 
               <button
                 onClick={() => setActiveTab("policies")}
-                className="py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-slate-100 hover:text-white shadow-[0_0_20px_rgba(56,189,248,0.25)] backdrop-blur-xs"
+                className="py-5 sm:py-6 px-6 sm:px-8 min-h-[76px] sm:min-h-[82px] rounded-full font-black text-sm sm:text-base lg:text-lg tracking-wide whitespace-nowrap flex items-center justify-center space-x-3 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.04] border-2 border-sky-400/90 bg-slate-950/60 hover:bg-sky-500/25 text-slate-100 hover:text-white shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.55)] backdrop-blur-md"
               >
-                <ShieldAlert className="size-5 shrink-0 text-sky-400" />
+                <ShieldAlert className="size-6 sm:size-7 shrink-0 text-sky-400" />
                 <span>Quy Định Chính Sách</span>
               </button>
 
               <button
                 onClick={() => setActiveTab("pricing")}
-                className="py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-slate-100 hover:text-white shadow-[0_0_20px_rgba(56,189,248,0.25)] backdrop-blur-xs"
+                className="py-5 sm:py-6 px-6 sm:px-8 min-h-[76px] sm:min-h-[82px] rounded-full font-black text-sm sm:text-base lg:text-lg tracking-wide whitespace-nowrap flex items-center justify-center space-x-3 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.04] border-2 border-sky-400/90 bg-slate-950/60 hover:bg-sky-500/25 text-slate-100 hover:text-white shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.55)] backdrop-blur-md"
               >
-                <SlidersHorizontal className="size-5 shrink-0 text-sky-400" />
+                <SlidersHorizontal className="size-6 sm:size-7 shrink-0 text-sky-400" />
                 <span>Khung Giá Phụ Thu</span>
               </button>
 
               <button
                 onClick={() => setActiveTab("reports")}
-                className="py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-slate-100 hover:text-white shadow-[0_0_20px_rgba(56,189,248,0.25)] backdrop-blur-xs"
+                className="py-5 sm:py-6 px-6 sm:px-8 min-h-[76px] sm:min-h-[82px] rounded-full font-black text-sm sm:text-base lg:text-lg tracking-wide whitespace-nowrap flex items-center justify-center space-x-3 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.04] border-2 border-sky-400/90 bg-slate-950/60 hover:bg-sky-500/25 text-slate-100 hover:text-white shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.55)] backdrop-blur-md"
               >
-                <FileSpreadsheet className="size-5 shrink-0 text-sky-400" />
+                <FileSpreadsheet className="size-6 sm:size-7 shrink-0 text-sky-400" />
                 <span>Báo Cáo Toàn Chuỗi</span>
               </button>
             </div>
