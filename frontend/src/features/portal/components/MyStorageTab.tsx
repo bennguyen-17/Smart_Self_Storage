@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { getMyContracts, getGatePin, cancelDepositContract } from '@/features/portal/services/contractService';
 import ContractDetailModal from '@/features/portal/components/modals/ContractDetailModal';
 import { formatDate } from '@/lib/format';
-import { canExtendOnline } from '@/features/portal/lib/contractRules';
+import { AT_COUNTER_NOTE, canExtendOnline, extendModeOf } from '@/features/portal/lib/contractRules';
 
 export default function MyStorageTab({ onOpenExtendModal }) {
   const [contracts, setContracts] = useState([]);
@@ -463,11 +463,24 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                               </span>
                             )}
 
-                            {/* HĐ OVERDUE không gia hạn online, phải ra quầy nộp phạt */}
-                            {item.status === 'OVERDUE' && (
-                              <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                                <i className="fa-solid fa-store text-xs"></i> Quá hạn: vui lòng gia hạn tại quầy
-                              </span>
+                            {/* HĐ OVERDUE: nút Gia hạn bị khóa + thông báo đến quầy (nộp phạt và gia hạn tại quầy) */}
+                            {extendModeOf(item.status) === 'AT_COUNTER' && (
+                              <div className="flex flex-col items-end gap-1">
+                                <button
+                                  type="button"
+                                  disabled
+                                  aria-describedby={`overdue-note-card-${String(item.contractId).replace(/\W/g, '')}`}
+                                  className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 cursor-not-allowed flex items-center justify-center gap-1.5 whitespace-nowrap"
+                                >
+                                  <i className="fa-solid fa-arrows-rotate text-xs"></i> Gia Hạn
+                                </button>
+                                <span
+                                  id={`overdue-note-card-${String(item.contractId).replace(/\W/g, '')}`}
+                                  className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 flex items-center gap-1"
+                                >
+                                  <i className="fa-solid fa-store text-[10px]"></i> {AT_COUNTER_NOTE}
+                                </span>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -577,14 +590,28 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                                     </span>
                                   )}
 
-                                  {/* HĐ OVERDUE không gia hạn online, phải ra quầy nộp phạt */}
-                                  {item.status === 'OVERDUE' && (
-                                    <span
-                                      className="text-xs font-semibold text-amber-700 dark:text-amber-300 flex items-center gap-1"
-                                      title="Hợp đồng quá hạn không gia hạn online được. Vui lòng đến quầy để nộp phạt và gia hạn."
-                                    >
-                                      <i className="fa-solid fa-store text-[11px]"></i> Gia hạn tại quầy
-                                    </span>
+                                  {/* HĐ OVERDUE: nút Gia hạn bị khóa + thông báo đến quầy (nộp phạt và gia hạn tại quầy) */}
+                                  {extendModeOf(item.status) === 'AT_COUNTER' && (
+                                    <div className="flex flex-col items-end gap-1">
+                                      <button
+                                        type="button"
+                                        disabled
+                                        aria-describedby={`overdue-note-row-${String(item.contractId).replace(/\W/g, '')}`}
+                                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 cursor-not-allowed flex items-center justify-center gap-1 whitespace-nowrap"
+                                      >
+                                        <i className="fa-solid fa-arrows-rotate text-[11px]"></i> Gia Hạn
+                                      </button>
+                                      {/* Cột bảng hẹp: hiện câu ngắn, câu đầy đủ ở tooltip và cho trình đọc màn hình */}
+                                      <span
+                                        id={`overdue-note-row-${String(item.contractId).replace(/\W/g, '')}`}
+                                        title={AT_COUNTER_NOTE}
+                                        className="text-[11px] leading-tight font-semibold text-amber-700 dark:text-amber-300 whitespace-nowrap"
+                                      >
+                                        <i className="fa-solid fa-store text-[10px] mr-1" aria-hidden="true"></i>
+                                        <span aria-hidden="true">Gia hạn tại quầy</span>
+                                        <span className="sr-only">{AT_COUNTER_NOTE}</span>
+                                      </span>
+                                    </div>
                                   )}
                                 </div>
                               </td>
