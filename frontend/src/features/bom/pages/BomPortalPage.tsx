@@ -499,12 +499,7 @@ export default function BomPortalPage() {
                 </span>
               </button>
 
-              <div className="border-t border-slate-800/80 my-1" />
 
-              <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-between">
-                <span>Menu Điều Hành</span>
-                <span className="size-2 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)] animate-pulse" />
-              </div>
 
                 {/* 5 Menu Items */}
                 <button
