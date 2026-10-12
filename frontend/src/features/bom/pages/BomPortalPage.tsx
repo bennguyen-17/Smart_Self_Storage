@@ -181,12 +181,12 @@ export default function BomPortalPage() {
   })
 
   return (
-    <div className="relative min-h-screen text-slate-100 font-sans transition-colors duration-200">
-      {/* 3D Dynamic Waves Background (Theme responsive: dark xanh đen / light cyan) */}
-      <ThreeBackground theme={theme} effectType="waves" />
+    <div className="relative min-h-screen text-slate-100 font-sans transition-colors duration-200 overflow-x-hidden">
+      {/* 3D Dynamic Waves Background (Native Three.js - Theme responsive: dark xanh đen / light cyan) */}
+      <ThreeBackground theme={theme} />
 
       {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-slate-950/70 backdrop-blur-xl border-b border-sky-500/20 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-lg text-white">
+      <header className="sticky top-0 z-40 bg-slate-950/60 backdrop-blur-xl border-b border-sky-500/20 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-lg text-white">
         <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab("home")}>
           <div className="w-10 h-10 rounded-2xl bg-sky-600/30 border border-sky-400/40 text-sky-400 flex items-center justify-center font-bold text-lg shadow-sm">
             <Warehouse className="size-5" />
@@ -242,9 +242,9 @@ export default function BomPortalPage() {
       </header>
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* HERO / METRICS ENTRY PORTAL (TO RA BỀ THẾ THEO YÊU CẦU USER) */}
-        <div className="p-8 sm:p-10 lg:p-12 rounded-3xl bg-slate-950/75 backdrop-blur-2xl text-white shadow-2xl border border-sky-500/25 transition-all duration-300 space-y-8">
+        <div className="p-8 sm:p-10 lg:p-12 rounded-3xl bg-slate-950/60 backdrop-blur-2xl text-white shadow-2xl border border-sky-500/25 transition-all duration-300 space-y-8">
           <div className="text-center space-y-2">
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-wider uppercase drop-shadow-lg">
               QUẢN LÝ VẬN HÀNH TOÀN HỆ THỐNG
