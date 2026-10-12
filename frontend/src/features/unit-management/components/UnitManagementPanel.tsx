@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
+import { Textarea } from "@/components/ui/textarea"
 import { shortFloorName, unitSizeOf, UNIT_SIZES } from "@/features/floor-plan/unitDisplay"
 import { useAsyncData } from "@/hooks/useAsyncData"
 import { getErrorMessage } from "@/lib/api"
@@ -40,6 +41,8 @@ import {
   canStartMaintenance,
   changeTypeBlockReason,
   climateCounterpartTypeId,
+  MAINTENANCE_NOTE_MAX,
+  maintenanceNoteError,
   normalizeUnitStatus,
   UNIT_STATUS_META,
 } from "../unitRules"
@@ -60,6 +63,15 @@ function UnitManagementPanel() {
   const [reloadCount, setReloadCount] = useState(0)
   const [pending, setPending] = useState<PendingAction | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [note, setNote] = useState("")
+  const [noteTouched, setNoteTouched] = useState(false)
+  const noteError = pending?.kind === "maintenance" ? maintenanceNoteError(note) : null
+
+  function openPending(action: PendingAction) {
+    setNote("")
+    setNoteTouched(false)
+    setPending(action)
+  }
 
   const floors = useAsyncData(`floors#${reloadCount}`, () => getManagerFloors(ctx))
   const units = useAsyncData(`units:${floorId}:${condition}#${reloadCount}`, () =>
@@ -81,13 +93,17 @@ function UnitManagementPanel() {
 
   async function confirmPending() {
     if (!pending) return
+    if (noteError) {
+      setNoteTouched(true)
+      return
+    }
     setSubmitting(true)
     try {
       if (pending.kind === "change-type") {
         await changeUnitType(ctx, pending.unit.unitCode, pending.targetTypeId)
         toast.success(`Đã đổi loại kho ô ${pending.unit.unitCode}`)
       } else {
-        await startMaintenance(ctx, pending.unit.unitCode)
+        await startMaintenance(ctx, pending.unit.unitCode, note)
         toast.success(`Đã đưa ô ${pending.unit.unitCode} vào bảo trì`)
       }
       setPending(null)
@@ -212,8 +228,8 @@ function UnitManagementPanel() {
                       key={u.unitCode}
                       unit={u}
                       floorLabel={floorName(u.floorId)}
-                      onChangeType={(targetTypeId) => setPending({ kind: "change-type", unit: u, targetTypeId })}
-                      onMaintenance={() => setPending({ kind: "maintenance", unit: u })}
+                      onChangeType={(targetTypeId) => openPending({ kind: "change-type", unit: u, targetTypeId })}
+                      onMaintenance={() => openPending({ kind: "maintenance", unit: u })}
                     />
                   ))}
               </tbody>
@@ -242,6 +258,38 @@ function UnitManagementPanel() {
                     : "Ô sẽ chuyển sang trạng thái bảo trì và ẩn khỏi sơ đồ đặt kho của khách cho đến khi nhân viên nghiệm thu hoàn tất."}
                 </DialogDescription>
               </DialogHeader>
+              {pending.kind === "maintenance" && (
+                <div className="space-y-1.5">
+                  <label htmlFor="maintenance-note" className="text-title text-xs font-bold">
+                    Ghi chú sự cố <span className="text-rose-500">*</span>
+                  </label>
+                  <Textarea
+                    id="maintenance-note"
+                    value={note}
+                    maxLength={MAINTENANCE_NOTE_MAX + 50}
+                    rows={3}
+                    disabled={submitting}
+                    placeholder="VD: Rò nước trần, khóa cửa kẹt, cần vệ sinh sau khi khách trả kho…"
+                    aria-invalid={noteTouched && noteError !== null}
+                    aria-describedby="maintenance-note-hint"
+                    onChange={(e) => setNote(e.target.value)}
+                    onBlur={() => setNoteTouched(true)}
+                    className="placeholder:text-slate-400"
+                  />
+                  <p
+                    id="maintenance-note-hint"
+                    className={cn(
+                      "flex justify-between gap-2 text-[11px]",
+                      noteTouched && noteError ? "text-rose-600 dark:text-rose-400" : "text-muted"
+                    )}
+                  >
+                    <span>{noteTouched && noteError ? noteError : "Nhân viên sẽ đọc ghi chú này khi xử lý ô."}</span>
+                    <span className="shrink-0 tabular-nums">
+                      {note.trim().length}/{MAINTENANCE_NOTE_MAX}
+                    </span>
+                  </p>
+                </div>
+              )}
               <DialogFooter>
                 <Button variant="outline" disabled={submitting} onClick={() => setPending(null)}>
                   Hủy
