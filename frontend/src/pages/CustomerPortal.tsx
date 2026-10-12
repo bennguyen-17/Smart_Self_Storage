@@ -1,22 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
+import { Warehouse, Boxes, KeyRound, Headset, ArrowLeft, Sparkles } from 'lucide-react';
 import Header from '@/components/common/Header';
 import StorageMap2D from '@/features/portal/components/StorageMap2D';
 import BookingSidebar from '@/features/portal/components/BookingSidebar';
 import MyStorageTab from '@/features/portal/components/MyStorageTab';
+import GatePinTab from '@/features/portal/components/GatePinTab';
+import SupportTab from '@/features/portal/components/SupportTab';
 import DepositPaymentFlow from '@/features/portal/components/modals/DepositPaymentFlow';
 import ExtendPaymentFlow from '@/features/portal/components/modals/ExtendPaymentFlow';
 import CustomerProfileModal from '@/features/portal/components/modals/CustomerProfileModal';
-import SupportTicketModal from '@/features/portal/components/modals/SupportTicketModal';
 import RentStorageWizardModal from '@/features/portal/components/modals/RentStorageWizardModal';
 import ExtendContractModal from '@/features/portal/components/modals/ExtendContractModal';
 import GatePinModal from '@/features/portal/components/modals/GatePinModal';
+import SupportTicketModal from '@/features/portal/components/modals/SupportTicketModal';
 import ChatbotWidget from '@/components/common/ChatbotWidget';
 import SiteFooter from '@/components/common/SiteFooter';
 
 import { useTheme } from '@/components/common/theme-provider';
 import { getCurrentCustomerProfile } from '@/features/portal/services/customerService';
 import { getBranches } from '@/features/portal/services/facilityService';
+
+type TabType = 'home' | 'rent' | 'my-storage' | 'gate-pin' | 'support';
+
+const CUSTOMER_NAV_ITEMS = [
+  {
+    id: 'rent' as const,
+    label: 'Thuê kho',
+    icon: Warehouse,
+  },
+  {
+    id: 'my-storage' as const,
+    label: 'Kho của tôi',
+    icon: Boxes,
+  },
+  {
+    id: 'gate-pin' as const,
+    label: 'Mã PIN mở cửa',
+    icon: KeyRound,
+  },
+  {
+    id: 'support' as const,
+    label: 'Gửi hỗ trợ',
+    icon: Headset,
+  },
+];
+
+const CUST_NAV_TRANSITION = {
+  type: 'spring' as const,
+  stiffness: 110,
+  damping: 20,
+  mass: 1.1,
+};
 
 interface CustomerPortalProps {
   initialTab?: 'home' | 'grid' | 'access';
@@ -25,30 +60,29 @@ interface CustomerPortalProps {
 export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalProps = {}) {
   const { theme, setTheme } = useTheme();
   const isDarkMode = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  const [showRentModal, setShowRentModal] = useState(initialTab === 'grid');
-  const [showMyStorageModal, setShowMyStorageModal] = useState(initialTab === 'access');
-  const [showGatePinModal, setShowGatePinModal] = useState(false);
 
-  useEffect(() => {
-    if (initialTab === 'grid') setShowRentModal(true);
-    if (initialTab === 'access') setShowGatePinModal(true);
-  }, [initialTab]);
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    if (initialTab === 'grid') return 'rent';
+    if (initialTab === 'access') return 'my-storage';
+    return 'home';
+  });
+
+  const [showRentModal, setShowRentModal] = useState(false);
+  const [showGatePinModal, setShowGatePinModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
 
   const [facility, setFacility] = useState('HN-01');
   const [currentFloor, setCurrentFloor] = useState(1);
-
-  // Mặc định chưa chọn ô kho nào (null)
-  const [selectedUnit, setSelectedUnit] = useState(null);
+  const [selectedUnit, setSelectedUnit] = useState<any>(null);
 
   // Modals
   const [showDepositFlow, setShowDepositFlow] = useState(false);
   const [showExtendPaymentFlow, setShowExtendPaymentFlow] = useState(false);
   const [extendPaymentData, setExtendPaymentData] = useState<any>(null);
-  const [depositBookingData, setDepositBookingData] = useState(null);
+  const [depositBookingData, setDepositBookingData] = useState<any>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showSupportModal, setShowSupportModal] = useState(false);
   const [showExtendModal, setShowExtendModal] = useState(false);
-  const [extendUnitContext, setExtendUnitContext] = useState(null);
+  const [extendUnitContext, setExtendUnitContext] = useState<any>(null);
 
   const [mapRefreshTrigger, setMapRefreshTrigger] = useState(0);
 
@@ -93,9 +127,7 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
   const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
   const parsedUser = storedUser ? (() => { try { return JSON.parse(storedUser); } catch(e) { return null; } })() : null;
   const customerName = customerProfile?.fullName || parsedUser?.fullName || 'Khách Hàng';
-  const customerAvatar = customerProfile?.avatarText || (customerName !== 'Khách Hàng' ? customerName.trim().split(' ').pop()?.substring(0, 2).toUpperCase() : null);
 
-  // Toggle giữa Sáng và Tối thống nhất hệ thống
   const toggleTheme = () => {
     setTheme(isDarkMode ? 'light' : 'dark');
   };
@@ -121,12 +153,12 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
     setShowDepositFlow(true);
   };
 
-  const handleOpenExtendModal = (unitInfo) => {
+  const handleOpenExtendModal = (unitInfo: any) => {
     setExtendUnitContext(unitInfo);
     setShowExtendModal(true);
   };
 
-  const handleConfirmExtendPayment = (extData) => {
+  const handleConfirmExtendPayment = (extData: any) => {
     setShowExtendModal(false);
     setDepositBookingData({
       facilityName: `SmartStorage ${extData.unitCode}`,
@@ -151,14 +183,14 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
     <div className={`relative min-h-screen flex flex-col ${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-slate-950 text-white'}`}>
       {/* Background Image with Dark & Cyber Gradient Overlay */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0"
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0"
         style={{ backgroundImage: `url('/images/tech-storage-bg.jpg')` }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-[#031525]/60 to-slate-950/90 backdrop-blur-[0.5px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-[#031525]/70 to-slate-950/95 backdrop-blur-[0.5px]" />
       </div>
 
       {/* Header */}
-      <div className="relative z-10">
+      <div className="relative z-20">
         <Header
           isDarkMode={isDarkMode}
           onToggleTheme={toggleTheme}
@@ -166,74 +198,248 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
         />
       </div>
 
-      {/* Main Body Container: Hero Banner Content */}
-      <main className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 flex flex-col justify-center items-center py-10 sm:py-16 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="flex flex-col items-center w-full"
-        >
-          {/* Main Headline */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight text-white uppercase text-center leading-tight drop-shadow-md whitespace-nowrap">
-            HỆ THỐNG <span className="text-cyan-400 drop-shadow-[0_0_25px_rgba(34,211,238,0.6)]">KHO TỰ QUẢN</span>
-            <br />
-            THÔNG MINH <span className="text-cyan-400 drop-shadow-[0_0_25px_rgba(34,211,238,0.6)]">24/7</span>
-          </h1>
+      {/* Main Container wrapped in LayoutGroup for seamless morphing */}
+      <LayoutGroup id="customer-portal-nav">
+        <main className="relative z-10 flex-1 flex flex-col w-full">
+          {activeTab === 'home' ? (
+            /* ========================================================
+               TRANG CHỦ (LANDING HOME): 4 Ô Ở GIỮA MÀN HÌNH
+               ======================================================== */
+            <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 flex flex-col justify-center items-center py-12 sm:py-20 text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+                className="flex flex-col items-center w-full"
+              >
+                {/* Main Headline */}
+                <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight text-white uppercase text-center leading-tight drop-shadow-md">
+                  HỆ THỐNG <span className="text-cyan-400 drop-shadow-[0_0_25px_rgba(34,211,238,0.6)]">KHO TỰ QUẢN</span>
+                  <br />
+                  THÔNG MINH <span className="text-cyan-400 drop-shadow-[0_0_25px_rgba(34,211,238,0.6)]">24/7</span>
+                </h1>
 
-          {/* Customer Greeting */}
-          <div className="flex items-center justify-center mt-4 sm:mt-6 text-sm sm:text-base font-semibold text-slate-300">
-            <span>Xin chào, <span className="text-cyan-300 font-extrabold drop-shadow-[0_0_12px_rgba(34,211,238,0.45)]">{customerName}</span></span>
-          </div>
+                {/* Customer Greeting */}
+                <div className="flex items-center justify-center mt-4 sm:mt-6 text-sm sm:text-base font-semibold text-slate-300">
+                  <span>Xin chào, <span className="text-cyan-300 font-extrabold drop-shadow-[0_0_12px_rgba(34,211,238,0.45)]">{customerName}</span></span>
+                </div>
 
-          {/* 4 Action Buttons */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 w-full max-w-5xl mt-8 sm:mt-12">
-            {/* 1. Thuê kho */}
-            <button
-              type="button"
-              onClick={() => setShowRentModal(true)}
-              className="px-6 py-5 sm:px-8 sm:py-6 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-extrabold text-base sm:text-lg lg:text-xl tracking-wide transition-all duration-300 shadow-[0_0_20px_rgba(34,211,238,0.22)] hover:shadow-[0_0_30px_rgba(34,211,238,0.55)] hover:scale-[1.04] cursor-pointer text-center group"
-            >
-              <span className="drop-shadow-[0_0_10px_rgba(34,211,238,0.4)] group-hover:drop-shadow-[0_0_14px_rgba(34,211,238,0.8)]">
-                Thuê kho
-              </span>
-            </button>
+                {/* 4 Action Buttons in Grid (Center Screen) */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 w-full max-w-5xl mt-8 sm:mt-12">
+                  {CUSTOMER_NAV_ITEMS.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <motion.button
+                        key={item.id}
+                        layoutId={`cust-nav-btn-${item.id}`}
+                        transition={CUST_NAV_TRANSITION}
+                        type="button"
+                        onClick={() => setActiveTab(item.id)}
+                        className="px-6 py-5 sm:px-8 sm:py-6 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-extrabold text-base sm:text-lg lg:text-xl tracking-wide transition-colors duration-300 shadow-[0_0_20px_rgba(34,211,238,0.22)] hover:shadow-[0_0_30px_rgba(34,211,238,0.55)] hover:scale-[1.04] cursor-pointer text-center group flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-3"
+                      >
+                        <motion.span
+                          layoutId={`cust-nav-icon-${item.id}`}
+                          transition={CUST_NAV_TRANSITION}
+                          className="shrink-0"
+                        >
+                          <Icon className="size-5 sm:size-6 text-cyan-400 group-hover:text-cyan-200" />
+                        </motion.span>
+                        <motion.span
+                          layoutId={`cust-nav-title-${item.id}`}
+                          transition={CUST_NAV_TRANSITION}
+                          className="drop-shadow-[0_0_10px_rgba(34,211,238,0.4)] group-hover:drop-shadow-[0_0_14px_rgba(34,211,238,0.8)]"
+                        >
+                          {item.label}
+                        </motion.span>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            </div>
+          ) : (
+            /* ========================================================
+               KHI BẤM VÔ: ĐƯA CÁC MỤC LÊN LÀM NAVBAR + PHÂN TRANG CHI TIẾT
+               ======================================================== */
+            <div className="w-full flex-1 flex flex-col items-center">
+              {/* TOP STICKY NAVBAR TRÊN CÙNG */}
+              <div className="sticky top-13 sm:top-14 z-30 w-full bg-slate-950/85 backdrop-blur-xl border-b border-cyan-500/25 py-3 shadow-[0_6px_25px_rgba(0,0,0,0.5)]">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  {/* Nút Về Trang Chủ */}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('home')}
+                    className="flex items-center space-x-2 px-3.5 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-900/80 border border-transparent hover:border-cyan-500/30 font-bold text-xs sm:text-sm transition-all cursor-pointer group shrink-0"
+                  >
+                    <ArrowLeft className="size-4 text-cyan-400 group-hover:-translate-x-1 transition-transform" />
+                    <span>Về Trang Chủ</span>
+                  </button>
 
-            {/* 2. Kho của tôi */}
-            <button
-              type="button"
-              onClick={() => setShowMyStorageModal(true)}
-              className="px-6 py-5 sm:px-8 sm:py-6 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-extrabold text-base sm:text-lg lg:text-xl tracking-wide transition-all duration-300 shadow-[0_0_20px_rgba(34,211,238,0.22)] hover:shadow-[0_0_30px_rgba(34,211,238,0.55)] hover:scale-[1.04] cursor-pointer text-center group"
-            >
-              <span className="drop-shadow-[0_0_10px_rgba(34,211,238,0.4)] group-hover:drop-shadow-[0_0_14px_rgba(34,211,238,0.8)]">
-                Kho của tôi
-              </span>
-            </button>
+                  {/* 4 MỤC NAVBAR (MORPH TỪ GIỮA MÀN HÌNH LÊN) */}
+                  <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto w-full sm:w-auto p-1 bg-slate-900/70 rounded-2xl border border-cyan-500/25 justify-center">
+                    {CUSTOMER_NAV_ITEMS.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = activeTab === item.id;
+                      return (
+                        <motion.button
+                          key={item.id}
+                          layoutId={`cust-nav-btn-${item.id}`}
+                          transition={CUST_NAV_TRANSITION}
+                          type="button"
+                          onClick={() => setActiveTab(item.id)}
+                          className={`px-3.5 sm:px-4 py-2 rounded-xl font-black text-xs sm:text-sm tracking-wide flex items-center space-x-2 transition-colors duration-200 cursor-pointer whitespace-nowrap ${
+                            isActive
+                              ? 'bg-cyan-500 text-slate-950 shadow-[0_0_20px_rgba(34,211,238,0.45)]'
+                              : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                          }`}
+                        >
+                          <motion.span
+                            layoutId={`cust-nav-icon-${item.id}`}
+                            transition={CUST_NAV_TRANSITION}
+                            className="shrink-0"
+                          >
+                            <Icon className={`size-4 sm:size-4.5 ${isActive ? 'text-slate-950' : 'text-cyan-400'}`} />
+                          </motion.span>
+                          <motion.span
+                            layoutId={`cust-nav-title-${item.id}`}
+                            transition={CUST_NAV_TRANSITION}
+                          >
+                            {item.label}
+                          </motion.span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
 
-            {/* 3. Mã PIN mở cửa */}
-            <button
-              type="button"
-              onClick={() => setShowGatePinModal(true)}
-              className="px-6 py-5 sm:px-8 sm:py-6 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-extrabold text-base sm:text-lg lg:text-xl tracking-wide transition-all duration-300 shadow-[0_0_20px_rgba(34,211,238,0.22)] hover:shadow-[0_0_30px_rgba(34,211,238,0.55)] hover:scale-[1.04] cursor-pointer text-center group"
-            >
-              <span className="drop-shadow-[0_0_10px_rgba(34,211,238,0.4)] group-hover:drop-shadow-[0_0_14px_rgba(34,211,238,0.8)]">
-                Mã PIN mở cửa
-              </span>
-            </button>
+                  {/* Chào khách hàng góc phải */}
+                  <div className="hidden lg:flex items-center space-x-2 text-xs font-semibold text-slate-400 shrink-0">
+                    <span>Khách hàng:</span>
+                    <span className="text-cyan-300 font-extrabold">{customerName}</span>
+                  </div>
+                </div>
+              </div>
 
-            {/* 4. Gửi hỗ trợ */}
-            <button
-              type="button"
-              onClick={() => setShowSupportModal(true)}
-              className="px-6 py-5 sm:px-8 sm:py-6 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-extrabold text-base sm:text-lg lg:text-xl tracking-wide transition-all duration-300 shadow-[0_0_20px_rgba(34,211,238,0.22)] hover:shadow-[0_0_30px_rgba(34,211,238,0.55)] hover:scale-[1.04] cursor-pointer text-center group"
-            >
-              <span className="drop-shadow-[0_0_10px_rgba(34,211,238,0.4)] group-hover:drop-shadow-[0_0_14px_rgba(34,211,238,0.8)]">
-                Gửi hỗ trợ
-              </span>
-            </button>
-          </div>
-        </motion.div>
-      </main>
+              {/* PHÂN TRANG CHI TIẾT TỪNG MỤC (PAGE TAB CONTENT) */}
+              <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1">
+                <AnimatePresence mode="wait">
+                  {/* PHÂN TRANG 1: THUÊ KHO */}
+                  {activeTab === 'rent' && (
+                    <motion.div
+                      key="tab-rent"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      className="space-y-6"
+                    >
+                      {/* Sub-header hướng dẫn & mở wizard nhanh */}
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-950/80 backdrop-blur-md rounded-2xl border border-cyan-500/25 p-4 sm:p-5 shadow-lg">
+                        <div className="flex items-center space-x-3.5">
+                          <div className="p-2.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 shadow-[0_0_12px_rgba(34,211,238,0.2)]">
+                            <Warehouse className="size-5" />
+                          </div>
+                          <div>
+                            <h2 className="text-sm sm:text-base font-black text-white uppercase tracking-tight">
+                              SƠ ĐỒ 2D TRỰC TUYẾN & ĐẶT CỌC THUÊ KHO
+                            </h2>
+                            <p className="text-xs text-slate-300">
+                              Chọn cơ sở, tầng và bấm chọn ô kho còn trống (màu xanh lá) để giữ chỗ và thanh toán cọc trực tuyến.
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setShowRentModal(true)}
+                          className="px-4 py-2.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 hover:text-white font-bold text-xs flex items-center space-x-2 transition cursor-pointer shadow-md shrink-0"
+                        >
+                          <Sparkles className="size-4 text-cyan-300" />
+                          <span>Mở Wizard Thuê Nhanh 5 Bước</span>
+                        </button>
+                      </div>
+
+                      {/* Bản đồ 2D + Sidebar đặt cọc */}
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
+                        <div className="lg:col-span-8">
+                          <StorageMap2D
+                            facility={facility}
+                            refreshTrigger={mapRefreshTrigger}
+                            onFacilityChange={(fac) => {
+                              setFacility(fac);
+                              setSelectedUnit(null);
+                            }}
+                            currentFloor={currentFloor}
+                            onSelectFloor={(fl) => {
+                              setCurrentFloor(fl);
+                              setSelectedUnit(null);
+                            }}
+                            selectedUnit={selectedUnit}
+                            onSelectUnit={setSelectedUnit}
+                          />
+                        </div>
+
+                        <div className="lg:col-span-4 sticky top-32">
+                          <BookingSidebar
+                            selectedUnit={selectedUnit}
+                            onOpenDepositModal={handleOpenDepositModal}
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* PHÂN TRANG 2: KHO CỦA TÔI */}
+                  {activeTab === 'my-storage' && (
+                    <motion.div
+                      key="tab-my-storage"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      className="w-full"
+                    >
+                      <div className="bg-slate-950/80 backdrop-blur-md rounded-3xl border border-cyan-500/25 p-5 sm:p-7 shadow-xl">
+                        <MyStorageTab
+                          onOpenExtendModal={handleOpenExtendModal}
+                          onOpenPinModal={() => setActiveTab('gate-pin')}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* PHÂN TRANG 3: MÃ PIN MỞ CỬA */}
+                  {activeTab === 'gate-pin' && (
+                    <motion.div
+                      key="tab-gate-pin"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      className="w-full"
+                    >
+                      <GatePinTab />
+                    </motion.div>
+                  )}
+
+                  {/* PHÂN TRANG 4: GỬI HỖ TRỢ */}
+                  {activeTab === 'support' && (
+                    <motion.div
+                      key="tab-support"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      className="w-full"
+                    >
+                      <SupportTab />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          )}
+        </main>
+      </LayoutGroup>
 
       {/* Footer for Customer Portal */}
       <div className="relative z-10">
@@ -243,7 +449,7 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
       {/* Floating Chatbot AI 24/7 Widget */}
       <ChatbotWidget />
 
-      {/* 1. Modal Thuê kho 4 bước (Dạng Popup Wizard) */}
+      {/* 1. Modal Thuê kho 5 bước (Dạng Popup Wizard tiện dụng khi người dùng bấm mở wizard) */}
       <RentStorageWizardModal
         isOpen={showRentModal}
         onClose={() => setShowRentModal(false)}
@@ -252,61 +458,25 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
         branches={branches}
         onSuccess={() => {
           setShowRentModal(false);
-          setMapRefreshTrigger(prev => prev + 1);
-          setShowMyStorageModal(true);
+          setMapRefreshTrigger((prev) => prev + 1);
+          setActiveTab('my-storage');
         }}
       />
 
-      {/* 2. Modal Kho của tôi (Dạng Popup Overlay) */}
-      {showMyStorageModal && (
-        <div 
-          className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-40 flex items-center justify-center p-3 sm:p-5"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowMyStorageModal(false);
-          }}
-        >
-          <div className="dark border border-slate-700/80 w-full max-w-5xl max-h-[92vh] flex flex-col rounded-3xl shadow-2xl modal-animate-pop bg-slate-900 text-white overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4 shrink-0 bg-slate-900/95">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-lg border border-cyan-400/30 shadow-[0_0_15px_rgba(34,211,238,0.25)]">
-                  <i className="fa-solid fa-boxes-stacked"></i>
-                </div>
-                <div>
-                  <h2 className="font-extrabold text-base sm:text-lg tracking-tight text-white">
-                    KHO CỦA TÔI
-                  </h2>
-                  <p className="text-xs text-slate-400">
-                    Quản lý danh sách hợp đồng ô kho hiện có và thủ tục gia hạn
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowMyStorageModal(false)}
-                className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer border border-slate-700"
-              >
-                <i className="fa-solid fa-xmark text-sm"></i>
-              </button>
-            </div>
-
-            {/* Modal Body: Scrollable */}
-            <div className="p-4 sm:p-6 overflow-y-auto flex-1">
-              <MyStorageTab 
-                onOpenExtendModal={handleOpenExtendModal} 
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 3. Modal Mã PIN Cửa Chính 24/7 (Được tách riêng độc lập) */}
+      {/* 2. Modal Mã PIN Cửa Chính (nếu gọi từ chỗ khác) */}
       <GatePinModal
         isOpen={showGatePinModal}
         onClose={() => setShowGatePinModal(false)}
       />
 
-      {/* Modals */}
+      {/* 3. Modal Support */}
+      {showSupportModal && (
+        <SupportTicketModal
+          onClose={() => setShowSupportModal(false)}
+        />
+      )}
+
+      {/* 4. Modal Profile */}
       {showProfileModal && (
         <CustomerProfileModal
           onClose={() => setShowProfileModal(false)}
@@ -314,12 +484,7 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
         />
       )}
 
-      {showSupportModal && (
-        <SupportTicketModal
-          onClose={() => setShowSupportModal(false)}
-        />
-      )}
-
+      {/* 5. Modal Gia hạn hợp đồng */}
       {showExtendModal && (
         <ExtendContractModal
           unitContext={extendUnitContext}
@@ -328,18 +493,20 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
         />
       )}
 
-              {showExtendPaymentFlow && extendPaymentData && (
-          <ExtendPaymentFlow
-            initialBookingData={extendPaymentData}
-            onClose={() => setShowExtendPaymentFlow(false)}
-            onFinish={() => {
-              setShowExtendPaymentFlow(false);
-              setMapRefreshTrigger(prev => prev + 1);
-            }}
-          />
-        )}
+      {/* 6. Luồng thanh toán gia hạn */}
+      {showExtendPaymentFlow && extendPaymentData && (
+        <ExtendPaymentFlow
+          initialBookingData={extendPaymentData}
+          onClose={() => setShowExtendPaymentFlow(false)}
+          onFinish={() => {
+            setShowExtendPaymentFlow(false);
+            setMapRefreshTrigger((prev) => prev + 1);
+            setActiveTab('my-storage');
+          }}
+        />
+      )}
 
-        {/* VietQR Deposit Flow Modal */}
+      {/* 7. Luồng thanh toán đặt cọc VietQR */}
       {showDepositFlow && depositBookingData && (
         <DepositPaymentFlow
           initialBookingData={depositBookingData}
@@ -347,8 +514,8 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
           onFinish={() => {
             setShowDepositFlow(false);
             setSelectedUnit(null);
-            setMapRefreshTrigger(prev => prev + 1);
-            setShowMyStorageModal(true);
+            setMapRefreshTrigger((prev) => prev + 1);
+            setActiveTab('my-storage');
           }}
         />
       )}
