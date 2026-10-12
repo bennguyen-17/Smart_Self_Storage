@@ -1,15 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { getMyContracts, getGatePin, cancelDepositContract } from '@/features/portal/services/contractService';
+import { getMyContracts, cancelDepositContract } from '@/features/portal/services/contractService';
 import ContractDetailModal from '@/features/portal/components/modals/ContractDetailModal';
 import { formatDate } from '@/lib/format';
 import { canExtendOnline } from '@/features/portal/lib/contractRules';
 
-export default function MyStorageTab({ onOpenExtendModal }) {
+export default function MyStorageTab({ onOpenExtendModal, onOpenPinModal }: { onOpenExtendModal?: any; onOpenPinModal?: () => void }) {
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [gateFacility, setGateFacility] = useState('');
-  const [pinValue, setPinValue] = useState('--- ---');
-  const [pinTimer, setPinTimer] = useState(15);
   
   // Modal Hủy Cọc & Xem hợp đồng
   const [cancelModalContract, setCancelModalContract] = useState<any>(null);
@@ -77,116 +74,6 @@ export default function MyStorageTab({ onOpenExtendModal }) {
     };
   }, []);
 
-  // Lọc danh sách các cơ sở mà khách hàng thực sự có hợp đồng
-  const contractedFacilities = useMemo(() => {
-    const map = new Map();
-    contracts.forEach((c: any) => {
-      const code = c.branchCode || 'HN-01';
-      const isActive = c.status === 'ACTIVE';
-      const isPending = c.status === 'PENDING_CHECKIN';
-
-      if (!map.has(code)) {
-        map.set(code, {
-          code,
-          name: c.branchName || `Cơ sở ${code}`,
-          hasActive: isActive,
-          hasPending: isPending,
-          activeCount: isActive ? 1 : 0,
-          pendingCount: isPending ? 1 : 0
-        });
-      } else {
-        const item = map.get(code);
-        if (isActive) {
-          item.hasActive = true;
-          item.activeCount = (item.activeCount || 0) + 1;
-        }
-        if (isPending) {
-          item.hasPending = true;
-          item.pendingCount = (item.pendingCount || 0) + 1;
-        }
-      }
-    });
-    return Array.from(map.values()).filter((f: any) => f.hasActive || f.hasPending);
-  }, [contracts]);
-
-  // Tự động ưu tiên chọn cơ sở có hợp đồng HIỆU LỰC (ACTIVE)
-  useEffect(() => {
-    if (contractedFacilities.length > 0) {
-      const activeFac = contractedFacilities.find((f: any) => f.hasActive);
-      if (activeFac) {
-        const cur = contractedFacilities.find((f: any) => f.code === gateFacility);
-        if (!cur || !cur.hasActive) {
-          setGateFacility(activeFac.code);
-        }
-      } else if (!gateFacility || !contractedFacilities.some((f: any) => f.code === gateFacility)) {
-        setGateFacility(contractedFacilities[0].code);
-      }
-    } else {
-      setGateFacility('');
-    }
-  }, [contractedFacilities, gateFacility]);
-
-  // Kiểm tra quyền ra vào của cơ sở đang chọn (BẮT BUỘC có hợp đồng ACTIVE)
-  const currentFacPermission = useMemo(() => {
-    if (!gateFacility) return { hasAccess: false, isPending: false };
-    const fac: any = contractedFacilities.find((f: any) => f.code === gateFacility);
-    if (!fac) return { hasAccess: false, isPending: false };
-    return {
-      hasAccess: Boolean(fac.hasActive),
-      isPending: !fac.hasActive && Boolean(fac.hasPending)
-    };
-  }, [contractedFacilities, gateFacility]);
-
-  // Lấy mã PIN từ API theo cơ sở (Chỉ gọi khi cơ sở có hợp đồng ACTIVE)
-  const fetchPinForFacility = async (code: string) => {
-    if (!code || !currentFacPermission.hasAccess) {
-      setPinValue('--- ---');
-      return;
-    }
-    try {
-      const res = await getGatePin(code);
-      if (res.success && res.data?.hasAccess !== false && res.data?.pin) {
-        setPinValue(res.data.pin);
-        setPinTimer(res.data.ttlSeconds || 15);
-      } else {
-        setPinValue('--- ---');
-      }
-    } catch (err) {
-      console.warn('Lỗi lấy mã PIN mở cổng:', err);
-      setPinValue('--- ---');
-    }
-  };
-
-  // Đổi cơ sở mở cổng
-  const handleFacilityChange = (code: string) => {
-    setGateFacility(code);
-  };
-
-  // Khi cơ sở hoặc quyền thay đổi, cập nhật PIN
-  useEffect(() => {
-    if (currentFacPermission.hasAccess && gateFacility) {
-      fetchPinForFacility(gateFacility);
-    } else {
-      setPinValue('--- ---');
-    }
-  }, [gateFacility, currentFacPermission.hasAccess]);
-
-  // Đếm ngược 15s tự động lấy mã PIN mới nếu ĐƯỢC PHÉP
-  useEffect(() => {
-    if (!currentFacPermission.hasAccess || !gateFacility) return;
-
-    const interval = setInterval(() => {
-      setPinTimer((prev) => {
-        if (prev <= 1) {
-          fetchPinForFacility(gateFacility);
-          return 15;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [gateFacility, currentFacPermission.hasAccess]);
 
   // Tính số ngày còn lại đến ngày nhận kho
   const daysUntilStart = useMemo(() => {
@@ -249,106 +136,10 @@ export default function MyStorageTab({ onOpenExtendModal }) {
   return (
     <div className="space-y-5 sm:space-y-6 w-full">
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start w-full">
-        {/* LEFT COLUMN: GATE PIN PASS (Chỉ cấp PIN cho cơ sở có hợp đồng) */}
-        <div className="lg:col-span-5 xl:col-span-4 space-y-4">
-          <div className="card-box rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs p-5 sm:p-6 space-y-4 sm:space-y-5">
-            {/* Header */}
-            <div className="flex flex-col items-start xl:flex-row xl:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3.5">
-              <div className="flex items-center space-x-2.5 sm:space-x-3 w-full">
-                <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-base sm:text-lg font-bold border border-blue-100 dark:border-blue-800 shrink-0 shadow-xs">
-                  <i className="fa-solid fa-key"></i>
-                </span>
-                <h2 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">MÃ PIN CỬA CHÍNH 24/7</h2>
-              </div>
-            </div>
+      {/* MANAGED STORAGE UNITS TABLE (FULL WIDTH) */}
+      <div className="w-full space-y-4">
+        <div className="card-box rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
 
-            {/* FACILITY SELECTOR */}
-            <div className="space-y-2">
-              <label className="block text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center justify-between">
-                <span><i className="fa-solid fa-location-dot text-rose-500 mr-1.5"></i> Cơ sở kho thuê:</span>
-              </label>
-              <div className="relative">
-                {contractedFacilities.length > 0 ? (
-                  <select
-                    value={gateFacility}
-                    onChange={(e) => handleFacilityChange(e.target.value)}
-                    className="w-full text-sm font-bold px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white hover:border-slate-300 dark:hover:border-slate-600 focus:border-blue-500 dark:focus:border-blue-500 outline-none cursor-pointer shadow-sm transition-all"
-                  >
-                    {contractedFacilities.map((fac: any) => (
-                      <option key={fac.code} value={fac.code} className="font-medium">
-                        {fac.name ? fac.name.replace(/\s*\([A-Z0-9-]+\)/g, '') : ''}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <div className="w-full text-xs sm:text-sm font-medium px-3.5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 italic">
-                    Chưa có cơ sở nào có hợp đồng
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* LARGE 6-DIGIT PIN DISPLAY BOX */}
-            <div className="bg-slate-950 text-white rounded-2xl flex flex-col justify-between border border-slate-800 shadow-md relative overflow-hidden p-3.5 sm:p-4 group">
-              <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all duration-500"></div>
-              
-              <div className="flex items-center justify-between text-xs text-slate-400 font-semibold mb-1.5">
-                <span className="flex items-center gap-1.5">
-                  <i className={`fa-solid ${currentFacPermission.hasAccess ? 'fa-shield-halved text-emerald-400' : 'fa-lock text-slate-400'} text-xs`}></i>
-                  {currentFacPermission.hasAccess ? 'MÃ BÀN PHÍM LIVE 24/7' : 'MÃ CỬA KHÓA'}
-                </span>
-                {currentFacPermission.hasAccess && (
-                  <div className="text-amber-400 font-mono font-black flex items-center gap-1 bg-slate-900/90 px-2 py-0.5 rounded-lg text-xs border border-slate-700/80 shadow-xs select-none">
-                    <i className="fa-solid fa-arrows-rotate text-[10px] animate-spin"></i> <span>{pinTimer}s</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="text-center py-2.5 sm:py-3.5 space-y-1.5">
-                <div className={`text-2xl sm:text-3xl font-black font-mono tracking-widest transition-all duration-300 ${
-                  currentFacPermission.hasAccess ? 'text-amber-400 select-all drop-shadow-[0_0_15px_rgba(251,191,36,0.3)]' : 'text-slate-600 tracking-[0.25em]'
-                }`}>
-                  {currentFacPermission.hasAccess ? pinValue : '--- ---'}
-                </div>
-                <p className="text-[11px] text-slate-300 max-w-xs mx-auto leading-relaxed font-normal">
-                  {currentFacPermission.hasAccess
-                    ? 'Nhập 6 số tại bàn phím cửa chính cơ sở để mở cửa vào kho 24/7.'
-                    : currentFacPermission.isPending
-                    ? 'Hợp đồng tại cơ sở này đang ở trạng thái CHỜ CHECK-IN. Mã PIN mở cửa 24/7 chỉ được cấp tự động sau khi hoàn tất thủ tục nhận kho.'
-                    : 'Cơ sở này hiện không có hợp đồng nào đang có HIỆU LỰC (ACTIVE). Mã PIN 24/7 không được sinh.'}
-                </p>
-              </div>
-
-              <div className="border-t border-slate-800/80 pt-2 mt-1 flex items-center justify-between text-[11px] text-slate-400">
-                <span className="font-mono font-bold text-slate-300 tracking-wider truncate">
-                  CƠ SỞ: {gateFacility || 'Chưa chọn'}
-                </span>
-                <span className="font-semibold text-slate-400">
-                  {currentFacPermission.hasAccess ? 'Đổi mỗi 15s' : 'Khóa mở cổng'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN: MANAGED STORAGE UNITS TABLE */}
-        <div className="lg:col-span-7 xl:col-span-8 space-y-4">
-          <div className="card-box rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
-            {/* Header Bar */}
-            <div className="p-5 sm:px-7 sm:py-5 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-800/30">
-              <div className="flex items-center space-x-3">
-                <span className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-base font-bold border border-blue-100 dark:border-blue-800 shrink-0 shadow-xs">
-                  <i className="fa-solid fa-boxes-stacked"></i>
-                </span>
-                <div>
-                  <h3 className="font-black text-sm sm:text-base text-slate-900 dark:text-slate-100 uppercase tracking-wider">
-                    Danh Sách Ô Kho Quản Lý
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Theo dõi trạng thái hợp đồng, thủ tục check-in nhận kho và gia hạn</p>
-                </div>
-              </div>
-            </div>
 
             {/* Table or Responsive Cards Content */}
             <div className="w-full">
@@ -599,7 +390,6 @@ export default function MyStorageTab({ onOpenExtendModal }) {
             </div>
           </div>
         </div>
-      </div>
 
       {/* MODAL XÁC NHẬN HỦY CỌC */}
       {cancelModalContract && (

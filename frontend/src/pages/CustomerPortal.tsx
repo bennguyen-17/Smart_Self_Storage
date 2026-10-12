@@ -8,7 +8,9 @@ import DepositPaymentFlow from '@/features/portal/components/modals/DepositPayme
 import ExtendPaymentFlow from '@/features/portal/components/modals/ExtendPaymentFlow';
 import CustomerProfileModal from '@/features/portal/components/modals/CustomerProfileModal';
 import SupportTicketModal from '@/features/portal/components/modals/SupportTicketModal';
+import RentStorageWizardModal from '@/features/portal/components/modals/RentStorageWizardModal';
 import ExtendContractModal from '@/features/portal/components/modals/ExtendContractModal';
+import GatePinModal from '@/features/portal/components/modals/GatePinModal';
 import ChatbotWidget from '@/components/common/ChatbotWidget';
 import SiteFooter from '@/components/common/SiteFooter';
 
@@ -16,10 +18,22 @@ import { useTheme } from '@/components/common/theme-provider';
 import { getCurrentCustomerProfile } from '@/features/portal/services/customerService';
 import { getBranches } from '@/features/portal/services/facilityService';
 
-export default function CustomerPortal() {
+interface CustomerPortalProps {
+  initialTab?: 'home' | 'grid' | 'access';
+}
+
+export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalProps = {}) {
   const { theme, setTheme } = useTheme();
   const isDarkMode = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  const [activeTab, setActiveTab] = useState('grid'); // 'grid' | 'access'
+  const [showRentModal, setShowRentModal] = useState(initialTab === 'grid');
+  const [showMyStorageModal, setShowMyStorageModal] = useState(initialTab === 'access');
+  const [showGatePinModal, setShowGatePinModal] = useState(false);
+
+  useEffect(() => {
+    if (initialTab === 'grid') setShowRentModal(true);
+    if (initialTab === 'access') setShowGatePinModal(true);
+  }, [initialTab]);
+
   const [facility, setFacility] = useState('HN-01');
   const [currentFloor, setCurrentFloor] = useState(1);
 
@@ -134,139 +148,163 @@ export default function CustomerPortal() {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col ${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`relative min-h-screen flex flex-col ${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-slate-950 text-white'}`}>
+      {/* Background Image with Dark & Cyber Gradient Overlay */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0"
+        style={{ backgroundImage: `url('/images/tech-storage-bg.jpg')` }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-[#031525]/60 to-slate-950/90 backdrop-blur-[0.5px]" />
+      </div>
+
       {/* Header */}
-      <Header
-        isDarkMode={isDarkMode}
-        onToggleTheme={toggleTheme}
-        onOpenProfileModal={() => setShowProfileModal(true)}
-      />
+      <div className="relative z-10">
+        <Header
+          isDarkMode={isDarkMode}
+          onToggleTheme={toggleTheme}
+          onOpenProfileModal={() => setShowProfileModal(true)}
+        />
+      </div>
 
-      {/* Main Body Container: Optimal 1280px max width & vertical centering for all screens */}
-      <main className="w-full max-w-[1280px] mx-auto px-3 sm:px-5 lg:px-6 flex-1 flex flex-col justify-center py-3.5 sm:py-5">
-        <div className="space-y-3 sm:space-y-3.5 w-full">
-          {/* CUSTOMER DASHBOARD HEADER BANNER */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white dark:bg-slate-900 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3 w-full"
-          >
-            {/* AVATAR & GREETING (Lấy động từ Database) */}
-            <div className="flex items-center space-x-3 shrink-0">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xs sm:text-sm shadow-sm shadow-blue-500/25 shrink-0 tracking-wider">
-                {customerAvatar || <i className="fa-solid fa-user-check"></i>}
-              </div>
-              <div>
-                <h1 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
-                  Xin chào, <span className="text-blue-600">{customerName}</span>!
-                </h1>
-                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">Hệ thống kho tự quản thông minh 24/7</p>
-              </div>
-            </div>
+      {/* Main Body Container: Hero Banner Content */}
+      <main className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 flex flex-col justify-center items-center py-12 sm:py-20 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="flex flex-col items-center w-full"
+        >
+          {/* Main Headline */}
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white uppercase text-center leading-tight drop-shadow-md">
+            HỆ THỐNG <span className="text-cyan-400 drop-shadow-[0_0_25px_rgba(34,211,238,0.6)]">KHO TỰ QUẢN</span>
+            <br />
+            THÔNG MINH <span className="text-cyan-400 drop-shadow-[0_0_25px_rgba(34,211,238,0.6)]">24/7</span>
+          </h1>
 
-            {/* TABS */}
-            <div className="inline-flex items-center p-0.5 sm:p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 gap-1 w-full sm:w-auto overflow-x-auto">
-              <button
-                type="button"
-                onClick={() => setActiveTab('grid')}
-                className={`px-3 py-1.5 rounded-lg font-bold text-xs flex items-center space-x-1.5 transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                  activeTab === 'grid'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-700'
-                }`}
-              >
-                <i className="fa-solid fa-map-location-dot text-xs"></i>
-                <span>Sơ đồ 2D & Thuê kho</span>
-              </button>
+          {/* Customer Greeting */}
+          <div className="flex items-center justify-center mt-4 sm:mt-6 text-sm sm:text-base font-semibold text-slate-300">
+            <span>Xin chào, <span className="text-cyan-300 font-extrabold drop-shadow-[0_0_12px_rgba(34,211,238,0.45)]">{customerName}</span></span>
+          </div>
 
-              <button
-                type="button"
-                onClick={() => setActiveTab('access')}
-                className={`px-3 py-1.5 rounded-lg font-bold text-xs flex items-center space-x-1.5 transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                  activeTab === 'access'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-700'
-                }`}
-              >
-                <i className="fa-solid fa-boxes-stacked text-xs"></i>
-                <span>Kho của tôi & Mã PIN Cửa chính</span>
-              </button>
-            </div>
+          {/* 4 Action Buttons */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 w-full max-w-4xl mt-8 sm:mt-10">
+            {/* 1. Thuê kho */}
+            <button
+              type="button"
+              onClick={() => setShowRentModal(true)}
+              className="px-5 py-4 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-bold text-sm sm:text-base tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.18)] hover:shadow-[0_0_25px_rgba(34,211,238,0.45)] hover:scale-[1.03] cursor-pointer text-center group"
+            >
+              <span className="drop-shadow-[0_0_8px_rgba(34,211,238,0.35)] group-hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.7)]">
+                Thuê kho
+              </span>
+            </button>
 
-            {/* SUPPORT TICKET BUTTON */}
-            <div className="flex items-center shrink-0">
-              <button
-                type="button"
-                onClick={() => setShowSupportModal(true)}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xs transition-transform duration-200 hover:scale-103 flex items-center space-x-1.5 cursor-pointer"
-              >
-                <i className="fa-solid fa-headset text-xs"></i>
-                <span>Gửi Hỗ Trợ / Báo Sự Cố</span>
-              </button>
-            </div>
-          </motion.div>
+            {/* 2. Kho của tôi */}
+            <button
+              type="button"
+              onClick={() => setShowMyStorageModal(true)}
+              className="px-5 py-4 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-bold text-sm sm:text-base tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.18)] hover:shadow-[0_0_25px_rgba(34,211,238,0.45)] hover:scale-[1.03] cursor-pointer text-center group"
+            >
+              <span className="drop-shadow-[0_0_8px_rgba(34,211,238,0.35)] group-hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.7)]">
+                Kho của tôi
+              </span>
+            </button>
 
-          {/* TAB CONTENT WITH ANIMATION */}
-          <AnimatePresence mode="wait">
-            {activeTab === 'grid' ? (
-              <motion.div
-                key="grid-tab"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-                className="space-y-4"
-              >
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start w-full">
-                  {/* Sơ đồ kho 2D */}
-                  <div className="lg:col-span-8">
-                    <StorageMap2D
-                      facility={facility}
-                      refreshTrigger={mapRefreshTrigger}
-                      onFacilityChange={(fac) => {
-                        setFacility(fac);
-                        setSelectedUnit(null);
-                      }}
-                      currentFloor={currentFloor}
-                      onSelectFloor={(fl) => {
-                        setCurrentFloor(fl);
-                        setSelectedUnit(null);
-                      }}
-                      selectedUnit={selectedUnit}
-                      onSelectUnit={setSelectedUnit}
-                    />
-                  </div>
+            {/* 3. Mã PIN mở cửa */}
+            <button
+              type="button"
+              onClick={() => setShowGatePinModal(true)}
+              className="px-5 py-4 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-bold text-sm sm:text-base tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.18)] hover:shadow-[0_0_25px_rgba(34,211,238,0.45)] hover:scale-[1.03] cursor-pointer text-center group"
+            >
+              <span className="drop-shadow-[0_0_8px_rgba(34,211,238,0.35)] group-hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.7)]">
+                Mã PIN mở cửa
+              </span>
+            </button>
 
-                  {/* Sidebar Giỏ hàng & Đặt cọc */}
-                  <div className="lg:col-span-4 sticky top-4">
-                    <BookingSidebar
-                      selectedUnit={selectedUnit}
-                      onOpenDepositModal={handleOpenDepositModal}
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="access-tab"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-              >
-                <MyStorageTab onOpenExtendModal={handleOpenExtendModal} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+            {/* 4. Gửi hỗ trợ */}
+            <button
+              type="button"
+              onClick={() => setShowSupportModal(true)}
+              className="px-5 py-4 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-bold text-sm sm:text-base tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.18)] hover:shadow-[0_0_25px_rgba(34,211,238,0.45)] hover:scale-[1.03] cursor-pointer text-center group"
+            >
+              <span className="drop-shadow-[0_0_8px_rgba(34,211,238,0.35)] group-hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.7)]">
+                Gửi hỗ trợ
+              </span>
+            </button>
+          </div>
+        </motion.div>
       </main>
 
       {/* Footer for Customer Portal */}
-      <SiteFooter />
+      <div className="relative z-10">
+        <SiteFooter />
+      </div>
 
       {/* Floating Chatbot AI 24/7 Widget */}
       <ChatbotWidget />
+
+      {/* 1. Modal Thuê kho 4 bước (Dạng Popup Wizard) */}
+      <RentStorageWizardModal
+        isOpen={showRentModal}
+        onClose={() => setShowRentModal(false)}
+        facility={facility}
+        onFacilityChange={setFacility}
+        branches={branches}
+        onSuccess={() => {
+          setShowRentModal(false);
+          setMapRefreshTrigger(prev => prev + 1);
+          setShowMyStorageModal(true);
+        }}
+      />
+
+      {/* 2. Modal Kho của tôi (Dạng Popup Overlay) */}
+      {showMyStorageModal && (
+        <div 
+          className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-40 flex items-center justify-center p-3 sm:p-5"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowMyStorageModal(false);
+          }}
+        >
+          <div className="dark border border-slate-700/80 w-full max-w-5xl max-h-[92vh] flex flex-col rounded-3xl shadow-2xl modal-animate-pop bg-slate-900 text-white overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4 shrink-0 bg-slate-900/95">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-lg border border-cyan-400/30 shadow-[0_0_15px_rgba(34,211,238,0.25)]">
+                  <i className="fa-solid fa-boxes-stacked"></i>
+                </div>
+                <div>
+                  <h2 className="font-extrabold text-base sm:text-lg tracking-tight text-white">
+                    KHO CỦA TÔI
+                  </h2>
+                  <p className="text-xs text-slate-400">
+                    Quản lý danh sách hợp đồng ô kho hiện có và thủ tục gia hạn
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMyStorageModal(false)}
+                className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer border border-slate-700"
+              >
+                <i className="fa-solid fa-xmark text-sm"></i>
+              </button>
+            </div>
+
+            {/* Modal Body: Scrollable */}
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+              <MyStorageTab 
+                onOpenExtendModal={handleOpenExtendModal} 
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Modal Mã PIN Cửa Chính 24/7 (Được tách riêng độc lập) */}
+      <GatePinModal
+        isOpen={showGatePinModal}
+        onClose={() => setShowGatePinModal(false)}
+      />
 
       {/* Modals */}
       {showProfileModal && (
@@ -310,10 +348,10 @@ export default function CustomerPortal() {
             setShowDepositFlow(false);
             setSelectedUnit(null);
             setMapRefreshTrigger(prev => prev + 1);
-            setActiveTab('access');
+            setShowMyStorageModal(true);
           }}
         />
       )}
     </div>
   );
-}
+}

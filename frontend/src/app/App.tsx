@@ -33,15 +33,11 @@ function App() {
         {/* US-03: Sơ đồ 2D chọn ô kho */}
         <Route path="/floor-plan" element={<FloorPlanPage />} />
 
-        {/* Cổng Khách Hàng (Bảo vệ bằng RoleProtectedRoute - Role CUSTOMER) */}
-        <Route
-          path="/portal"
-          element={
-            <RoleProtectedRoute allowedRoles={["CUSTOMER"]}>
-              <CustomerPortal />
-            </RoleProtectedRoute>
-          }
-        />
+        {/* Cổng Khách Hàng (Customer Portal) */}
+        <Route path="/portal" element={<CustomerPortal initialTab="home" />} />
+        <Route path="/customer" element={<CustomerPortal initialTab="home" />} />
+        <Route path="/rent" element={<CustomerPortal initialTab="grid" />} />
+        <Route path="/my-storage" element={<CustomerPortal initialTab="access" />} />
 
         {/* Cổng Nhân Viên Vận Hành: Check-in tại quầy & Quản lý Ticket (Role STAFF, MANAGER, ADMIN) */}
         <Route

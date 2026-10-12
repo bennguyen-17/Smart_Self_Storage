@@ -6,7 +6,7 @@ import AuthLayout from "@/components/layouts/AuthLayout"
 import LoginForm from "@/features/auth/components/LoginForm"
 import RegisterForm from "@/features/auth/components/RegisterForm"
 import { Button } from "@/components/ui/button"
-import { isTokenValid } from "@/lib/apiClient"
+import { useAuth } from "@/context/AuthContext"
 
 const TABS = [
   { label: "Đăng nhập", value: "login", href: "/customer_login" },
@@ -16,9 +16,9 @@ const TABS = [
 function AuthPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const { isAuthenticated, user } = useAuth()
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  if (isTokenValid(token)) {
+  if (isAuthenticated && user?.role === "CUSTOMER") {
     return <Navigate to="/portal" replace />
   }
 
