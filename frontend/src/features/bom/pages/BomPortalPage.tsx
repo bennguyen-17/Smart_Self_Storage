@@ -379,19 +379,20 @@ export default function BomPortalPage() {
           </div>
         ) : (
           /* GIAO DIỆN KHI CHỌN 1 MỤC: CHUYỂN THÀNH MENU BÊN TRÁI + NỘI DUNG BÊN PHẢI */
-          <div className="space-y-6">
-            {/* Thanh điều hướng nhanh phía trên */}
-            <div className="flex items-center justify-between py-2 border-b border-sky-500/20 text-xs">
-              <div className="flex items-center space-x-2 font-bold text-slate-300">
-                <button
-                  onClick={() => setActiveTab("home")}
-                  className="hover:text-sky-400 transition cursor-pointer flex items-center gap-1.5"
-                >
-                  <ArrowLeft className="size-4 text-sky-400" />
-                  <span>Trang Chủ BOM</span>
-                </button>
-                <span className="text-slate-500">/</span>
-                <span className="text-sky-400 font-extrabold uppercase tracking-wide">
+          <div className="space-y-5">
+            {/* Thanh điều hướng tinh gọn phía trên */}
+            <div className="flex items-center justify-between pb-3 border-b border-sky-500/20">
+              <button
+                onClick={() => setActiveTab("home")}
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-950/60 hover:bg-sky-500/20 text-sky-300 hover:text-white font-bold text-xs border border-sky-500/30 transition cursor-pointer backdrop-blur-xs group"
+              >
+                <ArrowLeft className="size-3.5 group-hover:-translate-x-0.5 transition-transform" />
+                <span>Quay lại Trang Chủ</span>
+              </button>
+
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-slate-400 font-medium hidden sm:inline">Khu vực:</span>
+                <span className="px-3 py-1 rounded-lg bg-sky-500/15 text-sky-300 border border-sky-400/30 font-black text-[11px] uppercase tracking-wider">
                   {activeTab === "dashboard" && "Giám Sát Cơ Sở"}
                   {activeTab === "facilities" && "Danh Sách Cơ Sở"}
                   {activeTab === "policies" && "Quy Định Chính Sách"}
@@ -399,107 +400,91 @@ export default function BomPortalPage() {
                   {activeTab === "reports" && "Báo Cáo Toàn Chuỗi"}
                 </span>
               </div>
-
-              <button
-                onClick={() => setActiveTab("home")}
-                className="px-4 py-2 rounded-full bg-slate-900/80 hover:bg-slate-800 text-sky-300 hover:text-white font-bold text-xs border border-sky-500/30 transition cursor-pointer flex items-center gap-1.5 shadow-md backdrop-blur-md"
-              >
-                <ArrowLeft className="size-3.5" />
-                <span>Quay về trang chủ</span>
-              </button>
             </div>
 
             {/* Cột Menu Bên Trái (Left Menu) + Cột Nội Dung Bên Phải (Right Content) */}
             <div className="flex flex-col lg:flex-row gap-6 items-start">
-              {/* MENU BÊN TRÁI (Sticky Sidebar) */}
-              <div className="w-full lg:w-72 xl:w-80 shrink-0 space-y-3 sticky top-20">
-                <button
-                  onClick={() => setActiveTab("home")}
-                  className="w-full py-3.5 px-5 rounded-2xl bg-slate-950/60 hover:bg-slate-900/90 text-sky-300 hover:text-white font-black text-xs sm:text-sm flex items-center justify-between border-2 border-sky-400/30 transition cursor-pointer backdrop-blur-xs shadow-md mb-2 group"
-                >
-                  <span className="flex items-center gap-2.5">
-                    <ArrowLeft className="size-4.5 group-hover:-translate-x-1 transition-transform" />
-                    <span>Quay Về Trang Chủ</span>
-                  </span>
-                  <span className="text-[10px] uppercase font-bold text-sky-400/70 bg-sky-500/10 px-2 py-0.5 rounded-md">
-                    Home
-                  </span>
-                </button>
+              {/* MENU BÊN TRÁI (Sticky Unified Sidebar Card) */}
+              <div className="w-full lg:w-64 xl:w-72 shrink-0 space-y-1.5 sticky top-20 bg-slate-950/70 backdrop-blur-md rounded-2xl border border-sky-500/20 p-2.5 shadow-xl">
+                <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                  <span>Menu Điều Hành</span>
+                  <span className="size-2 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)] animate-pulse" />
+                </div>
 
-                {/* 5 Menu Items (Đồng bộ viền Cyan) */}
+                {/* 5 Menu Items */}
                 <button
                   onClick={() => setActiveTab("dashboard")}
-                  className={`w-full py-4 px-5 rounded-2xl font-black text-xs sm:text-sm tracking-wide flex items-center justify-between transition-all duration-200 cursor-pointer shadow-md ${
+                  className={`w-full py-2.5 px-3.5 rounded-xl font-bold text-xs tracking-wide flex items-center justify-between transition-all duration-200 cursor-pointer ${
                     activeTab === "dashboard"
-                      ? "bg-sky-500 text-slate-950 border-2 border-sky-300 shadow-[0_0_30px_rgba(56,189,248,0.7)] scale-[1.02]"
-                      : "border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-slate-100 hover:text-white shadow-[0_0_15px_rgba(56,189,248,0.2)] backdrop-blur-xs"
+                      ? "bg-sky-500 text-slate-950 font-black shadow-md shadow-sky-500/30"
+                      : "text-slate-300 hover:text-white hover:bg-slate-900/90 border border-transparent hover:border-sky-500/20"
                   }`}
                 >
-                  <span className="flex items-center space-x-3">
-                    <TrendingUp className={`size-5 ${activeTab === "dashboard" ? "text-slate-950" : "text-sky-400"}`} />
+                  <span className="flex items-center space-x-2.5">
+                    <TrendingUp className={`size-4.5 ${activeTab === "dashboard" ? "text-slate-950" : "text-sky-400"}`} />
                     <span>Giám Sát Cơ Sở</span>
                   </span>
-                  <ChevronRight className={`size-4 ${activeTab === "dashboard" ? "text-slate-950" : "text-slate-400"}`} />
+                  <ChevronRight className={`size-3.5 ${activeTab === "dashboard" ? "text-slate-950" : "text-slate-500"}`} />
                 </button>
 
                 <button
                   onClick={() => setActiveTab("facilities")}
-                  className={`w-full py-4 px-5 rounded-2xl font-black text-xs sm:text-sm tracking-wide flex items-center justify-between transition-all duration-200 cursor-pointer shadow-md ${
+                  className={`w-full py-2.5 px-3.5 rounded-xl font-bold text-xs tracking-wide flex items-center justify-between transition-all duration-200 cursor-pointer ${
                     activeTab === "facilities"
-                      ? "bg-sky-500 text-slate-950 border-2 border-sky-300 shadow-[0_0_30px_rgba(56,189,248,0.7)] scale-[1.02]"
-                      : "border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-slate-100 hover:text-white shadow-[0_0_15px_rgba(56,189,248,0.2)] backdrop-blur-xs"
+                      ? "bg-sky-500 text-slate-950 font-black shadow-md shadow-sky-500/30"
+                      : "text-slate-300 hover:text-white hover:bg-slate-900/90 border border-transparent hover:border-sky-500/20"
                   }`}
                 >
-                  <span className="flex items-center space-x-3">
-                    <Warehouse className={`size-5 ${activeTab === "facilities" ? "text-slate-950" : "text-sky-400"}`} />
+                  <span className="flex items-center space-x-2.5">
+                    <Warehouse className={`size-4.5 ${activeTab === "facilities" ? "text-slate-950" : "text-sky-400"}`} />
                     <span>Danh Sách Cơ Sở</span>
                   </span>
-                  <ChevronRight className={`size-4 ${activeTab === "facilities" ? "text-slate-950" : "text-slate-400"}`} />
+                  <ChevronRight className={`size-3.5 ${activeTab === "facilities" ? "text-slate-950" : "text-slate-500"}`} />
                 </button>
 
                 <button
                   onClick={() => setActiveTab("policies")}
-                  className={`w-full py-4 px-5 rounded-2xl font-black text-xs sm:text-sm tracking-wide flex items-center justify-between transition-all duration-200 cursor-pointer shadow-md ${
+                  className={`w-full py-2.5 px-3.5 rounded-xl font-bold text-xs tracking-wide flex items-center justify-between transition-all duration-200 cursor-pointer ${
                     activeTab === "policies"
-                      ? "bg-sky-500 text-slate-950 border-2 border-sky-300 shadow-[0_0_30px_rgba(56,189,248,0.7)] scale-[1.02]"
-                      : "border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-slate-100 hover:text-white shadow-[0_0_15px_rgba(56,189,248,0.2)] backdrop-blur-xs"
+                      ? "bg-sky-500 text-slate-950 font-black shadow-md shadow-sky-500/30"
+                      : "text-slate-300 hover:text-white hover:bg-slate-900/90 border border-transparent hover:border-sky-500/20"
                   }`}
                 >
-                  <span className="flex items-center space-x-3">
-                    <ShieldAlert className={`size-5 ${activeTab === "policies" ? "text-slate-950" : "text-sky-400"}`} />
+                  <span className="flex items-center space-x-2.5">
+                    <ShieldAlert className={`size-4.5 ${activeTab === "policies" ? "text-slate-950" : "text-sky-400"}`} />
                     <span>Quy Định Chính Sách</span>
                   </span>
-                  <ChevronRight className={`size-4 ${activeTab === "policies" ? "text-slate-950" : "text-slate-400"}`} />
+                  <ChevronRight className={`size-3.5 ${activeTab === "policies" ? "text-slate-950" : "text-slate-500"}`} />
                 </button>
 
                 <button
                   onClick={() => setActiveTab("pricing")}
-                  className={`w-full py-4 px-5 rounded-2xl font-black text-xs sm:text-sm tracking-wide flex items-center justify-between transition-all duration-200 cursor-pointer shadow-md ${
+                  className={`w-full py-2.5 px-3.5 rounded-xl font-bold text-xs tracking-wide flex items-center justify-between transition-all duration-200 cursor-pointer ${
                     activeTab === "pricing"
-                      ? "bg-sky-500 text-slate-950 border-2 border-sky-300 shadow-[0_0_30px_rgba(56,189,248,0.7)] scale-[1.02]"
-                      : "border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-slate-100 hover:text-white shadow-[0_0_15px_rgba(56,189,248,0.2)] backdrop-blur-xs"
+                      ? "bg-sky-500 text-slate-950 font-black shadow-md shadow-sky-500/30"
+                      : "text-slate-300 hover:text-white hover:bg-slate-900/90 border border-transparent hover:border-sky-500/20"
                   }`}
                 >
-                  <span className="flex items-center space-x-3">
-                    <SlidersHorizontal className={`size-5 ${activeTab === "pricing" ? "text-slate-950" : "text-sky-400"}`} />
+                  <span className="flex items-center space-x-2.5">
+                    <SlidersHorizontal className={`size-4.5 ${activeTab === "pricing" ? "text-slate-950" : "text-sky-400"}`} />
                     <span>Khung Giá Phụ Thu</span>
                   </span>
-                  <ChevronRight className={`size-4 ${activeTab === "pricing" ? "text-slate-950" : "text-slate-400"}`} />
+                  <ChevronRight className={`size-3.5 ${activeTab === "pricing" ? "text-slate-950" : "text-slate-500"}`} />
                 </button>
 
                 <button
                   onClick={() => setActiveTab("reports")}
-                  className={`w-full py-4 px-5 rounded-2xl font-black text-xs sm:text-sm tracking-wide flex items-center justify-between transition-all duration-200 cursor-pointer shadow-md ${
+                  className={`w-full py-2.5 px-3.5 rounded-xl font-bold text-xs tracking-wide flex items-center justify-between transition-all duration-200 cursor-pointer ${
                     activeTab === "reports"
-                      ? "bg-sky-500 text-slate-950 border-2 border-sky-300 shadow-[0_0_30px_rgba(56,189,248,0.7)] scale-[1.02]"
-                      : "border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-slate-100 hover:text-white shadow-[0_0_15px_rgba(56,189,248,0.2)] backdrop-blur-xs"
+                      ? "bg-sky-500 text-slate-950 font-black shadow-md shadow-sky-500/30"
+                      : "text-slate-300 hover:text-white hover:bg-slate-900/90 border border-transparent hover:border-sky-500/20"
                   }`}
                 >
-                  <span className="flex items-center space-x-3">
-                    <FileSpreadsheet className={`size-5 ${activeTab === "reports" ? "text-slate-950" : "text-sky-400"}`} />
+                  <span className="flex items-center space-x-2.5">
+                    <FileSpreadsheet className={`size-4.5 ${activeTab === "reports" ? "text-slate-950" : "text-sky-400"}`} />
                     <span>Báo Cáo Toàn Chuỗi</span>
                   </span>
-                  <ChevronRight className={`size-4 ${activeTab === "reports" ? "text-slate-950" : "text-slate-400"}`} />
+                  <ChevronRight className={`size-3.5 ${activeTab === "reports" ? "text-slate-950" : "text-slate-500"}`} />
                 </button>
               </div>
 
@@ -509,15 +494,15 @@ export default function BomPortalPage() {
         {/* SUBTAB 1: GIÁM SÁT & HIỆU SUẤT CƠ SỞ */}
         {activeTab === "dashboard" && (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
-                <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-slate-900 dark:text-white">
-                  <TrendingUp className="size-4 text-blue-600" />
+            <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+                <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-white">
+                  <TrendingUp className="size-4.5 text-sky-400" />
                   <span>BẢNG SO SÁNH HIỆU SUẤT HOẠT ĐỘNG GIỮA CÁC CƠ SỞ KHO</span>
                 </h3>
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs text-slate-500 font-semibold">Tháng báo cáo:</span>
-                  <select className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold bg-white dark:bg-slate-950 text-slate-900 dark:text-white outline-none cursor-pointer">
+                  <span className="text-xs text-slate-400 font-semibold">Tháng báo cáo:</span>
+                  <select className="px-3.5 py-1.5 rounded-xl border border-slate-700 text-xs font-bold bg-slate-900 text-white outline-none cursor-pointer focus:border-sky-400">
                     <option value="09/2026">Tháng 09 / 2026</option>
                     <option value="08/2026">Tháng 08 / 2026</option>
                   </select>
@@ -527,7 +512,7 @@ export default function BomPortalPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-black text-[10px]">
+                    <tr className="border-b border-slate-800 text-slate-400 uppercase font-black text-[10px]">
                       <th className="py-3 px-4">CƠ SỞ KHO</th>
                       <th className="py-3 px-4">QUẢN LÝ CHI NHÁNH</th>
                       <th className="py-3 px-4 text-center">QUY MÔ KHO</th>
@@ -537,35 +522,35 @@ export default function BomPortalPage() {
                       <th className="py-3 px-4 text-center">THAO TÁC</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-700 dark:text-slate-300">
+                  <tbody className="divide-y divide-slate-800 font-medium text-slate-300">
                     {facilities.map((fac) => (
-                      <tr key={fac.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
+                      <tr key={fac.id} className="hover:bg-slate-900/60 transition">
                         <td className="py-4 px-4">
-                          <div className="font-extrabold text-slate-900 dark:text-white text-xs">{fac.name}</div>
+                          <div className="font-extrabold text-white text-xs">{fac.name}</div>
                           <div className="text-[11px] text-slate-400 mt-0.5">{fac.address}</div>
                         </td>
                         <td className="py-4 px-4">
-                          <div className="font-bold text-slate-900 dark:text-white text-xs">{fac.managerName}</div>
+                          <div className="font-bold text-white text-xs">{fac.managerName}</div>
                           <div className="text-[11px] text-slate-400 mt-0.5">{fac.managerEmail}</div>
                         </td>
-                        <td className="py-4 px-4 text-center font-bold text-slate-800 dark:text-slate-200">
+                        <td className="py-4 px-4 text-center font-bold text-slate-200">
                           {fac.totalUnits} Kho
                         </td>
                         <td className="py-4 px-4 text-center">
-                          <span className="font-black text-emerald-600 dark:text-emerald-400">
+                          <span className="font-black text-emerald-400">
                             {fac.rentedUnits}
                           </span>
                           <span className="text-slate-400">/{fac.totalUnits}</span>
                         </td>
-                        <td className="py-4 px-4 text-center font-black text-blue-600 dark:text-blue-400 font-mono text-xs">
+                        <td className="py-4 px-4 text-center font-black text-sky-400 font-mono text-xs">
                           ₫{fac.monthlyRevenue.toLocaleString("vi-VN").replace(/,/g, ".")}
                         </td>
                         <td className="py-4 px-4 text-center">
                           <span
                             className={`font-semibold px-3 py-1 rounded-full text-[10px] inline-block ${
                               fac.overdueUnits > 0
-                                ? "bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300"
-                                : "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-300"
+                                ? "bg-rose-950/60 text-rose-300 border border-rose-800/40"
+                                : "bg-emerald-950/60 text-emerald-300 border border-emerald-800/40"
                             }`}
                           >
                             {fac.overdueUnits > 0 ? `${fac.overdueUnits} Đơn quá hạn` : "0 Đơn"}
@@ -574,7 +559,7 @@ export default function BomPortalPage() {
                         <td className="py-4 px-4 text-center">
                           <button
                             onClick={() => handleOpenFacilityModal(fac)}
-                            className="bg-[#1d4ed8] hover:bg-blue-700 text-white font-bold text-xs px-4 py-1.5 rounded-full shadow-xs transition cursor-pointer"
+                            className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs px-4 py-1.5 rounded-full shadow-xs transition cursor-pointer"
                           >
                             Chi tiết
                           </button>
@@ -591,15 +576,15 @@ export default function BomPortalPage() {
         {/* SUBTAB 2: DANH SÁCH CƠ SỞ KHO HỆ THỐNG */}
         {activeTab === "facilities" && (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
-                <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-slate-900 dark:text-white">
-                  <Warehouse className="size-4 text-blue-600" />
+            <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+                <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-white">
+                  <Warehouse className="size-4.5 text-sky-400" />
                   <span>DANH SÁCH TẤT CẢ CÁC CƠ SỞ KHO LƯU TRỮ TOÀN HỆ THỐNG</span>
                 </h3>
                 <button
                   onClick={() => toast.info("Chức năng thêm cơ sở kho mới sẽ kích hoạt khi có chi nhánh mở rộng!")}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer"
+                  className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(56,189,248,0.25)]"
                 >
                   <Plus className="size-4" />
                   <span>Thêm Cơ Sở Kho Mới</span>
@@ -656,15 +641,20 @@ export default function BomPortalPage() {
         {/* SUBTAB 3: QUY ĐỊNH & CHÍNH SÁCH THUÊ CHUNG */}
         {activeTab === "policies" && (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
-                <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-slate-900 dark:text-white">
-                  <ShieldAlert className="size-4 text-indigo-600" />
-                  <span>THIẾT LẬP CÁC QUY ĐỊNH &amp; CHÍNH SÁCH THUÊ CHUNG CHUỖI HỆ THỐNG</span>
-                </h3>
+            <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+                <div>
+                  <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-white">
+                    <ShieldAlert className="size-4.5 text-sky-400" />
+                    <span>THIẾT LẬP CÁC QUY ĐỊNH &amp; CHÍNH SÁCH THUÊ CHUỖI HỆ THỐNG</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Áp dụng thống nhất cho toàn bộ các cơ sở kho và hợp đồng tự quản 24/7
+                  </p>
+                </div>
                 <button
                   onClick={() => toast.success("Đã lưu các thiết lập chính sách chung toàn hệ thống thành công!")}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs px-4 py-2 rounded-xl transition cursor-pointer shadow-xs"
+                  className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl transition cursor-pointer shadow-[0_0_15px_rgba(56,189,248,0.3)] shrink-0"
                 >
                   Lưu Thay Đổi Chính Sách
                 </button>
@@ -672,43 +662,48 @@ export default function BomPortalPage() {
 
               <div className="space-y-4">
                 {/* 1. Đặt cọc */}
-                <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 space-y-3">
-                  <h4 className="font-black text-xs uppercase text-blue-600 dark:text-blue-400">
-                    1. CHÍNH SÁCH ĐẶT CỌC &amp; GIỮ CHỖ KHO
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                    <div>
-                      <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                <div className="p-4 sm:p-5 rounded-xl border border-slate-800/80 bg-slate-900/50 space-y-3.5">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-sky-500/15 text-sky-400 border border-sky-500/30">
+                      Mục 01
+                    </span>
+                    <h4 className="font-extrabold text-xs uppercase text-slate-200">
+                      Chính Sách Đặt Cọc &amp; Giữ Chỗ Kho
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 text-xs">
+                    <div className="md:col-span-4">
+                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
                         Mức Tiền Cọc Mặc Định Cho Hợp Đồng
                       </label>
-                      <select className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold">
+                      <select className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-xs focus:border-sky-400 outline-none">
                         <option>1 Tháng Tiền Thuê Kho (Khuyên Dùng)</option>
                         <option>2 Tháng Tiền Thuê Kho</option>
                       </select>
                       <p className="text-[10px] text-slate-400 mt-1">Áp dụng mặc định cho tất cả hợp đồng thuê mới.</p>
                     </div>
-                    <div>
-                      <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">
-                        Thời Gian Giữ Chỗ Tối Đa Khi Cọc Trước
+                    <div className="md:col-span-3">
+                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
+                        Thời Gian Giữ Chỗ Tối Đa
                       </label>
                       <div className="flex items-center gap-2">
                         <input
                           type="number"
                           defaultValue={7}
-                          className="w-20 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold text-center"
+                          className="w-20 p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-center text-xs focus:border-sky-400 outline-none"
                         />
-                        <span className="font-bold text-slate-500">Ngày</span>
+                        <span className="font-bold text-slate-400">Ngày</span>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-1">Sau 7 ngày không ký HĐ sẽ tự động hủy giữ chỗ.</p>
+                      <p className="text-[10px] text-slate-400 mt-1">Tự hủy giữ chỗ nếu quá hạn.</p>
                     </div>
-                    <div>
-                      <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                    <div className="md:col-span-5">
+                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
                         Điều Kiện Hoàn Tiền Cọc Trả Kho
                       </label>
                       <input
                         type="text"
                         defaultValue="Thông báo trước ≥ 15 ngày & Không hư hại kho"
-                        className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold text-xs"
+                        className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-xs focus:border-sky-400 outline-none"
                       />
                       <p className="text-[10px] text-slate-400 mt-1">Hoàn cọc sau nghiệm thu và trừ phụ thu nếu có.</p>
                     </div>
@@ -716,40 +711,45 @@ export default function BomPortalPage() {
                 </div>
 
                 {/* 2. Gia hạn & Hủy */}
-                <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 space-y-3">
-                  <h4 className="font-black text-xs uppercase text-indigo-600 dark:text-indigo-400">
-                    2. CHÍNH SÁCH GIA HẠN &amp; HỦY HỢP ĐỒNG
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                    <div>
-                      <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                <div className="p-4 sm:p-5 rounded-xl border border-slate-800/80 bg-slate-900/50 space-y-3.5">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+                      Mục 02
+                    </span>
+                    <h4 className="font-extrabold text-xs uppercase text-slate-200">
+                      Chính Sách Gia Hạn &amp; Hủy Hợp Đồng
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 text-xs">
+                    <div className="md:col-span-4">
+                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
                         Tự Động Gửi Notification Gia Hạn HĐ
                       </label>
-                      <select className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold">
+                      <select className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-xs focus:border-sky-400 outline-none">
                         <option>Trước 7 Ngày Hết Hạn (Mặc định)</option>
                         <option>Trước 15 Ngày Hết Hạn</option>
                       </select>
                       <p className="text-[10px] text-slate-400 mt-1">Gửi Push App &amp; Email nhắc gia hạn HĐ.</p>
                     </div>
-                    <div>
-                      <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">
-                        Thời Hạn Báo Trả Kho Trước Hạn
+                    <div className="md:col-span-3">
+                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
+                        Thời Hạn Báo Trả Trước Hạn
                       </label>
                       <div className="flex items-center gap-2">
                         <input
                           type="number"
                           defaultValue={15}
-                          className="w-20 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold text-center"
+                          className="w-20 p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-center text-xs focus:border-sky-400 outline-none"
                         />
-                        <span className="font-bold text-slate-500">Ngày</span>
+                        <span className="font-bold text-slate-400">Ngày</span>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-1">Thời hạn tối thiểu khách cần báo trước khi trả.</p>
+                      <p className="text-[10px] text-slate-400 mt-1">Thời hạn tối thiểu báo trước.</p>
                     </div>
-                    <div>
-                      <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                    <div className="md:col-span-5">
+                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
                         Mức Phạt Khi Hủy HĐ Đột Ngột Trả Sớm
                       </label>
-                      <select className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold">
+                      <select className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-xs focus:border-sky-400 outline-none">
                         <option>Khấu Trừ 50% Tiền Cọc</option>
                         <option>Khấu Trừ 100% Tiền Cọc</option>
                       </select>
@@ -759,88 +759,98 @@ export default function BomPortalPage() {
                 </div>
 
                 {/* 3. Nghiệm thu & Trả kho */}
-                <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 space-y-3">
-                  <h4 className="font-black text-xs uppercase text-emerald-600 dark:text-emerald-400">
-                    3. QUY ĐỊNH NGHIỆM THU &amp; TRẢ KHO (CHECK-OUT)
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                    <div>
-                      <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                <div className="p-4 sm:p-5 rounded-xl border border-slate-800/80 bg-slate-900/50 space-y-3.5">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      Mục 03
+                    </span>
+                    <h4 className="font-extrabold text-xs uppercase text-slate-200">
+                      Quy Định Nghiệm Thu &amp; Trả Kho (Check-out)
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 text-xs">
+                    <div className="md:col-span-5">
+                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
                         Hình Thức Kiểm Tra &amp; Nghiệm Thu
                       </label>
                       <input
                         type="text"
                         readOnly
                         defaultValue="Xác Thực Ảnh Chụp App & Staff Nghiệm Thu Trực Tiếp"
-                        className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 font-bold text-xs"
+                        className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-slate-200 font-bold text-xs focus:border-sky-400 outline-none"
                       />
                     </div>
-                    <div>
-                      <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">
-                        Thời Gian Tối Đa Hoàn Trả Tiền Cọc
+                    <div className="md:col-span-3">
+                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
+                        Thời Gian Hoàn Trả Tiền Cọc
                       </label>
                       <div className="flex items-center gap-2">
                         <input
                           type="number"
                           defaultValue={3}
-                          className="w-20 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold text-center"
+                          className="w-20 p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-center text-xs focus:border-sky-400 outline-none"
                         />
-                        <span className="font-bold text-slate-500">Ngày Làm Việc</span>
+                        <span className="font-bold text-slate-400">Ngày làm việc</span>
                       </div>
                     </div>
-                    <div>
-                      <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                    <div className="md:col-span-4">
+                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
                         Phí Vệ Sinh Kho Phụ Thu (Nếu Không Dọn)
                       </label>
                       <input
                         type="text"
                         defaultValue="150,000 VNĐ"
-                        className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold"
+                        className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-xs focus:border-sky-400 outline-none"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* 4. Quá hạn & Khóa Smart Access */}
-                <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 space-y-3">
-                  <h4 className="font-black text-xs uppercase text-rose-600 dark:text-rose-400">
-                    4. QUY TRÌNH XỬ LÝ QUÁ HẠN &amp; PHONG TỎA SMART ACCESS (BR-18 / BR-21)
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                    <div>
-                      <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                <div className="p-4 sm:p-5 rounded-xl border border-slate-800/80 bg-slate-900/50 space-y-3.5">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                      Mục 04
+                    </span>
+                    <h4 className="font-extrabold text-xs uppercase text-slate-200">
+                      Quy Trình Xử Lý Quá Hạn &amp; Phong Tỏa Smart Access (BR-18 / BR-21)
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 text-xs">
+                    <div className="md:col-span-3">
+                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
                         Thời Gian Ân Hạn (Grace Period)
                       </label>
                       <div className="flex items-center gap-2">
                         <input
                           type="number"
                           defaultValue={3}
-                          className="w-20 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold text-center"
+                          className="w-20 p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-center text-xs focus:border-sky-400 outline-none"
                         />
-                        <span className="font-bold text-slate-500">Ngày</span>
+                        <span className="font-bold text-slate-400">Ngày</span>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-1">Ân hạn miễn phí phạt nợ quá hạn ban đầu.</p>
+                      <p className="text-[10px] text-slate-400 mt-1">Ân hạn miễn phí phạt ban đầu.</p>
                     </div>
-                    <div>
-                      <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                    <div className="md:col-span-5">
+                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
                         Tự Động Phong Tỏa Mã PIN Cổng IoT
                       </label>
                       <input
                         type="text"
                         readOnly
                         defaultValue="Ngày Thứ 5 Quá Hạn (Tự động Vô hiệu hóa PIN BR-18)"
-                        className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 font-bold text-xs"
+                        className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-amber-300 font-bold text-xs focus:border-sky-400 outline-none"
                       />
                     </div>
-                    <div>
-                      <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                    <div className="md:col-span-4">
+                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
                         Niêm Phong Tài Sản &amp; Thanh Lý HĐ
                       </label>
                       <input
                         type="text"
                         readOnly
                         defaultValue="Quá 30 Ngày Không Thanh Toán (BR-21)"
-                        className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 font-bold text-xs text-rose-600 dark:text-rose-400"
+                        className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-rose-400 font-bold text-xs focus:border-sky-400 outline-none"
                       />
                     </div>
                   </div>
@@ -854,26 +864,26 @@ export default function BomPortalPage() {
         {activeTab === "pricing" && (
           <div className="space-y-6">
             {/* PRICING MATRIX SECTION */}
-            <div className="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+            <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
                 <div>
-                  <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-slate-900 dark:text-white">
-                    <SlidersHorizontal className="size-4 text-indigo-600" />
+                  <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-white">
+                    <SlidersHorizontal className="size-4.5 text-sky-400" />
                     <span>QUẢN LÝ KHUNG GIÁ THUÊ, PHÍ PHỤ THU, PHÍ PHẠT QUÁ HẠN &amp; GIẢM GIÁ</span>
                   </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Áp dụng toàn bộ 4 cơ sở kho hệ thống</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Áp dụng toàn bộ 4 cơ sở kho hệ thống</p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => setIsSurchargeModalOpen(true)}
-                    className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer"
+                    className="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer"
                   >
-                    <Plus className="size-4 text-indigo-600" />
+                    <Plus className="size-4 text-sky-400" />
                     <span>Thêm Phụ Thu / Giảm Giá</span>
                   </button>
                   <button
                     onClick={() => handleOpenPricingModal()}
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs px-4 py-2 rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer"
+                    className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl shadow-[0_0_15px_rgba(56,189,248,0.3)] transition flex items-center gap-1.5 cursor-pointer"
                   >
                     <Edit3 className="size-4" />
                     <span>Cập Nhật Bảng Giá &amp; Phí</span>
@@ -1020,10 +1030,10 @@ export default function BomPortalPage() {
         {/* SUBTAB 5: BÁO CÁO SYSTEM & XUẤT DỮ LIỆU */}
         {activeTab === "reports" && (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
-                <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-slate-900 dark:text-white">
-                  <FileSpreadsheet className="size-4 text-blue-600" />
+            <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+                <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-white">
+                  <FileSpreadsheet className="size-4.5 text-sky-400" />
                   <span>XEM VÀ XUẤT BÁO CÁO TOÀN HỆ THỐNG (SYSTEM-WIDE REPORTS &amp; ANALYTICS)</span>
                 </h3>
                 <div className="flex items-center space-x-2">
