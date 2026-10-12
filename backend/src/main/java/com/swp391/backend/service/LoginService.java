@@ -26,6 +26,7 @@ public class LoginService {
 
     private final AccountRepository accountRepository;
     private final com.swp391.backend.repository.CustomerProfileRepository customerProfileRepository;
+    private final com.swp391.backend.repository.EmployeeProfileRepository employeeProfileRepository;
     private final JwtService jwtService;
     private final ActivityLogRepository activityLogRepository;
     private final PasswordEncoder passwordEncoder;
@@ -33,12 +34,14 @@ public class LoginService {
     public LoginService(
             AccountRepository accountRepository,
             com.swp391.backend.repository.CustomerProfileRepository customerProfileRepository,
+            com.swp391.backend.repository.EmployeeProfileRepository employeeProfileRepository,
             JwtService jwtService,
             ActivityLogRepository activityLogRepository,
             PasswordEncoder passwordEncoder) {
 
         this.accountRepository = accountRepository;
         this.customerProfileRepository = customerProfileRepository;
+        this.employeeProfileRepository = employeeProfileRepository;
         this.jwtService = jwtService;
         this.activityLogRepository = activityLogRepository;
         this.passwordEncoder = passwordEncoder;
@@ -173,6 +176,10 @@ public class LoginService {
                 .map(com.swp391.backend.entity.CustomerProfile::getIdentityNumber)
                 .orElse("Chưa cập nhật");
 
+        Integer facilityId = employeeProfileRepository.findByAccountId(account.getAccountId())
+                .map(com.swp391.backend.entity.EmployeeProfile::getFacilityId)
+                .orElse(null);
+
         String roleName = resolveRoleName(account.getRoleId());
 
         return LoginResult.success(
@@ -185,7 +192,8 @@ public class LoginService {
                                 account.getPhone(),
                                 account.getEmail(),
                                 identityNumber,
-                                account.getStatus())));
+                                account.getStatus(),
+                                facilityId)));
     }
 
     private String resolveRoleName(Long roleId) {

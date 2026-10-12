@@ -98,4 +98,12 @@ public class CheckoutSettlementController {
             return ResponseEntity.internalServerError().body(Map.of("success", false, "message", "Lỗi xử lý miễn giảm: " + e.getMessage()));
         }
     }
+
+    // --- US-26: Danh sách đơn cọc chờ hoàn tiền (REF) cho Staff (Q-18) ---
+    @GetMapping({"/staff/refunds", "/staff/settlements/refunds"})
+    public ResponseEntity<java.util.List<com.swp391.backend.dto.checkout.RefundListItemResponse>> getRefundList(
+            @RequestParam(value = "status", required = false, defaultValue = "PENDING") String status
+    ) {
+        return ResponseEntity.ok(checkoutSettlementService.getRefundList(status));
+    }
 }

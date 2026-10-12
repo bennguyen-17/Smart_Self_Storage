@@ -15,6 +15,8 @@ import java.util.Optional;
 public interface PaymentRepository extends JpaRepository<Payment, Integer> {
     Optional<Payment> findByInvoiceNumber(String invoiceNumber);
     List<Payment> findByContractId(Integer contractId);
+    List<Payment> findByInvoiceType(String invoiceType);
+    List<Payment> findByInvoiceTypeAndStatus(String invoiceType, String status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""

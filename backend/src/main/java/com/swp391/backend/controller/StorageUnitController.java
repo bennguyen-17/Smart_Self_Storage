@@ -94,11 +94,13 @@ public class StorageUnitController {
     @PostMapping("/manager/units/{unitCode}/maintenance")
     public ResponseEntity<?> putUnderMaintenance(
             @PathVariable String unitCode,
+            @RequestBody(required = false) java.util.Map<String, String> body,
             @RequestHeader(value = "X-Facility-Id", required = false) Integer managerFacilityId,
             @RequestHeader(value = "X-Account-Id", required = false) Integer accountId
     ) {
         try {
-            StorageUnit updated = storageService.putUnderMaintenance(unitCode, managerFacilityId, accountId);
+            String note = (body != null) ? body.get("note") : null;
+            StorageUnit updated = storageService.putUnderMaintenance(unitCode, managerFacilityId, accountId, note);
             return ResponseEntity.ok(updated);
         } catch (org.springframework.security.access.AccessDeniedException e) {
             return ResponseEntity.status(403).body(e.getMessage());
