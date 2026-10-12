@@ -9,6 +9,7 @@ import LandingPage from "@/features/landing/pages/LandingPage"
 import ReservationManagementPage from "@/features/reservations/pages/ReservationManagementPage"
 import StaffCheckinPage from "@/features/checkin/pages/StaffCheckinPage"
 import FloorPlanPage from "@/features/floor-plan/pages/FloorPlanPage"
+import BomPortalPage from "@/features/bom/pages/BomPortalPage"
 import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
 
 function App() {
@@ -74,7 +75,7 @@ function App() {
           path="/bom"
           element={
             <RoleProtectedRoute allowedRoles={["BOM", "ADMIN"]}>
-              <RolePortalPlaceholderPage portalType="BOM" />
+              <BomPortalPage />
             </RoleProtectedRoute>
           }
         />

@@ -167,7 +167,7 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
       </div>
 
       {/* Main Body Container: Hero Banner Content */}
-      <main className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 flex flex-col justify-center items-center py-12 sm:py-20 text-center">
+      <main className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 flex flex-col justify-center items-center py-10 sm:py-16 text-center">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -175,7 +175,7 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
           className="flex flex-col items-center w-full"
         >
           {/* Main Headline */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white uppercase text-center leading-tight drop-shadow-md">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight text-white uppercase text-center leading-tight drop-shadow-md whitespace-nowrap">
             HỆ THỐNG <span className="text-cyan-400 drop-shadow-[0_0_25px_rgba(34,211,238,0.6)]">KHO TỰ QUẢN</span>
             <br />
             THÔNG MINH <span className="text-cyan-400 drop-shadow-[0_0_25px_rgba(34,211,238,0.6)]">24/7</span>
@@ -187,14 +187,14 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
           </div>
 
           {/* 4 Action Buttons */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 w-full max-w-4xl mt-8 sm:mt-10">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 w-full max-w-5xl mt-8 sm:mt-12">
             {/* 1. Thuê kho */}
             <button
               type="button"
               onClick={() => setShowRentModal(true)}
-              className="px-5 py-4 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-bold text-sm sm:text-base tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.18)] hover:shadow-[0_0_25px_rgba(34,211,238,0.45)] hover:scale-[1.03] cursor-pointer text-center group"
+              className="px-6 py-5 sm:px-8 sm:py-6 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-extrabold text-base sm:text-lg lg:text-xl tracking-wide transition-all duration-300 shadow-[0_0_20px_rgba(34,211,238,0.22)] hover:shadow-[0_0_30px_rgba(34,211,238,0.55)] hover:scale-[1.04] cursor-pointer text-center group"
             >
-              <span className="drop-shadow-[0_0_8px_rgba(34,211,238,0.35)] group-hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.7)]">
+              <span className="drop-shadow-[0_0_10px_rgba(34,211,238,0.4)] group-hover:drop-shadow-[0_0_14px_rgba(34,211,238,0.8)]">
                 Thuê kho
               </span>
             </button>
@@ -203,9 +203,9 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
             <button
               type="button"
               onClick={() => setShowMyStorageModal(true)}
-              className="px-5 py-4 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-bold text-sm sm:text-base tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.18)] hover:shadow-[0_0_25px_rgba(34,211,238,0.45)] hover:scale-[1.03] cursor-pointer text-center group"
+              className="px-6 py-5 sm:px-8 sm:py-6 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-extrabold text-base sm:text-lg lg:text-xl tracking-wide transition-all duration-300 shadow-[0_0_20px_rgba(34,211,238,0.22)] hover:shadow-[0_0_30px_rgba(34,211,238,0.55)] hover:scale-[1.04] cursor-pointer text-center group"
             >
-              <span className="drop-shadow-[0_0_8px_rgba(34,211,238,0.35)] group-hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.7)]">
+              <span className="drop-shadow-[0_0_10px_rgba(34,211,238,0.4)] group-hover:drop-shadow-[0_0_14px_rgba(34,211,238,0.8)]">
                 Kho của tôi
               </span>
             </button>
@@ -214,9 +214,9 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
             <button
               type="button"
               onClick={() => setShowGatePinModal(true)}
-              className="px-5 py-4 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-bold text-sm sm:text-base tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.18)] hover:shadow-[0_0_25px_rgba(34,211,238,0.45)] hover:scale-[1.03] cursor-pointer text-center group"
+              className="px-6 py-5 sm:px-8 sm:py-6 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-extrabold text-base sm:text-lg lg:text-xl tracking-wide transition-all duration-300 shadow-[0_0_20px_rgba(34,211,238,0.22)] hover:shadow-[0_0_30px_rgba(34,211,238,0.55)] hover:scale-[1.04] cursor-pointer text-center group"
             >
-              <span className="drop-shadow-[0_0_8px_rgba(34,211,238,0.35)] group-hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.7)]">
+              <span className="drop-shadow-[0_0_10px_rgba(34,211,238,0.4)] group-hover:drop-shadow-[0_0_14px_rgba(34,211,238,0.8)]">
                 Mã PIN mở cửa
               </span>
             </button>
@@ -225,9 +225,9 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
             <button
               type="button"
               onClick={() => setShowSupportModal(true)}
-              className="px-5 py-4 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-bold text-sm sm:text-base tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.18)] hover:shadow-[0_0_25px_rgba(34,211,238,0.45)] hover:scale-[1.03] cursor-pointer text-center group"
+              className="px-6 py-5 sm:px-8 sm:py-6 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-extrabold text-base sm:text-lg lg:text-xl tracking-wide transition-all duration-300 shadow-[0_0_20px_rgba(34,211,238,0.22)] hover:shadow-[0_0_30px_rgba(34,211,238,0.55)] hover:scale-[1.04] cursor-pointer text-center group"
             >
-              <span className="drop-shadow-[0_0_8px_rgba(34,211,238,0.35)] group-hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.7)]">
+              <span className="drop-shadow-[0_0_10px_rgba(34,211,238,0.4)] group-hover:drop-shadow-[0_0_14px_rgba(34,211,238,0.8)]">
                 Gửi hỗ trợ
               </span>
             </button>
