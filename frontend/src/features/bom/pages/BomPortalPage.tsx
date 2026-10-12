@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import {
@@ -23,11 +23,13 @@ import {
   Lock,
   ArrowLeft,
   ChevronRight,
+  Radio,
 } from "lucide-react"
 
 import { useTheme } from "@/components/common/theme-provider"
 import { useAuth } from "@/context/AuthContext"
 import ThreeBackground from "../components/ThreeBackground"
+import { bomApi, type ChainDashboardData } from "../api/bomApi"
 import {
   INITIAL_FACILITIES,
   INITIAL_PRICING,
@@ -48,12 +50,82 @@ export default function BomPortalPage() {
     "home" | "dashboard" | "facilities" | "policies" | "pricing" | "reports"
   >("home")
 
+  // Live Backend API Data States
+  const [chainOverview, setChainOverview] = useState<ChainDashboardData | null>(null)
+  const [isLoadingApi, setIsLoadingApi] = useState<boolean>(true)
+  const [isApiConnected, setIsApiConnected] = useState<boolean>(false)
+
   // State Data
   const [facilities, setFacilities] = useState<FacilityPerformance[]>(INITIAL_FACILITIES)
   const [pricingList, setPricingList] = useState<UnitPricing[]>(INITIAL_PRICING)
   const [surcharges, setSurcharges] = useState<SurchargeItem[]>(INITIAL_SURCHARGES)
   const [searchSurcharge, setSearchSurcharge] = useState("")
   const [surchargeFilter, setSurchargeFilter] = useState<"all" | "surcharge" | "penalty" | "discount">("all")
+
+  // Fetch Live Data từ Spring Boot Backend (/api/admin/dashboard/chain-overview & /api/facilities)
+  useEffect(() => {
+    let isMounted = true
+
+    const loadLiveData = async () => {
+      try {
+        setIsLoadingApi(true)
+        const [overview, apiFacilities] = await Promise.all([
+          bomApi.getChainDashboard().catch((err) => {
+            console.warn("API /api/admin/dashboard/chain-overview lỗi, dùng dữ liệu dự phòng:", err)
+            return null
+          }),
+          bomApi.getFacilities().catch((err) => {
+            console.warn("API /api/facilities lỗi, dùng dữ liệu dự phòng:", err)
+            return null
+          }),
+        ])
+
+        if (!isMounted) return
+
+        if (overview) {
+          setChainOverview(overview)
+          setIsApiConnected(true)
+        }
+
+        if (apiFacilities && apiFacilities.length > 0) {
+          setIsApiConnected(true)
+          const breakdownMap = new Map(
+            (overview?.facilityBreakdown || []).map((b) => [b.facilityId, b])
+          )
+
+          const mergedFacilities: FacilityPerformance[] = apiFacilities.map((f) => {
+            const bd = breakdownMap.get(f.facilityId)
+            return {
+              id: `CS-${f.facilityId}`,
+              code: f.facilityCode,
+              name: f.facilityName,
+              address: f.address,
+              managerName: `Quản lý ${f.shortCode || f.facilityCode}`,
+              managerEmail: `manager.${(f.shortCode || f.facilityCode).toLowerCase()}@smartstorage.vn`,
+              totalUnits: bd ? Number(bd.totalUnits) : 0,
+              rentedUnits: bd ? Number(bd.occupiedUnits) : 0,
+              floorArea: (bd ? Number(bd.totalUnits) : 30) * 15,
+              monthlyRevenue: bd ? Number(bd.netRevenue || bd.rentalRevenue) : 0,
+              overdueUnits: bd ? Number(bd.overdueContracts) : 0,
+              status: f.status,
+              rating: "4.8",
+            }
+          })
+          setFacilities(mergedFacilities)
+        }
+      } catch (err) {
+        console.error("Lỗi nạp dữ liệu BOM từ API:", err)
+      } finally {
+        if (isMounted) setIsLoadingApi(false)
+      }
+    }
+
+    loadLiveData()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   // Modals state
   const [selectedFacility, setSelectedFacility] = useState<FacilityPerformance | null>(null)
@@ -182,6 +254,22 @@ export default function BomPortalPage() {
     return matchesFilter && matchesSearch
   })
 
+  // Live API Calculations
+  const totalOverdueCount = chainOverview
+    ? (chainOverview.facilityBreakdown || []).reduce((sum, f) => sum + (f.overdueContracts || 0), 0)
+    : 0
+
+  const formatShortCurrency = (amount: number | string) => {
+    const num = Number(amount) || 0
+    if (num >= 1_000_000_000) {
+      return `₫${(num / 1_000_000_000).toFixed(2)} Tỷ`
+    }
+    if (num >= 1_000_000) {
+      return `₫${(num / 1_000_000).toFixed(1)} Triệu`
+    }
+    return `₫${num.toLocaleString("vi-VN")}`
+  }
+
   return (
     <div className="relative min-h-screen text-slate-100 font-sans transition-colors duration-200 overflow-x-hidden">
       {/* 3D Dynamic Waves Background (Native Three.js - Theme responsive: dark xanh đen / light cyan) */}
@@ -199,6 +287,16 @@ export default function BomPortalPage() {
               <span className="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/30 text-sky-300">
                 BOM Portal
               </span>
+              {isApiConnected ? (
+                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                  <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Live API
+                </span>
+              ) : (
+                <span className="text-[10px] font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-full flex items-center gap-1.5">
+                  Mock Mode
+                </span>
+              )}
             </div>
             <div className="text-[11px] text-slate-400 font-medium">
               Hệ thống cho thuê kho tự quản thông minh 24/7
@@ -253,11 +351,11 @@ export default function BomPortalPage() {
                 QUẢN LÝ VẬN HÀNH TOÀN HỆ THỐNG
               </h1>
               <p className="text-sky-300 font-semibold text-base sm:text-lg max-w-2xl mx-auto drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
-                Trung tâm điều hành cấp cao &amp; giám sát 4 cụm cơ sở kho thông minh 24/7
+                Trung tâm điều hành cấp cao &amp; giám sát {chainOverview?.chainTotalFacilities || facilities.length} cụm cơ sở kho thông minh 24/7
               </p>
             </div>
 
-            {/* 4 Ô CHỈ SỐ KPI THU NHỎ GỌN GÀNG, TINH TẾ */}
+            {/* 4 Ô CHỈ SỐ KPI THU NHỎ GỌN GÀNG, TINH TẾ (DỮ LIỆU TỰ ĐỘNG CẬP NHẬT TỪ API) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 max-w-5xl mx-auto">
               {/* Box 1: Tổng cơ sở */}
               <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/25 backdrop-blur-xs hover:bg-slate-950/45 transition-all duration-300 flex flex-col justify-between min-h-[125px] group">
@@ -269,12 +367,14 @@ export default function BomPortalPage() {
                 </div>
                 <div className="my-1.5">
                   <div className="text-2xl sm:text-3xl font-black text-white tracking-tight drop-shadow-md flex items-baseline gap-1.5">
-                    <span>4</span>
+                    <span>{chainOverview ? chainOverview.chainTotalFacilities : facilities.length}</span>
                     <span className="text-xs sm:text-sm font-bold text-sky-400">Cơ sở</span>
                   </div>
                 </div>
                 <div className="text-[11px] text-slate-400 font-medium">
-                  1,240 Tổng số kho vận hành
+                  {chainOverview
+                    ? `${chainOverview.chainTotalUnits.toLocaleString("vi-VN")} Tổng số kho vận hành`
+                    : "1,240 Tổng số kho vận hành"}
                 </div>
               </div>
 
@@ -288,29 +388,33 @@ export default function BomPortalPage() {
                 </div>
                 <div className="my-1.5">
                   <div className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight drop-shadow-md">
-                    88.5%
+                    {chainOverview ? `${chainOverview.chainAverageOccupancyRate}%` : "88.5%"}
                   </div>
                 </div>
                 <div className="text-[11px] text-slate-400 font-medium">
-                  1,098 / 1,240 kho đang thuê
+                  {chainOverview
+                    ? `${chainOverview.chainTotalActiveContracts} Hợp đồng đang thuê`
+                    : "1,098 / 1,240 kho đang thuê"}
                 </div>
               </div>
 
               {/* Box 3: Doanh thu */}
               <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/25 backdrop-blur-xs hover:bg-slate-950/45 transition-all duration-300 flex flex-col justify-between min-h-[125px] group">
                 <div className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
-                  <span>DOANH THU THÁNG 09</span>
+                  <span>DOANH THU TOÀN CHUỖI</span>
                   <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-300 group-hover:scale-110 transition-transform">
                     <DollarSign className="size-4" />
                   </div>
                 </div>
                 <div className="my-1.5">
                   <div className="text-2xl sm:text-3xl font-black text-amber-400 tracking-tight drop-shadow-md">
-                    ₫1.85 Tỷ
+                    {chainOverview ? formatShortCurrency(chainOverview.chainNetRevenue) : "₫1.85 Tỷ"}
                   </div>
                 </div>
                 <div className="text-[11px] text-slate-400 font-medium">
-                  +14.2% so với tháng trước
+                  {chainOverview
+                    ? `Thực thu: ₫${Number(chainOverview.chainNetRevenue).toLocaleString("vi-VN")}`
+                    : "+14.2% so với tháng trước"}
                 </div>
               </div>
 
@@ -324,12 +428,12 @@ export default function BomPortalPage() {
                 </div>
                 <div className="my-1.5">
                   <div className="text-2xl sm:text-3xl font-black text-rose-400 tracking-tight drop-shadow-md flex items-baseline gap-1.5">
-                    <span>12</span>
+                    <span>{chainOverview ? totalOverdueCount : 12}</span>
                     <span className="text-xs sm:text-sm font-bold text-rose-300">Kho</span>
                   </div>
                 </div>
                 <div className="text-[11px] text-slate-400 font-medium">
-                  Cần kích hoạt BR-18 / BR-21
+                  {totalOverdueCount > 0 ? "Cần kích hoạt BR-18 / BR-21" : "An toàn - Không có nợ quá hạn"}
                 </div>
               </div>
             </div>
