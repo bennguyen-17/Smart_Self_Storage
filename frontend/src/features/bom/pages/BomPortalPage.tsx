@@ -22,6 +22,7 @@ import {
   X,
   Lock,
   ArrowLeft,
+  ArrowUpRight,
   ChevronRight,
   Radio,
 } from "lucide-react"
@@ -438,46 +439,121 @@ export default function BomPortalPage() {
               </div>
             </div>
 
-            {/* 5 NÚT BẤM DẠNG PILL ĐỒNG BỘ 1 MÀU BO VIỀN (CYAN / SKY BLUE NEON) - KÍCH THƯỚC LỚN, RỘNG RÃI */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5 pt-4 w-full max-w-7xl mx-auto">
+            {/* 5 Ô VUÔNG CHỨC NĂNG ĐỒNG BỘ VIỀN CYAN NEON (ĐỠ TRỐNG PHẦN DƯỚI) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 pt-6 w-full max-w-7xl mx-auto">
+              {/* Ô 1: Giám Sát Cơ Sở */}
               <button
                 onClick={() => setActiveTab("dashboard")}
-                className="py-5 sm:py-6 px-6 sm:px-8 min-h-[76px] sm:min-h-[82px] rounded-full font-black text-sm sm:text-base lg:text-lg tracking-wide whitespace-nowrap flex items-center justify-center space-x-3 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.04] border-2 border-sky-400/90 bg-slate-950/60 hover:bg-sky-500/25 text-slate-100 hover:text-white shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.55)] backdrop-blur-md"
+                className="group p-5 sm:p-6 rounded-2xl sm:rounded-3xl min-h-[190px] sm:min-h-[220px] flex flex-col justify-between items-start text-left transition-all duration-300 cursor-pointer border-2 border-sky-400/80 hover:border-sky-300 bg-slate-950/60 hover:bg-slate-900/80 shadow-[0_0_25px_rgba(56,189,248,0.25)] hover:shadow-[0_0_40px_rgba(56,189,248,0.5)] hover:scale-[1.03] backdrop-blur-md relative overflow-hidden"
               >
-                <TrendingUp className="size-6 sm:size-7 shrink-0 text-sky-400" />
-                <span>Giám Sát Cơ Sở</span>
+                <div className="flex items-center justify-between w-full">
+                  <div className="p-3.5 rounded-2xl bg-sky-500/15 border border-sky-400/30 text-sky-400 group-hover:bg-sky-500 group-hover:text-slate-950 transition-all duration-300 shadow-md">
+                    <TrendingUp className="size-6 sm:size-7" />
+                  </div>
+                  <div className="p-2 rounded-xl text-slate-500 group-hover:text-sky-300 group-hover:bg-sky-500/10 transition-colors">
+                    <ArrowUpRight className="size-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  </div>
+                </div>
+                <div className="mt-4 space-y-1.5 w-full">
+                  <div className="text-base sm:text-lg font-black text-white group-hover:text-sky-300 tracking-tight transition-colors">
+                    Giám Sát Cơ Sở
+                  </div>
+                  <p className="text-xs text-slate-400 font-medium line-clamp-2 leading-relaxed">
+                    Theo dõi KPI toàn diện, tải chuỗi &amp; cảnh báo vận hành
+                  </p>
+                </div>
               </button>
 
+              {/* Ô 2: Danh Sách Cơ Sở */}
               <button
                 onClick={() => setActiveTab("facilities")}
-                className="py-5 sm:py-6 px-6 sm:px-8 min-h-[76px] sm:min-h-[82px] rounded-full font-black text-sm sm:text-base lg:text-lg tracking-wide whitespace-nowrap flex items-center justify-center space-x-3 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.04] border-2 border-sky-400/90 bg-slate-950/60 hover:bg-sky-500/25 text-slate-100 hover:text-white shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.55)] backdrop-blur-md"
+                className="group p-5 sm:p-6 rounded-2xl sm:rounded-3xl min-h-[190px] sm:min-h-[220px] flex flex-col justify-between items-start text-left transition-all duration-300 cursor-pointer border-2 border-sky-400/80 hover:border-sky-300 bg-slate-950/60 hover:bg-slate-900/80 shadow-[0_0_25px_rgba(56,189,248,0.25)] hover:shadow-[0_0_40px_rgba(56,189,248,0.5)] hover:scale-[1.03] backdrop-blur-md relative overflow-hidden"
               >
-                <Warehouse className="size-6 sm:size-7 shrink-0 text-sky-400" />
-                <span>Danh Sách Cơ Sở</span>
+                <div className="flex items-center justify-between w-full">
+                  <div className="p-3.5 rounded-2xl bg-sky-500/15 border border-sky-400/30 text-sky-400 group-hover:bg-sky-500 group-hover:text-slate-950 transition-all duration-300 shadow-md">
+                    <Warehouse className="size-6 sm:size-7" />
+                  </div>
+                  <div className="p-2 rounded-xl text-slate-500 group-hover:text-sky-300 group-hover:bg-sky-500/10 transition-colors">
+                    <ArrowUpRight className="size-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  </div>
+                </div>
+                <div className="mt-4 space-y-1.5 w-full">
+                  <div className="text-base sm:text-lg font-black text-white group-hover:text-sky-300 tracking-tight transition-colors">
+                    Danh Sách Cơ Sở
+                  </div>
+                  <p className="text-xs text-slate-400 font-medium line-clamp-2 leading-relaxed">
+                    Quản lý 7 cụm cơ sở kho, sức chứa &amp; tỷ lệ lấp đầy
+                  </p>
+                </div>
               </button>
 
+              {/* Ô 3: Quy Định Chính Sách */}
               <button
                 onClick={() => setActiveTab("policies")}
-                className="py-5 sm:py-6 px-6 sm:px-8 min-h-[76px] sm:min-h-[82px] rounded-full font-black text-sm sm:text-base lg:text-lg tracking-wide whitespace-nowrap flex items-center justify-center space-x-3 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.04] border-2 border-sky-400/90 bg-slate-950/60 hover:bg-sky-500/25 text-slate-100 hover:text-white shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.55)] backdrop-blur-md"
+                className="group p-5 sm:p-6 rounded-2xl sm:rounded-3xl min-h-[190px] sm:min-h-[220px] flex flex-col justify-between items-start text-left transition-all duration-300 cursor-pointer border-2 border-sky-400/80 hover:border-sky-300 bg-slate-950/60 hover:bg-slate-900/80 shadow-[0_0_25px_rgba(56,189,248,0.25)] hover:shadow-[0_0_40px_rgba(56,189,248,0.5)] hover:scale-[1.03] backdrop-blur-md relative overflow-hidden"
               >
-                <ShieldAlert className="size-6 sm:size-7 shrink-0 text-sky-400" />
-                <span>Quy Định Chính Sách</span>
+                <div className="flex items-center justify-between w-full">
+                  <div className="p-3.5 rounded-2xl bg-sky-500/15 border border-sky-400/30 text-sky-400 group-hover:bg-sky-500 group-hover:text-slate-950 transition-all duration-300 shadow-md">
+                    <ShieldAlert className="size-6 sm:size-7" />
+                  </div>
+                  <div className="p-2 rounded-xl text-slate-500 group-hover:text-sky-300 group-hover:bg-sky-500/10 transition-colors">
+                    <ArrowUpRight className="size-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  </div>
+                </div>
+                <div className="mt-4 space-y-1.5 w-full">
+                  <div className="text-base sm:text-lg font-black text-white group-hover:text-sky-300 tracking-tight transition-colors">
+                    Quy Định Chính Sách
+                  </div>
+                  <p className="text-xs text-slate-400 font-medium line-clamp-2 leading-relaxed">
+                    Quy định lưu kho, tiêu chuẩn an ninh &amp; chế tài xử lý nợ
+                  </p>
+                </div>
               </button>
 
+              {/* Ô 4: Khung Giá Phụ Thu */}
               <button
                 onClick={() => setActiveTab("pricing")}
-                className="py-5 sm:py-6 px-6 sm:px-8 min-h-[76px] sm:min-h-[82px] rounded-full font-black text-sm sm:text-base lg:text-lg tracking-wide whitespace-nowrap flex items-center justify-center space-x-3 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.04] border-2 border-sky-400/90 bg-slate-950/60 hover:bg-sky-500/25 text-slate-100 hover:text-white shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.55)] backdrop-blur-md"
+                className="group p-5 sm:p-6 rounded-2xl sm:rounded-3xl min-h-[190px] sm:min-h-[220px] flex flex-col justify-between items-start text-left transition-all duration-300 cursor-pointer border-2 border-sky-400/80 hover:border-sky-300 bg-slate-950/60 hover:bg-slate-900/80 shadow-[0_0_25px_rgba(56,189,248,0.25)] hover:shadow-[0_0_40px_rgba(56,189,248,0.5)] hover:scale-[1.03] backdrop-blur-md relative overflow-hidden"
               >
-                <SlidersHorizontal className="size-6 sm:size-7 shrink-0 text-sky-400" />
-                <span>Khung Giá Phụ Thu</span>
+                <div className="flex items-center justify-between w-full">
+                  <div className="p-3.5 rounded-2xl bg-sky-500/15 border border-sky-400/30 text-sky-400 group-hover:bg-sky-500 group-hover:text-slate-950 transition-all duration-300 shadow-md">
+                    <SlidersHorizontal className="size-6 sm:size-7" />
+                  </div>
+                  <div className="p-2 rounded-xl text-slate-500 group-hover:text-sky-300 group-hover:bg-sky-500/10 transition-colors">
+                    <ArrowUpRight className="size-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  </div>
+                </div>
+                <div className="mt-4 space-y-1.5 w-full">
+                  <div className="text-base sm:text-lg font-black text-white group-hover:text-sky-300 tracking-tight transition-colors">
+                    Khung Giá Phụ Thu
+                  </div>
+                  <p className="text-xs text-slate-400 font-medium line-clamp-2 leading-relaxed">
+                    Biểu giá thuê kho chuẩn &amp; phụ phí tiện ích toàn mạng lưới
+                  </p>
+                </div>
               </button>
 
+              {/* Ô 5: Báo Cáo Toàn Chuỗi */}
               <button
                 onClick={() => setActiveTab("reports")}
-                className="py-5 sm:py-6 px-6 sm:px-8 min-h-[76px] sm:min-h-[82px] rounded-full font-black text-sm sm:text-base lg:text-lg tracking-wide whitespace-nowrap flex items-center justify-center space-x-3 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.04] border-2 border-sky-400/90 bg-slate-950/60 hover:bg-sky-500/25 text-slate-100 hover:text-white shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.55)] backdrop-blur-md"
+                className="group p-5 sm:p-6 rounded-2xl sm:rounded-3xl min-h-[190px] sm:min-h-[220px] flex flex-col justify-between items-start text-left transition-all duration-300 cursor-pointer border-2 border-sky-400/80 hover:border-sky-300 bg-slate-950/60 hover:bg-slate-900/80 shadow-[0_0_25px_rgba(56,189,248,0.25)] hover:shadow-[0_0_40px_rgba(56,189,248,0.5)] hover:scale-[1.03] backdrop-blur-md relative overflow-hidden"
               >
-                <FileSpreadsheet className="size-6 sm:size-7 shrink-0 text-sky-400" />
-                <span>Báo Cáo Toàn Chuỗi</span>
+                <div className="flex items-center justify-between w-full">
+                  <div className="p-3.5 rounded-2xl bg-sky-500/15 border border-sky-400/30 text-sky-400 group-hover:bg-sky-500 group-hover:text-slate-950 transition-all duration-300 shadow-md">
+                    <FileSpreadsheet className="size-6 sm:size-7" />
+                  </div>
+                  <div className="p-2 rounded-xl text-slate-500 group-hover:text-sky-300 group-hover:bg-sky-500/10 transition-colors">
+                    <ArrowUpRight className="size-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  </div>
+                </div>
+                <div className="mt-4 space-y-1.5 w-full">
+                  <div className="text-base sm:text-lg font-black text-white group-hover:text-sky-300 tracking-tight transition-colors">
+                    Báo Cáo Toàn Chuỗi
+                  </div>
+                  <p className="text-xs text-slate-400 font-medium line-clamp-2 leading-relaxed">
+                    Tổng hợp số liệu doanh thu, công nợ &amp; phân tích hiệu suất
+                  </p>
+                </div>
               </button>
             </div>
           </div>
