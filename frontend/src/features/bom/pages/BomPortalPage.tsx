@@ -244,7 +244,7 @@ export default function BomPortalPage() {
       </header>
 
       {/* Main Container */}
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+      <main className="relative z-10 w-full max-w-[1850px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6 space-y-8">
         {activeTab === "home" ? (
           /* TRANG CHỦ ĐẦU VÀO: FULL HERO PORTAL (4 Ô CHỈ SỐ + HÀNG 5 NÚT NGANG) */
           <div className="space-y-10">
@@ -335,7 +335,7 @@ export default function BomPortalPage() {
             </div>
 
             {/* 5 NÚT BẤM DẠNG PILL ĐỒNG BỘ 1 MÀU BO VIỀN (CYAN / SKY BLUE NEON) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-2 max-w-5xl mx-auto">
               <button
                 onClick={() => setActiveTab("dashboard")}
                 className="py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-slate-100 hover:text-white shadow-[0_0_20px_rgba(56,189,248,0.25)] backdrop-blur-xs"
@@ -379,7 +379,7 @@ export default function BomPortalPage() {
           </div>
         ) : (
           /* GIAO DIỆN KHI CHỌN 1 MỤC: CHUYỂN THÀNH MENU BÊN TRÁI + NỘI DUNG BÊN PHẢI */
-          <div className="flex flex-col lg:flex-row gap-6 items-start">
+          <div className="flex flex-col lg:flex-row gap-6 items-start w-full">
             {/* MENU BÊN TRÁI (Sticky Unified Sidebar Card) */}
             <div className="w-full lg:w-64 xl:w-72 shrink-0 space-y-1.5 sticky top-20 bg-slate-950/70 backdrop-blur-md rounded-2xl border border-sky-500/20 p-2.5 shadow-xl">
               <button
