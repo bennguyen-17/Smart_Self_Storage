@@ -4,6 +4,7 @@ import com.swp391.backend.dto.checkout.CheckoutConfirmRequest;
 import com.swp391.backend.dto.checkout.CheckoutConfirmResponse;
 import com.swp391.backend.dto.checkout.CheckoutPreviewResponse;
 import com.swp391.backend.dto.checkout.FeeDiscountRequest;
+import com.swp391.backend.dto.checkout.RefundListItemResponse;
 import com.swp391.backend.entity.*;
 import com.swp391.backend.repository.*;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class CheckoutSettlementService {
     private final SupportTicketRepository supportTicketRepository;
     private final ActivityLogRepository activityLogRepository;
     private final StorageService storageService;
+    private final AccountRepository accountRepository;
 
     public CheckoutSettlementService(ContractRepository contractRepository,
                                    ReservationRepository reservationRepository,
@@ -40,7 +42,8 @@ public class CheckoutSettlementService {
                                    GatePinRepository gatePinRepository,
                                    SupportTicketRepository supportTicketRepository,
                                    ActivityLogRepository activityLogRepository,
-                                   StorageService storageService) {
+                                   StorageService storageService,
+                                   AccountRepository accountRepository) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -51,6 +54,7 @@ public class CheckoutSettlementService {
         this.supportTicketRepository = supportTicketRepository;
         this.activityLogRepository = activityLogRepository;
         this.storageService = storageService;
+        this.accountRepository = accountRepository;
     }
 
     /**
@@ -471,5 +475,51 @@ public class CheckoutSettlementService {
         }
 
         return p;
+    }
+
+    /**
+     * US-26: Lấy danh sách các đơn cọc chờ hoàn tiền (REF) cho Staff (Q-18)
+     */
+    public List<RefundListItemResponse> getRefundList(String status) {
+        List<Payment> refundPayments;
+        if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim())) {
+            refundPayments = paymentRepository.findByInvoiceTypeAndStatus("REF", status.trim().toUpperCase());
+        } else {
+            refundPayments = paymentRepository.findByInvoiceType("REF");
+        }
+
+        List<RefundListItemResponse> result = new java.util.ArrayList<>();
+        for (Payment p : refundPayments) {
+            Contract c = contractRepository.findById(p.getContractId()).orElse(null);
+            Reservation r = (c != null) ? reservationRepository.findById(c.getReservationId()).orElse(null) : null;
+            Account acc = (r != null && r.getAccountId() != null) ? accountRepository.findAccountByAccountId(r.getAccountId()).orElse(null) : null;
+
+            String reservationCode = (r != null) ? r.getReservationCode() : ("RES-" + p.getContractId());
+            String unitCode = (r != null) ? r.getUnitCode() : "N/A";
+            String customerName = (acc != null) ? acc.getFullName() : "Khách hàng";
+            String customerPhone = (acc != null) ? acc.getPhone() : "";
+            String bankName = (c != null) ? c.getRefundBankName() : null;
+            String accNumber = (c != null) ? c.getRefundAccountNumber() : null;
+            String accName = (c != null) ? c.getRefundAccountName() : null;
+            String cancelReason = (c != null) ? c.getCancelReason() : null;
+
+            result.add(new RefundListItemResponse(
+                    p.getPaymentId(),
+                    p.getInvoiceNumber(),
+                    p.getContractId(),
+                    reservationCode,
+                    unitCode,
+                    customerName,
+                    customerPhone,
+                    p.getAmount(),
+                    bankName,
+                    accNumber,
+                    accName,
+                    cancelReason,
+                    p.getStatus(),
+                    p.getIssuedAt()
+            ));
+        }
+        return result;
     }
 }

@@ -666,7 +666,7 @@ export default function MyStorageTab({ onOpenExtendModal }) {
               <div className="flex items-center justify-between font-bold text-xs">
                 <span className="flex items-center gap-1.5">
                   <i className={`fa-solid ${isRefundEligible ? 'fa-circle-check text-emerald-600 dark:text-emerald-400' : 'fa-circle-exclamation text-amber-600 dark:text-amber-400'}`}></i>
-                  {isRefundEligible ? 'Đủ điều kiện hoàn 100% tiền cọc (BR-17)' : 'Hủy cận ngày: Hoàn 50% tiền cọc (BR-17)'}
+                  {isRefundEligible ? 'Đủ điều kiện hoàn 100% tiền cọc' : 'Hủy cận ngày: Hoàn 50% tiền cọc'}
                 </span>
                 <span className="font-mono text-[10.5px] px-2 py-0.5 rounded-full bg-white/80 dark:bg-slate-900/80 border border-current font-bold">
                   Còn {daysUntilStart > 0 ? `${daysUntilStart} ngày` : 'trong ngày'} đến ngày nhận kho
@@ -674,8 +674,8 @@ export default function MyStorageTab({ onOpenExtendModal }) {
               </div>
               <p className="text-[11px] leading-relaxed">
                 {isRefundEligible
-                  ? `Theo Business Rule BR-17: Do bạn hủy trước ngày nhận kho từ 4 ngày trở lên, toàn bộ 100% số tiền cọc (${(cancelModalContract.depositFee || 500000).toLocaleString('vi-VN')} đ) sẽ được bộ phận Kế toán / Back-office chuyển khoản hoàn lại cho bạn trong 24 - 48 giờ làm việc.`
-                  : `Theo Business Rule BR-17: Do hủy trước ngày nhận kho dưới 4 ngày, bạn sẽ bị khấu trừ 50% tiền cọc (${((cancelModalContract.depositFee || 500000) * 0.5).toLocaleString('vi-VN')} đ) làm chi phí giữ chỗ, và được hoàn lại 50% tiền cọc (${((cancelModalContract.depositFee || 500000) * 0.5).toLocaleString('vi-VN')} đ) về tài khoản ngân hàng.`}
+                  ? `Chính sách hoàn cọc: Do bạn hủy trước ngày nhận kho từ 4 ngày trở lên, toàn bộ 100% số tiền cọc (${(cancelModalContract.depositFee || 500000).toLocaleString('vi-VN')} đ) sẽ được bộ phận Kế toán chuyển khoản hoàn lại cho bạn trong 24 - 48 giờ làm việc.`
+                  : `Chính sách hoàn cọc: Do hủy trước ngày nhận kho dưới 4 ngày, bạn sẽ bị khấu trừ 50% tiền cọc (${((cancelModalContract.depositFee || 500000) * 0.5).toLocaleString('vi-VN')} đ) làm chi phí giữ chỗ, và được hoàn lại 50% tiền cọc (${((cancelModalContract.depositFee || 500000) * 0.5).toLocaleString('vi-VN')} đ) về tài khoản ngân hàng.`}
               </p>
             </div>
 
