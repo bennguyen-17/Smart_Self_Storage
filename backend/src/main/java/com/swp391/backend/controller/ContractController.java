@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -256,24 +257,54 @@ public class ContractController {
                     daysUntilStart, depositAmount, bankAccountNumber != null ? bankAccountNumber : "ngân hàng"));
             return ResponseEntity.ok(respMap);
         } else {
-            // Hủy trước ngày nhận kho < 4 ngày: Tịch thu 100% tiền cọc
+            // Hủy trước ngày nhận kho < 4 ngày: Khấu trừ 50%, Hoàn lại 50% tiền cọc (sinh hóa đơn REF 50%)
+            BigDecimal refund50Amount = depositAmount.multiply(BigDecimal.valueOf(0.5)).setScale(0, RoundingMode.HALF_UP);
+            BigDecimal forfeit50Amount = depositAmount.subtract(refund50Amount);
+
+            Payment refPayment = new Payment();
+            refPayment.setContractId(contract.getContractId());
+            refPayment.setInvoiceNumber("REF-" + System.currentTimeMillis() % 10000000);
+            refPayment.setInvoiceType("REF");
+            refPayment.setAmount(refund50Amount);
+            refPayment.setDueAt(LocalDateTime.now().plusDays(2));
+            refPayment.setStatus("PENDING");
+            refPayment.setPaymentStatus("PENDING");
+            refPayment.setPaymentMethod("BANK_TRANSFER");
+            refPayment.setIssuedAt(LocalDateTime.now());
+            if (bankAccountNumber != null && !bankAccountNumber.isBlank()) {
+                String bankDesc = String.format("%s - %s - %s",
+                        bankName != null ? bankName : "Ngân hàng",
+                        bankAccountNumber,
+                        bankAccountName != null ? bankAccountName : "");
+                if (bankDesc.length() > 100) bankDesc = bankDesc.substring(0, 100);
+                refPayment.setTransactionCode(bankDesc);
+                refPayment.setGatewayTransactionId(bankAccountNumber);
+            }
+            paymentRepository.save(refPayment);
+
             if (activityLogRepository != null) {
                 ActivityLog log = new ActivityLog();
                 log.setAccountId(res.getAccountId());
-                log.setAction("CUSTOMER_CANCEL_DEPOSIT_FORFEIT");
-                log.setDescription(String.format("Khách hủy đặt cọc HĐ #%d trước %d ngày (< 4 ngày). Tịch thu 100%% tiền cọc: %s VNĐ.",
-                        contract.getContractId(), daysUntilStart, depositAmount));
+                log.setAction("CUSTOMER_CANCEL_DEPOSIT_PARTIAL_REFUND");
+                log.setDescription(String.format("Khách hủy đặt cọc HĐ #%d trước %d ngày (< 4 ngày). Tịch thu 50%% cọc (%s VNĐ), hoàn 50%% cọc %s: %s VNĐ về TK: %s.",
+                        contract.getContractId(), daysUntilStart, forfeit50Amount, refPayment.getInvoiceNumber(), refund50Amount,
+                        refPayment.getTransactionCode() != null ? refPayment.getTransactionCode() : "Chưa cung cấp"));
                 log.setCreatedAt(LocalDateTime.now());
                 activityLogRepository.save(log);
             }
 
             Map<String, Object> respMap = new HashMap<>();
             respMap.put("success", true);
-            respMap.put("refundEligible", false);
-            respMap.put("refundAmount", BigDecimal.ZERO);
+            respMap.put("refundEligible", true);
+            respMap.put("refundRate", 0.5);
+            respMap.put("refundAmount", refund50Amount);
+            respMap.put("forfeitAmount", forfeit50Amount);
             respMap.put("daysUntilStart", daysUntilStart);
-            respMap.put("message", String.format("Hủy đặt cọc thành công! Do bạn hủy trước ngày nhận kho dưới 4 ngày (%d ngày), toàn bộ tiền cọc (%s VNĐ) sẽ bị khấu trừ theo chính sách hủy cọc.",
-                    daysUntilStart, depositAmount));
+            respMap.put("refundBankName", bankName != null ? bankName : "");
+            respMap.put("refundAccountNumber", bankAccountNumber != null ? bankAccountNumber : "");
+            respMap.put("refundAccountName", bankAccountName != null ? bankAccountName : "");
+            respMap.put("message", String.format("Hủy đặt cọc thành công! Do bạn hủy trước ngày nhận kho dưới 4 ngày (%d ngày), bạn bị khấu trừ 50%% tiền cọc (%s VNĐ) và được hoàn lại 50%% tiền cọc (%s VNĐ). Kế toán sẽ xử lý hoàn tiền về tài khoản %s trong 24-48 giờ làm việc.",
+                    daysUntilStart, forfeit50Amount, refund50Amount, bankAccountNumber != null ? bankAccountNumber : "ngân hàng"));
             return ResponseEntity.ok(respMap);
         }
     }

@@ -55,11 +55,19 @@ public class CheckoutSettlementController {
             @RequestHeader(value = "X-Account-Id", required = false) Integer staffAccountId) {
 
         String evidence = receiptUrl;
-        if ((evidence == null || evidence.isBlank()) && body != null && body.containsKey("receiptUrl")) {
-            evidence = body.get("receiptUrl");
+        String transactionRef = null;
+        if (body != null) {
+            if (body.containsKey("receiptUrl") && body.get("receiptUrl") != null && !body.get("receiptUrl").isBlank()) {
+                evidence = body.get("receiptUrl");
+            } else if (body.containsKey("evidenceUrl") && body.get("evidenceUrl") != null && !body.get("evidenceUrl").isBlank()) {
+                evidence = body.get("evidenceUrl");
+            }
+            if (body.containsKey("transactionRef") && body.get("transactionRef") != null && !body.get("transactionRef").isBlank()) {
+                transactionRef = body.get("transactionRef");
+            }
         }
 
-        boolean success = checkoutSettlementService.confirmRefundExecution(paymentId, staffAccountId, evidence);
+        boolean success = checkoutSettlementService.confirmRefundExecution(paymentId, staffAccountId, evidence, transactionRef);
         if (success) {
             return ResponseEntity.ok(Map.of("success", true, "message", "Đã xác nhận giải ngân hoàn tiền thành công!"));
         }
