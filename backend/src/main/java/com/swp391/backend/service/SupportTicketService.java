@@ -183,11 +183,15 @@ public class SupportTicketService {
     // --- US-22: 1. Staff xem hàng đợi Ticket của cơ sở kèm đếm lùi SLA 15 phút ---
     @Transactional
     public List<SupportTicket> getStaffTickets(Integer facilityId, String status, String type) {
-        if (facilityId == null) {
-            throw new AccessDeniedException("Vui lòng cung cấp Header X-Facility-Id của Nhân viên!");
+        List<SupportTicket> tickets;
+        if (facilityId == null || facilityId <= 0) {
+            tickets = supportTicketRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+        } else {
+            tickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
+            if (tickets.isEmpty()) {
+                tickets = supportTicketRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+            }
         }
-
-        List<SupportTicket> tickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
 
         LocalDateTime now = LocalDateTime.now();
         // Kiểm tra & cập nhật cờ vi phạm SLA 15 phút
@@ -292,6 +296,40 @@ public class SupportTicketService {
             log.setAction("RESOLVE_UNLOCK_TICKET");
             log.setDescription(String.format("Nhân viên #%d xác nhận đối chiếu CCCD trùng khớp và mở khóa hộ ô %s (Ticket: %s)",
                     staffId, ticket.getUnitCode(), ticket.getTicketCode()));
+            log.setCreatedAt(LocalDateTime.now());
+            activityLogRepository.save(log);
+        }
+
+        return saved;
+    }
+
+    // --- Staff hoàn tất và đóng ticket thông thường (Sự cố bảo trì, nghiệm thu xong, ...) ---
+    @Transactional
+    public SupportTicket resolveTicket(Long ticketId, String note, Integer staffId, Integer facilityId) {
+        SupportTicket ticket = supportTicketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy ticket # " + ticketId));
+
+        if (facilityId != null && ticket.getFacilityId() != null && !ticket.getFacilityId().equals(facilityId)) {
+            throw new AccessDeniedException("Bạn không có quyền xử lý ticket của cơ sở khác!");
+        }
+
+        if ("RESOLVED".equalsIgnoreCase(ticket.getStatus())) {
+            throw new IllegalArgumentException("Ticket này đã hoàn tất đóng trước đó!");
+        }
+
+        ticket.setStatus("RESOLVED");
+        ticket.setResolutionNote(note != null && !note.trim().isEmpty() ? note : "Đã xử lý và đóng ticket");
+        ticket.setAssignedStaffId(staffId);
+        ticket.setResolvedAt(LocalDateTime.now());
+
+        SupportTicket saved = supportTicketRepository.save(ticket);
+
+        if (activityLogRepository != null && staffId != null) {
+            ActivityLog log = new ActivityLog();
+            log.setAccountId(staffId);
+            log.setAction("RESOLVE_TICKET");
+            log.setDescription(String.format("Nhân viên #%d đã xử lý hoàn tất ticket %s: %s",
+                    staffId, ticket.getTicketCode(), ticket.getResolutionNote()));
             log.setCreatedAt(LocalDateTime.now());
             activityLogRepository.save(log);
         }

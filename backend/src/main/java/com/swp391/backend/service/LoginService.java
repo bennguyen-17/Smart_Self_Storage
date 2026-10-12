@@ -173,17 +173,28 @@ public class LoginService {
                 .map(com.swp391.backend.entity.CustomerProfile::getIdentityNumber)
                 .orElse("Chưa cập nhật");
 
+        String roleName = resolveRoleName(account.getRoleId());
+
         return LoginResult.success(
                 new LoginResponse(
                         token,
                         new LoginResponse.UserInfo(
                                 account.getAccountId(),
                                 account.getFullName(),
-                                account.getRoleId() != null ? account.getRoleId().toString() : "5",
+                                roleName,
                                 account.getPhone(),
                                 account.getEmail(),
                                 identityNumber,
                                 account.getStatus())));
+    }
+
+    private String resolveRoleName(Long roleId) {
+        if (roleId == null) return "CUSTOMER";
+        if (roleId == 1L) return "ADMIN";
+        if (roleId == 2L) return "BOM";
+        if (roleId == 3L) return "MANAGER";
+        if (roleId == 4L) return "STAFF";
+        return "CUSTOMER";
     }
 
     public ApiResponse forgotPassword(ResendOtpRequest request) {

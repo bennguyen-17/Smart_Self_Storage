@@ -9,6 +9,13 @@ import { toast } from "sonner"
 import { login, type LockedResponse } from "@/features/auth/api/authApi"
 import { useAuth } from "@/context/AuthContext"
 import {
+  getRoleDestination,
+  getRolePortalName,
+  getRoleTitle,
+  normalizeRole,
+  type UserRole,
+} from "@/lib/roles"
+import {
   internalLoginSchema,
   type InternalLoginFormValues,
 } from "@/utils/validation"
@@ -58,9 +65,17 @@ function InternalLoginForm() {
         return
       }
 
-      signIn({ token: data.token, user: data.user }, false)
-      // Vào thẳng cổng vận hành (Staff check-in) sau khi đăng nhập nội bộ
-      navigate("/staff/checkin")
+      const role = normalizeRole(data.user.role)
+
+      if (role === "CUSTOMER") {
+        setServerError("Tài khoản Khách hàng không có quyền truy cập Cổng Nội Bộ!")
+        return
+      }
+
+      signIn({ token: data.token, user: { ...data.user, role } }, false)
+      const destination = getRoleDestination(role)
+      toast.success(`Đăng nhập thành công với vai trò ${getRoleTitle(role)}!`)
+      navigate(destination)
     } catch (error) {
       if (!axios.isAxiosError(error)) {
         setServerError("Có lỗi xảy ra. Vui lòng thử lại.")
@@ -104,17 +119,22 @@ function InternalLoginForm() {
     })
   }
 
+
   if (isAuthenticated && user) {
+    const role = normalizeRole(user.role)
+    const destination = getRoleDestination(role)
+    const portalName = getRolePortalName(role)
+
     return (
       <SignedInPanel
         fullName={user.fullName}
-        description="Bạn đang truy cập cổng thông tin nội bộ."
+        description={`Bạn đang đăng nhập với vai trò ${getRoleTitle(role)}.`}
         action={
           <Link
-            to="/staff/checkin"
+            to={destination}
             className="flex w-full items-center justify-center rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-blue-700"
           >
-            Vào cổng vận hành (Check-in) →
+            Vào {portalName} →
           </Link>
         }
       />
@@ -131,7 +151,7 @@ function InternalLoginForm() {
 
         <h1 className="text-xl font-bold text-foreground">Đăng nhập nội bộ</h1>
         <p className="text-xs text-muted-foreground">
-          Dành cho Nhân viên, Quản lý chi nhánh, BOM, Admin
+          Dành cho Nhân viên (Staff), Quản lý chi nhánh (Manager), BOM, Admin
         </p>
       </div>
 
@@ -230,7 +250,6 @@ function InternalLoginForm() {
           className="mt-4 w-full"
         >
           {isSubmitting && <Spinner />}
-
           {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập hệ thống"}
         </Button>
 
@@ -241,8 +260,9 @@ function InternalLoginForm() {
         )}
       </form>
 
+
       {/* HELPDESK */}
-      <div className="mt-5 space-y-1 border-t pt-4 text-center text-xs text-muted-foreground">
+      <div className="mt-4 space-y-1 border-t pt-3 text-center text-xs text-muted-foreground">
         <div>Gặp sự cố đăng nhập tài khoản nội bộ?</div>
         <div className="text-[11.5px] font-medium">
           Liên hệ IT:{" "}
