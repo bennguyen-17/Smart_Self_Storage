@@ -242,104 +242,104 @@ export default function BomPortalPage() {
       </header>
 
       {/* Main Container */}
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* HERO / METRICS ENTRY PORTAL (TO RA BỀ THẾ THEO YÊU CẦU USER) */}
-        <div className="p-8 sm:p-10 lg:p-12 rounded-3xl bg-slate-950/60 backdrop-blur-2xl text-white shadow-2xl border border-sky-500/25 transition-all duration-300 space-y-8">
-          <div className="text-center space-y-2">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-wider uppercase drop-shadow-lg">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
+        {/* HERO / METRICS ENTRY PORTAL (VIẾT TRỰC TIẾP LÊN NỀN, KHÔNG KHUNG VIỀN THEO Ý USER) */}
+        <div className="space-y-10">
+          <div className="text-center space-y-3 pt-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-wider uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]">
               QUẢN LÝ VẬN HÀNH TOÀN HỆ THỐNG
             </h1>
-            <p className="text-sky-300/80 text-sm sm:text-base font-semibold max-w-2xl mx-auto">
+            <p className="text-sky-300 font-semibold text-base sm:text-lg max-w-2xl mx-auto drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
               Trung tâm điều hành cấp cao &amp; giám sát 4 cụm cơ sở kho thông minh 24/7
             </p>
           </div>
 
-          {/* 4 Ô CHỈ SỐ KPI TO RÕ RÀNG */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+          {/* 4 Ô CHỈ SỐ KPI KHÔNG KHUNG VIỀN - CHỮ VÀ SỐ NẰM TRỰC TIẾP TRÊN NỀN 3D */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {/* Box 1: Tổng cơ sở */}
-            <div className="bg-slate-900/80 hover:bg-slate-900/95 backdrop-blur-xl p-6 sm:p-7 rounded-2xl border border-sky-500/30 hover:border-sky-400 hover:shadow-[0_0_25px_rgba(56,189,248,0.25)] transition-all duration-300 flex flex-col justify-between min-h-[170px] group">
+            <div className="p-6 rounded-2xl bg-slate-950/20 backdrop-blur-xs hover:bg-slate-950/40 transition-all duration-300 flex flex-col justify-between min-h-[160px] group">
               <div className="text-xs sm:text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
                 <span>TỔNG CƠ SỞ KHO</span>
-                <div className="p-2 rounded-xl bg-sky-500/15 border border-sky-400/20 text-sky-400 group-hover:scale-110 transition-transform">
+                <div className="p-2 rounded-xl bg-sky-500/20 text-sky-300 group-hover:scale-110 transition-transform">
                   <Warehouse className="size-5" />
                 </div>
               </div>
               <div className="my-2">
-                <div className="text-4xl sm:text-5xl font-black text-white tracking-tight flex items-baseline gap-2">
+                <div className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] flex items-baseline gap-2">
                   <span>4</span>
-                  <span className="text-base sm:text-lg font-bold text-sky-400">Cơ sở</span>
+                  <span className="text-lg sm:text-xl font-bold text-sky-400">Cơ sở</span>
                 </div>
               </div>
-              <div className="text-xs sm:text-sm text-slate-400 font-medium">
+              <div className="text-xs sm:text-sm text-slate-300 font-medium drop-shadow-sm">
                 1,240 Tổng số kho vận hành
               </div>
             </div>
 
             {/* Box 2: Tỉ lệ lấp đầy */}
-            <div className="bg-slate-900/80 hover:bg-slate-900/95 backdrop-blur-xl p-6 sm:p-7 rounded-2xl border border-emerald-500/30 hover:border-emerald-400 hover:shadow-[0_0_25px_rgba(52,211,153,0.25)] transition-all duration-300 flex flex-col justify-between min-h-[170px] group">
+            <div className="p-6 rounded-2xl bg-slate-950/20 backdrop-blur-xs hover:bg-slate-950/40 transition-all duration-300 flex flex-col justify-between min-h-[160px] group">
               <div className="text-xs sm:text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
                 <span>TỈ LỆ LẤP ĐẦY TB</span>
-                <div className="p-2 rounded-xl bg-emerald-500/15 border border-emerald-400/20 text-emerald-400 group-hover:scale-110 transition-transform">
+                <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-300 group-hover:scale-110 transition-transform">
                   <TrendingUp className="size-5" />
                 </div>
               </div>
               <div className="my-2">
-                <div className="text-4xl sm:text-5xl font-black text-emerald-400 tracking-tight">
+                <div className="text-4xl sm:text-5xl lg:text-6xl font-black text-emerald-400 tracking-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]">
                   88.5%
                 </div>
               </div>
-              <div className="text-xs sm:text-sm text-slate-400 font-medium">
+              <div className="text-xs sm:text-sm text-slate-300 font-medium drop-shadow-sm">
                 1,098 / 1,240 kho đang thuê (Hiệu quả cao)
               </div>
             </div>
 
             {/* Box 3: Doanh thu */}
-            <div className="bg-slate-900/80 hover:bg-slate-900/95 backdrop-blur-xl p-6 sm:p-7 rounded-2xl border border-amber-500/30 hover:border-amber-400 hover:shadow-[0_0_25px_rgba(251,191,36,0.25)] transition-all duration-300 flex flex-col justify-between min-h-[170px] group">
+            <div className="p-6 rounded-2xl bg-slate-950/20 backdrop-blur-xs hover:bg-slate-950/40 transition-all duration-300 flex flex-col justify-between min-h-[160px] group">
               <div className="text-xs sm:text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
                 <span>DOANH THU THÁNG 09</span>
-                <div className="p-2 rounded-xl bg-amber-500/15 border border-amber-400/20 text-amber-400 group-hover:scale-110 transition-transform">
+                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-300 group-hover:scale-110 transition-transform">
                   <DollarSign className="size-5" />
                 </div>
               </div>
               <div className="my-2">
-                <div className="text-4xl sm:text-5xl font-black text-amber-400 tracking-tight">
+                <div className="text-4xl sm:text-5xl lg:text-6xl font-black text-amber-400 tracking-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]">
                   ₫1.85 Tỷ
                 </div>
               </div>
-              <div className="text-xs sm:text-sm text-slate-400 font-medium">
+              <div className="text-xs sm:text-sm text-slate-300 font-medium drop-shadow-sm">
                 +14.2% so với tháng trước
               </div>
             </div>
 
             {/* Box 4: Cảnh báo */}
-            <div className="bg-slate-900/80 hover:bg-slate-900/95 backdrop-blur-xl p-6 sm:p-7 rounded-2xl border border-rose-500/30 hover:border-rose-400 hover:shadow-[0_0_25px_rgba(244,63,94,0.25)] transition-all duration-300 flex flex-col justify-between min-h-[170px] group">
+            <div className="p-6 rounded-2xl bg-slate-950/20 backdrop-blur-xs hover:bg-slate-950/40 transition-all duration-300 flex flex-col justify-between min-h-[160px] group">
               <div className="text-xs sm:text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
                 <span>CẢNH BÁO QUÁ HẠN</span>
-                <div className="p-2 rounded-xl bg-rose-500/15 border border-rose-400/20 text-rose-400 group-hover:scale-110 transition-transform">
+                <div className="p-2 rounded-xl bg-rose-500/20 text-rose-300 group-hover:scale-110 transition-transform">
                   <AlertTriangle className="size-5" />
                 </div>
               </div>
               <div className="my-2">
-                <div className="text-4xl sm:text-5xl font-black text-rose-400 tracking-tight flex items-baseline gap-2">
+                <div className="text-4xl sm:text-5xl lg:text-6xl font-black text-rose-400 tracking-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] flex items-baseline gap-2">
                   <span>12</span>
-                  <span className="text-base sm:text-lg font-bold text-rose-300">Kho</span>
+                  <span className="text-lg sm:text-xl font-bold text-rose-300">Kho</span>
                 </div>
               </div>
-              <div className="text-xs sm:text-sm text-slate-400 font-medium">
+              <div className="text-xs sm:text-sm text-slate-300 font-medium drop-shadow-sm">
                 Cần kích hoạt quy chuẩn BR-18 / BR-21
               </div>
             </div>
           </div>
 
-          {/* 5 NÚT BẤM TO DẠNG PILL VỚI VIỀN DẠ QUANG ĐA SẮC MÀU (THEO ĐÚNG ẢNH USER) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4 pt-2">
+          {/* 5 NÚT BẤM DẠNG PILL ĐẶT TRỰC TIẾP TRÊN NỀN - VIỀN DẠ QUANG ĐA SẮC MÀU */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-2">
             {/* Pill 1: Giám Sát (Cyan Glow) */}
             <button
               onClick={() => setActiveTab(activeTab === "dashboard" ? "home" : "dashboard")}
               className={`py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] ${
                 activeTab === "dashboard"
-                  ? "bg-sky-500 text-slate-950 border-2 border-sky-300 shadow-[0_0_30px_rgba(56,189,248,0.6)]"
-                  : "border-2 border-sky-400/80 bg-sky-950/40 text-sky-200 hover:bg-sky-500/25 shadow-[0_0_20px_rgba(56,189,248,0.3)]"
+                  ? "bg-sky-500 text-slate-950 border-2 border-sky-300 shadow-[0_0_35px_rgba(56,189,248,0.7)]"
+                  : "border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-sky-200 shadow-[0_0_20px_rgba(56,189,248,0.3)] backdrop-blur-xs"
               }`}
             >
               <TrendingUp className="size-5 shrink-0" />
@@ -351,8 +351,8 @@ export default function BomPortalPage() {
               onClick={() => setActiveTab(activeTab === "facilities" ? "home" : "facilities")}
               className={`py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] ${
                 activeTab === "facilities"
-                  ? "bg-blue-500 text-white border-2 border-blue-300 shadow-[0_0_30px_rgba(96,165,250,0.6)]"
-                  : "border-2 border-blue-400/80 bg-blue-950/40 text-blue-200 hover:bg-blue-500/25 shadow-[0_0_20px_rgba(96,165,250,0.3)]"
+                  ? "bg-blue-500 text-white border-2 border-blue-300 shadow-[0_0_35px_rgba(96,165,250,0.7)]"
+                  : "border-2 border-blue-400/80 bg-slate-950/40 hover:bg-blue-500/20 text-blue-200 shadow-[0_0_20px_rgba(96,165,250,0.3)] backdrop-blur-xs"
               }`}
             >
               <Warehouse className="size-5 shrink-0" />
@@ -364,8 +364,8 @@ export default function BomPortalPage() {
               onClick={() => setActiveTab(activeTab === "policies" ? "home" : "policies")}
               className={`py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] ${
                 activeTab === "policies"
-                  ? "bg-purple-500 text-white border-2 border-purple-300 shadow-[0_0_30px_rgba(192,132,252,0.6)]"
-                  : "border-2 border-purple-400/80 bg-purple-950/40 text-purple-200 hover:bg-purple-500/25 shadow-[0_0_20px_rgba(192,132,252,0.3)]"
+                  ? "bg-purple-500 text-white border-2 border-purple-300 shadow-[0_0_35px_rgba(192,132,252,0.7)]"
+                  : "border-2 border-purple-400/80 bg-slate-950/40 hover:bg-purple-500/20 text-purple-200 shadow-[0_0_20px_rgba(192,132,252,0.3)] backdrop-blur-xs"
               }`}
             >
               <ShieldAlert className="size-5 shrink-0" />
@@ -377,8 +377,8 @@ export default function BomPortalPage() {
               onClick={() => setActiveTab(activeTab === "pricing" ? "home" : "pricing")}
               className={`py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] ${
                 activeTab === "pricing"
-                  ? "bg-emerald-500 text-slate-950 border-2 border-emerald-300 shadow-[0_0_30px_rgba(52,211,153,0.6)]"
-                  : "border-2 border-emerald-400/80 bg-emerald-950/40 text-emerald-200 hover:bg-emerald-500/25 shadow-[0_0_20px_rgba(52,211,153,0.3)]"
+                  ? "bg-emerald-500 text-slate-950 border-2 border-emerald-300 shadow-[0_0_35px_rgba(52,211,153,0.7)]"
+                  : "border-2 border-emerald-400/80 bg-slate-950/40 hover:bg-emerald-500/20 text-emerald-200 shadow-[0_0_20px_rgba(52,211,153,0.3)] backdrop-blur-xs"
               }`}
             >
               <SlidersHorizontal className="size-5 shrink-0" />
@@ -390,8 +390,8 @@ export default function BomPortalPage() {
               onClick={() => setActiveTab(activeTab === "reports" ? "home" : "reports")}
               className={`py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] ${
                 activeTab === "reports"
-                  ? "bg-amber-500 text-slate-950 border-2 border-amber-300 shadow-[0_0_30px_rgba(251,191,36,0.6)]"
-                  : "border-2 border-amber-400/80 bg-amber-950/40 text-amber-200 hover:bg-amber-500/25 shadow-[0_0_20px_rgba(251,191,36,0.3)]"
+                  ? "bg-amber-500 text-slate-950 border-2 border-amber-300 shadow-[0_0_35px_rgba(251,191,36,0.7)]"
+                  : "border-2 border-amber-400/80 bg-slate-950/40 hover:bg-amber-500/20 text-amber-200 shadow-[0_0_20px_rgba(251,191,36,0.3)] backdrop-blur-xs"
               }`}
             >
               <FileSpreadsheet className="size-5 shrink-0" />
@@ -401,14 +401,14 @@ export default function BomPortalPage() {
 
           {/* Quick collapse back to home indicator when tab is open */}
           {activeTab !== "home" && (
-            <div className="pt-2 flex items-center justify-between border-t border-sky-500/20 text-xs">
+            <div className="pt-2 flex items-center justify-between text-xs">
               <span className="text-sky-300 font-semibold flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 Đang hiển thị dữ liệu chi tiết bên dưới:
               </span>
               <button
                 onClick={() => setActiveTab("home")}
-                className="px-4 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold border border-slate-600 transition cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-2 rounded-full bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-bold border border-sky-500/30 transition cursor-pointer flex items-center gap-1.5 shadow-md backdrop-blur-md"
               >
                 <X className="size-3.5" />
                 <span>Thu gọn / Về trang chủ</span>
