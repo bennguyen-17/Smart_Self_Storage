@@ -6,13 +6,14 @@ import com.swp391.backend.service.AuditLogService;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/staff/audit-logs")
+@RequestMapping("/api")
 public class AuditLogController {
 
     private final AuditLogService auditLogService;
@@ -21,10 +22,10 @@ public class AuditLogController {
         this.auditLogService = auditLogService;
     }
 
-    @PostMapping("/manual-gate-open")
+    @PostMapping("/staff/audit-logs/manual-gate-open")
     public ResponseEntity<AuditLog> recordManualGateOpen(
             @AuthenticationPrincipal Integer accountId,
-            @RequestBody ManualGateOpenRequest request) {
+            @Valid @RequestBody ManualGateOpenRequest request) {
 
         AuditLog auditLog = auditLogService.recordManualGateOpen(
                 accountId,
