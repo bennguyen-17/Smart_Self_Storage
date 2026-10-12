@@ -367,6 +367,11 @@ public class CheckoutSettlementService {
      */
     @Transactional
     public boolean confirmRefundExecution(Integer paymentId, Integer staffAccountId, String receiptUrl) {
+        return confirmRefundExecution(paymentId, staffAccountId, receiptUrl, null);
+    }
+
+    @Transactional
+    public boolean confirmRefundExecution(Integer paymentId, Integer staffAccountId, String receiptUrl, String transactionRef) {
         Optional<Payment> paymentOpt = paymentRepository.findById(paymentId);
         if (paymentOpt.isEmpty()) return false;
 
@@ -381,6 +386,9 @@ public class CheckoutSettlementService {
         if (receiptUrl != null && !receiptUrl.isBlank()) {
             p.setPdfUrl(receiptUrl.trim());
         }
+        if (transactionRef != null && !transactionRef.isBlank()) {
+            p.setTransactionCode(transactionRef.trim());
+        }
         paymentRepository.save(p);
 
         if (activityLogRepository != null) {
@@ -388,6 +396,9 @@ public class CheckoutSettlementService {
             act.setAccountId(staffAccountId != null ? staffAccountId : 1);
             act.setAction("CONFIRM_REFUND_EXECUTED");
             String desc = "Đã chi tiền hoàn cọc hóa đơn " + p.getInvoiceNumber() + ", số tiền: " + p.getAmount() + " VNĐ";
+            if (transactionRef != null && !transactionRef.isBlank()) {
+                desc += " (Mã GD: " + transactionRef.trim() + ")";
+            }
             if (receiptUrl != null && !receiptUrl.isBlank()) {
                 desc += " (Đính kèm biên lai: " + receiptUrl.trim() + ")";
             }

@@ -1,8 +1,9 @@
 import { useState, type ReactNode } from "react"
-import { IdCardIcon, KeyIcon, UserCogIcon, WrenchIcon } from "lucide-react"
+import { Building2Icon, IdCardIcon, KeyIcon, UserCogIcon, WrenchIcon } from "lucide-react"
 import { cn } from "cn"
 
 import { useTheme } from "@/components/common/theme-provider"
+import { useAuth } from "@/context/AuthContext"
 
 import CheckinPanel from "../components/CheckinPanel"
 import StaffPinPanel from "../components/StaffPinPanel"
@@ -23,9 +24,18 @@ function resolveIsDark(theme: string): boolean {
 /** Cổng nhân viên vận hành — bám prototype staff_portal.html */
 function StaffCheckinPage() {
   const { theme, setTheme } = useTheme()
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<StaffTab>("checkin")
 
   const isDark = resolveIsDark(theme)
+  const staffName = user?.fullName || "Nguyễn Văn Staff"
+  const staffBranch = (user as { facilityName?: string })?.facilityName || "Quận 9 (Khu FPT)"
+  const staffRole =
+    user?.role === "STAFF"
+      ? "Chuyên viên Vận hành"
+      : user?.role === "MANAGER"
+        ? "Quản lý Cơ sở"
+        : user?.role || "Chuyên viên Vận hành"
 
   return (
     <div className="staff-portal flex min-h-screen flex-col antialiased">
@@ -43,19 +53,29 @@ function StaffCheckinPage() {
                 <UserCogIcon className="size-5" />
               </div>
               <div>
-                <h2 className="flex items-center space-x-2 text-sm font-black tracking-wide text-white sm:text-base">
+                <h2 className="flex flex-wrap items-center gap-2 text-sm font-black tracking-wide text-white sm:text-base">
                   <span className="inline-flex items-center space-x-2 rounded-xl border border-slate-700 bg-slate-800/80 px-3 py-1.5">
                     <span className="text-xs font-semibold text-slate-300">
-                      Chuyên viên:
+                      {staffRole}:
                     </span>
-                    <span>Nguyễn Văn Staff</span>
+                    <span>{staffName}</span>
+                  </span>
+                  <span className="inline-flex items-center space-x-1.5 rounded-xl border border-blue-500/40 bg-blue-950/60 px-2.5 py-1 text-xs font-semibold text-blue-200">
+                    <Building2Icon className="size-3 text-blue-400" />
+                    <span>{staffBranch}</span>
                   </span>
                 </h2>
-                <p className="text-[11px] text-slate-300">
+                <p className="mt-1 text-[11px] text-slate-300">
                   Xử lý Hợp đồng Khách hàng, Tiếp nhận Ticket, Bảo trì ô kho
                   &amp; Cấp PIN mở cổng khẩn cấp.
                 </p>
               </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="inline-flex items-center space-x-1.5 rounded-full border border-emerald-400/40 bg-emerald-950/70 px-3 py-1 text-[11px] font-bold text-emerald-300">
+                <span className="size-2 animate-pulse rounded-full bg-emerald-400" />
+                <span>Trực ca 08:00 - 20:00</span>
+              </span>
             </div>
           </div>
 

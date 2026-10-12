@@ -9,6 +9,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/staff")
@@ -82,6 +83,27 @@ public class StaffTicketController {
     ) {
         try {
             SupportTicket ticket = supportTicketService.resolveUnlockTicket(id, request, staffId, facilityId);
+            return ResponseEntity.ok(ticket);
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
+
+    // --- US-22: 3. Staff hoàn tất xử lý ticket thường (Bảo trì, Nghiệm thu, ...) ---
+    @PostMapping("/tickets/{id}/resolve")
+    public ResponseEntity<?> resolveTicket(
+            @PathVariable Long id,
+            @RequestBody(required = false) Map<String, String> body,
+            @RequestHeader(value = "X-Facility-Id", required = false) Integer facilityId,
+            @RequestHeader(value = "X-Account-Id", defaultValue = "1") Integer staffId
+    ) {
+        try {
+            String note = (body != null) ? body.get("note") : null;
+            SupportTicket ticket = supportTicketService.resolveTicket(id, note, staffId, facilityId);
             return ResponseEntity.ok(ticket);
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(403).body(e.getMessage());
