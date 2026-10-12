@@ -10,7 +10,24 @@ import ReservationManagementPage from "@/features/reservations/pages/Reservation
 import StaffCheckinPage from "@/features/checkin/pages/StaffCheckinPage"
 import FloorPlanPage from "@/features/floor-plan/pages/FloorPlanPage"
 import BomPortalPage from "@/features/bom/pages/BomPortalPage"
+import ManagerPortalPage from "@/features/manager-portal/pages/ManagerPortalPage"
 import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
+import { isTokenValid } from "@/lib/apiClient"
+
+// Route Guard độc lập cho Cổng Khách Hàng (không phụ thuộc vào cổng nội bộ)
+function CustomerProtectedRoute({ children }: { children: React.ReactNode }) {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+
+  if (!isTokenValid(token)) {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token")
+      localStorage.removeItem("user")
+    }
+    return <Navigate to="/customer_login" replace />
+  }
+
+  return <>{children}</>
+}
 
 function App() {
   return (
@@ -34,11 +51,39 @@ function App() {
         {/* US-03: Sơ đồ 2D chọn ô kho */}
         <Route path="/floor-plan" element={<FloorPlanPage />} />
 
-        {/* Cổng Khách Hàng (Customer Portal) */}
-        <Route path="/portal" element={<CustomerPortal initialTab="home" />} />
-        <Route path="/customer" element={<CustomerPortal initialTab="home" />} />
-        <Route path="/rent" element={<CustomerPortal initialTab="grid" />} />
-        <Route path="/my-storage" element={<CustomerPortal initialTab="access" />} />
+        {/* Cổng Khách Hàng (Customer Portal - Bảo vệ bằng token khách hàng) */}
+        <Route
+          path="/portal"
+          element={
+            <CustomerProtectedRoute>
+              <CustomerPortal initialTab="home" />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/customer"
+          element={
+            <CustomerProtectedRoute>
+              <CustomerPortal initialTab="home" />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/rent"
+          element={
+            <CustomerProtectedRoute>
+              <CustomerPortal initialTab="grid" />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-storage"
+          element={
+            <CustomerProtectedRoute>
+              <CustomerPortal initialTab="access" />
+            </CustomerProtectedRoute>
+          }
+        />
 
         {/* Cổng Nhân Viên Vận Hành: Check-in tại quầy & Quản lý Ticket (Role STAFF, MANAGER, ADMIN) */}
         <Route
@@ -65,7 +110,8 @@ function App() {
           path="/manager"
           element={
             <RoleProtectedRoute allowedRoles={["MANAGER", "ADMIN"]}>
-              <RolePortalPlaceholderPage portalType="MANAGER" />
+              {/* Khung Cổng Quản lý cơ sở (builder: Vỹ) */}
+              <ManagerPortalPage />
             </RoleProtectedRoute>
           }
         />
