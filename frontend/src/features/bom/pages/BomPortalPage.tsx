@@ -25,6 +25,7 @@ import {
 
 import { useTheme } from "@/components/common/theme-provider"
 import { useAuth } from "@/context/AuthContext"
+import ThreeBackground from "../components/ThreeBackground"
 import {
   INITIAL_FACILITIES,
   INITIAL_PRICING,
@@ -180,18 +181,24 @@ export default function BomPortalPage() {
   })
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
+    <div className="relative min-h-screen text-slate-100 font-sans transition-colors duration-200">
+      {/* 3D Dynamic Waves Background (Theme responsive: dark xanh đen / light cyan) */}
+      <ThreeBackground theme={theme} effectType="waves" />
+
       {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-8 py-3 flex items-center justify-between shadow-xs">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#1d4ed8] text-white flex items-center justify-center font-bold text-lg shadow-sm">
+      <header className="sticky top-0 z-40 bg-slate-950/70 backdrop-blur-xl border-b border-sky-500/20 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-lg text-white">
+        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab("home")}>
+          <div className="w-10 h-10 rounded-2xl bg-sky-600/30 border border-sky-400/40 text-sky-400 flex items-center justify-center font-bold text-lg shadow-sm">
             <Warehouse className="size-5" />
           </div>
           <div>
-            <div className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white leading-tight">
-              Smart Storage
+            <div className="font-black text-sm sm:text-base text-white leading-tight tracking-wide flex items-center gap-2">
+              <span>Smart Storage</span>
+              <span className="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/30 text-sky-300">
+                BOM Portal
+              </span>
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+            <div className="text-[11px] text-slate-400 font-medium">
               Hệ thống cho thuê kho tự quản thông minh 24/7
             </div>
           </div>
@@ -200,33 +207,33 @@ export default function BomPortalPage() {
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+            className="px-3.5 py-1.5 rounded-full border border-sky-500/30 bg-slate-900/60 hover:bg-slate-800/80 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-sm text-slate-200"
           >
             {theme === "dark" ? (
               <>
                 <Sun className="size-3.5 text-amber-400" />
-                <span className="text-slate-700 dark:text-slate-200">Giao diện Sáng</span>
+                <span>Giao diện Sáng</span>
               </>
             ) : (
               <>
-                <Moon className="size-3.5 text-indigo-600" />
-                <span className="text-slate-700 dark:text-slate-200">Giao diện Tối</span>
+                <Moon className="size-3.5 text-sky-400" />
+                <span>Giao diện Xanh đen</span>
               </>
             )}
           </button>
 
           <button
             onClick={() => setIsProfileModalOpen(true)}
-            className="flex items-center space-x-2.5 p-1 sm:px-3 sm:py-1.5 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 transition cursor-pointer shadow-xs"
+            className="flex items-center space-x-2.5 p-1 sm:px-3 sm:py-1.5 rounded-2xl border border-sky-500/30 bg-slate-900/60 hover:bg-slate-800/80 transition cursor-pointer shadow-sm text-white"
           >
-            <div className="w-8 h-8 rounded-xl bg-[#1d4ed8] text-white font-black text-xs flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-sky-600 text-white font-black text-xs flex items-center justify-center">
               NV
             </div>
             <div className="hidden sm:block text-left text-xs">
-              <div className="font-extrabold text-slate-900 dark:text-white leading-tight">
+              <div className="font-extrabold text-white leading-tight">
                 Nguyễn Văn BOM
               </div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+              <div className="text-[10px] text-sky-300/80 font-medium">
                 Chuyên viên Quản lý Vận hành
               </div>
             </div>
@@ -235,129 +242,179 @@ export default function BomPortalPage() {
       </header>
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* HERO / METRICS BANNER (Chuẩn mẫu ảnh: Xanh dương gradient, 4 box thông số có icon góc phải) */}
-        <div className="p-6 rounded-3xl bg-[#2540b0] dark:bg-slate-900 text-white shadow-xl border border-blue-600/30 space-y-5">
-          <div className="flex items-center space-x-3.5 pb-1">
-            <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-md shrink-0 border border-white/20">
-              <Building2 className="size-6 text-white" />
-            </div>
-            <h2 className="font-black text-lg sm:text-xl text-white tracking-wide uppercase">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* HERO / METRICS ENTRY PORTAL (TO RA BỀ THẾ THEO YÊU CẦU USER) */}
+        <div className="p-8 sm:p-10 lg:p-12 rounded-3xl bg-slate-950/75 backdrop-blur-2xl text-white shadow-2xl border border-sky-500/25 transition-all duration-300 space-y-8">
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-wider uppercase drop-shadow-lg">
               QUẢN LÝ VẬN HÀNH TOÀN HỆ THỐNG
-            </h2>
+            </h1>
+            <p className="text-sky-300/80 text-sm sm:text-base font-semibold max-w-2xl mx-auto">
+              Trung tâm điều hành cấp cao &amp; giám sát 4 cụm cơ sở kho thông minh 24/7
+            </p>
           </div>
 
-          {/* Quick Metrics (4 card xanh có icon góc trên bên phải) */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <div className="bg-white/15 dark:bg-slate-800/80 backdrop-blur-md p-4 rounded-2xl border border-white/15 dark:border-slate-700">
-              <div className="text-[11px] font-bold text-blue-100 uppercase tracking-wider flex items-center justify-between">
+          {/* 4 Ô CHỈ SỐ KPI TO RÕ RÀNG */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+            {/* Box 1: Tổng cơ sở */}
+            <div className="bg-slate-900/80 hover:bg-slate-900/95 backdrop-blur-xl p-6 sm:p-7 rounded-2xl border border-sky-500/30 hover:border-sky-400 hover:shadow-[0_0_25px_rgba(56,189,248,0.25)] transition-all duration-300 flex flex-col justify-between min-h-[170px] group">
+              <div className="text-xs sm:text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
                 <span>TỔNG CƠ SỞ KHO</span>
-                <Warehouse className="size-4 text-blue-200" />
+                <div className="p-2 rounded-xl bg-sky-500/15 border border-sky-400/20 text-sky-400 group-hover:scale-110 transition-transform">
+                  <Warehouse className="size-5" />
+                </div>
               </div>
-              <div className="text-2xl font-black text-white mt-1.5">
-                4 <span className="text-xs font-semibold text-blue-100">Cơ sở</span>
+              <div className="my-2">
+                <div className="text-4xl sm:text-5xl font-black text-white tracking-tight flex items-baseline gap-2">
+                  <span>4</span>
+                  <span className="text-base sm:text-lg font-bold text-sky-400">Cơ sở</span>
+                </div>
               </div>
-              <div className="text-[11px] text-blue-100 mt-0.5 font-medium">
-                1,240 Tổng số kho
+              <div className="text-xs sm:text-sm text-slate-400 font-medium">
+                1,240 Tổng số kho vận hành
               </div>
             </div>
 
-            <div className="bg-white/15 dark:bg-slate-800/80 backdrop-blur-md p-4 rounded-2xl border border-white/15 dark:border-slate-700">
-              <div className="text-[11px] font-bold text-blue-100 uppercase tracking-wider flex items-center justify-between">
+            {/* Box 2: Tỉ lệ lấp đầy */}
+            <div className="bg-slate-900/80 hover:bg-slate-900/95 backdrop-blur-xl p-6 sm:p-7 rounded-2xl border border-emerald-500/30 hover:border-emerald-400 hover:shadow-[0_0_25px_rgba(52,211,153,0.25)] transition-all duration-300 flex flex-col justify-between min-h-[170px] group">
+              <div className="text-xs sm:text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
                 <span>TỈ LỆ LẤP ĐẦY TB</span>
-                <TrendingUp className="size-4 text-emerald-300" />
+                <div className="p-2 rounded-xl bg-emerald-500/15 border border-emerald-400/20 text-emerald-400 group-hover:scale-110 transition-transform">
+                  <TrendingUp className="size-5" />
+                </div>
               </div>
-              <div className="text-2xl font-black text-emerald-300 mt-1.5">88.5%</div>
-              <div className="text-[11px] text-blue-100 mt-0.5 font-medium">
-                1,098 / 1,240 kho rented
+              <div className="my-2">
+                <div className="text-4xl sm:text-5xl font-black text-emerald-400 tracking-tight">
+                  88.5%
+                </div>
+              </div>
+              <div className="text-xs sm:text-sm text-slate-400 font-medium">
+                1,098 / 1,240 kho đang thuê (Hiệu quả cao)
               </div>
             </div>
 
-            <div className="bg-white/15 dark:bg-slate-800/80 backdrop-blur-md p-4 rounded-2xl border border-white/15 dark:border-slate-700">
-              <div className="text-[11px] font-bold text-blue-100 uppercase tracking-wider flex items-center justify-between">
+            {/* Box 3: Doanh thu */}
+            <div className="bg-slate-900/80 hover:bg-slate-900/95 backdrop-blur-xl p-6 sm:p-7 rounded-2xl border border-amber-500/30 hover:border-amber-400 hover:shadow-[0_0_25px_rgba(251,191,36,0.25)] transition-all duration-300 flex flex-col justify-between min-h-[170px] group">
+              <div className="text-xs sm:text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
                 <span>DOANH THU THÁNG 09</span>
-                <DollarSign className="size-4 text-amber-300" />
+                <div className="p-2 rounded-xl bg-amber-500/15 border border-amber-400/20 text-amber-400 group-hover:scale-110 transition-transform">
+                  <DollarSign className="size-5" />
+                </div>
               </div>
-              <div className="text-2xl font-black text-amber-300 mt-1.5">₫1.85 Tỷ</div>
-              <div className="text-[11px] text-blue-100 mt-0.5 font-medium">
-                +14.2% so với T08
+              <div className="my-2">
+                <div className="text-4xl sm:text-5xl font-black text-amber-400 tracking-tight">
+                  ₫1.85 Tỷ
+                </div>
+              </div>
+              <div className="text-xs sm:text-sm text-slate-400 font-medium">
+                +14.2% so với tháng trước
               </div>
             </div>
 
-            <div className="bg-white/15 dark:bg-slate-800/80 backdrop-blur-md p-4 rounded-2xl border border-white/15 dark:border-slate-700">
-              <div className="text-[11px] font-bold text-blue-100 uppercase tracking-wider flex items-center justify-between">
+            {/* Box 4: Cảnh báo */}
+            <div className="bg-slate-900/80 hover:bg-slate-900/95 backdrop-blur-xl p-6 sm:p-7 rounded-2xl border border-rose-500/30 hover:border-rose-400 hover:shadow-[0_0_25px_rgba(244,63,94,0.25)] transition-all duration-300 flex flex-col justify-between min-h-[170px] group">
+              <div className="text-xs sm:text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
                 <span>CẢNH BÁO QUÁ HẠN</span>
-                <AlertTriangle className="size-4 text-rose-300" />
+                <div className="p-2 rounded-xl bg-rose-500/15 border border-rose-400/20 text-rose-400 group-hover:scale-110 transition-transform">
+                  <AlertTriangle className="size-5" />
+                </div>
               </div>
-              <div className="text-2xl font-black text-rose-300 mt-1.5">12 Kho</div>
-              <div className="text-[11px] text-rose-200 mt-0.5 font-medium">
-                Cần kích hoạt BR-18 / BR-21
+              <div className="my-2">
+                <div className="text-4xl sm:text-5xl font-black text-rose-400 tracking-tight flex items-baseline gap-2">
+                  <span>12</span>
+                  <span className="text-base sm:text-lg font-bold text-rose-300">Kho</span>
+                </div>
+              </div>
+              <div className="text-xs sm:text-sm text-slate-400 font-medium">
+                Cần kích hoạt quy chuẩn BR-18 / BR-21
               </div>
             </div>
           </div>
-        </div>
 
-        {/* NAVIGATION SUBTABS BAR (Dạng pill pills như ảnh chụp) */}
-        <div className="flex items-center space-x-2.5 overflow-x-auto text-xs font-extrabold no-scrollbar pt-1">
-          <button
-            onClick={() => setActiveTab(activeTab === "dashboard" ? "home" : "dashboard")}
-            className={`px-4 py-2.5 rounded-2xl border transition flex items-center space-x-2 whitespace-nowrap cursor-pointer shadow-xs ${
-              activeTab === "dashboard"
-                ? "bg-[#1d4ed8] text-white border-[#1d4ed8]"
-                : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400"
-            }`}
-          >
-            <TrendingUp className="size-3.5" />
-            <span>Giám Sát &amp; Hiệu Suất Cơ Sở</span>
-          </button>
+          {/* 5 NÚT BẤM TO DẠNG PILL VỚI VIỀN DẠ QUANG ĐA SẮC MÀU (THEO ĐÚNG ẢNH USER) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4 pt-2">
+            {/* Pill 1: Giám Sát (Cyan Glow) */}
+            <button
+              onClick={() => setActiveTab(activeTab === "dashboard" ? "home" : "dashboard")}
+              className={`py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] ${
+                activeTab === "dashboard"
+                  ? "bg-sky-500 text-slate-950 border-2 border-sky-300 shadow-[0_0_30px_rgba(56,189,248,0.6)]"
+                  : "border-2 border-sky-400/80 bg-sky-950/40 text-sky-200 hover:bg-sky-500/25 shadow-[0_0_20px_rgba(56,189,248,0.3)]"
+              }`}
+            >
+              <TrendingUp className="size-5 shrink-0" />
+              <span>Giám Sát Cơ Sở</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab(activeTab === "facilities" ? "home" : "facilities")}
-            className={`px-4 py-2.5 rounded-2xl border transition flex items-center space-x-2 whitespace-nowrap cursor-pointer shadow-xs ${
-              activeTab === "facilities"
-                ? "bg-[#1d4ed8] text-white border-[#1d4ed8]"
-                : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400"
-            }`}
-          >
-            <Warehouse className="size-3.5" />
-            <span>Danh Sách Cơ Sở Kho Hệ Thống</span>
-          </button>
+            {/* Pill 2: Danh Sách Cơ Sở (Blue Glow) */}
+            <button
+              onClick={() => setActiveTab(activeTab === "facilities" ? "home" : "facilities")}
+              className={`py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] ${
+                activeTab === "facilities"
+                  ? "bg-blue-500 text-white border-2 border-blue-300 shadow-[0_0_30px_rgba(96,165,250,0.6)]"
+                  : "border-2 border-blue-400/80 bg-blue-950/40 text-blue-200 hover:bg-blue-500/25 shadow-[0_0_20px_rgba(96,165,250,0.3)]"
+              }`}
+            >
+              <Warehouse className="size-5 shrink-0" />
+              <span>Danh Sách Cơ Sở</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab(activeTab === "policies" ? "home" : "policies")}
-            className={`px-4 py-2.5 rounded-2xl border transition flex items-center space-x-2 whitespace-nowrap cursor-pointer shadow-xs ${
-              activeTab === "policies"
-                ? "bg-[#1d4ed8] text-white border-[#1d4ed8]"
-                : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400"
-            }`}
-          >
-            <ShieldAlert className="size-3.5" />
-            <span>Quy Định &amp; Chính Sách Thuê Chung</span>
-          </button>
+            {/* Pill 3: Quy Định Chính Sách (Purple Glow) */}
+            <button
+              onClick={() => setActiveTab(activeTab === "policies" ? "home" : "policies")}
+              className={`py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] ${
+                activeTab === "policies"
+                  ? "bg-purple-500 text-white border-2 border-purple-300 shadow-[0_0_30px_rgba(192,132,252,0.6)]"
+                  : "border-2 border-purple-400/80 bg-purple-950/40 text-purple-200 hover:bg-purple-500/25 shadow-[0_0_20px_rgba(192,132,252,0.3)]"
+              }`}
+            >
+              <ShieldAlert className="size-5 shrink-0" />
+              <span>Quy Định Chính Sách</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab(activeTab === "pricing" ? "home" : "pricing")}
-            className={`px-4 py-2.5 rounded-2xl border transition flex items-center space-x-2 whitespace-nowrap cursor-pointer shadow-xs ${
-              activeTab === "pricing"
-                ? "bg-[#1d4ed8] text-white border-[#1d4ed8]"
-                : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400"
-            }`}
-          >
-            <SlidersHorizontal className="size-3.5" />
-            <span>Khung Giá, Phụ Thu &amp; Giảm Giá</span>
-          </button>
+            {/* Pill 4: Khung Giá Phụ Thu (Green Glow) */}
+            <button
+              onClick={() => setActiveTab(activeTab === "pricing" ? "home" : "pricing")}
+              className={`py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] ${
+                activeTab === "pricing"
+                  ? "bg-emerald-500 text-slate-950 border-2 border-emerald-300 shadow-[0_0_30px_rgba(52,211,153,0.6)]"
+                  : "border-2 border-emerald-400/80 bg-emerald-950/40 text-emerald-200 hover:bg-emerald-500/25 shadow-[0_0_20px_rgba(52,211,153,0.3)]"
+              }`}
+            >
+              <SlidersHorizontal className="size-5 shrink-0" />
+              <span>Khung Giá Phụ Thu</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab(activeTab === "reports" ? "home" : "reports")}
-            className={`px-4 py-2.5 rounded-2xl border transition flex items-center space-x-2 whitespace-nowrap cursor-pointer shadow-xs ${
-              activeTab === "reports"
-                ? "bg-[#1d4ed8] text-white border-[#1d4ed8]"
-                : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400"
-            }`}
-          >
-            <FileSpreadsheet className="size-3.5" />
-            <span>Báo Cáo System &amp; Xuất Dữ Liệu</span>
-          </button>
+            {/* Pill 5: Báo Cáo Toàn Chuỗi (Amber Glow) */}
+            <button
+              onClick={() => setActiveTab(activeTab === "reports" ? "home" : "reports")}
+              className={`py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] ${
+                activeTab === "reports"
+                  ? "bg-amber-500 text-slate-950 border-2 border-amber-300 shadow-[0_0_30px_rgba(251,191,36,0.6)]"
+                  : "border-2 border-amber-400/80 bg-amber-950/40 text-amber-200 hover:bg-amber-500/25 shadow-[0_0_20px_rgba(251,191,36,0.3)]"
+              }`}
+            >
+              <FileSpreadsheet className="size-5 shrink-0" />
+              <span>Báo Cáo Toàn Chuỗi</span>
+            </button>
+          </div>
+
+          {/* Quick collapse back to home indicator when tab is open */}
+          {activeTab !== "home" && (
+            <div className="pt-2 flex items-center justify-between border-t border-sky-500/20 text-xs">
+              <span className="text-sky-300 font-semibold flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                Đang hiển thị dữ liệu chi tiết bên dưới:
+              </span>
+              <button
+                onClick={() => setActiveTab("home")}
+                className="px-4 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold border border-slate-600 transition cursor-pointer flex items-center gap-1.5"
+              >
+                <X className="size-3.5" />
+                <span>Thu gọn / Về trang chủ</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* SUBTAB 1: GIÁM SÁT & HIỆU SUẤT CƠ SỞ */}
