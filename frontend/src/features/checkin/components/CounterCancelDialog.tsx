@@ -52,7 +52,7 @@ function Body({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  // Ước tính theo BR-17 (hủy tại quầy); BE là nơi tính con số cuối cùng.
+  // Ước tính khi hủy tại quầy; BE là nơi tính con số cuối cùng.
   const paid = contract.depPaidAmount ?? 0
   const estimatedRefund = Math.round(paid * (1 - CANCEL_FORFEIT_RATE))
   const estimatedPenalty = paid - estimatedRefund
@@ -78,7 +78,7 @@ function Body({
       <div className="rounded-2xl border border-rose-300 bg-rose-50 p-3.5 text-xs text-rose-900 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-200">
         <div className="mb-1 flex items-center space-x-2 font-black">
           <TriangleAlertIcon className="size-4" />
-          <span>Khách mất 50% tiền cọc (BR-17)</span>
+          <span>Khách chịu phí hủy 50% tiền cọc</span>
         </div>
         <ul className="list-disc space-y-1 pl-4 text-rose-800/90 dark:text-rose-300/90">
           {CANCEL_POLICY_TEXT.map((line) => (
@@ -100,8 +100,7 @@ function Body({
           valueClass="text-rose-600 dark:text-rose-400"
         />
         <p className="pt-1 text-[11px] text-muted">
-          * Số tiền cuối cùng do hệ thống tính lại (BR-17: hoàn 100% nếu hủy ≥ 4
-          ngày trước ngày nhận kho).
+          * Số tiền cuối cùng do hệ thống tính lại (hoàn 100% nếu hủy trước ngày nhận kho từ 4 ngày trở lên).
         </p>
       </div>
 

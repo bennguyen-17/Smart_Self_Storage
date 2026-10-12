@@ -8,7 +8,7 @@ public class CheckoutConfirmRequest {
     private String inspectionNotes;
     private Integer ticketId;
     private String refundPaymentMethod = "VIETQR";
-    private boolean confirmInspection; // Bắt buộc phải tích xác nhận biên bản nghiệm thu theo BR-33
+    private boolean confirmInspection; // Bắt buộc phải tích xác nhận biên bản nghiệm thu
 
     public CheckoutConfirmRequest() {
     }

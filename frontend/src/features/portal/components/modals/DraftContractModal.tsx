@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 export default function DraftContractModal({ bookingData, onProceedToPayment, onClose, isLoading }: { bookingData: any; onProceedToPayment: () => void; onClose?: () => void; isLoading?: boolean }) {
   // US-07: bắt buộc tích đủ 2 xác nhận mới được thanh toán cọc
-  // (1) cam kết không lưu trữ hàng cấm (BR-09), (2) đồng ý điều khoản hợp đồng clickwrap (BR-18)
+  // (1) cam kết không lưu trữ hàng cấm, (2) đồng ý điều khoản hợp đồng clickwrap
   const [noProhibitedGoods, setNoProhibitedGoods] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const canProceed = noProhibitedGoods && agreed;
@@ -111,7 +111,7 @@ export default function DraftContractModal({ bookingData, onProceedToPayment, on
                 <ul className="list-disc pl-4 space-y-1">
                   <li>Hủy trước ngày nhận kho từ 4 ngày trở lên: Bạn được hoàn lại 100% tiền cọc.</li>
                   <li>Hủy trước ngày nhận kho dưới 4 ngày: Bạn bị tính phí phạt 50% tiền cọc và nhận lại 50% còn lại.</li>
-                  <li>Quy trình hoàn tiền: Yêu cầu hoàn cọc được bộ phận Back-office đối soát và chuyển khoản trong vòng 24 - 48 giờ làm việc, kèm biên lai xác nhận gửi qua email (BR-35).</li>
+                  <li>Quy trình hoàn tiền: Yêu cầu hoàn cọc được bộ phận Back-office đối soát và chuyển khoản trong vòng 24 - 48 giờ làm việc, kèm biên lai xác nhận gửi qua email.</li>
                 </ul>
               </div>
 

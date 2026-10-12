@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest"
 
 import { calcRentalTotal, clampRentalDays, getCheckInDates } from "./bookingRules"
 
-describe("getCheckInDates: ngày Check-in chỉ từ Hôm nay+1 đến Hôm nay+7, giờ Việt Nam (US-07, BR-17)", () => {
+describe("getCheckInDates: ngày Check-in chỉ từ Hôm nay+1 đến Hôm nay+7, giờ Việt Nam", () => {
   test.each([
     { now: "2026-10-07T03:00:00Z", vn: "10:00 07/10", first: "2026-10-08", last: "2026-10-14" },
     // 06:30 sáng giờ VN vẫn là ngày 06/10 theo UTC → lỗi cũ dùng toISOString() lệch 1 ngày ở đây
@@ -23,7 +23,7 @@ describe("getCheckInDates: ngày Check-in chỉ từ Hôm nay+1 đến Hôm nay+
   })
 })
 
-describe("clampRentalDays: thuê theo ngày từ 7 đến 29 (US-07, BR-13)", () => {
+describe("clampRentalDays: thuê theo ngày từ 7 đến 29", () => {
   test.each([
     { input: "7", expected: 7 },
     { input: "15", expected: 15 },
@@ -41,8 +41,8 @@ describe("clampRentalDays: thuê theo ngày từ 7 đến 29 (US-07, BR-13)", ()
   })
 })
 
-describe("calcRentalTotal: tổng tiền thuê theo gói và chiết khấu (US-07, BR-13, BR-09)", () => {
-  // Size M theo BR-08: 60.000đ/ngày, 1.200.000đ/tháng. Kho điều hòa +20%: 72.000đ/ngày, 1.440.000đ/tháng.
+describe("calcRentalTotal: tổng tiền thuê theo gói và chiết khấu", () => {
+  // Size M: 60.000đ/ngày, 1.200.000đ/tháng. Kho điều hòa +20%: 72.000đ/ngày, 1.440.000đ/tháng.
   const M = { dailyPrice: 60_000, monthlyPrice: 1_200_000 }
   const M_CLIMATE = { dailyPrice: 72_000, monthlyPrice: 1_440_000 }
 

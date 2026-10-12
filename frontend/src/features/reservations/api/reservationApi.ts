@@ -33,14 +33,14 @@ export async function getReservation(code: string): Promise<Reservation> {
   return unwrapApiData<Reservation>(body)
 }
 
-/** POST /api/admin/jobs/no-show-scan (chỉ ADMIN + profile dev/demo): chạy tay cron No-Show (BR-17) */
+/** POST /api/admin/jobs/no-show-scan (chỉ ADMIN + profile dev/demo): chạy tay cron No-Show */
 export async function runNoShowScan(): Promise<NoShowScanResult> {
   if (isMockMode()) return mockRunNoShowScan()
   const body = await apiClient.post("/admin/jobs/no-show-scan")
   return unwrapApiData<NoShowScanResult>(body)
 }
 
-/** POST /api/reservations/{code}/refund: Back-office xác nhận hoàn tiền & lưu ảnh chứng từ (BR-35) */
+/** POST /api/reservations/{code}/refund: Back-office xác nhận hoàn tiền & lưu ảnh chứng từ */
 export async function confirmRefund(
   code: string,
   payload: { evidenceUrl: string; note?: string; staffName?: string }

@@ -50,16 +50,23 @@ public class CheckoutSettlementController {
     @PostMapping("/staff/settlements/{paymentId}/confirm-refund")
     public ResponseEntity<?> confirmRefund(
             @PathVariable Integer paymentId,
+            @RequestBody(required = false) Map<String, String> body,
+            @RequestParam(required = false) String receiptUrl,
             @RequestHeader(value = "X-Account-Id", required = false) Integer staffAccountId) {
 
-        boolean success = checkoutSettlementService.confirmRefundExecution(paymentId, staffAccountId);
+        String evidence = receiptUrl;
+        if ((evidence == null || evidence.isBlank()) && body != null && body.containsKey("receiptUrl")) {
+            evidence = body.get("receiptUrl");
+        }
+
+        boolean success = checkoutSettlementService.confirmRefundExecution(paymentId, staffAccountId, evidence);
         if (success) {
             return ResponseEntity.ok(Map.of("success", true, "message", "Đã xác nhận giải ngân hoàn tiền thành công!"));
         }
         return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Không tìm thấy hóa đơn hoàn tiền hợp lệ!"));
     }
 
-    // --- US-31: Miễn / Giảm phí (Facility Manager / BOM duyệt theo BR-48) ---
+    // --- US-31: Miễn / Giảm phí (Facility Manager / BOM duyệt) ---
     @PostMapping("/manager/payments/{paymentId}/discount")
     public ResponseEntity<?> applyFeeDiscount(
             @PathVariable Integer paymentId,

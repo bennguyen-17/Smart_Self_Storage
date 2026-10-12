@@ -11,7 +11,7 @@ export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
   const [selectedPkgDays, setSelectedPkgDays] = useState(30); // Mặc định 1 Tháng (30 ngày)
   const [isCustomDays, setIsCustomDays] = useState(false);
   const [customDaysVal, setCustomDaysVal] = useState('');
-  // BR-17: ngày Check-in hợp lệ từ Hôm nay+1 đến Hôm nay+7 (giờ VN). Mặc định chọn ngày sớm nhất.
+  // Ngày Check-in hợp lệ từ Hôm nay+1 đến Hôm nay+7 (giờ VN). Mặc định chọn ngày sớm nhất.
   const [startDate, setStartDate] = useState(() => getCheckInDates(new Date())[0]);
 
 
@@ -69,7 +69,7 @@ export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
   }
 
   // Calculate check-out date
-  // BR-13: thuê theo ngày từ 7 đến 29 ngày
+  // Thuê theo ngày từ 7 đến 29 ngày
   const effectiveDays = isCustomDays ? clampRentalDays(customDaysVal) : selectedPkgDays;
 
   const calculateCheckOutDate = () => {
@@ -103,7 +103,7 @@ export default function BookingSidebar({ selectedUnit, onOpenDepositModal }) {
     setCustomDaysVal(String(clampRentalDays(String(clampRentalDays(customDaysVal) - 1))));
   };
 
-  // BR-13: tiền thuê ước tính theo gói tháng (có chiết khấu) hoặc theo ngày lẻ.
+  // Tiền thuê ước tính theo gói tháng (có chiết khấu) hoặc theo ngày lẻ.
   // Giá tháng lấy từ dữ liệu ô kho; thiếu thì dùng giá ngày × 20 như hiển thị phía trên.
   const rental = calcRentalTotal({
     dailyPrice: selectedUnit.price,

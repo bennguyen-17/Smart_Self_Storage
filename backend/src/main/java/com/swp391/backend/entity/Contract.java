@@ -22,7 +22,19 @@ public class Contract {
     private LocalDateTime terminatedAt;
 
     @Column(nullable = false, length = 30)
-    private String status = "PENDING_CHECKIN"; // BR-21 States: INITIATED, PENDING_CHECKIN, ACTIVE, OVERDUE, TERMINATED, FORFEITED, CANCELED
+    private String status = "PENDING_CHECKIN"; // States: INITIATED, PENDING_CHECKIN, ACTIVE, OVERDUE, TERMINATED, FORFEITED, CANCELED
+
+    @Column(length = 50)
+    private String cancelReason; // NO_SHOW, CUSTOMER_REQUEST, VIOLATION, EARLY_TERMINATION
+
+    @Column(length = 100)
+    private String refundBankName;
+
+    @Column(length = 50)
+    private String refundAccountNumber;
+
+    @Column(length = 100)
+    private String refundAccountName;
 
     public Contract() {
     }
@@ -82,5 +94,37 @@ public class Contract {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getCancelReason() {
+        return cancelReason;
+    }
+
+    public void setCancelReason(String cancelReason) {
+        this.cancelReason = cancelReason;
+    }
+
+    public String getRefundBankName() {
+        return refundBankName;
+    }
+
+    public void setRefundBankName(String refundBankName) {
+        this.refundBankName = refundBankName;
+    }
+
+    public String getRefundAccountNumber() {
+        return refundAccountNumber;
+    }
+
+    public void setRefundAccountNumber(String refundAccountNumber) {
+        this.refundAccountNumber = refundAccountNumber;
+    }
+
+    public String getRefundAccountName() {
+        return refundAccountName;
+    }
+
+    public void setRefundAccountName(String refundAccountName) {
+        this.refundAccountName = refundAccountName;
     }
 }

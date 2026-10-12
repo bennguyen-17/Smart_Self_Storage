@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from "vitest"
 
 import DraftContractModal from "./DraftContractModal"
 
-// US-07 AC: "Chưa tích 2 checkbox → nút thanh toán bị khóa" (BR-09 hàng cấm, BR-18 clickwrap)
+// US-07 AC: "Chưa tích 2 checkbox → nút thanh toán bị khóa" (cam kết hàng cấm, thỏa thuận clickwrap)
 const bookingData = {
   unitId: "HN01-1-S01",
   facilityName: "SmartStorage Cầu Giấy (HN-01)",
@@ -65,7 +65,7 @@ describe("DraftContractModal: 2 xác nhận bắt buộc trước khi thanh toá
     expect(payButton).toBeDisabled()
   })
 
-  test("chính sách hủy cọc hiển thị mốc 4 ngày theo BR-17", () => {
+  test("chính sách hủy cọc hiển thị mốc 4 ngày", () => {
     renderModal()
     expect(screen.getByText(/từ 4 ngày trở lên/i)).toBeInTheDocument()
     expect(screen.getByText(/dưới 4 ngày/i)).toBeInTheDocument()

@@ -56,10 +56,11 @@ public class NoShowCronService {
                 continue;
             }
 
-            // [BR-17]: Nếu đến 00:00 ngày hôm sau mà khách vẫn chưa đến Check-in (startDate < today)
+            // Nếu đến 00:00 ngày hôm sau mà khách vẫn chưa đến Check-in (startDate < today)
             if (reservation.getStartDate() != null && reservation.getStartDate().isBefore(today)) {
                 // 1. Chuyển hợp đồng sang CANCELED
                 contract.setStatus("CANCELED");
+                contract.setCancelReason("NO_SHOW");
                 contractRepository.save(contract);
 
                 // 2. Chuyển Reservation sang CANCELLED
@@ -89,7 +90,7 @@ public class NoShowCronService {
                     ActivityLog activityLog = new ActivityLog();
                     activityLog.setAccountId(reservation.getAccountId());
                     activityLog.setAction("NO_SHOW_CANCELED");
-                    activityLog.setDescription(String.format("Tự động hủy do No-Show hợp đồng #%d, ô %s (ngày hẹn: %s). Tịch thu 100%% tiền cọc theo BR-17.",
+                    activityLog.setDescription(String.format("Tự động hủy do No-Show hợp đồng #%d, ô %s (ngày hẹn: %s). Tịch thu 100%% tiền cọc do quá hạn check-in.",
                             contract.getContractId(), reservation.getUnitCode(), reservation.getStartDate()));
                     activityLog.setCreatedAt(LocalDateTime.now());
                     activityLogRepository.save(activityLog);
@@ -102,7 +103,7 @@ public class NoShowCronService {
         return count;
     }
 
-    // --- US-21: Cron Job nhắc hạn thuê lúc 08:00:00 hằng ngày (BR-27) ---
+    // --- US-21: Cron Job nhắc hạn thuê lúc 08:00:00 hằng ngày ---
     @Scheduled(cron = "0 0 8 * * ?")
     public void scheduledContractExpiryReminderJob() {
         log.info("Starting Daily Contract Expiry Reminder Cron Job at 08:00:00...");
@@ -121,13 +122,13 @@ public class NoShowCronService {
             if (reservation == null || reservation.getEndDate() == null) continue;
 
             long daysLeft = java.time.temporal.ChronoUnit.DAYS.between(today, reservation.getEndDate());
-            // [BR-27]: Gửi nhắc nhở ở các mốc T-7, T-3, T-1 ngày trước khi hết hạn
+            // Gửi nhắc nhở ở các mốc T-7, T-3, T-1 ngày trước khi hết hạn
             if (daysLeft == 7 || daysLeft == 3 || daysLeft == 1) {
                 if (activityLogRepository != null) {
                     ActivityLog activityLog = new ActivityLog();
                     activityLog.setAccountId(reservation.getAccountId());
                     activityLog.setAction("EXPIRY_REMINDER_T" + daysLeft);
-                    activityLog.setDescription(String.format("Hệ thống tự động gửi nhắc hạn hợp đồng #%d (ô %s) sắp hết hạn sau %d ngày (hạn: %s) qua Email/Portal theo BR-27.",
+                    activityLog.setDescription(String.format("Hệ thống tự động gửi nhắc hạn hợp đồng #%d (ô %s) sắp hết hạn sau %d ngày (hạn: %s) qua Email/Portal.",
                             contract.getContractId(), reservation.getUnitCode(), daysLeft, reservation.getEndDate()));
                     activityLog.setCreatedAt(LocalDateTime.now());
                     activityLogRepository.save(activityLog);

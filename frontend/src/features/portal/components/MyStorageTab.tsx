@@ -12,9 +12,30 @@ export default function MyStorageTab({ onOpenExtendModal }) {
   const [pinTimer, setPinTimer] = useState(15);
   
   // Modal Hủy Cọc & Xem hợp đồng
-  const [cancelModalContract, setCancelModalContract] = useState(null);
+  const [cancelModalContract, setCancelModalContract] = useState<any>(null);
   const [isCancelling, setIsCancelling] = useState(false);
-  const [viewContract, setViewContract] = useState(null);
+  const [viewContract, setViewContract] = useState<any>(null);
+  const [refundBankName, setRefundBankName] = useState('Vietcombank');
+  const [refundAccountNumber, setRefundAccountNumber] = useState('');
+  const [refundAccountName, setRefundAccountName] = useState('');
+  const [bankFormError, setBankFormError] = useState('');
+
+  const getCancelReasonLabel = (reason?: string) => {
+    switch (reason) {
+      case 'NO_SHOW':
+        return 'Đã hủy do No-Show (quá hạn nhận kho)';
+      case 'CUSTOMER_REQUEST':
+        return 'Đã hủy theo yêu cầu (được hoàn cọc)';
+      case 'VIOLATION':
+        return 'Đã hủy do vi phạm quy định';
+      case 'EARLY_TERMINATION':
+        return 'Đã trả kho trước hạn';
+      case 'COUNTER_CANCEL':
+        return 'Đã hủy tại quầy';
+      default:
+        return 'Đã hủy cọc';
+    }
+  };
 
   // Tải danh sách hợp đồng kho của khách hàng
   const fetchContracts = async (showLoading = false) => {
@@ -167,16 +188,66 @@ export default function MyStorageTab({ onOpenExtendModal }) {
     return () => clearInterval(interval);
   }, [gateFacility, currentFacPermission.hasAccess]);
 
+  // Tính số ngày còn lại đến ngày nhận kho
+  const daysUntilStart = useMemo(() => {
+    if (!cancelModalContract?.startDate) return 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(cancelModalContract.startDate);
+    start.setHours(0, 0, 0, 0);
+    const diffTime = start.getTime() - today.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }, [cancelModalContract]);
+
+  const isRefundEligible = daysUntilStart >= 4;
+
+  const handleOpenCancelModal = (item: any) => {
+    setCancelModalContract(item);
+    setBankFormError('');
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const u = JSON.parse(userStr);
+        if (u.fullName) {
+          setRefundAccountName(u.fullName.toUpperCase());
+        }
+      }
+    } catch (e) {}
+  };
+
   // Xử lý Hủy cọc
   const handleConfirmCancelDeposit = async () => {
     if (!cancelModalContract) return;
+
+    if (isRefundEligible) {
+      if (!refundAccountNumber.trim()) {
+        setBankFormError('Vui lòng nhập số tài khoản ngân hàng để nhận hoàn tiền cọc.');
+        return;
+      }
+      if (!refundAccountName.trim()) {
+        setBankFormError('Vui lòng nhập tên chủ tài khoản thụ hưởng.');
+        return;
+      }
+    }
+
     setIsCancelling(true);
+    setBankFormError('');
     try {
-      await cancelDepositContract(cancelModalContract);
+      await cancelDepositContract(
+        cancelModalContract,
+        isRefundEligible
+          ? {
+              bankName: refundBankName,
+              bankAccountNumber: refundAccountNumber.trim(),
+              bankAccountName: refundAccountName.trim().toUpperCase()
+            }
+          : undefined
+      );
       setCancelModalContract(null);
       await fetchContracts();
     } catch (err) {
       console.error('Lỗi khi hủy cọc:', err);
+      setBankFormError('Có lỗi xảy ra khi hủy cọc, vui lòng thử lại.');
     } finally {
       setIsCancelling(false);
     }
@@ -366,7 +437,7 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                             {isPending && (
                               <button
                                 type="button"
-                                onClick={() => setCancelModalContract(item)}
+                                onClick={() => handleOpenCancelModal(item)}
                                 className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-600 hover:text-white border border-rose-200 dark:border-rose-800 transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap active:scale-95"
                                 title="Hủy đặt cọc ô kho"
                               >
@@ -374,7 +445,7 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                               </button>
                             )}
 
-                            {/* US-12 / BR-29: chỉ HĐ ACTIVE mới được gia hạn online */}
+                            {/* Chỉ HĐ ACTIVE mới được gia hạn online */}
                             {canExtendOnline(item.status) && (
                               <button
                                 type="button"
@@ -394,10 +465,12 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                             )}
 
                             {isCanceled && (
-                              <span className="text-xs text-slate-400 italic">Đã hủy cọc</span>
+                              <span className="text-xs text-rose-500/90 dark:text-rose-400 font-medium italic" title={getCancelReasonLabel(item.cancelReason)}>
+                                {getCancelReasonLabel(item.cancelReason)}
+                              </span>
                             )}
 
-                            {/* US-12 / BR-29: HĐ OVERDUE không gia hạn online, phải ra quầy nộp phạt (US-20) */}
+                            {/* HĐ OVERDUE không gia hạn online, phải ra quầy nộp phạt */}
                             {item.status === 'OVERDUE' && (
                               <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
                                 <i className="fa-solid fa-store text-xs"></i> Quá hạn: vui lòng gia hạn tại quầy
@@ -486,7 +559,7 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                                     </button>
                                   )}
 
-                                  {/* US-12 / BR-29: chỉ HĐ ACTIVE mới được gia hạn online */}
+                                  {/* Chỉ HĐ ACTIVE mới được gia hạn online */}
                                   {canExtendOnline(item.status) && (
                                     <button
                                       type="button"
@@ -506,10 +579,12 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                                   )}
 
                                   {isCanceled && (
-                                    <span className="text-xs text-slate-400 italic">Đã hủy cọc</span>
+                                    <span className="text-xs text-rose-500/90 dark:text-rose-400 font-medium italic" title={getCancelReasonLabel(item.cancelReason)}>
+                                      {getCancelReasonLabel(item.cancelReason)}
+                                    </span>
                                   )}
 
-                                  {/* US-12 / BR-29: HĐ OVERDUE không gia hạn online, phải ra quầy nộp phạt (US-20) */}
+                                  {/* HĐ OVERDUE không gia hạn online, phải ra quầy nộp phạt */}
                                   {item.status === 'OVERDUE' && (
                                     <span
                                       className="text-xs font-semibold text-amber-700 dark:text-amber-300 flex items-center gap-1"
@@ -533,7 +608,7 @@ export default function MyStorageTab({ onOpenExtendModal }) {
         </div>
       </div>
 
-      {/* MODAL XÁC NHẬN HỦY CỌC (BR-17) */}
+      {/* MODAL XÁC NHẬN HỦY CỌC */}
       {cancelModalContract && (
         <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-3xl shadow-2xl p-6 space-y-4 modal-animate-pop">
@@ -562,21 +637,105 @@ export default function MyStorageTab({ onOpenExtendModal }) {
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-800 dark:text-amber-300 space-y-2">
-              <span className="font-bold flex items-center gap-1.5 text-xs">
-                <i className="fa-solid fa-file-invoice"></i> Chính sách hủy cọc & Quy trình hoàn tiền Back-office:
-              </span>
-              <ul className="list-disc pl-4 space-y-1">
-                <li><strong className="font-semibold">Hủy trước ngày nhận kho từ 7 ngày trở lên:</strong> Bạn được hoàn lại 100% tiền cọc.</li>
-                <li><strong className="font-semibold">Hủy trước ngày nhận kho dưới 7 ngày:</strong> Bạn sẽ bị tính phí hủy 50% tiền cọc và nhận lại 50% còn lại.</li>
-              </ul>
-              <div className="pt-2 mt-2 border-t border-amber-200/60 dark:border-amber-800/60">
-                <p className="flex gap-1.5">
-                  <i className="fa-solid fa-triangle-exclamation mt-0.5 text-[10px]"></i>
-                  <span>Lưu ý: Hệ thống sẽ tự động lập Yêu cầu hoàn cọc (Hóa đơn REF ở trạng thái PENDING). Kế toán / Back-office sẽ chuyển khoản hoàn tiền trong vòng <strong>24 - 48 giờ làm việc</strong>, đính kèm biên lai xác nhận và gửi email thông báo cho bạn (theo BR-35).</span>
-                </p>
+            {/* BẢNG ĐIỀU KIỆN & CHÍNH SÁCH HOÀN TIỀN */}
+            <div className={`p-3.5 rounded-2xl border text-xs space-y-2 ${
+              isRefundEligible
+                ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+                : 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-200'
+            }`}>
+              <div className="flex items-center justify-between font-bold text-xs">
+                <span className="flex items-center gap-1.5">
+                  <i className={`fa-solid ${isRefundEligible ? 'fa-circle-check text-emerald-600 dark:text-emerald-400' : 'fa-circle-exclamation text-rose-600 dark:text-rose-400'}`}></i>
+                  {isRefundEligible ? 'Đủ điều kiện hoàn 100% tiền cọc' : 'Không đủ điều kiện hoàn cọc'}
+                </span>
+                <span className="font-mono text-[10.5px] px-2 py-0.5 rounded-full bg-white/80 dark:bg-slate-900/80 border border-current font-bold">
+                  Còn {daysUntilStart > 0 ? `${daysUntilStart} ngày` : 'trong ngày'} đến ngày nhận kho
+                </span>
               </div>
+              <p className="text-[11px] leading-relaxed">
+                {isRefundEligible
+                  ? `Do bạn hủy trước ngày nhận kho từ 4 ngày trở lên, toàn bộ số tiền cọc (${(cancelModalContract.depositFee || 500000).toLocaleString('vi-VN')} đ) sẽ được bộ phận Kế toán / Back-office giải ngân chuyển khoản hoàn lại cho bạn trong 24 - 48 giờ làm việc.`
+                  : `Quy định kho: Hủy trước ngày nhận kho dưới 4 ngày sẽ bị tịch thu 100% tiền cọc (${(cancelModalContract.depositFee || 500000).toLocaleString('vi-VN')} đ) để bù đắp chi phí giữ chỗ cho kho.`}
+              </p>
             </div>
+
+            {/* FORM ĐIỀN THÔNG TIN TÀI KHOẢN NGÂN HÀNG (CHỈ HIỆN KHI ĐƯỢC HOÀN CỌC) */}
+            {isRefundEligible ? (
+              <div className="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/80 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-blue-900 dark:text-blue-300">
+                  <i className="fa-solid fa-building-columns text-blue-600 dark:text-blue-400"></i>
+                  <span>Thông tin tài khoản nhận tiền hoàn cọc</span>
+                </div>
+                
+                <div className="space-y-2 text-xs">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                      Ngân hàng thụ hưởng:
+                    </label>
+                    <select
+                      value={refundBankName}
+                      onChange={(e) => setRefundBankName(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-xs focus:border-blue-500 focus:outline-none"
+                    >
+                      <option value="Vietcombank">Vietcombank (VCB)</option>
+                      <option value="MB Bank">MB Bank (Quân Đội)</option>
+                      <option value="Techcombank">Techcombank (TCB)</option>
+                      <option value="ACB">ACB (Á Châu)</option>
+                      <option value="VPBank">VPBank</option>
+                      <option value="TPBank">TPBank (Tiên Phong)</option>
+                      <option value="BIDV">BIDV</option>
+                      <option value="Agribank">Agribank</option>
+                      <option value="VietinBank">VietinBank</option>
+                      <option value="Khác">Ngân hàng khác</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                        Số tài khoản (STK): <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: 1029384756"
+                        value={refundAccountNumber}
+                        onChange={(e) => {
+                          setRefundAccountNumber(e.target.value);
+                          setBankFormError('');
+                        }}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-xs focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                        Tên chủ tài khoản: <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: NGUYEN VAN A"
+                        value={refundAccountName}
+                        onChange={(e) => {
+                          setRefundAccountName(e.target.value.toUpperCase());
+                          setBankFormError('');
+                        }}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs uppercase focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {bankFormError && (
+                    <p className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-1 mt-1">
+                      <i className="fa-solid fa-circle-exclamation"></i> {bankFormError}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-[11px] text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                <i className="fa-solid fa-info-circle text-slate-500"></i>
+                <span>Trường hợp này không được hoàn tiền cọc nên không cần cung cấp thông tin tài khoản ngân hàng.</span>
+              </div>
+            )}
 
             <div className="pt-2 flex items-center justify-end space-x-2.5">
               <button

@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 public class FeeDiscountRequest {
     private Integer discountPercent; // % miễn giảm (ví dụ 50, 100)
     private BigDecimal discountAmount; // Số tiền miễn giảm cụ thể (nếu nhập theo số tiền)
-    private String reason; // Bắt buộc phải có lý do duyệt theo BR-48
+    private String reason; // Bắt buộc phải có lý do duyệt miễn / giảm phí
 
     public FeeDiscountRequest() {
     }

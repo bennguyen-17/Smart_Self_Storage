@@ -21,10 +21,10 @@ public class CheckoutPreviewResponse {
 
     private BigDecimal rentalAmountPaid;
     private BigDecimal unusedRentalAmount;
-    private BigDecimal unusedRentalRefundAmount; // 50% theo BR-36
+    private BigDecimal unusedRentalRefundAmount; // 50% tiền thuê chưa dùng
     private BigDecimal depositAmount;
-    private BigDecimal unpaidPenalties; // Phạt quá hạn chưa nộp theo BR-30
-    private BigDecimal damageAndCleaningFee; // Hư hại/vệ sinh theo BR-33
+    private BigDecimal unpaidPenalties; // Phạt quá hạn chưa nộp
+    private BigDecimal damageAndCleaningFee; // Phí hư hại / vệ sinh
 
     private BigDecimal totalDeductions;
     private BigDecimal netSettlementAmount; // Số tiền quyết toán cuối cùng

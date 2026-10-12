@@ -6,12 +6,12 @@ public class DepositInitiateResponse {
     private boolean success;
     private String message;
     private Integer reservationId;
-    private String reservationCode; // BR-15: RES-HN01-3456-X9K2
+    private String reservationCode; // RES-HN01-3456-X9K2
     private Integer contractId;
-    private String contractDraftUrl; // BR-18: Hợp đồng dự thảo
+    private String contractDraftUrl; // Hợp đồng dự thảo
     private Integer paymentId;
-    private String invoiceNumber; // BR-37: DEP-HN01-20260927-4719
-    private BigDecimal depositAmount; // BR-16: 100% tiền cọc
+    private String invoiceNumber; // DEP-HN01-20260927-4719
+    private BigDecimal depositAmount; // 100% tiền cọc
     private BigDecimal rentalAmount;
     private String vietQrUrl; // Link ảnh QR thanh toán VietQR
     private String bankAccount;

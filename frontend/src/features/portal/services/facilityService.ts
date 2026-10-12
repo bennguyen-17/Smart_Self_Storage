@@ -64,7 +64,7 @@ const generateMockUnits = (facilityCode, currentFloor) => {
     for (let i = 1; i <= 10; i++) {
       const uId = `${prefix}-G-XL${i < 10 ? '0' + i : i}`;
       const defaultStatus = (i === 3 || i === 7) ? 'OCCUPIED' : 'AVAILABLE';
-      // Dãy 1 (1-5): Kho Tiêu chuẩn; Dãy 2 (6-10): Kho Mát Điều Hòa 22-25°C (+20% phụ phí BR-47)
+      // Dãy 1 (1-5): Kho Tiêu chuẩn; Dãy 2 (6-10): Kho Mát Điều Hòa 22-25°C (+20% phụ phí)
       const isClimate = i > 5;
       const baseDaily = 200000;
       const baseMonthly = 4000000;

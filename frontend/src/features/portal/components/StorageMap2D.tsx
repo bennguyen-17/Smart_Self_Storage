@@ -291,7 +291,7 @@ export default function StorageMap2D({
                         <span className="text-[10px] bg-cyan-600 text-white px-1.5 py-0.2 rounded-md font-bold">Đang lọc</span>
                       )}
                     </h3>
-                    <span className="text-[11px] font-bold text-cyan-600 dark:text-cyan-400">+20% phụ phí điều hòa (BR-47)</span>
+                    <span className="text-[11px] font-bold text-cyan-600 dark:text-cyan-400">+20% phụ phí điều hòa</span>
                   </div>
                 </div>
                 <input

@@ -37,7 +37,7 @@ public class StorageUnitController {
         return ResponseEntity.ok(storageService.filterUnits(facilityId, floorId, unitTypeId, storageCondition, status));
     }
 
-    // --- US-03: API Tính giá thuê & tiền cọc tự động (BR-08 & BR-13) ---
+    // --- US-03: API Tính giá thuê & tiền cọc tự động ---
     @PostMapping("/pricing/calculate")
     public ResponseEntity<CalculatePriceResponse> calculatePrice(@RequestBody CalculatePriceRequest request) {
         CalculatePriceResponse response = storageService.calculateRentalPrice(request);

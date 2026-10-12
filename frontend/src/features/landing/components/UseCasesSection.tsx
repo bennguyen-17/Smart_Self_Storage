@@ -4,15 +4,10 @@ import personalStorageBoxesImg from "@/assets/landing/personal-storage-boxes.jpg
 import qrScanStorageImg from "@/assets/landing/qr-scan-storage.jpg"
 import {
   USE_CASES_SECTION,
-  type EstimatorPresetId,
 } from "../content/copy"
 import { SectionHeading } from "./SectionHeading"
 
-interface UseCasesSectionProps {
-  onTry?: (presetId: EstimatorPresetId) => void
-}
-
-export function UseCasesSection({ onTry: _onTry }: UseCasesSectionProps) {
+export function UseCasesSection() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
   const [isHovered, setIsHovered] = useState(false)

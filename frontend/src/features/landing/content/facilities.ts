@@ -1,4 +1,4 @@
-// 7 cơ sở theo BR-00 và docs/Take note.txt.
+// Danh sách 7 cơ sở vận hành.
 // Chỉ giữ thông tin public: không đưa bố trí bên trong kho (xem docs) lên trang.
 
 export type CityId = "HN" | "HCM" | "DN" | "CT"
