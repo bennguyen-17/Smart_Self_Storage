@@ -331,70 +331,70 @@ export default function BomPortalPage() {
             </div>
           </div>
 
-          {/* 5 NÚT BẤM DẠNG PILL ĐẶT TRỰC TIẾP TRÊN NỀN - VIỀN DẠ QUANG ĐA SẮC MÀU */}
+          {/* 5 NÚT BẤM DẠNG PILL ĐỒNG BỘ 1 MÀU BO VIỀN DUY NHẤT (CYAN / SKY BLUE NEON) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-2">
-            {/* Pill 1: Giám Sát (Cyan Glow) */}
+            {/* Pill 1: Giám Sát Cơ Sở */}
             <button
               onClick={() => setActiveTab(activeTab === "dashboard" ? "home" : "dashboard")}
               className={`py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] ${
                 activeTab === "dashboard"
                   ? "bg-sky-500 text-slate-950 border-2 border-sky-300 shadow-[0_0_35px_rgba(56,189,248,0.7)]"
-                  : "border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-sky-200 shadow-[0_0_20px_rgba(56,189,248,0.3)] backdrop-blur-xs"
+                  : "border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-slate-100 hover:text-white shadow-[0_0_20px_rgba(56,189,248,0.25)] backdrop-blur-xs"
               }`}
             >
-              <TrendingUp className="size-5 shrink-0" />
+              <TrendingUp className="size-5 shrink-0 text-sky-400" />
               <span>Giám Sát Cơ Sở</span>
             </button>
 
-            {/* Pill 2: Danh Sách Cơ Sở (Blue Glow) */}
+            {/* Pill 2: Danh Sách Cơ Sở */}
             <button
               onClick={() => setActiveTab(activeTab === "facilities" ? "home" : "facilities")}
               className={`py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] ${
                 activeTab === "facilities"
-                  ? "bg-blue-500 text-white border-2 border-blue-300 shadow-[0_0_35px_rgba(96,165,250,0.7)]"
-                  : "border-2 border-blue-400/80 bg-slate-950/40 hover:bg-blue-500/20 text-blue-200 shadow-[0_0_20px_rgba(96,165,250,0.3)] backdrop-blur-xs"
+                  ? "bg-sky-500 text-slate-950 border-2 border-sky-300 shadow-[0_0_35px_rgba(56,189,248,0.7)]"
+                  : "border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-slate-100 hover:text-white shadow-[0_0_20px_rgba(56,189,248,0.25)] backdrop-blur-xs"
               }`}
             >
-              <Warehouse className="size-5 shrink-0" />
+              <Warehouse className="size-5 shrink-0 text-sky-400" />
               <span>Danh Sách Cơ Sở</span>
             </button>
 
-            {/* Pill 3: Quy Định Chính Sách (Purple Glow) */}
+            {/* Pill 3: Quy Định Chính Sách */}
             <button
               onClick={() => setActiveTab(activeTab === "policies" ? "home" : "policies")}
               className={`py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] ${
                 activeTab === "policies"
-                  ? "bg-purple-500 text-white border-2 border-purple-300 shadow-[0_0_35px_rgba(192,132,252,0.7)]"
-                  : "border-2 border-purple-400/80 bg-slate-950/40 hover:bg-purple-500/20 text-purple-200 shadow-[0_0_20px_rgba(192,132,252,0.3)] backdrop-blur-xs"
+                  ? "bg-sky-500 text-slate-950 border-2 border-sky-300 shadow-[0_0_35px_rgba(56,189,248,0.7)]"
+                  : "border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-slate-100 hover:text-white shadow-[0_0_20px_rgba(56,189,248,0.25)] backdrop-blur-xs"
               }`}
             >
-              <ShieldAlert className="size-5 shrink-0" />
+              <ShieldAlert className="size-5 shrink-0 text-sky-400" />
               <span>Quy Định Chính Sách</span>
             </button>
 
-            {/* Pill 4: Khung Giá Phụ Thu (Green Glow) */}
+            {/* Pill 4: Khung Giá Phụ Thu */}
             <button
               onClick={() => setActiveTab(activeTab === "pricing" ? "home" : "pricing")}
               className={`py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] ${
                 activeTab === "pricing"
-                  ? "bg-emerald-500 text-slate-950 border-2 border-emerald-300 shadow-[0_0_35px_rgba(52,211,153,0.7)]"
-                  : "border-2 border-emerald-400/80 bg-slate-950/40 hover:bg-emerald-500/20 text-emerald-200 shadow-[0_0_20px_rgba(52,211,153,0.3)] backdrop-blur-xs"
+                  ? "bg-sky-500 text-slate-950 border-2 border-sky-300 shadow-[0_0_35px_rgba(56,189,248,0.7)]"
+                  : "border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-slate-100 hover:text-white shadow-[0_0_20px_rgba(56,189,248,0.25)] backdrop-blur-xs"
               }`}
             >
-              <SlidersHorizontal className="size-5 shrink-0" />
+              <SlidersHorizontal className="size-5 shrink-0 text-sky-400" />
               <span>Khung Giá Phụ Thu</span>
             </button>
 
-            {/* Pill 5: Báo Cáo Toàn Chuỗi (Amber Glow) */}
+            {/* Pill 5: Báo Cáo Toàn Chuỗi */}
             <button
               onClick={() => setActiveTab(activeTab === "reports" ? "home" : "reports")}
               className={`py-4 sm:py-5 px-5 rounded-full font-black text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2.5 transition-all duration-300 cursor-pointer shadow-lg hover:scale-[1.03] ${
                 activeTab === "reports"
-                  ? "bg-amber-500 text-slate-950 border-2 border-amber-300 shadow-[0_0_35px_rgba(251,191,36,0.7)]"
-                  : "border-2 border-amber-400/80 bg-slate-950/40 hover:bg-amber-500/20 text-amber-200 shadow-[0_0_20px_rgba(251,191,36,0.3)] backdrop-blur-xs"
+                  ? "bg-sky-500 text-slate-950 border-2 border-sky-300 shadow-[0_0_35px_rgba(56,189,248,0.7)]"
+                  : "border-2 border-sky-400/80 bg-slate-950/40 hover:bg-sky-500/20 text-slate-100 hover:text-white shadow-[0_0_20px_rgba(56,189,248,0.25)] backdrop-blur-xs"
               }`}
             >
-              <FileSpreadsheet className="size-5 shrink-0" />
+              <FileSpreadsheet className="size-5 shrink-0 text-sky-400" />
               <span>Báo Cáo Toàn Chuỗi</span>
             </button>
           </div>
