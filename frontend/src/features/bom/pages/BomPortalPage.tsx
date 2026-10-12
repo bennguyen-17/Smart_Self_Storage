@@ -379,37 +379,28 @@ export default function BomPortalPage() {
           </div>
         ) : (
           /* GIAO DIỆN KHI CHỌN 1 MỤC: CHUYỂN THÀNH MENU BÊN TRÁI + NỘI DUNG BÊN PHẢI */
-          <div className="space-y-5">
-            {/* Thanh điều hướng tinh gọn phía trên */}
-            <div className="flex items-center justify-between pb-3 border-b border-sky-500/20">
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
+            {/* MENU BÊN TRÁI (Sticky Unified Sidebar Card) */}
+            <div className="w-full lg:w-64 xl:w-72 shrink-0 space-y-1.5 sticky top-20 bg-slate-950/70 backdrop-blur-md rounded-2xl border border-sky-500/20 p-2.5 shadow-xl">
               <button
                 onClick={() => setActiveTab("home")}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-950/60 hover:bg-sky-500/20 text-sky-300 hover:text-white font-bold text-xs border border-sky-500/30 transition cursor-pointer backdrop-blur-xs group"
+                className="w-full py-2.5 px-3.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900/90 font-bold text-xs flex items-center justify-between transition cursor-pointer border border-transparent hover:border-sky-500/20 group mb-1"
               >
-                <ArrowLeft className="size-3.5 group-hover:-translate-x-0.5 transition-transform" />
-                <span>Quay lại Trang Chủ</span>
+                <span className="flex items-center space-x-2.5">
+                  <ArrowLeft className="size-4 text-sky-400 group-hover:-translate-x-0.5 transition-transform" />
+                  <span>Về Trang Chủ</span>
+                </span>
+                <span className="text-[10px] uppercase font-black text-sky-400/80 bg-sky-500/10 px-1.5 py-0.5 rounded">
+                  Home
+                </span>
               </button>
 
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-slate-400 font-medium hidden sm:inline">Khu vực:</span>
-                <span className="px-3 py-1 rounded-lg bg-sky-500/15 text-sky-300 border border-sky-400/30 font-black text-[11px] uppercase tracking-wider">
-                  {activeTab === "dashboard" && "Giám Sát Cơ Sở"}
-                  {activeTab === "facilities" && "Danh Sách Cơ Sở"}
-                  {activeTab === "policies" && "Quy Định Chính Sách"}
-                  {activeTab === "pricing" && "Khung Giá Phụ Thu"}
-                  {activeTab === "reports" && "Báo Cáo Toàn Chuỗi"}
-                </span>
-              </div>
-            </div>
+              <div className="border-t border-slate-800/80 my-1" />
 
-            {/* Cột Menu Bên Trái (Left Menu) + Cột Nội Dung Bên Phải (Right Content) */}
-            <div className="flex flex-col lg:flex-row gap-6 items-start">
-              {/* MENU BÊN TRÁI (Sticky Unified Sidebar Card) */}
-              <div className="w-full lg:w-64 xl:w-72 shrink-0 space-y-1.5 sticky top-20 bg-slate-950/70 backdrop-blur-md rounded-2xl border border-sky-500/20 p-2.5 shadow-xl">
-                <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-between">
-                  <span>Menu Điều Hành</span>
-                  <span className="size-2 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)] animate-pulse" />
-                </div>
+              <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                <span>Menu Điều Hành</span>
+                <span className="size-2 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)] animate-pulse" />
+              </div>
 
                 {/* 5 Menu Items */}
                 <button
@@ -1183,7 +1174,6 @@ export default function BomPortalPage() {
         )}
               </div>
             </div>
-          </div>
         )}
       </main>
 
