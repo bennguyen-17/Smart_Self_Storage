@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
-import { Warehouse, Boxes, KeyRound, Headset, ArrowLeft, Sparkles } from 'lucide-react';
+import { Warehouse, Boxes, KeyRound, Headset, Sparkles } from 'lucide-react';
 import Header from '@/components/common/Header';
 import StorageMap2D from '@/features/portal/components/StorageMap2D';
 import BookingSidebar from '@/features/portal/components/BookingSidebar';
@@ -264,19 +264,9 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
             <div className="w-full flex-1 flex flex-col items-center">
               {/* TOP STICKY NAVBAR TRÊN CÙNG */}
               <div className="sticky top-13 sm:top-14 z-30 w-full bg-slate-950/85 backdrop-blur-xl border-b border-cyan-500/25 py-3 shadow-[0_6px_25px_rgba(0,0,0,0.5)]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  {/* Nút Về Trang Chủ */}
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('home')}
-                    className="flex items-center space-x-2 px-3.5 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-900/80 border border-transparent hover:border-cyan-500/30 font-bold text-xs sm:text-sm transition-all cursor-pointer group shrink-0"
-                  >
-                    <ArrowLeft className="size-4 text-cyan-400 group-hover:-translate-x-1 transition-transform" />
-                    <span>Về Trang Chủ</span>
-                  </button>
-
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center">
                   {/* 4 MỤC NAVBAR (MORPH TỪ GIỮA MÀN HÌNH LÊN) */}
-                  <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto w-full sm:w-auto p-1 bg-slate-900/70 rounded-2xl border border-cyan-500/25 justify-center">
+                  <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto p-1 bg-slate-900/70 rounded-2xl border border-cyan-500/25 justify-center">
                     {CUSTOMER_NAV_ITEMS.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeTab === item.id;
@@ -287,7 +277,7 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                           transition={CUST_NAV_TRANSITION}
                           type="button"
                           onClick={() => setActiveTab(item.id)}
-                          className={`px-3.5 sm:px-4 py-2 rounded-xl font-black text-xs sm:text-sm tracking-wide flex items-center space-x-2 transition-colors duration-200 cursor-pointer whitespace-nowrap ${
+                          className={`px-3.5 sm:px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm tracking-wide flex items-center space-x-2 transition-colors duration-200 cursor-pointer whitespace-nowrap ${
                             isActive
                               ? 'bg-cyan-500 text-slate-950 shadow-[0_0_20px_rgba(34,211,238,0.45)]'
                               : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
@@ -309,12 +299,6 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                         </motion.button>
                       );
                     })}
-                  </div>
-
-                  {/* Chào khách hàng góc phải */}
-                  <div className="hidden lg:flex items-center space-x-2 text-xs font-semibold text-slate-400 shrink-0">
-                    <span>Khách hàng:</span>
-                    <span className="text-cyan-300 font-extrabold">{customerName}</span>
                   </div>
                 </div>
               </div>
