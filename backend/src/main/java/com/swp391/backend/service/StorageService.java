@@ -324,6 +324,11 @@ public class StorageService {
     // --- US-14: Đưa ô kho vào trạng thái bảo trì / dọn dẹp ---
     @Transactional
     public StorageUnit putUnderMaintenance(String unitCode, Integer managerFacilityId, Integer accountId) {
+        return putUnderMaintenance(unitCode, managerFacilityId, accountId, null);
+    }
+
+    @Transactional
+    public StorageUnit putUnderMaintenance(String unitCode, Integer managerFacilityId, Integer accountId, String note) {
         StorageUnit unit = storageUnitRepository.findById(unitCode)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy ô kho: " + unitCode));
 
@@ -345,7 +350,11 @@ public class StorageService {
             ActivityLog log = new ActivityLog();
             log.setAccountId(accountId);
             log.setAction("PUT_MAINTENANCE");
-            log.setDescription("Đưa ô kho " + unitCode + " vào trạng thái bảo trì UNDER_MAINTENANCE");
+            String desc = "Đưa ô kho " + unitCode + " vào trạng thái bảo trì UNDER_MAINTENANCE";
+            if (note != null && !note.trim().isEmpty()) {
+                desc += ". Ghi chú: " + note.trim();
+            }
+            log.setDescription(desc);
             log.setCreatedAt(java.time.LocalDateTime.now());
             activityLogRepository.save(log);
         }

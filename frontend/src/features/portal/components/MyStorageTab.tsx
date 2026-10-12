@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { getMyContracts, getGatePin, cancelDepositContract } from '@/features/portal/services/contractService';
 import ContractDetailModal from '@/features/portal/components/modals/ContractDetailModal';
 import { formatDate } from '@/lib/format';
-import { canExtendOnline } from '@/features/portal/lib/contractRules';
+import { AT_COUNTER_NOTE, canExtendOnline, extendModeOf } from '@/features/portal/lib/contractRules';
 
 export default function MyStorageTab({ onOpenExtendModal }) {
   const [contracts, setContracts] = useState([]);
@@ -463,11 +463,24 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                               </span>
                             )}
 
-                            {/* HĐ OVERDUE không gia hạn online, phải ra quầy nộp phạt */}
-                            {item.status === 'OVERDUE' && (
-                              <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                                <i className="fa-solid fa-store text-xs"></i> Quá hạn: vui lòng gia hạn tại quầy
-                              </span>
+                            {/* HĐ OVERDUE: nút Gia hạn bị khóa + thông báo đến quầy (nộp phạt và gia hạn tại quầy) */}
+                            {extendModeOf(item.status) === 'AT_COUNTER' && (
+                              <div className="flex flex-col items-end gap-1">
+                                <button
+                                  type="button"
+                                  disabled
+                                  aria-describedby={`overdue-note-card-${String(item.contractId).replace(/\W/g, '')}`}
+                                  className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 cursor-not-allowed flex items-center justify-center gap-1.5 whitespace-nowrap"
+                                >
+                                  <i className="fa-solid fa-arrows-rotate text-xs"></i> Gia Hạn
+                                </button>
+                                <span
+                                  id={`overdue-note-card-${String(item.contractId).replace(/\W/g, '')}`}
+                                  className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 flex items-center gap-1"
+                                >
+                                  <i className="fa-solid fa-store text-[10px]"></i> {AT_COUNTER_NOTE}
+                                </span>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -577,14 +590,28 @@ export default function MyStorageTab({ onOpenExtendModal }) {
                                     </span>
                                   )}
 
-                                  {/* HĐ OVERDUE không gia hạn online, phải ra quầy nộp phạt */}
-                                  {item.status === 'OVERDUE' && (
-                                    <span
-                                      className="text-xs font-semibold text-amber-700 dark:text-amber-300 flex items-center gap-1"
-                                      title="Hợp đồng quá hạn không gia hạn online được. Vui lòng đến quầy để nộp phạt và gia hạn."
-                                    >
-                                      <i className="fa-solid fa-store text-[11px]"></i> Gia hạn tại quầy
-                                    </span>
+                                  {/* HĐ OVERDUE: nút Gia hạn bị khóa + thông báo đến quầy (nộp phạt và gia hạn tại quầy) */}
+                                  {extendModeOf(item.status) === 'AT_COUNTER' && (
+                                    <div className="flex flex-col items-end gap-1">
+                                      <button
+                                        type="button"
+                                        disabled
+                                        aria-describedby={`overdue-note-row-${String(item.contractId).replace(/\W/g, '')}`}
+                                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 cursor-not-allowed flex items-center justify-center gap-1 whitespace-nowrap"
+                                      >
+                                        <i className="fa-solid fa-arrows-rotate text-[11px]"></i> Gia Hạn
+                                      </button>
+                                      {/* Cột bảng hẹp: hiện câu ngắn, câu đầy đủ ở tooltip và cho trình đọc màn hình */}
+                                      <span
+                                        id={`overdue-note-row-${String(item.contractId).replace(/\W/g, '')}`}
+                                        title={AT_COUNTER_NOTE}
+                                        className="text-[11px] leading-tight font-semibold text-amber-700 dark:text-amber-300 whitespace-nowrap"
+                                      >
+                                        <i className="fa-solid fa-store text-[10px] mr-1" aria-hidden="true"></i>
+                                        <span aria-hidden="true">Gia hạn tại quầy</span>
+                                        <span className="sr-only">{AT_COUNTER_NOTE}</span>
+                                      </span>
+                                    </div>
                                   )}
                                 </div>
                               </td>
@@ -639,7 +666,7 @@ export default function MyStorageTab({ onOpenExtendModal }) {
               <div className="flex items-center justify-between font-bold text-xs">
                 <span className="flex items-center gap-1.5">
                   <i className={`fa-solid ${isRefundEligible ? 'fa-circle-check text-emerald-600 dark:text-emerald-400' : 'fa-circle-exclamation text-amber-600 dark:text-amber-400'}`}></i>
-                  {isRefundEligible ? 'Đủ điều kiện hoàn 100% tiền cọc (BR-17)' : 'Hủy cận ngày: Hoàn 50% tiền cọc (BR-17)'}
+                  {isRefundEligible ? 'Đủ điều kiện hoàn 100% tiền cọc' : 'Hủy cận ngày: Hoàn 50% tiền cọc'}
                 </span>
                 <span className="font-mono text-[10.5px] px-2 py-0.5 rounded-full bg-white/80 dark:bg-slate-900/80 border border-current font-bold">
                   Còn {daysUntilStart > 0 ? `${daysUntilStart} ngày` : 'trong ngày'} đến ngày nhận kho
@@ -647,8 +674,8 @@ export default function MyStorageTab({ onOpenExtendModal }) {
               </div>
               <p className="text-[11px] leading-relaxed">
                 {isRefundEligible
-                  ? `Theo Business Rule BR-17: Do bạn hủy trước ngày nhận kho từ 4 ngày trở lên, toàn bộ 100% số tiền cọc (${(cancelModalContract.depositFee || 500000).toLocaleString('vi-VN')} đ) sẽ được bộ phận Kế toán / Back-office chuyển khoản hoàn lại cho bạn trong 24 - 48 giờ làm việc.`
-                  : `Theo Business Rule BR-17: Do hủy trước ngày nhận kho dưới 4 ngày, bạn sẽ bị khấu trừ 50% tiền cọc (${((cancelModalContract.depositFee || 500000) * 0.5).toLocaleString('vi-VN')} đ) làm chi phí giữ chỗ, và được hoàn lại 50% tiền cọc (${((cancelModalContract.depositFee || 500000) * 0.5).toLocaleString('vi-VN')} đ) về tài khoản ngân hàng.`}
+                  ? `Chính sách hoàn cọc: Do bạn hủy trước ngày nhận kho từ 4 ngày trở lên, toàn bộ 100% số tiền cọc (${(cancelModalContract.depositFee || 500000).toLocaleString('vi-VN')} đ) sẽ được bộ phận Kế toán chuyển khoản hoàn lại cho bạn trong 24 - 48 giờ làm việc.`
+                  : `Chính sách hoàn cọc: Do hủy trước ngày nhận kho dưới 4 ngày, bạn sẽ bị khấu trừ 50% tiền cọc (${((cancelModalContract.depositFee || 500000) * 0.5).toLocaleString('vi-VN')} đ) làm chi phí giữ chỗ, và được hoàn lại 50% tiền cọc (${((cancelModalContract.depositFee || 500000) * 0.5).toLocaleString('vi-VN')} đ) về tài khoản ngân hàng.`}
               </p>
             </div>
 

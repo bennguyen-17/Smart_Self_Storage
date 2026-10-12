@@ -36,6 +36,7 @@ public class LoginResponse {
         private String email;
         private String identityNumber;
         private String status;
+        private Integer facilityId;
 
         public UserInfo() {
         }
@@ -47,6 +48,10 @@ public class LoginResponse {
         }
 
         public UserInfo(Integer id, String fullName, String role, String phone, String email, String identityNumber, String status) {
+            this(id, fullName, role, phone, email, identityNumber, status, null);
+        }
+
+        public UserInfo(Integer id, String fullName, String role, String phone, String email, String identityNumber, String status, Integer facilityId) {
             this.id = id;
             this.fullName = fullName;
             this.role = role;
@@ -54,6 +59,7 @@ public class LoginResponse {
             this.email = email;
             this.identityNumber = identityNumber;
             this.status = status;
+            this.facilityId = facilityId;
         }
 
         public Integer getId() {
@@ -110,6 +116,14 @@ public class LoginResponse {
 
         public void setStatus(String status) {
             this.status = status;
+        }
+
+        public Integer getFacilityId() {
+            return facilityId;
+        }
+
+        public void setFacilityId(Integer facilityId) {
+            this.facilityId = facilityId;
         }
     }
 }

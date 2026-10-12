@@ -1,5 +1,21 @@
 import { describe, expect, test } from "vitest"
-import { canExtendOnline } from "./contractRules"
+import { canExtendOnline, extendModeOf } from "./contractRules"
+
+describe("extendModeOf: hiện nút Gia hạn theo trạng thái hợp đồng", () => {
+  test.each([
+    { status: "ACTIVE", expected: "ONLINE" },
+    { status: "OVERDUE", expected: "AT_COUNTER" }, // nút khóa + thông báo đến quầy
+    { status: "TERMINATED", expected: "NONE" }, // ẩn hẳn nút
+    { status: "FORFEITED", expected: "NONE" },
+    { status: "CANCELED", expected: "NONE" },
+    { status: "PENDING_CHECKIN", expected: "NONE" },
+    { status: "SUSPENDED", expected: "NONE" },
+    { status: "", expected: "NONE" },
+    { status: "overdue", expected: "NONE" },
+  ])("$status → $expected", ({ status, expected }) => {
+    expect(extendModeOf(status)).toBe(expected)
+  })
+})
 
 describe("canExtendOnline: chỉ hợp đồng ACTIVE mới được gia hạn online", () => {
   test.each([
