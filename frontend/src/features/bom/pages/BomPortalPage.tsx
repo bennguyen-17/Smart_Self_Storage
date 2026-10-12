@@ -71,6 +71,13 @@ const NAV_ITEMS = [
   },
 ]
 
+const NAV_LAYOUT_TRANSITION = {
+  type: "spring" as const,
+  stiffness: 110,
+  damping: 20,
+  mass: 1.1,
+}
+
 export default function BomPortalPage() {
   const { theme, setTheme } = useTheme()
   const { signOut } = useAuth()
@@ -521,13 +528,14 @@ export default function BomPortalPage() {
                     <motion.button
                       key={item.id}
                       layoutId={`bom-nav-btn-${item.id}`}
-                      transition={{ type: "spring", stiffness: 350, damping: 28 }}
+                      transition={NAV_LAYOUT_TRANSITION}
                       onClick={() => setActiveTab(item.id)}
                       className="group p-5 sm:p-6 rounded-2xl sm:rounded-3xl min-h-[190px] sm:min-h-[220px] flex flex-col justify-between items-start text-left cursor-pointer border-2 border-sky-400/80 hover:border-sky-300 bg-slate-950/60 hover:bg-slate-900/80 shadow-[0_0_25px_rgba(56,189,248,0.25)] hover:shadow-[0_0_40px_rgba(56,189,248,0.5)] hover:scale-[1.03] backdrop-blur-md relative overflow-hidden transition-colors"
                     >
                       <div className="flex items-center justify-between w-full">
                         <motion.div
                           layoutId={`bom-nav-icon-${item.id}`}
+                          transition={NAV_LAYOUT_TRANSITION}
                           className="p-3.5 rounded-2xl bg-sky-500/15 border border-sky-400/30 text-sky-400 group-hover:bg-sky-500 group-hover:text-slate-950 transition-colors shadow-md"
                         >
                           <Icon className="size-6 sm:size-7" />
@@ -539,6 +547,7 @@ export default function BomPortalPage() {
                       <div className="mt-4 space-y-1.5 w-full">
                         <motion.div
                           layoutId={`bom-nav-title-${item.id}`}
+                          transition={NAV_LAYOUT_TRANSITION}
                           className="text-base sm:text-lg font-black text-white group-hover:text-sky-300 tracking-tight transition-colors"
                         >
                           {item.label}
@@ -578,7 +587,7 @@ export default function BomPortalPage() {
                     <motion.button
                       key={item.id}
                       layoutId={`bom-nav-btn-${item.id}`}
-                      transition={{ type: "spring", stiffness: 350, damping: 28 }}
+                      transition={NAV_LAYOUT_TRANSITION}
                       onClick={() => setActiveTab(item.id)}
                       className={`w-full py-2.5 px-3.5 rounded-xl font-bold text-xs tracking-wide flex items-center justify-between transition-colors duration-200 cursor-pointer ${
                         isActive
@@ -587,10 +596,10 @@ export default function BomPortalPage() {
                       }`}
                     >
                       <span className="flex items-center space-x-2.5 min-w-0">
-                        <motion.span layoutId={`bom-nav-icon-${item.id}`} className="shrink-0">
+                        <motion.span layoutId={`bom-nav-icon-${item.id}`} transition={NAV_LAYOUT_TRANSITION} className="shrink-0">
                           <Icon className={`size-4.5 ${isActive ? "text-slate-950" : "text-sky-400"}`} />
                         </motion.span>
-                        <motion.span layoutId={`bom-nav-title-${item.id}`} className="truncate">
+                        <motion.span layoutId={`bom-nav-title-${item.id}`} transition={NAV_LAYOUT_TRANSITION} className="truncate">
                           {item.label}
                         </motion.span>
                       </span>
@@ -603,9 +612,9 @@ export default function BomPortalPage() {
               {/* CỘT NỘI DUNG BÊN PHẢI (Right Content Panel with smooth slide-in) */}
               <motion.div
                 key={activeTab}
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: 24 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                transition={{ duration: 0.5, delay: 0.18, ease: "easeOut" }}
                 className="flex-1 min-w-0 space-y-6"
               >
 
