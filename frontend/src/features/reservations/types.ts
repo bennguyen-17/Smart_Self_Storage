@@ -25,6 +25,7 @@ export interface Reservation {
   forfeitedAmount: number | null // Tiền cọc bị tịch thu (VND)
   refundAmount?: number | null // Tiền cọc được hoàn lại (VND)
   refundStatus?: RefundStatus | null // NONE | PENDING | REFUNDED
+  refundPaymentId?: number | null // paymentId của phiếu hoàn tiền (hóa đơn REF) để xác nhận với BE
   refundEvidenceUrl?: string | null // Link/Base64 ảnh chụp biên lai chuyển tiền
   refundedAt?: string | null // ISO datetime
   refundStaffName?: string | null // Tên nhân viên back-office thực hiện
@@ -55,4 +56,25 @@ export interface NoShowScanResult {
   scannedAt: string
   canceledCount: number
   reservationCodes: string[]
+}
+
+/**
+ * Một phiếu hoàn tiền cọc đang chờ back-office xử lý.
+ * Khớp RefundListItemResponse của BE: GET /api/staff/refunds?status=PENDING
+ */
+export interface RefundItem {
+  paymentId: number
+  invoiceNumber: string
+  contractId: number
+  reservationCode: string
+  unitCode: string
+  customerName: string
+  customerPhone: string
+  refundAmount: number
+  refundBankName: string | null
+  refundAccountNumber: string | null
+  refundAccountName: string | null
+  cancelReason: CancelReason | string | null
+  status: string // PENDING | PAID
+  issuedAt: string // ISO datetime
 }
