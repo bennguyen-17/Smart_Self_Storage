@@ -1129,24 +1129,8 @@ export default function BomPortalPage() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
                 <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-white">
                   <FileSpreadsheet className="size-4.5 text-sky-400" />
-                  <span>XEM VÀ XUẤT BÁO CÁO TOÀN HỆ THỐNG (SYSTEM-WIDE REPORTS &amp; ANALYTICS)</span>
+                  <span>BÁO CÁO TOÀN HỆ THỐNG (SYSTEM-WIDE REPORTS &amp; ANALYTICS)</span>
                 </h3>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handleExport("EXCEL")}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-xs"
-                  >
-                    <FileSpreadsheet className="size-4" />
-                    <span>Xuất Excel (.xlsx)</span>
-                  </button>
-                  <button
-                    onClick={() => handleExport("PDF")}
-                    className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-xs"
-                  >
-                    <FileText className="size-4" />
-                    <span>Xuất PDF Report</span>
-                  </button>
-                </div>
               </div>
 
               {/* Filter bar */}
