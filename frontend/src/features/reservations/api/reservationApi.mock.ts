@@ -6,6 +6,7 @@ import { addDays, todayInVietnam } from "@/lib/format"
 import type {
   NoShowScanResult,
   PageResponse,
+  RefundItem,
   RefundStatus,
   Reservation,
   ReservationFilter,
@@ -212,9 +213,12 @@ function vnMidnightIso(isoDate: string): string {
   return new Date(`${isoDate}T00:00:00+07:00`).toISOString()
 }
 
+/** paymentId giả của phiếu hoàn tiền (hóa đơn REF), tương ứng thứ tự đơn trong dữ liệu mẫu */
+const MOCK_REFUND_PAYMENT_BASE = 9001
+
 function buildStore(): Reservation[] {
   const today = todayInVietnam()
-  return SEEDS.map(({ checkinOffsetDays, forfeitRate, ...seed }) => {
+  return SEEDS.map(({ checkinOffsetDays, forfeitRate, ...seed }, index) => {
     const checkinDate = addDays(today, checkinOffsetDays)
     const createdAt = vnMidnightIso(addDays(checkinDate, -7))
     let canceledAt: string | null = null
@@ -243,6 +247,7 @@ function buildStore(): Reservation[] {
       forfeitedAmount,
       refundAmount,
       refundStatus,
+      refundPaymentId: refundStatus === "NONE" ? null : MOCK_REFUND_PAYMENT_BASE + index,
     }
   })
 }
@@ -312,23 +317,58 @@ export function mockRunNoShowScan(): Promise<NoShowScanResult> {
   })
 }
 
-/** Giả lập quy trình Back-office hoàn tiền cọc & lưu biên lai */
-export function mockConfirmRefund(
-  code: string,
-  payload: { evidenceUrl: string; note?: string; staffName?: string }
-): Promise<Reservation> {
-  const index = store.findIndex((r) => r.reservationCode === code)
-  if (index === -1) {
-    return Promise.reject(new Error(`Không tìm thấy đơn ${code}`))
+/** Tách "STK (Ngân hàng) - Chủ TK" của dữ liệu mẫu thành các trường như BE trả về */
+function splitBankAccount(r: Reservation) {
+  const match = /^(\S+)(?: \(([^)]+)\))?(?: - (.+))?$/.exec(r.bankAccount?.trim() ?? "")
+  return {
+    refundAccountNumber: match?.[1] ?? null,
+    refundBankName: r.bankName ?? match?.[2] ?? null,
+    refundAccountName: match?.[3] ?? null,
   }
-  const updated: Reservation = {
+}
+
+/** Giả lập GET /api/staff/refunds?status=PENDING */
+export function mockListPendingRefunds(): Promise<RefundItem[]> {
+  const items = store
+    .filter((r) => r.refundStatus === "PENDING" && r.refundPaymentId)
+    .map<RefundItem>((r) => ({
+      paymentId: r.refundPaymentId!,
+      invoiceNumber: `REF-${r.refundPaymentId}`,
+      contractId: r.refundPaymentId!,
+      reservationCode: r.reservationCode,
+      unitCode: r.unitCode,
+      customerName: r.customerName,
+      customerPhone: "",
+      refundAmount: r.refundAmount ?? 0,
+      ...splitBankAccount(r),
+      cancelReason: r.cancelReason,
+      status: "PENDING",
+      issuedAt: r.canceledAt ?? r.createdAt,
+    }))
+  return delay(items)
+}
+
+/** Giả lập POST /api/staff/settlements/{paymentId}/confirm-refund */
+export function mockConfirmRefundPayment(
+  paymentId: number,
+  payload: { evidenceUrl: string; transactionRef?: string; staffName?: string | null }
+): Promise<{ success: true; message: string }> {
+  const index = store.findIndex((r) => r.refundPaymentId === paymentId && r.refundStatus === "PENDING")
+  if (index === -1) {
+    return Promise.reject(new Error("Không tìm thấy hóa đơn hoàn tiền hợp lệ!"))
+  }
+  store[index] = {
     ...store[index],
     refundStatus: "REFUNDED",
     refundEvidenceUrl: payload.evidenceUrl,
     refundedAt: new Date().toISOString(),
-    refundStaffName: payload.staffName || "Trần Thị Thu (Kế toán Back-office)",
-    refundNote: payload.note || "Đã chuyển khoản ngoài và lưu biên lai đối soát thành công",
+    refundStaffName: payload.staffName ?? null,
+    refundNote: payload.transactionRef ?? null,
   }
-  store[index] = updated
-  return delay(updated)
+  return delay({ success: true as const, message: "Đã xác nhận giải ngân hoàn tiền thành công!" })
+}
+
+/** Chỉ dùng trong test: đưa dữ liệu mẫu về ban đầu */
+export function resetReservationsMock() {
+  store = buildStore()
 }

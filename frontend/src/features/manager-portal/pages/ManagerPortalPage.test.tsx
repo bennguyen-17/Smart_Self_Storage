@@ -39,13 +39,13 @@ beforeEach(() => {
 })
 
 describe("ManagerPortalPage: khung Cổng Quản lý cơ sở", () => {
-  test("hiện tên thật, chữ viết tắt, vai trò, đủ 5 tab, mặc định tab Quản lý Kho", async () => {
+  test("hiện tên thật, chữ viết tắt, vai trò, đủ 6 tab, mặc định tab Quản lý Kho", async () => {
     renderAt("/manager")
     expect(screen.getByText("Trần Văn Quản Lý")).toBeInTheDocument()
     expect(screen.getByText("QL")).toBeInTheDocument()
     expect(screen.getByText(/quản lý chi nhánh/i)).toBeInTheDocument()
     const nav = screen.getByRole("navigation", { name: /chức năng quản lý/i })
-    expect(nav.querySelectorAll("button")).toHaveLength(5)
+    expect(nav.querySelectorAll("button")).toHaveLength(6)
     expect(screen.getByRole("button", { name: /quản lý kho & bảng giá/i })).toHaveAttribute("aria-current", "page")
     expect(await screen.findByRole("heading", { name: /quản lý ô kho tại cơ sở/i })).toBeInTheDocument()
   })
@@ -62,6 +62,12 @@ describe("ManagerPortalPage: khung Cổng Quản lý cơ sở", () => {
     await user.click(screen.getByRole("button", { name: /phân công staff/i }))
     expect(screen.getByTestId("location")).toHaveTextContent("/manager?tab=staff")
     expect(screen.getByText(/đang phát triển · US-32 · phụ trách: Vy/i)).toBeInTheDocument()
+  })
+
+  test("tab Nhật ký cổng (US-18) đã gắn chức năng, không còn ô 'đang phát triển'", async () => {
+    renderAt("/manager?tab=gate-logs")
+    expect(await screen.findByRole("heading", { name: /nhật ký mở cổng thủ công/i })).toBeInTheDocument()
+    expect(screen.queryByText(/đang phát triển/i)).not.toBeInTheDocument()
   })
 
   test("tab lạ trên URL → quay về tab mặc định", () => {

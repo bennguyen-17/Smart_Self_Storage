@@ -11,6 +11,7 @@ import StaffCheckinPage from "@/features/checkin/pages/StaffCheckinPage"
 import FloorPlanPage from "@/features/floor-plan/pages/FloorPlanPage"
 import BomPortalPage from "@/features/bom/pages/BomPortalPage"
 import ManagerPortalPage from "@/features/manager-portal/pages/ManagerPortalPage"
+import AdminPortalPage from "@/features/admin-portal/pages/AdminPortalPage"
 import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
 import { isTokenValid } from "@/lib/apiClient"
 
@@ -131,7 +132,8 @@ function App() {
           path="/admin"
           element={
             <RoleProtectedRoute allowedRoles={["ADMIN"]}>
-              <RolePortalPlaceholderPage portalType="ADMIN" />
+              {/* Khung Cổng Quản trị hệ thống (builder: Vỹ) */}
+              <AdminPortalPage />
             </RoleProtectedRoute>
           }
         />

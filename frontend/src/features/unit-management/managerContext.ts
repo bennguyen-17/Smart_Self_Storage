@@ -1,5 +1,5 @@
 // Lấy "ai đang thao tác, ở cơ sở nào" từ phiên đăng nhập.
-// BE chưa trả facilityId khi đăng nhập (xem qa-log Q-15), nên khi chạy thật mà thiếu thì để null
+// Đăng nhập nội bộ trả user.facilityId (cơ sở của nhân sự). Tài khoản chưa gắn cơ sở thì để null
 // và giao diện báo rõ, KHÔNG tự đoán cơ sở. Chỉ chế độ demo (mock) mới dùng cơ sở mẫu HN-01.
 
 import { getStoredUser } from "@/hooks/useAuthSession"

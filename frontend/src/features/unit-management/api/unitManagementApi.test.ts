@@ -43,16 +43,16 @@ describe("unitManagementApi: gọi đúng API BE của Manager", () => {
     )
   })
 
-  test("đưa vào bảo trì: POST /manager/units/{mã}/maintenance", async () => {
-    await startMaintenance(CTX, "HN01-F1-M01")
-    expect(http.post).toHaveBeenCalledWith("/manager/units/HN01-F1-M01/maintenance", null, {
+  test("đưa vào bảo trì: POST /manager/units/{mã}/maintenance kèm ghi chú đã cắt khoảng trắng", async () => {
+    await startMaintenance(CTX, "HN01-F1-M01", "  Rò nước trần  ")
+    expect(http.post).toHaveBeenCalledWith("/manager/units/HN01-F1-M01/maintenance", { note: "Rò nước trần" }, {
       headers: { "X-Facility-Id": "1", "X-Account-Id": "3" },
     })
   })
 
   test("thiếu cơ sở của quản lý → báo lỗi rõ ràng, KHÔNG gọi BE với cơ sở đoán bừa", async () => {
     await expect(getManagerUnits(NO_FACILITY, {})).rejects.toBeInstanceOf(MissingFacilityError)
-    await expect(startMaintenance(NO_FACILITY, "X")).rejects.toBeInstanceOf(MissingFacilityError)
+    await expect(startMaintenance(NO_FACILITY, "X", "ghi chú")).rejects.toBeInstanceOf(MissingFacilityError)
     expect(http.get).not.toHaveBeenCalled()
     expect(http.post).not.toHaveBeenCalled()
   })

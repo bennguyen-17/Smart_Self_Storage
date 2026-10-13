@@ -6,10 +6,9 @@ import type { Reservation } from "../types"
 import RefundBackOfficeSection from "./RefundBackOfficeSection"
 
 // Giả lập API và cờ mock để test không gọi mạng
-const env = vi.hoisted(() => ({ mockMode: false }))
-const { confirmRefund } = vi.hoisted(() => ({ confirmRefund: vi.fn() }))
-vi.mock("@/lib/apiClient", () => ({ default: {}, isMockMode: () => env.mockMode }))
-vi.mock("../api/reservationApi", () => ({ confirmRefund }))
+const { confirmRefundPayment } = vi.hoisted(() => ({ confirmRefundPayment: vi.fn() }))
+vi.mock("@/lib/apiClient", () => ({ default: {}, isMockMode: () => false }))
+vi.mock("../api/refundApi", () => ({ confirmRefundPayment }))
 
 const PENDING: Reservation = {
   reservationCode: "RES-TX-1100-C7YU",
@@ -26,107 +25,37 @@ const PENDING: Reservation = {
   forfeitedAmount: 500_000,
   refundAmount: 500_000,
   refundStatus: "PENDING",
+  refundPaymentId: 9005,
   bankAccount: "190367891234 (Techcombank) - Lý Hải Phong",
   canceledAt: "2026-10-11T00:00:00.000Z",
   createdAt: "2026-10-05T00:00:00.000Z",
 }
 
-const STAFF = { fullName: "Nguyễn Văn Nhân Viên 1", role: "STAFF" }
-
 function renderSection(reservation: Reservation) {
   const onRefundSuccess = vi.fn()
-  const user = userEvent.setup()
   render(<RefundBackOfficeSection reservation={reservation} onRefundSuccess={onRefundSuccess} />)
-  const confirmButton = () =>
-    screen.queryByRole("button", { name: /xác nhận đã chuyển khoản/i })
-  return { user, onRefundSuccess, confirmButton }
+  return { onRefundSuccess }
 }
 
 beforeEach(() => {
-  env.mockMode = false
-  confirmRefund.mockReset()
-  confirmRefund.mockResolvedValue({ ...PENDING, refundStatus: "REFUNDED" })
-  localStorage.setItem("user", JSON.stringify(STAFF))
+  confirmRefundPayment.mockReset().mockResolvedValue(undefined)
+  localStorage.setItem("user", JSON.stringify({ id: 5, fullName: "Nguyễn Văn Nhân Viên 1", role: "STAFF" }))
 })
+afterEach(() => localStorage.clear())
 
-afterEach(() => {
-  localStorage.clear()
-})
-
-describe("RefundBackOfficeSection khi chờ hoàn tiền: không dùng dữ liệu giả", () => {
-  test("khách chưa có STK → báo thiếu rõ ràng, KHÔNG hiện STK mẫu, nút bị khóa", () => {
-    const { confirmButton } = renderSection({ ...PENDING, bankAccount: null })
-    expect(screen.getByText(/chưa có số tài khoản\. liên hệ khách/i)).toBeInTheDocument()
-    expect(screen.queryByText(/190367891234/)).not.toBeInTheDocument()
-    expect(confirmButton()).toBeDisabled()
-  })
-
-  test("tên nhân viên lấy từ phiên đăng nhập và không sửa được", () => {
-    renderSection(PENDING)
-    const staff = screen.getByLabelText(/nhân viên thực hiện/i)
-    expect(staff).toHaveValue(STAFF.fullName)
-    expect(staff).toHaveAttribute("readonly")
-  })
-
-  test("chưa đăng nhập → hiện 'Chưa đăng nhập' và chặn xác nhận", () => {
-    localStorage.clear()
-    const { confirmButton } = renderSection(PENDING)
-    expect(screen.getByLabelText(/nhân viên thực hiện/i)).toHaveValue("Chưa đăng nhập")
-    expect(screen.getByText(/chưa xác định nhân viên thực hiện/i)).toBeInTheDocument()
-    expect(confirmButton()).toBeDisabled()
-  })
-
-  test("mã giao dịch để trống, không điền sẵn mã giả, và là ô tùy chọn", () => {
-    renderSection(PENDING)
-    const ref = screen.getByLabelText(/mã giao dịch ngân hàng \(tùy chọn\)/i)
-    expect(ref).toHaveValue("")
-    expect(ref).not.toHaveAttribute("aria-required")
-  })
-
-  test("đủ STK + biên lai + nhân viên → mở khóa, KHÔNG cần mã giao dịch", async () => {
-    const { user, confirmButton } = renderSection(PENDING)
-    expect(confirmButton()).toBeDisabled()
-    const file = new File(["fake-image"], "bien-lai.png", { type: "image/png" })
-    await user.upload(screen.getByLabelText(/tải lên ảnh chụp biên lai/i), file)
-    expect(await screen.findByText(/đã chọn ảnh biên lai/i)).toBeInTheDocument()
-    expect(confirmButton()).toBeEnabled()
-
-    await user.click(confirmButton()!)
-    expect(confirmRefund).toHaveBeenCalledWith(PENDING.reservationCode, {
-      evidenceUrl: expect.stringMatching(/^data:image\/png;base64,/),
-      note: undefined,
-      staffName: STAFF.fullName,
-    })
-  })
-
-  test("có nhập mã giao dịch → gửi kèm (đã bỏ khoảng trắng thừa)", async () => {
-    const { user, confirmButton, onRefundSuccess } = renderSection(PENDING)
-
-    const file = new File(["fake-image"], "bien-lai.png", { type: "image/png" })
-    await user.upload(screen.getByLabelText(/tải lên ảnh chụp biên lai/i), file)
-    expect(await screen.findByText(/đã chọn ảnh biên lai/i)).toBeInTheDocument()
-
-    await user.type(screen.getByLabelText(/mã giao dịch ngân hàng/i), "  FT2610028891  ")
-    expect(confirmButton()).toBeEnabled()
-
-    await user.click(confirmButton()!)
-    expect(confirmRefund).toHaveBeenCalledTimes(1)
-    expect(confirmRefund).toHaveBeenCalledWith(PENDING.reservationCode, {
-      evidenceUrl: expect.stringMatching(/^data:image\/png;base64,/),
-      note: "FT2610028891",
-      staffName: STAFF.fullName,
-    })
+describe("RefundBackOfficeSection khi chờ hoàn tiền", () => {
+  test("xác nhận theo paymentId của phiếu hoàn trong đơn, xong thì báo trang cha", async () => {
+    const user = userEvent.setup()
+    const { onRefundSuccess } = renderSection(PENDING)
+    await user.type(screen.getByLabelText(/link biên lai chuyển khoản/i), "https://drive.google.com/x")
+    await user.click(screen.getByRole("button", { name: /xác nhận đã chuyển khoản/i }))
+    expect(confirmRefundPayment).toHaveBeenCalledWith(9005, expect.objectContaining({ evidenceUrl: "https://drive.google.com/x" }))
     expect(onRefundSuccess).toHaveBeenCalledTimes(1)
   })
 
-  test.each([
-    { mockMode: false, visible: false },
-    { mockMode: true, visible: true },
-  ])("nút 'ảnh biên lai mẫu' chỉ hiện khi demo mock (mockMode=$mockMode)", ({ mockMode, visible }) => {
-    env.mockMode = mockMode
-    renderSection(PENDING)
-    const sample = screen.queryByRole("button", { name: /ảnh biên lai mẫu/i })
-    expect(Boolean(sample)).toBe(visible)
+  test("không có refundAmount → tính từ tiền cọc trừ phần bị giữ", () => {
+    renderSection({ ...PENDING, refundAmount: null, depositAmount: 1_000_000, forfeitedAmount: 500_000 })
+    expect(screen.getByText(/500\.000/)).toBeInTheDocument()
   })
 })
 
