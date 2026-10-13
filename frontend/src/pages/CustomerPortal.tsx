@@ -67,6 +67,13 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
     return 'home';
   });
 
+  useEffect(() => {
+    // Chuyển sang Light mode theo yêu cầu giao diện sáng
+    if (localStorage.getItem('theme') === 'dark') {
+      setTheme('light');
+    }
+  }, []);
+
   const [showRentModal, setShowRentModal] = useState(false);
   const [showGatePinModal, setShowGatePinModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
@@ -180,13 +187,17 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
   };
 
   return (
-    <div className={`relative min-h-screen flex flex-col ${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-slate-950 text-white'}`}>
-      {/* Background Image with Dark & Cyber Gradient Overlay */}
+    <div className={`relative min-h-screen flex flex-col transition-colors ${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'}`}>
+      {/* Background Image with Adaptive Light / Dark Cyber Gradient Overlay */}
       <div 
         className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0"
         style={{ backgroundImage: `url('/images/tech-storage-bg.jpg')` }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-[#031525]/70 to-slate-950/95 backdrop-blur-[0.5px]" />
+        <div className={`absolute inset-0 backdrop-blur-[0.5px] transition-colors ${
+          isDarkMode 
+            ? 'bg-gradient-to-b from-slate-950/90 via-[#031525]/70 to-slate-950/95' 
+            : 'bg-gradient-to-b from-slate-50/95 via-sky-50/85 to-slate-100/95'
+        }`} />
       </div>
 
       {/* Header */}
@@ -213,15 +224,15 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                 className="flex flex-col items-center w-full"
               >
                 {/* Main Headline */}
-                <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight text-white uppercase text-center leading-tight drop-shadow-md">
-                  HỆ THỐNG <span className="text-cyan-400 drop-shadow-[0_0_25px_rgba(34,211,238,0.6)]">KHO TỰ QUẢN</span>
+                <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight text-slate-900 dark:text-white uppercase text-center leading-tight drop-shadow-sm dark:drop-shadow-md">
+                  HỆ THỐNG <span className="text-blue-600 dark:text-cyan-400 drop-shadow-[0_0_20px_rgba(37,99,235,0.25)] dark:drop-shadow-[0_0_25px_rgba(34,211,238,0.6)]">KHO TỰ QUẢN</span>
                   <br />
-                  THÔNG MINH <span className="text-cyan-400 drop-shadow-[0_0_25px_rgba(34,211,238,0.6)]">24/7</span>
+                  THÔNG MINH <span className="text-blue-600 dark:text-cyan-400 drop-shadow-[0_0_20px_rgba(37,99,235,0.25)] dark:drop-shadow-[0_0_25px_rgba(34,211,238,0.6)]">24/7</span>
                 </h1>
 
                 {/* Customer Greeting */}
-                <div className="flex items-center justify-center mt-4 sm:mt-6 text-sm sm:text-base font-semibold text-slate-300">
-                  <span>Xin chào, <span className="text-cyan-300 font-extrabold drop-shadow-[0_0_12px_rgba(34,211,238,0.45)]">{customerName}</span></span>
+                <div className="flex items-center justify-center mt-4 sm:mt-6 text-sm sm:text-base font-semibold text-slate-600 dark:text-slate-300">
+                  <span>Xin chào, <span className="text-blue-600 dark:text-cyan-300 font-extrabold">{customerName}</span></span>
                 </div>
 
                 {/* 4 Action Buttons in Grid (Center Screen) */}
@@ -235,19 +246,18 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                         transition={CUST_NAV_TRANSITION}
                         type="button"
                         onClick={() => setActiveTab(item.id)}
-                        className="px-6 py-5 sm:px-8 sm:py-6 rounded-2xl bg-cyan-950/45 hover:bg-cyan-900/50 backdrop-blur-md border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-extrabold text-base sm:text-lg lg:text-xl tracking-wide transition-colors duration-300 shadow-[0_0_20px_rgba(34,211,238,0.22)] hover:shadow-[0_0_30px_rgba(34,211,238,0.55)] hover:scale-[1.04] cursor-pointer text-center group flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-3"
+                        className="px-6 py-5 sm:px-8 sm:py-6 rounded-2xl bg-white/90 hover:bg-white dark:bg-cyan-950/45 dark:hover:bg-cyan-900/50 backdrop-blur-md border-2 border-blue-400/50 hover:border-blue-500 dark:border-cyan-400/60 dark:hover:border-cyan-300 text-blue-900 hover:text-blue-950 dark:text-cyan-200 dark:hover:text-white font-extrabold text-base sm:text-lg lg:text-xl tracking-wide transition-all duration-300 shadow-lg shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20 dark:shadow-[0_0_20px_rgba(34,211,238,0.22)] dark:hover:shadow-[0_0_30px_rgba(34,211,238,0.55)] hover:scale-[1.04] cursor-pointer text-center group flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-3"
                       >
                         <motion.span
                           layoutId={`cust-nav-icon-${item.id}`}
                           transition={CUST_NAV_TRANSITION}
                           className="shrink-0"
                         >
-                          <Icon className="size-5 sm:size-6 text-cyan-400 group-hover:text-cyan-200" />
+                          <Icon className="size-5 sm:size-6 text-blue-600 group-hover:text-blue-700 dark:text-cyan-400 dark:group-hover:text-cyan-200" />
                         </motion.span>
                         <motion.span
                           layoutId={`cust-nav-title-${item.id}`}
                           transition={CUST_NAV_TRANSITION}
-                          className="drop-shadow-[0_0_10px_rgba(34,211,238,0.4)] group-hover:drop-shadow-[0_0_14px_rgba(34,211,238,0.8)]"
                         >
                           {item.label}
                         </motion.span>
@@ -263,10 +273,10 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                ======================================================== */
             <div className="w-full flex-1 flex flex-col items-center">
               {/* TOP STICKY NAVBAR TRÊN CÙNG (Dính ở trên cùng khi cuộn màn hình) */}
-              <div className="sticky top-0 z-30 w-full bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 py-2.5 shadow-md transition-colors">
+              <div className="sticky top-0 z-30 w-full bg-white/85 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80 py-2.5 shadow-sm dark:shadow-md transition-colors">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center">
                   {/* 4 MỤC NAVBAR (MORPH TỪ GIỮA MÀN HÌNH LÊN) */}
-                  <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto p-1 bg-slate-950/60 rounded-2xl border border-slate-800/80 justify-center">
+                  <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto p-1 bg-slate-100/90 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800/80 justify-center">
                     {CUSTOMER_NAV_ITEMS.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeTab === item.id;
@@ -279,8 +289,8 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                           onClick={() => setActiveTab(item.id)}
                           className={`px-3.5 sm:px-5 py-2 rounded-xl font-bold text-xs sm:text-sm tracking-wide flex items-center space-x-2 transition-all duration-200 cursor-pointer whitespace-nowrap border ${
                             isActive
-                              ? 'bg-cyan-500/15 text-cyan-300 border-cyan-400/35 shadow-[0_0_12px_rgba(34,211,238,0.12)]'
-                              : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border-transparent'
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/25 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-400/35 dark:shadow-[0_0_12px_rgba(34,211,238,0.12)]'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800/60 border-transparent'
                           }`}
                         >
                           <motion.span
@@ -288,7 +298,7 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                             transition={CUST_NAV_TRANSITION}
                             className="shrink-0"
                           >
-                            <Icon className={`size-4 sm:size-4.5 ${isActive ? 'text-cyan-400' : 'text-slate-400'}`} />
+                            <Icon className={`size-4 sm:size-4.5 ${isActive ? 'text-white dark:text-cyan-400' : 'text-slate-500 dark:text-slate-400'}`} />
                           </motion.span>
                           <motion.span
                             layoutId={`cust-nav-title-${item.id}`}

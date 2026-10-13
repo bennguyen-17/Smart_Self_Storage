@@ -155,17 +155,17 @@ export default function StorageMap2D({
   return (
     <div className="space-y-3">
       {/* THANH ĐIỀU KHIỂN: THIẾT KẾ TRÊN - DƯỚI */}
-      <div className="p-3 sm:p-3.5 rounded-2xl border shadow-xs w-full bg-slate-900/95 border-slate-800 space-y-2.5 text-white">
+      <div className="p-3 sm:p-3.5 rounded-2xl border shadow-xs w-full bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 space-y-2.5 text-slate-900 dark:text-white">
         {/* HÀNG TRÊN: CƠ SỞ KHO & ĐỊA CHỈ */}
-        <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-slate-800">
-          <span className="text-xs sm:text-sm font-black text-cyan-400 uppercase tracking-wide flex items-center shrink-0">
-            <i className="fa-solid fa-location-dot text-cyan-400 mr-1.5 text-sm"></i> Cơ sở kho:
+        <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
+          <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide flex items-center shrink-0">
+            <i className="fa-solid fa-location-dot text-blue-600 dark:text-cyan-400 mr-1.5 text-sm"></i> Cơ sở kho:
           </span>
           <div className="relative min-w-[200px] sm:min-w-[260px]">
             <select
               value={facility}
               onChange={(e) => onFacilityChange(e.target.value)}
-              className="w-full text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 text-white focus:ring-2 focus:ring-cyan-500 outline-none cursor-pointer shadow-2xs transition-colors truncate"
+              className="w-full text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-cyan-500 outline-none cursor-pointer shadow-2xs transition-colors truncate"
             >
               {branches.length > 0 ? (
                 <>
@@ -179,12 +179,12 @@ export default function StorageMap2D({
                       cityCode === 'DN' ? '📍 Đà Nẵng' : '📍 Cần Thơ';
 
                     return (
-                      <optgroup key={cityCode} label={cityName} className="bg-slate-900 text-white">
+                      <optgroup key={cityCode} label={cityName} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                         {cityBranches.map((b) => (
                           <option
                             key={b.code || b.id}
                             value={b.code || b.id}
-                            className="bg-slate-800 text-white"
+                            className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                           >
                             {b.name || b.facilityName || facilityData[b.code]?.name || b.code}
                           </option>
@@ -195,20 +195,20 @@ export default function StorageMap2D({
                 </>
               ) : (
                 <>
-                  <optgroup label="📍 Hà Nội" className="bg-slate-900 text-white">
-                    <option value="HN-01" className="bg-slate-800 text-white">SmartStorage Cầu Giấy (HN-01)</option>
-                    <option value="HN-02" className="bg-slate-800 text-white">SmartStorage Thanh Xuân (HN-02)</option>
+                  <optgroup label="📍 Hà Nội" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                    <option value="HN-01" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Cầu Giấy (HN-01)</option>
+                    <option value="HN-02" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Thanh Xuân (HN-02)</option>
                   </optgroup>
-                  <optgroup label="📍 TP. Hồ Chí Minh" className="bg-slate-900 text-white">
-                    <option value="HCM-01" className="bg-slate-800 text-white">SmartStorage Quận 1 (HCM-01)</option>
-                    <option value="HCM-02" className="bg-slate-800 text-white">SmartStorage Quận 7 (HCM-02)</option>
-                    <option value="HCM-03" className="bg-slate-800 text-white">SmartStorage Thủ Đức (HCM-03)</option>
+                  <optgroup label="📍 TP. Hồ Chí Minh" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                    <option value="HCM-01" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Quận 1 (HCM-01)</option>
+                    <option value="HCM-02" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Quận 7 (HCM-02)</option>
+                    <option value="HCM-03" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Thủ Đức (HCM-03)</option>
                   </optgroup>
-                  <optgroup label="📍 Đà Nẵng" className="bg-slate-900 text-white">
-                    <option value="DN-01" className="bg-slate-800 text-white">SmartStorage Hải Châu (DN-01)</option>
+                  <optgroup label="📍 Đà Nẵng" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                    <option value="DN-01" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Hải Châu (DN-01)</option>
                   </optgroup>
-                  <optgroup label="📍 Cần Thơ" className="bg-slate-900 text-white">
-                    <option value="CT-01" className="bg-slate-800 text-white">SmartStorage Ninh Kiều (CT-01)</option>
+                  <optgroup label="📍 Cần Thơ" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                    <option value="CT-01" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Ninh Kiều (CT-01)</option>
                   </optgroup>
                 </>
               )}
@@ -216,8 +216,8 @@ export default function StorageMap2D({
           </div>
 
           {/* ĐỊA CHỈ */}
-          <div className="flex items-center space-x-1.5 text-xs text-slate-300 bg-slate-800/80 px-2.5 py-1.5 rounded-xl border border-slate-700 max-w-full">
-            <i className="fa-solid fa-map-pin text-cyan-400 text-xs shrink-0"></i>
+          <div className="flex items-center space-x-1.5 text-xs text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 max-w-full">
+            <i className="fa-solid fa-map-pin text-blue-600 dark:text-cyan-400 text-xs shrink-0"></i>
             <span className="font-semibold truncate max-w-[300px] sm:max-w-[500px]" title={currentFacilityObj.address}>
               {currentFacilityObj.address}
             </span>
@@ -225,18 +225,18 @@ export default function StorageMap2D({
         </div>
 
         {/* DÒNG 2: LOẠI KHO */}
-        <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-slate-800">
-          <span className="text-xs sm:text-sm font-black text-cyan-400 uppercase tracking-wide flex items-center shrink-0 min-w-[90px]">
-            <i className="fa-solid fa-snowflake text-cyan-400 mr-1.5 text-xs"></i> Loại kho:
+        <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
+          <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide flex items-center shrink-0 min-w-[90px]">
+            <i className="fa-solid fa-snowflake text-blue-600 dark:text-cyan-400 mr-1.5 text-xs"></i> Loại kho:
           </span>
-          <div className="inline-flex rounded-xl p-1 bg-slate-800/90 border border-slate-700 gap-1 shrink-0">
+          <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 gap-1 shrink-0">
             <button
               type="button"
               onClick={() => setSelectedStorageType('ALL')}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
                 selectedStorageType === 'ALL'
-                  ? 'bg-cyan-600 text-white shadow-[0_0_10px_rgba(34,211,238,0.3)]'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                  ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
               }`}
             >
               Tất cả
@@ -246,8 +246,8 @@ export default function StorageMap2D({
               onClick={() => setSelectedStorageType('STANDARD')}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
                 selectedStorageType === 'STANDARD'
-                  ? 'bg-cyan-600 text-white shadow-[0_0_10px_rgba(34,211,238,0.3)]'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                  ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
               }`}
             >
               📦 Thường
@@ -257,8 +257,8 @@ export default function StorageMap2D({
               onClick={() => setSelectedStorageType('CLIMATE_CONTROLLED')}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
                 selectedStorageType === 'CLIMATE_CONTROLLED'
-                  ? 'bg-cyan-600 text-white shadow-[0_0_10px_rgba(34,211,238,0.3)]'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                  ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
               }`}
             >
               ❄️ Mát (22-25°C)
@@ -268,15 +268,15 @@ export default function StorageMap2D({
 
         {/* DÒNG 3: TẦNG */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs sm:text-sm font-black text-cyan-400 uppercase tracking-wide flex items-center shrink-0 min-w-[90px]">
-            <i className="fa-solid fa-layer-group text-cyan-400 mr-1.5 text-xs"></i> Tầng:
+          <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide flex items-center shrink-0 min-w-[90px]">
+            <i className="fa-solid fa-layer-group text-blue-600 dark:text-cyan-400 mr-1.5 text-xs"></i> Tầng:
           </span>
-          <div className="inline-flex rounded-xl p-1 bg-slate-800/90 border border-slate-700 gap-1 shrink-0">
+          <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 gap-1 shrink-0">
             <button
               type="button"
               onClick={() => onSelectFloor(1)}
               className={`px-3.5 py-1 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                currentFloor === 1 ? 'bg-cyan-600 text-white shadow-[0_0_10px_rgba(34,211,238,0.3)]' : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                currentFloor === 1 ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
               }`}
             >
               Tầng Trệt
@@ -285,7 +285,7 @@ export default function StorageMap2D({
               type="button"
               onClick={() => onSelectFloor(2)}
               className={`px-3.5 py-1 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                currentFloor === 2 ? 'bg-cyan-600 text-white shadow-[0_0_10px_rgba(34,211,238,0.3)]' : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                currentFloor === 2 ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
               }`}
             >
               Tầng 1
@@ -295,7 +295,7 @@ export default function StorageMap2D({
                 type="button"
                 onClick={() => onSelectFloor(3)}
                 className={`px-3.5 py-1 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                  currentFloor === 3 ? 'bg-cyan-600 text-white shadow-[0_0_10px_rgba(34,211,238,0.3)]' : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                  currentFloor === 3 ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
                 }`}
               >
                 Tầng 2
@@ -306,10 +306,10 @@ export default function StorageMap2D({
       </div>
 
       {/* SƠ ĐỒ MẶT BẰNG 2D BLUEPRINT */}
-      <div className="p-3 sm:p-3.5 rounded-2xl border shadow-xs space-y-2.5 bg-slate-900/95 border-slate-800 text-white">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-          <div className="flex items-center space-x-2 text-xs font-black text-cyan-400 uppercase tracking-wide">
-            <i className="fa-solid fa-map text-cyan-400 text-sm"></i>
+      <div className="p-3 sm:p-3.5 rounded-2xl border shadow-xs space-y-2.5 bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+          <div className="flex items-center space-x-2 text-xs font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide">
+            <i className="fa-solid fa-map text-blue-600 dark:text-cyan-400 text-sm"></i>
             <span>SƠ ĐỒ MẶT BẰNG Ô KHO • {currentFloor === 1 ? 'TẦNG TRỆT' : `TẦNG ${currentFloor - 1}`}</span>
           </div>
         </div>

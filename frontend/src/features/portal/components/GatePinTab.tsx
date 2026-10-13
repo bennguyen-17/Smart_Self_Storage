@@ -139,16 +139,16 @@ export default function GatePinTab() {
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6">
       {/* Banner Tiêu Đề */}
-      <div className="bg-slate-950/80 backdrop-blur-md rounded-2xl border border-cyan-500/30 p-5 sm:p-6 shadow-[0_0_25px_rgba(34,211,238,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-cyan-500/30 p-5 sm:p-6 shadow-sm dark:shadow-[0_0_25px_rgba(34,211,238,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-3.5">
-          <div className="p-3 rounded-2xl bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 shadow-[0_0_15px_rgba(34,211,238,0.25)]">
-            <KeyRound className="size-6 text-cyan-300" />
+          <div className="p-3 rounded-2xl bg-blue-50 text-blue-600 dark:bg-cyan-500/20 dark:text-cyan-300 border border-blue-200 dark:border-cyan-400/30 shadow-xs dark:shadow-[0_0_15px_rgba(34,211,238,0.25)]">
+            <KeyRound className="size-6 text-blue-600 dark:text-cyan-300" />
           </div>
           <div>
-            <h2 className="text-lg sm:text-xl font-black text-white tracking-tight uppercase">
+            <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
               MÃ PIN MỞ CỬA CHÍNH 24/7
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
               Mã bảo mật điện tử tự động cấp quyền vào cơ sở kho lưu trữ của bạn bất kỳ lúc nào.
             </p>
           </div>
@@ -158,25 +158,25 @@ export default function GatePinTab() {
         <div className="w-full sm:w-auto min-w-[220px]">
           {contractedFacilities.length > 0 ? (
             <div className="relative">
-              <MapPin className="size-4 text-cyan-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <MapPin className="size-4 text-blue-600 dark:text-cyan-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <select
                 value={gateFacility}
                 onChange={(e) => setGateFacility(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-cyan-500/30 bg-slate-900/90 text-white font-bold text-xs sm:text-sm focus:border-cyan-400 focus:outline-none cursor-pointer"
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-cyan-500/30 bg-slate-50 dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold text-xs sm:text-sm focus:border-blue-500 dark:focus:border-cyan-400 focus:outline-none cursor-pointer"
               >
                 {contractedFacilities.map((fac: any) => (
-                  <option key={fac.code} value={fac.code}>
+                  <option key={fac.code} value={fac.code} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                     {fac.name ? fac.name.replace(/\s*\([A-Z0-9-]+\)/g, '') : fac.code}
                   </option>
                 ))}
               </select>
             </div>
           ) : loading ? (
-            <div className="text-xs text-slate-400 font-medium px-4 py-2 rounded-xl bg-slate-900/60 border border-slate-800">
+            <div className="text-xs text-slate-500 font-medium px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
               Đang tải cơ sở...
             </div>
           ) : (
-            <div className="text-xs text-amber-400 font-medium px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <div className="text-xs text-amber-600 dark:text-amber-400 font-medium px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
               Chưa có hợp đồng kho
             </div>
           )}
@@ -185,24 +185,24 @@ export default function GatePinTab() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* CỘT TRÁI: THẺ HIỂN THỊ MÃ PIN LIVE 24/7 (CYBER NEON CARD) */}
-        <div className="lg:col-span-7 bg-slate-950/85 backdrop-blur-md rounded-3xl border-2 border-cyan-400/50 p-6 sm:p-8 shadow-[0_0_35px_rgba(34,211,238,0.2)] relative overflow-hidden space-y-6">
-          <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="lg:col-span-7 bg-white dark:bg-slate-950/85 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-cyan-400/50 p-6 sm:p-8 shadow-sm dark:shadow-[0_0_35px_rgba(34,211,238,0.2)] relative overflow-hidden space-y-6">
+          <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-blue-500/5 dark:bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Header Status */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               {currentFacPermission.hasAccess ? (
-                <span className="flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold text-xs">
+                <span className="flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-emerald-700 dark:text-emerald-300 font-bold text-xs">
                   <ShieldCheck className="size-4" />
                   <span>CỬA ĐƯỢC CẤP PHÉP LIVE 24/7</span>
                 </span>
               ) : currentFacPermission.isPending ? (
-                <span className="flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold text-xs">
+                <span className="flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-400/40 text-amber-700 dark:text-amber-300 font-bold text-xs">
                   <AlertTriangle className="size-4" />
                   <span>CHỜ CHECK-IN NHẬN KHO</span>
                 </span>
               ) : (
-                <span className="flex items-center space-x-2 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-400/40 text-rose-300 font-bold text-xs">
+                <span className="flex items-center space-x-2 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-400/40 text-rose-700 dark:text-rose-300 font-bold text-xs">
                   <ShieldAlert className="size-4" />
                   <span>CHƯA CÓ QUYỀN MỞ CỬA</span>
                 </span>
@@ -210,26 +210,26 @@ export default function GatePinTab() {
             </div>
 
             {currentFacPermission.hasAccess && (
-              <div className="flex items-center space-x-2 px-3 py-1 rounded-xl bg-slate-900 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold">
-                <Clock className="size-3.5 text-cyan-400" />
+              <div className="flex items-center space-x-2 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-cyan-500/30 text-blue-600 dark:text-cyan-300 text-xs font-mono font-bold">
+                <Clock className="size-3.5 text-blue-600 dark:text-cyan-400" />
                 <span>Đổi sau: {pinTimer}s</span>
               </div>
             )}
           </div>
 
           {/* Dãy Số PIN 6 Chữ Số Lớn */}
-          <div className="py-6 sm:py-8 text-center space-y-3 bg-slate-900/60 rounded-2xl border border-cyan-500/20 shadow-inner">
-            <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold">
+          <div className="py-6 sm:py-8 text-center space-y-3 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-cyan-500/20 shadow-inner">
+            <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold">
               MÃ BÀN PHÍM CỬA CHÍNH (6 CHỮ SỐ)
             </p>
             <div className={`text-4xl sm:text-6xl font-black font-mono tracking-[0.25em] select-all transition-all duration-300 ${
               currentFacPermission.hasAccess
-                ? 'text-cyan-300 drop-shadow-[0_0_25px_rgba(34,211,238,0.7)]'
-                : 'text-slate-600'
+                ? 'text-blue-600 dark:text-cyan-300 dark:drop-shadow-[0_0_25px_rgba(34,211,238,0.7)]'
+                : 'text-slate-300 dark:text-slate-600'
             }`}>
               {currentFacPermission.hasAccess ? pinValue : '--- ---'}
             </div>
-            <p className="text-xs text-slate-400 max-w-md mx-auto px-4">
+            <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto px-4">
               {currentFacPermission.hasAccess
                 ? 'Nhập trực tiếp dãy 6 số này tại bàn phím số gắn trước cổng chính để mở cửa.'
                 : currentFacPermission.isPending
@@ -244,15 +244,15 @@ export default function GatePinTab() {
               type="button"
               disabled={isRefreshing}
               onClick={() => gateFacility && fetchPinForFacility(gateFacility)}
-              className="w-full py-3.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 hover:border-cyan-300 text-cyan-200 hover:text-white font-bold text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-[0_0_15px_rgba(34,211,238,0.2)]"
+              className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white dark:bg-cyan-500/20 dark:hover:bg-cyan-500/30 border border-blue-600 dark:border-cyan-400/50 dark:text-cyan-200 dark:hover:text-white font-bold text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-xs dark:shadow-[0_0_15px_rgba(34,211,238,0.2)]"
             >
               <RotateCw className={`size-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span>Làm mới mã PIN ngay lập tức</span>
             </button>
           )}
 
-          <div className="border-t border-slate-800/80 pt-4 flex items-center justify-between text-xs text-slate-400">
-            <span className="font-mono font-bold text-cyan-300">
+          <div className="border-t border-slate-200 dark:border-slate-800/80 pt-4 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+            <span className="font-mono font-bold text-blue-600 dark:text-cyan-300">
               CƠ SỞ: {gateFacility || 'Chưa chọn'}
             </span>
             <span>Tự động mã hóa động mỗi 15s</span>
@@ -260,40 +260,40 @@ export default function GatePinTab() {
         </div>
 
         {/* CỘT PHẢI: HƯỚNG DẪN MỞ CỬA & QUY TRÌNH AN NINH */}
-        <div className="lg:col-span-5 bg-slate-950/75 backdrop-blur-md rounded-3xl border border-cyan-500/20 p-6 sm:p-7 shadow-xl space-y-6">
-          <h3 className="font-black text-sm uppercase text-white flex items-center space-x-2">
-            <DoorOpen className="size-4.5 text-cyan-400" />
+        <div className="lg:col-span-5 bg-white dark:bg-slate-950/75 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-cyan-500/20 p-6 sm:p-7 shadow-sm dark:shadow-xl space-y-6">
+          <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white flex items-center space-x-2">
+            <DoorOpen className="size-4.5 text-blue-600 dark:text-cyan-400" />
             <span>HƯỚNG DẪN MỞ CỬA BẰNG MÃ PIN</span>
           </h3>
 
-          <div className="space-y-4 text-xs sm:text-sm text-slate-300">
-            <div className="flex items-start space-x-3 p-3.5 rounded-xl bg-slate-900/60 border border-slate-800">
-              <span className="size-6 rounded-lg bg-cyan-500/20 text-cyan-300 font-black flex items-center justify-center shrink-0 text-xs border border-cyan-400/30">
+          <div className="space-y-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+            <div className="flex items-start space-x-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+              <span className="size-6 rounded-lg bg-blue-50 text-blue-600 dark:bg-cyan-500/20 dark:text-cyan-300 font-black flex items-center justify-center shrink-0 text-xs border border-blue-200 dark:border-cyan-400/30">
                 1
               </span>
               <div>
-                <p className="font-bold text-white">Tiếp cận bàn phím cửa chính</p>
-                <p className="text-slate-400 text-xs mt-0.5">Chạm vào màn hình keypad để đánh thức bàn phím cảm ứng sáng đèn.</p>
+                <p className="font-bold text-slate-900 dark:text-white">Tiếp cận bàn phím cửa chính</p>
+                <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Chạm vào màn hình keypad để đánh thức bàn phím cảm ứng sáng đèn.</p>
               </div>
             </div>
 
-            <div className="flex items-start space-x-3 p-3.5 rounded-xl bg-slate-900/60 border border-slate-800">
-              <span className="size-6 rounded-lg bg-cyan-500/20 text-cyan-300 font-black flex items-center justify-center shrink-0 text-xs border border-cyan-400/30">
+            <div className="flex items-start space-x-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+              <span className="size-6 rounded-lg bg-blue-50 text-blue-600 dark:bg-cyan-500/20 dark:text-cyan-300 font-black flex items-center justify-center shrink-0 text-xs border border-blue-200 dark:border-cyan-400/30">
                 2
               </span>
               <div>
-                <p className="font-bold text-white">Nhập chính xác 6 chữ số</p>
-                <p className="text-slate-400 text-xs mt-0.5">Nhập mã PIN đang hiển thị ở cột bên trái trước khi bộ đếm 15s reset.</p>
+                <p className="font-bold text-slate-900 dark:text-white">Nhập chính xác 6 chữ số</p>
+                <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Nhập mã PIN đang hiển thị ở cột bên trái trước khi bộ đếm 15s reset.</p>
               </div>
             </div>
 
-            <div className="flex items-start space-x-3 p-3.5 rounded-xl bg-slate-900/60 border border-slate-800">
-              <span className="size-6 rounded-lg bg-cyan-500/20 text-cyan-300 font-black flex items-center justify-center shrink-0 text-xs border border-cyan-400/30">
+            <div className="flex items-start space-x-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+              <span className="size-6 rounded-lg bg-blue-50 text-blue-600 dark:bg-cyan-500/20 dark:text-cyan-300 font-black flex items-center justify-center shrink-0 text-xs border border-blue-200 dark:border-cyan-400/30">
                 3
               </span>
               <div>
-                <p className="font-bold text-white">Nhấn phím # để mở khóa</p>
-                <p className="text-slate-400 text-xs mt-0.5">Chốt từ sẽ nhả và đèn xanh sáng lên trong 10 giây để bạn đẩy cửa vào.</p>
+                <p className="font-bold text-slate-900 dark:text-white">Nhấn phím # để mở khóa</p>
+                <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Chốt từ sẽ nhả và đèn xanh sáng lên trong 10 giây để bạn đẩy cửa vào.</p>
               </div>
             </div>
           </div>

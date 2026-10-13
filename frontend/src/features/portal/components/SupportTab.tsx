@@ -70,47 +70,47 @@ export default function SupportTab() {
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6">
       {/* Banner Tiêu Đề */}
-      <div className="bg-slate-950/80 backdrop-blur-md rounded-2xl border border-cyan-500/30 p-5 sm:p-6 shadow-[0_0_25px_rgba(34,211,238,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-cyan-500/30 p-5 sm:p-6 shadow-sm dark:shadow-[0_0_25px_rgba(34,211,238,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-3.5">
-          <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-400/30 shadow-[0_0_15px_rgba(245,158,11,0.25)]">
-            <Headset className="size-6 text-amber-300" />
+          <div className="p-3 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-400/30 shadow-xs dark:shadow-[0_0_15px_rgba(245,158,11,0.25)]">
+            <Headset className="size-6 text-amber-500 dark:text-amber-300" />
           </div>
           <div>
-            <h2 className="text-lg sm:text-xl font-black text-white tracking-tight uppercase">
+            <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
               TRUNG TÂM HỖ TRỢ KỸ THUẬT & KHẨN CẤP 24/7
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
               Tiếp nhận và xử lý yêu cầu mở khóa từ xa, bảo trì sự cố ô kho, an ninh 24/7.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2 text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-2 rounded-xl">
-          <span className="size-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <div className="flex items-center space-x-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-2 rounded-xl">
+          <span className="size-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
           <span>Trực ban 24/7 đang hoạt động</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* CỘT TRÁI: FORM GỬI YÊU CẦU HỖ TRỢ */}
-        <div className="lg:col-span-7 bg-slate-950/85 backdrop-blur-md rounded-3xl border border-cyan-500/30 p-6 sm:p-8 shadow-xl space-y-6">
-          <h3 className="font-black text-base text-white uppercase flex items-center space-x-2">
-            <MessageSquare className="size-5 text-cyan-400" />
+        <div className="lg:col-span-7 bg-white dark:bg-slate-950/85 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-cyan-500/30 p-6 sm:p-8 shadow-sm dark:shadow-xl space-y-6">
+          <h3 className="font-black text-base text-slate-900 dark:text-white uppercase flex items-center space-x-2">
+            <MessageSquare className="size-5 text-blue-600 dark:text-cyan-400" />
             <span>GỬI YÊU CẦU TIẾP NHẬN XỬ LÝ</span>
           </h3>
 
           {submittedSuccess && (
-            <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 space-y-2 flex items-start space-x-3">
-              <CheckCircle2 className="size-5 text-emerald-400 shrink-0 mt-0.5" />
+            <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/30 text-emerald-800 dark:text-emerald-300 space-y-2 flex items-start space-x-3">
+              <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold text-sm">Gửi ticket hỗ trợ thành công!</p>
-                <p className="text-xs text-emerald-200/80">
+                <p className="text-xs text-emerald-700 dark:text-emerald-200/80">
                   Nhân viên trực ca (Staff) đã tiếp nhận và sẽ liên hệ hỗ trợ bạn qua điện thoại hoặc xử lý trực tiếp tại trạm trong vòng 5-15 phút.
                 </p>
                 <button
                   type="button"
                   onClick={() => setSubmittedSuccess(false)}
-                  className="mt-2 text-xs font-bold underline hover:text-white cursor-pointer"
+                  className="mt-2 text-xs font-bold underline hover:text-blue-600 dark:hover:text-white cursor-pointer"
                 >
                   Tạo thêm yêu cầu khác
                 </button>
@@ -120,16 +120,16 @@ export default function SupportTab() {
 
           {/* CẢNH BÁO KHI TÀI KHOẢN CHƯA CÓ HỢP ĐỒNG ACTIVE */}
           {!loadingContracts && !hasActiveContracts && (
-            <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 space-y-2">
-              <div className="flex items-center space-x-2.5 font-bold text-amber-200 text-sm">
-                <AlertTriangle className="size-5 text-amber-400 shrink-0" />
+            <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 space-y-2">
+              <div className="flex items-center space-x-2.5 font-bold text-amber-700 dark:text-amber-200 text-sm">
+                <AlertTriangle className="size-5 text-amber-500 dark:text-amber-400 shrink-0" />
                 <span>YÊU CẦU HỢP ĐỒNG ĐANG HOẠT ĐỘNG (ACTIVE)</span>
               </div>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Tài khoản của bạn hiện chưa có hợp đồng thuê kho nào ở trạng thái <strong className="text-emerald-400">ACTIVE</strong> (đang có hiệu lực). Chức năng gửi ticket hỗ trợ kỹ thuật và mở khóa khẩn cấp chỉ áp dụng cho khách hàng đang có hợp đồng hoạt động tại cơ sở.
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                Tài khoản của bạn hiện chưa có hợp đồng thuê kho nào ở trạng thái <strong className="text-emerald-600 dark:text-emerald-400">ACTIVE</strong> (đang có hiệu lực). Chức năng gửi ticket hỗ trợ kỹ thuật và mở khóa khẩn cấp chỉ áp dụng cho khách hàng đang có hợp đồng hoạt động tại cơ sở.
               </p>
-              <p className="text-[11px] text-slate-400 pt-1">
-                Nếu hợp đồng của bạn đang chờ check-in nhận kho hoặc cần tư vấn, vui lòng liên hệ hotline trực ban 24/7: <strong className="text-cyan-300">1900 8888 68</strong>.
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-1">
+                Nếu hợp đồng của bạn đang chờ check-in nhận kho hoặc cần tư vấn, vui lòng liên hệ hotline trực ban 24/7: <strong className="text-blue-600 dark:text-cyan-300">1900 8888 68</strong>.
               </p>
             </div>
           )}
@@ -137,7 +137,7 @@ export default function SupportTab() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Loại sự cố */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-black text-slate-300 uppercase tracking-wide">
+              <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                 Loại sự cố / Yêu cầu:
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -154,10 +154,10 @@ export default function SupportTab() {
                     onClick={() => setTicketType(cat.id)}
                     className={`p-3 rounded-xl border text-xs font-bold flex items-center space-x-2 transition-all text-left ${
                       !hasActiveContracts
-                        ? 'opacity-50 cursor-not-allowed bg-slate-900/50 text-slate-500 border-slate-800'
+                        ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-900/50 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-800'
                         : ticketType === cat.id
-                        ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/50 shadow-md shadow-cyan-500/20 font-black cursor-pointer'
-                        : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-cyan-500/40 hover:text-white cursor-pointer'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20 dark:bg-cyan-500/20 dark:text-cyan-300 dark:border-cyan-400/50 dark:shadow-cyan-500/20 font-black cursor-pointer'
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/80 dark:text-slate-300 dark:border-slate-800 dark:hover:border-cyan-500/40 dark:hover:text-white cursor-pointer'
                     }`}
                   >
                     <cat.icon className="size-4 shrink-0" />
@@ -169,15 +169,15 @@ export default function SupportTab() {
 
             {/* Chọn Ô kho liên quan */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-black text-slate-300 uppercase tracking-wide">
+              <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                 Vị trí / Ô kho liên quan:
               </label>
               <select
                 disabled={!hasActiveContracts}
                 value={unitSelect}
                 onChange={(e) => setUnitSelect(e.target.value)}
-                className={`w-full px-4 py-2.5 rounded-xl border border-cyan-500/30 bg-slate-900/90 text-white font-bold text-xs sm:text-sm focus:border-cyan-400 focus:outline-none ${
-                  !hasActiveContracts ? 'opacity-50 cursor-not-allowed text-slate-500' : 'cursor-pointer'
+                className={`w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-cyan-500/30 bg-slate-50 dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold text-xs sm:text-sm focus:border-blue-500 dark:focus:border-cyan-400 focus:outline-none ${
+                  !hasActiveContracts ? 'opacity-50 cursor-not-allowed text-slate-400 dark:text-slate-500' : 'cursor-pointer'
                 }`}
               >
                 {!hasActiveContracts ? (
@@ -197,7 +197,7 @@ export default function SupportTab() {
 
             {/* Nội dung mô tả */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-black text-slate-300 uppercase tracking-wide">
+              <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                 Mô tả chi tiết sự cố:
               </label>
               <textarea
@@ -210,8 +210,8 @@ export default function SupportTab() {
                     ? "Chức năng gửi ticket bị khóa do tài khoản chưa có hợp đồng ACTIVE..."
                     : "Ví dụ: Cửa cuốn ô kho A-102 kẹt không mở được, hoặc quên mã bảo mật, cần mở khóa từ xa..."
                 }
-                className={`w-full p-3.5 rounded-xl border border-cyan-500/30 bg-slate-900/90 text-white text-xs sm:text-sm focus:border-cyan-400 focus:outline-none placeholder:text-slate-500 resize-none ${
-                  !hasActiveContracts ? 'opacity-50 cursor-not-allowed bg-slate-900/50' : ''
+                className={`w-full p-3.5 rounded-xl border border-slate-200 dark:border-cyan-500/30 bg-slate-50 dark:bg-slate-900/90 text-slate-900 dark:text-white text-xs sm:text-sm focus:border-blue-500 dark:focus:border-cyan-400 focus:outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none ${
+                  !hasActiveContracts ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-900/50' : ''
                 }`}
               />
             </div>
@@ -222,8 +222,8 @@ export default function SupportTab() {
               disabled={!hasActiveContracts || submitting}
               className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 transition-all ${
                 hasActiveContracts
-                  ? 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)]'
-                  : 'bg-slate-800 text-slate-500 border border-slate-700/60 cursor-not-allowed opacity-75'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white font-bold cursor-pointer shadow-md shadow-blue-500/20 dark:bg-cyan-500 dark:hover:bg-cyan-400 dark:text-slate-950 dark:font-black'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700/60 cursor-not-allowed opacity-75'
               } disabled:opacity-50`}
             >
               <Send className="size-4" />
@@ -239,23 +239,23 @@ export default function SupportTab() {
         </div>
 
         {/* CỘT PHẢI: THÔNG TIN LIÊN HỆ TRỰC BAN 24/7 */}
-        <div className="lg:col-span-5 bg-slate-950/75 backdrop-blur-md rounded-3xl border border-cyan-500/20 p-6 sm:p-7 shadow-xl space-y-6">
-          <h3 className="font-black text-sm uppercase text-white flex items-center space-x-2">
-            <PhoneCall className="size-4.5 text-amber-400" />
+        <div className="lg:col-span-5 bg-white dark:bg-slate-950/75 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-cyan-500/20 p-6 sm:p-7 shadow-sm dark:shadow-xl space-y-6">
+          <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white flex items-center space-x-2">
+            <PhoneCall className="size-4.5 text-amber-500" />
             <span>KÊNH LIÊN HỆ KHẨN CẤP TRỰC TIẾP</span>
           </h3>
 
           <div className="space-y-3.5">
-            <div className="p-4 rounded-2xl bg-cyan-950/30 border border-cyan-500/30 space-y-1">
-              <p className="text-xs text-cyan-300 uppercase font-black tracking-wider">Hotline Khẩn Cấp 24/7</p>
-              <p className="text-2xl font-black font-mono text-white tracking-wide">1900 8888 68</p>
-              <p className="text-[11px] text-slate-400">Hỗ trợ kỹ thuật chốt cửa, điện nước & an ninh toàn chi nhánh</p>
+            <div className="p-4 rounded-2xl bg-blue-50/70 dark:bg-cyan-950/30 border border-blue-200 dark:border-cyan-500/30 space-y-1">
+              <p className="text-xs text-blue-700 dark:text-cyan-300 uppercase font-black tracking-wider">Hotline Khẩn Cấp 24/7</p>
+              <p className="text-2xl font-black font-mono text-slate-900 dark:text-white tracking-wide">1900 8888 68</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Hỗ trợ kỹ thuật chốt cửa, điện nước & an ninh toàn chi nhánh</p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-1">
-              <p className="text-xs text-slate-400 uppercase font-black tracking-wider">Zalo Hỗ Trợ Khách Hàng</p>
-              <p className="text-base font-bold text-white">SmartStorage Support Official</p>
-              <p className="text-[11px] text-slate-400">Nhắn tin gửi hình ảnh sự cố trực tiếp để xử lý nhanh</p>
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-black tracking-wider">Zalo Hỗ Trợ Khách Hàng</p>
+              <p className="text-base font-bold text-slate-900 dark:text-white">SmartStorage Support Official</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Nhắn tin gửi hình ảnh sự cố trực tiếp để xử lý nhanh</p>
             </div>
           </div>
 
