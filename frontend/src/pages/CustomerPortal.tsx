@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
-import { Warehouse, Boxes, KeyRound, Headset } from 'lucide-react';
+import { Warehouse, Boxes, KeyRound, Headset, Home } from 'lucide-react';
 import Header from '@/components/common/Header';
 import StorageMap2D from '@/features/portal/components/StorageMap2D';
 import BookingSidebar from '@/features/portal/components/BookingSidebar';
@@ -257,22 +257,23 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
           isDarkMode={isDarkMode}
           onToggleTheme={toggleTheme}
           onOpenProfileModal={() => setShowProfileModal(true)}
+          onGoHome={() => setActiveTab('home')}
         />
       </div>
 
       {/* Main Container wrapped in LayoutGroup for seamless morphing */}
       <LayoutGroup id="customer-portal-nav">
         <main className="relative z-10 flex-1 flex flex-col w-full">
-          {activeTab === 'home' ? (
-            /* ========================================================
-               TRANG CHỦ (LANDING HOME): 4 Ô Ở GIỮA MÀN HÌNH
-               ======================================================== */
-            <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 flex flex-col justify-center items-center py-12 sm:py-16 lg:py-20 text-center">
+          {/* 1. KHU VỰC HERO (TIÊU ĐỀ + CHÀO HỎI): Thu gọn mượt mà khi bấm vào các mục */}
+          <AnimatePresence>
+            {activeTab === 'home' && (
               <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35 }}
-                className="flex flex-col items-center w-full"
+                key="hero-dashboard-headline"
+                initial={{ opacity: 0, height: 0, scale: 0.95 }}
+                animate={{ opacity: 1, height: 'auto', scale: 1 }}
+                exit={{ opacity: 0, height: 0, scale: 0.95, y: -20 }}
+                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-hidden flex flex-col items-center pt-10 sm:pt-14 pb-2 text-center"
               >
                 {/* Main Headline */}
                 <div className="relative flex flex-col items-center select-none w-full max-w-5xl">
@@ -309,184 +310,223 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                     </span>
                   </div>
                 </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-                {/* 4 Action Buttons in Grid (Center Screen) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7 lg:gap-8 w-full max-w-6xl xl:max-w-7xl mt-10 sm:mt-14 lg:mt-16">
-                  {CUSTOMER_NAV_ITEMS.map((item) => {
-                    const Icon = item.icon;
-                    const theme = item.theme;
-                    return (
-                      <motion.button
-                        key={item.id}
-                        layoutId={`cust-nav-btn-${item.id}`}
+          {/* 2. HÀNG 4 NÚT: TỰ ĐỘNG CHUYỂN TỪ GIỮA MÀN HÌNH LÊN LÀM THANH NAVBAR VỚI ANIMATION */}
+          <motion.div
+            layout
+            transition={CUST_NAV_TRANSITION}
+            className={`w-full z-30 transition-colors flex justify-center ${
+              activeTab === 'home'
+                ? 'relative py-8 sm:py-12'
+                : 'sticky top-0 py-2.5'
+            }`}
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center w-full">
+              <motion.div
+                layout
+                transition={CUST_NAV_TRANSITION}
+                className={`transition-all ${
+                  activeTab === 'home'
+                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7 lg:gap-8 w-full max-w-6xl xl:max-w-7xl'
+                    : 'flex items-center gap-1.5 sm:gap-2 overflow-x-auto p-1.5 bg-white/90 dark:bg-slate-900/90 rounded-2xl border border-sky-200/80 dark:border-slate-800/80 justify-center backdrop-blur-md shadow-md'
+                }`}
+              >
+                {/* Nút Về Trang Chủ khi đang ở trong Tab */}
+                {activeTab !== 'home' && (
+                  <motion.button
+                    layout
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={CUST_NAV_TRANSITION}
+                    type="button"
+                    onClick={() => setActiveTab('home')}
+                    title="Về Trang Chủ"
+                    className="p-2 rounded-xl text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
+                  >
+                    <Home className="size-4.5" />
+                  </motion.button>
+                )}
+
+                {CUSTOMER_NAV_ITEMS.map((item) => {
+                  const Icon = item.icon;
+                  const theme = item.theme;
+                  const isActive = activeTab === item.id;
+                  const isHome = activeTab === 'home';
+
+                  return (
+                    <motion.button
+                      key={item.id}
+                      layout
+                      transition={CUST_NAV_TRANSITION}
+                      type="button"
+                      onClick={() => setActiveTab(item.id)}
+                      className={`transition-all duration-300 cursor-pointer flex items-center ${
+                        isHome
+                          ? `p-7 sm:p-8 lg:p-10 rounded-3xl backdrop-blur-xl border-2 tracking-wide hover:scale-[1.04] text-center flex-col justify-between min-h-[220px] sm:min-h-[250px] ${theme.cardBg} ${theme.border} ${theme.shadow}`
+                          : `px-3.5 sm:px-5 py-2 rounded-xl font-bold text-xs sm:text-sm tracking-wide space-x-2 whitespace-nowrap border ${
+                              isActive
+                                ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/25 dark:bg-cyan-500 dark:text-slate-950 dark:border-cyan-400 dark:shadow-cyan-400/30'
+                                : 'text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-800/70 border-transparent'
+                            }`
+                      }`}
+                    >
+                      <motion.span
+                        layout
                         transition={CUST_NAV_TRANSITION}
-                        type="button"
-                        onClick={() => setActiveTab(item.id)}
-                        className={`p-7 sm:p-8 lg:p-10 rounded-3xl backdrop-blur-xl border-2 tracking-wide transition-all duration-300 hover:scale-[1.05] cursor-pointer text-center group flex flex-col items-center justify-between min-h-[220px] sm:min-h-[250px] ${theme.cardBg} ${theme.border} ${theme.shadow}`}
+                        className={`shrink-0 flex items-center justify-center ${
+                          isHome
+                            ? `w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl group-hover:scale-110 transition-transform ${theme.iconBg}`
+                            : ''
+                        }`}
+                      >
+                        <Icon
+                          className={
+                            isHome
+                              ? 'size-8 sm:size-10'
+                              : `size-4 sm:size-4.5 ${
+                                  isActive ? 'text-white dark:text-slate-950' : 'text-slate-600 dark:text-slate-400'
+                                }`
+                          }
+                        />
+                      </motion.span>
+
+                      <motion.div
+                        layout
+                        transition={CUST_NAV_TRANSITION}
+                        className={isHome ? 'flex flex-col items-center mt-5 w-full' : 'flex items-center'}
                       >
                         <motion.span
-                          layoutId={`cust-nav-icon-${item.id}`}
+                          layout
                           transition={CUST_NAV_TRANSITION}
-                          className={`shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 ${theme.iconBg}`}
+                          className={
+                            isHome
+                              ? `font-black text-xl sm:text-2xl lg:text-3xl text-slate-900 dark:text-white transition-colors whitespace-nowrap ${theme.textHover}`
+                              : 'font-bold text-xs sm:text-sm tracking-wide'
+                          }
                         >
-                          <Icon className="size-8 sm:size-10" />
+                          {item.label}
                         </motion.span>
 
-                        <div className="flex flex-col items-center mt-5 w-full">
+                        {isHome && (
                           <motion.span
-                            layoutId={`cust-nav-title-${item.id}`}
-                            transition={CUST_NAV_TRANSITION}
-                            className={`font-black text-xl sm:text-2xl lg:text-3xl text-slate-900 dark:text-white transition-colors whitespace-nowrap ${theme.textHover}`}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className={`mt-2.5 text-xs sm:text-sm font-bold px-3.5 py-1 rounded-full ${theme.badge}`}
                           >
-                            {item.label}
-                          </motion.span>
-                          <span className={`mt-2.5 text-xs sm:text-sm font-bold px-3.5 py-1 rounded-full ${theme.badge}`}>
                             {item.subtitle}
-                          </span>
-                        </div>
-                      </motion.button>
-                    );
-                  })}
-                </div>
+                          </motion.span>
+                        )}
+                      </motion.div>
+                    </motion.button>
+                  );
+                })}
               </motion.div>
             </div>
-          ) : (
-            /* ========================================================
-               KHI BẤM VÔ: ĐƯA CÁC MỤC LÊN LÀM NAVBAR + PHÂN TRANG CHI TIẾT
-               ======================================================== */
-            <div className="w-full flex-1 flex flex-col items-center">
-              {/* TOP STICKY NAVBAR TRÊN CÙNG (Dính ở trên cùng khi cuộn màn hình) */}
-              <div className="sticky top-0 z-30 w-full py-2.5 transition-colors">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center">
-                  {/* 4 MỤC NAVBAR (MORPH TỪ GIỮA MÀN HÌNH LÊN) */}
-                  <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto justify-center">
-                    {CUSTOMER_NAV_ITEMS.map((item) => {
-                      const Icon = item.icon;
-                      const isActive = activeTab === item.id;
-                      return (
-                        <motion.button
-                          key={item.id}
-                          layoutId={`cust-nav-btn-${item.id}`}
-                          transition={CUST_NAV_TRANSITION}
-                          type="button"
-                          onClick={() => setActiveTab(item.id)}
-                          className={`px-3.5 sm:px-5 py-2 rounded-xl font-bold text-xs sm:text-sm tracking-wide flex items-center space-x-2 transition-all duration-200 cursor-pointer whitespace-nowrap border ${
-                            isActive
-                              ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/25 dark:bg-cyan-500 dark:text-slate-950 dark:border-cyan-400 dark:shadow-cyan-400/30'
-                              : 'text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-800/70 border-transparent'
-                          }`}
-                        >
-                          <motion.span
-                            layoutId={`cust-nav-icon-${item.id}`}
-                            transition={CUST_NAV_TRANSITION}
-                            className="shrink-0"
-                          >
-                            <Icon className={`size-4 sm:size-4.5 ${isActive ? 'text-white dark:text-slate-950' : 'text-slate-600 dark:text-slate-400'}`} />
-                          </motion.span>
-                          <motion.span
-                            layoutId={`cust-nav-title-${item.id}`}
-                            transition={CUST_NAV_TRANSITION}
-                          >
-                            {item.label}
-                          </motion.span>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+          </motion.div>
 
-              {/* PHÂN TRANG CHI TIẾT TỪNG MỤC (PAGE TAB CONTENT) */}
-              <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1">
-                <AnimatePresence mode="wait">
-                  {/* PHÂN TRANG 1: THUÊ KHO */}
-                  {activeTab === 'rent' && (
-                    <motion.div
-                      key="tab-rent"
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -15 }}
-                      transition={{ duration: 0.4, ease: "easeOut" }}
-                      className="space-y-6"
-                    >
-                      {/* Bản đồ 2D + Sidebar đặt cọc */}
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
-                        <div className="lg:col-span-8">
-                          <StorageMap2D
-                            facility={facility}
-                            refreshTrigger={mapRefreshTrigger}
-                            onFacilityChange={(fac) => {
-                              setFacility(fac);
-                              setSelectedUnit(null);
-                            }}
-                            currentFloor={currentFloor}
-                            onSelectFloor={(fl) => {
-                              setCurrentFloor(fl);
-                              setSelectedUnit(null);
-                            }}
-                            selectedUnit={selectedUnit}
-                            onSelectUnit={setSelectedUnit}
-                          />
-                        </div>
-
-                        <div className="lg:col-span-4 sticky top-20">
-                          <BookingSidebar
-                            selectedUnit={selectedUnit}
-                            onOpenDepositModal={handleOpenDepositModal}
-                          />
-                        </div>
+          {/* 3. PHÂN TRANG CHI TIẾT TỪNG MỤC (PAGE TAB CONTENT) */}
+          <AnimatePresence mode="wait">
+            {activeTab !== 'home' && (
+              <motion.div
+                key={`tab-content-active-${activeTab}`}
+                initial={{ opacity: 0, y: 25 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+                className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1"
+              >
+                {/* PHÂN TRANG 1: THUÊ KHO */}
+                {activeTab === 'rent' && (
+                  <motion.div
+                    key="tab-rent"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    className="space-y-6"
+                  >
+                    {/* Bản đồ 2D + Sidebar đặt cọc */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
+                      <div className="lg:col-span-8">
+                        <StorageMap2D
+                          facility={facility}
+                          refreshTrigger={mapRefreshTrigger}
+                          onFacilityChange={(fac) => {
+                            setFacility(fac);
+                            setSelectedUnit(null);
+                          }}
+                          currentFloor={currentFloor}
+                          onSelectFloor={(fl) => {
+                            setCurrentFloor(fl);
+                            setSelectedUnit(null);
+                          }}
+                          selectedUnit={selectedUnit}
+                          onSelectUnit={setSelectedUnit}
+                        />
                       </div>
-                    </motion.div>
-                  )}
 
-                  {/* PHÂN TRANG 2: KHO CỦA TÔI */}
-                  {activeTab === 'my-storage' && (
-                    <motion.div
-                      key="tab-my-storage"
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -15 }}
-                      transition={{ duration: 0.4, ease: "easeOut" }}
-                      className="w-full"
-                    >
-                      <MyStorageTab
-                        onOpenExtendModal={handleOpenExtendModal}
-                        onOpenPinModal={() => setActiveTab('gate-pin')}
-                      />
-                    </motion.div>
-                  )}
+                      <div className="lg:col-span-4 sticky top-20">
+                        <BookingSidebar
+                          selectedUnit={selectedUnit}
+                          onOpenDepositModal={handleOpenDepositModal}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
 
-                  {/* PHÂN TRANG 3: MÃ PIN MỞ CỬA */}
-                  {activeTab === 'gate-pin' && (
-                    <motion.div
-                      key="tab-gate-pin"
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -15 }}
-                      transition={{ duration: 0.4, ease: "easeOut" }}
-                      className="w-full"
-                    >
-                      <GatePinTab />
-                    </motion.div>
-                  )}
+                {/* PHÂN TRANG 2: KHO CỦA TÔI */}
+                {activeTab === 'my-storage' && (
+                  <motion.div
+                    key="tab-my-storage"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    className="w-full"
+                  >
+                    <MyStorageTab
+                      onOpenExtendModal={handleOpenExtendModal}
+                      onOpenPinModal={() => setActiveTab('gate-pin')}
+                    />
+                  </motion.div>
+                )}
 
-                  {/* PHÂN TRANG 4: GỬI HỖ TRỢ */}
-                  {activeTab === 'support' && (
-                    <motion.div
-                      key="tab-support"
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -15 }}
-                      transition={{ duration: 0.4, ease: "easeOut" }}
-                      className="w-full"
-                    >
-                      <SupportTab />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          )}
+                {/* PHÂN TRANG 3: MÃ PIN MỞ CỬA */}
+                {activeTab === 'gate-pin' && (
+                  <motion.div
+                    key="tab-gate-pin"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    className="w-full"
+                  >
+                    <GatePinTab />
+                  </motion.div>
+                )}
+
+                {/* PHÂN TRANG 4: GỬI HỖ TRỢ */}
+                {activeTab === 'support' && (
+                  <motion.div
+                    key="tab-support"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    className="w-full"
+                  >
+                    <SupportTab />
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </main>
       </LayoutGroup>
 

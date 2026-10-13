@@ -3,11 +3,12 @@ import { Warehouse } from "lucide-react"
 
 interface BrandLogoProps {
   internal?: boolean
+  onClick?: () => void
 }
 
-function BrandLogo({ internal = false }: BrandLogoProps) {
+function BrandLogo({ internal = false, onClick }: BrandLogoProps) {
   return (
-    <Link to="/" className="flex items-center gap-3 group">
+    <Link to="/" onClick={onClick} className="flex items-center gap-3 group">
       <div className="flex size-10 sm:size-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
         <Warehouse className="size-5 sm:size-6" />
       </div>
