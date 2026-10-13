@@ -7,6 +7,7 @@ import {
   INITIAL_PRICING,
   INITIAL_SURCHARGES,
 } from "../data/bomData"
+import { toast } from "sonner"
 
 interface BomContextType {
   chainOverview: ChainDashboardData | null
@@ -21,6 +22,10 @@ interface BomContextType {
   totalOverdueCount: number
   formatShortCurrency: (val?: number) => string
   reloadData: () => Promise<void>
+  updatePricingInDb: (unitTypeId: number, data: { dailyPrice?: number; monthlyPrice?: number; depositAmount?: number; climateSurchargePercent?: number }) => Promise<boolean>
+  createFacilityInDb: (data: { facilityName: string; address: string; phone?: string }) => Promise<boolean>
+  updateFacilityInDb: (facilityId: number, data: { facilityName?: string; address?: string; phone?: string; status?: string }) => Promise<boolean>
+  deleteFacilityInDb: (facilityId: number) => Promise<boolean>
 }
 
 const BomContext = createContext<BomContextType | undefined>(undefined)
@@ -36,7 +41,7 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
   const loadLiveData = useCallback(async () => {
     try {
       setIsLoadingApi(true)
-      const [overview, apiFacilities, apiUnits] = await Promise.all([
+      const [overview, apiFacilities, apiUnits, apiPrices] = await Promise.all([
         bomApi.getChainDashboard().catch((err) => {
           console.warn("API /api/admin/dashboard/chain-overview lỗi:", err)
           return null
@@ -49,6 +54,10 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
           console.warn("API /api/units/filter lỗi:", err)
           return null
         }),
+        bomApi.getPrices().catch((err) => {
+          console.warn("API /api/prices lỗi:", err)
+          return null
+        }),
       ])
 
       if (overview) {
@@ -56,6 +65,29 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
         setIsApiConnected(true)
       }
 
+      // 1. Cập nhật bảng giá từ Database (nếu API có dữ liệu)
+      if (apiPrices && Array.isArray(apiPrices) && apiPrices.length > 0) {
+        setIsApiConnected(true)
+        const mappedPrices: UnitPricing[] = apiPrices.map((p: any) => ({
+          id: `size-${(p.size || "").toLowerCase()}`,
+          unitTypeId: p.unitTypeId,
+          size: p.size,
+          name: p.name || `Size ${p.size}`,
+          description: p.description || "",
+          dimensions: p.dimensions || "",
+          area: p.area || "",
+          height: p.height || "2.0m",
+          dailyPrice: Number(p.dailyPrice || 0),
+          normPrice: Number(p.monthlyPrice || 0),
+          acPrice: Number(p.acPrice || Math.round(Number(p.monthlyPrice || 0) * 1.2)),
+          depositAmount: Number(p.depositAmount || 0),
+          depositText: `₫${Number(p.depositAmount || 0).toLocaleString("vi-VN")}`,
+          status: p.status === "ACTIVE" ? "Đang áp dụng" : (p.status || "Đang áp dụng"),
+        }))
+        setPricingList(mappedPrices)
+      }
+
+      // 2. Cập nhật danh sách cơ sở từ Database
       if (apiFacilities && apiFacilities.length > 0) {
         setIsApiConnected(true)
         const breakdownMap = new Map<number, FacilityBreakdownItem>(
@@ -154,6 +186,79 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
     loadLiveData()
   }, [loadLiveData])
 
+  // Cập nhật giá & cọc lưu trực tiếp vào Database
+  const updatePricingInDb = async (
+    unitTypeId: number,
+    data: { dailyPrice?: number; monthlyPrice?: number; depositAmount?: number; climateSurchargePercent?: number }
+  ): Promise<boolean> => {
+    try {
+      await bomApi.updatePrice(unitTypeId, data)
+      // Cập nhật state local ngay để giao diện phản hồi tức thì
+      setPricingList((prev) =>
+        prev.map((item) => {
+          if (item.unitTypeId === unitTypeId) {
+            const newNorm = data.monthlyPrice !== undefined ? data.monthlyPrice : item.normPrice
+            const newDaily = data.dailyPrice !== undefined ? data.dailyPrice : item.dailyPrice
+            const newDeposit = data.depositAmount !== undefined ? data.depositAmount : item.depositAmount
+            const newAc = Math.round(newNorm * 1.2)
+            return {
+              ...item,
+              dailyPrice: newDaily,
+              normPrice: newNorm,
+              acPrice: newAc,
+              depositAmount: newDeposit,
+              depositText: `₫${newDeposit.toLocaleString("vi-VN")}`,
+            }
+          }
+          return item
+        })
+      )
+      return true
+    } catch (err) {
+      console.error("Lỗi cập nhật giá vào database:", err)
+      return false
+    }
+  }
+
+  // Thêm cơ sở kho lưu trực tiếp vào Database
+  const createFacilityInDb = async (data: { facilityName: string; address: string; phone?: string }): Promise<boolean> => {
+    try {
+      await bomApi.createFacility(data)
+      await loadLiveData()
+      return true
+    } catch (err) {
+      console.error("Lỗi thêm cơ sở vào database:", err)
+      return false
+    }
+  }
+
+  // Cập nhật cơ sở kho lưu trực tiếp vào Database
+  const updateFacilityInDb = async (
+    facilityId: number,
+    data: { facilityName?: string; address?: string; phone?: string; status?: string }
+  ): Promise<boolean> => {
+    try {
+      await bomApi.updateFacility(facilityId, data)
+      await loadLiveData()
+      return true
+    } catch (err) {
+      console.error("Lỗi cập nhật cơ sở vào database:", err)
+      return false
+    }
+  }
+
+  // Xóa mềm cơ sở kho trong Database (status = 'INACTIVE')
+  const deleteFacilityInDb = async (facilityId: number): Promise<boolean> => {
+    try {
+      await bomApi.deleteFacility(facilityId)
+      await loadLiveData()
+      return true
+    } catch (err) {
+      console.error("Lỗi xóa mềm cơ sở trong database:", err)
+      return false
+    }
+  }
+
   const totalOverdueCount = chainOverview
     ? (chainOverview.facilityBreakdown || []).reduce((sum, item) => sum + (item.overdueContracts || 0), 0)
     : 0
@@ -185,6 +290,10 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
         totalOverdueCount,
         formatShortCurrency,
         reloadData: loadLiveData,
+        updatePricingInDb,
+        createFacilityInDb,
+        updateFacilityInDb,
+        deleteFacilityInDb,
       }}
     >
       {children}

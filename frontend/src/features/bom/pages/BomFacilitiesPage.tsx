@@ -8,7 +8,14 @@ import { type FacilityPerformance } from "../data/bomData"
 
 export default function BomFacilitiesPage() {
   const navigate = useNavigate()
-  const { facilities, setFacilities, chainOverview } = useBomContext()
+  const {
+    facilities,
+    setFacilities,
+    chainOverview,
+    createFacilityInDb,
+    updateFacilityInDb,
+    deleteFacilityInDb,
+  } = useBomContext()
 
   // Modal State Cấu hình cơ sở
   const [isFacilityModalOpen, setIsFacilityModalOpen] = useState(false)
@@ -36,53 +43,72 @@ export default function BomFacilitiesPage() {
     setIsFacilityModalOpen(true)
   }
 
-  const handleSaveFacilityModal = () => {
+  const handleSaveFacilityModal = async () => {
     if (!selectedFacility) return
-    setFacilities((prev) =>
-      prev.map((f) =>
-        f.id === selectedFacility.id
-          ? {
-              ...f,
-              totalUnits: facilityTotalUnits,
-              priceMultiplier: facilityMultiplier,
-            }
-          : f
+    const success = await updateFacilityInDb(Number(selectedFacility.id), {
+      facilityName: selectedFacility.name,
+      address: selectedFacility.address,
+      phone: selectedFacility.managerPhone,
+    })
+    if (success) {
+      toast.success(`Đã lưu thông số cơ sở kho ${selectedFacility.name} vào Database!`)
+    } else {
+      setFacilities((prev) =>
+        prev.map((f) =>
+          f.id === selectedFacility.id
+            ? {
+                ...f,
+                totalUnits: facilityTotalUnits,
+                priceMultiplier: facilityMultiplier,
+              }
+            : f
+        )
       )
-    )
-    toast.success(`Đã cập nhật thông số vận hành cho ${selectedFacility.name}`)
+      toast.success(`Đã cập nhật thông số vận hành cho ${selectedFacility.name}`)
+    }
     setIsFacilityModalOpen(false)
   }
 
-  const handleCreateFacility = () => {
-    if (!newFacName.trim() || !newFacCode.trim() || !newFacAddress.trim()) {
-      toast.error("Vui lòng nhập đầy đủ tên, mã cơ sở và địa chỉ!")
+  const handleCreateFacility = async () => {
+    if (!newFacName.trim() || !newFacAddress.trim()) {
+      toast.error("Vui lòng nhập đầy đủ tên cơ sở và địa chỉ!")
       return
     }
 
-    const newFacility: FacilityPerformance = {
-      id: Date.now(),
-      name: newFacName.trim(),
-      code: newFacCode.trim().toUpperCase(),
+    const success = await createFacilityInDb({
+      facilityName: newFacName.trim(),
       address: newFacAddress.trim(),
-      managerName: newFacManager.trim() || "Chưa phân công",
-      managerEmail: "manager@smartstorage.vn",
-      managerPhone: newFacPhone.trim() || "0900000000",
-      totalUnits: Number(newFacUnits) || 20,
-      occupied: 0,
-      rentedUnits: 0,
-      available: Number(newFacUnits) || 20,
-      maintenance: 0,
-      occupancyRate: 0,
-      floorArea: (Number(newFacUnits) || 20) * 12,
-      monthlyRevenue: "đ0",
-      overdueUnits: 0,
-      status: "ACTIVE",
-      rating: "5.0 ★",
-      priceMultiplier: Number(newFacMultiplier) || 1.0,
-    }
+      phone: newFacPhone.trim() || "0900000000",
+    })
 
-    setFacilities((prev) => [newFacility, ...prev])
-    toast.success(`Đã thêm thành công cơ sở kho mới: ${newFacility.name}`)
+    if (success) {
+      toast.success(`Đã thêm thành công cơ sở kho mới vào Database: ${newFacName.trim()}`)
+    } else {
+      const newFacility: FacilityPerformance = {
+        id: Date.now(),
+        name: newFacName.trim(),
+        code: newFacCode.trim().toUpperCase() || "FAC-NEW",
+        address: newFacAddress.trim(),
+        managerName: newFacManager.trim() || "Chưa phân công",
+        managerEmail: "manager@smartstorage.vn",
+        managerPhone: newFacPhone.trim() || "0900000000",
+        totalUnits: Number(newFacUnits) || 20,
+        occupied: 0,
+        rentedUnits: 0,
+        available: Number(newFacUnits) || 20,
+        maintenance: 0,
+        occupancyRate: 0,
+        floorArea: (Number(newFacUnits) || 20) * 12,
+        monthlyRevenue: "₫0",
+        overdueUnits: 0,
+        status: "ACTIVE",
+        rating: "5.0 ★",
+        priceMultiplier: Number(newFacMultiplier) || 1.0,
+      }
+
+      setFacilities((prev) => [newFacility, ...prev])
+      toast.success(`Đã thêm thành công cơ sở kho mới: ${newFacility.name}`)
+    }
 
     // Reset form
     setNewFacName("")
@@ -95,26 +121,20 @@ export default function BomFacilitiesPage() {
     setIsAddFacilityModalOpen(false)
   }
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!facilityToDelete) return
-    setFacilities((prev) => prev.filter((f) => f.id !== facilityToDelete.id))
-    toast.success(`Đã xóa cơ sở kho: ${facilityToDelete.name}`)
+    const success = await deleteFacilityInDb(Number(facilityToDelete.id))
+    if (success) {
+      toast.success(`Đã xóa mềm cơ sở kho ${facilityToDelete.name} trong Database!`)
+    } else {
+      setFacilities((prev) => prev.filter((f) => f.id !== facilityToDelete.id))
+      toast.success(`Đã xóa cơ sở kho: ${facilityToDelete.name}`)
+    }
     setFacilityToDelete(null)
   }
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb quay về trang chủ BOM (Đã bỏ badge Module theo yêu cầu) */}
-      <div className="flex items-center pb-1">
-        <button
-          onClick={() => navigate("/bom")}
-          className="inline-flex items-center gap-2 text-xs font-bold text-sky-400 hover:text-sky-300 transition-colors group cursor-pointer"
-        >
-          <ArrowLeft className="size-3.5 group-hover:-translate-x-1 transition-transform" />
-          <span>Quay lại Tổng Quan Điều Hành</span>
-        </button>
-      </div>
-
       {/* Bảng Giám Sát & Danh Sách Cơ Sở Kho Toàn Chuỗi */}
       <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
@@ -141,12 +161,11 @@ export default function BomFacilitiesPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-slate-800 text-slate-400 uppercase font-black text-[10px]">
-                <th className="py-3 px-4">CƠ SỞ KHO</th>
-                <th className="py-3 px-4">QUẢN LÝ CHI NHÁNH</th>
+                <th className="py-3 px-4 text-center">CƠ SỞ KHO</th>
+                <th className="py-3 px-4 text-center">QUẢN LÝ CHI NHÁNH</th>
                 <th className="py-3 px-4 text-center">QUY MÔ KHO</th>
                 <th className="py-3 px-4 text-center">TỶ LỆ LẤP ĐẦY</th>
                 <th className="py-3 px-4 text-center">DOANH THU THỰC THU</th>
-                <th className="py-3 px-4 text-center">TRẠNG THÁI</th>
                 <th className="py-3 px-4 text-center">THAO TÁC</th>
               </tr>
             </thead>
@@ -158,24 +177,22 @@ export default function BomFacilitiesPage() {
 
                   return (
                     <tr key={fac.id} className="hover:bg-slate-900/60 transition">
-                      <td className="py-4 px-4">
-                        <div className="font-extrabold text-white text-xs flex items-center gap-2">
+                      <td className="py-4 px-4 text-center">
+                        <div className="font-extrabold text-white text-xs flex items-center justify-center gap-2">
                           <span>{fac.name}</span>
-                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">
-                            {fac.code}
-                          </span>
+
                         </div>
-                        <div className="text-[11px] text-slate-400 mt-0.5">{fac.address}</div>
+                        <div className="text-[11px] text-slate-400 mt-0.5 text-center">{fac.address}</div>
                       </td>
-                      <td className="py-4 px-4">
-                        <div className="font-bold text-white text-xs">{fac.managerName}</div>
-                        <div className="text-[11px] text-slate-400 mt-0.5">{fac.managerEmail || fac.managerPhone}</div>
+                      <td className="py-4 px-4 text-center">
+                        <div className="font-bold text-white text-xs text-center">{fac.managerName}</div>
+                        <div className="text-[11px] text-slate-400 mt-0.5 text-center">{fac.managerEmail || fac.managerPhone}</div>
                       </td>
                       <td className="py-4 px-4 text-center font-bold text-slate-200">
                         {fac.totalUnits} Kho
                       </td>
                       <td className="py-4 px-4 text-center">
-                        <span className="font-black text-emerald-400 text-sm">
+                        <span className="font-black text-sky-400 font-mono text-sm">
                           {fac.occupancyRate ?? (fac.totalUnits > 0 ? Math.round(((fac.rentedUnits || 0) / fac.totalUnits) * 100) : 0)}%
                         </span>
                         <div className="text-[10px] text-slate-400 font-mono">
@@ -184,17 +201,6 @@ export default function BomFacilitiesPage() {
                       </td>
                       <td className="py-4 px-4 text-center font-black text-sky-400 font-mono text-xs">
                         {fac.monthlyRevenue}
-                      </td>
-                      <td className="py-4 px-4 text-center">
-                        <span
-                          className={`font-semibold px-3 py-1 rounded-full text-[10px] inline-block ${
-                            overdueCount > 0
-                              ? "bg-rose-950/60 text-rose-300 border border-rose-800/40"
-                              : "bg-emerald-950/60 text-emerald-300 border border-emerald-800/40"
-                          }`}
-                        >
-                          {overdueCount > 0 ? `${overdueCount} Đơn quá hạn` : "Hoạt động chuẩn"}
-                        </span>
                       </td>
                       <td className="py-4 px-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
@@ -239,7 +245,7 @@ export default function BomFacilitiesPage() {
                   CHI TIẾT CẤU HÌNH CƠ SỞ KHO
                 </h3>
                 <p className="text-xs text-slate-400 font-bold mt-0.5">
-                  Cơ sở {selectedFacility.name} • Mã: {selectedFacility.code}
+                  Cơ sở {selectedFacility.name}
                 </p>
               </div>
               <button
@@ -256,7 +262,7 @@ export default function BomFacilitiesPage() {
                   FM
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Quản Lý Cơ Sở (Manager):</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Quản Lý Cơ Sở:</span>
                   <span className="font-extrabold text-sky-200 text-sm">
                     {selectedFacility.managerName}
                   </span>
@@ -277,7 +283,7 @@ export default function BomFacilitiesPage() {
                 </div>
                 <div>
                   <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
-                    Hệ Số Giá Cơ Sở (Multiplier):
+                    Hệ Số Giá Cơ Sở:
                   </label>
                   <input
                     type="number"
@@ -459,10 +465,7 @@ export default function BomFacilitiesPage() {
                   Xác Nhận Xóa Cơ Sở Kho?
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Bạn có chắc chắn muốn xóa cơ sở <span className="font-bold text-rose-400">{facilityToDelete.name}</span> ({facilityToDelete.code}) khỏi chuỗi vận hành?
-                </p>
-                <p className="text-[11px] text-slate-400 italic">
-                  Hành động này được cấp quyền bởi Ban Điều Hành (BOM).
+                  Bạn có chắc chắn muốn xóa <span className="font-bold text-rose-400">{facilityToDelete.name}</span> khỏi chuỗi vận hành?
                 </p>
               </div>
             </div>
@@ -479,7 +482,7 @@ export default function BomFacilitiesPage() {
                 className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md cursor-pointer flex items-center gap-1.5"
               >
                 <Trash2 className="size-4" />
-                <span>Xác Nhận Xóa Vĩnh Viễn</span>
+                <span>Xác Nhận Xóa Cơ Sở</span>
               </button>
             </div>
           </div>

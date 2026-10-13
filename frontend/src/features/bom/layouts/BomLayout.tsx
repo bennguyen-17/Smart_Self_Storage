@@ -101,7 +101,7 @@ function BomLayoutContent() {
       <header className="fixed top-0 left-0 right-0 z-50 w-full min-h-[58px] bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-sky-500/20 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4 shrink-0 shadow-lg text-slate-900 dark:text-white transition-colors">
         {/* BRAND LOGO (Đã bỏ chữ BOM theo yêu cầu) */}
         <div className="shrink-0 flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={() => navigate("/bom")}>
-          <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/20 hover:scale-105 transition-transform">
+          <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20 hover:scale-105 transition-transform">
             <Warehouse className="size-5" />
           </div>
           <div>
@@ -139,7 +139,7 @@ function BomLayoutContent() {
                     <motion.div
                       layoutId="bom-active-pill-indicator"
                       transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                      className="absolute inset-0 bg-blue-600 dark:bg-cyan-500 rounded-xl shadow-md shadow-blue-500/30 dark:shadow-cyan-400/30 -z-10"
+                      className="absolute inset-0 bg-sky-500 dark:bg-sky-500 rounded-xl shadow-md shadow-sky-500/30 -z-10"
                     />
                   )}
                   <Icon className="size-3.5 sm:size-4 shrink-0" />
@@ -159,7 +159,7 @@ function BomLayoutContent() {
             className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition cursor-pointer shadow-xs shrink-0"
           >
             {isDarkMode ? (
-              <Sun className="size-4 text-amber-400" />
+              <Sun className="size-4 text-slate-300" />
             ) : (
               <Moon className="size-4 text-slate-600" />
             )}
@@ -174,16 +174,16 @@ function BomLayoutContent() {
             title="Nhấn để xem Hồ sơ & Đăng xuất"
             type="button"
           >
-            <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+            <div className="w-7 h-7 rounded-full bg-sky-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
               {userInitials}
             </div>
             <div className="text-left hidden md:block">
               <div className="text-xs font-extrabold text-slate-900 dark:text-white leading-tight flex items-center space-x-1">
                 <span className="max-w-[130px] truncate">{currentUserName}</span>
-                <ChevronDown className="size-3 text-slate-400 group-hover:text-blue-600 transition-colors ml-0.5 shrink-0" />
+                <ChevronDown className="size-3 text-slate-400 group-hover:text-sky-400 transition-colors ml-0.5 shrink-0" />
               </div>
-              <div className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 truncate max-w-[130px]">
-                {currentUserRole} ✓
+              <div className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 truncate max-w-[130px]">
+                {currentUserRole}
               </div>
             </div>
           </button>
@@ -215,9 +215,6 @@ function BomLayoutContent() {
                 <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white">
                   Hồ Sơ Ban Quản Lý Vận Hành
                 </h3>
-                <p className="text-[10px] text-slate-500 font-bold">
-                  BOM (Board of Management) System Account Profile
-                </p>
               </div>
               <button
                 onClick={() => setIsProfileModalOpen(false)}
@@ -236,11 +233,8 @@ function BomLayoutContent() {
                   <div className="font-black text-sm text-sky-950 dark:text-sky-200">
                     {currentUserName}
                   </div>
-                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-extrabold uppercase mt-0.5">
-                    ● ĐANG TRONG CA ĐIỀU HÀNH
-                  </div>
                   <div className="text-[10px] text-slate-500 mt-0.5">
-                    {currentUserRole} • Ban Quản Lý (BOM)
+                    {currentUserRole}
                   </div>
                 </div>
               </div>

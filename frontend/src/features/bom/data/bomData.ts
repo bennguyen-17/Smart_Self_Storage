@@ -23,6 +23,7 @@ export interface FacilityPerformance {
 
 export interface UnitPricing {
   id: string
+  unitTypeId?: number
   size: "S" | "M" | "L" | "XL"
   name: string
   description: string
@@ -131,6 +132,7 @@ export const INITIAL_FACILITIES: FacilityPerformance[] = [
 export const INITIAL_PRICING: UnitPricing[] = [
   {
     id: "size-s",
+    unitTypeId: 1,
     size: "S",
     name: "Size S (Tủ cá nhân)",
     description: "Tủ cá nhân, tài liệu hồ sơ, vali, thùng carton nhỏ",
@@ -146,6 +148,7 @@ export const INITIAL_PRICING: UnitPricing[] = [
   },
   {
     id: "size-m",
+    unitTypeId: 2,
     size: "M",
     name: "Size M (Phòng vừa)",
     description: "Đồ đạc gia đình nhỏ, xe máy, bàn ghế, thiết bị cá nhân",
@@ -161,6 +164,7 @@ export const INITIAL_PRICING: UnitPricing[] = [
   },
   {
     id: "size-l",
+    unitTypeId: 3,
     size: "L",
     name: "Size L (Phòng lớn)",
     description: "Kho hàng shop online, căn hộ 2-3 phòng, hàng thương mại",
@@ -176,6 +180,7 @@ export const INITIAL_PRICING: UnitPricing[] = [
   },
   {
     id: "size-xl",
+    unitTypeId: 4,
     size: "XL",
     name: "Size XL (Kho Doanh nghiệp)",
     description: "Kho lưu trữ doanh nghiệp, máy móc, pallet hàng khối lượng lớn",

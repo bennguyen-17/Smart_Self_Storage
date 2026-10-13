@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react"
 import { createPortal } from "react-dom"
-import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import {
   SlidersHorizontal,
@@ -9,15 +8,53 @@ import {
   Search,
   CheckCircle,
   X,
-  ArrowLeft,
   Trash2,
+  LayoutGrid,
+  Table,
+  Snowflake,
+  ShieldCheck,
+  Tag,
+  Sparkles,
 } from "lucide-react"
 import { useBomContext } from "../context/BomContext"
 import { type UnitPricing, type SurchargeItem } from "../data/bomData"
 
+const SIZE_THEMES: Record<string, { badge: string; border: string; glow: string; text: string; lightBg: string }> = {
+  S: {
+    badge: "bg-slate-800 text-sky-300 border-slate-700",
+    border: "border-slate-800 hover:border-slate-700",
+    glow: "from-slate-700/20",
+    text: "text-white",
+    lightBg: "bg-slate-900/60",
+  },
+  M: {
+    badge: "bg-slate-800 text-sky-300 border-slate-700",
+    border: "border-slate-800 hover:border-slate-700",
+    glow: "from-slate-700/20",
+    text: "text-white",
+    lightBg: "bg-slate-900/60",
+  },
+  L: {
+    badge: "bg-slate-800 text-sky-300 border-slate-700",
+    border: "border-slate-800 hover:border-slate-700",
+    glow: "from-slate-700/20",
+    text: "text-white",
+    lightBg: "bg-slate-900/60",
+  },
+  XL: {
+    badge: "bg-slate-800 text-sky-300 border-slate-700",
+    border: "border-slate-800 hover:border-slate-700",
+    glow: "from-slate-700/20",
+    text: "text-white",
+    lightBg: "bg-slate-900/60",
+  },
+}
+
 export default function BomPricingPage() {
-  const navigate = useNavigate()
-  const { pricingList, setPricingList, surcharges, setSurcharges } = useBomContext()
+  const { pricingList, setPricingList, surcharges, setSurcharges, updatePricingInDb } = useBomContext()
+
+  // View mode: cards (thẻ trực quan) hoặc table (bảng đối soát)
+  const [pricingViewMode, setPricingViewMode] = useState<"cards" | "table">("cards")
 
   // Search & Filter state for surcharges
   const [searchSurcharge, setSearchSurcharge] = useState("")
@@ -60,23 +97,41 @@ export default function BomPricingPage() {
     setIsPricingModalOpen(true)
   }
 
-  const handleSavePricingModal = () => {
+  const handleSavePricingModal = async () => {
     if (!selectedPricingItem) return
-    setPricingList((prev) =>
-      prev.map((p) =>
-        p.id === selectedPricingItem.id
-          ? {
-              ...p,
-              dailyPrice: editDailyPrice,
-              normPrice: editNormPrice,
-              acPrice: editAcPrice,
-              depositAmount: editDepositAmount,
-              depositText: `₫${editDepositAmount.toLocaleString("vi-VN")}`,
-            }
-          : p
-      )
+    const unitTypeId = selectedPricingItem.unitTypeId || (
+      selectedPricingItem.size === "S" ? 1 :
+      selectedPricingItem.size === "M" ? 2 :
+      selectedPricingItem.size === "L" ? 3 : 4
     )
-    toast.success(`Đã cập nhật khung giá & mức cọc chuẩn cho ${selectedPricingItem.name}`)
+
+    const success = await updatePricingInDb(unitTypeId, {
+      dailyPrice: editDailyPrice,
+      monthlyPrice: editNormPrice,
+      depositAmount: editDepositAmount,
+      climateSurchargePercent: 20,
+    })
+
+    if (success) {
+      toast.success(`Đã lưu bảng giá & mức cọc cho ${selectedPricingItem.name} trực tiếp vào Database!`)
+    } else {
+      // Fallback update local state
+      setPricingList((prev) =>
+        prev.map((p) =>
+          p.id === selectedPricingItem.id
+            ? {
+                ...p,
+                dailyPrice: editDailyPrice,
+                normPrice: editNormPrice,
+                acPrice: editAcPrice,
+                depositAmount: editDepositAmount,
+                depositText: `₫${editDepositAmount.toLocaleString("vi-VN")}`,
+              }
+            : p
+        )
+      )
+      toast.success(`Đã cập nhật khung giá & mức cọc cho ${selectedPricingItem.name}`)
+    }
     setIsPricingModalOpen(false)
   }
 
@@ -161,125 +216,249 @@ export default function BomPricingPage() {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb quay về trang chủ BOM */}
-      <div className="flex items-center pb-1">
-        <button
-          onClick={() => navigate("/bom")}
-          className="inline-flex items-center gap-2 text-xs font-bold text-sky-400 hover:text-sky-300 transition-colors group cursor-pointer"
-        >
-          <ArrowLeft className="size-3.5 group-hover:-translate-x-1 transition-transform" />
-          <span>Quay lại Tổng Quan Điều Hành</span>
-        </button>
-      </div>
-
-      {/* Bảng Quản Lý Khung Giá & Phụ Phí */}
+      {/* Khung Bảng Giá & Phụ Phí Điều Hành */}
       <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+        {/* Header điều phối */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
           <div>
-            <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-white">
-              <SlidersHorizontal className="size-4.5 text-sky-400" />
-              <span>QUẢN LÝ KHUNG GIÁ THUÊ, PHÍ PHỤ THU, PHÍ PHẠT QUÁ HẠN &amp; GIẢM GIÁ</span>
-            </h3>
-            <p className="text-[11px] text-slate-400 mt-0.5">Áp dụng toàn bộ hệ thống cơ sở kho</p>
+            <div className="flex items-center gap-2">
+              <span className="p-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400">
+                <SlidersHorizontal className="size-5" />
+              </span>
+              <h3 className="font-black text-base uppercase text-white tracking-wide">
+                BẢNG GIÁ THUÊ &amp; BIỂU PHÍ HỆ THỐNG
+              </h3>
+            </div>
+            <p className="text-xs text-slate-400 mt-1.5">
+              Quy chuẩn 4 kích thước kho cố định (chiều cao 2.0m), đơn giá kho mát (+20%) và biểu phí áp dụng toàn chuỗi
+            </p>
           </div>
-          <div className="flex items-center space-x-2">
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Chuyển đổi giao diện Thẻ / Bảng */}
+            <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setPricingViewMode("cards")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                  pricingViewMode === "cards"
+                    ? "bg-sky-500 text-slate-950 font-black shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <LayoutGrid className="size-3.5" />
+                <span>Dạng Thẻ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPricingViewMode("table")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                  pricingViewMode === "table"
+                    ? "bg-sky-500 text-slate-950 font-black shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Table className="size-3.5" />
+                <span>Dạng Bảng</span>
+              </button>
+            </div>
+
             <button
               onClick={handleOpenAddSurcharge}
-              className="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer"
+              className="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm"
             >
               <Plus className="size-4 text-sky-400" />
-              <span>Thêm Phụ Thu / Giảm Giá</span>
+              <span>Thêm Phụ Thu</span>
             </button>
             <button
               onClick={() => handleOpenPricingModal()}
-              className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl shadow-[0_0_15px_rgba(56,189,248,0.3)] transition flex items-center gap-1.5 cursor-pointer"
+              className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl shadow-md shadow-sky-500/20 transition flex items-center gap-1.5 cursor-pointer"
             >
               <Edit3 className="size-4" />
-              <span>Cập Nhật Bảng Giá &amp; Phí</span>
+              <span>Cập Nhật Giá</span>
             </button>
           </div>
         </div>
 
-        {/* 1. Bảng Khung Giá Thuê Tiêu Chuẩn */}
-        <div className="space-y-2">
+        {/* 1. KHUNG GIÁ THUÊ 4 SIZE KHO */}
+        <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h4 className="font-black text-xs uppercase text-slate-200">
-                1. Khung Giá Thuê Tiêu Chuẩn &amp; Mức Cọc Chuẩn Theo 4 Size Kho
+              <h4 className="font-black text-xs uppercase text-slate-200 tracking-wider flex items-center gap-2">
+                <Sparkles className="size-3.5 text-sky-400" />
+                <span>1. Khung Giá Thuê Tiêu Chuẩn &amp; Mức Cọc Theo 4 Size Kho</span>
               </h4>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                Chiều cao cố định 2.0m. Kho Điều hòa / Mát (22°C–25°C) tự động cộng 20% vào đơn giá thuê.
+                Chiều cao kho cố định 2.0m. Kho Điều hòa / Mát (22°C–25°C) tự động cộng 20% vào đơn giá thuê.
               </p>
             </div>
           </div>
-          <div className="overflow-x-auto rounded-2xl border border-slate-800">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-800 bg-slate-900/60 uppercase font-black text-slate-300 text-[10px]">
-                  <th className="p-3.5">Kích Thước / Size Kho</th>
-                  <th className="p-3.5 text-center">Quy Cách Sàn</th>
-                  <th className="p-3.5 text-right">Giá Ngày (Non-AC)</th>
-                  <th className="p-3.5 text-right">Kho Thường (Tháng)</th>
-                  <th className="p-3.5 text-right">Kho Điều Hòa (+20%)</th>
-                  <th className="p-3.5 text-center">Tiền Cọc Chuẩn</th>
-                  <th className="p-3.5 text-center">Trạng Thái</th>
-                  <th className="p-3.5 text-center">Thao Tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800 font-semibold text-slate-300">
-                {pricingList.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-900/40 transition">
-                    <td className="p-3.5">
-                      <div className="font-extrabold text-white">{item.name}</div>
-                      <div className="text-[11px] text-slate-400">{item.description}</div>
-                    </td>
-                    <td className="p-3.5 text-center font-mono">
-                      <span className="font-bold text-white">{item.dimensions}</span>
-                      <span className="text-slate-400 block text-[10px]">({item.area} • Cao {item.height || "2.0m"})</span>
-                    </td>
-                    <td className="p-3.5 text-right font-black font-mono text-amber-400 text-sm">
-                      ₫{item.dailyPrice.toLocaleString("vi-VN")} <span className="text-[10px] text-slate-400 font-sans">/ngày</span>
-                    </td>
-                    <td className="p-3.5 text-right font-black font-mono text-emerald-400 text-sm">
-                      ₫{item.normPrice.toLocaleString("vi-VN")} <span className="text-[10px] text-slate-400 font-sans">/tháng</span>
-                    </td>
-                    <td className="p-3.5 text-right font-black font-mono text-sky-400 text-sm">
-                      ₫{item.acPrice.toLocaleString("vi-VN")} <span className="text-[10px] text-slate-400 font-sans">/tháng</span>
-                      <span className="block text-[10px] text-sky-400/80 font-sans">
-                        (₫{Math.round(item.dailyPrice * 1.2).toLocaleString("vi-VN")}/ngày)
-                      </span>
-                    </td>
-                    <td className="p-3.5 text-center">
-                      <span className="inline-block px-3 py-1 rounded-xl bg-violet-950/80 border border-violet-700/60 font-black font-mono text-violet-300 text-xs shadow-sm">
-                        ₫{item.depositAmount.toLocaleString("vi-VN")}
-                      </span>
-                    </td>
-                    <td className="p-3.5 text-center">
-                      <span className="bg-emerald-950/80 text-emerald-300 font-bold px-2.5 py-0.5 rounded-full text-[10px] border border-emerald-800">
-                        {item.status}
-                      </span>
-                    </td>
-                    <td className="p-3.5 text-center">
+
+          {pricingViewMode === "cards" ? (
+            /* GIAO DIỆN DẠNG THẺ (PRICING CARDS - THUẬN MẮT, HIỆN ĐẠI) */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {pricingList.map((item) => {
+                const theme = SIZE_THEMES[item.size] || SIZE_THEMES.S
+                return (
+                  <div
+                    key={item.id}
+                    className={`group relative p-5 rounded-2xl bg-slate-900/60 border ${theme.border} transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between shadow-lg overflow-hidden`}
+                  >
+                    {/* Gradient ánh sáng phía trên */}
+                    <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.glow}`} />
+
+                    <div className="space-y-3.5">
+                      {/* Size Badge & Tên */}
+                      <div className="flex items-center justify-between">
+                        <span className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase border ${theme.badge}`}>
+                          Size {item.size}
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                          {item.status}
+                        </span>
+                      </div>
+
+                      <div>
+                        <div className="font-black text-white text-base group-hover:text-sky-300 transition-colors">
+                          {item.name}
+                        </div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">
+                          {item.description}
+                        </div>
+                      </div>
+
+                      {/* Quy cách sàn & kích thước */}
+                      <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs font-mono text-center">
+                        <span className="text-white font-bold">{item.dimensions}</span>
+                        <span className="text-slate-400 text-[10px] block mt-0.5">
+                          Sàn {item.area} • Cao {item.height || "2.0m"}
+                        </span>
+                      </div>
+
+                      {/* Giá thuê chính (Kho Thường) */}
+                      <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800/80 text-center space-y-1">
+                        <div className="text-[10px] uppercase font-bold text-slate-400">Giá Kho Thường</div>
+                        <div className="text-xl font-black font-mono text-sky-400">
+                          ₫{item.normPrice.toLocaleString("vi-VN")}
+                          <span className="text-[10px] font-sans font-medium text-slate-400"> /tháng</span>
+                        </div>
+                        <div className="text-[11px] font-mono font-semibold text-slate-300">
+                          ₫{item.dailyPrice.toLocaleString("vi-VN")}{" "}
+                          <span className="text-[10px] font-sans text-slate-500">/ngày</span>
+                        </div>
+                      </div>
+
+                      {/* Thông số phụ: Kho Điều Hòa & Tiền Cọc */}
+                      <div className="space-y-2 text-xs">
+                        <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
+                          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300">
+                            <Snowflake className="size-3 text-sky-400" />
+                            <span>Kho Mát (+20%):</span>
+                          </span>
+                          <span className="font-mono font-bold text-sky-300 text-xs">
+                            ₫{item.acPrice.toLocaleString("vi-VN")}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
+                          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300">
+                            <ShieldCheck className="size-3 text-sky-400" />
+                            <span>Tiền Cọc Chuẩn:</span>
+                          </span>
+                          <span className="font-mono font-bold text-slate-200 text-xs">
+                            ₫{item.depositAmount.toLocaleString("vi-VN")}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Nút hành động sửa giá & cọc */}
+                    <div className="pt-4 mt-2 border-t border-slate-800">
                       <button
+                        type="button"
                         onClick={() => handleOpenPricingModal(item)}
-                        className="text-sky-400 font-black hover:underline cursor-pointer"
+                        className="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-sky-500 text-slate-200 hover:text-slate-950 font-black text-xs transition cursor-pointer flex items-center justify-center gap-1.5 border border-slate-700"
                       >
-                        Sửa Giá &amp; Cọc
+                        <Edit3 className="size-3.5" />
+                        <span>Sửa Giá &amp; Cọc</span>
                       </button>
-                    </td>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            /* GIAO DIỆN DẠNG BẢNG (TABLE VIEW) */
+            <div className="overflow-x-auto rounded-2xl border border-slate-800">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-800 bg-slate-900/80 uppercase font-black text-slate-300 text-[10px]">
+                    <th className="p-3.5 text-center">Size Kho</th>
+                    <th className="p-3.5 text-center">Quy Cách Sàn</th>
+                    <th className="p-3.5 text-center">Giá Ngày (Non-AC)</th>
+                    <th className="p-3.5 text-center">Kho Thường (Tháng)</th>
+                    <th className="p-3.5 text-center">Kho Điều Hòa (+20%)</th>
+                    <th className="p-3.5 text-center">Tiền Cọc Chuẩn</th>
+                    <th className="p-3.5 text-center">Trạng Thái</th>
+                    <th className="p-3.5 text-center">Thao Tác</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-800 font-semibold text-slate-300">
+                  {pricingList.map((item) => (
+                    <tr key={item.id} className="hover:bg-slate-900/40 transition">
+                      <td className="p-3.5 text-center">
+                        <div className="font-extrabold text-white">{item.name}</div>
+                        <div className="text-[11px] text-slate-400">{item.description}</div>
+                      </td>
+                      <td className="p-3.5 text-center font-mono">
+                        <span className="font-bold text-white">{item.dimensions}</span>
+                        <span className="text-slate-400 block text-[10px]">({item.area} • Cao {item.height || "2.0m"})</span>
+                      </td>
+                      <td className="p-3.5 text-center font-semibold font-mono text-slate-300 text-sm">
+                        ₫{item.dailyPrice.toLocaleString("vi-VN")} <span className="text-[10px] text-slate-400 font-sans">/ngày</span>
+                      </td>
+                      <td className="p-3.5 text-center font-black font-mono text-sky-400 text-sm">
+                        ₫{item.normPrice.toLocaleString("vi-VN")} <span className="text-[10px] text-slate-400 font-sans">/tháng</span>
+                      </td>
+                      <td className="p-3.5 text-center font-semibold font-mono text-sky-300 text-sm">
+                        ₫{item.acPrice.toLocaleString("vi-VN")} <span className="text-[10px] text-slate-400 font-sans">/tháng</span>
+                        <span className="block text-[10px] text-slate-400 font-sans">
+                          (₫{Math.round(item.dailyPrice * 1.2).toLocaleString("vi-VN")}/ngày)
+                        </span>
+                      </td>
+                      <td className="p-3.5 text-center">
+                        <span className="inline-block px-3 py-1 rounded-xl bg-slate-800/80 border border-slate-700 font-semibold font-mono text-slate-200 text-xs shadow-sm">
+                          ₫{item.depositAmount.toLocaleString("vi-VN")}
+                        </span>
+                      </td>
+                      <td className="p-3.5 text-center">
+                        <span className="bg-slate-800 text-slate-300 font-bold px-2.5 py-0.5 rounded-full text-[10px] border border-slate-700">
+                          {item.status}
+                        </span>
+                      </td>
+                      <td className="p-3.5 text-center">
+                        <button
+                          onClick={() => handleOpenPricingModal(item)}
+                          className="text-sky-400 hover:text-sky-300 font-bold underline cursor-pointer"
+                        >
+                          Sửa Giá &amp; Cọc
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
-        {/* 2. Biểu Phí Phụ Thu, Phạt & Giảm Giá */}
-        <div className="space-y-3 pt-6 border-t border-slate-800">
+        {/* 2. BIỂU PHÍ PHỤ THU, PHẠT QUÁ HẠN & GIẢM GIÁ */}
+        <div className="space-y-4 pt-6 border-t border-slate-800">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
-              <h4 className="font-black text-xs uppercase text-slate-200">
-                2. Biểu Phí Phụ Thu, Phí Phạt Quá Hạn &amp; Chính Sách Miễn Giảm Giá
+              <h4 className="font-black text-xs uppercase text-slate-200 tracking-wider flex items-center gap-2">
+                <Tag className="size-3.5 text-sky-400" />
+                <span>2. Biểu Phí Phụ Thu, Phí Phạt Quá Hạn &amp; Chính Sách Miễn Giảm Giá</span>
               </h4>
               <p className="text-[11px] text-slate-400 mt-0.5">
                 Quy định mức thu dịch vụ bổ sung, chế tài trễ hạn và các ưu đãi thanh toán
@@ -290,7 +469,7 @@ export default function BomPricingPage() {
                 <Search className="size-3.5 absolute left-3 top-3 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Tìm kiếm phụ thu, phí phạt..."
+                  placeholder="Tìm kiếm khoản phí..."
                   value={searchSurcharge}
                   onChange={(e) => setSearchSurcharge(e.target.value)}
                   className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-700 bg-slate-950 text-xs font-bold text-white placeholder-slate-500"
@@ -299,14 +478,15 @@ export default function BomPricingPage() {
             </div>
           </div>
 
+          {/* Thanh phân loại tab */}
           <div className="flex items-center gap-2 overflow-x-auto text-xs pb-1">
             {(["all", "surcharge", "penalty", "discount"] as const).map((filterKey) => (
               <button
                 key={filterKey}
                 onClick={() => setSurchargeFilter(filterKey)}
-                className={`px-3 py-1 rounded-lg font-bold transition cursor-pointer border ${
+                className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer border ${
                   surchargeFilter === filterKey
-                    ? "bg-sky-500 text-slate-950 border-sky-500 font-black"
+                    ? "bg-sky-500 text-slate-950 border-sky-500 font-black shadow-sm"
                     : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
                 }`}
               >
@@ -321,60 +501,57 @@ export default function BomPricingPage() {
             ))}
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-800">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-800 bg-slate-900/60 uppercase font-black text-slate-300 text-[10px]">
-                  <th className="p-3.5">Nội Dung Khoản Phí</th>
-                  <th className="p-3.5">Phân Loại</th>
-                  <th className="p-3.5 text-right">Mức Phí Áp Dụng</th>
-                  <th className="p-3.5 text-center">Thao Tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800 font-semibold text-slate-300">
-                {filteredSurcharges.map((sc) => {
-                  const badgeConfig = {
-                    surcharge: { label: "Phụ Thu Dịch Vụ", style: "bg-sky-950/80 text-sky-400 border-sky-800" },
-                    penalty: { label: "Phí Phạt Quá Hạn", style: "bg-amber-950/80 text-amber-400 border-amber-800" },
-                    discount: { label: "Chính Sách Miễn Giảm", style: "bg-emerald-950/80 text-emerald-400 border-emerald-800" },
-                  }[sc.category] || { label: "Khác", style: "bg-slate-800 text-slate-300 border-slate-700" }
+          {/* Dạng thẻ gọn gàng cho từng khoản phí */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {filteredSurcharges.map((sc) => {
+              const badgeConfig = {
+                surcharge: { label: "Phụ Thu Dịch Vụ", style: "bg-slate-800 text-slate-300 border-slate-700" },
+                penalty: { label: "Phí Phạt Quá Hạn", style: "bg-slate-800 text-slate-300 border-slate-700" },
+                discount: { label: "Chính Sách Miễn Giảm", style: "bg-slate-800 text-slate-300 border-slate-700" },
+              }[sc.category] || { label: "Khác", style: "bg-slate-800 text-slate-300 border-slate-700" }
 
-                  return (
-                    <tr key={sc.id} className="hover:bg-slate-900/40 transition">
-                      <td className="p-3.5">
-                        <div className="font-extrabold text-white text-sm">{sc.name}</div>
-                      </td>
-                      <td className="p-3.5">
-                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badgeConfig.style}`}>
-                          {badgeConfig.label}
-                        </span>
-                      </td>
-                      <td className="p-3.5 text-right font-black font-mono text-emerald-400 text-sm">
+              return (
+                <div
+                  key={sc.id}
+                  className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-slate-700 transition flex flex-col justify-between space-y-3"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badgeConfig.style}`}>
+                        {badgeConfig.label}
+                      </span>
+                    </div>
+                    <div className="font-extrabold text-white text-sm">
+                      {sc.name}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-slate-400">Mức Phí Áp Dụng</div>
+                      <div className="font-black font-mono text-sky-400 text-sm">
                         {sc.rate}
-                      </td>
-                      <td className="p-3.5 text-center">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEditSurcharge(sc)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/10 hover:bg-sky-500 text-sky-400 hover:text-slate-950 border border-sky-500/30 font-bold transition cursor-pointer text-xs"
-                        >
-                          <Edit3 className="size-3.5" />
-                          <span>Chỉnh Sửa</span>
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-                {filteredSurcharges.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="p-8 text-center text-slate-500 font-bold">
-                      Không tìm thấy biểu phí hoặc phụ thu nào phù hợp.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditSurcharge(sc)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-sky-500 text-slate-200 hover:text-slate-950 border border-slate-700 font-bold transition cursor-pointer text-xs"
+                    >
+                      <Edit3 className="size-3.5" />
+                      <span>Sửa</span>
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
           </div>
+
+          {filteredSurcharges.length === 0 && (
+            <div className="p-8 text-center text-slate-500 font-bold rounded-2xl bg-slate-900/30 border border-slate-800">
+              Không tìm thấy biểu phí hoặc phụ thu nào phù hợp.
+            </div>
+          )}
         </div>
       </div>
 
@@ -387,7 +564,7 @@ export default function BomPricingPage() {
                 <h3 className="font-black text-sm uppercase text-sky-400">
                   CẬP NHẬT BIỂU GIÁ &amp; MỨC CỌC CHUẨN - {selectedPricingItem.name}
                 </h3>
-                <p className="text-xs text-slate-400 font-bold mt-0.5">
+                <p className="text-xs text-slate-400 mt-0.5">
                   Kích thước sàn: {selectedPricingItem.dimensions} ({selectedPricingItem.area} • Cao {selectedPricingItem.height || "2.0m"})
                 </p>
               </div>
@@ -416,7 +593,7 @@ export default function BomPricingPage() {
                     }}
                     className={`flex-1 py-1.5 rounded-xl font-black text-xs transition cursor-pointer ${
                       isCurrent
-                        ? "bg-sky-500 text-slate-950 shadow-md"
+                        ? "bg-sky-500 text-slate-950 shadow-md font-black"
                         : "text-slate-400 hover:text-white hover:bg-slate-900"
                     }`}
                   >
@@ -511,7 +688,7 @@ export default function BomPricingPage() {
                     onClick={() => setEditDepositAmount(preset.val)}
                     className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition cursor-pointer ${
                       editDepositAmount === preset.val
-                        ? "bg-violet-600 text-white border-violet-500 font-black shadow-sm"
+                        ? "bg-sky-500 text-slate-950 border-sky-400 font-black shadow-sm"
                         : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                     }`}
                   >
@@ -530,7 +707,7 @@ export default function BomPricingPage() {
               </button>
               <button
                 onClick={handleSavePricingModal}
-                className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs shadow-md cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs shadow-md shadow-sky-500/20 cursor-pointer"
               >
                 Lưu Thay Đổi
               </button>
@@ -552,7 +729,7 @@ export default function BomPricingPage() {
                 <h3 className="font-black text-sm uppercase text-sky-400">
                   {editingSurcharge ? "CẬP NHẬT BIỂU PHÍ & PHỤ THU" : "THÊM PHỤ THU / BIỂU PHÍ MỚI"}
                 </h3>
-                <p className="text-xs text-slate-400 font-bold mt-0.5">
+                <p className="text-xs text-slate-400 mt-0.5">
                   {editingSurcharge
                     ? `Chỉnh sửa mức phí cho "${editingSurcharge.name}"`
                     : "Thiết lập biểu phí phụ thu hoặc chế tài trễ hạn mới"}
@@ -640,7 +817,7 @@ export default function BomPricingPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs shadow-md cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs shadow-md shadow-sky-500/20 cursor-pointer"
                 >
                   {editingSurcharge ? "Lưu Thay Đổi" : "Lưu Hạng Mục"}
                 </button>

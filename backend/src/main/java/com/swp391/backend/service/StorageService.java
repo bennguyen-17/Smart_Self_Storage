@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 
 import com.swp391.backend.dto.CalculatePriceRequest;
 import com.swp391.backend.dto.CalculatePriceResponse;
+import com.swp391.backend.dto.FacilityRequest;
 import com.swp391.backend.dto.FacilityResponse;
+import com.swp391.backend.dto.PriceDto;
 import com.swp391.backend.dto.UnitDetailResponse;
 import com.swp391.backend.entity.ActivityLog;
 import com.swp391.backend.entity.Facility;
@@ -487,6 +489,141 @@ public class StorageService {
         });
 
         return dto;
+    }
+
+    // --- Lấy danh sách bảng giá & mức cọc từ Database ---
+    public List<PriceDto> getAllPrices() {
+        List<UnitType> unitTypes = unitTypeRepository.findAll();
+        List<Price> activePrices = priceRepository.findByStatus("ACTIVE");
+        Map<Integer, Price> priceMap = activePrices.stream()
+                .collect(Collectors.toMap(Price::getUnitTypeId, p -> p, (p1, p2) -> p1));
+
+        return unitTypes.stream()
+                .filter(ut -> "ACTIVE".equalsIgnoreCase(ut.getStatus()))
+                .filter(ut -> !"CLIMATE_CONTROLLED".equalsIgnoreCase(ut.getStorageCondition())) // map 4 size chuẩn
+                .map(ut -> {
+                    PriceDto dto = new PriceDto();
+                    dto.setUnitTypeId(ut.getUnitTypeId());
+                    dto.setName(ut.getTypeName());
+                    dto.setDimensions(ut.getSize());
+                    dto.setStatus(ut.getStatus());
+
+                    String lower = ut.getTypeName().toLowerCase();
+                    if (lower.contains("size s") || lower.contains("tủ cá nhân")) {
+                        dto.setSize("S");
+                        dto.setDescription("Tủ cá nhân đồ đạc nhỏ, balo, vali, tài liệu cá nhân");
+                        dto.setArea("1.0m²");
+                        dto.setHeight("2.0m");
+                    } else if (lower.contains("size l") || lower.contains("phòng lớn")) {
+                        dto.setSize("L");
+                        dto.setDescription("Phòng chứa lớn đồ gia đình 3-4 phòng, nội thất, pallet");
+                        dto.setArea("6.0m²");
+                        dto.setHeight("2.0m");
+                    } else if (lower.contains("size xl") || lower.contains("kho doanh nghiệp")) {
+                        dto.setSize("XL");
+                        dto.setDescription("Kho doanh nghiệp lưu kho hàng hóa, máy móc, nguyên vật liệu");
+                        dto.setArea("10.0m²");
+                        dto.setHeight("2.0m");
+                    } else {
+                        dto.setSize("M");
+                        dto.setDescription("Phòng vừa đồ gia đình nhỏ, xe máy, 15-20 thùng carton");
+                        dto.setArea("3.0m²");
+                        dto.setHeight("2.0m");
+                    }
+
+                    Price p = priceMap.get(ut.getUnitTypeId());
+                    if (p != null) {
+                        dto.setPriceId(p.getPriceId());
+                        dto.setDailyPrice(p.getDailyPrice());
+                        dto.setMonthlyPrice(p.getMonthlyPrice());
+                        dto.setDepositAmount(p.getDepositAmount());
+                        dto.setClimateSurchargePercent(p.getClimateSurchargePercent() != null ? p.getClimateSurchargePercent() : BigDecimal.valueOf(20.00));
+                        BigDecimal surcharge = dto.getClimateSurchargePercent().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                        dto.setAcPrice(p.getMonthlyPrice().multiply(BigDecimal.ONE.add(surcharge)).setScale(0, RoundingMode.HALF_UP));
+                    } else {
+                        dto.setDailyPrice(BigDecimal.valueOf(60000));
+                        dto.setMonthlyPrice(BigDecimal.valueOf(1200000));
+                        dto.setAcPrice(BigDecimal.valueOf(1440000));
+                        dto.setDepositAmount(BigDecimal.valueOf(1000000));
+                        dto.setClimateSurchargePercent(BigDecimal.valueOf(20.00));
+                    }
+                    return dto;
+                })
+                .sorted((a, b) -> {
+                    List<String> order = List.of("S", "M", "L", "XL");
+                    int idxA = order.indexOf(a.getSize());
+                    int idxB = order.indexOf(b.getSize());
+                    return Integer.compare(idxA != -1 ? idxA : 99, idxB != -1 ? idxB : 99);
+                })
+                .collect(Collectors.toList());
+    }
+
+    // --- Cập nhật Bảng giá và Mức cọc lưu vào Database ---
+    @Transactional
+    public PriceDto updatePrice(Integer unitTypeId, PriceDto req) {
+        UnitType ut = unitTypeRepository.findById(unitTypeId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy loại ô kho ID: " + unitTypeId));
+
+        Optional<Price> existingPriceOpt = priceRepository.findByUnitTypeIdAndStatus(unitTypeId, "ACTIVE");
+        Price price;
+        if (existingPriceOpt.isPresent()) {
+            price = existingPriceOpt.get();
+        } else {
+            price = new Price();
+            price.setUnitTypeId(unitTypeId);
+            price.setEffectiveFrom(java.time.LocalDate.now());
+            price.setStatus("ACTIVE");
+        }
+
+        if (req.getDailyPrice() != null) price.setDailyPrice(req.getDailyPrice());
+        if (req.getMonthlyPrice() != null) price.setMonthlyPrice(req.getMonthlyPrice());
+        if (req.getDepositAmount() != null) price.setDepositAmount(req.getDepositAmount());
+        if (req.getClimateSurchargePercent() != null) {
+            price.setClimateSurchargePercent(req.getClimateSurchargePercent());
+        } else {
+            price.setClimateSurchargePercent(BigDecimal.valueOf(20.00));
+        }
+
+        Price saved = priceRepository.save(price);
+        req.setPriceId(saved.getPriceId());
+        req.setUnitTypeId(saved.getUnitTypeId());
+        BigDecimal surcharge = saved.getClimateSurchargePercent().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        req.setAcPrice(saved.getMonthlyPrice().multiply(BigDecimal.ONE.add(surcharge)).setScale(0, RoundingMode.HALF_UP));
+        return req;
+    }
+
+    // --- Thêm cơ sở kho mới vào Database ---
+    @Transactional
+    public FacilityResponse createFacility(FacilityRequest req) {
+        Facility f = new Facility();
+        f.setFacilityName(req.getFacilityName());
+        f.setAddress(req.getAddress());
+        f.setPhone(req.getPhone() != null && !req.getPhone().trim().isEmpty() ? req.getPhone() : "0900000000");
+        f.setStatus("ACTIVE");
+        Facility saved = facilityRepository.save(f);
+        return mapFacilityToResponse(saved);
+    }
+
+    // --- Cập nhật cơ sở kho vào Database ---
+    @Transactional
+    public FacilityResponse updateFacility(Integer facilityId, FacilityRequest req) {
+        Facility f = facilityRepository.findById(facilityId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy cơ sở ID: " + facilityId));
+        if (req.getFacilityName() != null) f.setFacilityName(req.getFacilityName());
+        if (req.getAddress() != null) f.setAddress(req.getAddress());
+        if (req.getPhone() != null) f.setPhone(req.getPhone());
+        if (req.getStatus() != null) f.setStatus(req.getStatus());
+        Facility saved = facilityRepository.save(f);
+        return mapFacilityToResponse(saved);
+    }
+
+    // --- Xóa mềm cơ sở kho vào Database (status = 'INACTIVE') ---
+    @Transactional
+    public void deleteFacility(Integer facilityId) {
+        Facility f = facilityRepository.findById(facilityId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy cơ sở ID: " + facilityId));
+        f.setStatus("INACTIVE");
+        facilityRepository.save(f);
     }
 
 }

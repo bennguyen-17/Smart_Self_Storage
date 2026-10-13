@@ -73,8 +73,7 @@ export default function BomDashboardPage() {
           QUẢN LÝ VẬN HÀNH TOÀN HỆ THỐNG
         </h1>
         <p className="text-sky-300 font-semibold text-base sm:text-lg max-w-2xl mx-auto drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
-          Trung tâm điều hành cấp cao &amp; giám sát{" "}
-          {chainOverview ? chainOverview.chainTotalFacilities : facilities.length} cụm cơ sở kho thông minh 24/7
+          Trung tâm điều hành cấp cao & giám sát cụm cơ sở kho thông minh 24/7
         </p>
       </div>
 
@@ -83,7 +82,7 @@ export default function BomDashboardPage() {
         <BomKpiCards />
       </div>
 
-      {/* 4 CỤM Ô VUÔNG CHỨC NĂNG (MẤY CỤC TO) - HIỆU ỨNG LIÊN KẾT CHUYỂN ĐỘNG SIÊU MƯỢT */}
+      {/* 4 cụm chức năng  */}
       <motion.div
         variants={containerVariants}
         initial="hidden"

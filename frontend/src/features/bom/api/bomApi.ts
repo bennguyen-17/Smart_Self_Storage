@@ -54,7 +54,22 @@ export const bomApi = {
   getFacilities: async (): Promise<FacilityApiItem[]> => {
     return apiClient.get('/facilities')
   },
+  createFacility: async (data: { facilityName: string; address: string; phone?: string }): Promise<FacilityApiItem> => {
+    return apiClient.post('/facilities', data)
+  },
+  updateFacility: async (facilityId: number, data: { facilityName?: string; address?: string; phone?: string; status?: string }): Promise<FacilityApiItem> => {
+    return apiClient.put(`/facilities/${facilityId}`, data)
+  },
+  deleteFacility: async (facilityId: number): Promise<any> => {
+    return apiClient.delete(`/facilities/${facilityId}`)
+  },
   getUnits: async (): Promise<any[]> => {
     return apiClient.get('/units/filter')
+  },
+  getPrices: async (): Promise<any[]> => {
+    return apiClient.get('/prices')
+  },
+  updatePrice: async (unitTypeId: number, data: { dailyPrice?: number; monthlyPrice?: number; depositAmount?: number; climateSurchargePercent?: number }): Promise<any> => {
+    return apiClient.put(`/prices/${unitTypeId}`, data)
   },
 }
