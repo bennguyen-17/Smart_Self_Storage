@@ -16,12 +16,15 @@ export default function ThreeBackground({
     const container = containerRef.current
     if (!container) return
 
-    const isDark = theme === "dark"
+    const isDark =
+      theme === "dark" ||
+      (theme === "system" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)
 
     // Scene setup
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(isDark ? 0x030712 : 0x06152d)
-    scene.fog = new THREE.FogExp2(isDark ? 0x030712 : 0x06152d, 0.018)
+    scene.background = new THREE.Color(isDark ? 0x030712 : 0xf1f5f9)
+    scene.fog = new THREE.FogExp2(isDark ? 0x030712 : 0xf1f5f9, 0.015)
 
     // Camera setup
     const width = window.innerWidth
@@ -84,7 +87,6 @@ export default function ThreeBackground({
       geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3))
 
       // Tính màu sắc chuyển dần từ Cyan neon sang Sapphire & Indigo
-      const t = l / (numLines - 1)
       let lineColor: THREE.Color
       let opacity: number
 
@@ -101,15 +103,24 @@ export default function ThreeBackground({
           opacity = 0.28
         }
       } else {
-        lineColor = new THREE.Color(0x0284c7)
-        opacity = 0.5
+        // Tông sáng: Màu Sky & Blue đậm rõ nét trên nền trắng ngọc
+        if (l % 3 === 0) {
+          lineColor = new THREE.Color(0x0284c7) // Sky 600
+          opacity = 0.55
+        } else if (l % 3 === 1) {
+          lineColor = new THREE.Color(0x2563eb) // Blue 600
+          opacity = 0.4
+        } else {
+          lineColor = new THREE.Color(0x0ea5e9) // Sky 500
+          opacity = 0.3
+        }
       }
 
       const material = new THREE.LineBasicMaterial({
         color: lineColor,
         transparent: true,
         opacity: opacity,
-        blending: THREE.AdditiveBlending,
+        blending: isDark ? THREE.AdditiveBlending : THREE.NormalBlending,
         linewidth: 1, // Đường kẻ mảnh tinh tế
       })
 
@@ -131,11 +142,11 @@ export default function ThreeBackground({
     // 2. DẢI LỤA SƯƠNG MỜ MỎNG ĐỆM PHÍA DƯỚI (Ethereal sheer ribbons)
     const ribbonGeom = new THREE.PlaneGeometry(110, 80, 50, 30)
     const ribbonMat = new THREE.MeshBasicMaterial({
-      color: isDark ? 0x0284c7 : 0x0369a1,
+      color: isDark ? 0x0284c7 : 0xbae6fd,
       transparent: true,
-      opacity: 0.045, // Siêu trong suốt, chỉ tạo độ mịn như khói
+      opacity: isDark ? 0.045 : 0.22, // Trong suốt, chỉ tạo độ mịn
       wireframe: false,
-      blending: THREE.AdditiveBlending,
+      blending: isDark ? THREE.AdditiveBlending : THREE.NormalBlending,
       side: THREE.DoubleSide,
     })
     const ribbonMesh = new THREE.Mesh(ribbonGeom, ribbonMat)

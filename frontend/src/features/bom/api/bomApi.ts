@@ -17,6 +17,9 @@ export interface FacilityBreakdownItem {
   rentalRevenue: number
   netRevenue: number
   depositHolding: number
+  managerName?: string
+  managerEmail?: string
+  managerPhone?: string
 }
 
 export interface ChainDashboardData {
