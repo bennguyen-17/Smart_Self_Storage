@@ -97,9 +97,9 @@ function BomLayoutContent() {
       {/* 3D Dynamic Waves Background */}
       <ThreeBackground theme={theme} />
 
-      {/* Top Header đồng bộ với Customer Portal - Sticky top-0 z-50 cố định không bị che khi cuộn */}
-      <header className="sticky top-0 z-50 w-full min-h-[58px] bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-sky-500/20 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4 shrink-0 shadow-lg text-slate-900 dark:text-white transition-colors">
-        {/* BRAND LOGO */}
+      {/* Top Header - Fixed cố định vĩnh viễn trên đỉnh khi cuộn trang */}
+      <header className="fixed top-0 left-0 right-0 z-50 w-full min-h-[58px] bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-sky-500/20 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4 shrink-0 shadow-lg text-slate-900 dark:text-white transition-colors">
+        {/* BRAND LOGO (Đã bỏ chữ BOM theo yêu cầu) */}
         <div className="shrink-0 flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={() => navigate("/bom")}>
           <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/20 hover:scale-105 transition-transform">
             <Warehouse className="size-5" />
@@ -107,7 +107,6 @@ function BomLayoutContent() {
           <div>
             <div className="text-base sm:text-lg font-black tracking-tight leading-tight text-slate-900 dark:text-white flex items-center gap-1.5">
               <span>Smart Storage</span>
-              <span className="text-[10px] font-black uppercase tracking-wider text-sky-400 bg-sky-500/10 border border-sky-400/30 px-1.5 py-0.5 rounded hidden sm:inline-block">BOM</span>
             </div>
             <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden xl:block leading-none mt-0.5">
               Hệ thống cho thuê kho tự quản thông minh 24/7
@@ -192,14 +191,14 @@ function BomLayoutContent() {
       </header>
 
       {/* Main Workspace Outlet với hiệu ứng chuyển trang mượt mà liên kết */}
-      <main className="relative z-10 w-full max-w-[1850px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6">
+      <main className="relative z-10 w-full max-w-[1850px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 pt-20 pb-12 sm:pt-22">
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
             className="w-full"
           >
             {outlet}

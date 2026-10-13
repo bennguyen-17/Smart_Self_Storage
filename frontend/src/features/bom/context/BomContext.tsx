@@ -74,36 +74,71 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
         }
 
         const mappedFacilities: FacilityPerformance[] = apiFacilities.map((f: any, idx: number) => {
-          const breakdown = breakdownMap.get(f.id)
-          const fUnits = unitsByFacility.get(f.id) || []
-          const totalUnits = breakdown?.totalUnits ?? (fUnits.length > 0 ? fUnits.length : (f.totalCapacity || 0))
+          const facId = Number(f.facilityId ?? f.id ?? idx + 1)
+          const breakdown = breakdownMap.get(facId)
+          const fUnits = unitsByFacility.get(facId) || []
+          const totalUnits = breakdown?.totalUnits ?? (fUnits.length > 0 ? fUnits.length : (f.totalCapacity || f.totalUnits || 0))
           const occupied = breakdown?.occupiedUnits ?? fUnits.filter((u) => u.status === "OCCUPIED").length
           const available = breakdown?.availableUnits ?? (totalUnits - occupied > 0 ? totalUnits - occupied : 0)
           const maintenance = breakdown?.maintenanceUnits ?? fUnits.filter((u) => u.status === "MAINTENANCE").length
           const calcOccRate = totalUnits > 0 ? Number(((occupied / totalUnits) * 100).toFixed(1)) : 0
           const realOccRate = breakdown?.occupancyRate ?? calcOccRate
-          const realRevenue = breakdown?.netRevenue ? `₫${Number(breakdown.netRevenue).toLocaleString("vi-VN")}` : "₫0"
+          const rawRevenue = breakdown?.rentalRevenue ?? breakdown?.netRevenue ?? 0
+          const realRevenue = rawRevenue > 0 ? `₫${Number(rawRevenue).toLocaleString("vi-VN")}` : "₫0"
 
           return {
-            id: f.id,
-            code: f.facilityCode || `FAC-0${idx + 1}`,
-            name: f.facilityName || `Cơ sở ${f.id}`,
+            id: facId,
+            code: f.facilityCode || breakdown?.facilityCode || `FAC-0${idx + 1}`,
+            name: f.facilityName || breakdown?.facilityName || `Cơ sở ${facId}`,
             address: f.address || "Hệ thống cơ sở kho",
-            managerName: breakdown?.managerName || (f.managerId ? `Quản lý ID #${f.managerId}` : "Chưa phân công"),
-            managerEmail: breakdown?.managerEmail || (f.managerId ? `manager${f.managerId}@smartstorage.vn` : ""),
-            managerPhone: breakdown?.managerPhone || "0900000000",
+            managerName: breakdown?.managerName || f.managerName || (f.managerId ? `Quản lý ID #${f.managerId}` : "Chưa phân công"),
+            managerEmail: breakdown?.managerEmail || (f.managerId ? `manager${f.managerId}@smartstorage.vn` : "manager@smartstorage.vn"),
+            managerPhone: breakdown?.managerPhone || f.phone || "0900000000",
             totalUnits: totalUnits,
             occupied: occupied,
+            rentedUnits: breakdown?.occupiedUnits ?? occupied,
             available: available,
             maintenance: maintenance,
             occupancyRate: realOccRate,
             monthlyRevenue: realRevenue,
+            floorArea: totalUnits * 12,
+            overdueUnits: breakdown?.overdueContracts || 0,
+            status: f.status || "ACTIVE",
+            rating: "5.0 ★",
             priceMultiplier: 1.0,
             note: "Dữ liệu vận hành đồng bộ trực tiếp từ Database",
           }
         })
 
         setFacilities(mappedFacilities)
+      } else if (overview && overview.facilityBreakdown && overview.facilityBreakdown.length > 0) {
+        setIsApiConnected(true)
+        const mappedFromBreakdown: FacilityPerformance[] = overview.facilityBreakdown.map((b, idx) => {
+          const rawRev = b.rentalRevenue ?? b.netRevenue ?? 0
+          return {
+            id: b.facilityId || idx + 1,
+            code: b.facilityCode || `FAC-0${idx + 1}`,
+            name: b.facilityName || `Cơ sở ${b.facilityId}`,
+            address: "Hệ thống chi nhánh SmartStorage",
+            managerName: b.managerName || "Chưa phân công",
+            managerEmail: b.managerEmail || "manager@smartstorage.vn",
+            managerPhone: b.managerPhone || "0900000000",
+            totalUnits: b.totalUnits || 0,
+            occupied: b.occupiedUnits || 0,
+            rentedUnits: b.occupiedUnits || 0,
+            available: b.availableUnits || 0,
+            maintenance: b.maintenanceUnits || 0,
+            occupancyRate: b.occupancyRate || 0,
+            monthlyRevenue: rawRev > 0 ? `₫${Number(rawRev).toLocaleString("vi-VN")}` : "₫0",
+            floorArea: (b.totalUnits || 10) * 12,
+            overdueUnits: b.overdueContracts || 0,
+            status: "ACTIVE",
+            rating: "5.0 ★",
+            priceMultiplier: 1.0,
+            note: "Dữ liệu báo cáo tổng hợp từ Database",
+          }
+        })
+        setFacilities(mappedFromBreakdown)
       } else {
         setFacilities([])
       }

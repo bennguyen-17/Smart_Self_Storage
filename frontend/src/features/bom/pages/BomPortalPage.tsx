@@ -190,6 +190,10 @@ export default function BomPortalPage() {
             else if (u.typeName?.includes("Size XL") || u.size?.startsWith("2.5m")) sizeKey = "XL"
 
             if (!sizeMap.has(sizeKey)) {
+              const depAmt = Number(u.depositAmount || 0)
+              const fallbackDeposit = sizeKey === "S" ? 500000 : sizeKey === "M" ? 1000000 : sizeKey === "L" ? 2000000 : 3000000
+              const realDeposit = depAmt > 0 ? depAmt : fallbackDeposit
+              const fallbackDaily = sizeKey === "S" ? 30000 : sizeKey === "M" ? 60000 : sizeKey === "L" ? 120000 : 200000
               sizeMap.set(sizeKey, {
                 id: `PRICE-${sizeKey}`,
                 size: sizeKey,
@@ -197,9 +201,11 @@ export default function BomPortalPage() {
                 description: u.typeName || `Kho lưu trữ chuẩn Size ${sizeKey}`,
                 dimensions: u.size || "",
                 area: `${u.areaM2 || 0} m²`,
+                dailyPrice: Number(u.dailyPrice) || fallbackDaily,
                 normPrice: Number(u.monthlyPrice) || 0,
                 acPrice: Math.round(Number(u.monthlyPrice) * (1 + (Number(u.climateSurchargePercent) || 20) / 100)),
-                depositText: `₫${Number(u.depositAmount || 0).toLocaleString("vi-VN")}`,
+                depositAmount: realDeposit,
+                depositText: `₫${realDeposit.toLocaleString("vi-VN")}`,
                 status: "Đang Áp Dụng",
               })
             } else {

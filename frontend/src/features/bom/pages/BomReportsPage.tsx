@@ -25,7 +25,7 @@ export default function BomReportsPage() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb quay về trang chủ BOM */}
-      <div className="flex items-center justify-between pb-1">
+      <div className="flex items-center pb-1">
         <button
           onClick={() => navigate("/bom")}
           className="inline-flex items-center gap-2 text-xs font-bold text-sky-400 hover:text-sky-300 transition-colors group cursor-pointer"
@@ -33,9 +33,6 @@ export default function BomReportsPage() {
           <ArrowLeft className="size-3.5 group-hover:-translate-x-1 transition-transform" />
           <span>Quay lại Tổng Quan Điều Hành</span>
         </button>
-        <span className="text-[11px] font-semibold text-slate-400 bg-slate-900/60 border border-slate-800 px-2.5 py-1 rounded-lg">
-          Module: Báo Cáo Doanh Thu
-        </span>
       </div>
 
       {/* Báo Cáo Toàn Hệ Thống */}
