@@ -21,6 +21,8 @@ import {
   User,
   X,
   Lock,
+  Key,
+  Clock,
   ArrowLeft,
   ArrowUpRight,
   ChevronRight,
@@ -36,37 +38,33 @@ import {
   type FacilityPerformance,
   type UnitPricing,
   type SurchargeItem,
+  INITIAL_PRICING,
+  INITIAL_SURCHARGES,
 } from "../data/bomData"
 
 const NAV_ITEMS = [
   {
-    id: "dashboard" as const,
-    label: "Giám Sát Cơ Sở",
-    shortDesc: "Theo dõi KPI toàn diện, tải chuỗi & cảnh báo vận hành",
-    icon: TrendingUp,
-  },
-  {
     id: "facilities" as const,
-    label: "Danh Sách Cơ Sở",
-    shortDesc: "Quản lý 7 cụm cơ sở kho, sức chứa & tỷ lệ lấp đầy",
+    label: "Giám Sát & Cơ Sở",
+    shortDesc: "Theo dõi KPI, tỷ lệ lấp đầy & cấu hình 7 cụm cơ sở kho",
     icon: Warehouse,
   },
   {
-    id: "policies" as const,
-    label: "Quy Định Chính Sách",
-    shortDesc: "Quy định lưu kho, tiêu chuẩn an ninh & chế tài xử lý nợ",
-    icon: ShieldAlert,
-  },
-  {
     id: "pricing" as const,
-    label: "Khung Giá Phụ Thu",
-    shortDesc: "Biểu giá thuê kho chuẩn & phụ phí tiện ích toàn mạng lưới",
+    label: "Khung Giá & Phụ Phí",
+    shortDesc: "Biểu giá thuê chuẩn Size S/M/L/XL & các loại phụ phí toàn chuỗi",
     icon: SlidersHorizontal,
   },
   {
+    id: "policies" as const,
+    label: "Thông Số Vận Hành",
+    shortDesc: "Quy chuẩn an ninh mã PIN & các mốc chế tài xử lý nợ quá hạn",
+    icon: ShieldAlert,
+  },
+  {
     id: "reports" as const,
-    label: "Báo Cáo Toàn Chuỗi",
-    shortDesc: "Tổng hợp số liệu doanh thu, công nợ & phân tích hiệu suất",
+    label: "Báo Cáo Doanh Thu",
+    shortDesc: "Tổng hợp dòng tiền, tỷ lệ lấp đầy & xuất báo cáo Excel/PDF",
     icon: FileSpreadsheet,
   },
 ]
@@ -80,23 +78,42 @@ const NAV_LAYOUT_TRANSITION = {
 
 export default function BomPortalPage() {
   const { theme, setTheme } = useTheme()
-  const { signOut } = useAuth()
+  const { user, signOut } = useAuth()
   const navigate = useNavigate()
 
-  // State Tabs: mặc định 'home' chỉ hiện Banner + 4 Thẻ chỉ số
+  const isDarkMode =
+    theme === "dark" ||
+    (theme === "system" &&
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches)
+
+  // Thông tin người dùng lấy trực tiếp từ Auth / Session
+  const storedUser = typeof window !== "undefined" ? localStorage.getItem("user") : null
+  const parsedStoredUser = storedUser ? (() => { try { return JSON.parse(storedUser); } catch(e) { return null; } })() : null
+  const currentUserName = user?.fullName || parsedStoredUser?.fullName || "Quản Trị Viên"
+  const currentUserRole = user?.role ? (user.role === "BOM" ? "Ban Điều Hành (BOM)" : user.role) : "Chuyên viên Quản lý Vận hành"
+  const currentUserEmail = user?.email || parsedStoredUser?.email || "bom@smartstorage.vn"
+  const userInitials = currentUserName
+    .split(" ")
+    .filter(Boolean)
+    .slice(-2)
+    .map((w: string) => w[0].toUpperCase())
+    .join("") || "BM"
+
+  // 4 Phân hệ vận hành tinh gọn, mặc định vào thẳng Giám Sát & Cơ Sở
   const [activeTab, setActiveTab] = useState<
-    "home" | "dashboard" | "facilities" | "policies" | "pricing" | "reports"
-  >("home")
+    "facilities" | "pricing" | "policies" | "reports"
+  >("facilities")
 
   // Live Backend API Data States
   const [chainOverview, setChainOverview] = useState<ChainDashboardData | null>(null)
   const [isLoadingApi, setIsLoadingApi] = useState<boolean>(true)
   const [isApiConnected, setIsApiConnected] = useState<boolean>(false)
 
-  // State Data (100% dữ liệu từ API, mặc định rỗng / 0)
+  // State Data (Tải trực tiếp từ Live API, hỗ trợ default dữ liệu chuẩn nếu API chưa có bảng phụ thu)
   const [facilities, setFacilities] = useState<FacilityPerformance[]>([])
-  const [pricingList, setPricingList] = useState<UnitPricing[]>([])
-  const [surcharges, setSurcharges] = useState<SurchargeItem[]>([])
+  const [pricingList, setPricingList] = useState<UnitPricing[]>(INITIAL_PRICING)
+  const [surcharges, setSurcharges] = useState<SurchargeItem[]>(INITIAL_SURCHARGES)
   const [searchSurcharge, setSearchSurcharge] = useState("")
   const [surchargeFilter, setSurchargeFilter] = useState<"all" | "surcharge" | "penalty" | "discount">("all")
 
@@ -142,8 +159,8 @@ export default function BomPortalPage() {
               code: f.facilityCode,
               name: f.facilityName,
               address: f.address,
-              managerName: `Quản lý ${f.shortCode || f.facilityCode}`,
-              managerEmail: `manager.${(f.shortCode || f.facilityCode).toLowerCase()}@smartstorage.vn`,
+              managerName: bd?.managerName || `Quản lý ${f.shortCode || f.facilityCode}`,
+              managerEmail: bd?.managerEmail || `manager.${(f.shortCode || f.facilityCode).toLowerCase()}@smartstorage.vn`,
               totalUnits: bd ? Number(bd.totalUnits) : 0,
               rentedUnits: bd ? Number(bd.occupiedUnits) : 0,
               floorArea: (bd ? Number(bd.totalUnits) : 0) * 15,
@@ -355,27 +372,14 @@ export default function BomPortalPage() {
       <ThreeBackground theme={theme} />
 
       {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-slate-950/60 backdrop-blur-xl border-b border-sky-500/20 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-lg text-white">
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab("home")}>
+      <header className="sticky top-0 z-40 bg-slate-950/60 backdrop-blur-xl border-b border-sky-500/20 px-4 sm:px-8 py-3 flex items-center justify-between shadow-lg text-white">
+        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab("facilities")}>
           <div className="w-10 h-10 rounded-2xl bg-sky-600/30 border border-sky-400/40 text-sky-400 flex items-center justify-center font-bold text-lg shadow-sm">
             <Warehouse className="size-5" />
           </div>
           <div>
             <div className="font-black text-sm sm:text-base text-white leading-tight tracking-wide flex items-center gap-2">
               <span>Smart Storage</span>
-              <span className="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/30 text-sky-300">
-                BOM Portal
-              </span>
-              {isApiConnected ? (
-                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm">
-                  <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Live API
-                </span>
-              ) : (
-                <span className="text-[10px] font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-full flex items-center gap-1.5">
-                  Mock Mode
-                </span>
-              )}
             </div>
             <div className="text-[11px] text-slate-400 font-medium">
               Hệ thống cho thuê kho tự quản thông minh 24/7
@@ -384,622 +388,419 @@ export default function BomPortalPage() {
         </div>
 
         <div className="flex items-center space-x-3">
+          {/* Nút Đổi Theme Tối Giản Chỉ Icon */}
           <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="px-3.5 py-1.5 rounded-full border border-sky-500/30 bg-slate-900/60 hover:bg-slate-800/80 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-sm text-slate-200"
+            onClick={() => setTheme(isDarkMode ? "light" : "dark")}
+            title={isDarkMode ? "Chuyển sang giao diện Sáng" : "Chuyển sang giao diện Tối"}
+            className="w-9 h-9 rounded-full border border-sky-500/30 bg-slate-900/60 hover:bg-slate-800/80 text-xs font-bold flex items-center justify-center transition cursor-pointer shadow-sm text-slate-200"
           >
-            {theme === "dark" ? (
-              <>
-                <Sun className="size-3.5 text-amber-400" />
-                <span>Giao diện Sáng</span>
-              </>
+            {isDarkMode ? (
+              <Sun className="size-4 text-amber-400" />
             ) : (
-              <>
-                <Moon className="size-3.5 text-sky-400" />
-                <span>Giao diện Xanh đen</span>
-              </>
+              <Moon className="size-4 text-sky-400" />
             )}
           </button>
 
+          {/* Nút Hồ Sơ Người Dùng Lấy Dữ Liệu Thực Tế */}
           <button
             onClick={() => setIsProfileModalOpen(true)}
             className="flex items-center space-x-2.5 p-1 sm:px-3 sm:py-1.5 rounded-2xl border border-sky-500/30 bg-slate-900/60 hover:bg-slate-800/80 transition cursor-pointer shadow-sm text-white"
           >
-            <div className="w-8 h-8 rounded-xl bg-sky-600 text-white font-black text-xs flex items-center justify-center">
-              NV
+            <div className="w-8 h-8 rounded-xl bg-sky-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
+              {userInitials}
             </div>
             <div className="hidden sm:block text-left text-xs">
               <div className="font-extrabold text-white leading-tight">
-                Nguyễn Văn BOM
+                {currentUserName}
               </div>
-              <div className="text-[10px] text-sky-300/80 font-medium">
-                Chuyên viên Quản lý Vận hành
+              <div className="text-[10px] text-sky-300/80 font-medium truncate max-w-[150px]">
+                {currentUserRole}
               </div>
             </div>
           </button>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="relative z-10 w-full max-w-[1850px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6 space-y-8">
-        <LayoutGroup id="bom-portal-nav">
-          {activeTab === "home" ? (
-            /* TRANG CHỦ ĐẦU VÀO: FULL HERO PORTAL (4 Ô CHỈ SỐ + HÀNG 5 NÚT NGANG) */
-            <div className="space-y-10">
-              <div className="text-center space-y-3 pt-4">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-wider uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]">
-                  QUẢN LÝ VẬN HÀNH TOÀN HỆ THỐNG
-                </h1>
-                <p className="text-sky-300 font-semibold text-base sm:text-lg max-w-2xl mx-auto drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
-                  Trung tâm điều hành cấp cao &amp; giám sát {chainOverview ? chainOverview.chainTotalFacilities : facilities.length} cụm cơ sở kho thông minh 24/7
-                </p>
-              </div>
+      {/* Main Workspace Container */}
+      <main className="relative z-10 w-full max-w-[1850px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6">
+        <div className="flex flex-col lg:flex-row gap-6 items-start w-full">
+          {/* MENU BÊN TRÁI (Sticky Sidebar Navigation) */}
+          <aside className="w-full lg:w-64 xl:w-72 shrink-0 space-y-2 sticky top-20 bg-slate-950/70 backdrop-blur-md rounded-2xl border border-sky-500/20 p-3 shadow-xl">
+            <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-sky-400/80 border-b border-slate-800/80 mb-1">
+              Phân Hệ Vận Hành
+            </div>
 
-              {/* 4 Ô CHỈ SỐ KPI THU NHỎ GỌN GÀNG, TINH TẾ (DỮ LIỆU TỰ ĐỘNG CẬP NHẬT TỪ API) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 max-w-5xl mx-auto">
-                {/* Box 1: Tổng cơ sở */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/25 backdrop-blur-xs hover:bg-slate-950/45 transition-all duration-300 flex flex-col justify-between min-h-[125px] group">
-                  <div className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
-                    <span>TỔNG CƠ SỞ KHO</span>
-                    <div className="p-1.5 rounded-lg bg-sky-500/20 text-sky-300 group-hover:scale-110 transition-transform">
-                      <Warehouse className="size-4" />
-                    </div>
-                  </div>
-                  <div className="my-1.5">
-                    <div className="text-2xl sm:text-3xl font-black text-white tracking-tight drop-shadow-md flex items-baseline gap-1.5">
-                      <span>{chainOverview ? chainOverview.chainTotalFacilities : facilities.length}</span>
-                      <span className="text-xs sm:text-sm font-bold text-sky-400">Cơ sở</span>
-                    </div>
-                  </div>
-                  <div className="text-[11px] text-slate-400 font-medium">
-                    {chainOverview
-                      ? `${chainOverview.chainTotalUnits.toLocaleString("vi-VN")} Tổng số kho vận hành`
-                      : "0 Tổng số kho vận hành"}
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon
+              const isActive = activeTab === item.id
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full py-3 px-3.5 rounded-xl font-bold text-xs tracking-wide flex items-center justify-between transition-colors duration-200 cursor-pointer ${
+                    isActive
+                      ? "bg-sky-500 text-slate-950 font-black shadow-md shadow-sky-500/30"
+                      : "text-slate-300 hover:text-white hover:bg-slate-900/90 border border-transparent hover:border-sky-500/20"
+                  }`}
+                >
+                  <span className="flex items-center space-x-2.5 min-w-0">
+                    <Icon className={`size-4.5 shrink-0 ${isActive ? "text-slate-950" : "text-sky-400"}`} />
+                    <span className="truncate">{item.label}</span>
+                  </span>
+                  <ChevronRight className={`size-3.5 shrink-0 ${isActive ? "text-slate-950" : "text-slate-500"}`} />
+                </button>
+              )
+            })}
+          </aside>
+
+          {/* CỘT NỘI DUNG BÊN PHẢI */}
+          <div className="flex-1 min-w-0 space-y-6">
+            {/* 4 THẺ CHỈ SỐ KPI ĐƯỢC ĐẶT TRÊN ĐỈNH CỦA BẢNG ĐIỀU HÀNH */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Box 1: Tổng cơ sở */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/40 backdrop-blur-md border border-sky-500/20 shadow-md hover:border-sky-400/40 transition flex flex-col justify-between min-h-[120px] group">
+                <div className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                  <span>TỔNG CƠ SỞ KHO</span>
+                  <div className="p-1.5 rounded-lg bg-sky-500/20 text-sky-300 group-hover:scale-110 transition-transform">
+                    <Warehouse className="size-4" />
                   </div>
                 </div>
-
-                {/* Box 2: Tỉ lệ lấp đầy */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/25 backdrop-blur-xs hover:bg-slate-950/45 transition-all duration-300 flex flex-col justify-between min-h-[125px] group">
-                  <div className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
-                    <span>TỈ LỆ LẤP ĐẦY TB</span>
-                    <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 group-hover:scale-110 transition-transform">
-                      <TrendingUp className="size-4" />
-                    </div>
-                  </div>
-                  <div className="my-1.5">
-                    <div className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight drop-shadow-md">
-                      {chainOverview ? `${chainOverview.chainAverageOccupancyRate}%` : "0%"}
-                    </div>
-                  </div>
-                  <div className="text-[11px] text-slate-400 font-medium">
-                    {chainOverview
-                      ? `${chainOverview.chainTotalActiveContracts} Hợp đồng đang thuê`
-                      : "0 Hợp đồng đang thuê"}
+                <div className="my-1">
+                  <div className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-baseline gap-1.5">
+                    <span>{chainOverview ? chainOverview.chainTotalFacilities : facilities.length}</span>
+                    <span className="text-xs sm:text-sm font-bold text-sky-400">Cơ sở</span>
                   </div>
                 </div>
-
-                {/* Box 3: Doanh thu */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/25 backdrop-blur-xs hover:bg-slate-950/45 transition-all duration-300 flex flex-col justify-between min-h-[125px] group">
-                  <div className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
-                    <span>DOANH THU TOÀN CHUỖI</span>
-                    <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-300 group-hover:scale-110 transition-transform">
-                      <DollarSign className="size-4" />
-                    </div>
-                  </div>
-                  <div className="my-1.5">
-                    <div className="text-2xl sm:text-3xl font-black text-amber-400 tracking-tight drop-shadow-md">
-                      {chainOverview ? formatShortCurrency(chainOverview.chainNetRevenue) : "₫0"}
-                    </div>
-                  </div>
-                  <div className="text-[11px] text-slate-400 font-medium">
-                    {chainOverview
-                      ? `Thực thu: ₫${Number(chainOverview.chainNetRevenue).toLocaleString("vi-VN")}`
-                      : "₫0"}
-                  </div>
-                </div>
-
-                {/* Box 4: Cảnh báo */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/25 backdrop-blur-xs hover:bg-slate-950/45 transition-all duration-300 flex flex-col justify-between min-h-[125px] group">
-                  <div className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
-                    <span>CẢNH BÁO QUÁ HẠN</span>
-                    <div className="p-1.5 rounded-lg bg-rose-500/20 text-rose-300 group-hover:scale-110 transition-transform">
-                      <AlertTriangle className="size-4" />
-                    </div>
-                  </div>
-                  <div className="my-1.5">
-                    <div className="text-2xl sm:text-3xl font-black text-rose-400 tracking-tight drop-shadow-md flex items-baseline gap-1.5">
-                      <span>{chainOverview ? totalOverdueCount : 0}</span>
-                      <span className="text-xs sm:text-sm font-bold text-rose-300">Kho</span>
-                    </div>
-                  </div>
-                  <div className="text-[11px] text-slate-400 font-medium">
-                    {chainOverview
-                      ? (totalOverdueCount > 0 ? "Cần kích hoạt BR-18 / BR-21" : "An toàn - Không có nợ quá hạn")
-                      : "0 Đơn quá hạn"}
-                  </div>
+                <div className="text-[11px] text-slate-400 font-medium">
+                  {chainOverview
+                    ? `${chainOverview.chainTotalUnits.toLocaleString("vi-VN")} Tổng số kho vận hành`
+                    : "0 Tổng số kho vận hành"}
                 </div>
               </div>
 
-              {/* 5 Ô VUÔNG CHỨC NĂNG ĐỒNG BỘ VIỀN CYAN NEON (SHARED MOTION LAYOUT) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 pt-6 w-full max-w-7xl mx-auto">
-                {NAV_ITEMS.map((item) => {
-                  const Icon = item.icon
-                  return (
-                    <motion.button
-                      key={item.id}
-                      layoutId={`bom-nav-btn-${item.id}`}
-                      transition={NAV_LAYOUT_TRANSITION}
-                      onClick={() => setActiveTab(item.id)}
-                      className="group p-5 sm:p-6 rounded-2xl sm:rounded-3xl min-h-[190px] sm:min-h-[220px] flex flex-col justify-between items-start text-left cursor-pointer border-2 border-sky-400/80 hover:border-sky-300 bg-slate-950/60 hover:bg-slate-900/80 shadow-[0_0_25px_rgba(56,189,248,0.25)] hover:shadow-[0_0_40px_rgba(56,189,248,0.5)] hover:scale-[1.03] backdrop-blur-md relative overflow-hidden transition-colors"
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <motion.div
-                          layoutId={`bom-nav-icon-${item.id}`}
-                          transition={NAV_LAYOUT_TRANSITION}
-                          className="p-3.5 rounded-2xl bg-sky-500/15 border border-sky-400/30 text-sky-400 group-hover:bg-sky-500 group-hover:text-slate-950 transition-colors shadow-md"
-                        >
-                          <Icon className="size-6 sm:size-7" />
-                        </motion.div>
-                        <div className="p-2 rounded-xl text-slate-500 group-hover:text-sky-300 group-hover:bg-sky-500/10 transition-colors">
-                          <ArrowUpRight className="size-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                        </div>
-                      </div>
-                      <div className="mt-4 space-y-1.5 w-full">
-                        <motion.div
-                          layoutId={`bom-nav-title-${item.id}`}
-                          transition={NAV_LAYOUT_TRANSITION}
-                          className="text-base sm:text-lg font-black text-white group-hover:text-sky-300 tracking-tight transition-colors"
-                        >
-                          {item.label}
-                        </motion.div>
-                        <p className="text-xs text-slate-400 font-medium line-clamp-2 leading-relaxed">
-                          {item.shortDesc}
+              {/* Box 2: Tỉ lệ lấp đầy */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/40 backdrop-blur-md border border-emerald-500/20 shadow-md hover:border-emerald-400/40 transition flex flex-col justify-between min-h-[120px] group">
+                <div className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                  <span>TỈ LỆ LẤP ĐẦY TB</span>
+                  <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 group-hover:scale-110 transition-transform">
+                    <TrendingUp className="size-4" />
+                  </div>
+                </div>
+                <div className="my-1">
+                  <div className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">
+                    {chainOverview ? `${chainOverview.chainAverageOccupancyRate}%` : "0%"}
+                  </div>
+                </div>
+                <div className="text-[11px] text-slate-400 font-medium">
+                  {chainOverview
+                    ? `${chainOverview.chainTotalActiveContracts} Hợp đồng đang thuê`
+                    : "0 Hợp đồng đang thuê"}
+                </div>
+              </div>
+
+              {/* Box 3: Doanh thu */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/40 backdrop-blur-md border border-amber-500/20 shadow-md hover:border-amber-400/40 transition flex flex-col justify-between min-h-[120px] group">
+                <div className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                  <span>DOANH THU TOÀN CHUỖI</span>
+                  <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-300 group-hover:scale-110 transition-transform">
+                    <DollarSign className="size-4" />
+                  </div>
+                </div>
+                <div className="my-1">
+                  <div className="text-2xl sm:text-3xl font-black text-amber-400 tracking-tight">
+                    {chainOverview ? formatShortCurrency(chainOverview.chainNetRevenue) : "₫0"}
+                  </div>
+                </div>
+                <div className="text-[11px] text-slate-400 font-medium">
+                  {chainOverview
+                    ? `Thực thu: ₫${Number(chainOverview.chainNetRevenue).toLocaleString("vi-VN")}`
+                    : "₫0"}
+                </div>
+              </div>
+
+              {/* Box 4: Cảnh báo */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/40 backdrop-blur-md border border-rose-500/20 shadow-md hover:border-rose-400/40 transition flex flex-col justify-between min-h-[120px] group">
+                <div className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                  <span>CẢNH BÁO QUÁ HẠN</span>
+                  <div className="p-1.5 rounded-lg bg-rose-500/20 text-rose-300 group-hover:scale-110 transition-transform">
+                    <AlertTriangle className="size-4" />
+                  </div>
+                </div>
+                <div className="my-1">
+                  <div className="text-2xl sm:text-3xl font-black text-rose-400 tracking-tight flex items-baseline gap-1.5">
+                    <span>{chainOverview ? totalOverdueCount : 0}</span>
+                    <span className="text-xs sm:text-sm font-bold text-rose-300">Kho</span>
+                  </div>
+                </div>
+                <div className="text-[11px] text-slate-400 font-medium">
+                  {chainOverview
+                    ? (totalOverdueCount > 0 ? "Cần kích hoạt BR-18 / BR-21" : "An toàn - Không có nợ quá hạn")
+                    : "0 Đơn quá hạn"}
+                </div>
+              </div>
+            </div>
+
+            {/* NỘI DUNG CHI TIẾT TỪNG TAB */}
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              {/* TAB 1: GIÁM SÁT & DANH SÁCH CƠ SỞ KHO */}
+              {activeTab === "facilities" && (
+                <div className="space-y-6">
+                  <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+                      <div>
+                        <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-white">
+                          <Warehouse className="size-4.5 text-sky-400" />
+                          <span>GIÁM SÁT HOẠT ĐỘNG VÀ CƠ SỞ KHO TOÀN CHUỖI</span>
+                        </h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          Theo dõi sức chứa, tỷ lệ lấp đầy thực tế và cấu hình tham số từng chi nhánh
                         </p>
                       </div>
-                    </motion.button>
-                  )
-                })}
-              </div>
-            </div>
-          ) : (
-            /* GIAO DIỆN KHI CHỌN 1 MỤC: CHUYỂN THÀNH MENU BÊN TRÁI + NỘI DUNG BÊN PHẢI */
-            <div className="flex flex-col lg:flex-row gap-6 items-start w-full">
-              {/* MENU BÊN TRÁI (Sticky Unified Sidebar Card) */}
-              <div className="w-full lg:w-64 xl:w-72 shrink-0 space-y-1.5 sticky top-20 bg-slate-950/70 backdrop-blur-md rounded-2xl border border-sky-500/20 p-2.5 shadow-xl">
-                <button
-                  onClick={() => setActiveTab("home")}
-                  className="w-full py-2.5 px-3.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900/90 font-bold text-xs flex items-center justify-between transition cursor-pointer border border-transparent hover:border-sky-500/20 group mb-1"
-                >
-                  <span className="flex items-center space-x-2.5">
-                    <ArrowLeft className="size-4 text-sky-400 group-hover:-translate-x-0.5 transition-transform" />
-                    <span>Về Trang Chủ</span>
-                  </span>
-                  <span className="text-[10px] uppercase font-black text-sky-400/80 bg-sky-500/10 px-1.5 py-0.5 rounded">
-                    Home
-                  </span>
-                </button>
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-xs text-slate-400 font-semibold">Tháng báo cáo:</span>
+                        <select className="px-3.5 py-1.5 rounded-xl border border-slate-700 text-xs font-bold bg-slate-900 text-white outline-none cursor-pointer focus:border-sky-400">
+                          <option value="09/2026">Tháng 09 / 2026</option>
+                          <option value="08/2026">Tháng 08 / 2026</option>
+                        </select>
+                      </div>
+                    </div>
 
-                {/* 5 Menu Items (Animate morph từ giữa màn hình sang xếp gọn menu bên trái) */}
-                {NAV_ITEMS.map((item) => {
-                  const Icon = item.icon
-                  const isActive = activeTab === item.id
-                  return (
-                    <motion.button
-                      key={item.id}
-                      layoutId={`bom-nav-btn-${item.id}`}
-                      transition={NAV_LAYOUT_TRANSITION}
-                      onClick={() => setActiveTab(item.id)}
-                      className={`w-full py-2.5 px-3.5 rounded-xl font-bold text-xs tracking-wide flex items-center justify-between transition-colors duration-200 cursor-pointer ${
-                        isActive
-                          ? "bg-sky-500 text-slate-950 font-black shadow-md shadow-sky-500/30"
-                          : "text-slate-300 hover:text-white hover:bg-slate-900/90 border border-transparent hover:border-sky-500/20"
-                      }`}
-                    >
-                      <span className="flex items-center space-x-2.5 min-w-0">
-                        <motion.span layoutId={`bom-nav-icon-${item.id}`} transition={NAV_LAYOUT_TRANSITION} className="shrink-0">
-                          <Icon className={`size-4.5 ${isActive ? "text-slate-950" : "text-sky-400"}`} />
-                        </motion.span>
-                        <motion.span layoutId={`bom-nav-title-${item.id}`} transition={NAV_LAYOUT_TRANSITION} className="truncate">
-                          {item.label}
-                        </motion.span>
-                      </span>
-                      <ChevronRight className={`size-3.5 shrink-0 ${isActive ? "text-slate-950" : "text-slate-500"}`} />
-                    </motion.button>
-                  )
-                })}
-              </div>
-
-              {/* CỘT NỘI DUNG BÊN PHẢI (Right Content Panel with smooth slide-in) */}
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, x: 24 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.18, ease: "easeOut" }}
-                className="flex-1 min-w-0 space-y-6"
-              >
-
-        {/* SUBTAB 1: GIÁM SÁT & HIỆU SUẤT CƠ SỞ */}
-        {activeTab === "dashboard" && (
-          <div className="space-y-6">
-            <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
-                <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-white">
-                  <TrendingUp className="size-4.5 text-sky-400" />
-                  <span>BẢNG SO SÁNH HIỆU SUẤT HOẠT ĐỘNG GIỮA CÁC CƠ SỞ KHO</span>
-                </h3>
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-slate-400 font-semibold">Tháng báo cáo:</span>
-                  <select className="px-3.5 py-1.5 rounded-xl border border-slate-700 text-xs font-bold bg-slate-900 text-white outline-none cursor-pointer focus:border-sky-400">
-                    <option value="09/2026">Tháng 09 / 2026</option>
-                    <option value="08/2026">Tháng 08 / 2026</option>
-                  </select>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-800 text-slate-400 uppercase font-black text-[10px]">
+                            <th className="py-3 px-4">CƠ SỞ KHO</th>
+                            <th className="py-3 px-4">QUẢN LÝ CHI NHÁNH</th>
+                            <th className="py-3 px-4 text-center">QUY MÔ KHO</th>
+                            <th className="py-3 px-4 text-center">ĐANG THUÊ</th>
+                            <th className="py-3 px-4 text-center">DOANH THU THÁNG</th>
+                            <th className="py-3 px-4 text-center">ĐƠN QUÁ HẠN</th>
+                            <th className="py-3 px-4 text-center">THAO TÁC</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800 font-medium text-slate-300">
+                          {facilities.length > 0 ? (
+                            facilities.map((fac) => (
+                              <tr key={fac.id} className="hover:bg-slate-900/60 transition">
+                                <td className="py-4 px-4">
+                                  <div className="font-extrabold text-white text-xs flex items-center gap-2">
+                                    <span>{fac.name}</span>
+                                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                                      {fac.code}
+                                    </span>
+                                  </div>
+                                  <div className="text-[11px] text-slate-400 mt-0.5">{fac.address}</div>
+                                </td>
+                                <td className="py-4 px-4">
+                                  <div className="font-bold text-white text-xs">{fac.managerName}</div>
+                                  <div className="text-[11px] text-slate-400 mt-0.5">{fac.managerEmail}</div>
+                                </td>
+                                <td className="py-4 px-4 text-center font-bold text-slate-200">
+                                  {fac.totalUnits} Kho
+                                </td>
+                                <td className="py-4 px-4 text-center">
+                                  <span className="font-black text-emerald-400">
+                                    {fac.rentedUnits}
+                                  </span>
+                                  <span className="text-slate-400">/{fac.totalUnits}</span>
+                                </td>
+                                <td className="py-4 px-4 text-center font-black text-sky-400 font-mono text-xs">
+                                  ₫{fac.monthlyRevenue.toLocaleString("vi-VN").replace(/,/g, ".")}
+                                </td>
+                                <td className="py-4 px-4 text-center">
+                                  <span
+                                    className={`font-semibold px-3 py-1 rounded-full text-[10px] inline-block ${
+                                      fac.overdueUnits > 0
+                                        ? "bg-rose-950/60 text-rose-300 border border-rose-800/40"
+                                        : "bg-emerald-950/60 text-emerald-300 border border-emerald-800/40"
+                                    }`}
+                                  >
+                                    {fac.overdueUnits > 0 ? `${fac.overdueUnits} Đơn quá hạn` : "0 Đơn"}
+                                  </span>
+                                </td>
+                                <td className="py-4 px-4 text-center">
+                                  <button
+                                    onClick={() => handleOpenFacilityModal(fac)}
+                                    className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs px-4 py-1.5 rounded-full shadow-xs transition cursor-pointer"
+                                  >
+                                    Cấu hình
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={7} className="py-8 text-center text-slate-400 italic">
+                                Chưa có dữ liệu cơ sở từ hệ thống
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-800 text-slate-400 uppercase font-black text-[10px]">
-                      <th className="py-3 px-4">CƠ SỞ KHO</th>
-                      <th className="py-3 px-4">QUẢN LÝ CHI NHÁNH</th>
-                      <th className="py-3 px-4 text-center">QUY MÔ KHO</th>
-                      <th className="py-3 px-4 text-center">ĐANG THUÊ</th>
-                      <th className="py-3 px-4 text-center">DOANH THU THÁNG</th>
-                      <th className="py-3 px-4 text-center">ĐƠN QUÁ HẠN</th>
-                      <th className="py-3 px-4 text-center">THAO TÁC</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800 font-medium text-slate-300">
-                    {facilities.length > 0 ? (
-                      facilities.map((fac) => (
-                        <tr key={fac.id} className="hover:bg-slate-900/60 transition">
-                          <td className="py-4 px-4">
-                            <div className="font-extrabold text-white text-xs">{fac.name}</div>
-                            <div className="text-[11px] text-slate-400 mt-0.5">{fac.address}</div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="font-bold text-white text-xs">{fac.managerName}</div>
-                            <div className="text-[11px] text-slate-400 mt-0.5">{fac.managerEmail}</div>
-                          </td>
-                          <td className="py-4 px-4 text-center font-bold text-slate-200">
-                            {fac.totalUnits} Kho
-                          </td>
-                          <td className="py-4 px-4 text-center">
-                            <span className="font-black text-emerald-400">
-                              {fac.rentedUnits}
-                            </span>
-                            <span className="text-slate-400">/{fac.totalUnits}</span>
-                          </td>
-                          <td className="py-4 px-4 text-center font-black text-sky-400 font-mono text-xs">
-                            ₫{fac.monthlyRevenue.toLocaleString("vi-VN").replace(/,/g, ".")}
-                          </td>
-                          <td className="py-4 px-4 text-center">
-                            <span
-                              className={`font-semibold px-3 py-1 rounded-full text-[10px] inline-block ${
-                                fac.overdueUnits > 0
-                                  ? "bg-rose-950/60 text-rose-300 border border-rose-800/40"
-                                  : "bg-emerald-950/60 text-emerald-300 border border-emerald-800/40"
-                              }`}
-                            >
-                              {fac.overdueUnits > 0 ? `${fac.overdueUnits} Đơn quá hạn` : "0 Đơn"}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 text-center">
-                            <button
-                              onClick={() => handleOpenFacilityModal(fac)}
-                              className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs px-4 py-1.5 rounded-full shadow-xs transition cursor-pointer"
-                            >
-                              Chi tiết
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={7} className="py-8 text-center text-slate-400 italic">
-                          Chưa có dữ liệu cơ sở từ hệ thống
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* SUBTAB 2: DANH SÁCH CƠ SỞ KHO HỆ THỐNG */}
-        {activeTab === "facilities" && (
-          <div className="space-y-6">
-            <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
-                <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-white">
-                  <Warehouse className="size-4.5 text-sky-400" />
-                  <span>DANH SÁCH TẤT CẢ CÁC CƠ SỞ KHO LƯU TRỮ TOÀN HỆ THỐNG</span>
-                </h3>
-                <button
-                  onClick={() => toast.info("Chức năng thêm cơ sở kho mới sẽ kích hoạt khi có chi nhánh mở rộng!")}
-                  className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(56,189,248,0.25)]"
-                >
-                  <Plus className="size-4" />
-                  <span>Thêm Cơ Sở Kho Mới</span>
-                </button>
-              </div>
-
-              {facilities.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {facilities.map((fac) => (
-                  <div
-                    key={fac.id}
-                    className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-4 hover:border-blue-400 transition"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-950/80 px-2 py-0.5 rounded-md">
-                          {fac.code}
-                        </span>
-                        <h4 className="font-extrabold text-base text-slate-900 dark:text-white">{fac.name}</h4>
-                        <p className="text-xs text-slate-500">{fac.address}</p>
-                      </div>
-                      <span className="text-xs font-mono font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 px-2.5 py-1 rounded-full">
-                        {fac.status}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200/80 dark:border-slate-700/80 text-xs">
+              {/* TAB 3: THÔNG SỐ VẬN HÀNH & CHẾ TÀI QUÁ HẠN */}
+              {activeTab === "policies" && (
+                <div className="space-y-6">
+                  <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
                       <div>
-                        <span className="text-slate-400 text-[10px] uppercase font-bold block">Quản lý cơ sở:</span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200">{fac.managerName}</span>
+                        <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-white">
+                          <ShieldAlert className="size-4.5 text-sky-400" />
+                          <span>QUY CHUẨN AN NINH &amp; CHẾ TÀI XỬ LÝ NỢ QUÁ HẠN</span>
+                        </h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          Thông số cấu hình bảo mật mã PIN và quy trình 4 cấp bậc cưỡng chế tự động
+                        </p>
                       </div>
-                      <div>
-                        <span className="text-slate-400 text-[10px] uppercase font-bold block">Sức chứa &amp; Sàn:</span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200">
-                          {fac.totalUnits} Kho • {fac.floorArea.toLocaleString()} m² sàn
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end pt-1">
                       <button
-                        onClick={() => handleOpenFacilityModal(fac)}
-                        className="bg-slate-200 dark:bg-slate-700 hover:bg-blue-600 hover:text-white text-slate-800 dark:text-slate-200 font-extrabold text-xs px-3.5 py-1.5 rounded-xl transition cursor-pointer"
+                        onClick={() => toast.success("Đã đồng bộ thông số vận hành toàn chuỗi kho thành công!")}
+                        className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl transition cursor-pointer shadow-[0_0_15px_rgba(56,189,248,0.3)] shrink-0"
                       >
-                        Cấu hình chi nhánh
+                        Lưu Thay Đổi
                       </button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-12 text-center text-slate-400 italic">
-                Chưa có dữ liệu cơ sở kho từ hệ thống
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
-        {/* SUBTAB 3: QUY ĐỊNH & CHÍNH SÁCH THUÊ CHUNG */}
-        {activeTab === "policies" && (
-          <div className="space-y-6">
-            <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-5">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
-                <div>
-                  <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-white">
-                    <ShieldAlert className="size-4.5 text-sky-400" />
-                    <span>THIẾT LẬP CÁC QUY ĐỊNH &amp; CHÍNH SÁCH THUÊ CHUỖI HỆ THỐNG</span>
-                  </h3>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    Áp dụng thống nhất cho toàn bộ các cơ sở kho và hợp đồng tự quản 24/7
-                  </p>
-                </div>
-                <button
-                  onClick={() => toast.success("Đã lưu các thiết lập chính sách chung toàn hệ thống thành công!")}
-                  className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl transition cursor-pointer shadow-[0_0_15px_rgba(56,189,248,0.3)] shrink-0"
-                >
-                  Lưu Thay Đổi Chính Sách
-                </button>
-              </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      {/* Thẻ 1: Quy Chuẩn An Ninh Mã PIN */}
+                      <div className="p-5 rounded-2xl bg-slate-900/50 border border-slate-800 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="p-1.5 rounded-lg bg-sky-500/20 text-sky-400">
+                              <Key className="size-4" />
+                            </span>
+                            <span className="font-extrabold text-xs uppercase text-slate-200">
+                              An Ninh &amp; Cổng Tự Động (IoT)
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            Đang Bật
+                          </span>
+                        </div>
 
-              <div className="space-y-4">
-                {/* 1. Đặt cọc */}
-                <div className="p-4 sm:p-5 rounded-xl border border-slate-800/80 bg-slate-900/50 space-y-3.5">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-sky-500/15 text-sky-400 border border-sky-500/30">
-                      Mục 01
-                    </span>
-                    <h4 className="font-extrabold text-xs uppercase text-slate-200">
-                      Chính Sách Đặt Cọc &amp; Giữ Chỗ Kho
-                    </h4>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 text-xs">
-                    <div className="md:col-span-4">
-                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
-                        Mức Tiền Cọc Mặc Định Cho Hợp Đồng
-                      </label>
-                      <select className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-xs focus:border-sky-400 outline-none">
-                        <option>1 Tháng Tiền Thuê Kho (Khuyên Dùng)</option>
-                        <option>2 Tháng Tiền Thuê Kho</option>
-                      </select>
-                      <p className="text-[10px] text-slate-400 mt-1">Áp dụng mặc định cho tất cả hợp đồng thuê mới.</p>
-                    </div>
-                    <div className="md:col-span-3">
-                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
-                        Thời Gian Giữ Chỗ Tối Đa
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          defaultValue={7}
-                          className="w-20 p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-center text-xs focus:border-sky-400 outline-none"
-                        />
-                        <span className="font-bold text-slate-400">Ngày</span>
+                        <div className="space-y-3 text-xs">
+                          <div className="flex justify-between items-center p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                            <div>
+                              <div className="font-bold text-white">Thời lượng hiệu lực mã PIN mở cửa</div>
+                              <div className="text-[11px] text-slate-400">Chu kỳ làm mới mã PIN động tránh lộ lọt</div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                defaultValue={15}
+                                className="w-16 p-2 rounded-lg border border-slate-700 bg-slate-900 text-center font-bold text-sky-400 text-xs outline-none"
+                              />
+                              <span className="font-bold text-slate-400 text-xs">Giây</span>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between items-center p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                            <div>
+                              <div className="font-bold text-white">Tiền cọc mặc định khi ký hợp đồng</div>
+                              <div className="text-[11px] text-slate-400">Khấu trừ khi hư hại hoặc vi phạm hợp đồng</div>
+                            </div>
+                            <select className="p-2 rounded-lg border border-slate-700 bg-slate-900 font-bold text-white text-xs outline-none">
+                              <option>1 Tháng Tiền Thuê</option>
+                              <option>2 Tháng Tiền Thuê</option>
+                            </select>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-1">Tự hủy giữ chỗ nếu quá hạn.</p>
-                    </div>
-                    <div className="md:col-span-5">
-                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
-                        Điều Kiện Hoàn Tiền Cọc Trả Kho
-                      </label>
-                      <input
-                        type="text"
-                        defaultValue="Thông báo trước ≥ 15 ngày & Không hư hại kho"
-                        className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-xs focus:border-sky-400 outline-none"
-                      />
-                      <p className="text-[10px] text-slate-400 mt-1">Hoàn cọc sau nghiệm thu và trừ phụ thu nếu có.</p>
-                    </div>
-                  </div>
-                </div>
 
-                {/* 2. Gia hạn & Hủy */}
-                <div className="p-4 sm:p-5 rounded-xl border border-slate-800/80 bg-slate-900/50 space-y-3.5">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
-                      Mục 02
-                    </span>
-                    <h4 className="font-extrabold text-xs uppercase text-slate-200">
-                      Chính Sách Gia Hạn &amp; Hủy Hợp Đồng
-                    </h4>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 text-xs">
-                    <div className="md:col-span-4">
-                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
-                        Tự Động Gửi Notification Gia Hạn HĐ
-                      </label>
-                      <select className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-xs focus:border-sky-400 outline-none">
-                        <option>Trước 7 Ngày Hết Hạn (Mặc định)</option>
-                        <option>Trước 15 Ngày Hết Hạn</option>
-                      </select>
-                      <p className="text-[10px] text-slate-400 mt-1">Gửi Push App &amp; Email nhắc gia hạn HĐ.</p>
-                    </div>
-                    <div className="md:col-span-3">
-                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
-                        Thời Hạn Báo Trả Trước Hạn
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          defaultValue={15}
-                          className="w-20 p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-center text-xs focus:border-sky-400 outline-none"
-                        />
-                        <span className="font-bold text-slate-400">Ngày</span>
-                      </div>
-                      <p className="text-[10px] text-slate-400 mt-1">Thời hạn tối thiểu báo trước.</p>
-                    </div>
-                    <div className="md:col-span-5">
-                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
-                        Mức Phạt Khi Hủy HĐ Đột Ngột Trả Sớm
-                      </label>
-                      <select className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-xs focus:border-sky-400 outline-none">
-                        <option>Khấu Trừ 50% Tiền Cọc</option>
-                        <option>Khấu Trừ 100% Tiền Cọc</option>
-                      </select>
-                      <p className="text-[10px] text-slate-400 mt-1">Khấu trừ cọc khi trả sớm không báo trước.</p>
-                    </div>
-                  </div>
-                </div>
+                      {/* Thẻ 2: Danh Mục Hàng Hóa Cấm Lưu Trữ */}
+                      <div className="p-5 rounded-2xl bg-slate-900/50 border border-slate-800 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="p-1.5 rounded-lg bg-rose-500/20 text-rose-400">
+                              <AlertTriangle className="size-4" />
+                            </span>
+                            <span className="font-extrabold text-xs uppercase text-slate-200">
+                              Hàng Hóa Tuyệt Đối Cấm Lưu Trữ
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                            PCCC Chuỗi
+                          </span>
+                        </div>
 
-                {/* 3. Nghiệm thu & Trả kho */}
-                <div className="p-4 sm:p-5 rounded-xl border border-slate-800/80 bg-slate-900/50 space-y-3.5">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                      Mục 03
-                    </span>
-                    <h4 className="font-extrabold text-xs uppercase text-slate-200">
-                      Quy Định Nghiệm Thu &amp; Trả Kho (Check-out)
-                    </h4>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 text-xs">
-                    <div className="md:col-span-5">
-                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
-                        Hình Thức Kiểm Tra &amp; Nghiệm Thu
-                      </label>
-                      <input
-                        type="text"
-                        readOnly
-                        defaultValue="Xác Thực Ảnh Chụp App & Staff Nghiệm Thu Trực Tiếp"
-                        className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-slate-200 font-bold text-xs focus:border-sky-400 outline-none"
-                      />
-                    </div>
-                    <div className="md:col-span-3">
-                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
-                        Thời Gian Hoàn Trả Tiền Cọc
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          defaultValue={3}
-                          className="w-20 p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-center text-xs focus:border-sky-400 outline-none"
-                        />
-                        <span className="font-bold text-slate-400">Ngày làm việc</span>
+                        <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
+                          <p className="text-[11px] text-slate-400 leading-relaxed">
+                            Khách hàng vi phạm lưu trữ danh mục dưới đây sẽ bị lập tức hủy hợp đồng và trình báo cơ quan chức năng:
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {["Chất nổ, xăng dầu, gas", "Chất độc hại hóa chất", "Động vật sống", "Hàng lậu, vũ khí", "Hàng dễ phân hủy sinh mùi"].map((tag, i) => (
+                              <span
+                                key={i}
+                                className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-rose-950/50 text-rose-300 border border-rose-800/40"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="md:col-span-4">
-                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
-                        Phí Vệ Sinh Kho Phụ Thu (Nếu Không Dọn)
-                      </label>
-                      <input
-                        type="text"
-                        defaultValue="150,000 VNĐ"
-                        className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-xs focus:border-sky-400 outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
 
-                {/* 4. Quá hạn & Khóa Smart Access */}
-                <div className="p-4 sm:p-5 rounded-xl border border-slate-800/80 bg-slate-900/50 space-y-3.5">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-400 border border-rose-500/30">
-                      Mục 04
-                    </span>
-                    <h4 className="font-extrabold text-xs uppercase text-slate-200">
-                      Quy Trình Xử Lý Quá Hạn &amp; Phong Tỏa Smart Access (BR-18 / BR-21)
-                    </h4>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 text-xs">
-                    <div className="md:col-span-3">
-                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
-                        Thời Gian Ân Hạn (Grace Period)
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          defaultValue={3}
-                          className="w-20 p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white font-bold text-center text-xs focus:border-sky-400 outline-none"
-                        />
-                        <span className="font-bold text-slate-400">Ngày</span>
+                    {/* Khung 3: 4 Mốc Xử Lý Chế Tài Quá Hạn */}
+                    <div className="p-5 rounded-2xl bg-slate-900/50 border border-slate-800 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-extrabold text-xs uppercase text-slate-200 flex items-center gap-2">
+                          <span className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400">
+                            <Clock className="size-4" />
+                          </span>
+                          <span>Quy Trình 4 Cấp Bậc Cưỡng Chế Quá Hạn Hợp Đồng (BR-18 / BR-21)</span>
+                        </h4>
+                        <span className="text-[10px] font-bold text-slate-400">
+                          Tự động kích hoạt theo chu kỳ
+                        </span>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-1">Ân hạn miễn phí phạt ban đầu.</p>
-                    </div>
-                    <div className="md:col-span-5">
-                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
-                        Tự Động Phong Tỏa Mã PIN Cổng IoT
-                      </label>
-                      <input
-                        type="text"
-                        readOnly
-                        defaultValue="Ngày Thứ 5 Quá Hạn (Tự động Vô hiệu hóa PIN BR-18)"
-                        className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-amber-300 font-bold text-xs focus:border-sky-400 outline-none"
-                      />
-                    </div>
-                    <div className="md:col-span-4">
-                      <label className="font-bold text-slate-300 block mb-1.5 text-xs">
-                        Niêm Phong Tài Sản &amp; Thanh Lý HĐ
-                      </label>
-                      <input
-                        type="text"
-                        readOnly
-                        defaultValue="Quá 30 Ngày Không Thanh Toán (BR-21)"
-                        className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-rose-400 font-bold text-xs focus:border-sky-400 outline-none"
-                      />
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                        <div className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1.5">
+                          <div className="text-[10px] font-black uppercase text-sky-400">Cấp 1 • Ân Hạn</div>
+                          <div className="font-black text-white text-sm">3 Ngày Đầu</div>
+                          <p className="text-[11px] text-slate-400 leading-relaxed">
+                            Gửi thông báo Push Notification &amp; SMS nhắc hạn thanh toán. Không tính phí phạt.
+                          </p>
+                        </div>
+
+                        <div className="p-3.5 rounded-xl bg-slate-950/70 border border-amber-500/30 space-y-1.5">
+                          <div className="text-[10px] font-black uppercase text-amber-400">Cấp 2 • Khóa Mã PIN</div>
+                          <div className="font-black text-amber-300 text-sm">Sau 7 Ngày</div>
+                          <p className="text-[11px] text-slate-400 leading-relaxed">
+                            Vô hiệu hóa quyền ra vào cổng tự động (BR-18). Áp dụng phí phạt trễ hạn 5%/tháng.
+                          </p>
+                        </div>
+
+                        <div className="p-3.5 rounded-xl bg-slate-950/70 border border-orange-500/30 space-y-1.5">
+                          <div className="text-[10px] font-black uppercase text-orange-400">Cấp 3 • Niêm Phong</div>
+                          <div className="font-black text-orange-300 text-sm">Sau 15 Ngày</div>
+                          <p className="text-[11px] text-slate-400 leading-relaxed">
+                            Quản lý cơ sở dán tem niêm phong vật lý. Tạm giữ toàn bộ tài sản tại ô kho.
+                          </p>
+                        </div>
+
+                        <div className="p-3.5 rounded-xl bg-slate-950/70 border border-rose-500/30 space-y-1.5">
+                          <div className="text-[10px] font-black uppercase text-rose-400">Cấp 4 • Thanh Lý</div>
+                          <div className="font-black text-rose-300 text-sm">Sau 30 Ngày</div>
+                          <p className="text-[11px] text-slate-400 leading-relaxed">
+                            Chấm dứt hợp đồng (BR-21), lập biên bản thanh lý và xử lý tài sản theo hợp đồng.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
+              )}
 
         {/* SUBTAB 4: KHUNG GIÁ, PHỤ THU & GIẢM GIÁ */}
         {activeTab === "pricing" && (
@@ -1348,10 +1149,9 @@ export default function BomPortalPage() {
             </div>
           </div>
         )}
-              </motion.div>
-            </div>
-          )}
-        </LayoutGroup>
+            </motion.div>
+          </div>
+        </div>
       </main>
 
       {/* 1. MODAL CẤU HÌNH CƠ SỞ KHO */}
@@ -1681,19 +1481,19 @@ export default function BomPortalPage() {
             </div>
 
             <div className="space-y-4 text-xs">
-              <div className="flex items-center space-x-3.5 p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white font-black text-lg flex items-center justify-center shadow-md">
-                  NV
+              <div className="flex items-center space-x-3.5 p-3.5 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-900">
+                <div className="w-12 h-12 rounded-2xl bg-sky-600 text-white font-black text-lg flex items-center justify-center shadow-md">
+                  {userInitials}
                 </div>
                 <div>
-                  <div className="font-black text-sm text-indigo-950 dark:text-indigo-200">
-                    Nguyễn Văn BOM
+                  <div className="font-black text-sm text-sky-950 dark:text-sky-200">
+                    {currentUserName}
                   </div>
                   <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-extrabold uppercase mt-0.5">
                     ● ĐANG TRONG CA ĐIỀU HÀNH
                   </div>
                   <div className="text-[10px] text-slate-500 mt-0.5">
-                    Chuyên viên Quản lý Vận hành • Ban Điều Hành Hệ Thống (BOM)
+                    {currentUserRole} • Ban Quản Lý (BOM)
                   </div>
                 </div>
               </div>
@@ -1705,19 +1505,15 @@ export default function BomPortalPage() {
                 <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 font-semibold">
                   <div className="flex justify-between">
                     <span className="text-slate-500">Họ và Tên:</span>
-                    <span className="text-slate-900 dark:text-white font-bold">Nguyễn Văn BOM</span>
+                    <span className="text-slate-900 dark:text-white font-bold">{currentUserName}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Mã Quản Lý:</span>
-                    <span className="font-mono font-bold text-blue-600">BOM-HQ-8899</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Số Điện Thoại:</span>
-                    <span className="font-mono font-bold">0909 777 888</span>
+                    <span className="text-slate-500">Vai Trò:</span>
+                    <span className="font-mono font-bold text-sky-600">{currentUserRole}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">Email:</span>
-                    <span className="font-mono font-bold">bom.nguyen@swp391.vn</span>
+                    <span className="font-mono font-bold">{currentUserEmail}</span>
                   </div>
                 </div>
               </div>
