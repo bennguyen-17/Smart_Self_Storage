@@ -365,7 +365,7 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                       onClick={() => setActiveTab(item.id)}
                       className={`transition-all duration-300 cursor-pointer flex items-center ${
                         isHome
-                          ? `p-7 sm:p-8 lg:p-10 rounded-3xl backdrop-blur-xl border-2 tracking-wide hover:scale-[1.04] text-center flex-col justify-between min-h-[220px] sm:min-h-[250px] ${theme.cardBg} ${theme.border} ${theme.shadow}`
+                          ? `p-5 sm:p-6 lg:p-7 rounded-3xl backdrop-blur-xl border tracking-wide hover:scale-[1.04] text-center flex-col justify-between min-h-[180px] sm:min-h-[210px] ${theme.cardBg} ${theme.border} ${theme.shadow}`
                           : `px-3.5 sm:px-5 py-2 rounded-xl font-bold text-xs sm:text-sm tracking-wide space-x-2 whitespace-nowrap border ${
                               isActive
                                 ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/25 dark:bg-cyan-500 dark:text-slate-950 dark:border-cyan-400 dark:shadow-cyan-400/30'
@@ -378,14 +378,14 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                         transition={CUST_NAV_TRANSITION}
                         className={`shrink-0 flex items-center justify-center ${
                           isHome
-                            ? `w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl group-hover:scale-110 transition-transform ${theme.iconBg}`
+                            ? `w-14 h-14 sm:w-16 sm:h-16 rounded-2xl group-hover:scale-110 transition-transform ${theme.iconBg}`
                             : ''
                         }`}
                       >
                         <Icon
                           className={
                             isHome
-                              ? 'size-8 sm:size-10'
+                              ? 'size-7 sm:size-8'
                               : `size-4 sm:size-4.5 ${
                                   isActive ? 'text-white dark:text-slate-950' : 'text-slate-600 dark:text-slate-400'
                                 }`

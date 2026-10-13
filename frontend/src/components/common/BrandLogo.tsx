@@ -20,7 +20,7 @@ function BrandLogo({ internal = false, onClick }: BrandLogoProps) {
 
       <div>
         <div className="flex items-center gap-1.5">
-          <span className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white">
+          <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
             Smart Storage
           </span>
         </div>
