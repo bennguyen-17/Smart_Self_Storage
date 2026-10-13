@@ -1,6 +1,8 @@
 import { LogOutIcon, MoonIcon, SunIcon, WarehouseIcon } from "lucide-react"
 
 interface ManagerTopBarProps {
+  /** Tên cổng hiện dưới logo; Admin Portal dùng lại thanh này với tên khác */
+  portalName?: string
   fullName: string
   roleLabel: string
   isDark: boolean
@@ -21,8 +23,15 @@ function initials(fullName: string): string {
     .join("")
 }
 
-/** Thanh trên cùng của Manager Portal: cùng kiểu với cổng Staff (prototype), màu nhấn tím của Manager */
-function ManagerTopBar({ fullName, roleLabel, isDark, onToggleTheme, onLogout }: ManagerTopBarProps) {
+/** Thanh trên cùng của các cổng nội bộ Manager/Admin: cùng kiểu với cổng Staff (prototype), màu nhấn tím */
+function ManagerTopBar({
+  portalName = "Cổng Quản lý cơ sở",
+  fullName,
+  roleLabel,
+  isDark,
+  onToggleTheme,
+  onLogout,
+}: ManagerTopBarProps) {
   return (
     <header className="portal-topbar sticky top-0 z-50 flex h-16 w-full shrink-0 items-center justify-between border-b px-4 shadow-sm transition-colors sm:px-10">
       <div className="flex min-w-0 items-center space-x-3">
@@ -31,7 +40,7 @@ function ManagerTopBar({ fullName, roleLabel, isDark, onToggleTheme, onLogout }:
         </div>
         <div className="min-w-0">
           <span className="text-title block text-base leading-tight font-bold">Smart Storage</span>
-          <span className="text-muted hidden text-[11px] font-medium sm:block">Cổng Quản lý cơ sở</span>
+          <span className="text-muted hidden text-[11px] font-medium sm:block">{portalName}</span>
         </div>
       </div>
 

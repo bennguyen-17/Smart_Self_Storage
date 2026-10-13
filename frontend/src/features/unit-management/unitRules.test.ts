@@ -5,6 +5,8 @@ import {
   canStartMaintenance,
   changeTypeBlockReason,
   climateCounterpartTypeId,
+  MAINTENANCE_NOTE_MAX,
+  maintenanceNoteError,
   normalizeUnitStatus,
 } from "./unitRules"
 
@@ -73,5 +75,19 @@ describe("canStartMaintenance: ô đang có khách thì không được đưa v�
     { status: "MAINTENANCE", expected: false },
   ])("$status → $expected", ({ status, expected }) => {
     expect(canStartMaintenance(status)).toBe(expected)
+  })
+})
+
+describe("maintenanceNoteError: bảo trì phải kèm ghi chú sự cố", () => {
+  test.each([
+    { name: "trống", note: "", ok: false },
+    { name: "chỉ có khoảng trắng", note: "   \n ", ok: false },
+    { name: "1 ký tự", note: "x", ok: true },
+    { name: "câu bình thường", note: "Bóng đèn hỏng, cần thay", ok: true },
+    { name: "đúng 500 ký tự", note: "a".repeat(MAINTENANCE_NOTE_MAX), ok: true },
+    { name: "500 ký tự + khoảng trắng 2 đầu", note: `  ${"a".repeat(MAINTENANCE_NOTE_MAX)}  `, ok: true },
+    { name: "501 ký tự", note: "a".repeat(MAINTENANCE_NOTE_MAX + 1), ok: false },
+  ])("$name → hợp lệ: $ok", ({ note, ok }) => {
+    expect(maintenanceNoteError(note) === null).toBe(ok)
   })
 })

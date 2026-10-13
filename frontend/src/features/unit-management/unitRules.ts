@@ -55,6 +55,16 @@ export function changeTypeBlockReason(status: string, unitTypeId: number | null 
   return null
 }
 
+/** Ghi chú sự cố khi đưa ô vào bảo trì: bắt buộc (AC US-13), tối đa 500 ký tự */
+export const MAINTENANCE_NOTE_MAX = 500
+
+export function maintenanceNoteError(note: string): string | null {
+  const trimmed = note.trim()
+  if (trimmed.length === 0) return "Vui lòng ghi chú sự cố hoặc lý do bảo trì"
+  if (trimmed.length > MAINTENANCE_NOTE_MAX) return `Ghi chú tối đa ${MAINTENANCE_NOTE_MAX} ký tự`
+  return null
+}
+
 export const UNIT_STATUS_META: Record<PhysicalUnitStatus, { label: string; className: string }> = {
   AVAILABLE: {
     label: "Còn trống",
