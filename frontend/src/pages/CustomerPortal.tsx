@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
-import { Warehouse, Boxes, KeyRound, Headset, Sparkles } from 'lucide-react';
+import { Warehouse, Boxes, KeyRound, Headset } from 'lucide-react';
 import Header from '@/components/common/Header';
 import StorageMap2D from '@/features/portal/components/StorageMap2D';
 import BookingSidebar from '@/features/portal/components/BookingSidebar';
@@ -316,32 +316,6 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                       transition={{ duration: 0.4, ease: "easeOut" }}
                       className="space-y-6"
                     >
-                      {/* Sub-header hướng dẫn & mở wizard nhanh */}
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-950/80 backdrop-blur-md rounded-2xl border border-cyan-500/25 p-4 sm:p-5 shadow-lg">
-                        <div className="flex items-center space-x-3.5">
-                          <div className="p-2.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 shadow-[0_0_12px_rgba(34,211,238,0.2)]">
-                            <Warehouse className="size-5" />
-                          </div>
-                          <div>
-                            <h2 className="text-sm sm:text-base font-black text-white uppercase tracking-tight">
-                              SƠ ĐỒ 2D TRỰC TUYẾN & ĐẶT CỌC THUÊ KHO
-                            </h2>
-                            <p className="text-xs text-slate-300">
-                              Chọn cơ sở, tầng và bấm chọn ô kho còn trống (màu xanh lá) để giữ chỗ và thanh toán cọc trực tuyến.
-                            </p>
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => setShowRentModal(true)}
-                          className="px-4 py-2.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 hover:text-white font-bold text-xs flex items-center space-x-2 transition cursor-pointer shadow-md shrink-0"
-                        >
-                          <Sparkles className="size-4 text-cyan-300" />
-                          <span>Mở Wizard Thuê Nhanh 5 Bước</span>
-                        </button>
-                      </div>
-
                       {/* Bản đồ 2D + Sidebar đặt cọc */}
                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
                         <div className="lg:col-span-8">
