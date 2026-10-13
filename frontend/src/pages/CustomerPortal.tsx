@@ -283,10 +283,10 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                ======================================================== */
             <div className="w-full flex-1 flex flex-col items-center">
               {/* TOP STICKY NAVBAR TRÊN CÙNG (Dính ở trên cùng khi cuộn màn hình) */}
-              <div className="sticky top-0 z-30 w-full bg-white/75 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80 py-2.5 shadow-sm dark:shadow-md transition-colors">
+              <div className="sticky top-0 z-30 w-full py-2.5 transition-colors">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center">
                   {/* 4 MỤC NAVBAR (MORPH TỪ GIỮA MÀN HÌNH LÊN) */}
-                  <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto p-1 bg-slate-100/80 dark:bg-slate-950/60 rounded-2xl border border-sky-200/60 dark:border-slate-800/80 justify-center backdrop-blur-md">
+                  <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto justify-center">
                     {CUSTOMER_NAV_ITEMS.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeTab === item.id;
@@ -299,8 +299,8 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                           onClick={() => setActiveTab(item.id)}
                           className={`px-3.5 sm:px-5 py-2 rounded-xl font-bold text-xs sm:text-sm tracking-wide flex items-center space-x-2 transition-all duration-200 cursor-pointer whitespace-nowrap border ${
                             isActive
-                              ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/25 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-400/35 dark:shadow-[0_0_12px_rgba(34,211,238,0.12)]'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800/60 border-transparent'
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/25 dark:bg-cyan-500 dark:text-slate-950 dark:border-cyan-400 dark:shadow-cyan-400/30'
+                              : 'text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-800/70 border-transparent'
                           }`}
                         >
                           <motion.span
@@ -308,7 +308,7 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                             transition={CUST_NAV_TRANSITION}
                             className="shrink-0"
                           >
-                            <Icon className={`size-4 sm:size-4.5 ${isActive ? 'text-white dark:text-cyan-400' : 'text-slate-500 dark:text-slate-400'}`} />
+                            <Icon className={`size-4 sm:size-4.5 ${isActive ? 'text-white dark:text-slate-950' : 'text-slate-600 dark:text-slate-400'}`} />
                           </motion.span>
                           <motion.span
                             layoutId={`cust-nav-title-${item.id}`}
