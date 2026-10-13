@@ -79,11 +79,11 @@ public class StaffReservationService {
     public StaffReservationListResponse listReservations() {
         Integer accountId = getAuthenticatedAccountId();
         if (accountId == null) {
-            return new StaffReservationListResponse(false, "Authenticated staff account was not found.", List.of());
+            return new StaffReservationListResponse(false, "Không tìm thấy tài khoản nhân viên đã xác thực.", List.of());
         }
         Optional<EmployeeProfile> employee = employeeProfileRepository.findByAccountId(accountId);
         if (employee.isEmpty()) {
-            return new StaffReservationListResponse(false, "Employee profile was not found.", List.of());
+            return new StaffReservationListResponse(false, "Không tìm thấy hồ sơ nhân viên.", List.of());
         }
 
         List<StaffReservationListItemResponse> reservations = reservationRepository
@@ -95,40 +95,40 @@ public class StaffReservationService {
                         .thenComparing(StaffReservationListItemResponse::getCheckInDate,
                                 Comparator.nullsLast(Comparator.naturalOrder())))
                 .toList();
-        return new StaffReservationListResponse(true, "Reservations loaded.", reservations);
+        return new StaffReservationListResponse(true, "Đã tải danh sách đặt chỗ.", reservations);
     }
 
     public StaffReservationLookupResponse lookupReservation(String reservationCode) {
         StaffReservationLookupResponse response = new StaffReservationLookupResponse();
         if (reservationCode == null || reservationCode.isBlank()) {
             response.setSuccess(false);
-            response.setMessage("Reservation code is required.");
+            response.setMessage("Mã đặt chỗ là bắt buộc.");
             return response;
         }
 
         Integer accountId = getAuthenticatedAccountId();
         if (accountId == null) {
             response.setSuccess(false);
-            response.setMessage("Authenticated staff account was not found.");
+            response.setMessage("Không tìm thấy tài khoản nhân viên đã xác thực.");
             return response;
         }
         Optional<EmployeeProfile> employee = employeeProfileRepository.findByAccountId(accountId);
         if (employee.isEmpty()) {
             response.setSuccess(false);
-            response.setMessage("Employee profile was not found.");
+            response.setMessage("Không tìm thấy hồ sơ nhân viên.");
             return response;
         }
 
         Optional<Reservation> reservation = reservationRepository.findByReservationCode(reservationCode.trim());
         if (reservation.isEmpty()) {
             response.setSuccess(false);
-            response.setMessage("Reservation was not found.");
+            response.setMessage("Không tìm thấy đặt chỗ.");
             return response;
         }
         Optional<StorageUnit> unit = storageUnitRepository.findById(reservation.get().getUnitCode());
         if (unit.isEmpty() || !belongsToFacility(unit.get(), employee.get().getFacilityId())) {
             response.setSuccess(false);
-            response.setMessage("Reservation was not found in the staff member's facility.");
+            response.setMessage("Không tìm thấy đặt chỗ trong cơ sở của nhân viên.");
             return response;
         }
 
@@ -138,7 +138,7 @@ public class StaffReservationService {
         contractRepository.findByReservationId(reservation.get().getReservationId())
                 .ifPresent(contract -> response.setContractPdfUrl(contract.getPdfUrl()));
         response.setSuccess(true);
-        response.setMessage("Reservation found.");
+        response.setMessage("Đã tìm thấy đặt chỗ.");
         return response;
     }
 
@@ -146,62 +146,62 @@ public class StaffReservationService {
     public StaffChangeUnitResponse changeUnit(Integer reservationId, String newUnitCode) {
         Integer staffAccountId = getAuthenticatedAccountId();
         if (staffAccountId == null) {
-            return changeUnitFailure("Authenticated staff account was not found in SecurityContext.");
+            return changeUnitFailure("Không tìm thấy tài khoản nhân viên đã xác thực trong SecurityContext.");
         }
 
         Optional<EmployeeProfile> employee = employeeProfileRepository.findByAccountId(staffAccountId);
         if (employee.isEmpty()) {
-            return changeUnitFailure("Employee profile was not found for the authenticated account.");
+            return changeUnitFailure("Không tìm thấy hồ sơ nhân viên của tài khoản đã xác thực.");
         }
         Integer staffFacilityId = employee.get().getFacilityId();
 
         Optional<Reservation> reservationOpt = reservationRepository.findByReservationIdForUpdate(reservationId);
         if (reservationOpt.isEmpty()) {
-            return changeUnitFailure("Reservation was not found.");
+            return changeUnitFailure("Không tìm thấy đặt chỗ.");
         }
         Reservation reservation = reservationOpt.get();
         if (!isChangeableReservation(reservation)) {
-            return changeUnitFailure("Reservation is not in a changeable status.");
+            return changeUnitFailure("Đặt chỗ không ở trạng thái có thể thay đổi.");
         }
 
         Optional<Contract> contractOpt = contractRepository.findByReservationId(reservation.getReservationId());
         if (contractOpt.isEmpty() || !CONTRACT_PENDING_CHECKIN.equals(contractOpt.get().getStatus())) {
-            return changeUnitFailure("A PENDING_CHECKIN contract is required to change the storage unit.");
+            return changeUnitFailure("Cần có hợp đồng PENDING_CHECKIN để thay đổi kho.");
         }
         Contract contract = contractOpt.get();
 
         String oldUnitCode = reservation.getUnitCode();
         if (newUnitCode == null || newUnitCode.isBlank()) {
-            return changeUnitFailure("New unit code is required.");
+            return changeUnitFailure("Mã kho mới là bắt buộc.");
         }
         newUnitCode = newUnitCode.trim();
         if (oldUnitCode.equals(newUnitCode)) {
-            return changeUnitFailure("New unit must be different from the current unit.");
+            return changeUnitFailure("Kho mới phải khác kho hiện tại.");
         }
 
         LockedUnits lockedUnits = lockUnitsInStableOrder(oldUnitCode, newUnitCode);
         if (lockedUnits.oldUnit().isEmpty()) {
-            return changeUnitFailure("Current storage unit was not found.");
+            return changeUnitFailure("Không tìm thấy kho hiện tại.");
         }
         if (lockedUnits.newUnit().isEmpty()) {
-            return changeUnitFailure("New storage unit was not found.");
+            return changeUnitFailure("Không tìm thấy kho mới.");
         }
         StorageUnit oldUnit = lockedUnits.oldUnit().get();
         StorageUnit newUnit = lockedUnits.newUnit().get();
 
         if (!belongsToFacility(oldUnit, staffFacilityId) || !belongsToFacility(newUnit, staffFacilityId)) {
-            return changeUnitFailure("Both storage units must belong to the staff member's facility.");
+            return changeUnitFailure("Cả hai kho phải thuộc cơ sở của nhân viên.");
         }
         if (!"RESERVED".equals(oldUnit.getStatus())) {
-            return changeUnitFailure("Current storage unit must have RESERVED status.");
+            return changeUnitFailure("Kho hiện tại phải ở trạng thái RESERVED.");
         }
         if (!"AVAILABLE".equals(newUnit.getStatus())) {
-            return changeUnitFailure("New storage unit must have AVAILABLE status.");
+            return changeUnitFailure("Kho mới phải ở trạng thái AVAILABLE.");
         }
 
         List<Payment> depositInvoices = findDepositInvoices(contract.getContractId());
         if (depositInvoices.size() != 1) {
-            return changeUnitFailure("Exactly one DEP or legacy INITIAL_RENTAL invoice is required to recalculate the deposit.");
+            return changeUnitFailure("Cần chính xác một hóa đơn DEP hoặc INITIAL_RENTAL cũ để tính lại tiền đặt cọc.");
         }
         Payment depositInvoice = depositInvoices.get(0);
 
@@ -209,7 +209,7 @@ public class StaffReservationService {
         CalculatePriceResponse newPrice = storageService.calculateRentalPrice(
                 new CalculatePriceRequest(newUnit.getUnitTypeId(), reservation.getRentalType(), duration));
         if (!newPrice.isSuccess()) {
-            return changeUnitFailure("Unable to calculate the new unit price: " + newPrice.getMessage());
+            return changeUnitFailure("Không thể tính giá kho mới: " + newPrice.getMessage());
         }
 
         BigDecimal totalNew = zeroIfNull(newPrice.getFinalRentalAmount()).add(zeroIfNull(newPrice.getDepositAmount()));
@@ -240,13 +240,13 @@ public class StaffReservationService {
         reservationRepository.save(reservation);
 
         String result = remaining.signum() > 0
-                ? "remaining due at counter=" + remaining
-                : "refund request=" + refundAmount;
+                ? "còn phải thanh toán tại quầy=" + remaining
+                : "yêu cầu hoàn tiền=" + refundAmount;
         writeActivityLog(staffAccountId, "STAFF_CHANGE_UNIT",
-                "RES " + reservation.getReservationId() + ": old unit " + oldUnitCode
-                        + " -> new unit " + newUnit.getUnitCode() + "; " + result + "; result=SUCCESS");
+                "RES " + reservation.getReservationId() + ": kho cũ " + oldUnitCode
+                        + " -> kho mới " + newUnit.getUnitCode() + "; " + result + "; kết quả=SUCCESS");
 
-        return new StaffChangeUnitResponse(true, "Storage unit changed. " + result + ".",
+        return new StaffChangeUnitResponse(true, "Đã thay đổi kho. " + result + ".",
                 reservationId, newUnit.getUnitCode(), remaining.max(BigDecimal.ZERO), refundAmount);
     }
 
@@ -254,40 +254,40 @@ public class StaffReservationService {
     public StaffCancelReservationResponse cancelReservation(Integer reservationId) {
         Integer staffAccountId = getAuthenticatedAccountId();
         if (staffAccountId == null) {
-            return cancelReservationFailure("Authenticated staff account was not found in SecurityContext.");
+            return cancelReservationFailure("Không tìm thấy tài khoản nhân viên đã xác thực trong SecurityContext.");
         }
 
         Optional<EmployeeProfile> employee = employeeProfileRepository.findByAccountId(staffAccountId);
         if (employee.isEmpty()) {
-            return cancelReservationFailure("Employee profile was not found for the authenticated account.");
+            return cancelReservationFailure("Không tìm thấy hồ sơ nhân viên của tài khoản đã xác thực.");
         }
         Integer staffFacilityId = employee.get().getFacilityId();
 
         Optional<Reservation> reservationOpt = reservationRepository.findByReservationIdForUpdate(reservationId);
         if (reservationOpt.isEmpty()) {
-            return cancelReservationFailure("Reservation was not found.");
+            return cancelReservationFailure("Không tìm thấy đặt chỗ.");
         }
         Reservation reservation = reservationOpt.get();
         if (!isChangeableReservation(reservation)) {
-            return cancelReservationFailure("Reservation is not in a cancellable status.");
+            return cancelReservationFailure("Đặt chỗ không ở trạng thái có thể hủy.");
         }
 
         Optional<Contract> contractOpt = contractRepository.findByReservationId(reservation.getReservationId());
         if (contractOpt.isEmpty() || !CONTRACT_PENDING_CHECKIN.equals(contractOpt.get().getStatus())) {
-            return cancelReservationFailure("A PENDING_CHECKIN contract is required to cancel the reservation.");
+            return cancelReservationFailure("Cần có hợp đồng PENDING_CHECKIN để hủy đặt chỗ.");
         }
         Contract contract = contractOpt.get();
 
         Optional<StorageUnit> unitOpt = storageUnitRepository.findByUnitCodeForUpdate(reservation.getUnitCode());
         if (unitOpt.isEmpty()) {
-            return cancelReservationFailure("Reservation storage unit was not found.");
+            return cancelReservationFailure("Không tìm thấy kho của đặt chỗ.");
         }
         StorageUnit unit = unitOpt.get();
         if (!belongsToFacility(unit, staffFacilityId)) {
-            return cancelReservationFailure("Reservation storage unit does not belong to the staff member's facility.");
+            return cancelReservationFailure("Kho của đặt chỗ không thuộc cơ sở của nhân viên.");
         }
         if (!"RESERVED".equals(unit.getStatus())) {
-            return cancelReservationFailure("Reservation storage unit must have RESERVED status to be released.");
+            return cancelReservationFailure("Kho của đặt chỗ phải ở trạng thái RESERVED để được giải phóng.");
         }
 
         List<Payment> depositInvoices = findDepositInvoices(contract.getContractId());
@@ -323,11 +323,11 @@ public class StaffReservationService {
         storageUnitRepository.save(unit);
 
         writeActivityLog(staffAccountId, "STAFF_CANCEL_RESERVATION",
-                "RES " + reservation.getReservationId() + ": refund amount=" + refundAmount
-                        + "; penalty amount=" + penaltyAmount + "; result=SUCCESS");
+                "RES " + reservation.getReservationId() + ": số tiền hoàn=" + refundAmount
+                        + "; tiền phạt=" + penaltyAmount + "; kết quả=SUCCESS");
 
         return new StaffCancelReservationResponse(true,
-                "Reservation cancelled. Refund request=" + refundAmount + ", penalty=" + penaltyAmount + ".",
+                "Đã hủy đặt chỗ. Yêu cầu hoàn tiền=" + refundAmount + ", tiền phạt=" + penaltyAmount + ".",
                 reservationId, reservation.getReservationCode(), refundAmount, penaltyAmount);
     }
 
