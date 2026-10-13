@@ -45,12 +45,12 @@ const CUSTOMER_NAV_ITEMS: CustNavItem[] = [
     subtitle: 'Tìm & đặt ô kho 2D',
     icon: Warehouse,
     theme: {
-      cardBg: 'bg-slate-50/90 hover:bg-white/95',
-      border: 'border border-slate-200/80 hover:border-blue-400/60 hover:ring-2 hover:ring-blue-400/15',
-      shadow: 'shadow-lg shadow-slate-300/30 hover:shadow-xl hover:shadow-blue-500/20',
+      cardBg: 'bg-slate-50/90 hover:bg-slate-100/95 dark:bg-slate-900/85 dark:hover:bg-slate-800/90',
+      border: 'border border-slate-200/80 hover:border-blue-400/60 hover:ring-2 hover:ring-blue-400/15 dark:border-slate-800 dark:hover:border-cyan-500/60 dark:hover:ring-2 dark:hover:ring-cyan-500/20',
+      shadow: 'shadow-lg shadow-slate-300/30 hover:shadow-xl hover:shadow-blue-500/20 dark:shadow-[0_10px_30px_rgba(0,0,0,0.6)] dark:hover:shadow-[0_15px_35px_rgba(6,182,212,0.2)]',
       iconBg: 'bg-gradient-to-tr from-blue-600 to-sky-500 text-white shadow-md shadow-blue-600/30',
-      textHover: 'group-hover:text-blue-600',
-      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/60',
+      textHover: 'group-hover:text-blue-600 dark:group-hover:text-cyan-400',
+      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/60 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30',
     },
   },
   {
@@ -59,12 +59,12 @@ const CUSTOMER_NAV_ITEMS: CustNavItem[] = [
     subtitle: 'Quản lý hợp đồng & đồ',
     icon: Boxes,
     theme: {
-      cardBg: 'bg-slate-50/90 hover:bg-white/95',
-      border: 'border border-slate-200/80 hover:border-blue-400/60 hover:ring-2 hover:ring-blue-400/15',
-      shadow: 'shadow-lg shadow-slate-300/30 hover:shadow-xl hover:shadow-blue-500/20',
+      cardBg: 'bg-slate-50/90 hover:bg-slate-100/95 dark:bg-slate-900/85 dark:hover:bg-slate-800/90',
+      border: 'border border-slate-200/80 hover:border-blue-400/60 hover:ring-2 hover:ring-blue-400/15 dark:border-slate-800 dark:hover:border-cyan-500/60 dark:hover:ring-2 dark:hover:ring-cyan-500/20',
+      shadow: 'shadow-lg shadow-slate-300/30 hover:shadow-xl hover:shadow-blue-500/20 dark:shadow-[0_10px_30px_rgba(0,0,0,0.6)] dark:hover:shadow-[0_15px_35px_rgba(6,182,212,0.2)]',
       iconBg: 'bg-gradient-to-tr from-emerald-600 to-teal-400 text-white shadow-md shadow-emerald-600/30',
-      textHover: 'group-hover:text-blue-600',
-      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/60',
+      textHover: 'group-hover:text-blue-600 dark:group-hover:text-cyan-400',
+      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/60 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30',
     },
   },
   {
@@ -73,12 +73,12 @@ const CUSTOMER_NAV_ITEMS: CustNavItem[] = [
     subtitle: 'Mở cửa tự động 24/7',
     icon: KeyRound,
     theme: {
-      cardBg: 'bg-slate-50/90 hover:bg-white/95',
-      border: 'border border-slate-200/80 hover:border-blue-400/60 hover:ring-2 hover:ring-blue-400/15',
-      shadow: 'shadow-lg shadow-slate-300/30 hover:shadow-xl hover:shadow-blue-500/20',
+      cardBg: 'bg-slate-50/90 hover:bg-slate-100/95 dark:bg-slate-900/85 dark:hover:bg-slate-800/90',
+      border: 'border border-slate-200/80 hover:border-blue-400/60 hover:ring-2 hover:ring-blue-400/15 dark:border-slate-800 dark:hover:border-cyan-500/60 dark:hover:ring-2 dark:hover:ring-cyan-500/20',
+      shadow: 'shadow-lg shadow-slate-300/30 hover:shadow-xl hover:shadow-blue-500/20 dark:shadow-[0_10px_30px_rgba(0,0,0,0.6)] dark:hover:shadow-[0_15px_35px_rgba(6,182,212,0.2)]',
       iconBg: 'bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/30',
-      textHover: 'group-hover:text-blue-600',
-      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/60',
+      textHover: 'group-hover:text-blue-600 dark:group-hover:text-cyan-400',
+      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/60 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30',
     },
   },
   {
@@ -87,12 +87,12 @@ const CUSTOMER_NAV_ITEMS: CustNavItem[] = [
     subtitle: 'Gửi ticket & giải đáp',
     icon: Headset,
     theme: {
-      cardBg: 'bg-slate-50/90 hover:bg-white/95',
-      border: 'border border-slate-200/80 hover:border-blue-400/60 hover:ring-2 hover:ring-blue-400/15',
-      shadow: 'shadow-lg shadow-slate-300/30 hover:shadow-xl hover:shadow-blue-500/20',
+      cardBg: 'bg-slate-50/90 hover:bg-slate-100/95 dark:bg-slate-900/85 dark:hover:bg-slate-800/90',
+      border: 'border border-slate-200/80 hover:border-blue-400/60 hover:ring-2 hover:ring-blue-400/15 dark:border-slate-800 dark:hover:border-cyan-500/60 dark:hover:ring-2 dark:hover:ring-cyan-500/20',
+      shadow: 'shadow-lg shadow-slate-300/30 hover:shadow-xl hover:shadow-blue-500/20 dark:shadow-[0_10px_30px_rgba(0,0,0,0.6)] dark:hover:shadow-[0_15px_35px_rgba(6,182,212,0.2)]',
       iconBg: 'bg-gradient-to-tr from-violet-600 to-purple-500 text-white shadow-md shadow-violet-600/30',
-      textHover: 'group-hover:text-blue-600',
-      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/60',
+      textHover: 'group-hover:text-blue-600 dark:group-hover:text-cyan-400',
+      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/60 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30',
     },
   },
 ];
@@ -282,14 +282,14 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                   <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-full max-w-3xl h-40 bg-gradient-to-r from-blue-500/20 via-cyan-400/25 to-indigo-500/20 blur-3xl rounded-full pointer-events-none -z-10" />
 
                   <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight uppercase text-center leading-[1.15]">
-                    <span className="text-slate-900 dark:text-white drop-shadow-[0_2px_12px_rgba(255,255,255,0.8)]">
+                    <span className="text-slate-900 dark:text-white drop-shadow-[0_2px_12px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
                       HỆ THỐNG KHO TỰ QUẢN
                     </span>
                     <br />
-                    <span className="text-slate-900 dark:text-white drop-shadow-[0_2px_12px_rgba(255,255,255,0.8)]">
+                    <span className="text-slate-900 dark:text-white drop-shadow-[0_2px_12px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
                       THÔNG MINH{' '}
                     </span>
-                    <span className="text-blue-600 dark:text-cyan-400 drop-shadow-[0_4px_16px_rgba(37,99,235,0.4)]">
+                    <span className="text-blue-600 dark:text-cyan-400 drop-shadow-[0_4px_16px_rgba(37,99,235,0.4)] dark:drop-shadow-[0_4px_20px_rgba(6,182,212,0.6)]">
                       24/7
                     </span>
                   </h1>
