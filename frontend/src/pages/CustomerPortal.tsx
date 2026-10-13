@@ -231,8 +231,17 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                 </h1>
 
                 {/* Customer Greeting */}
-                <div className="flex items-center justify-center mt-4 sm:mt-6 text-sm sm:text-base font-semibold text-slate-600 dark:text-slate-300">
-                  <span>Xin chào, <span className="text-blue-600 dark:text-cyan-300 font-extrabold">{customerName}</span></span>
+                <div className="flex items-center justify-center mt-5 sm:mt-7">
+                  <div className="inline-flex items-center gap-2.5 px-5 py-2 sm:px-6 sm:py-2.5 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-2 border-blue-400/60 dark:border-cyan-400/60 shadow-lg shadow-blue-500/15 text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-200">
+                    <span className="flex h-2.5 w-2.5 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span>Xin chào,</span>
+                    <span className="text-blue-600 dark:text-cyan-400 font-black text-base sm:text-lg tracking-wide">
+                      {customerName}
+                    </span>
+                  </div>
                 </div>
 
                 {/* 4 Action Buttons in Grid (Center Screen) */}
@@ -246,18 +255,19 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                         transition={CUST_NAV_TRANSITION}
                         type="button"
                         onClick={() => setActiveTab(item.id)}
-                        className="px-6 py-5 sm:px-8 sm:py-6 rounded-2xl bg-gradient-to-br from-white/70 via-slate-50/50 to-sky-100/40 hover:from-white/90 hover:via-sky-50/60 hover:to-blue-100/60 dark:from-transparent dark:to-transparent dark:bg-cyan-950/45 dark:hover:bg-cyan-900/50 backdrop-blur-xl border-2 border-sky-300/60 hover:border-blue-400 dark:border-cyan-400/60 dark:hover:border-cyan-300 text-slate-800 hover:text-blue-950 dark:text-cyan-200 dark:hover:text-white font-extrabold text-base sm:text-lg lg:text-xl tracking-wide transition-all duration-300 shadow-lg shadow-sky-950/5 hover:shadow-xl hover:shadow-blue-500/15 dark:shadow-[0_0_20px_rgba(34,211,238,0.22)] dark:hover:shadow-[0_0_30px_rgba(34,211,238,0.55)] hover:scale-[1.04] cursor-pointer text-center group flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-3"
+                        className="px-4 py-5 sm:px-6 sm:py-6 rounded-2xl bg-white/95 hover:bg-white dark:bg-slate-900/90 dark:hover:bg-slate-800/95 backdrop-blur-xl border-2 border-blue-400/80 hover:border-blue-600 dark:border-cyan-400/70 dark:hover:border-cyan-300 text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-cyan-300 font-black text-base sm:text-lg tracking-tight transition-all duration-300 shadow-xl shadow-blue-900/12 hover:shadow-2xl hover:shadow-blue-500/25 dark:shadow-[0_10px_30px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_0_35px_rgba(34,211,238,0.45)] hover:scale-[1.04] cursor-pointer text-center group flex flex-col sm:flex-row items-center justify-center gap-3"
                       >
                         <motion.span
                           layoutId={`cust-nav-icon-${item.id}`}
                           transition={CUST_NAV_TRANSITION}
-                          className="shrink-0 p-2 rounded-xl bg-blue-500/10 dark:bg-transparent text-blue-600 group-hover:text-blue-700 dark:text-cyan-400 dark:group-hover:text-cyan-200 transition-colors"
+                          className="shrink-0 p-2.5 sm:p-3 rounded-xl bg-blue-600 text-white dark:bg-cyan-400 dark:text-slate-950 shadow-md shadow-blue-600/30 dark:shadow-cyan-400/30 group-hover:scale-110 group-hover:bg-blue-700 dark:group-hover:bg-cyan-300 transition-all duration-300"
                         >
                           <Icon className="size-5 sm:size-6" />
                         </motion.span>
                         <motion.span
                           layoutId={`cust-nav-title-${item.id}`}
                           transition={CUST_NAV_TRANSITION}
+                          className="whitespace-nowrap"
                         >
                           {item.label}
                         </motion.span>
