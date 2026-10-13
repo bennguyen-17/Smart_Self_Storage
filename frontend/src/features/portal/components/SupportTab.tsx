@@ -259,15 +259,15 @@ export default function SupportTab() {
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300/90 space-y-2">
-            <p className="font-bold flex items-center space-x-1.5 text-amber-300">
-              <Clock className="size-4 shrink-0" />
+          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 dark:bg-amber-500/10 dark:border-amber-500/20 text-xs space-y-2">
+            <p className="font-bold flex items-center space-x-1.5 text-amber-800 dark:text-amber-300">
+              <Clock className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
               <span>Thời gian phản hồi cam kết</span>
             </p>
-            <ul className="space-y-1 list-disc list-inside text-[11px] text-slate-300">
-              <li>Sự cố mở khóa khẩn cấp: <strong className="text-white">Dưới 10 phút</strong></li>
-              <li>Bảo trì đèn/điều hòa: <strong className="text-white">Trong vòng 2 giờ</strong></li>
-              <li>Tư vấn hợp đồng & cọc: <strong className="text-white">Giờ hành chính (8h - 20h)</strong></li>
+            <ul className="space-y-1 list-disc list-inside text-[11px] text-slate-700 dark:text-slate-300">
+              <li>Sự cố mở khóa khẩn cấp: <strong className="text-slate-900 dark:text-white font-bold">Dưới 10 phút</strong></li>
+              <li>Bảo trì đèn/điều hòa: <strong className="text-slate-900 dark:text-white font-bold">Trong vòng 2 giờ</strong></li>
+              <li>Tư vấn hợp đồng & cọc: <strong className="text-slate-900 dark:text-white font-bold">Giờ hành chính (8h - 20h)</strong></li>
             </ul>
           </div>
         </div>

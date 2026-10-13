@@ -298,12 +298,12 @@ export default function GatePinTab() {
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300/90 space-y-1">
-            <p className="font-bold flex items-center space-x-1.5 text-amber-300">
-              <AlertTriangle className="size-4 shrink-0" />
+          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 dark:bg-amber-500/10 dark:border-amber-500/20 text-xs space-y-1">
+            <p className="font-bold flex items-center space-x-1.5 text-amber-800 dark:text-amber-300">
+              <AlertTriangle className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
               <span>Lưu ý bảo mật an ninh</span>
             </p>
-            <p className="leading-relaxed">
+            <p className="leading-relaxed text-slate-700 dark:text-slate-300">
               Tuyệt đối không chia sẻ mã PIN cho người lạ. Hệ thống camera AI nhận diện khuôn mặt giám sát liên tục 24/7 để bảo đảm an toàn cho tài sản của bạn.
             </p>
           </div>
