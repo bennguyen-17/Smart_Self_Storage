@@ -2,7 +2,14 @@ import { Link } from 'react-router-dom';
 import BrandLogo from '@/components/common/BrandLogo';
 import ThemeToggle from '@/components/common/ThemeToggle';
 
-export default function Header({ isDarkMode, onToggleTheme, onOpenProfileModal }) {
+interface HeaderProps {
+  isDarkMode?: boolean;
+  onToggleTheme?: () => void;
+  onOpenProfileModal?: () => void;
+  isSticky?: boolean;
+}
+
+export default function Header({ isDarkMode, onToggleTheme, onOpenProfileModal, isSticky = false }: HeaderProps) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
   let userName = 'Nguyễn Văn Khách';
@@ -34,7 +41,7 @@ export default function Header({ isDarkMode, onToggleTheme, onOpenProfileModal }
   }
 
   return (
-    <header className="w-full h-13 sm:h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between shrink-0 sticky top-0 z-40 transition-colors shadow-xs">
+    <header className={`w-full h-13 sm:h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between shrink-0 ${isSticky ? 'sticky top-0 z-40' : 'relative z-20'} transition-colors shadow-xs`}>
       {/* BRAND LOGO */}
       <BrandLogo />
 

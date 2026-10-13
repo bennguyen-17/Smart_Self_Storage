@@ -262,8 +262,8 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                KHI BẤM VÔ: ĐƯA CÁC MỤC LÊN LÀM NAVBAR + PHÂN TRANG CHI TIẾT
                ======================================================== */
             <div className="w-full flex-1 flex flex-col items-center">
-              {/* TOP STICKY NAVBAR TRÊN CÙNG */}
-              <div className="sticky top-13 sm:top-14 z-30 w-full bg-slate-950/85 backdrop-blur-xl border-b border-cyan-500/25 py-3 shadow-[0_6px_25px_rgba(0,0,0,0.5)]">
+              {/* TOP STICKY NAVBAR TRÊN CÙNG (Dính ở trên cùng khi cuộn màn hình) */}
+              <div className="sticky top-0 z-30 w-full bg-slate-950/85 backdrop-blur-xl border-b border-cyan-500/25 py-3 shadow-[0_6px_25px_rgba(0,0,0,0.5)]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center">
                   {/* 4 MỤC NAVBAR (MORPH TỪ GIỮA MÀN HÌNH LÊN) */}
                   <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto p-1 bg-slate-900/70 rounded-2xl border border-cyan-500/25 justify-center">
@@ -362,7 +362,7 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                           />
                         </div>
 
-                        <div className="lg:col-span-4 sticky top-32">
+                        <div className="lg:col-span-4 sticky top-20">
                           <BookingSidebar
                             selectedUnit={selectedUnit}
                             onOpenDepositModal={handleOpenDepositModal}
