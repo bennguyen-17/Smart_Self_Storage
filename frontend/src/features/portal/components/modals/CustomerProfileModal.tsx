@@ -138,7 +138,7 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
                 
                 {isEditing ? (
                   <div className="space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-900 dark:text-white">
+                    <div className="grid grid-cols-2 gap-3 text-slate-900 dark:text-white">
                       <div>
                         <span className="text-slate-500 block text-[10px] mb-1 font-semibold">Họ và Tên:</span>
                         <input 
@@ -166,7 +166,7 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
                           className="w-full text-xs font-bold px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/80 text-slate-400 cursor-not-allowed"
                         />
                       </div>
-                      <div className="col-span-2">
+                      <div>
                         <span className="text-slate-500 block text-[10px] mb-1 font-semibold">Email:</span>
                         <input 
                           type="email" 
@@ -184,19 +184,19 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3.5 text-slate-900 dark:text-white pt-1">
                     <div>
                       <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Họ và Tên</span>
-                      <span className="font-bold text-xs text-slate-900 dark:text-white block truncate">{profile?.fullName}</span>
+                      <span className="font-bold text-xs text-slate-900 dark:text-white block truncate" title={profile?.fullName || ''}>{profile?.fullName}</span>
                     </div>
                     <div>
                       <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Mã CCCD</span>
-                      <span className="font-bold font-mono text-xs text-slate-900 dark:text-white block">{identityNumber}</span>
+                      <span className="font-bold font-mono text-xs text-slate-900 dark:text-white block truncate" title={identityNumber || ''}>{identityNumber}</span>
                     </div>
                     <div>
                       <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Số Điện Thoại</span>
-                      <span className="font-bold text-xs text-slate-900 dark:text-white block">{profile?.phone}</span>
+                      <span className="font-bold text-xs text-slate-900 dark:text-white block truncate" title={profile?.phone || ''}>{profile?.phone}</span>
                     </div>
-                    <div className="col-span-2">
+                    <div>
                       <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Email</span>
-                      <span className="font-bold text-xs text-slate-900 dark:text-white block">{profile?.email}</span>
+                      <span className="font-bold text-xs text-slate-900 dark:text-white block truncate" title={profile?.email || ''}>{profile?.email}</span>
                     </div>
                   </div>
                 )}
