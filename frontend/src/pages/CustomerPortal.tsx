@@ -366,12 +366,10 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                       transition={{ duration: 0.4, ease: "easeOut" }}
                       className="w-full"
                     >
-                      <div className="bg-slate-950/80 backdrop-blur-md rounded-3xl border border-cyan-500/25 p-5 sm:p-7 shadow-xl">
-                        <MyStorageTab
-                          onOpenExtendModal={handleOpenExtendModal}
-                          onOpenPinModal={() => setActiveTab('gate-pin')}
-                        />
-                      </div>
+                      <MyStorageTab
+                        onOpenExtendModal={handleOpenExtendModal}
+                        onOpenPinModal={() => setActiveTab('gate-pin')}
+                      />
                     </motion.div>
                   )}
 

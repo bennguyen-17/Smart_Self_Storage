@@ -138,7 +138,7 @@ export default function MyStorageTab({ onOpenExtendModal, onOpenPinModal }: { on
 
       {/* MANAGED STORAGE UNITS TABLE (FULL WIDTH) */}
       <div className="w-full space-y-4">
-        <div className="card-box rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+        <div className="card-box rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md shadow-slate-300/40 dark:shadow-sm overflow-hidden">
 
 
             {/* Table or Responsive Cards Content */}
