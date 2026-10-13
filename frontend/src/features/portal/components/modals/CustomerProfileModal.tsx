@@ -135,9 +135,6 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
 
             <div className="space-y-3 text-xs">
               <div className="bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
-                <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-1">
-                  Thông tin Cá nhân & Liên hệ
-                </div>
                 
                 {isEditing ? (
                   <div className="space-y-3">
