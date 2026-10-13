@@ -252,17 +252,65 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
         }`} />
       </div>
 
-      {/* Header */}
-      <div className="relative z-20">
-        <Header
-          isDarkMode={isDarkMode}
-          onToggleTheme={toggleTheme}
-          onOpenProfileModal={() => setShowProfileModal(true)}
-          onGoHome={() => setActiveTab('home')}
-        />
-      </div>
+      {/* Header with integrated Tab Navbar */}
+      <Header
+        isDarkMode={isDarkMode}
+        onToggleTheme={toggleTheme}
+        onOpenProfileModal={() => setShowProfileModal(true)}
+        onGoHome={() => setActiveTab('home')}
+        isSticky={true}
+        centerContent={
+          <AnimatePresence>
+            {activeTab !== 'home' && (
+              <motion.div
+                key="header-nav-pill"
+                initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                className="flex items-center gap-1 sm:gap-1.5 p-1 bg-slate-100/90 dark:bg-slate-800/90 rounded-2xl border border-slate-200/90 dark:border-slate-700/80 shadow-xs backdrop-blur-md overflow-x-auto no-scrollbar"
+              >
+                {/* Nút Về Trang Chủ */}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('home')}
+                  title="Về Trang Chủ"
+                  className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-blue-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition cursor-pointer shrink-0"
+                >
+                  <Home className="size-4 sm:size-4.5" />
+                </button>
 
-      {/* Main Container wrapped in LayoutGroup for seamless morphing */}
+                {/* 4 Nút mục con */}
+                {CUSTOMER_NAV_ITEMS.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setActiveTab(item.id)}
+                      className={`px-3 sm:px-4 py-1.5 rounded-xl font-bold text-xs sm:text-sm tracking-wide flex items-center gap-1.5 whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                        isActive
+                          ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30 dark:bg-cyan-500 dark:text-slate-950 dark:shadow-cyan-400/30'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-700/70'
+                      }`}
+                    >
+                      <Icon
+                        className={`size-4 shrink-0 ${
+                          isActive ? 'text-white dark:text-slate-950' : 'text-slate-500 dark:text-slate-400'
+                        }`}
+                      />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        }
+      />
+
+      {/* Main Container */}
       <LayoutGroup id="customer-portal-nav">
         <main className="relative z-10 flex-1 flex flex-col w-full">
           {/* 1. KHU VỰC HERO (TIÊU ĐỀ + CHÀO HỎI): Thu gọn mượt mà khi bấm vào các mục */}
@@ -313,120 +361,49 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
             )}
           </AnimatePresence>
 
-          {/* 2. HÀNG 4 NÚT: TỰ ĐỘNG CHUYỂN TỪ GIỮA MÀN HÌNH LÊN LÀM THANH NAVBAR VỚI ANIMATION */}
-          <motion.div
-            layout
-            transition={CUST_NAV_TRANSITION}
-            className={`w-full z-30 transition-colors flex justify-center ${
-              activeTab === 'home'
-                ? 'relative py-8 sm:py-12'
-                : 'sticky top-0 py-2.5'
-            }`}
-          >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center w-full">
+          {/* 2. HÀNG 4 NÚT DASHBOARD (CHỈ HIỂN THỊ KHI Ở TRANG CHỦ) */}
+          <AnimatePresence>
+            {activeTab === 'home' && (
               <motion.div
-                layout
-                transition={CUST_NAV_TRANSITION}
-                className={`transition-all ${
-                  activeTab === 'home'
-                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7 lg:gap-8 w-full max-w-6xl xl:max-w-7xl'
-                    : 'flex items-center gap-1.5 sm:gap-2 overflow-x-auto p-1.5 bg-slate-50/90 dark:bg-slate-900/90 rounded-2xl border border-sky-200/80 dark:border-slate-800/80 justify-center backdrop-blur-md shadow-md'
-                }`}
+                key="home-action-cards"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+                className="w-full max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex justify-center"
               >
-                {/* Nút Về Trang Chủ khi đang ở trong Tab */}
-                {activeTab !== 'home' && (
-                  <motion.button
-                    layout
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={CUST_NAV_TRANSITION}
-                    type="button"
-                    onClick={() => setActiveTab('home')}
-                    title="Về Trang Chủ"
-                    className="p-2 rounded-xl text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
-                  >
-                    <Home className="size-4.5" />
-                  </motion.button>
-                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7 lg:gap-8 w-full">
+                  {CUSTOMER_NAV_ITEMS.map((item) => {
+                    const Icon = item.icon;
+                    const theme = item.theme;
 
-                {CUSTOMER_NAV_ITEMS.map((item) => {
-                  const Icon = item.icon;
-                  const theme = item.theme;
-                  const isActive = activeTab === item.id;
-                  const isHome = activeTab === 'home';
-
-                  return (
-                    <motion.button
-                      key={item.id}
-                      layout
-                      transition={CUST_NAV_TRANSITION}
-                      type="button"
-                      onClick={() => setActiveTab(item.id)}
-                      className={`transition-all duration-300 cursor-pointer flex items-center ${
-                        isHome
-                          ? `p-5 sm:p-6 lg:p-7 rounded-3xl backdrop-blur-xl border tracking-wide hover:scale-[1.04] text-center flex-col justify-between min-h-[180px] sm:min-h-[210px] ${theme.cardBg} ${theme.border} ${theme.shadow}`
-                          : `px-3.5 sm:px-5 py-2 rounded-xl font-bold text-xs sm:text-sm tracking-wide space-x-2 whitespace-nowrap border ${
-                              isActive
-                                ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/25 dark:bg-cyan-500 dark:text-slate-950 dark:border-cyan-400 dark:shadow-cyan-400/30'
-                                : 'text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-800/70 border-transparent'
-                            }`
-                      }`}
-                    >
-                      <motion.span
-                        layout
-                        transition={CUST_NAV_TRANSITION}
-                        className={`shrink-0 flex items-center justify-center ${
-                          isHome
-                            ? `w-14 h-14 sm:w-16 sm:h-16 rounded-2xl group-hover:scale-110 transition-transform ${theme.iconBg}`
-                            : ''
-                        }`}
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setActiveTab(item.id)}
+                        className={`transition-all duration-300 cursor-pointer flex items-center p-5 sm:p-6 lg:p-7 rounded-3xl backdrop-blur-xl border tracking-wide hover:scale-[1.04] text-center flex-col justify-between min-h-[180px] sm:min-h-[210px] ${theme.cardBg} ${theme.border} ${theme.shadow}`}
                       >
-                        <Icon
-                          className={
-                            isHome
-                              ? 'size-7 sm:size-8'
-                              : `size-4 sm:size-4.5 ${
-                                  isActive ? 'text-white dark:text-slate-950' : 'text-slate-600 dark:text-slate-400'
-                                }`
-                          }
-                        />
-                      </motion.span>
+                        <span className={`shrink-0 flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl group-hover:scale-110 transition-transform ${theme.iconBg}`}>
+                          <Icon className="size-7 sm:size-8" />
+                        </span>
 
-                      <motion.div
-                        layout
-                        transition={CUST_NAV_TRANSITION}
-                        className={isHome ? 'flex flex-col items-center mt-5 w-full' : 'flex items-center'}
-                      >
-                        <motion.span
-                          layout
-                          transition={CUST_NAV_TRANSITION}
-                          className={
-                            isHome
-                              ? `font-black text-xl sm:text-2xl lg:text-3xl text-slate-900 dark:text-white transition-colors whitespace-nowrap ${theme.textHover}`
-                              : 'font-bold text-xs sm:text-sm tracking-wide'
-                          }
-                        >
-                          {item.label}
-                        </motion.span>
+                        <div className="flex flex-col items-center mt-5 w-full">
+                          <span className={`font-black text-xl sm:text-2xl lg:text-3xl text-slate-900 dark:text-white transition-colors whitespace-nowrap ${theme.textHover}`}>
+                            {item.label}
+                          </span>
 
-                        {isHome && (
-                          <motion.span
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className={`mt-2.5 text-xs sm:text-sm font-bold px-3.5 py-1 rounded-full ${theme.badge}`}
-                          >
+                          <span className={`mt-2.5 text-xs sm:text-sm font-bold px-3.5 py-1 rounded-full ${theme.badge}`}>
                             {item.subtitle}
-                          </motion.span>
-                        )}
-                      </motion.div>
-                    </motion.button>
-                  );
-                })}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </motion.div>
-            </div>
-          </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* 3. PHÂN TRANG CHI TIẾT TỪNG MỤC (PAGE TAB CONTENT) */}
           <AnimatePresence mode="wait">
