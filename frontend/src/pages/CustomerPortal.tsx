@@ -187,16 +187,16 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
   };
 
   return (
-    <div className={`relative min-h-screen flex flex-col transition-colors ${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`relative min-h-screen flex flex-col transition-colors ${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'}`}>
       {/* Background Image with Adaptive Light / Dark Cyber Gradient Overlay */}
       <div 
         className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0"
         style={{ backgroundImage: `url('/images/tech-storage-bg.jpg')` }}
       >
-        <div className={`absolute inset-0 backdrop-blur-[0.5px] transition-colors ${
+        <div className={`absolute inset-0 backdrop-blur-[1px] transition-colors ${
           isDarkMode 
             ? 'bg-gradient-to-b from-slate-950/90 via-[#031525]/70 to-slate-950/95' 
-            : 'bg-gradient-to-b from-slate-50/95 via-sky-50/85 to-slate-100/95'
+            : 'bg-gradient-to-b from-slate-200/95 via-slate-200/85 to-slate-300/80'
         }`} />
       </div>
 

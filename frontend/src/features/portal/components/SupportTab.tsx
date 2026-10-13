@@ -70,7 +70,7 @@ export default function SupportTab() {
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6">
       {/* Banner Tiêu Đề */}
-      <div className="bg-white dark:bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-cyan-500/30 p-5 sm:p-6 shadow-sm dark:shadow-[0_0_25px_rgba(34,211,238,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-cyan-500/30 p-5 sm:p-6 shadow-md shadow-slate-300/40 dark:shadow-[0_0_25px_rgba(34,211,238,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-3.5">
           <div className="p-3 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-400/30 shadow-xs dark:shadow-[0_0_15px_rgba(245,158,11,0.25)]">
             <Headset className="size-6 text-amber-500 dark:text-amber-300" />
@@ -93,7 +93,7 @@ export default function SupportTab() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* CỘT TRÁI: FORM GỬI YÊU CẦU HỖ TRỢ */}
-        <div className="lg:col-span-7 bg-white dark:bg-slate-950/85 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-cyan-500/30 p-6 sm:p-8 shadow-sm dark:shadow-xl space-y-6">
+        <div className="lg:col-span-7 bg-white dark:bg-slate-950/85 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-cyan-500/30 p-6 sm:p-8 shadow-md shadow-slate-300/40 dark:shadow-xl space-y-6">
           <h3 className="font-black text-base text-slate-900 dark:text-white uppercase flex items-center space-x-2">
             <MessageSquare className="size-5 text-blue-600 dark:text-cyan-400" />
             <span>GỬI YÊU CẦU TIẾP NHẬN XỬ LÝ</span>
@@ -239,7 +239,7 @@ export default function SupportTab() {
         </div>
 
         {/* CỘT PHẢI: THÔNG TIN LIÊN HỆ TRỰC BAN 24/7 */}
-        <div className="lg:col-span-5 bg-white dark:bg-slate-950/75 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-cyan-500/20 p-6 sm:p-7 shadow-sm dark:shadow-xl space-y-6">
+        <div className="lg:col-span-5 bg-white dark:bg-slate-950/75 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-cyan-500/20 p-6 sm:p-7 shadow-md shadow-slate-300/40 dark:shadow-xl space-y-6">
           <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white flex items-center space-x-2">
             <PhoneCall className="size-4.5 text-amber-500" />
             <span>KÊNH LIÊN HỆ KHẨN CẤP TRỰC TIẾP</span>
