@@ -193,10 +193,10 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
         className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0"
         style={{ backgroundImage: `url('/images/tech-storage-bg.jpg')` }}
       >
-        <div className={`absolute inset-0 backdrop-blur-[1px] transition-colors ${
+        <div className={`absolute inset-0 backdrop-blur-[2px] transition-colors ${
           isDarkMode 
             ? 'bg-gradient-to-b from-slate-950/90 via-[#031525]/70 to-slate-950/95' 
-            : 'bg-gradient-to-b from-slate-200/95 via-slate-200/85 to-slate-300/80'
+            : 'bg-gradient-to-b from-slate-100/80 via-sky-100/50 to-slate-200/75'
         }`} />
       </div>
 
@@ -246,14 +246,14 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                         transition={CUST_NAV_TRANSITION}
                         type="button"
                         onClick={() => setActiveTab(item.id)}
-                        className="px-6 py-5 sm:px-8 sm:py-6 rounded-2xl bg-white/90 hover:bg-white dark:bg-cyan-950/45 dark:hover:bg-cyan-900/50 backdrop-blur-md border-2 border-blue-400/50 hover:border-blue-500 dark:border-cyan-400/60 dark:hover:border-cyan-300 text-blue-900 hover:text-blue-950 dark:text-cyan-200 dark:hover:text-white font-extrabold text-base sm:text-lg lg:text-xl tracking-wide transition-all duration-300 shadow-lg shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20 dark:shadow-[0_0_20px_rgba(34,211,238,0.22)] dark:hover:shadow-[0_0_30px_rgba(34,211,238,0.55)] hover:scale-[1.04] cursor-pointer text-center group flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-3"
+                        className="px-6 py-5 sm:px-8 sm:py-6 rounded-2xl bg-gradient-to-br from-white/70 via-slate-50/50 to-sky-100/40 hover:from-white/90 hover:via-sky-50/60 hover:to-blue-100/60 dark:from-transparent dark:to-transparent dark:bg-cyan-950/45 dark:hover:bg-cyan-900/50 backdrop-blur-xl border-2 border-sky-300/60 hover:border-blue-400 dark:border-cyan-400/60 dark:hover:border-cyan-300 text-slate-800 hover:text-blue-950 dark:text-cyan-200 dark:hover:text-white font-extrabold text-base sm:text-lg lg:text-xl tracking-wide transition-all duration-300 shadow-lg shadow-sky-950/5 hover:shadow-xl hover:shadow-blue-500/15 dark:shadow-[0_0_20px_rgba(34,211,238,0.22)] dark:hover:shadow-[0_0_30px_rgba(34,211,238,0.55)] hover:scale-[1.04] cursor-pointer text-center group flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-3"
                       >
                         <motion.span
                           layoutId={`cust-nav-icon-${item.id}`}
                           transition={CUST_NAV_TRANSITION}
-                          className="shrink-0"
+                          className="shrink-0 p-2 rounded-xl bg-blue-500/10 dark:bg-transparent text-blue-600 group-hover:text-blue-700 dark:text-cyan-400 dark:group-hover:text-cyan-200 transition-colors"
                         >
-                          <Icon className="size-5 sm:size-6 text-blue-600 group-hover:text-blue-700 dark:text-cyan-400 dark:group-hover:text-cyan-200" />
+                          <Icon className="size-5 sm:size-6" />
                         </motion.span>
                         <motion.span
                           layoutId={`cust-nav-title-${item.id}`}
@@ -273,10 +273,10 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
                ======================================================== */
             <div className="w-full flex-1 flex flex-col items-center">
               {/* TOP STICKY NAVBAR TRÊN CÙNG (Dính ở trên cùng khi cuộn màn hình) */}
-              <div className="sticky top-0 z-30 w-full bg-white/85 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80 py-2.5 shadow-sm dark:shadow-md transition-colors">
+              <div className="sticky top-0 z-30 w-full bg-white/75 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80 py-2.5 shadow-sm dark:shadow-md transition-colors">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center">
                   {/* 4 MỤC NAVBAR (MORPH TỪ GIỮA MÀN HÌNH LÊN) */}
-                  <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto p-1 bg-slate-100/90 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800/80 justify-center">
+                  <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto p-1 bg-slate-100/80 dark:bg-slate-950/60 rounded-2xl border border-sky-200/60 dark:border-slate-800/80 justify-center backdrop-blur-md">
                     {CUSTOMER_NAV_ITEMS.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeTab === item.id;
