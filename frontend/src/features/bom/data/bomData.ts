@@ -1,15 +1,22 @@
 export interface FacilityPerformance {
-  id: string
+  id: string | number
   code: string
   name: string
   address: string
   managerName: string
   managerEmail: string
+  managerPhone?: string
   totalUnits: number
   rentedUnits: number
+  occupied?: number
+  available?: number
+  maintenance?: number
   floorArea: number
-  monthlyRevenue: number
+  monthlyRevenue: number | string
   overdueUnits: number
+  occupancyRate?: number
+  priceMultiplier?: number
+  note?: string
   status: string
   rating: string
 }

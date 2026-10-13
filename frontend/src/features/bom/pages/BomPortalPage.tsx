@@ -27,9 +27,12 @@ import {
   ArrowUpRight,
   ChevronRight,
   Radio,
+  Home,
+  ChevronDown,
 } from "lucide-react"
 
 import { LayoutGroup, motion, AnimatePresence } from "motion/react"
+import BrandLogo from "@/components/common/BrandLogo"
 import { useTheme } from "@/components/common/theme-provider"
 import { useAuth } from "@/context/AuthContext"
 import ThreeBackground from "../components/ThreeBackground"
@@ -46,24 +49,28 @@ const NAV_ITEMS = [
   {
     id: "facilities" as const,
     label: "Giám Sát & Cơ Sở",
+    navLabel: "Cơ Sở Kho",
     shortDesc: "Theo dõi KPI, tỷ lệ lấp đầy & cấu hình 7 cụm cơ sở kho",
     icon: Warehouse,
   },
   {
     id: "pricing" as const,
     label: "Khung Giá & Phụ Phí",
+    navLabel: "Khung Giá & Phí",
     shortDesc: "Biểu giá thuê chuẩn Size S/M/L/XL & các loại phụ phí toàn chuỗi",
     icon: SlidersHorizontal,
   },
   {
     id: "policies" as const,
     label: "Thông Số Vận Hành",
+    navLabel: "Quy Chuẩn Vận Hành",
     shortDesc: "Quy chuẩn an ninh mã PIN & các mốc chế tài xử lý nợ quá hạn",
     icon: ShieldAlert,
   },
   {
     id: "reports" as const,
     label: "Báo Cáo Doanh Thu",
+    navLabel: "Báo Cáo Doanh Thu",
     shortDesc: "Tổng hợp dòng tiền, tỷ lệ lấp đầy & xuất báo cáo Excel/PDF",
     icon: FileSpreadsheet,
   },
@@ -100,10 +107,10 @@ export default function BomPortalPage() {
     .map((w: string) => w[0].toUpperCase())
     .join("") || "BM"
 
-  // 4 Phân hệ vận hành tinh gọn, mặc định vào thẳng Giám Sát & Cơ Sở
+  // Tab state: mặc định 'home' mở Landing Portal với các nút module to, bấm vào để mở Workspace
   const [activeTab, setActiveTab] = useState<
-    "facilities" | "pricing" | "policies" | "reports"
-  >("facilities")
+    "home" | "facilities" | "pricing" | "policies" | "reports"
+  >("home")
 
   // Live Backend API Data States
   const [chainOverview, setChainOverview] = useState<ChainDashboardData | null>(null)
@@ -371,50 +378,105 @@ export default function BomPortalPage() {
       {/* 3D Dynamic Waves Background (Native Three.js - Theme responsive: dark xanh đen / light cyan) */}
       <ThreeBackground theme={theme} />
 
-      {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-slate-950/60 backdrop-blur-xl border-b border-sky-500/20 px-4 sm:px-8 py-3 flex items-center justify-between shadow-lg text-white">
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab("facilities")}>
-          <div className="w-10 h-10 rounded-2xl bg-sky-600/30 border border-sky-400/40 text-sky-400 flex items-center justify-center font-bold text-lg shadow-sm">
+      {/* Top Header đồng bộ với Customer Portal - Sticky top-0 z-50 cố định không bị che khi cuộn */}
+      <header className="sticky top-0 z-50 w-full min-h-[58px] bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-sky-500/20 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4 shrink-0 shadow-lg text-slate-900 dark:text-white transition-colors">
+        {/* BRAND LOGO */}
+        <div className="shrink-0 flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={() => setActiveTab("home")}>
+          <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/20 hover:scale-105 transition-transform">
             <Warehouse className="size-5" />
           </div>
           <div>
-            <div className="font-black text-sm sm:text-base text-white leading-tight tracking-wide flex items-center gap-2">
+            <div className="text-base sm:text-lg font-black tracking-tight leading-tight text-slate-900 dark:text-white flex items-center gap-1.5">
               <span>Smart Storage</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-sky-400 bg-sky-500/10 border border-sky-400/30 px-1.5 py-0.5 rounded hidden sm:inline-block">BOM</span>
             </div>
-            <div className="text-[11px] text-slate-400 font-medium">
+            <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden xl:block leading-none mt-0.5">
               Hệ thống cho thuê kho tự quản thông minh 24/7
             </div>
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
-          {/* Nút Đổi Theme Tối Giản Chỉ Icon */}
+        {/* CENTER CONTENT (NAVBAR TABS PILL - KHÔNG BỊ TRÀN CHỮ, KHÔNG CẦN SCROLL NGANG) */}
+        <div className="flex-1 flex justify-center items-center px-1 min-w-0">
+          <AnimatePresence>
+            {activeTab !== "home" && (
+              <motion.div
+                key="header-nav-pill"
+                initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="flex items-center gap-0.5 sm:gap-1 p-1 bg-slate-100/90 dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-sky-500/30 shadow-md backdrop-blur-md shrink-0"
+              >
+                {/* Nút Về Trang Chủ */}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("home")}
+                  title="Về Trang Chủ"
+                  className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
+                >
+                  <Home className="size-4" />
+                </button>
+
+                {/* 4 Nút mục con BOM - GỌN GÀNG, ĐẦY ĐỦ CHỮ */}
+                {NAV_ITEMS.map((item) => {
+                  const Icon = item.icon
+                  const isActive = activeTab === item.id
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setActiveTab(item.id)}
+                      className={`px-2.5 sm:px-3.5 py-1.5 rounded-xl font-bold text-xs tracking-wide flex items-center gap-1.5 whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${
+                        isActive
+                          ? "bg-blue-600 text-white shadow-sm shadow-blue-500/30 dark:bg-cyan-500 dark:text-slate-950 dark:shadow-cyan-400/30 font-black"
+                          : "text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-800/80"
+                      }`}
+                    >
+                      <Icon className="size-3.5 sm:size-4 shrink-0" />
+                      <span>{item.navLabel || item.label}</span>
+                    </button>
+                  )
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* CONTROLS & USER PROFILE */}
+        <div className="flex items-center space-x-2 sm:space-x-2.5 shrink-0">
+          {/* Nút Theme Toggle */}
           <button
             onClick={() => setTheme(isDarkMode ? "light" : "dark")}
             title={isDarkMode ? "Chuyển sang giao diện Sáng" : "Chuyển sang giao diện Tối"}
-            className="w-9 h-9 rounded-full border border-sky-500/30 bg-slate-900/60 hover:bg-slate-800/80 text-xs font-bold flex items-center justify-center transition cursor-pointer shadow-sm text-slate-200"
+            className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition cursor-pointer shadow-xs shrink-0"
           >
             {isDarkMode ? (
               <Sun className="size-4 text-amber-400" />
             ) : (
-              <Moon className="size-4 text-sky-400" />
+              <Moon className="size-4 text-slate-600" />
             )}
           </button>
 
-          {/* Nút Hồ Sơ Người Dùng Lấy Dữ Liệu Thực Tế */}
+          <div className="h-5 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block"></div>
+
+          {/* User Profile Pill */}
           <button
             onClick={() => setIsProfileModalOpen(true)}
-            className="flex items-center space-x-2.5 p-1 sm:px-3 sm:py-1.5 rounded-2xl border border-sky-500/30 bg-slate-900/60 hover:bg-slate-800/80 transition cursor-pointer shadow-sm text-white"
+            className="flex items-center space-x-2 px-2.5 sm:px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white text-slate-900 hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 transition cursor-pointer shadow-xs group text-left shrink-0"
+            title="Nhấn để xem Hồ sơ & Đăng xuất"
+            type="button"
           >
-            <div className="w-8 h-8 rounded-xl bg-sky-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
+            <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
               {userInitials}
             </div>
-            <div className="hidden sm:block text-left text-xs">
-              <div className="font-extrabold text-white leading-tight">
-                {currentUserName}
+            <div className="text-left hidden md:block">
+              <div className="text-xs font-extrabold text-slate-900 dark:text-white leading-tight flex items-center space-x-1">
+                <span className="max-w-[130px] truncate">{currentUserName}</span>
+                <ChevronDown className="size-3 text-slate-400 group-hover:text-blue-600 transition-colors ml-0.5 shrink-0" />
               </div>
-              <div className="text-[10px] text-sky-300/80 font-medium truncate max-w-[150px]">
-                {currentUserRole}
+              <div className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 truncate max-w-[130px]">
+                {currentUserRole} ✓
               </div>
             </div>
           </button>
@@ -423,38 +485,148 @@ export default function BomPortalPage() {
 
       {/* Main Workspace Container */}
       <main className="relative z-10 w-full max-w-[1850px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6">
-        <div className="flex flex-col lg:flex-row gap-6 items-start w-full">
-          {/* MENU BÊN TRÁI (Sticky Sidebar Navigation) */}
-          <aside className="w-full lg:w-64 xl:w-72 shrink-0 space-y-2 sticky top-20 bg-slate-950/70 backdrop-blur-md rounded-2xl border border-sky-500/20 p-3 shadow-xl">
-            <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-sky-400/80 border-b border-slate-800/80 mb-1">
-              Phân Hệ Vận Hành
+        <LayoutGroup id="bom-portal-nav">
+          {activeTab === "home" ? (
+            /* TRANG CHỦ ĐẦU VÀO: FULL HERO PORTAL (4 Ô CHỈ SỐ + HÀNG 4 NÚT TO) */
+            <div className="space-y-10">
+              <div className="text-center space-y-3 pt-4">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-wider uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]">
+                  QUẢN LÝ VẬN HÀNH TOÀN HỆ THỐNG
+                </h1>
+                <p className="text-sky-300 font-semibold text-base sm:text-lg max-w-2xl mx-auto drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
+                  Trung tâm điều hành cấp cao &amp; giám sát {chainOverview ? chainOverview.chainTotalFacilities : facilities.length} cụm cơ sở kho thông minh 24/7
+                </p>
+              </div>
+
+              {/* 4 Ô CHỈ SỐ KPI THU NHỎ GỌN GÀNG, TINH TẾ (DỮ LIỆU TỰ ĐỘNG CẬP NHẬT TỪ API) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 max-w-5xl mx-auto">
+                {/* Box 1: Tổng cơ sở */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/25 backdrop-blur-xs hover:bg-slate-950/45 border border-sky-500/20 transition-all duration-300 flex flex-col justify-between min-h-[125px] group">
+                  <div className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                    <span>TỔNG CƠ SỞ KHO</span>
+                    <div className="p-1.5 rounded-lg bg-sky-500/20 text-sky-300 group-hover:scale-110 transition-transform">
+                      <Warehouse className="size-4" />
+                    </div>
+                  </div>
+                  <div className="my-1.5">
+                    <div className="text-2xl sm:text-3xl font-black text-white tracking-tight drop-shadow-md flex items-baseline gap-1.5">
+                      <span>{chainOverview ? chainOverview.chainTotalFacilities : facilities.length}</span>
+                      <span className="text-xs sm:text-sm font-bold text-sky-400">Cơ sở</span>
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-medium">
+                    {chainOverview
+                      ? `${chainOverview.chainTotalUnits.toLocaleString("vi-VN")} Tổng số kho vận hành`
+                      : "0 Tổng số kho vận hành"}
+                  </div>
+                </div>
+
+                {/* Box 2: Tỉ lệ lấp đầy */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/25 backdrop-blur-xs hover:bg-slate-950/45 border border-emerald-500/20 transition-all duration-300 flex flex-col justify-between min-h-[125px] group">
+                  <div className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                    <span>TỈ LỆ LẤP ĐẦY TB</span>
+                    <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 group-hover:scale-110 transition-transform">
+                      <TrendingUp className="size-4" />
+                    </div>
+                  </div>
+                  <div className="my-1.5">
+                    <div className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight drop-shadow-md">
+                      {chainOverview ? `${chainOverview.chainAverageOccupancyRate}%` : "0%"}
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-medium">
+                    {chainOverview
+                      ? `${chainOverview.chainTotalActiveContracts} Hợp đồng đang thuê`
+                      : "0 Hợp đồng đang thuê"}
+                  </div>
+                </div>
+
+                {/* Box 3: Doanh thu */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/25 backdrop-blur-xs hover:bg-slate-950/45 border border-amber-500/20 transition-all duration-300 flex flex-col justify-between min-h-[125px] group">
+                  <div className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                    <span>DOANH THU TOÀN CHUỖI</span>
+                    <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-300 group-hover:scale-110 transition-transform">
+                      <DollarSign className="size-4" />
+                    </div>
+                  </div>
+                  <div className="my-1.5">
+                    <div className="text-2xl sm:text-3xl font-black text-amber-400 tracking-tight drop-shadow-md">
+                      {chainOverview ? formatShortCurrency(chainOverview.chainNetRevenue) : "₫0"}
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-medium">
+                    {chainOverview
+                      ? `Thực thu: ₫${Number(chainOverview.chainNetRevenue).toLocaleString("vi-VN")}`
+                      : "₫0"}
+                  </div>
+                </div>
+
+                {/* Box 4: Cảnh báo */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/25 backdrop-blur-xs hover:bg-slate-950/45 border border-rose-500/20 transition-all duration-300 flex flex-col justify-between min-h-[125px] group">
+                  <div className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                    <span>CẢNH BÁO QUÁ HẠN</span>
+                    <div className="p-1.5 rounded-lg bg-rose-500/20 text-rose-300 group-hover:scale-110 transition-transform">
+                      <AlertTriangle className="size-4" />
+                    </div>
+                  </div>
+                  <div className="my-1.5">
+                    <div className="text-2xl sm:text-3xl font-black text-rose-400 tracking-tight drop-shadow-md flex items-baseline gap-1.5">
+                      <span>{chainOverview ? totalOverdueCount : 0}</span>
+                      <span className="text-xs sm:text-sm font-bold text-rose-300">Kho</span>
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-medium">
+                    {chainOverview
+                      ? (totalOverdueCount > 0 ? "Cần kích hoạt BR-18 / BR-21" : "An toàn - Không có nợ quá hạn")
+                      : "0 Đơn quá hạn"}
+                  </div>
+                </div>
+              </div>
+
+              {/* 4 CỤM Ô VUÔNG CHỨC NĂNG (MẤY CỤC TO) ĐỒNG BỘ CYAN NEON */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-6 w-full max-w-6xl mx-auto">
+                {NAV_ITEMS.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <motion.button
+                      key={item.id}
+                      layoutId={`bom-nav-btn-${item.id}`}
+                      transition={NAV_LAYOUT_TRANSITION}
+                      onClick={() => setActiveTab(item.id)}
+                      className="group p-6 rounded-3xl min-h-[220px] flex flex-col justify-between items-start text-left cursor-pointer border-2 border-sky-400/80 hover:border-sky-300 bg-slate-950/60 hover:bg-slate-900/80 shadow-[0_0_25px_rgba(56,189,248,0.25)] hover:shadow-[0_0_40px_rgba(56,189,248,0.5)] hover:scale-[1.03] backdrop-blur-md relative overflow-hidden transition-all duration-300"
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <motion.div
+                          layoutId={`bom-nav-icon-${item.id}`}
+                          transition={NAV_LAYOUT_TRANSITION}
+                          className="p-3.5 rounded-2xl bg-sky-500/15 border border-sky-400/30 text-sky-400 group-hover:bg-sky-500 group-hover:text-slate-950 transition-colors shadow-md"
+                        >
+                          <Icon className="size-7" />
+                        </motion.div>
+                        <div className="p-2 rounded-xl text-slate-500 group-hover:text-sky-300 group-hover:bg-sky-500/10 transition-colors">
+                          <ArrowUpRight className="size-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                        </div>
+                      </div>
+                      <div className="mt-4 space-y-1.5 w-full">
+                        <motion.div
+                          layoutId={`bom-nav-title-${item.id}`}
+                          transition={NAV_LAYOUT_TRANSITION}
+                          className="text-lg font-black text-white group-hover:text-sky-300 tracking-tight transition-colors"
+                        >
+                          {item.label}
+                        </motion.div>
+                        <p className="text-xs text-slate-400 font-medium line-clamp-2 leading-relaxed">
+                          {item.shortDesc}
+                        </p>
+                      </div>
+                    </motion.button>
+                  )
+                })}
+              </div>
             </div>
-
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon
-              const isActive = activeTab === item.id
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full py-3 px-3.5 rounded-xl font-bold text-xs tracking-wide flex items-center justify-between transition-colors duration-200 cursor-pointer ${
-                    isActive
-                      ? "bg-sky-500 text-slate-950 font-black shadow-md shadow-sky-500/30"
-                      : "text-slate-300 hover:text-white hover:bg-slate-900/90 border border-transparent hover:border-sky-500/20"
-                  }`}
-                >
-                  <span className="flex items-center space-x-2.5 min-w-0">
-                    <Icon className={`size-4.5 shrink-0 ${isActive ? "text-slate-950" : "text-sky-400"}`} />
-                    <span className="truncate">{item.label}</span>
-                  </span>
-                  <ChevronRight className={`size-3.5 shrink-0 ${isActive ? "text-slate-950" : "text-slate-500"}`} />
-                </button>
-              )
-            })}
-          </aside>
-
-          {/* CỘT NỘI DUNG BÊN PHẢI */}
-          <div className="flex-1 min-w-0 space-y-6">
+          ) : (
+            /* GIAO DIỆN KHI CHỌN 1 MỤC: TOÀN BỘ KHÔNG GIAN (FULL-WIDTH) VỚI ĐIỀU HƯỚNG TRÊN HEADER */
+            <div className="w-full space-y-6">
             {/* 4 THẺ CHỈ SỐ KPI ĐƯỢC ĐẶT TRÊN ĐỈNH CỦA BẢNG ĐIỀU HÀNH */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Box 1: Tổng cơ sở */}
@@ -1149,10 +1321,11 @@ export default function BomPortalPage() {
             </div>
           </div>
         )}
-            </motion.div>
-          </div>
-        </div>
-      </main>
+      </motion.div>
+    </div>
+  )}
+</LayoutGroup>
+</main>
 
       {/* 1. MODAL CẤU HÌNH CƠ SỞ KHO */}
       {isFacilityModalOpen && selectedFacility && (
