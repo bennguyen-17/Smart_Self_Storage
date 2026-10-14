@@ -4,6 +4,10 @@ import { Agentation } from "agentation"
 import AuthPage from "@/pages/AuthPage"
 import InternalLoginPage from "@/pages/InternalLoginPage"
 import CustomerPortal from "@/pages/CustomerPortal"
+import RentStoragePage from "@/pages/RentStoragePage"
+import MyStoragePage from "@/pages/MyStoragePage"
+import GatePinPage from "@/pages/GatePinPage"
+import CustomerSupportPage from "@/pages/CustomerSupportPage"
 import RolePortalPlaceholderPage from "@/pages/RolePortalPlaceholderPage"
 import LandingPage from "@/features/landing/pages/LandingPage"
 import ReservationManagementPage from "@/features/reservations/pages/ReservationManagementPage"
@@ -61,12 +65,12 @@ function App() {
         {/* US-03: Sơ đồ 2D chọn ô kho */}
         <Route path="/floor-plan" element={<FloorPlanPage />} />
 
-        {/* Cổng Khách Hàng (Customer Portal - Bảo vệ bằng token khách hàng) */}
+        {/* Cổng Khách Hàng: Trang chủ Dashboard & 4 Màn hình tách riêng */}
         <Route
           path="/portal"
           element={
             <CustomerProtectedRoute>
-              <CustomerPortal initialTab="home" />
+              <CustomerPortal />
             </CustomerProtectedRoute>
           }
         />
@@ -74,23 +78,79 @@ function App() {
           path="/customer"
           element={
             <CustomerProtectedRoute>
-              <CustomerPortal initialTab="home" />
+              <CustomerPortal />
             </CustomerProtectedRoute>
           }
         />
+
+        {/* Màn hình 1: Thuê kho (Sơ đồ 2D & Đặt cọc) */}
         <Route
           path="/rent"
           element={
             <CustomerProtectedRoute>
-              <CustomerPortal initialTab="grid" />
+              <RentStoragePage />
             </CustomerProtectedRoute>
           }
         />
         <Route
+          path="/portal/rent"
+          element={
+            <CustomerProtectedRoute>
+              <RentStoragePage />
+            </CustomerProtectedRoute>
+          }
+        />
+
+        {/* Màn hình 2: Kho của tôi (Quản lý hợp đồng & đồ) */}
+        <Route
           path="/my-storage"
           element={
             <CustomerProtectedRoute>
-              <CustomerPortal initialTab="access" />
+              <MyStoragePage />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/portal/my-storage"
+          element={
+            <CustomerProtectedRoute>
+              <MyStoragePage />
+            </CustomerProtectedRoute>
+          }
+        />
+
+        {/* Màn hình 3: Mã PIN mở cửa 24/7 */}
+        <Route
+          path="/gate-pin"
+          element={
+            <CustomerProtectedRoute>
+              <GatePinPage />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/portal/gate-pin"
+          element={
+            <CustomerProtectedRoute>
+              <GatePinPage />
+            </CustomerProtectedRoute>
+          }
+        />
+
+        {/* Màn hình 4: Gửi hỗ trợ & Kênh liên hệ khẩn cấp */}
+        <Route
+          path="/support"
+          element={
+            <CustomerProtectedRoute>
+              <CustomerSupportPage />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/portal/support"
+          element={
+            <CustomerProtectedRoute>
+              <CustomerSupportPage />
             </CustomerProtectedRoute>
           }
         />

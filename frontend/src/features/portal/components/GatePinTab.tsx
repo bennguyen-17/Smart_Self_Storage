@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getMyContracts, getGatePin } from '@/features/portal/services/contractService';
-import { KeyRound, ShieldCheck, ShieldAlert, RotateCw, MapPin, Clock, DoorOpen, AlertTriangle } from 'lucide-react';
+import { KeyRound, ShieldCheck, ShieldAlert, RotateCw, MapPin, Clock, DoorOpen, AlertTriangle, ArrowRight, Warehouse } from 'lucide-react';
 
 export default function GatePinTab() {
+  const navigate = useNavigate();
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [gateFacility, setGateFacility] = useState('');
@@ -30,40 +32,34 @@ export default function GatePinTab() {
     fetchContracts();
   }, []);
 
-  // Lọc danh sách các cơ sở mà khách hàng thực sự có hợp đồng
+  // Chỉ lấy các cơ sở mà khách hàng thực sự có hợp đồng ĐANG HOẠT ĐỘNG (ACTIVE)
   const contractedFacilities = useMemo(() => {
     const map = new Map();
     contracts.forEach((c: any) => {
-      const code = c.branchCode || 'HN-01';
-      const isActive = c.status === 'ACTIVE';
-      const isPending = c.status === 'PENDING_CHECKIN';
+      // BẮT BUỘC hợp đồng phải ACTIVE mới có quyền mở cửa
+      if (c.status !== 'ACTIVE') return;
 
+      const code = c.branchCode || 'HN-01';
       if (!map.has(code)) {
         map.set(code, {
           code,
           name: c.branchName || `Cơ sở ${code}`,
-          hasActive: isActive,
-          hasPending: isPending,
+          hasActive: true,
         });
-      } else {
-        const item = map.get(code);
-        if (isActive) item.hasActive = true;
-        if (isPending) item.hasPending = true;
       }
     });
-    return Array.from(map.values()).filter((f: any) => f.hasActive || f.hasPending);
+    return Array.from(map.values());
   }, [contracts]);
 
-  // Tự động ưu tiên chọn cơ sở có hợp đồng HIỆU LỰC (ACTIVE)
+  // Số hợp đồng đang chờ check-in
+  const pendingContracts = useMemo(() => {
+    return contracts.filter((c: any) => c.status === 'PENDING_CHECKIN');
+  }, [contracts]);
+
+  // Tự động chọn cơ sở đầu tiên có hợp đồng HIỆU LỰC (ACTIVE)
   useEffect(() => {
     if (contractedFacilities.length > 0) {
-      const activeFac = contractedFacilities.find((f: any) => f.hasActive);
-      if (activeFac) {
-        const cur = contractedFacilities.find((f: any) => f.code === gateFacility);
-        if (!cur || !cur.hasActive) {
-          setGateFacility(activeFac.code);
-        }
-      } else if (!gateFacility || !contractedFacilities.some((f: any) => f.code === gateFacility)) {
+      if (!gateFacility || !contractedFacilities.some((f: any) => f.code === gateFacility)) {
         setGateFacility(contractedFacilities[0].code);
       }
     } else {
@@ -73,12 +69,10 @@ export default function GatePinTab() {
 
   // Kiểm tra quyền ra vào của cơ sở đang chọn
   const currentFacPermission = useMemo(() => {
-    if (!gateFacility) return { hasAccess: false, isPending: false };
+    if (!gateFacility) return { hasAccess: false };
     const fac: any = contractedFacilities.find((f: any) => f.code === gateFacility);
-    if (!fac) return { hasAccess: false, isPending: false };
     return {
-      hasAccess: Boolean(fac.hasActive),
-      isPending: !fac.hasActive && Boolean(fac.hasPending),
+      hasAccess: Boolean(fac?.hasActive),
     };
   }, [contractedFacilities, gateFacility]);
 
@@ -176,8 +170,9 @@ export default function GatePinTab() {
               Đang tải cơ sở...
             </div>
           ) : (
-            <div className="text-xs text-amber-600 dark:text-amber-400 font-medium px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
-              Chưa có hợp đồng kho
+            <div className="text-xs text-amber-700 dark:text-amber-300 font-bold px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-center gap-1.5">
+              <AlertTriangle className="size-3.5 shrink-0 text-amber-600" />
+              <span>{pendingContracts.length > 0 ? 'Chờ check-in nhận kho' : 'Chưa có hợp đồng'}</span>
             </div>
           )}
         </div>
@@ -196,7 +191,7 @@ export default function GatePinTab() {
                   <ShieldCheck className="size-4" />
                   <span>CỬA ĐƯỢC CẤP PHÉP LIVE 24/7</span>
                 </span>
-              ) : currentFacPermission.isPending ? (
+              ) : pendingContracts.length > 0 ? (
                 <span className="flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-400/40 text-amber-700 dark:text-amber-300 font-bold text-xs">
                   <AlertTriangle className="size-4" />
                   <span>CHỜ CHECK-IN NHẬN KHO</span>
@@ -218,7 +213,7 @@ export default function GatePinTab() {
           </div>
 
           {/* Dãy Số PIN 6 Chữ Số Lớn */}
-          <div className="py-6 sm:py-8 text-center space-y-3 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-cyan-500/20 shadow-inner">
+          <div className="py-6 sm:py-8 text-center space-y-4 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-cyan-500/20 shadow-inner">
             <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold">
               MÃ BÀN PHÍM CỬA CHÍNH (6 CHỮ SỐ)
             </p>
@@ -229,13 +224,41 @@ export default function GatePinTab() {
             }`}>
               {currentFacPermission.hasAccess ? pinValue : '--- ---'}
             </div>
-            <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto px-4">
-              {currentFacPermission.hasAccess
-                ? 'Nhập trực tiếp dãy 6 số này tại bàn phím số gắn trước cổng chính để mở cửa.'
-                : currentFacPermission.isPending
-                ? 'Hợp đồng tại cơ sở này đang chờ check-in nhận kho. Mã PIN sẽ tự động kích hoạt sau khi nhân viên duyệt check-in.'
-                : 'Bạn không có hợp đồng kho nào đang hoạt động tại cơ sở này.'}
-            </p>
+
+            {currentFacPermission.hasAccess ? (
+              <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto px-4">
+                Nhập trực tiếp dãy 6 số này tại bàn phím số gắn trước cổng chính để mở cửa.
+              </p>
+            ) : pendingContracts.length > 0 ? (
+              <div className="space-y-3 px-4 max-w-md mx-auto">
+                <p className="text-xs text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 p-3 rounded-xl leading-relaxed">
+                  Bạn có <strong>{pendingContracts.length} hợp đồng</strong> đang ở trạng thái <strong>Chờ check-in nhận kho</strong>. Mã PIN mở cửa chính 24/7 sẽ tự động kích hoạt ngay sau khi nhân viên tại cơ sở duyệt check-in cho bạn.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/my-storage')}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition shadow-sm cursor-pointer"
+                >
+                  <Warehouse className="size-4" />
+                  <span>Xem hợp đồng tại Kho của tôi</span>
+                  <ArrowRight className="size-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3 px-4 max-w-md mx-auto">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Tài khoản của bạn hiện chưa có hợp đồng kho nào đang hoạt động.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/rent')}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition shadow-sm cursor-pointer"
+                >
+                  <span>Thuê ô kho ngay</span>
+                  <ArrowRight className="size-3.5" />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Nút Làm Mới Mã PIN */}

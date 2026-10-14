@@ -7,6 +7,25 @@ import { AT_COUNTER_NOTE, canExtendOnline, extendModeOf } from '@/features/porta
 export default function MyStorageTab({ onOpenExtendModal, onOpenPinModal }: { onOpenExtendModal?: any; onOpenPinModal?: () => void }) {
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Phân trang danh sách hợp đồng
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(8);
+
+  const totalItems = contracts.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+
+  // Reset trang nếu vượt quá
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
+
+  const paginatedContracts = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return contracts.slice(start, start + pageSize);
+  }, [contracts, currentPage, pageSize]);
   
   // Modal Hủy Cọc & Xem hợp đồng
   const [cancelModalContract, setCancelModalContract] = useState<any>(null);
@@ -156,7 +175,7 @@ export default function MyStorageTab({ onOpenExtendModal, onOpenPinModal }: { on
                 <>
                   {/* 1. RESPONSIVE CARD VIEW (Màn hình nhỏ & vừa, KHÔNG CẦN CUỘN NGANG) */}
                   <div className="xl:hidden divide-y divide-slate-100 dark:divide-slate-800">
-                    {contracts.map((item) => {
+                    {paginatedContracts.map((item) => {
                       const isPending = item.status === 'PENDING_CHECKIN';
                       const isActive = item.status === 'ACTIVE';
                       const isCanceled = item.status === 'CANCELED';
@@ -294,7 +313,7 @@ export default function MyStorageTab({ onOpenExtendModal, onOpenPinModal }: { on
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300 font-medium">
-                        {contracts.map((item) => {
+                        {paginatedContracts.map((item) => {
                           const isPending = item.status === 'PENDING_CHECKIN';
                           const isActive = item.status === 'ACTIVE';
                           const isCanceled = item.status === 'CANCELED';
@@ -412,6 +431,117 @@ export default function MyStorageTab({ onOpenExtendModal, onOpenPinModal }: { on
                       </tbody>
                     </table>
                   </div>
+
+                  {/* THANH PHÂN TRANG (PAGINATION BAR) */}
+                  {totalItems > 0 && (
+                    <div className="p-3.5 sm:px-6 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-900/50">
+                      {/* Thông tin số lượng hiển thị */}
+                      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        Hiển thị <span className="font-bold text-slate-800 dark:text-slate-200">{(currentPage - 1) * pageSize + 1}</span> - <span className="font-bold text-slate-800 dark:text-slate-200">{Math.min(currentPage * pageSize, totalItems)}</span> trong tổng số <span className="font-bold text-blue-600 dark:text-cyan-400">{totalItems}</span> hợp đồng
+                      </div>
+
+                      {/* Nút phân trang */}
+                      <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                        {/* Nút chọn số lượng mỗi trang */}
+                        <div className="flex items-center gap-1.5 mr-2 text-xs text-slate-500 dark:text-slate-400">
+                          <span className="font-medium">Hiển thị:</span>
+                          <select
+                            value={pageSize}
+                            onChange={(e) => {
+                              setPageSize(Number(e.target.value));
+                              setCurrentPage(1);
+                            }}
+                            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                          >
+                            <option value={5}>5 / trang</option>
+                            <option value={8}>8 / trang</option>
+                            <option value={10}>10 / trang</option>
+                            <option value={15}>15 / trang</option>
+                          </select>
+                        </div>
+
+                        {/* Nút Về trang đầu */}
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage(1)}
+                          disabled={currentPage === 1}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                          title="Trang đầu"
+                        >
+                          <i className="fa-solid fa-angles-left"></i>
+                        </button>
+
+                        {/* Nút Trang trước */}
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                          title="Trang trước"
+                        >
+                          <i className="fa-solid fa-chevron-left"></i>
+                        </button>
+
+                        {/* Các số trang */}
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter((page) => {
+                              return (
+                                page === 1 ||
+                                page === totalPages ||
+                                Math.abs(page - currentPage) <= 1
+                              );
+                            })
+                            .map((page, idx, arr) => {
+                              const prevPage = arr[idx - 1];
+                              const showEllipsis = prevPage && page - prevPage > 1;
+                              const isActive = currentPage === page;
+
+                              return (
+                                <React.Fragment key={page}>
+                                  {showEllipsis && (
+                                    <span className="px-1 text-slate-400 text-xs">...</span>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black transition cursor-pointer ${
+                                      isActive
+                                        ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
+                                        : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                    }`}
+                                  >
+                                    {page}
+                                  </button>
+                                </React.Fragment>
+                              );
+                            })}
+                        </div>
+
+                        {/* Nút Trang sau */}
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                          title="Trang sau"
+                        >
+                          <i className="fa-solid fa-chevron-right"></i>
+                        </button>
+
+                        {/* Nút Đến trang cuối */}
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage(totalPages)}
+                          disabled={currentPage === totalPages}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                          title="Trang cuối"
+                        >
+                          <i className="fa-solid fa-angles-right"></i>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>
