@@ -1,5 +1,5 @@
 -- ============================================================================
--- DATABASE SCRIPT: SMART STORAGE SYSTEM
+-- DATABASE SCRIPT: SMART STORAGE SYSTEM (BẢN MASTER HOÀN CHỈNH TOÀN HỆ THỐNG)
 -- PROJECT: SWP391 - FALL 2026
 -- SYSTEM: Smart Self-Storage Management System
 -- DIALECT: MySQL 8.0+ / MariaDB 10.4+
@@ -10,11 +10,11 @@ DROP DATABASE IF EXISTS smart_storage;
 CREATE DATABASE smart_storage CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE smart_storage;
 
--- Disable foreign key checks for clean setup
+-- Tắt kiểm tra khóa ngoại để khởi tạo sạch sẽ không bị xung đột thứ tự
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------------------------------------------------------
--- 1. TABLE: Role
+-- 1. TABLE: Role (Phân quyền người dùng)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Role;
 CREATE TABLE Role (
@@ -23,7 +23,7 @@ CREATE TABLE Role (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 2. TABLE: Facility (Cơ sở lưu trữ)
+-- 2. TABLE: Facility (Cơ sở lưu trữ chuỗi toàn quốc)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Facility;
 CREATE TABLE Facility (
@@ -35,7 +35,7 @@ CREATE TABLE Facility (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 3. TABLE: Account (Tài khoản người dùng - Login bằng SĐT)
+-- 3. TABLE: Account (Tài khoản người dùng - Đăng nhập bằng SĐT)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Account;
 CREATE TABLE Account (
@@ -57,7 +57,7 @@ CREATE TABLE Account (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 4. TABLE: CustomerProfile (Hồ sơ khách hàng)
+-- 4. TABLE: CustomerProfile (Hồ sơ khách hàng gắn CCCD / Mã số thuế)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS CustomerProfile;
 CREATE TABLE CustomerProfile (
@@ -68,7 +68,7 @@ CREATE TABLE CustomerProfile (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 5. TABLE: EmployeeProfile (Hồ sơ nhân viên gắn với cơ sở)
+-- 5. TABLE: EmployeeProfile (Hồ sơ nhân viên / Quản lý gắn với cơ sở)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS EmployeeProfile;
 CREATE TABLE EmployeeProfile (
@@ -80,7 +80,7 @@ CREATE TABLE EmployeeProfile (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 6. TABLE: ActivityLog (Nhật ký thao tác hệ thống)
+-- 6. TABLE: ActivityLog (Nhật ký hành động hệ thống)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS ActivityLog;
 CREATE TABLE ActivityLog (
@@ -94,7 +94,7 @@ CREATE TABLE ActivityLog (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 7. TABLE: AuditLog (Nhật ký quẹt mã PIN ra vào cổng cơ sở)
+-- 7. TABLE: AuditLog (Nhật ký quẹt mã PIN ra vào cổng cơ sở IoT 24/7)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS AuditLog;
 CREATE TABLE AuditLog (
@@ -106,16 +106,11 @@ CREATE TABLE AuditLog (
     openedAt DATETIME NULL,
     reason VARCHAR(500) NULL,
     createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_audit_account
-        FOREIGN KEY (accountId)
-        REFERENCES Account (accountId)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
+    CONSTRAINT fk_audit_account FOREIGN KEY (accountId) REFERENCES Account (accountId) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 8. TABLE: Floor (Tầng của cơ sở)
+-- 8. TABLE: Floor (Tầng của cơ sở lưu trữ)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Floor;
 CREATE TABLE Floor (
@@ -128,7 +123,7 @@ CREATE TABLE Floor (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 9. TABLE: UnitType (Loại kho)
+-- 9. TABLE: UnitType (Quy chuẩn kích thước & điều kiện bảo quản kho)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS UnitType;
 CREATE TABLE UnitType (
@@ -140,7 +135,7 @@ CREATE TABLE UnitType (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 10. TABLE: StorageUnit (Ngăn kho / Buồng kho)
+-- 10. TABLE: StorageUnit (Ngăn kho / Buồng kho thực tế)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS StorageUnit;
 CREATE TABLE StorageUnit (
@@ -153,7 +148,7 @@ CREATE TABLE StorageUnit (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 11. TABLE: Price (Bảng giá thuê)
+-- 11. TABLE: Price (Bảng giá thuê & Mức cọc tiêu chuẩn)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Price;
 CREATE TABLE Price (
@@ -170,7 +165,7 @@ CREATE TABLE Price (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 12. TABLE: Promotion (Chương trình khuyến mãi)
+-- 12. TABLE: Promotion (Chương trình khuyến mãi & Chiết khấu)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Promotion;
 CREATE TABLE Promotion (
@@ -184,7 +179,7 @@ CREATE TABLE Promotion (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 13. TABLE: PromotionUnitType (Liên kết Khuyến mãi - Loại kho)
+-- 13. TABLE: PromotionUnitType (Liên kết Khuyến mãi - Loại kho áp dụng)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS PromotionUnitType;
 CREATE TABLE PromotionUnitType (
@@ -196,7 +191,7 @@ CREATE TABLE PromotionUnitType (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 14. TABLE: Shift (Ca trực)
+-- 14. TABLE: Shift (Ca trực vận hành)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Shift;
 CREATE TABLE Shift (
@@ -208,7 +203,7 @@ CREATE TABLE Shift (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 15. TABLE: StaffShift (Phân công ca trực cho nhân viên tại cơ sở)
+-- 15. TABLE: StaffShift (Phân công ca trực nhân viên tại cơ sở)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS StaffShift;
 CREATE TABLE StaffShift (
@@ -263,9 +258,8 @@ CREATE TABLE Contract (
     CONSTRAINT fk_contract_reservation FOREIGN KEY (reservationId) REFERENCES Reservation (reservationId) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
 -- ----------------------------------------------------------------------------
--- 18. TABLE: Payment (Hóa đơn và Thanh toán)
+-- 18. TABLE: Payment (Hóa đơn và Giao dịch thanh toán)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Payment;
 CREATE TABLE Payment (
@@ -289,7 +283,7 @@ CREATE TABLE Payment (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 19. TABLE: GatePin (Mã PIN động mở cổng cơ sở 15s - 30s)
+-- 19. TABLE: GatePin (Mã PIN động mở cổng IoT cơ sở 15s - 30s)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS GatePin;
 CREATE TABLE GatePin (
@@ -303,7 +297,7 @@ CREATE TABLE GatePin (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 20. TABLE: FeeItem (Danh mục biểu phí phụ thu / bồi thường hư hỏng)
+-- 20. TABLE: FeeItem (Danh mục biểu phí phụ thu / Bồi thường hư hỏng)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS FeeItem;
 CREATE TABLE FeeItem (
@@ -315,7 +309,7 @@ CREATE TABLE FeeItem (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 21. TABLE: Inspection (Biên bản kiểm tra kho khi trả kho / có sự cố)
+-- 21. TABLE: Inspection (Biên bản kiểm tra kho khi bàn giao / trả kho)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Inspection;
 CREATE TABLE Inspection (
@@ -329,7 +323,7 @@ CREATE TABLE Inspection (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 22. TABLE: InspectionItem (Chi tiết các khoản phí phạt trong biên bản kiểm tra)
+-- 22. TABLE: InspectionItem (Chi tiết các hạng mục bồi thường hư hỏng)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS InspectionItem;
 CREATE TABLE InspectionItem (
@@ -343,31 +337,42 @@ CREATE TABLE InspectionItem (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 23. TABLE: SupportTicket (Yêu cầu hỗ trợ gắn với Hợp đồng của khách)
+-- 23. TABLE: SupportTicket (Yêu cầu hỗ trợ & Xử lý sự cố kỹ thuật SLA)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS SupportTicket;
 CREATE TABLE SupportTicket (
-    ticketId INT AUTO_INCREMENT PRIMARY KEY,
-    contractId INT NOT NULL,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     ticketCode VARCHAR(50) NOT NULL UNIQUE,
-    category ENUM('TECHNICAL', 'BILLING', 'ACCESS_GATE', 'CLEANLINESS', 'OTHER') NOT NULL,
-    description TEXT NOT NULL,
-    status ENUM('PENDING', 'IN_PROGRESS', 'RESOLVED', 'CLOSED') NOT NULL DEFAULT 'PENDING',
-    submittedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    acceptedAt DATETIME,
-    resolvedAt DATETIME,
-    slaDeadline DATETIME,
+    type VARCHAR(30) NOT NULL, -- INCIDENT, EARLY_TERMINATION
+    status VARCHAR(30) NOT NULL DEFAULT 'SUBMITTED', -- SUBMITTED, IN_PROGRESS, RESOLVED
+    customerId INT NOT NULL,
+    facilityId INT NULL,
+    unitCode VARCHAR(50) NULL,
+    contractId INT NULL,
+    title VARCHAR(200) NULL,
+    description TEXT NULL,
+    desiredDate DATE NULL,
+    assignedStaffId INT NULL,
+    slaDeadline DATETIME NULL,
+    isSlaBreached BOOLEAN NOT NULL DEFAULT FALSE,
+    identityVerified BOOLEAN NOT NULL DEFAULT FALSE,
+    resolutionNote TEXT NULL,
+    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    resolvedAt DATETIME NULL,
+    CONSTRAINT fk_ticket_customer FOREIGN KEY (customerId) REFERENCES CustomerProfile (customerId) ON UPDATE CASCADE,
+    CONSTRAINT fk_ticket_facility FOREIGN KEY (facilityId) REFERENCES Facility (facilityId) ON UPDATE CASCADE,
     CONSTRAINT fk_ticket_contract FOREIGN KEY (contractId) REFERENCES Contract (contractId) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Re-enable foreign key checks
+-- Bật lại ràng buộc khóa ngoại
 SET FOREIGN_KEY_CHECKS = 1;
 
+
 -- ============================================================================
--- SEED DATA (DỮ LIỆU KHỞI TẠO MẪU)
+-- DỮ LIỆU KHỞI TẠO ĐẦY ĐỦ (MASTER SEED DATA) CHO TOÀN BỘ 7 CƠ SỞ KHO
 -- ============================================================================
 
--- 1. Roles
+-- 1. Phân quyền (Roles)
 INSERT INTO Role (roleId, roleName) VALUES
 (1, 'ADMIN'),
 (2, 'BOM'),
@@ -375,7 +380,7 @@ INSERT INTO Role (roleId, roleName) VALUES
 (4, 'STAFF'),
 (5, 'CUSTOMER');
 
--- 2. 7 Facilities (Theo Take note.txt)
+-- 2. 7 Cơ sở kho toàn quốc (Khớp 100% tài liệu Take note.txt)
 INSERT INTO Facility (facilityId, facilityName, address, phone, status) VALUES
 (1, 'SmartStorage Cầu Giấy (HN-01)', 'Số 391 Cầu Giấy, Q. Cầu Giấy, Hà Nội', '02439100001', 'ACTIVE'),
 (2, 'SmartStorage Thanh Xuân (HN-02)', 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội', '02439100002', 'ACTIVE'),
@@ -385,60 +390,86 @@ INSERT INTO Facility (facilityId, facilityName, address, phone, status) VALUES
 (6, 'SmartStorage Hải Châu (DN-01)', 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng', '02369100001', 'ACTIVE'),
 (7, 'SmartStorage Ninh Kiều (CT-01)', 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', '02929100001', 'ACTIVE');
 
--- 3. Accounts
--- Mật khẩu ban đầu cho toàn bộ tài khoản mẫu dev/test: 123456@Test (đã được băm bằng BCrypt)
--- BCrypt Hash: $2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW
+-- 3. Tài khoản người dùng (Accounts)
+-- Mật khẩu mặc định dev/test: 123456@Test (BCrypt: $2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW)
 INSERT INTO Account (accountId, roleId, phone, fullName, email, password, status) VALUES
-(1, 1, '0900000001', 'System Administrator', 'admin@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
-(2, 2, '0900000002', 'Board of Management Leader', 'bom@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
-(3, 3, '0900000003', 'Trần Văn Quản Lý (HN-01)', 'manager.hn@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
-(4, 3, '0900000004', 'Lê Thị Quản Lý (HCM-01)', 'manager.hcm@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
-(5, 4, '0900000005', 'Nguyễn Văn Nhân Viên 1', 'staff.hn@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
-(6, 4, '0900000006', 'Phạm Thị Nhân Viên 2', 'staff.hcm@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
-(7, 5, '0912345678', 'Nguyễn Khách Hàng A', 'customer.a@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
-(8, 5, '0987654321', 'Công Ty Cổ Phần SmartRetail', 'smartretail@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE');
+-- Admin hệ thống & Ban Giám Đốc BOM
+(1, 1, '0900000001', 'Quản Trị Viên Hệ Thống', 'admin@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(2, 2, '0900000002', 'Ban Giám Đốc Điều Hành (BOM)', 'bom@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
 
--- 4. CustomerProfiles (12 số CCCD)
+-- Quản lý chi nhánh (Managers) cho ĐẦY ĐỦ 7 CƠ SỞ (Facility 1 -> 7)
+(3, 3, '0900000003', 'Trần Văn Quản Lý (HN-01)', 'manager.hn01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(4, 3, '0900000004', 'Hoàng Minh Quản Lý (HN-02)', 'manager.hn02@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(5, 3, '0900000005', 'Lê Thị Quản Lý (HCM-01)', 'manager.hcm01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(6, 3, '0900000006', 'Đỗ Đức Quản Lý (HCM-02)', 'manager.hcm02@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(7, 3, '0900000007', 'Vũ Đình Quản Lý (HCM-03)', 'manager.hcm03@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(8, 3, '0900000008', 'Nguyễn Thanh Quản Lý (DN-01)', 'manager.dn01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(9, 3, '0900000009', 'Bùi Tuấn Quản Lý (CT-01)', 'manager.ct01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+
+-- Nhân viên vận hành tại cơ sở (Staffs)
+(10, 4, '0900000010', 'Nguyễn Văn Nhân Viên (HN-01)', 'staff.hn01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(11, 4, '0900000011', 'Phạm Thị Nhân Viên (HCM-01)', 'staff.hcm01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(12, 4, '0900000012', 'Đinh Văn Nhân Viên (HCM-02)', 'staff.hcm02@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+
+-- Khách hàng cá nhân & Doanh nghiệp (Customers)
+(13, 5, '0912345678', 'Nguyễn Khách Hàng A', 'customer.a@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(14, 5, '0987654321', 'Công Ty Cổ Phần SmartRetail', 'smartretail@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(15, 5, '0933445566', 'Trần Thị Bích Ngọc', 'bichngoc.tran@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(16, 5, '0977889900', 'Công Ty TNHH Logistics Express', 'logistics.express@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(17, 5, '0966778899', 'Lê Hoàng Long', 'hoanglong.le@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(18, 5, '0944556677', 'Vũ Mai Phương', 'maiphuong.vu@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE');
+
+-- 4. Hồ sơ khách hàng (CustomerProfiles gắn CCCD 12 số chuẩn)
 INSERT INTO CustomerProfile (customerId, accountId, identityNumber) VALUES
-(1, 7, '001201012345'),
-(2, 8, '079201098765');
+(1, 13, '001201012345'),
+(2, 14, '079201098765'),
+(3, 15, '001202023456'),
+(4, 16, '079202087654'),
+(5, 17, '048201034567'),
+(6, 18, '092201045678');
 
--- 5. EmployeeProfiles
+-- 5. Hồ sơ nhân viên & Quản lý cơ sở (EmployeeProfiles gắn với từng cơ sở)
 INSERT INTO EmployeeProfile (employeeId, accountId, facilityId) VALUES
-(1, 3, 1), -- Quản lý HN-01
-(2, 4, 3), -- Quản lý HCM-01
-(3, 5, 1), -- Nhân viên HN-01
-(4, 6, 3); -- Nhân viên HCM-01
+(1, 3, 1),  -- Quản lý HN-01
+(2, 4, 2),  -- Quản lý HN-02
+(3, 5, 3),  -- Quản lý HCM-01
+(4, 6, 4),  -- Quản lý HCM-02
+(5, 7, 5),  -- Quản lý HCM-03
+(6, 8, 6),  -- Quản lý DN-01
+(7, 9, 7),  -- Quản lý CT-01
+(8, 10, 1), -- Nhân viên HN-01
+(9, 11, 3), -- Nhân viên HCM-01
+(10, 12, 4); -- Nhân viên HCM-02
 
--- 6. Floors cho 7 Cơ sở (Chuẩn 1000 kg/m² Tầng Trệt, 500 kg/m² Tầng trên)
+-- 6. Danh sách Tầng cho 7 Cơ sở (18 tầng phân bổ theo đặc thù thiết kế)
 INSERT INTO Floor (floorId, facilityId, floorName, maxLoadPerM2, status) VALUES
--- HN-01
+-- HN-01 (Mẫu A - Nhà phố 3 tầng)
 (1, 1, 'Tầng Trệt (Sảnh & Kho XL)', 1000.00, 'ACTIVE'),
 (2, 1, 'Tầng 1 (Kho S, M, L)', 500.00, 'ACTIVE'),
 (3, 1, 'Tầng 2 (Kho S, M, L)', 500.00, 'ACTIVE'),
--- HN-02
-(4, 2, 'Tầng Trệt (Kho XL)', 1000.00, 'ACTIVE'),
-(5, 2, 'Tầng 1', 500.00, 'ACTIVE'),
-(6, 2, 'Tầng 2', 500.00, 'ACTIVE'),
--- HCM-01
-(7, 3, 'Tầng Trệt (Kho Mát XL)', 1000.00, 'ACTIVE'),
-(8, 3, 'Tầng 1 (Kho Mát VIP)', 500.00, 'ACTIVE'),
-(9, 3, 'Tầng 2 (Kho Mát VIP)', 500.00, 'ACTIVE'),
--- HCM-02
-(10, 4, 'Tầng Trệt (Kho XL)', 1000.00, 'ACTIVE'),
-(11, 4, 'Tầng 1 (Kho S, M, L)', 500.00, 'ACTIVE'),
--- HCM-03
-(12, 5, 'Tầng Trệt (Kho XL)', 1000.00, 'ACTIVE'),
-(13, 5, 'Tầng 1', 500.00, 'ACTIVE'),
-(14, 5, 'Tầng 2', 500.00, 'ACTIVE'),
--- DN-01
-(15, 6, 'Tầng Trệt (Kho XL)', 1000.00, 'ACTIVE'),
-(16, 6, 'Tầng 1 (Kho S, M, L)', 500.00, 'ACTIVE'),
--- CT-01
-(17, 7, 'Tầng Trệt (Kho XL)', 1000.00, 'ACTIVE'),
-(18, 7, 'Tầng 1 (Kho S, M, L)', 500.00, 'ACTIVE');
+-- HN-02 (Mẫu B - Kho dài Logistics 3 tầng)
+(4, 2, 'Tầng Trệt (Kho XL Logistics)', 1200.00, 'ACTIVE'),
+(5, 2, 'Tầng 1 (Kho M & L)', 600.00, 'ACTIVE'),
+(6, 2, 'Tầng 2 (Kho M & L)', 600.00, 'ACTIVE'),
+-- HCM-01 (Mẫu A - Tòa nhà VIP 3 tầng 100% Kho mát Climate-Controlled)
+(7, 3, 'Tầng Trệt (Kho Mát XL VIP)', 1000.00, 'ACTIVE'),
+(8, 3, 'Tầng 1 (Kho Mát M & L)', 500.00, 'ACTIVE'),
+(9, 3, 'Tầng 2 (Kho Mát M & L)', 500.00, 'ACTIVE'),
+-- HCM-02 (Mẫu B - Cảng kho 2 tầng)
+(10, 4, 'Tầng Trệt (Kho XL Pallet)', 1200.00, 'ACTIVE'),
+(11, 4, 'Tầng 1 (Kho S, M, L)', 600.00, 'ACTIVE'),
+-- HCM-03 (Mẫu B - Khu công nghệ cao 3 tầng bàn cờ)
+(12, 5, 'Tầng Trệt (Kho XL Startup)', 1000.00, 'ACTIVE'),
+(13, 5, 'Tầng 1 (Kho M & L)', 500.00, 'ACTIVE'),
+(14, 5, 'Tầng 2 (Kho S & M)', 500.00, 'ACTIVE'),
+-- DN-01 (Mẫu A - Du lịch homestay 2 tầng)
+(15, 6, 'Tầng Trệt (Kho L & XL)', 800.00, 'ACTIVE'),
+(16, 6, 'Tầng 1 (Kho S du lịch & M)', 500.00, 'ACTIVE'),
+-- CT-01 (Mẫu B - Nông sản miền Tây 2 tầng)
+(17, 7, 'Tầng Trệt (Kho XL Hàng mẫu)', 1000.00, 'ACTIVE'),
+(18, 7, 'Tầng 1 (Kho S & M Tiểu thương)', 500.00, 'ACTIVE');
 
--- 7. UnitTypes (Chuẩn 4 kích thước chiều cao 2.0m)
+-- 7. Loại kho chuẩn (UnitTypes - Chiều cao cố định 2.0m)
 INSERT INTO UnitType (unitTypeId, typeName, size, storageCondition, status) VALUES
 (1, 'Size S (Tủ cá nhân)', '1.0m x 1.0m x 2.0m', 'NORMAL', 'ACTIVE'),
 (2, 'Size M (Phòng vừa)', '1.5m x 2.0m x 2.0m', 'NORMAL', 'ACTIVE'),
@@ -447,7 +478,7 @@ INSERT INTO UnitType (unitTypeId, typeName, size, storageCondition, status) VALU
 (5, 'Size M - Climate (Kho mát VIP)', '1.5m x 2.0m x 2.0m', 'CLIMATE_CONTROLLED', 'ACTIVE'),
 (6, 'Size L - Climate (Kho mát VIP)', '2.0m x 3.0m x 2.0m', 'CLIMATE_CONTROLLED', 'ACTIVE');
 
--- 8. Prices (Giá ngày, Giá tháng, Tiền cọc chuẩn & Phụ phí kho mát 20%)
+-- 8. Bảng giá thuê chuẩn & Mức cọc (Prices)
 INSERT INTO Price (priceId, unitTypeId, dailyPrice, monthlyPrice, depositAmount, climateSurchargePercent, effectiveFrom, effectiveTo, status) VALUES
 (1, 1, 30000.00, 600000.00, 500000.00, 0.00, '2026-01-01', NULL, 'ACTIVE'),
 (2, 2, 60000.00, 1200000.00, 1000000.00, 0.00, '2026-01-01', NULL, 'ACTIVE'),
@@ -456,9 +487,10 @@ INSERT INTO Price (priceId, unitTypeId, dailyPrice, monthlyPrice, depositAmount,
 (5, 5, 60000.00, 1200000.00, 1000000.00, 20.00, '2026-01-01', NULL, 'ACTIVE'),
 (6, 6, 120000.00, 2400000.00, 2000000.00, 20.00, '2026-01-01', NULL, 'ACTIVE');
 
--- 9. StorageUnits mẫu (Khớp 100% Sơ đồ mặt bằng 2D)
+-- 9. Danh mục Ngăn kho thực tế (StorageUnits) phân bổ trên cả 7 cơ sở
 INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
--- === HN-01 TẦNG TRỆT (Floor 1): 10 Ô KHO XL (Dãy Mặt tiền 5 ô + Dãy Hậu cần 5 ô) ===
+-- === CƠ SỞ 1: HN-01 (Cầu Giấy, Hà Nội) ===
+-- Floor 1 (Trệt): 10 Ô Kho XL
 ('HN01-G-XL01', 1, 4, 'AVAILABLE'),
 ('HN01-G-XL02', 1, 4, 'OCCUPIED'),
 ('HN01-G-XL03', 1, 4, 'AVAILABLE'),
@@ -469,10 +501,9 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 ('HN01-G-XL08', 1, 4, 'AVAILABLE'),
 ('HN01-G-XL09', 1, 4, 'OCCUPIED'),
 ('HN01-G-XL10', 1, 4, 'AVAILABLE'),
-
--- === HN-01 TẦNG 1 (Floor 2): 8 ô S, 6 ô M, 4 ô L ===
+-- Floor 2 (Tầng 1): 8 ô S, 6 ô M, 4 ô L
 ('HN01-F1-S01', 2, 1, 'AVAILABLE'),
-('HN01-F1-S02', 2, 1, 'HOLD'),
+('HN01-F1-S02', 2, 1, 'OCCUPIED'),
 ('HN01-F1-S03', 2, 1, 'AVAILABLE'),
 ('HN01-F1-S04', 2, 1, 'OCCUPIED'),
 ('HN01-F1-S05', 2, 1, 'AVAILABLE'),
@@ -489,8 +520,7 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 ('HN01-F1-L02', 2, 3, 'OCCUPIED'),
 ('HN01-F1-L03', 2, 3, 'AVAILABLE'),
 ('HN01-F1-L04', 2, 3, 'AVAILABLE'),
-
--- === HN-01 TẦNG 2 (Floor 3): 6 ô S, 8 ô M, 4 ô L ===
+-- Floor 3 (Tầng 2): 6 ô S, 8 ô M, 4 ô L
 ('HN01-F2-S01', 3, 1, 'AVAILABLE'),
 ('HN01-F2-S02', 3, 1, 'OCCUPIED'),
 ('HN01-F2-S03', 3, 1, 'AVAILABLE'),
@@ -510,71 +540,180 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 ('HN01-F2-L03', 3, 3, 'OCCUPIED'),
 ('HN01-F2-L04', 3, 3, 'AVAILABLE'),
 
--- === HCM-01 TẦNG 1 (Floor 8): Kho mát VIP Climate-Controlled (M & L) ===
+-- === CƠ SỞ 2: HN-02 (Thanh Xuân, Hà Nội) ===
+('HN02-G-XL01', 4, 4, 'OCCUPIED'),
+('HN02-G-XL02', 4, 4, 'AVAILABLE'),
+('HN02-G-XL03', 4, 4, 'AVAILABLE'),
+('HN02-G-XL04', 4, 4, 'OCCUPIED'),
+('HN02-G-XL05', 4, 4, 'AVAILABLE'),
+('HN02-F1-M01', 5, 2, 'AVAILABLE'),
+('HN02-F1-M02', 5, 2, 'OCCUPIED'),
+('HN02-F1-M03', 5, 2, 'AVAILABLE'),
+('HN02-F1-L01', 5, 3, 'OCCUPIED'),
+('HN02-F1-L02', 5, 3, 'AVAILABLE'),
+('HN02-F2-M01', 6, 2, 'AVAILABLE'),
+('HN02-F2-M02', 6, 2, 'AVAILABLE'),
+('HN02-F2-L01', 6, 3, 'AVAILABLE'),
+('HN02-F2-L02', 6, 3, 'OCCUPIED'),
+
+-- === CƠ SỞ 3: HCM-01 (Quận 1, TP.HCM - 100% KHO MÁT) ===
+('HCM01-G-XL01', 7, 6, 'OCCUPIED'),
+('HCM01-G-XL02', 7, 6, 'AVAILABLE'),
+('HCM01-G-XL03', 7, 6, 'AVAILABLE'),
+('HCM01-G-XL04', 7, 6, 'OCCUPIED'),
 ('HCM01-F1-M01', 8, 5, 'OCCUPIED'),
-('HCM01-F1-L01', 8, 6, 'AVAILABLE'),
 ('HCM01-F1-M02', 8, 5, 'AVAILABLE'),
 ('HCM01-F1-M03', 8, 5, 'HOLD'),
-('HCM01-F1-L02', 8, 6, 'AVAILABLE');
+('HCM01-F1-L01', 8, 6, 'AVAILABLE'),
+('HCM01-F1-L02', 8, 6, 'OCCUPIED'),
+('HCM01-F2-M01', 9, 5, 'AVAILABLE'),
+('HCM01-F2-M02', 9, 5, 'OCCUPIED'),
+('HCM01-F2-L01', 9, 6, 'AVAILABLE'),
 
--- 10. Shifts
+-- === CƠ SỞ 4: HCM-02 (Quận 7, TP.HCM) ===
+('HCM02-G-XL01', 10, 4, 'OCCUPIED'),
+('HCM02-G-XL02', 10, 4, 'OCCUPIED'),
+('HCM02-G-XL03', 10, 4, 'AVAILABLE'),
+('HCM02-G-XL04', 10, 4, 'AVAILABLE'),
+('HCM02-F1-M01', 11, 2, 'AVAILABLE'),
+('HCM02-F1-M02', 11, 2, 'OCCUPIED'),
+('HCM02-F1-L01', 11, 3, 'AVAILABLE'),
+('HCM02-F1-L02', 11, 3, 'OCCUPIED'),
+
+-- === CƠ SỞ 5: HCM-03 (Thủ Đức, TP.HCM) ===
+('HCM03-G-XL01', 12, 4, 'AVAILABLE'),
+('HCM03-G-XL02', 12, 4, 'OCCUPIED'),
+('HCM03-G-XL03', 12, 4, 'AVAILABLE'),
+('HCM03-F1-M01', 13, 2, 'AVAILABLE'),
+('HCM03-F1-M02', 13, 2, 'OCCUPIED'),
+('HCM03-F1-L01', 13, 3, 'AVAILABLE'),
+('HCM03-F2-S01', 14, 1, 'AVAILABLE'),
+('HCM03-F2-S02', 14, 1, 'OCCUPIED'),
+
+-- === CƠ SỞ 6: DN-01 (Hải Châu, Đà Nẵng) ===
+('DN01-G-L01', 15, 3, 'OCCUPIED'),
+('DN01-G-XL01', 15, 4, 'AVAILABLE'),
+('DN01-G-XL02', 15, 4, 'AVAILABLE'),
+('DN01-F1-S01', 16, 1, 'AVAILABLE'),
+('DN01-F1-S02', 16, 1, 'OCCUPIED'),
+('DN01-F1-M01', 16, 2, 'AVAILABLE'),
+
+-- === CƠ SỞ 7: CT-01 (Ninh Kiều, Cần Thơ) ===
+('CT01-G-XL01', 17, 4, 'AVAILABLE'),
+('CT01-G-XL02', 17, 4, 'OCCUPIED'),
+('CT01-F1-S01', 18, 1, 'AVAILABLE'),
+('CT01-F1-M01', 18, 2, 'OCCUPIED');
+
+-- 10. Ca trực vận hành (Shifts)
 INSERT INTO Shift (shiftId, shiftName, startTime, endTime, status) VALUES
-(1, 'Ca Sáng', '06:00:00', '14:00:00', 'ACTIVE'),
-(2, 'Ca Chiều', '14:00:00', '22:00:00', 'ACTIVE'),
-(3, 'Ca Đêm', '22:00:00', '06:00:00', 'ACTIVE');
+(1, 'Ca Sáng (Mở cổng & Kiểm tra sáng)', '06:00:00', '14:00:00', 'ACTIVE'),
+(2, 'Ca Chiều (Vận hành & Hỗ trợ khách)', '14:00:00', '22:00:00', 'ACTIVE'),
+(3, 'Ca Đêm (Giám sát an ninh IoT)', '22:00:00', '06:00:00', 'ACTIVE');
 
--- 11. StaffShifts
+-- 11. Phân công ca trực mẫu (StaffShifts)
 INSERT INTO StaffShift (staffShiftId, employeeId, facilityId, shiftId, workDate, status) VALUES
-(1, 3, 1, 1, '2026-09-25', 'ATTENDED'),
-(2, 4, 3, 2, '2026-09-25', 'SCHEDULED');
+(1, 8, 1, 1, '2026-09-25', 'ATTENDED'),
+(2, 9, 3, 2, '2026-09-25', 'ATTENDED'),
+(3, 10, 4, 1, '2026-09-25', 'SCHEDULED');
 
--- 12. Promotions
+-- 12. Chương trình khuyến mãi (Promotions)
 INSERT INTO Promotion (promotionId, promotionName, promotionType, discountValue, startDate, endDate, status) VALUES
-(1, 'Khuyến mãi Khai trương mùa Thu', 'PERCENTAGE', 20.00, '2026-09-01', '2026-10-31', 'ACTIVE'),
-(2, 'Ưu đãi Doanh nghiệp thuê dài hạn', 'FIXED_AMOUNT', 500000.00, '2026-09-01', '2026-12-31', 'ACTIVE');
+(1, 'Khuyến mãi Khai trương mùa Thu (-20%)', 'PERCENTAGE', 20.00, '2026-09-01', '2026-10-31', 'ACTIVE'),
+(2, 'Ưu đãi Doanh nghiệp thuê dài hạn (-500k)', 'FIXED_AMOUNT', 500000.00, '2026-09-01', '2026-12-31', 'ACTIVE');
 
--- 13. PromotionUnitType
 INSERT INTO PromotionUnitType (promotionId, unitTypeId) VALUES
 (1, 1),
 (1, 2),
 (1, 3),
 (2, 4);
 
--- 14. FeeItems (Danh mục bồi thường hư hỏng / vệ sinh khi bàn giao)
+-- 13. Danh mục bồi thường hư hỏng / vệ sinh (FeeItems)
 INSERT INTO FeeItem (feeItemId, feeName, unitPrice, description, status) VALUES
 (1, 'Phí vệ sinh rác thông thường', 150000.00, 'Dọn dẹp rác cơ bản để lại trong kho', 'ACTIVE'),
-(2, 'Phí vệ sinh chuyên sâu / hóa chất dơ', 400000.00, 'Tẩy rửa vết ố, dầu mỡ, chất lỏng bám sàn', 'ACTIVE'),
+(2, 'Phí vệ sinh chuyên sâu / tẩy rửa ố dầu mỡ', 400000.00, 'Tẩy rửa vết ố, dầu mỡ, chất lỏng bám sàn', 'ACTIVE'),
 (3, 'Phí sửa chữa chốt khóa / tay nắm cửa', 250000.00, 'Thay thế chốt khóa cửa kho bị bẻ hỏng', 'ACTIVE'),
 (4, 'Phí sơn vá lại vách ngăn kho', 350000.00, 'Xử lý trầy xước, đục khoét trên panel vách kho', 'ACTIVE'),
-(5, 'Phí đền bù hư hỏng cửa cuốn', 1200000.00, 'Hư hỏng nan cửa cuốn, kẹt ray do ngoại lực', 'ACTIVE');
+(5, 'Phí đền bù hư hỏng nan cửa cuốn', 1200000.00, 'Hư hỏng nan cửa cuốn, kẹt ray do ngoại lực', 'ACTIVE');
 
--- 15. Reservations mẫu
-INSERT INTO Reservation (reservationId, reservationCode, accountId, unitCode, startDate, endDate, rentalType, rentalAmount, depositAmount, status, createdAt, holdExpiresAt) VALUES
-(1, 'RES-LEGACY-000001', 7, 'HN01-G-XL02', '2026-09-01', '2026-10-01', 'MONTHLY', 7500000.00, 7500000.00, 'CONFIRMED', '2026-08-30 09:00:00', NULL),
-(2, 'RES-LEGACY-000002', 8, 'HN01-F1-M01', '2026-09-15', '2026-12-15', 'MONTHLY', 6000000.00, 2000000.00, 'CONFIRMED', '2026-09-14 14:30:00', NULL),
-(3, 'RES-LEGACY-000003', 7, 'HN01-F1-S02', '2026-09-25', '2026-09-30', 'DAILY', 250000.00, 800000.00, 'PENDING', '2026-09-25 10:00:00', '2026-09-25 10:30:00');
+-- 14. Đơn giữ chỗ mẫu (Reservations) phân bổ đều các cơ sở
+INSERT INTO Reservation (reservationId, reservationCode, accountId, unitCode, startDate, endDate, rentalType, rentalAmount, depositAmount, penaltyAmount, status, createdAt, holdExpiresAt) VALUES
+-- HN-01
+(1, 'RES-HN01-202609-001', 13, 'HN01-G-XL02', '2026-09-01', '2026-10-01', 'MONTHLY', 4000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-08-30 09:00:00', NULL),
+(2, 'RES-HN01-202609-002', 14, 'HN01-F1-M01', '2026-09-15', '2026-12-15', 'MONTHLY', 3600000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-09-14 14:30:00', NULL),
+(3, 'RES-HN01-202609-003', 15, 'HN01-F1-S02', '2026-09-20', '2026-10-20', 'MONTHLY', 600000.00, 500000.00, 0.00, 'CONFIRMED', '2026-09-19 11:00:00', NULL),
+(4, 'RES-HN01-202609-004', 16, 'HN01-F1-L02', '2026-08-01', '2026-09-01', 'MONTHLY', 2400000.00, 2000000.00, 120000.00, 'CONFIRMED', '2026-07-30 08:00:00', NULL), -- Quá hạn
+(5, 'RES-HN01-202609-005', 17, 'HN01-F2-M03', '2026-09-25', '2026-10-25', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-09-24 16:00:00', NULL),
+-- HN-02
+(6, 'RES-HN02-202609-001', 14, 'HN02-G-XL01', '2026-09-10', '2026-11-10', 'MONTHLY', 8000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-09-08 10:00:00', NULL),
+(7, 'RES-HN02-202609-002', 17, 'HN02-F1-M02', '2026-09-12', '2026-10-12', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-09-10 15:00:00', NULL),
+-- HCM-01 (Kho mát)
+(8, 'RES-HCM01-202609-001', 15, 'HCM01-G-XL01', '2026-09-05', '2026-12-05', 'MONTHLY', 8640000.00, 2000000.00, 0.00, 'CONFIRMED', '2026-09-03 09:30:00', NULL),
+(9, 'RES-HCM01-202609-002', 13, 'HCM01-F1-M01', '2026-09-18', '2026-10-18', 'MONTHLY', 1440000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-09-17 14:00:00', NULL),
+-- HCM-02
+(10, 'RES-HCM02-202609-001', 16, 'HCM02-G-XL01', '2026-09-02', '2026-11-02', 'MONTHLY', 8000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-08-31 16:00:00', NULL),
+-- HCM-03
+(11, 'RES-HCM03-202609-001', 14, 'HCM03-G-XL02', '2026-09-05', '2026-10-05', 'MONTHLY', 4000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-09-04 10:30:00', NULL),
+-- DN-01
+(12, 'RES-DN01-202609-001', 18, 'DN01-G-L01', '2026-09-15', '2026-10-15', 'MONTHLY', 2400000.00, 2000000.00, 0.00, 'CONFIRMED', '2026-09-14 09:00:00', NULL),
+-- CT-01
+(13, 'RES-CT01-202609-001', 16, 'CT01-G-XL02', '2026-09-10', '2026-11-10', 'MONTHLY', 8000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-09-09 11:20:00', NULL);
 
--- 16. Contracts mẫu
-INSERT INTO Contract (contractId, reservationId, pdfUrl, activatedAt, terminatedAt, status) VALUES
-(1, 1, '/contracts/HD-20260901-001.pdf', '2026-09-01 00:00:00', NULL, 'ACTIVE'),
-(2, 2, '/contracts/HD-20260915-002.pdf', '2026-09-15 00:00:00', NULL, 'ACTIVE');
+-- 15. Hợp đồng thuê kho (Contracts) đa dạng trạng thái (ACTIVE, OVERDUE, PENDING_CHECKIN)
+INSERT INTO Contract (contractId, reservationId, pdfUrl, activatedAt, terminatedAt, status, cancelReason, refundBankName, refundAccountNumber, refundAccountName) VALUES
+(1, 1, '/contracts/HD-HN01-202609-001.pdf', '2026-09-01 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
+(2, 2, '/contracts/HD-HN01-202609-002.pdf', '2026-09-15 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
+(3, 3, '/contracts/HD-HN01-202609-003.pdf', '2026-09-20 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
+(4, 4, '/contracts/HD-HN01-202609-004.pdf', '2026-08-01 00:00:00', NULL, 'OVERDUE', NULL, NULL, NULL, NULL), -- Quá hạn BR-18
+(5, 5, '/contracts/HD-HN01-202609-005.pdf', '2026-09-25 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
+(6, 6, '/contracts/HD-HN02-202609-001.pdf', '2026-09-10 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
+(7, 7, '/contracts/HD-HN02-202609-002.pdf', '2026-09-12 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
+(8, 8, '/contracts/HD-HCM01-202609-001.pdf', '2026-09-05 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
+(9, 9, '/contracts/HD-HCM01-202609-002.pdf', '2026-09-18 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
+(10, 10, '/contracts/HD-HCM02-202609-001.pdf', '2026-09-02 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
+(11, 11, '/contracts/HD-HCM03-202609-001.pdf', '2026-09-05 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
+(12, 12, '/contracts/HD-DN01-202609-001.pdf', '2026-09-15 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
+(13, 13, '/contracts/HD-CT01-202609-001.pdf', '2026-09-10 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL);
 
--- 17. Payments mẫu
+-- 16. Hóa đơn và Thanh toán (Payments)
 INSERT INTO Payment (paymentId, contractId, invoiceNumber, invoiceType, amount, paidAmount, remainingAmount, pdfUrl, issuedAt, dueAt, status, paymentMethod, transactionCode, paymentStatus, gatewayTransactionId, paidAt) VALUES
-(1, 1, 'INV-202609-001', 'INITIAL_RENTAL', 15000000.00, 15000000.00, 0.00, '/invoices/INV-202609-001.pdf', '2026-08-30 09:15:00', '2026-09-01 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_998811', 'SUCCESS', 'VNP14882711', '2026-08-30 09:20:00'),
-(2, 2, 'INV-202609-002', 'INITIAL_RENTAL', 8000000.00, 8000000.00, 0.00, '/invoices/INV-202609-002.pdf', '2026-09-14 14:40:00', '2026-09-15 23:59:59', 'PAID', 'BANK_TRANSFER', 'MB_BANK_882910', 'SUCCESS', 'FT2625718991', '2026-09-14 14:45:00');
+-- Hóa đơn tiền thuê ban đầu (INITIAL_RENTAL)
+(1, 1, 'INV-HN01-2609-001', 'INITIAL_RENTAL', 4000000.00, 4000000.00, 0.00, '/invoices/INV-001.pdf', '2026-08-30 09:15:00', '2026-09-01 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_998811', 'SUCCESS', 'VNP14882711', '2026-08-30 09:20:00'),
+(2, 2, 'INV-HN01-2609-002', 'INITIAL_RENTAL', 3600000.00, 3600000.00, 0.00, '/invoices/INV-002.pdf', '2026-09-14 14:40:00', '2026-09-15 23:59:59', 'PAID', 'BANK_TRANSFER', 'MB_BANK_882910', 'SUCCESS', 'FT2625718991', '2026-09-14 14:45:00'),
+(3, 3, 'INV-HN01-2609-003', 'INITIAL_RENTAL', 600000.00, 600000.00, 0.00, '/invoices/INV-003.pdf', '2026-09-19 11:10:00', '2026-09-20 23:59:59', 'PAID', 'VIETQR', 'VIETQR_992102', 'SUCCESS', 'QR992102', '2026-09-19 11:15:00'),
+(4, 4, 'INV-HN01-2609-004', 'OVERDUE_FEE', 120000.00, 0.00, 120000.00, '/invoices/INV-004.pdf', '2026-09-02 00:00:00', '2026-09-05 23:59:59', 'OVERDUE', NULL, NULL, 'PENDING', NULL, NULL),
+(5, 5, 'INV-HN01-2609-005', 'INITIAL_RENTAL', 1200000.00, 1200000.00, 0.00, '/invoices/INV-005.pdf', '2026-09-24 16:10:00', '2026-09-25 23:59:59', 'PAID', 'MOMO', 'MOMO_881902', 'SUCCESS', 'MM881902', '2026-09-24 16:15:00'),
+(6, 6, 'INV-HN02-2609-001', 'INITIAL_RENTAL', 8000000.00, 8000000.00, 0.00, '/invoices/INV-006.pdf', '2026-09-08 10:15:00', '2026-09-10 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_882199', 'SUCCESS', 'VNP882199', '2026-09-08 10:20:00'),
+(7, 7, 'INV-HN02-2609-002', 'INITIAL_RENTAL', 1200000.00, 1200000.00, 0.00, '/invoices/INV-007.pdf', '2026-09-10 15:10:00', '2026-09-12 23:59:59', 'PAID', 'VIETQR', 'VIETQR_339102', 'SUCCESS', 'QR339102', '2026-09-10 15:15:00'),
+(8, 8, 'INV-HCM01-2609-001', 'INITIAL_RENTAL', 8640000.00, 8640000.00, 0.00, '/invoices/INV-008.pdf', '2026-09-03 09:40:00', '2026-09-05 23:59:59', 'PAID', 'BANK_TRANSFER', 'VCB_772910', 'SUCCESS', 'VCB772910', '2026-09-03 09:45:00'),
+(9, 9, 'INV-HCM01-2609-002', 'INITIAL_RENTAL', 1440000.00, 1440000.00, 0.00, '/invoices/INV-009.pdf', '2026-09-17 14:10:00', '2026-09-18 23:59:59', 'PAID', 'MOMO', 'MOMO_339102', 'SUCCESS', 'MM339102', '2026-09-17 14:15:00'),
+(10, 10, 'INV-HCM02-2609-001', 'INITIAL_RENTAL', 8000000.00, 8000000.00, 0.00, '/invoices/INV-010.pdf', '2026-08-31 16:10:00', '2026-09-02 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_552199', 'SUCCESS', 'VNP552199', '2026-08-31 16:15:00'),
+(11, 11, 'INV-HCM03-2609-001', 'INITIAL_RENTAL', 4000000.00, 4000000.00, 0.00, '/invoices/INV-011.pdf', '2026-09-04 10:40:00', '2026-09-05 23:59:59', 'PAID', 'BANK_TRANSFER', 'TCB_992102', 'SUCCESS', 'TCB992102', '2026-09-04 10:45:00'),
+(12, 12, 'INV-DN01-2609-001', 'INITIAL_RENTAL', 2400000.00, 2400000.00, 0.00, '/invoices/INV-012.pdf', '2026-09-14 09:10:00', '2026-09-15 23:59:59', 'PAID', 'VIETQR', 'VIETQR_771920', 'SUCCESS', 'QR771920', '2026-09-14 09:15:00'),
+(13, 13, 'INV-CT01-2609-001', 'INITIAL_RENTAL', 8000000.00, 8000000.00, 0.00, '/invoices/INV-013.pdf', '2026-09-09 11:30:00', '2026-09-10 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_119201', 'SUCCESS', 'VNP119201', '2026-09-09 11:35:00');
 
--- 18. GatePins (Mã PIN động mẫu)
+-- 17. Mã PIN động mở cổng IoT 24/7 (GatePins)
 INSERT INTO GatePin (gatePinId, contractId, pinCode, status, generatedAt, expiresAt) VALUES
 (1, 1, '839201', 'ACTIVE', '2026-09-25 18:00:00', '2026-09-25 18:00:30'),
-(2, 2, '194726', 'EXPIRED', '2026-09-25 17:59:00', '2026-09-25 17:59:30');
+(2, 2, '194726', 'EXPIRED', '2026-09-25 17:59:00', '2026-09-25 17:59:30'),
+(3, 3, '551920', 'ACTIVE', '2026-09-25 18:02:00', '2026-09-25 18:02:30'),
+(4, 5, '339102', 'ACTIVE', '2026-09-25 18:05:00', '2026-09-25 18:05:30'),
+(5, 8, '771920', 'ACTIVE', '2026-09-25 18:08:00', '2026-09-25 18:08:30');
 
--- 19. AuditLogs (Quẹt cổng cơ sở)
-INSERT INTO AuditLog (auditLogId, accountId, action, createdAt) VALUES
-(1, 7, 'GATE_ACCESS_GRANTED - HN-01 Gate 1', '2026-09-25 08:30:15'),
-(2, 8, 'GATE_ACCESS_GRANTED - HCM-01 VIP Gate', '2026-09-25 10:15:40');
+-- 18. Nhật ký quẹt cổng cơ sở (AuditLogs)
+INSERT INTO AuditLog (auditLogId, accountId, facilityId, customerId, action, openedAt, reason, createdAt) VALUES
+(1, 13, 1, 1, 'GATE_ACCESS_GRANTED - HN-01 Cổng Chính', '2026-09-25 08:30:15', 'Mã PIN động hợp lệ', '2026-09-25 08:30:15'),
+(2, 14, 1, 2, 'GATE_ACCESS_GRANTED - HN-01 Thang máy hàng', '2026-09-25 10:15:40', 'Mã PIN động hợp lệ', '2026-09-25 10:15:40'),
+(3, 15, 3, 3, 'GATE_ACCESS_GRANTED - HCM-01 Cổng VIP', '2026-09-25 14:20:10', 'Mã PIN động hợp lệ', '2026-09-25 14:20:10'),
+(4, 16, 4, 4, 'GATE_ACCESS_GRANTED - HCM-02 Cổng Xe Tải', '2026-09-25 15:45:00', 'Mã PIN động hợp lệ', '2026-09-25 15:45:00');
 
--- 20. SupportTickets
-INSERT INTO SupportTicket (ticketId, contractId, ticketCode, category, description, status, submittedAt, acceptedAt, resolvedAt, slaDeadline) VALUES
-(1, 1, 'TK-202609-001', 'ACCESS_GATE', 'Mã PIN động đôi lúc chậm hiển thị trên mobile app', 'RESOLVED', '2026-09-20 14:00:00', '2026-09-20 14:15:00', '2026-09-20 15:30:00', '2026-09-20 18:00:00'),
-(2, 2, 'TK-202609-002', 'CLEANLINESS', 'Yêu cầu hỗ trợ thêm xe nâng pallet tại tầng trệt', 'IN_PROGRESS', '2026-09-25 09:00:00', '2026-09-25 09:10:00', NULL, '2026-09-25 13:00:00');
+-- 19. Yêu cầu hỗ trợ & Sự cố vận hành SLA (SupportTickets)
+INSERT INTO SupportTicket (id, ticketCode, type, status, customerId, facilityId, unitCode, contractId, title, description, desiredDate, assignedStaffId, slaDeadline, isSlaBreached, identityVerified, resolutionNote, createdAt, resolvedAt) VALUES
+(1, 'TK-HN01-202609-001', 'INCIDENT', 'RESOLVED', 1, 1, 'HN01-G-XL02', 1, 'Mã PIN mở cổng đôi lúc phản hồi chậm', 'Khách hàng quẹt cổng chính mất 5-10s để IoT nhận tín hiệu', NULL, 8, '2026-09-20 18:00:00', FALSE, TRUE, 'Đã cấu hình reset module controller cổng chính và tối ưu cache PIN', '2026-09-20 14:00:00', '2026-09-20 15:30:00'),
+(2, 'TK-HN01-202609-002', 'INCIDENT', 'IN_PROGRESS', 2, 1, 'HN01-F1-M01', 2, 'Cần mượn xe nâng pallet tầng trệt', 'Doanh nghiệp nhập thêm 2 kiện hàng nặng cần xe kéo tay trợ lực', NULL, 8, '2026-09-25 13:00:00', FALSE, TRUE, NULL, '2026-09-25 09:00:00', NULL),
+(3, 'TK-HCM01-202609-001', 'INCIDENT', 'RESOLVED', 3, 3, 'HCM01-G-XL01', 8, 'Kiểm tra độ ẩm kho mát VIP', 'Yêu cầu nhân viên kiểm tra nhiệt độ buồng kho rượu vang', NULL, 9, '2026-09-22 17:00:00', FALSE, TRUE, 'Nhiệt độ đo thực tế 23.5°C, độ ẩm 55%, đạt chuẩn bảo quản rượu vang', '2026-09-22 14:30:00', '2026-09-22 16:00:00'),
+(4, 'TK-HN02-202609-001', 'EARLY_TERMINATION', 'SUBMITTED', 4, 2, 'HN02-G-XL01', 6, 'Yêu cầu trả kho trước hạn 15 ngày', 'Khách hàng đã chuyển văn phòng xong và muốn làm thủ tục nghiệm thu bàn giao kho sớm', '2026-10-15', NULL, NULL, FALSE, FALSE, NULL, '2026-09-24 10:00:00', NULL),
+(5, 'TK-HCM02-202609-001', 'INCIDENT', 'IN_PROGRESS', 5, 4, 'HCM02-G-XL01', 10, 'Đèn chiếu sáng hành lang số 2 chập chờn', 'Đèn LED cảm biến phía trước cửa kho nhấp nháy vào ban đêm', NULL, 10, '2026-09-25 20:00:00', FALSE, TRUE, NULL, '2026-09-25 16:30:00', NULL);
+
+-- ============================================================================
+-- HOÀN TẤT KHỞI TẠO CƠ SỞ DỮ LIỆU SMART STORAGE SYSTEM
+-- ============================================================================
