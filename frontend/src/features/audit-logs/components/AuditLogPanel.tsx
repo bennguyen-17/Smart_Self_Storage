@@ -8,11 +8,16 @@ import {
   DateFilter,
   FilterBar,
   LoadError,
+  Pagination,
   ResultCount,
   SearchFilter,
   SelectFilter,
   TableCard,
 } from "@/features/internal-shell/components/PanelKit"
+import {
+  paginate,
+  PAGE_SIZE_OPTIONS,
+} from "@/features/internal-shell/pagination"
 import { useAsyncData } from "@/hooks/useAsyncData"
 import { formatDateTime, todayInVietnam } from "@/lib/format"
 
@@ -43,15 +48,21 @@ const EMPTY_FILTER: ActivityFilter = {
 function AuditLogPanel() {
   const [reloadCount, setReloadCount] = useState(0)
   const [filter, setFilter] = useState<ActivityFilter>(EMPTY_FILTER)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0])
   const { data, error, isLoading } = useAsyncData(
     `activity:${filter.from}:${filter.to}#${reloadCount}`,
     () => listActivityLogs({ from: filter.from, to: filter.to })
   )
   const all = data ?? []
   const rows = filterActivityLogs(all, filter)
+  const slice = paginate(rows, page, pageSize)
   const rangeOk = isRangeValid(filter.from, filter.to)
-  const update = (patch: Partial<ActivityFilter>) =>
+  // Đổi bộ lọc thì quay về trang 1, tránh đứng ở trang không còn dữ liệu
+  const update = (patch: Partial<ActivityFilter>) => {
     setFilter((f) => ({ ...f, ...patch }))
+    setPage(1)
+  }
 
   if (error) {
     return (
@@ -144,7 +155,7 @@ function AuditLogPanel() {
             : "Không có bản ghi phù hợp bộ lọc"
         }
       >
-        {rows.map((l) => (
+        {slice.rows.map((l) => (
           <tr
             key={l.activityLogId}
             className="border-b align-top last:border-0"
@@ -180,6 +191,18 @@ function AuditLogPanel() {
           </tr>
         ))}
       </TableCard>
+
+      <Pagination
+        slice={slice}
+        total={rows.length}
+        unit="bản ghi"
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size)
+          setPage(1)
+        }}
+      />
     </section>
   )
 }
