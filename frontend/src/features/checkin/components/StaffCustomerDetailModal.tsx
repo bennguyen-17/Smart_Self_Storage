@@ -96,7 +96,9 @@ function Body({
           <div className="text-title space-y-1.5">
             <div>
               <span className="block text-[10px] text-muted">Số CCCD:</span>
-              <span className="text-title font-mono text-sm font-bold">—</span>
+              <span className="text-title font-mono text-sm font-bold">
+                {contract.customerIdNumber ?? "—"}
+              </span>
             </div>
             <div>
               <span className="block text-[10px] text-muted">
@@ -108,7 +110,9 @@ function Body({
             </div>
             <div>
               <span className="block text-[10px] text-muted">Email:</span>
-              <span className="text-title font-mono text-sm font-bold">—</span>
+              <span className="text-title font-mono text-sm font-bold">
+                {contract.customerEmail ?? "—"}
+              </span>
             </div>
           </div>
         </div>
@@ -128,7 +132,7 @@ function Body({
             </div>
             <div className="flex items-center justify-between">
               <span>Thời gian thuê:</span>
-              <b className="text-title">—</b>
+              <b className="text-title">{contract.rentalDuration ?? "—"}</b>
             </div>
             <div className="flex items-center justify-between">
               <span>Ngày bắt đầu:</span>

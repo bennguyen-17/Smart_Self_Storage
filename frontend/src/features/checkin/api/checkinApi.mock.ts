@@ -33,6 +33,9 @@ const SEEDS: Seed[] = [
     reservationCode: "RES-CG-8899-K7X2",
     customerName: "Nguyễn Văn Khách",
     customerPhone: "0988 123 719",
+    customerIdNumber: "079201008899",
+    customerEmail: "khach.nguyen@gmail.com",
+    rentalDuration: "1 tháng",
     unitCode: "F2-M205",
     floorName: "Tầng 2",
     reservationStatus: "CONFIRMED",
@@ -54,6 +57,9 @@ const SEEDS: Seed[] = [
     reservationCode: "RES-CG-9900-M12",
     customerName: "Phạm Minh Hoàng",
     customerPhone: "0909 555 246",
+    customerIdNumber: "079198007766",
+    customerEmail: "hoang.pham@gmail.com",
+    rentalDuration: "1 tháng",
     unitCode: "F3-S301",
     floorName: "Tầng 3",
     reservationStatus: "CONFIRMED",
@@ -75,6 +81,9 @@ const SEEDS: Seed[] = [
     reservationCode: "HD-CG-2026-902",
     customerName: "Trần Thị Bích",
     customerPhone: "0912 777 333",
+    customerIdNumber: "079195006655",
+    customerEmail: "bich.tran@gmail.com",
+    rentalDuration: "1 tháng",
     unitCode: "F1-XL104",
     floorName: "Tầng 1",
     reservationStatus: "CONFIRMED",
@@ -97,6 +106,9 @@ const SEEDS: Seed[] = [
     reservationCode: "HD-CG-8812",
     customerName: "Lê Văn C",
     customerPhone: "0938 222 111",
+    customerIdNumber: "079199005544",
+    customerEmail: "c.le@gmail.com",
+    rentalDuration: "1 tháng",
     unitCode: "F1-M102",
     floorName: "Tầng 1",
     reservationStatus: "CONFIRMED",
@@ -118,6 +130,9 @@ const SEEDS: Seed[] = [
     reservationCode: "HD-CG-2026-701",
     customerName: "Vũ Thùy Linh",
     customerPhone: "0977 888 999",
+    customerIdNumber: "079200004433",
+    customerEmail: "linh.vu@gmail.com",
+    rentalDuration: "1 tháng",
     unitCode: "F2-L202",
     floorName: "Tầng 2",
     reservationStatus: "CANCELLED",
@@ -140,6 +155,9 @@ const SEEDS: Seed[] = [
     reservationCode: "RES-TX-2211-B8NC",
     customerName: "Võ Thị Hạnh",
     customerPhone: "0977 111 222",
+    customerIdNumber: "079193003322",
+    customerEmail: "hanh.vo@gmail.com",
+    rentalDuration: "1 tháng",
     unitCode: "HN02-1-M03",
     floorName: "Tầng 1",
     reservationStatus: "CONFIRMED",
@@ -182,6 +200,9 @@ function toItem(seed: Seed): StaffReservationItem {
     reservationId: seed.reservationId,
     reservationCode: seed.reservationCode,
     customerName: seed.customerName,
+    customerIdNumber: seed.customerIdNumber,
+    customerEmail: seed.customerEmail,
+    rentalDuration: seed.rentalDuration,
     customerPhone: seed.customerPhone,
     unitCode: seed.unitCode,
     floorName: seed.floorName,
@@ -331,7 +352,9 @@ export function mockRenewAtCounter(
     return fail("Contract must be OVERDUE to renew at the counter.")
   }
   if ((seed.unpaidPenaltyAmount ?? 0) > 0) {
-    return fail("Cannot renew at the counter while unpaid overdue penalties remain.")
+    return fail(
+      "Cannot renew at the counter while unpaid overdue penalties remain."
+    )
   }
 
   const months = payload.months
@@ -353,8 +376,7 @@ export function mockRenewAtCounter(
     unitStatus: "RENTED",
     invoiceNumber: randomInvoiceNumber("EXT"),
     amount,
-    discountPercent:
-      months >= 12 ? 15 : months >= 6 ? 10 : months >= 3 ? 5 : 0,
+    discountPercent: months >= 12 ? 15 : months >= 6 ? 10 : months >= 3 ? 5 : 0,
     newExpiryDate: newExpiry,
     gatePin: "839201",
   })

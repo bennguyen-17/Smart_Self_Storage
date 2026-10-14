@@ -10,12 +10,15 @@ const overdueItem: StaffReservationItem = {
   reservationId: 104,
   reservationCode: "HD-CG-8812",
   customerName: "Lê Văn C",
+  customerIdNumber: "079199005544",
+  customerEmail: "c.le@gmail.com",
   customerPhone: "0938 222 111",
   unitCode: "F1-M102",
   floorName: "Tầng 1",
   reservationStatus: "CONFIRMED",
   checkInDate: "2026-09-06",
   endDate: "2026-10-06",
+  rentalDuration: "1 tháng",
   overdueDays: 3,
   unpaidPenaltyAmount: 150_000,
   monthlyPrice: 1_500_000,
@@ -50,7 +53,9 @@ function renderTable(item: StaffReservationItem) {
 describe("CheckinContractTable: hành động cho HĐ OVERDUE (US-20)", () => {
   test("hiển thị nút Thu phạt & Gia hạn", () => {
     renderTable(overdueItem)
-    expect(screen.getByRole("button", { name: /thu phạt/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: /thu phạt/i })
+    ).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /gia hạn/i })).toBeInTheDocument()
   })
 

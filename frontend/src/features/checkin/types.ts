@@ -10,6 +10,8 @@ export interface StaffReservationItem {
   reservationId: number
   reservationCode: string
   customerName: string | null
+  customerIdNumber: string | null // CCCD / CMND
+  customerEmail: string | null
   customerPhone: string | null
   unitCode: string | null
   floorName: string | null
@@ -23,6 +25,8 @@ export interface StaffReservationItem {
   depRemainingAmount: number | null
   // US-20: thông tin quá hạn & phạt cho tab CHECK-IN
   endDate: string | null // YYYY-MM-DD
+  /** BE-16 bổ sung: nhãn thời gian thuê (vd "1 tháng") */
+  rentalDuration: string | null
   overdueDays: number | null
   unpaidPenaltyAmount: number | null
   monthlyPrice: number | null
