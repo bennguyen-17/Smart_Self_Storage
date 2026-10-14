@@ -25,6 +25,9 @@ export interface StaffReservationItem {
   depRemainingAmount: number | null
   // US-20: thông tin quá hạn & phạt cho tab CHECK-IN
   endDate: string | null // YYYY-MM-DD
+  /** BE-16 gửi ngày bắt đầu/kết thúc thật của đơn (endDate phía trên có thể không có) */
+  reservationStartDate?: string | null // YYYY-MM-DD
+  reservationEndDate?: string | null // YYYY-MM-DD
   /** BE-16 bổ sung: nhãn thời gian thuê (vd "1 tháng") */
   rentalDuration: string | null
   overdueDays: number | null

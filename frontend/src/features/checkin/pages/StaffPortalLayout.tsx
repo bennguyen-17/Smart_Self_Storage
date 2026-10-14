@@ -18,8 +18,7 @@ function resolveIsDark(theme: string): boolean {
 }
 
 /**
- * Khung cổng nhân viên vận hành — sidebar nghiệp vụ + dải thông tin staff.
- * Nội dung từng nghiệp vụ render qua <Outlet /> theo URL (/staff/checkin|support|pin).
+ * Khung cổng nhân viên vận hành
  */
 function StaffPortalLayout() {
   const { theme, setTheme } = useTheme()
@@ -38,7 +37,7 @@ function StaffPortalLayout() {
 
   return (
     <div className="staff-portal antialiased">
-      {/* Nền ambient — đồng bộ với CustomerLayout (src/components/layouts/CustomerLayout.tsx) */}
+      {/* Nền ambient  */}
       <div
         className={`pointer-events-none fixed inset-0 z-0 transition-colors ${
           isDark

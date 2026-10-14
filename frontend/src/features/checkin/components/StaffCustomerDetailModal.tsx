@@ -136,12 +136,14 @@ function Body({
             </div>
             <div className="flex items-center justify-between">
               <span>Ngày bắt đầu:</span>
-              <b className="text-title">{formatDate(contract.checkInDate)}</b>
+              <b className="text-title">
+                {formatDate(contract.reservationStartDate)}
+              </b>
             </div>
             <div className="flex items-center justify-between">
               <span>Ngày kết thúc:</span>
               <b className="text-rose-600 dark:text-rose-400">
-                {formatDate(contract.endDate)}
+                {formatDate(contract.reservationEndDate)}
               </b>
             </div>
             {contract.contractStatus === "OVERDUE" && (
