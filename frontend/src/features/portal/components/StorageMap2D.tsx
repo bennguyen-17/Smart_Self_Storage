@@ -9,6 +9,7 @@ export const facilityData: Record<string, {
   floors: number;
   city: string;
   image: string;
+  layoutType?: string;
 }> = {
   'HN-01': {
     name: 'SmartStorage Cầu Giấy (HN-01)',
@@ -151,7 +152,12 @@ export default function StorageMap2D({
         floors: matchedBranch.floors || 3,
         layoutType: (matchedBranch.layoutType || 'A').toUpperCase(),
       }
-    : (facility && facilityData[facility]) ? facilityData[facility] : null;
+    : (facility && facilityData[facility])
+      ? {
+          ...facilityData[facility],
+          layoutType: ['HN-02', 'HCM-02', 'HCM-03', 'CT-01'].includes(facility) ? 'B' : 'A',
+        }
+      : null;
 
   // Gọi API lấy danh sách ô kho theo cơ sở và tầng
   useEffect(() => {
@@ -512,11 +518,11 @@ export default function StorageMap2D({
           </div>
           <div className="flex items-center gap-2">
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-              currentFacilityObj.layoutType === 'B'
+              currentFacilityObj?.layoutType === 'B'
                 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
                 : 'bg-blue-500/10 text-blue-600 dark:text-cyan-400 border-blue-500/30'
             }`}>
-              {currentFacilityObj.layoutType === 'B' ? 'Mô hình Layout B (15 ô kho)' : 'Mô hình Layout A (46 ô kho)'}
+              {currentFacilityObj?.layoutType === 'B' ? 'Mô hình Layout B (15 ô kho)' : 'Mô hình Layout A (46 ô kho)'}
             </span>
             <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">
               {units.length} ô kho tầng này

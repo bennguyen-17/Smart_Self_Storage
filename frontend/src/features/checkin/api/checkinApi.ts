@@ -4,7 +4,7 @@
 import { isAxiosError } from "axios"
 
 import { getErrorMessage, unwrapApiData } from "@/lib/api"
-import apiClient, { isMockMode } from "@/lib/apiClient"
+import apiClient from "@/lib/apiClient"
 import type { UnitDetailResponse } from "@/types"
 
 import type {
@@ -19,19 +19,9 @@ import type {
   StaffReservationItem,
   StaffReservationLookup,
 } from "../types"
-import {
-  mockCancelReservation,
-  mockChangeUnit,
-  mockCheckIn,
-  mockCollectPenalty,
-  mockListReservations,
-  mockLookupReservation,
-  mockRenewAtCounter,
-} from "./checkinApi.mock"
 
 /** GET /api/staff/reservations — BE tự lọc theo cơ sở của Staff. */
 export async function listCheckinContracts(): Promise<StaffReservationItem[]> {
-  if (isMockMode()) return mockListReservations()
   const body = await apiClient.get("/staff/reservations")
   return unwrapApiData<StaffReservationItem[]>(body) ?? []
 }
@@ -40,7 +30,6 @@ export async function listCheckinContracts(): Promise<StaffReservationItem[]> {
 export async function lookupContract(
   code: string
 ): Promise<StaffReservationLookup> {
-  if (isMockMode()) return mockLookupReservation(code)
   const body = await apiClient.get("/staff/reservations/lookup", {
     params: { code },
   })
@@ -52,7 +41,6 @@ export async function confirmCheckin(
   reservationId: number,
   payload: StaffCheckInRequest
 ): Promise<StaffCheckInResponse> {
-  if (isMockMode()) return mockCheckIn(reservationId, payload)
   const body = await apiClient.post(
     `/staff/reservations/${reservationId}/check-in`,
     payload
@@ -65,7 +53,6 @@ export async function changeUnit(
   reservationId: number,
   payload: { newUnitCode: string }
 ): Promise<StaffChangeUnitResponse> {
-  if (isMockMode()) return mockChangeUnit(reservationId, payload.newUnitCode)
   const body = await apiClient.post(
     `/staff/reservations/${reservationId}/change-unit`,
     payload
@@ -77,7 +64,6 @@ export async function changeUnit(
 export async function counterCancel(
   reservationId: number
 ): Promise<StaffCancelReservationResponse> {
-  if (isMockMode()) return mockCancelReservation(reservationId)
   const body = await apiClient.post(
     `/staff/reservations/${reservationId}/cancel`,
     {}
@@ -93,7 +79,6 @@ export async function collectPenalty(
   reservationId: number,
   payload: CollectPenaltyRequest
 ): Promise<CollectPenaltyResponse> {
-  if (isMockMode()) return mockCollectPenalty(reservationId)
   const body = await apiClient.post(
     `/staff/reservations/${reservationId}/collect-penalty`,
     payload
@@ -109,7 +94,6 @@ export async function renewAtCounter(
   reservationId: number,
   payload: RenewAtCounterRequest
 ): Promise<RenewAtCounterResponse> {
-  if (isMockMode()) return mockRenewAtCounter(reservationId, payload)
   const body = await apiClient.post(
     `/staff/reservations/${reservationId}/renew-at-counter`,
     payload

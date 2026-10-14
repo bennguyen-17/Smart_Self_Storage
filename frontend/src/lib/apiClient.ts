@@ -3,10 +3,8 @@ import axios from 'axios';
 // Base URL lấy từ biến môi trường .env hoặc mặc định Spring Boot (KHÔNG CÓ /v1)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
-// Cờ bật tắt Mock Data: mặc định là true nếu chưa nối backend
-export const isMockMode = () => {
-  return import.meta.env.VITE_USE_MOCK !== 'false';
-};
+// Cờ bật tắt Mock Data: Khóa cứng = false trên mọi máy (Luôn luôn gọi Backend thật 100%, không dùng Mock)
+export const isMockMode = () => false;
 
 // Hàm kiểm tra token JWT
 export const isTokenValid = (token: string | null) => {
