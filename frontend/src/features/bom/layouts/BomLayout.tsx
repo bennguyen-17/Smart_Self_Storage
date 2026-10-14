@@ -155,28 +155,31 @@ function BomLayoutContent() {
             )}
           </button>
 
-          <div className="h-5 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block"></div>
-
-          {/* User Profile Pill */}
-          <button
-            onClick={() => setIsProfileModalOpen(true)}
-            className="flex items-center space-x-2 px-2.5 sm:px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white text-slate-900 hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 transition cursor-pointer shadow-xs group text-left shrink-0"
-            title="Nhấn để xem Hồ sơ & Đăng xuất"
-            type="button"
-          >
-            <div className="w-7 h-7 rounded-full bg-sky-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
-              {userInitials}
-            </div>
-            <div className="text-left hidden md:block">
-              <div className="text-xs font-extrabold text-slate-900 dark:text-white leading-tight flex items-center space-x-1">
-                <span className="max-w-[130px] truncate">{currentUserName}</span>
-                <ChevronDown className="size-3 text-slate-400 group-hover:text-sky-400 transition-colors ml-0.5 shrink-0" />
-              </div>
-              <div className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 truncate max-w-[130px]">
-                {currentUserRole}
-              </div>
-            </div>
-          </button>
+          {/* User Profile Pill - Chỉ hiện trên Header khi ở trang chủ Tổng Quan (nơi không có thanh sidebar bên trái) */}
+          {isHome && (
+            <>
+              <div className="h-5 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block"></div>
+              <button
+                onClick={() => setIsProfileModalOpen(true)}
+                className="flex items-center space-x-2 px-2.5 sm:px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white text-slate-900 hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 transition cursor-pointer shadow-xs group text-left shrink-0"
+                title="Nhấn để xem Hồ sơ & Đăng xuất"
+                type="button"
+              >
+                <div className="w-7 h-7 rounded-full bg-sky-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+                  {userInitials}
+                </div>
+                <div className="text-left hidden md:block">
+                  <div className="text-xs font-extrabold text-slate-900 dark:text-white leading-tight flex items-center space-x-1">
+                    <span className="max-w-[130px] truncate">{currentUserName}</span>
+                    <ChevronDown className="size-3 text-slate-400 group-hover:text-sky-400 transition-colors ml-0.5 shrink-0" />
+                  </div>
+                  <div className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 truncate max-w-[130px]">
+                    {currentUserRole}
+                  </div>
+                </div>
+              </button>
+            </>
+          )}
         </div>
       </header>
 
@@ -297,6 +300,32 @@ function BomLayoutContent() {
                     })}
                   </nav>
                 </div>
+              </div>
+
+              {/* Phần dưới cùng: User Profile Pill ở góc dưới cùng bên trái */}
+              <div className="pt-3 border-t border-slate-800/80 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsProfileModalOpen(true)
+                    setIsMobileSidebarOpen(false)
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-left transition cursor-pointer group shadow-sm"
+                  title="Nhấn để xem Hồ sơ & Đăng xuất"
+                >
+                  <div className="size-8.5 rounded-full bg-sky-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+                    {userInitials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-black text-white truncate flex items-center justify-between">
+                      <span className="truncate">{currentUserName}</span>
+                      <ChevronDown className="size-3.5 text-slate-400 group-hover:text-sky-400 transition-colors shrink-0 ml-1" />
+                    </div>
+                    <div className="text-[10.5px] font-semibold text-sky-400 truncate mt-0.5">
+                      {currentUserRole}
+                    </div>
+                  </div>
+                </button>
               </div>
             </motion.aside>
           </>
