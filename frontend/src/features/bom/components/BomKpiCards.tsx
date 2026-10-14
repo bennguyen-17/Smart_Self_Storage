@@ -83,7 +83,7 @@ export default function BomKpiCards() {
         </div>
         <div className="text-[11px] text-slate-400 font-medium">
           {chainOverview
-            ? (totalOverdueCount > 0 ? "Cần kích hoạt BR-18 / BR-21" : "An toàn - Không có nợ quá hạn")
+            ? (totalOverdueCount > 0 ? "Cần xử lý" : "An toàn - Không có nợ quá hạn")
             : "0 Đơn quá hạn"}
         </div>
       </div>

@@ -16,9 +16,10 @@ export interface FacilityPerformance {
   overdueUnits: number
   occupancyRate?: number
   priceMultiplier?: number
-  note?: string
   status: string
   rating: string
+  layoutType?: string
+  floorCount?: number
 }
 
 export interface UnitPricing {

@@ -1,12 +1,18 @@
 import {
   BanIcon,
+  CalendarPlusIcon,
   EyeIcon,
   InboxIcon,
   PackageOpenIcon,
-  TriangleAlertIcon,
+  ReceiptTextIcon,
   UserCheckIcon,
 } from "lucide-react"
 import { cn } from "cn"
+
+import {
+  SIZE_AREA_M2,
+  unitSizeFromCode,
+} from "@/features/floor-plan/unitDisplay"
 
 import type { StaffReservationItem } from "../types"
 
@@ -18,27 +24,24 @@ interface CheckinContractTableProps {
   onOpenDetail: (item: StaffReservationItem) => void
   onCheckin: (item: StaffReservationItem) => void
   onCheckout: (item: StaffReservationItem) => void
+  /** US-20: mở dialog thu phạt quá hạn tại quầy */
+  onCollectPenalty: (item: StaffReservationItem) => void
+  /** US-20: mở dialog gia hạn tại quầy */
+  onRenew: (item: StaffReservationItem) => void
   /** unitCode → nhãn "Size M (3m²)" để hiển thị cạnh vị trí kho */
   unitMeta?: Record<string, string>
-}
-
-const CODE_COLOR: Record<string, string> = {
-  PENDING_CHECKIN: "text-blue-600",
-  ACTIVE: "text-emerald-600",
-  OVERDUE: "text-rose-600",
-  CANCELED: "text-slate-500",
-}
-
-const UNIT_COLOR: Record<string, string> = {
-  PENDING_CHECKIN: "text-blue-600",
-  OVERDUE: "text-rose-600",
-  CANCELED: "text-slate-500",
 }
 
 /** Dòng phụ dưới mã HĐ (bám prototype) */
 function codeSubtitle(status: string | null): string | null {
   if (status === "CANCELED") return "Đã hoàn tiền cọc"
   return null
+}
+
+/** Nhãn size dự phòng từ mã ô kho ("F2-M205" → "Size M (3m²)") khi chưa tải được danh sách ô. */
+function sizeMetaFromCode(unitCode: string): string | undefined {
+  const size = unitSizeFromCode(unitCode)
+  return size ? `Size ${size} (${SIZE_AREA_M2[size]}m²)` : undefined
 }
 
 /** Bảng hợp đồng 5 cột — bám prototype staff_portal.html */
@@ -50,6 +53,8 @@ function CheckinContractTable({
   onOpenDetail,
   onCheckin,
   onCheckout,
+  onCollectPenalty,
+  onRenew,
   unitMeta,
 }: CheckinContractTableProps) {
   if (error) {
@@ -77,7 +82,7 @@ function CheckinContractTable({
             <th className="w-[15%] px-4 py-3.5">Thông tin Khách hàng</th>
             <th className="w-[15%] px-4 py-3.5">Kho &amp; Vị trí</th>
             <th className="w-[15%] px-4 py-3.5">Trạng thái</th>
-            <th className="w-[15%] px-4 py-3.5 text-center">Chi tiết</th>
+            <th className="w-[15%] px-4 py-3.5">Chi tiết</th>
           </tr>
         </thead>
         <tbody className="text-title divide-y divide-slate-200 dark:divide-slate-800">
@@ -104,7 +109,9 @@ function CheckinContractTable({
           {!isLoading &&
             rows?.map((item) => {
               const subtitle = codeSubtitle(item.contractStatus)
-              const meta = item.unitCode ? unitMeta?.[item.unitCode] : undefined
+              const meta = item.unitCode
+                ? (unitMeta?.[item.unitCode] ?? sizeMetaFromCode(item.unitCode))
+                : undefined
               return (
                 <tr
                   key={item.reservationId}
@@ -115,13 +122,7 @@ function CheckinContractTable({
                   data-status={item.contractStatus ?? ""}
                 >
                   <td className="px-4 py-3.5 align-middle font-mono font-bold">
-                    <span
-                      className={cn(
-                        "block font-bold",
-                        CODE_COLOR[item.contractStatus ?? ""] ??
-                          "text-slate-600"
-                      )}
-                    >
+                    <span className="text-title block font-bold">
                       {item.reservationCode}
                     </span>
                     {subtitle && (
@@ -138,12 +139,7 @@ function CheckinContractTable({
                   </td>
 
                   <td className="px-4 py-3.5 align-middle">
-                    <span
-                      className={cn(
-                        "block font-bold",
-                        UNIT_COLOR[item.contractStatus ?? ""] ?? "text-title"
-                      )}
-                    >
+                    <span className="text-title block font-bold">
                       Kho {item.unitCode ?? "—"}
                     </span>
                     <span className="block text-[11px] text-muted">
@@ -156,14 +152,16 @@ function CheckinContractTable({
                       item={item}
                       onCheckin={onCheckin}
                       onCheckout={onCheckout}
+                      onCollectPenalty={onCollectPenalty}
+                      onRenew={onRenew}
                     />
                   </td>
 
-                  <td className="px-4 py-3.5 text-center align-middle">
+                  <td className="px-4 py-3.5 align-middle">
                     <button
                       type="button"
                       onClick={() => onOpenDetail(item)}
-                      className="mx-auto flex cursor-pointer items-center space-x-1 rounded-xl bg-slate-200 px-3 py-1.5 text-[11px] font-bold text-slate-700 transition hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-200"
+                      className="flex cursor-pointer items-center space-x-1 rounded-xl bg-slate-200 px-3 py-1.5 text-[11px] font-bold text-slate-700 transition hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-200"
                     >
                       <EyeIcon className="size-3.5" />
                       <span>Xem chi tiết</span>
@@ -182,17 +180,21 @@ function StatusAction({
   item,
   onCheckin,
   onCheckout,
+  onCollectPenalty,
+  onRenew,
 }: {
   item: StaffReservationItem
   onCheckin: (item: StaffReservationItem) => void
   onCheckout: (item: StaffReservationItem) => void
+  onCollectPenalty: (item: StaffReservationItem) => void
+  onRenew: (item: StaffReservationItem) => void
 }) {
   if (item.contractStatus === "PENDING_CHECKIN") {
     return (
       <button
         type="button"
         onClick={() => onCheckin(item)}
-        className="flex w-36 cursor-pointer items-center justify-center space-x-1.5 rounded-xl bg-blue-600 px-3 py-2 text-[11px] font-extrabold whitespace-nowrap text-white shadow-sm transition hover:bg-blue-700"
+        className="flex w-36 cursor-pointer items-center justify-center space-x-1.5 rounded-xl border border-blue-300 bg-blue-100 px-3 py-2 text-[11px] font-extrabold whitespace-nowrap text-blue-700 transition hover:bg-blue-200 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/50"
       >
         <UserCheckIcon className="size-3.5" />
         <span>Check-in</span>
@@ -205,7 +207,7 @@ function StatusAction({
       <button
         type="button"
         onClick={() => onCheckout(item)}
-        className="flex w-36 cursor-pointer items-center justify-center space-x-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-[11px] font-extrabold whitespace-nowrap text-white shadow-sm transition hover:bg-emerald-700"
+        className="flex w-36 cursor-pointer items-center justify-center space-x-1.5 rounded-xl border border-emerald-300 bg-emerald-100 px-3 py-2 text-[11px] font-extrabold whitespace-nowrap text-emerald-700 transition hover:bg-emerald-200 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
       >
         <PackageOpenIcon className="size-3.5" />
         <span>Xác nhận trả kho</span>
@@ -214,11 +216,26 @@ function StatusAction({
   }
 
   if (item.contractStatus === "OVERDUE") {
+    // US-20: thu phạt quá hạn & gia hạn tại quầy
     return (
-      <span className="flex w-36 items-center justify-center space-x-1.5 rounded-xl border border-rose-300 bg-rose-100 px-3 py-2 text-[11px] font-extrabold whitespace-nowrap text-rose-800 shadow-sm dark:border-rose-800 dark:bg-rose-950/80 dark:text-rose-300">
-        <TriangleAlertIcon className="size-3" />
-        <span>QUÁ HẠN</span>
-      </span>
+      <div className="flex w-36 flex-col gap-1">
+        <button
+          type="button"
+          onClick={() => onCollectPenalty(item)}
+          className="flex w-full cursor-pointer items-center justify-center space-x-1.5 rounded-xl border border-rose-300 bg-rose-100 px-3 py-1.5 text-[11px] font-extrabold whitespace-nowrap text-rose-700 transition hover:bg-rose-200 dark:border-rose-800 dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-900/50"
+        >
+          <ReceiptTextIcon className="size-3.5" />
+          <span>Thu phạt</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onRenew(item)}
+          className="flex w-full cursor-pointer items-center justify-center space-x-1.5 rounded-xl border border-rose-300 bg-rose-100 px-3 py-1.5 text-[11px] font-extrabold whitespace-nowrap text-rose-800 shadow-sm transition hover:bg-rose-200 dark:border-rose-800 dark:bg-rose-950/80 dark:text-rose-300"
+        >
+          <CalendarPlusIcon className="size-3.5" />
+          <span>Gia hạn</span>
+        </button>
+      </div>
     )
   }
 

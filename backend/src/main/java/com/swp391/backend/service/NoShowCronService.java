@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -22,17 +23,20 @@ public class NoShowCronService {
     private final StorageUnitRepository storageUnitRepository;
     private final PaymentRepository paymentRepository;
     private final ActivityLogRepository activityLogRepository;
+    private final OverdueService overdueService;
 
     public NoShowCronService(ContractRepository contractRepository,
                              ReservationRepository reservationRepository,
                              StorageUnitRepository storageUnitRepository,
                              PaymentRepository paymentRepository,
-                             ActivityLogRepository activityLogRepository) {
+                             ActivityLogRepository activityLogRepository,
+                             OverdueService overdueService) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
         this.paymentRepository = paymentRepository;
         this.activityLogRepository = activityLogRepository;
+        this.overdueService = overdueService;
     }
 
     // --- US-15: Cron Job chạy tự động lúc 00:00:00 hằng ngày ---
@@ -101,6 +105,14 @@ public class NoShowCronService {
         }
 
         return count;
+    }
+
+    // --- US-19: Cron Job kiểm tra hợp đồng quá hạn chạy tự động mỗi phút ---
+    @Scheduled(cron = "0 * * * * ?")
+    public void scheduledOverdueContractJob() {
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        int updatedCount = overdueService.markExpiredContracts(today);
+        log.info("Overdue contract job completed. Updated {} contracts for {}.", updatedCount, today);
     }
 
     // --- US-21: Cron Job nhắc hạn thuê lúc 08:00:00 hằng ngày ---

@@ -23,7 +23,16 @@ interface BomContextType {
   formatShortCurrency: (val?: number) => string
   reloadData: () => Promise<void>
   updatePricingInDb: (unitTypeId: number, data: { dailyPrice?: number; monthlyPrice?: number; depositAmount?: number; climateSurchargePercent?: number }) => Promise<boolean>
-  createFacilityInDb: (data: { facilityName: string; address: string; phone?: string }) => Promise<boolean>
+  createFacilityInDb: (data: {
+    facilityName: string
+    address: string
+    phone?: string
+    facilityCode?: string
+    layoutType?: string
+    floorCount?: number
+    isAllClimate?: boolean
+    managerName?: string
+  }) => Promise<boolean>
   updateFacilityInDb: (facilityId: number, data: { facilityName?: string; address?: string; phone?: string; status?: string }) => Promise<boolean>
   deleteFacilityInDb: (facilityId: number) => Promise<boolean>
 }
@@ -115,18 +124,27 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
           const maintenance = breakdown?.maintenanceUnits ?? fUnits.filter((u) => u.status === "MAINTENANCE").length
           const calcOccRate = totalUnits > 0 ? Number(((occupied / totalUnits) * 100).toFixed(1)) : 0
           const realOccRate = breakdown?.occupancyRate ?? calcOccRate
-          const rawRevenue = breakdown?.rentalRevenue ?? breakdown?.netRevenue ?? 0
-          const realRevenue = rawRevenue > 0 ? `₫${Number(rawRevenue).toLocaleString("vi-VN")}` : "₫0"
+          const rawRevenue = (breakdown?.netRevenue != null && Number(breakdown.netRevenue) > 0)
+            ? breakdown.netRevenue
+            : (breakdown?.rentalRevenue ?? 0)
+          const realRevenue = Number(rawRevenue) > 0 ? `₫${Number(rawRevenue).toLocaleString("vi-VN")}` : "₫0"
+
+          const rawName = f.facilityName || breakdown?.facilityName || `Cơ sở ${facId}`
+          const cleanName = rawName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+
+          const rawMgr = breakdown?.managerName || f.managerName || (f.managerId ? `Quản lý ID #${f.managerId}` : "Chưa phân công")
+          const cleanMgr = rawMgr.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+          const stdUnits = (f.layoutType === "B" || f.layoutType === "Layout B") ? 15 : 46
 
           return {
             id: facId,
             code: f.facilityCode || breakdown?.facilityCode || `FAC-0${idx + 1}`,
-            name: f.facilityName || breakdown?.facilityName || `Cơ sở ${facId}`,
+            name: cleanName || rawName,
             address: f.address || "Hệ thống cơ sở kho",
-            managerName: breakdown?.managerName || f.managerName || (f.managerId ? `Quản lý ID #${f.managerId}` : "Chưa phân công"),
+            managerName: cleanMgr || rawMgr,
             managerEmail: breakdown?.managerEmail || (f.managerId ? `manager${f.managerId}@smartstorage.vn` : "manager@smartstorage.vn"),
             managerPhone: breakdown?.managerPhone || f.phone || "0900000000",
-            totalUnits: totalUnits,
+            totalUnits: totalUnits > 0 ? totalUnits : stdUnits,
             occupied: occupied,
             rentedUnits: breakdown?.occupiedUnits ?? occupied,
             available: available,
@@ -138,6 +156,8 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
             status: f.status || "ACTIVE",
             rating: "5.0 ★",
             priceMultiplier: 1.0,
+            layoutType: f.layoutType || "A",
+            floorCount: f.floorCount || 3,
             note: "Dữ liệu vận hành đồng bộ trực tiếp từ Database",
           }
         })
@@ -146,16 +166,24 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
       } else if (overview && overview.facilityBreakdown && overview.facilityBreakdown.length > 0) {
         setIsApiConnected(true)
         const mappedFromBreakdown: FacilityPerformance[] = overview.facilityBreakdown.map((b, idx) => {
-          const rawRev = b.rentalRevenue ?? b.netRevenue ?? 0
+          const rawRev = (b.netRevenue != null && Number(b.netRevenue) > 0)
+            ? b.netRevenue
+            : (b.rentalRevenue ?? 0)
+          const rawName = b.facilityName || `Cơ sở ${b.facilityId}`
+          const cleanName = rawName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+          const rawMgr = b.managerName || "Chưa phân công"
+          const cleanMgr = rawMgr.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+          const isLayoutB = [2, 4, 5, 7].includes(Number(b.facilityId)) || String(b.facilityCode).includes("02") || String(b.facilityCode).includes("04") || String(b.facilityCode).includes("05") || String(b.facilityCode).includes("07")
+          const stdUnits = isLayoutB ? 15 : 46
           return {
             id: b.facilityId || idx + 1,
             code: b.facilityCode || `FAC-0${idx + 1}`,
-            name: b.facilityName || `Cơ sở ${b.facilityId}`,
+            name: cleanName || rawName,
             address: "Hệ thống chi nhánh SmartStorage",
-            managerName: b.managerName || "Chưa phân công",
+            managerName: cleanMgr || rawMgr,
             managerEmail: b.managerEmail || "manager@smartstorage.vn",
             managerPhone: b.managerPhone || "0900000000",
-            totalUnits: b.totalUnits || 0,
+            totalUnits: b.totalUnits && b.totalUnits > 0 ? b.totalUnits : stdUnits,
             occupied: b.occupiedUnits || 0,
             rentedUnits: b.occupiedUnits || 0,
             available: b.availableUnits || 0,
@@ -221,10 +249,26 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
   }
 
   // Thêm cơ sở kho lưu trực tiếp vào Database
-  const createFacilityInDb = async (data: { facilityName: string; address: string; phone?: string }): Promise<boolean> => {
+  const createFacilityInDb = async (data: {
+    facilityName: string
+    address: string
+    phone?: string
+    facilityCode?: string
+    layoutType?: string
+    floorCount?: number
+    isAllClimate?: boolean
+    managerName?: string
+  }): Promise<boolean> => {
     try {
       await bomApi.createFacility(data)
       await loadLiveData()
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("storage_facilities_updated"))
+        window.dispatchEvent(new CustomEvent("storage_units_updated"))
+        try {
+          localStorage.setItem("smart_storage_last_facility_sync", String(Date.now()))
+        } catch (e) {}
+      }
       return true
     } catch (err) {
       console.error("Lỗi thêm cơ sở vào database:", err)
@@ -240,6 +284,12 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
     try {
       await bomApi.updateFacility(facilityId, data)
       await loadLiveData()
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("storage_facilities_updated"))
+        try {
+          localStorage.setItem("smart_storage_last_facility_sync", String(Date.now()))
+        } catch (e) {}
+      }
       return true
     } catch (err) {
       console.error("Lỗi cập nhật cơ sở vào database:", err)
@@ -252,6 +302,13 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
     try {
       await bomApi.deleteFacility(facilityId)
       await loadLiveData()
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("storage_facilities_updated"))
+        window.dispatchEvent(new CustomEvent("storage_units_updated"))
+        try {
+          localStorage.setItem("smart_storage_last_facility_sync", String(Date.now()))
+        } catch (e) {}
+      }
       return true
     } catch (err) {
       console.error("Lỗi xóa mềm cơ sở trong database:", err)

@@ -35,8 +35,16 @@ public class SecurityConfig {
                                 "/api/staff/reservations/lookup",
                                 "/api/staff/reservations/*/check-in")
                         .hasRole("STAFF")
-                        .anyRequest().permitAll()
-                )
+
+                        .requestMatchers(
+                                "/api/staff/audit-logs/manual-gate-open")
+                        .hasRole("STAFF")
+
+                        .requestMatchers(
+                                "/api/manager/audit-logs/manual-gate-open")
+                        .hasRole("MANAGER")
+
+                        .anyRequest().permitAll())
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .addFilterBefore(

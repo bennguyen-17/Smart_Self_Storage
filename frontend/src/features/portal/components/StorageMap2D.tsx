@@ -113,7 +113,7 @@ export default function StorageMap2D({
     setSelectedStorageType(null);
   }, [facility]);
 
-  // Tải danh sách chi nhánh cơ sở từ Database
+  // Tải danh sách chi nhánh cơ sở từ Database & lắng nghe sự kiện đồng bộ tự động
   useEffect(() => {
     let isMounted = true;
     const fetchBranches = async () => {
@@ -127,17 +127,29 @@ export default function StorageMap2D({
       }
     };
     fetchBranches();
+
+    // Lắng nghe sự kiện khi BOM thêm / xóa / sửa cơ sở
+    const handleSync = () => {
+      fetchBranches();
+    };
+
+    window.addEventListener('storage_facilities_updated', handleSync);
+    window.addEventListener('storage', handleSync);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('storage_facilities_updated', handleSync);
+      window.removeEventListener('storage', handleSync);
     };
   }, []);
 
   const matchedBranch = branches.find((b) => b.code === facility || b.id === facility);
   const currentFacilityObj = matchedBranch
     ? {
-        name: matchedBranch.name,
+        name: matchedBranch.name || matchedBranch.facilityName,
         address: matchedBranch.address,
         floors: matchedBranch.floors || 3,
+        layoutType: (matchedBranch.layoutType || 'A').toUpperCase(),
       }
     : (facility && facilityData[facility]) ? facilityData[facility] : null;
 
@@ -493,10 +505,22 @@ export default function StorageMap2D({
 
       {/* SƠ ĐỒ MẶT BẰNG 2D BLUEPRINT */}
       <div className="p-3 sm:p-3.5 rounded-2xl border shadow-xs space-y-2.5 bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
-        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+        <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2 gap-2">
           <div className="flex items-center space-x-2 text-xs font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide">
             <i className="fa-solid fa-map text-blue-600 dark:text-cyan-400 text-sm"></i>
             <span>SƠ ĐỒ MẶT BẰNG Ô KHO • {currentFloor === 1 ? 'TẦNG TRỆT' : `TẦNG ${currentFloor - 1}`}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+              currentFacilityObj.layoutType === 'B'
+                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                : 'bg-blue-500/10 text-blue-600 dark:text-cyan-400 border-blue-500/30'
+            }`}>
+              {currentFacilityObj.layoutType === 'B' ? 'Mô hình Layout B (15 ô kho)' : 'Mô hình Layout A (46 ô kho)'}
+            </span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">
+              {units.length} ô kho tầng này
+            </span>
           </div>
         </div>
 
@@ -513,26 +537,30 @@ export default function StorageMap2D({
                 <span className="flex items-center">
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span> Dãy Kho Mặt Tiền (XL - 10m²)
                 </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">5 ô kho</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{Math.min(units.length, 5)} ô kho</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
                 {units.slice(0, 5).map((u) => renderUnitCard(u))}
               </div>
             </div>
 
-            <div className="floor-corridor-strip">HÀNH LANG LỐI ĐI CHÍNH TRỤC XE TẢI / XE NÂNG</div>
+            {units.length > 5 && (
+              <>
+                <div className="floor-corridor-strip">HÀNH LANG LỐI ĐI CHÍNH TRỤC XE TẢI / XE NÂNG</div>
 
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
-                <span className="flex items-center">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span> Dãy Kho Hậu Cần (XL - 10m²)
-                </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">5 ô kho</span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
-                {units.slice(5, 10).map((u) => renderUnitCard(u))}
-              </div>
-            </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
+                    <span className="flex items-center">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span> Dãy Kho Hậu Cần (XL - 10m²)
+                    </span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.length - 5} ô kho</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
+                    {units.slice(5, 10).map((u) => renderUnitCard(u))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <div className="floor-blueprint-container p-3 sm:p-3.5 space-y-3 shadow-inner relative">
