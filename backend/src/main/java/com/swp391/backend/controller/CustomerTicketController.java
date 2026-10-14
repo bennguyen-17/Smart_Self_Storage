@@ -28,21 +28,42 @@ public class CustomerTicketController {
             Authentication authentication
     ) {
         try {
-            Integer customerId = headerAccountId;
-            if (customerId == null && authentication != null && authentication.getPrincipal() instanceof Integer) {
-                customerId = (Integer) authentication.getPrincipal();
+            Integer accountId = headerAccountId;
+            if (accountId == null && body.get("accountId") != null) {
+                try {
+                    accountId = Integer.parseInt(body.get("accountId").toString());
+                } catch (Exception ignored) {}
             }
-            if (customerId == null) customerId = 1;
+            if (accountId == null && authentication != null && authentication.getPrincipal() instanceof Integer) {
+                accountId = (Integer) authentication.getPrincipal();
+            }
+            if (accountId == null) {
+                accountId = 13;
+            }
 
-            String type = (String) body.getOrDefault("type", "INCIDENT");
-            String unitCode = (String) body.getOrDefault("unitCode", "GATE");
-            String description = (String) body.getOrDefault("description", "");
-            String title = (String) body.getOrDefault("title", "Yêu cầu hỗ trợ: " + type);
+            String type = body.get("type") != null ? body.get("type").toString() : "UNLOCK";
+            String unitCode = body.get("unitCode") != null ? body.get("unitCode").toString() : "";
+            String description = body.get("description") != null ? body.get("description").toString() : "";
 
-            SupportTicket ticket = supportTicketService.createTicketGeneric(type, unitCode, title, description, customerId);
-            return ResponseEntity.ok(Map.of("success", true, "data", ticket));
-        } catch (Exception e) {
+            SupportTicket ticket;
+            if (unitCode != null && !unitCode.trim().isEmpty() && !"GATE".equalsIgnoreCase(unitCode)) {
+                ticket = supportTicketService.createSupportFormTicket(accountId, type, unitCode, description);
+            } else {
+                String title = body.get("title") != null ? body.get("title").toString() : "Yêu cầu hỗ trợ: " + type;
+                ticket = supportTicketService.createTicketGeneric(type, unitCode, title, description, accountId);
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "ticketId", ticket.getTicketCode(),
+                    "status", ticket.getStatus(),
+                    "unitCode", ticket.getUnitCode() != null ? ticket.getUnitCode() : "",
+                    "data", ticket
+            ));
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", e.getMessage()));
         }
     }
 
@@ -103,48 +124,14 @@ public class CustomerTicketController {
     @GetMapping("/customer/tickets")
     public ResponseEntity<?> getMyTickets(
             @RequestHeader(value = "X-Account-Id", required = false) Integer headerAccountId,
+            @RequestParam(value = "accountId", required = false) Integer paramAccountId,
             Authentication authentication
     ) {
-        Integer customerId = headerAccountId;
-        if (customerId == null && authentication != null && authentication.getPrincipal() instanceof Integer) {
-            customerId = (Integer) authentication.getPrincipal();
+        Integer accountId = headerAccountId != null ? headerAccountId : paramAccountId;
+        if (accountId == null && authentication != null && authentication.getPrincipal() instanceof Integer) {
+            accountId = (Integer) authentication.getPrincipal();
         }
-        if (customerId == null) customerId = 1;
-        return ResponseEntity.ok(supportTicketService.getCustomerTickets(customerId));
-    }
-
-    // --- US-21: 6. Khách hàng gửi Ticket hỗ trợ kỹ thuật từ SupportForm ---
-    @PostMapping("/support/tickets")
-    public ResponseEntity<?> submitSupportTicket(
-            @RequestBody java.util.Map<String, Object> body,
-            @RequestHeader(value = "X-Account-Id", required = false) Integer customerId
-    ) {
-        String type = body.get("type") != null ? body.get("type").toString() : "UNLOCK";
-        String unitCode = body.get("unitCode") != null ? body.get("unitCode").toString() : "";
-        String description = body.get("description") != null ? body.get("description").toString() : "";
-
-        Integer accountId = customerId;
-        if (accountId == null && body.get("accountId") != null) {
-            try {
-                accountId = Integer.parseInt(body.get("accountId").toString());
-            } catch (Exception ignored) {}
-        }
-        if (accountId == null) {
-            accountId = 13;
-        }
-
-        try {
-            SupportTicket saved = supportTicketService.createSupportFormTicket(accountId, type, unitCode, description);
-            return ResponseEntity.ok(java.util.Map.of(
-                    "success", true,
-                    "ticketId", saved.getTicketCode(),
-                    "status", saved.getStatus(),
-                    "unitCode", saved.getUnitCode()
-            ));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(java.util.Map.of("success", false, "message", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(java.util.Map.of("success", false, "message", e.getMessage()));
-        }
+        if (accountId == null) accountId = 13;
+        return ResponseEntity.ok(supportTicketService.getCustomerTickets(accountId));
     }
 }

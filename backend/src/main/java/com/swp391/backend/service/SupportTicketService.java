@@ -81,7 +81,13 @@ public class SupportTicketService {
         ticket.setTicketCode("TCK-INC-" + System.currentTimeMillis() % 1000000);
         ticket.setType("INCIDENT");
         ticket.setStatus("SUBMITTED");
-        ticket.setCustomerId(customerId);
+        Integer targetCustomerId = customerId;
+        if (customerId != null) {
+            targetCustomerId = customerProfileRepository.findByAccountId(customerId)
+                    .map(CustomerProfile::getCustomerId)
+                    .orElse(customerId);
+        }
+        ticket.setCustomerId(targetCustomerId != null ? targetCustomerId : 1);
         ticket.setFacilityId(req.getFacilityId());
         ticket.setUnitCode(req.getUnitCode());
         ticket.setTitle(req.getTitle() != null ? req.getTitle() : "Báo sự cố ô kho");
@@ -104,7 +110,14 @@ public class SupportTicketService {
         ticket.setTicketCode("TCK-" + prefix + "-" + (System.currentTimeMillis() % 1000000));
         ticket.setType(type != null ? type.toUpperCase() : "INCIDENT");
         ticket.setStatus("SUBMITTED");
-        ticket.setCustomerId(customerId != null ? customerId : 1);
+
+        Integer targetCustomerId = customerId;
+        if (customerId != null) {
+            targetCustomerId = customerProfileRepository.findByAccountId(customerId)
+                    .map(CustomerProfile::getCustomerId)
+                    .orElse(customerId);
+        }
+        ticket.setCustomerId(targetCustomerId != null ? targetCustomerId : 1);
 
         Integer facId = getFacilityIdByUnit(unitCode);
         if (facId == null) facId = 1;
@@ -183,7 +196,13 @@ public class SupportTicketService {
             throw new IllegalArgumentException("Chỉ có thể yêu cầu trả kho cho hợp đồng đang có hiệu lực (ACTIVE)!");
         }
 
-        Account account = accountRepository.findById(Long.valueOf(customerId))
+        Long targetAccountId = Long.valueOf(customerId);
+        Optional<CustomerProfile> cpOpt = customerProfileRepository.findById(customerId);
+        if (cpOpt.isPresent() && cpOpt.get().getAccountId() != null) {
+            targetAccountId = Long.valueOf(cpOpt.get().getAccountId());
+        }
+
+        Account account = accountRepository.findById(targetAccountId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản khách hàng!"));
 
         // Sinh mã OTP 6 số thực tế và lưu thời hạn 5 phút vào tài khoản
@@ -218,7 +237,13 @@ public class SupportTicketService {
             throw new IllegalArgumentException("Vui lòng nhập mã OTP xác thực email!");
         }
 
-        Account account = accountRepository.findById(Long.valueOf(customerId))
+        Long targetAccountId = Long.valueOf(customerId);
+        Optional<CustomerProfile> cpOpt = customerProfileRepository.findById(customerId);
+        if (cpOpt.isPresent() && cpOpt.get().getAccountId() != null) {
+            targetAccountId = Long.valueOf(cpOpt.get().getAccountId());
+        }
+
+        Account account = accountRepository.findById(targetAccountId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản khách hàng!"));
 
         if (account.getOtpCode() == null || !account.getOtpCode().equals(req.getOtpCode().trim())) {
@@ -235,11 +260,18 @@ public class SupportTicketService {
 
         Reservation reservation = reservationRepository.findById(contract.getReservationId()).orElse(null);
 
+        Integer targetCustomerId = customerId;
+        if (customerId != null) {
+            targetCustomerId = customerProfileRepository.findByAccountId(customerId)
+                    .map(CustomerProfile::getCustomerId)
+                    .orElse(customerId);
+        }
+
         SupportTicket ticket = new SupportTicket();
         ticket.setTicketCode("TCK-TRM-" + System.currentTimeMillis() % 1000000);
         ticket.setType("EARLY_TERMINATION");
         ticket.setStatus("SUBMITTED");
-        ticket.setCustomerId(customerId);
+        ticket.setCustomerId(targetCustomerId != null ? targetCustomerId : 1);
         ticket.setContractId(contract.getContractId());
         ticket.setFacilityId(reservation != null ? getFacilityIdByUnit(reservation.getUnitCode()) : null);
         ticket.setUnitCode(reservation != null ? reservation.getUnitCode() : null);
@@ -254,8 +286,42 @@ public class SupportTicketService {
     }
 
     // --- US-21: 5. Khách xem danh sách ticket của mình ---
-    public List<SupportTicket> getCustomerTickets(Integer customerId) {
-        return supportTicketRepository.findByCustomerIdOrderByCreatedAtDesc(customerId);
+    public List<SupportTicket> getCustomerTickets(Integer accountOrCustomerId) {
+        if (accountOrCustomerId == null) return Collections.emptyList();
+
+        Set<Integer> targetCustomerIds = new LinkedHashSet<>();
+        targetCustomerIds.add(accountOrCustomerId);
+
+        // Trường hợp accountOrCustomerId là accountId: tìm customerProfile.customerId
+        customerProfileRepository.findByAccountId(accountOrCustomerId)
+                .ifPresent(cp -> targetCustomerIds.add(cp.getCustomerId()));
+
+        // Trường hợp accountOrCustomerId là customerId: tìm customerProfile tương ứng
+        customerProfileRepository.findById(accountOrCustomerId)
+                .ifPresent(cp -> {
+                    targetCustomerIds.add(cp.getCustomerId());
+                    if (cp.getAccountId() != null) {
+                        targetCustomerIds.add(cp.getAccountId());
+                    }
+                });
+
+        List<SupportTicket> results = new ArrayList<>();
+        Set<Long> seenIds = new HashSet<>();
+        for (Integer cid : targetCustomerIds) {
+            List<SupportTicket> list = supportTicketRepository.findByCustomerIdOrderByCreatedAtDesc(cid);
+            for (SupportTicket t : list) {
+                if (t.getId() != null && seenIds.add(t.getId())) {
+                    results.add(t);
+                }
+            }
+        }
+
+        results.sort((a, b) -> {
+            if (a.getCreatedAt() == null || b.getCreatedAt() == null) return 0;
+            return b.getCreatedAt().compareTo(a.getCreatedAt());
+        });
+
+        return results;
     }
 
     // --- US-22: 1. Staff xem hàng đợi Ticket của cơ sở kèm đếm lùi SLA 15 phút ---
