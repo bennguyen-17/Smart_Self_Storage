@@ -65,6 +65,54 @@ export function maintenanceNoteError(note: string): string | null {
   return null
 }
 
+/** Những gì Manager chỉnh trong ngăn "Sửa ô kho" */
+export interface UnitEditDraft {
+  climate: boolean
+  maintenance: boolean
+  note: string
+}
+
+export type UnitEditOp =
+  | { kind: "change-type"; targetTypeId: number }
+  | { kind: "maintenance"; note: string }
+
+interface EditableUnit {
+  status: string
+  unitTypeId: number | null | undefined
+  isClimate?: boolean | null
+}
+
+/** Bản nháp ban đầu khớp đúng hiện trạng ô */
+export function initialUnitDraft(unit: EditableUnit): UnitEditDraft {
+  return {
+    climate: Boolean(unit.isClimate),
+    maintenance: normalizeUnitStatus(unit.status) === "UNDER_MAINTENANCE",
+    note: "",
+  }
+}
+
+/**
+ * Từ bản nháp suy ra cần gọi API nào, theo thứ tự: đổi loại kho trước rồi mới đưa vào bảo trì
+ * (cả hai đều yêu cầu ô đang trống). Thay đổi không hợp lệ với trạng thái ô thì bỏ qua,
+ * vì giao diện đã khóa lựa chọn đó. `noteError` khác null nghĩa là chưa được lưu.
+ */
+export function planUnitEdit(unit: EditableUnit, draft: UnitEditDraft): { ops: UnitEditOp[]; noteError: string | null } {
+  const ops: UnitEditOp[] = []
+  let noteError: string | null = null
+
+  const target = climateCounterpartTypeId(unit.unitTypeId)
+  if (draft.climate !== Boolean(unit.isClimate) && canChangeStorageType(unit.status, unit.unitTypeId) && target !== null) {
+    ops.push({ kind: "change-type", targetTypeId: target })
+  }
+
+  if (draft.maintenance && canStartMaintenance(unit.status)) {
+    noteError = maintenanceNoteError(draft.note)
+    ops.push({ kind: "maintenance", note: draft.note.trim() })
+  }
+
+  return { ops, noteError }
+}
+
 export const UNIT_STATUS_META: Record<PhysicalUnitStatus, { label: string; className: string }> = {
   AVAILABLE: {
     label: "Còn trống",
