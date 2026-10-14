@@ -83,7 +83,7 @@ function App() {
 
         {/* Cổng Quản Lý Chi Nhánh: Manager Portal (Role MANAGER, ADMIN) */}
         <Route
-          path="/manager"
+          path="/manager/*"
           element={
             <RoleProtectedRoute allowedRoles={["MANAGER", "ADMIN"]}>
               {/* Khung Cổng Quản lý cơ sở (builder: Vỹ) */}
@@ -104,7 +104,7 @@ function App() {
 
         {/* Cổng Quản Trị Hệ Thống: Admin Portal (Role ADMIN) */}
         <Route
-          path="/admin"
+          path="/admin/*"
           element={
             <RoleProtectedRoute allowedRoles={["ADMIN"]}>
               {/* Khung Cổng Quản trị hệ thống (builder: Vỹ) */}

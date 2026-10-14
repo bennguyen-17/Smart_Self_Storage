@@ -1,6 +1,5 @@
-// Khung Manager Portal: danh sách tab theo prototype/manager_portal.html.
-// Mỗi thành viên gắn chức năng của mình bằng cách điền `component` cho tab tương ứng,
-// không cần sửa layout. Tab chưa có component sẽ hiện ô "Đang phát triển".
+// Các trang của Manager Portal, mỗi trang một link riêng /manager/<key> trên navbar.
+// Từ 14/10 cả cổng Manager thuộc Vỹ (chia việc theo trang). Trang chưa có `component` hiện ô "Đang phát triển".
 
 import type { ComponentType } from "react"
 import {
@@ -16,13 +15,16 @@ import {
 import GateLogPanel from "@/features/gate-logs/components/GateLogPanel"
 import UnitManagementPanel from "@/features/unit-management/components/UnitManagementPanel"
 
-export type ManagerTabKey = "reports" | "units" | "customers" | "workflow" | "staff" | "gate-logs"
+export type ManagerTabKey = "units" | "reports" | "customers" | "workflow" | "staff" | "gate-logs"
 
 export interface ManagerTab {
   key: ManagerTabKey
+  /** Tên ngắn trên navbar */
   label: string
+  /** Tiêu đề đầy đủ của trang (thẻ h1) */
+  title: string
   icon: LucideIcon
-  /** User story và người phụ trách chức năng của tab */
+  /** User story và người phụ trách chức năng của trang */
   stories: string
   owner: string
   description: string
@@ -31,50 +33,55 @@ export interface ManagerTab {
 
 export const MANAGER_TABS: readonly ManagerTab[] = [
   {
-    key: "reports",
-    label: "Báo cáo Cơ sở & KPI",
-    icon: ChartColumnIcon,
-    stories: "US-33",
-    owner: "Tâm",
-    description: "Ô trống, đã thuê, doanh thu, tỷ lệ lấp đầy và các ca quá hạn của cơ sở.",
-  },
-  {
     key: "units",
-    label: "Quản lý Kho & Bảng giá",
+    label: "Ô kho",
+    title: "Quản lý ô kho",
     icon: WarehouseIcon,
     stories: "US-13, US-14",
     owner: "Vỹ",
-    description: "Đổi loại kho, đưa ô vào bảo trì; xem giá theo bảng giá hệ thống.",
+    description: "Đổi loại kho, đưa ô vào bảo trì; giá theo bảng giá hệ thống.",
     component: UnitManagementPanel,
   },
   {
+    key: "reports",
+    label: "Báo cáo",
+    title: "Báo cáo cơ sở & KPI",
+    icon: ChartColumnIcon,
+    stories: "US-33",
+    owner: "Vỹ",
+    description: "Ô trống, đã thuê, doanh thu, tỷ lệ lấp đầy và các ca quá hạn của cơ sở.",
+  },
+  {
     key: "customers",
-    label: "Giám sát Khách & HĐ",
+    label: "Khách & hợp đồng",
+    title: "Khách hàng & hợp đồng",
     icon: UsersRoundIcon,
     stories: "US-24, US-25",
-    owner: "Tâm, Vy",
+    owner: "Vỹ",
     description: "Theo dõi khách, hợp đồng, thời hạn thuê và tình trạng thanh toán của cơ sở.",
   },
   {
     key: "workflow",
-    label: "QTrình Trả kho & Nợ",
+    label: "Trả kho & công nợ",
+    title: "Trả kho & công nợ",
     icon: ClipboardListIcon,
     stories: "US-24, US-25, US-26, US-31",
-    owner: "Tâm, Vy, Vỹ",
+    owner: "Vỹ",
     description: "Nghiệm thu trả kho, quyết toán cọc, truy thu và duyệt miễn/giảm phí.",
   },
   {
     key: "staff",
-    label: "Phân công Staff",
+    label: "Phân công",
+    title: "Phân công nhân viên",
     icon: UserCheckIcon,
     stories: "US-32",
-    owner: "Vy",
+    owner: "Vỹ",
     description: "Phân ca và phân công nhân viên hỗ trợ bàn giao, kiểm tra, xử lý sự cố.",
   },
-  // Không có trong prototype; thêm để Manager xem nhật ký theo AC US-18 (builder quyết định 13/10)
   {
     key: "gate-logs",
     label: "Nhật ký cổng",
+    title: "Nhật ký mở cổng thủ công",
     icon: DoorOpenIcon,
     stories: "US-18",
     owner: "Vỹ",
@@ -85,9 +92,7 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
 
 export const DEFAULT_MANAGER_TAB: ManagerTabKey = "units"
 
-export function findManagerTab(key: string | null): ManagerTab {
-  return (
-    MANAGER_TABS.find((t) => t.key === key) ??
-    MANAGER_TABS.find((t) => t.key === DEFAULT_MANAGER_TAB)!
-  )
+/** Tìm trang theo key; key lạ hoặc trống thì trả undefined để trang tự chuyển về mặc định */
+export function findManagerTab(key: string | null | undefined): ManagerTab | undefined {
+  return MANAGER_TABS.find((t) => t.key === key)
 }
