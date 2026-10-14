@@ -1,39 +1,27 @@
-// US-30: nhật ký hệ thống (System Audit Log) cho Admin.
-// BE CHƯA có API đọc: kiểu dưới đây là contract FE đề xuất (GET /api/admin/audit-logs, xem qa-log).
-// Mỗi bản ghi có đủ trường theo quy định ghi log: người, vai trò, cơ sở, hành động, đối tượng, trước/sau, thời gian, IP.
+// US-30: nhật ký hoạt động hệ thống cho Admin.
+// Khớp bảng ActivityLog có sẵn trong DB (activityLogId, accountId, action, description, createdAt, ipAddress):
+// BE đã GHI các thao tác vào bảng này, chỉ còn thiếu API ĐỌC (contract FE đề xuất ở qa-log Q-32).
+// actorName / actorRole là BE join từ bảng Account; thao tác tự động của hệ thống thì accountId = null.
 
-export type AuditAction =
-  | "LOGIN"
-  | "LOGIN_FAILED"
-  | "ACCOUNT_CREATED"
-  | "ACCOUNT_LOCKED"
-  | "ROLE_CHANGED"
-  | "CONTRACT_STATUS_CHANGED"
-  | "UNIT_STATUS_CHANGED"
-  | "PAYMENT_COLLECTED"
-  | "FEE_DISCOUNTED"
-  | "CONFIG_CHANGED"
-  | "MANUAL_GATE_OPEN"
-
-export interface AuditLogEntry {
-  logId: number
+export interface ActivityLogEntry {
+  activityLogId: number
   accountId: number | null
-  actorName: string
-  actorRole: string
-  facilityCode: string | null
-  action: AuditAction | string
-  /** Đối tượng bị tác động, ví dụ "CTR-HN01-0103", "HN01-F1-S01", "account #12" */
-  target: string | null
-  before: string | null
-  after: string | null
+  actorName: string | null
+  /** ADMIN, BOM, MANAGER, STAFF, CUSTOMER */
+  actorRole: string | null
+  /** Mã hành động BE ghi, ví dụ "APPROVE_FEE_DISCOUNT", "EXPIRY_REMINDER_T7" */
+  action: string
+  /** Mô tả BE ghi kèm (có thể là tiếng Việt hoặc tiếng Anh) */
+  description: string | null
   /** LocalDateTime giờ Việt Nam, ví dụ "2026-10-14T09:12:00" */
   createdAt: string
   ipAddress: string | null
 }
 
-export interface AuditFilter {
+export interface ActivityFilter {
   query: string
-  action: AuditAction | "ALL"
+  /** Mã nhóm hành động (xem actionGroup) hoặc "ALL" */
+  action: string
   from: string
   to: string
 }
