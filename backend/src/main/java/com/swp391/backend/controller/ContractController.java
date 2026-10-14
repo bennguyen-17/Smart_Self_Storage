@@ -162,8 +162,14 @@ public class ContractController {
             map.put("startDate", res.getStartDate() != null ? res.getStartDate().toString() : LocalDate.now().toString());
             map.put("expiryDate", res.getEndDate() != null ? res.getEndDate().toString() : LocalDate.now().plusMonths(1).toString());
             map.put("endDate", res.getEndDate() != null ? res.getEndDate().toString() : LocalDate.now().plusMonths(1).toString());
-            map.put("rentalFee", res.getRentalAmount());
-            map.put("depositFee", res.getDepositAmount());
+            BigDecimal rentAmount = res.getRentalAmount() != null ? res.getRentalAmount() : BigDecimal.ZERO;
+            BigDecimal depAmount = res.getDepositAmount() != null ? res.getDepositAmount() : BigDecimal.ZERO;
+            BigDecimal totAmount = rentAmount.add(depAmount);
+            map.put("rentalFee", rentAmount);
+            map.put("depositFee", depAmount);
+            map.put("rentalAmount", rentAmount);
+            map.put("depositAmount", depAmount);
+            map.put("totalAmount", totAmount);
             map.put("daysLeft", daysLeft);
             map.put("status", c.getStatus());
             map.put("statusLabel", statusLabel);

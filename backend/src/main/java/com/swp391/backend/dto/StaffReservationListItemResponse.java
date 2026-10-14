@@ -24,6 +24,8 @@ public class StaffReservationListItemResponse {
     private BigDecimal depAmount;
     private BigDecimal depPaidAmount;
     private BigDecimal depRemainingAmount;
+    private BigDecimal depositAmount;
+    private BigDecimal rentalAmount;
 
     public StaffReservationListItemResponse() {}
 
@@ -95,5 +97,20 @@ public class StaffReservationListItemResponse {
     public void setRentalDuration(String rentalDuration) {
         this.rentalDuration = rentalDuration;
     }
-    
+
+    public BigDecimal getDepositAmount() {
+        return depositAmount;
+    }
+
+    public void setDepositAmount(BigDecimal depositAmount) {
+        this.depositAmount = depositAmount;
+    }
+
+    public BigDecimal getRentalAmount() {
+        return rentalAmount;
+    }
+
+    public void setRentalAmount(BigDecimal rentalAmount) {
+        this.rentalAmount = rentalAmount;
+    }
 }

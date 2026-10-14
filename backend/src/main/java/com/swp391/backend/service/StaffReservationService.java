@@ -45,6 +45,7 @@ import java.util.UUID;
 public class StaffReservationService {
 
     private static final String CONTRACT_PENDING_CHECKIN = "PENDING_CHECKIN";
+    private static final String CONTRACT_ACTIVE = "ACTIVE";
     private static final String RESERVATION_PENDING = "PENDING";
     private static final String RESERVATION_CONFIRMED = "CONFIRMED";
 
@@ -439,6 +440,15 @@ public class StaffReservationService {
             floorRepository.findById(unit.getFloorId()).ifPresent(floor -> item.setFloorName(floor.getFloorName()));
         });
 
+        item.setDepositAmount(reservation.getDepositAmount());
+        item.setRentalAmount(reservation.getRentalAmount());
+        BigDecimal defDep = reservation.getDepositAmount() != null ? reservation.getDepositAmount() : BigDecimal.ZERO;
+        BigDecimal defRent = reservation.getRentalAmount() != null ? reservation.getRentalAmount() : BigDecimal.ZERO;
+        BigDecimal defTotal = defDep.add(defRent);
+        item.setDepAmount(defTotal);
+        item.setDepPaidAmount(defDep);
+        item.setDepRemainingAmount(defRent);
+
         contractRepository.findByReservationId(reservation.getReservationId()).ifPresent(contract -> {
             item.setContractStatus(contract.getStatus());
             paymentRepository.findByContractId(contract.getContractId()).stream()
@@ -448,11 +458,21 @@ public class StaffReservationService {
                     .ifPresent(payment -> {
                         BigDecimal totalAmt = payment.getAmount() != null ? payment.getAmount() : BigDecimal.ZERO;
                         BigDecimal depAmt = reservation.getDepositAmount() != null ? reservation.getDepositAmount() : BigDecimal.ZERO;
+                        BigDecimal rentalAmt = reservation.getRentalAmount() != null ? reservation.getRentalAmount() : BigDecimal.ZERO;
                         BigDecimal paid = payment.getPaidAmount() != null ? payment.getPaidAmount() : BigDecimal.ZERO;
 
                         // Hợp đồng đã chuyển sang trang staff (PENDING_CHECKIN) thì 100% đã cọc đủ
                         if (paid.compareTo(depAmt) < 0 && CONTRACT_PENDING_CHECKIN.equals(contract.getStatus())) {
                             paid = depAmt;
+                        }
+                        if (CONTRACT_ACTIVE.equals(contract.getStatus())) {
+                            if (totalAmt.compareTo(BigDecimal.ZERO) == 0) {
+                                totalAmt = depAmt.add(rentalAmt);
+                            }
+                            paid = totalAmt;
+                        }
+                        if (totalAmt.compareTo(BigDecimal.ZERO) == 0 && (depAmt.compareTo(BigDecimal.ZERO) > 0 || rentalAmt.compareTo(BigDecimal.ZERO) > 0)) {
+                            totalAmt = depAmt.add(rentalAmt);
                         }
                         BigDecimal remaining = totalAmt.subtract(paid);
                         if (remaining.signum() < 0) remaining = BigDecimal.ZERO;
@@ -482,6 +502,9 @@ public class StaffReservationService {
         target.setContractStatus(source.getContractStatus());
         target.setReservationStartDate(source.getReservationStartDate());
         target.setReservationEndDate(source.getReservationEndDate());
+        target.setRentalDuration(source.getRentalDuration());
+        target.setDepositAmount(source.getDepositAmount());
+        target.setRentalAmount(source.getRentalAmount());
         target.setDepStatus(source.getDepStatus());
         target.setDepPaymentStatus(source.getDepPaymentStatus());
         target.setDepAmount(source.getDepAmount());
