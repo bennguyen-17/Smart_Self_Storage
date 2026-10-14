@@ -7,6 +7,7 @@ import apiClient, { isMockMode } from "@/lib/apiClient"
 import { getFloors } from "@/features/floor-plan/api/floorPlanApi"
 import type { Floor } from "@/types"
 
+import { managerHeaders as contextHeaders, MissingFacilityError } from "../managerContext"
 import type { ManagerContext, ManagerUnit, ManagerUnitFilter } from "../types"
 import {
   mockChangeUnitType,
@@ -15,19 +16,7 @@ import {
   mockStartMaintenance,
 } from "./unitManagementApi.mock"
 
-export class MissingFacilityError extends Error {
-  constructor() {
-    super("Tài khoản quản lý chưa được gắn cơ sở, nên chưa xem được ô kho. Vui lòng liên hệ quản trị hệ thống.")
-    this.name = "MissingFacilityError"
-  }
-}
-
-function contextHeaders(ctx: ManagerContext): Record<string, string> {
-  if (ctx.facilityId === null) throw new MissingFacilityError()
-  const headers: Record<string, string> = { "X-Facility-Id": String(ctx.facilityId) }
-  if (ctx.accountId !== null) headers["X-Account-Id"] = String(ctx.accountId)
-  return headers
-}
+export { MissingFacilityError }
 
 /** GET /api/facilities/{facilityId}/floors */
 export async function getManagerFloors(ctx: ManagerContext): Promise<Floor[]> {

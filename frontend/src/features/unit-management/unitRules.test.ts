@@ -5,9 +5,11 @@ import {
   canStartMaintenance,
   changeTypeBlockReason,
   climateCounterpartTypeId,
+  initialUnitDraft,
   MAINTENANCE_NOTE_MAX,
   maintenanceNoteError,
   normalizeUnitStatus,
+  planUnitEdit,
 } from "./unitRules"
 
 describe("normalizeUnitStatus: đọc được cả bộ trạng thái mới và cũ của DB", () => {
@@ -89,5 +91,47 @@ describe("maintenanceNoteError: bảo trì phải kèm ghi chú sự cố", () =
     { name: "501 ký tự", note: "a".repeat(MAINTENANCE_NOTE_MAX + 1), ok: false },
   ])("$name → hợp lệ: $ok", ({ note, ok }) => {
     expect(maintenanceNoteError(note) === null).toBe(ok)
+  })
+})
+
+// typeId 2 = M thường ↔ 5 = M điều hòa; typeId 1 = S (không có bản điều hòa)
+const M_TRONG = { status: "AVAILABLE", unitTypeId: 2, isClimate: false }
+const M_DIEU_HOA = { status: "AVAILABLE", unitTypeId: 5, isClimate: true }
+const S_TRONG = { status: "AVAILABLE", unitTypeId: 1, isClimate: false }
+const M_DANG_THUE = { status: "OCCUPIED", unitTypeId: 2, isClimate: false }
+const M_BAO_TRI = { status: "UNDER_MAINTENANCE", unitTypeId: 2, isClimate: false }
+
+describe("initialUnitDraft: bản nháp ban đầu đúng hiện trạng", () => {
+  test.each([
+    { unit: M_TRONG, expected: { climate: false, maintenance: false, note: "" } },
+    { unit: M_DIEU_HOA, expected: { climate: true, maintenance: false, note: "" } },
+    { unit: M_BAO_TRI, expected: { climate: false, maintenance: true, note: "" } },
+    { unit: { ...M_BAO_TRI, status: "MAINTENANCE" }, expected: { climate: false, maintenance: true, note: "" } },
+  ])("$unit.status / điều hòa=$unit.isClimate", ({ unit, expected }) => {
+    expect(initialUnitDraft(unit)).toEqual(expected)
+  })
+})
+
+describe("planUnitEdit: Sửa ô kho → gọi API nào, theo thứ tự nào", () => {
+  test.each([
+    { name: "không đổi gì", unit: M_TRONG, draft: { climate: false, maintenance: false, note: "" }, ops: [], noteError: false },
+    { name: "M thường → điều hòa", unit: M_TRONG, draft: { climate: true, maintenance: false, note: "" }, ops: [{ kind: "change-type", targetTypeId: 5 }], noteError: false },
+    { name: "M điều hòa → thường", unit: M_DIEU_HOA, draft: { climate: false, maintenance: false, note: "" }, ops: [{ kind: "change-type", targetTypeId: 2 }], noteError: false },
+    { name: "bảo trì kèm ghi chú (cắt khoảng trắng)", unit: M_TRONG, draft: { climate: false, maintenance: true, note: "  Kẹt khóa " }, ops: [{ kind: "maintenance", note: "Kẹt khóa" }], noteError: false },
+    { name: "bảo trì thiếu ghi chú → có lỗi", unit: M_TRONG, draft: { climate: false, maintenance: true, note: " " }, ops: [{ kind: "maintenance", note: "" }], noteError: true },
+    {
+      name: "đổi loại + bảo trì: đổi loại trước",
+      unit: M_TRONG,
+      draft: { climate: true, maintenance: true, note: "Vệ sinh" },
+      ops: [{ kind: "change-type", targetTypeId: 5 }, { kind: "maintenance", note: "Vệ sinh" }],
+      noteError: false,
+    },
+    { name: "ô đang thuê: bỏ qua mọi thay đổi", unit: M_DANG_THUE, draft: { climate: true, maintenance: true, note: "x" }, ops: [], noteError: false },
+    { name: "Size S không có bản điều hòa", unit: S_TRONG, draft: { climate: true, maintenance: false, note: "" }, ops: [], noteError: false },
+    { name: "ô đang bảo trì: không gửi lại lệnh bảo trì", unit: M_BAO_TRI, draft: { climate: false, maintenance: true, note: "" }, ops: [], noteError: false },
+  ])("$name", ({ unit, draft, ops, noteError }) => {
+    const plan = planUnitEdit(unit, draft)
+    expect(plan.ops).toEqual(ops)
+    expect(plan.noteError !== null).toBe(noteError)
   })
 })
