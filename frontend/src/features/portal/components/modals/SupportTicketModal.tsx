@@ -49,11 +49,13 @@ export default function SupportTicketModal({ onClose }) {
       });
       if (res.success) {
         alert("✅ Đã gửi ticket hỗ trợ kỹ thuật thành công! Nhân viên trực ca (Staff) sẽ tiếp nhận trong ít phút.");
+        window.dispatchEvent(new CustomEvent('ticket-updated'));
         onClose();
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Lỗi gửi yêu cầu hỗ trợ:', err);
-      alert("Lỗi khi gửi yêu cầu hỗ trợ. Vui lòng thử lại!");
+      const msg = err.response?.data?.message || err.message || "Lỗi khi gửi yêu cầu hỗ trợ. Vui lòng thử lại!";
+      alert(msg);
     } finally {
       setSubmitting(false);
     }

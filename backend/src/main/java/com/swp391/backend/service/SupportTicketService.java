@@ -95,6 +95,31 @@ public class SupportTicketService {
         return supportTicketRepository.save(ticket);
     }
 
+    // --- US-21: Tạo Ticket Hỗ trợ kỹ thuật 24/7 (Sự cố, Mở khóa, Bảo trì, Thắc mắc) ---
+    @Transactional
+    public SupportTicket createTicketGeneric(String type, String unitCode, String title, String description, Integer customerId) {
+        SupportTicket ticket = new SupportTicket();
+        String prefix = type != null ? type.toUpperCase() : "INC";
+        if (prefix.length() > 5) prefix = prefix.substring(0, 5);
+        ticket.setTicketCode("TCK-" + prefix + "-" + (System.currentTimeMillis() % 1000000));
+        ticket.setType(type != null ? type.toUpperCase() : "INCIDENT");
+        ticket.setStatus("SUBMITTED");
+        ticket.setCustomerId(customerId != null ? customerId : 1);
+
+        Integer facId = getFacilityIdByUnit(unitCode);
+        if (facId == null) facId = 1;
+        ticket.setFacilityId(facId);
+        ticket.setUnitCode(unitCode);
+        ticket.setTitle(title != null && !title.isEmpty() ? title : "Yêu cầu hỗ trợ: " + type);
+        ticket.setDescription(description);
+        ticket.setCreatedAt(LocalDateTime.now());
+        ticket.setSlaDeadline(LocalDateTime.now().plusMinutes(15));
+        ticket.setIsSlaBreached(false);
+        ticket.setIdentityVerified("UNLOCK".equalsIgnoreCase(type) ? false : true);
+
+        return supportTicketRepository.save(ticket);
+    }
+
     // --- US-21: 3. Gửi OTP xác thực trả kho trước hạn ---
     @Transactional
     public Map<String, Object> sendEarlyTerminationOtp(Integer contractId, Integer customerId) {

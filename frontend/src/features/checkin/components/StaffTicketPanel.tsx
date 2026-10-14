@@ -380,7 +380,7 @@ function StaffTicketPanel() {
           </div>
         </div>
 
-        {/* TICKET CARDS GRID */}
+        {/* TICKET VIEW (LIST OR GRID) */}
         {filtered.length === 0 ? (
           <div className="card-box flex flex-col items-center justify-center rounded-2xl border py-12 text-center text-muted">
             <CheckCircle2Icon className="mb-2 size-10 text-muted" />
@@ -392,36 +392,48 @@ function StaffTicketPanel() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((ticket) => {
-              const sla = getSlaInfo(ticket, now)
-              const isUnlock =
-                ticket.type === "INCIDENT" &&
-                (ticket.title.toLowerCase().includes("mở khóa") ||
-                  ticket.title.toLowerCase().includes("khóa") ||
-                  ticket.description?.toLowerCase().includes("chìa"))
-              const isEarlyTerm = ticket.type === "EARLY_TERMINATION"
-              const typeColor = isUnlock
-                ? "text-amber-600 dark:text-amber-400"
-                : isEarlyTerm
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-blue-600 dark:text-blue-400"
+          /* DẠNG DANH SÁCH (TABLE / LIST VIEW) */
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm dark:border-slate-800">
+            <table className="w-full min-w-[920px] text-left text-xs">
+              <thead className="border-b bg-slate-100 text-[11px] font-bold tracking-wider text-slate-500 uppercase dark:bg-slate-800/80 dark:text-slate-400">
+                <tr>
+                  <th className="px-4 py-3.5">Mã &amp; Loại Ticket</th>
+                  <th className="px-4 py-3.5">Vị trí Ô Kho</th>
+                  <th className="px-4 py-3.5">Khách Hàng</th>
+                  <th className="max-w-[280px] px-4 py-3.5">Nội Dung Yêu Cầu</th>
+                  <th className="px-4 py-3.5">Thời Hạn / Hẹn</th>
+                  <th className="px-4 py-3.5">Trạng Thái</th>
+                  <th className="px-4 py-3.5 text-right">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                {filtered.map((ticket) => {
+                  const sla = getSlaInfo(ticket, now)
+                  const isUnlock =
+                    ticket.type === "INCIDENT" &&
+                    (ticket.title.toLowerCase().includes("mở khóa") ||
+                      ticket.title.toLowerCase().includes("khóa") ||
+                      ticket.description?.toLowerCase().includes("chìa"))
+                  const isEarlyTerm = ticket.type === "EARLY_TERMINATION"
+                  const typeColor = isUnlock
+                    ? "text-amber-600 dark:text-amber-400"
+                    : isEarlyTerm
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-blue-600 dark:text-blue-400"
 
-              return (
-                <div
-                  key={ticket.id}
-                  className="card-box staff-ticket-card flex flex-col justify-between space-y-3 rounded-2xl border p-4 shadow-sm"
-                >
-                  <div className="space-y-2.5">
-                    {/* CARD HEADER */}
-                    <div className="flex items-start justify-between gap-2 border-b pb-2.5">
-                      <div>
+                  return (
+                    <tr
+                      key={ticket.id}
+                      className="transition hover:bg-blue-500/5 dark:hover:bg-slate-800/50"
+                    >
+                      {/* Cột 1: Mã & Loại Ticket */}
+                      <td className="px-4 py-3.5 align-middle">
                         <span className="font-mono text-xs font-black text-blue-600 dark:text-blue-400">
                           #{ticket.ticketCode}
                         </span>
-                        <h5
+                        <div
                           className={cn(
-                            "mt-0.5 flex items-center gap-1.5 text-sm font-extrabold",
+                            "mt-0.5 flex items-center gap-1.5 text-xs font-bold",
                             typeColor
                           )}
                         >
@@ -433,124 +445,131 @@ function StaffTicketPanel() {
                             <WrenchIcon className="size-3.5 shrink-0" />
                           )}
                           <span>{ticket.title}</span>
-                        </h5>
-                      </div>
-                      <span
-                        className={cn(
-                          "rounded-full px-2.5 py-1 text-[10px] font-black whitespace-nowrap",
-                          sla.className
+                        </div>
+                      </td>
+
+                      {/* Cột 2: Vị trí Ô Kho */}
+                      <td className="px-4 py-3.5 align-middle font-mono font-bold text-slate-800 dark:text-slate-200">
+                        {ticket.unitCode ? `Kho ${ticket.unitCode}` : "Cổng / Ra vào"}
+                      </td>
+
+                      {/* Cột 3: Khách Hàng */}
+                      <td className="px-4 py-3.5 align-middle">
+                        <div className="font-extrabold text-slate-900 dark:text-white">
+                          {ticket.customerName ||
+                            (ticket.customerId
+                              ? `Khách hàng #${ticket.customerId}`
+                              : "—")}
+                        </div>
+                        {ticket.customerPhone && (
+                          <div className="text-[11px] text-muted">
+                            {ticket.customerPhone}
+                          </div>
                         )}
-                      >
-                        <ClockIcon className="mr-1 inline size-2.5" />
-                        {sla.text}
-                      </span>
-                    </div>
+                      </td>
 
-                    {/* CARD DETAILS */}
-                    <div className="space-y-1.5 text-xs">
-                      {ticket.unitCode && (
-                        <div className="flex items-center justify-between gap-3 text-muted">
-                          <span className="shrink-0">Vị trí ô kho:</span>
-                          <span className="text-title text-right font-mono font-bold">
-                            Kho {ticket.unitCode}
-                          </span>
-                        </div>
-                      )}
+                      {/* Cột 4: Nội dung yêu cầu */}
+                      <td className="max-w-[280px] px-4 py-3.5 align-middle">
+                        <p className="line-clamp-2 text-[11px] text-slate-600 italic dark:text-slate-300">
+                          {ticket.description
+                            ? `"${ticket.description}"`
+                            : "—"}
+                        </p>
+                      </td>
 
-                      {ticket.customerName && (
-                        <div className="flex items-center justify-between gap-3 text-muted">
-                          <span className="shrink-0">Khách hàng:</span>
-                          <span className="text-title text-right font-bold">
-                            {ticket.customerName}
-                            {ticket.customerPhone
-                              ? ` • ${ticket.customerPhone}`
-                              : ""}
-                          </span>
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between text-muted">
-                        <span>Trạng thái:</span>
-                        <span className="text-title rounded-md border px-2 py-0.5 text-[10px] font-extrabold">
-                          {ticket.status === "SUBMITTED"
-                            ? "⌛ SUBMITTED (Chờ Tiếp Nhận)"
-                            : ticket.status === "IN_PROGRESS"
-                              ? "⚙ IN_PROGRESS (Đang Xử Lý)"
-                              : "✓ RESOLVED (Đã Hoàn Tất)"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* NOTE / QUOTE */}
-                    {ticket.description && (
-                      <div className="inner-box rounded-xl border p-2.5 text-[11px] leading-relaxed text-slate-600 italic dark:text-slate-300">
-                        "{ticket.description}"
-                      </div>
-                    )}
-                  </div>
-
-                  {/* ACTION BUTTONS */}
-                  <div className="flex flex-col gap-1.5 border-t pt-2">
-                    {ticket.status === "SUBMITTED" && (
-                      <button
-                        type="button"
-                        onClick={() => handleClaim(ticket)}
-                        className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-blue-600 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700"
-                      >
-                        <UserCheckIcon className="size-3.5" />
-                        <span>Tiếp Nhận Xử Lý (Claim)</span>
-                      </button>
-                    )}
-
-                    {ticket.status === "IN_PROGRESS" && isUnlock && (
-                      <button
-                        type="button"
-                        onClick={() => handleOpenUnlock(ticket)}
-                        className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-blue-600 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700"
-                      >
-                        <IdCardIcon className="size-3.5" />
-                        <span>Đối Chiếu CCCD &amp; Mở Khóa</span>
-                      </button>
-                    )}
-
-                    {ticket.status === "IN_PROGRESS" && isEarlyTerm && (
-                      <button
-                        type="button"
-                        onClick={() => handleOpenInspection(ticket)}
-                        className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-blue-600 py-2 text-xs font-extrabold text-white shadow-sm transition hover:bg-blue-700"
-                      >
-                        <ClipboardCheckIcon className="size-3.5" />
-                        <span>Mở Biên Bản Nghiệm Thu &amp; Quyết Toán</span>
-                      </button>
-                    )}
-
-                    {ticket.status === "IN_PROGRESS" &&
-                      !isUnlock &&
-                      !isEarlyTerm && (
-                        <button
-                          type="button"
-                          onClick={() => handleResolveGeneral(ticket)}
-                          className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-blue-600 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700"
+                      {/* Cột 5: Thời hạn SLA */}
+                      <td className="px-4 py-3.5 align-middle">
+                        <span
+                          className={cn(
+                            "inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black whitespace-nowrap",
+                            sla.className
+                          )}
                         >
-                          <CircleCheckIcon className="size-3.5" />
-                          <span>Xác Nhận Đã Sửa Xong ➔ Đóng Ticket</span>
-                        </button>
-                      )}
+                          <ClockIcon className="mr-1 inline size-2.5" />
+                          {sla.text}
+                        </span>
+                      </td>
 
-                    {ticket.status === "RESOLVED" && (
-                      <button
-                        type="button"
-                        disabled
-                        className="flex w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-slate-200 py-2 text-xs font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                      >
-                        <CircleCheckIcon className="size-3.5 text-muted" />
-                        <span>Đã Đóng Ticket Hoàn Tất</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+                      {/* Cột 6: Trạng thái */}
+                      <td className="px-4 py-3.5 align-middle">
+                        <span
+                          className={cn(
+                            "rounded-md border px-2 py-0.5 text-[10px] font-extrabold whitespace-nowrap",
+                            ticket.status === "SUBMITTED"
+                              ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+                              : ticket.status === "IN_PROGRESS"
+                                ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300"
+                                : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                          )}
+                        >
+                          {ticket.status === "SUBMITTED"
+                            ? "⌛ Chờ Tiếp Nhận"
+                            : ticket.status === "IN_PROGRESS"
+                              ? "⚙ Đang Xử Lý"
+                              : "✓ Đã Hoàn Tất"}
+                        </span>
+                      </td>
+
+                      {/* Cột 7: Thao tác */}
+                      <td className="px-4 py-3.5 align-middle text-right">
+                        {ticket.status === "SUBMITTED" && (
+                          <button
+                            type="button"
+                            onClick={() => handleClaim(ticket)}
+                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-blue-700"
+                          >
+                            <UserCheckIcon className="size-3.5" />
+                            <span>Tiếp Nhận</span>
+                          </button>
+                        )}
+
+                        {ticket.status === "IN_PROGRESS" && isUnlock && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenUnlock(ticket)}
+                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-blue-700"
+                          >
+                            <IdCardIcon className="size-3.5" />
+                            <span>Mở Khóa</span>
+                          </button>
+                        )}
+
+                        {ticket.status === "IN_PROGRESS" && isEarlyTerm && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenInspection(ticket)}
+                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-xs transition hover:bg-blue-700"
+                          >
+                            <ClipboardCheckIcon className="size-3.5" />
+                            <span>Nghiệm Thu</span>
+                          </button>
+                        )}
+
+                        {ticket.status === "IN_PROGRESS" &&
+                          !isUnlock &&
+                          !isEarlyTerm && (
+                            <button
+                              type="button"
+                              onClick={() => handleResolveGeneral(ticket)}
+                              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-blue-700"
+                            >
+                              <CircleCheckIcon className="size-3.5" />
+                              <span>Đóng Ticket</span>
+                            </button>
+                          )}
+
+                        {ticket.status === "RESOLVED" && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                            <CircleCheckIcon className="size-3.5" />
+                            <span>Đã Đóng</span>
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
