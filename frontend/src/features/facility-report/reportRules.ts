@@ -91,3 +91,63 @@ export function buildReportSections(d: ManagerDashboard): ReportSection[] {
 export function reportCsvRows(d: ManagerDashboard): (string | number)[][] {
   return buildReportSections(d).flatMap((s) => s.rows.map((r) => [s.title, r.label, r.value]))
 }
+
+// ---- Dữ liệu cho biểu đồ ----
+
+export type UnitSegmentKey = "occupied" | "reserved" | "available" | "maintenance"
+
+export interface UnitSegment {
+  key: UnitSegmentKey
+  label: string
+  count: number
+  /** % trên tổng số ô, làm tròn 1 chữ số; tổng các phần = 100 (dồn phần lẻ vào phần lớn nhất) */
+  percent: number
+}
+
+/** Thứ tự cố định (màu đi theo trạng thái, không theo thứ hạng): đang thuê, đã đặt cọc, còn trống, bảo trì */
+export function unitMix(d: ManagerDashboard): UnitSegment[] {
+  const raw: Omit<UnitSegment, "percent">[] = [
+    { key: "occupied", label: "Đang thuê", count: d.occupiedUnits },
+    { key: "reserved", label: "Đã đặt cọc", count: d.reservedUnits },
+    { key: "available", label: "Còn trống", count: d.availableUnits },
+    { key: "maintenance", label: "Bảo trì / vệ sinh", count: d.maintenanceUnits },
+  ]
+  const total = raw.reduce((s, r) => s + r.count, 0)
+  if (total === 0) return raw.map((r) => ({ ...r, percent: 0 }))
+  const segments = raw.map((r) => ({ ...r, percent: Math.round((r.count / total) * 1000) / 10 }))
+  const drift = Math.round((100 - segments.reduce((s, r) => s + r.percent, 0)) * 10) / 10
+  if (drift !== 0) {
+    const biggest = segments.reduce((a, b) => (b.count > a.count ? b : a))
+    biggest.percent = Math.round((biggest.percent + drift) * 10) / 10
+  }
+  return segments
+}
+
+/** Độ dài thanh (%) so với giá trị lớn nhất theo trị tuyệt đối; giá trị khác 0 luôn có tối thiểu 2% để còn nhìn thấy */
+export function barWidths(values: readonly number[]): number[] {
+  const max = Math.max(0, ...values.map(Math.abs))
+  if (max === 0) return values.map(() => 0)
+  return values.map((v) => (v === 0 ? 0 : Math.max(2, Math.round((Math.abs(v) / max) * 1000) / 10)))
+}
+
+export interface DonutArc {
+  key: UnitSegmentKey
+  /** Vị trí bắt đầu và độ dài cung, tính theo % chu vi (0–100), đã trừ khe hở giữa các lát */
+  start: number
+  length: number
+}
+
+/**
+ * Cung cho biểu đồ vành khuyên: bỏ lát 0 ô; giữa các lát chừa khe `gap` (% chu vi) để tách màu.
+ * Chỉ có 1 lát thì vẽ trọn vòng, không chừa khe.
+ */
+export function donutArcs(segments: readonly UnitSegment[], gap = 1): DonutArc[] {
+  const visible = segments.filter((s) => s.percent > 0)
+  if (visible.length === 1) return [{ key: visible[0].key, start: 0, length: 100 }]
+  let cursor = 0
+  return visible.map((s) => {
+    const arc = { key: s.key, start: cursor, length: Math.max(0.5, Math.round((s.percent - gap) * 100) / 100) }
+    cursor = Math.round((cursor + s.percent) * 100) / 100
+    return arc
+  })
+}
