@@ -39,6 +39,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/manager/contracts/overdue-alerts")
                         .hasRole("MANAGER")
 
+                        .requestMatchers("/api/contracts/*/cancel-deposit")
+                        .hasRole("AUTHENTICATED")
+
                         .requestMatchers(
                                 "/api/staff/reservations",
                                 "/api/staff/reservations/lookup",
