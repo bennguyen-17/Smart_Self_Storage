@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 
 import com.swp391.backend.dto.CalculatePriceRequest;
 import com.swp391.backend.dto.CalculatePriceResponse;
+import com.swp391.backend.dto.FacilityRequest;
 import com.swp391.backend.dto.FacilityResponse;
+import com.swp391.backend.dto.PriceDto;
 import com.swp391.backend.dto.UnitDetailResponse;
 import com.swp391.backend.entity.ActivityLog;
 import com.swp391.backend.entity.Facility;
@@ -204,70 +206,44 @@ public class StorageService {
     public FacilityResponse mapFacilityToResponse(Facility f) {
         FacilityResponse res = new FacilityResponse();
         res.setFacilityId(f.getFacilityId());
-        res.setFacilityName(f.getFacilityName());
+
+        String rawName = f.getFacilityName() != null ? f.getFacilityName().trim() : "";
+        if (rawName.contains("(") && rawName.contains(")")) {
+            rawName = rawName.replaceAll("\\s*\\([^)]*\\)", "").trim();
+        }
+        res.setFacilityName(rawName);
         res.setAddress(f.getAddress());
         res.setPhone(f.getPhone());
         res.setStatus(f.getStatus());
 
-        // Gán metadata chuẩn theo Take note.txt
-        switch (f.getFacilityId()) {
-            case 1:
-                res.setFacilityCode("HN-01");
-                res.setShortCode("CG");
-                res.setFloorCount(3);
-                res.setLayoutType("A");
-                res.setIsAllClimate(false);
-                break;
-            case 2:
-                res.setFacilityCode("HN-02");
-                res.setShortCode("TX");
-                res.setFloorCount(3);
-                res.setLayoutType("B");
-                res.setIsAllClimate(false);
-                break;
-            case 3:
-                res.setFacilityCode("HCM-01");
-                res.setShortCode("Q1");
-                res.setFloorCount(3);
-                res.setLayoutType("A");
-                res.setIsAllClimate(true); // 100% kho mát
-                break;
-            case 4:
-                res.setFacilityCode("HCM-02");
-                res.setShortCode("Q7");
-                res.setFloorCount(2);
-                res.setLayoutType("B");
-                res.setIsAllClimate(false);
-                break;
-            case 5:
-                res.setFacilityCode("HCM-03");
-                res.setShortCode("TD");
-                res.setFloorCount(3);
-                res.setLayoutType("B");
-                res.setIsAllClimate(false);
-                break;
-            case 6:
-                res.setFacilityCode("DN-01");
-                res.setShortCode("HC");
-                res.setFloorCount(2);
-                res.setLayoutType("A");
-                res.setIsAllClimate(false);
-                break;
-            case 7:
-                res.setFacilityCode("CT-01");
-                res.setShortCode("NK");
-                res.setFloorCount(2);
-                res.setLayoutType("B");
-                res.setIsAllClimate(false);
-                break;
-            default:
-                res.setFacilityCode("FAC-0" + f.getFacilityId());
-                res.setShortCode("FC");
-                res.setFloorCount(2);
-                res.setLayoutType("A");
-                res.setIsAllClimate(false);
-                break;
+        // Lấy mã cơ sở và layout chuẩn hóa trực tiếp từ entity
+        String code = f.getFacilityCode();
+        String layout = f.getLayoutType();
+
+        if (code == null || code.trim().isEmpty()) {
+            switch (f.getFacilityId()) {
+                case 1: code = "HN-01"; layout = "A"; break;
+                case 2: code = "HN-02"; layout = "B"; break;
+                case 3: code = "HCM-01"; layout = "A"; break;
+                case 4: code = "HCM-02"; layout = "B"; break;
+                case 5: code = "HCM-03"; layout = "B"; break;
+                case 6: code = "DN-01"; layout = "A"; break;
+                case 7: code = "CT-01"; layout = "B"; break;
+                default: code = "FAC-" + String.format("%02d", f.getFacilityId()); break;
+            }
         }
+        if (layout == null || layout.trim().isEmpty()) {
+            layout = "A";
+        }
+
+        res.setFacilityCode(code);
+        res.setShortCode(code.replace("-", ""));
+        res.setLayoutType(layout.toUpperCase());
+        res.setIsAllClimate("HCM-01".equalsIgnoreCase(code));
+
+        List<Floor> actualFloors = floorRepository.findByFacilityId(f.getFacilityId());
+        res.setFloorCount(actualFloors.isEmpty() ? 3 : actualFloors.size());
+
         return res;
     }
 
@@ -487,6 +463,281 @@ public class StorageService {
         });
 
         return dto;
+    }
+
+    // --- Lấy danh sách bảng giá & mức cọc từ Database ---
+    public List<PriceDto> getAllPrices() {
+        List<UnitType> unitTypes = unitTypeRepository.findAll();
+        List<Price> activePrices = priceRepository.findByStatus("ACTIVE");
+        Map<Integer, Price> priceMap = activePrices.stream()
+                .collect(Collectors.toMap(Price::getUnitTypeId, p -> p, (p1, p2) -> p1));
+
+        return unitTypes.stream()
+                .filter(ut -> "ACTIVE".equalsIgnoreCase(ut.getStatus()))
+                .filter(ut -> !"CLIMATE_CONTROLLED".equalsIgnoreCase(ut.getStorageCondition())) // map 4 size chuẩn
+                .map(ut -> {
+                    PriceDto dto = new PriceDto();
+                    dto.setUnitTypeId(ut.getUnitTypeId());
+                    dto.setName(ut.getTypeName());
+                    dto.setDimensions(ut.getSize());
+                    dto.setStatus(ut.getStatus());
+
+                    String lower = ut.getTypeName().toLowerCase();
+                    if (lower.contains("size s") || lower.contains("tủ cá nhân")) {
+                        dto.setSize("S");
+                        dto.setDescription("Tủ cá nhân đồ đạc nhỏ, balo, vali, tài liệu cá nhân");
+                        dto.setArea("1.0m²");
+                        dto.setHeight("2.0m");
+                    } else if (lower.contains("size l") || lower.contains("phòng lớn")) {
+                        dto.setSize("L");
+                        dto.setDescription("Phòng chứa lớn đồ gia đình 3-4 phòng, nội thất, pallet");
+                        dto.setArea("6.0m²");
+                        dto.setHeight("2.0m");
+                    } else if (lower.contains("size xl") || lower.contains("kho doanh nghiệp")) {
+                        dto.setSize("XL");
+                        dto.setDescription("Kho doanh nghiệp lưu kho hàng hóa, máy móc, nguyên vật liệu");
+                        dto.setArea("10.0m²");
+                        dto.setHeight("2.0m");
+                    } else {
+                        dto.setSize("M");
+                        dto.setDescription("Phòng vừa đồ gia đình nhỏ, xe máy, 15-20 thùng carton");
+                        dto.setArea("3.0m²");
+                        dto.setHeight("2.0m");
+                    }
+
+                    Price p = priceMap.get(ut.getUnitTypeId());
+                    if (p != null) {
+                        dto.setPriceId(p.getPriceId());
+                        dto.setDailyPrice(p.getDailyPrice());
+                        dto.setMonthlyPrice(p.getMonthlyPrice());
+                        dto.setDepositAmount(p.getDepositAmount());
+                        dto.setClimateSurchargePercent(p.getClimateSurchargePercent() != null ? p.getClimateSurchargePercent() : BigDecimal.valueOf(20.00));
+                        BigDecimal surcharge = dto.getClimateSurchargePercent().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                        dto.setAcPrice(p.getMonthlyPrice().multiply(BigDecimal.ONE.add(surcharge)).setScale(0, RoundingMode.HALF_UP));
+                    } else {
+                        dto.setDailyPrice(BigDecimal.valueOf(60000));
+                        dto.setMonthlyPrice(BigDecimal.valueOf(1200000));
+                        dto.setAcPrice(BigDecimal.valueOf(1440000));
+                        dto.setDepositAmount(BigDecimal.valueOf(1000000));
+                        dto.setClimateSurchargePercent(BigDecimal.valueOf(20.00));
+                    }
+                    return dto;
+                })
+                .sorted((a, b) -> {
+                    List<String> order = List.of("S", "M", "L", "XL");
+                    int idxA = order.indexOf(a.getSize());
+                    int idxB = order.indexOf(b.getSize());
+                    return Integer.compare(idxA != -1 ? idxA : 99, idxB != -1 ? idxB : 99);
+                })
+                .collect(Collectors.toList());
+    }
+
+    // --- Cập nhật Bảng giá và Mức cọc lưu vào Database ---
+    @Transactional
+    public PriceDto updatePrice(Integer unitTypeId, PriceDto req) {
+        UnitType ut = unitTypeRepository.findById(unitTypeId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy loại ô kho ID: " + unitTypeId));
+
+        Optional<Price> existingPriceOpt = priceRepository.findByUnitTypeIdAndStatus(unitTypeId, "ACTIVE");
+        Price price;
+        if (existingPriceOpt.isPresent()) {
+            price = existingPriceOpt.get();
+        } else {
+            price = new Price();
+            price.setUnitTypeId(unitTypeId);
+            price.setEffectiveFrom(java.time.LocalDate.now());
+            price.setStatus("ACTIVE");
+        }
+
+        if (req.getDailyPrice() != null) price.setDailyPrice(req.getDailyPrice());
+        if (req.getMonthlyPrice() != null) price.setMonthlyPrice(req.getMonthlyPrice());
+        if (req.getDepositAmount() != null) price.setDepositAmount(req.getDepositAmount());
+        if (req.getClimateSurchargePercent() != null) {
+            price.setClimateSurchargePercent(req.getClimateSurchargePercent());
+        } else {
+            price.setClimateSurchargePercent(BigDecimal.valueOf(20.00));
+        }
+
+        Price saved = priceRepository.save(price);
+        req.setPriceId(saved.getPriceId());
+        req.setUnitTypeId(saved.getUnitTypeId());
+        BigDecimal surcharge = saved.getClimateSurchargePercent().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        req.setAcPrice(saved.getMonthlyPrice().multiply(BigDecimal.ONE.add(surcharge)).setScale(0, RoundingMode.HALF_UP));
+        return req;
+    }
+
+    // --- Thêm cơ sở kho mới vào Database kèm Tự Động Sinh Tầng & Ô Kho theo Layout ---
+    @Transactional
+    public FacilityResponse createFacility(FacilityRequest req) {
+        // 1. Tự động sinh mã cơ sở thông minh không trùng lặp nếu chưa có
+        String code = req.getFacilityCode();
+        if (code == null || code.trim().isEmpty()) {
+            String addr = (req.getAddress() != null ? req.getAddress().toLowerCase() : "") + " " + (req.getFacilityName() != null ? req.getFacilityName().toLowerCase() : "");
+            String cityPrefix = "HN";
+            if (addr.contains("hồ chí minh") || addr.contains("ho chi minh") || addr.contains("hcm") || addr.contains("sài gòn") || addr.contains("sai gon") || addr.contains("tp.hcm")) {
+                cityPrefix = "HCM";
+            } else if (addr.contains("đà nẵng") || addr.contains("da nang") || addr.contains("dn")) {
+                cityPrefix = "DN";
+            } else if (addr.contains("cần thơ") || addr.contains("can tho") || addr.contains("ct")) {
+                cityPrefix = "CT";
+            } else if (addr.contains("hải phòng") || addr.contains("hai phong") || addr.contains("hp")) {
+                cityPrefix = "HP";
+            } else if (addr.contains("bình dương") || addr.contains("binh duong") || addr.contains("bd")) {
+                cityPrefix = "BD";
+            }
+
+            final String finalPrefix = cityPrefix;
+            List<Facility> allFacs = facilityRepository.findAll();
+            int maxNum = 0;
+            for (Facility fac : allFacs) {
+                String c = fac.getFacilityCode();
+                if (c == null) {
+                    FacilityResponse fr = mapFacilityToResponse(fac);
+                    c = fr.getFacilityCode();
+                }
+                if (c != null && c.toUpperCase().startsWith(finalPrefix + "-")) {
+                    try {
+                        String numPart = c.substring(finalPrefix.length() + 1);
+                        int num = Integer.parseInt(numPart);
+                        if (num > maxNum) maxNum = num;
+                    } catch (Exception ignored) {}
+                }
+            }
+            code = String.format("%s-%02d", cityPrefix, maxNum + 1);
+        } else {
+            code = code.trim().toUpperCase();
+        }
+
+        // 2. TÊN CƠ SỞ HOÀN TOÀN THUẦN TÚY - KHÔNG GHÉP MÃ VÀO TÊN
+        String rawName = req.getFacilityName() != null ? req.getFacilityName().trim() : "SmartStorage Cơ Sở Mới";
+        if (rawName.contains("(") && rawName.contains(")")) {
+            rawName = rawName.replaceAll("\\s*\\([^)]*\\)", "").trim();
+        }
+
+        String layout = (req.getLayoutType() != null && req.getLayoutType().equalsIgnoreCase("B")) ? "B" : "A";
+
+        Facility f = new Facility();
+        f.setFacilityName(rawName);
+        f.setFacilityCode(code);
+        f.setLayoutType(layout);
+        f.setAddress(req.getAddress() != null ? req.getAddress().trim() : "Chưa cập nhật địa chỉ");
+        f.setPhone(req.getPhone() != null && !req.getPhone().trim().isEmpty() ? req.getPhone() : "0900000000");
+        f.setStatus("ACTIVE");
+        Facility saved = facilityRepository.save(f);
+
+        // 3. Tự động sinh danh sách Tầng (Floor) (chuẩn 3 tầng)
+        int floors = (req.getFloorCount() != null && req.getFloorCount() >= 1) ? req.getFloorCount() : 3;
+        List<Floor> createdFloors = new java.util.ArrayList<>();
+        for (int fl = 1; fl <= floors; fl++) {
+            Floor floor = new Floor();
+            floor.setFacilityId(saved.getFacilityId());
+            floor.setFloorName(fl == 1 ? "Tầng Trệt" : "Tầng " + (fl - 1));
+            floor.setMaxLoadPerM2(fl == 1 ? BigDecimal.valueOf(1000) : BigDecimal.valueOf(500));
+            floor.setStatus("ACTIVE");
+            createdFloors.add(floorRepository.save(floor));
+        }
+
+        // 4. Tự động sinh danh sách Ô Kho (StorageUnit) theo Layout A hoặc B
+        String cleanCode = code.replace("-", "");
+        List<StorageUnit> newUnits = new java.util.ArrayList<>();
+
+        // Floor 1 (Tầng Trệt):
+        // Layout A: 10 ô XL
+        // Layout B: 5 ô XL
+        Floor floor1 = createdFloors.get(0);
+        int xlCount = layout.equals("A") ? 10 : 5;
+        for (int i = 1; i <= xlCount; i++) {
+            String unitCode = String.format("%s-G-XL%02d", cleanCode, i);
+            newUnits.add(new StorageUnit(unitCode, floor1.getFloorId(), 4, "AVAILABLE"));
+        }
+
+        // Floor 2 (Tầng 1):
+        // Layout A: 8 ô S, 6 ô M, 4 ô L (18 ô)
+        // Layout B: 3 ô M, 2 ô L (5 ô)
+        if (createdFloors.size() >= 2) {
+            Floor floor2 = createdFloors.get(1);
+            if (layout.equals("A")) {
+                for (int s = 1; s <= 8; s++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F1-S%02d", cleanCode, s), floor2.getFloorId(), 1, "AVAILABLE"));
+                }
+                for (int m = 1; m <= 6; m++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F1-M%02d", cleanCode, m), floor2.getFloorId(), 2, "AVAILABLE"));
+                }
+                for (int l = 1; l <= 4; l++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F1-L%02d", cleanCode, l), floor2.getFloorId(), 3, "AVAILABLE"));
+                }
+            } else {
+                for (int m = 1; m <= 3; m++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F1-M%02d", cleanCode, m), floor2.getFloorId(), 2, "AVAILABLE"));
+                }
+                for (int l = 1; l <= 2; l++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F1-L%02d", cleanCode, l), floor2.getFloorId(), 3, "AVAILABLE"));
+                }
+            }
+        }
+
+        // Floor 3 (Tầng 2):
+        // Layout A: 6 ô S, 8 ô M, 4 ô L (18 ô)
+        // Layout B: 3 ô M, 2 ô L (5 ô)
+        if (createdFloors.size() >= 3) {
+            Floor floor3 = createdFloors.get(2);
+            if (layout.equals("A")) {
+                for (int s = 1; s <= 6; s++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F2-S%02d", cleanCode, s), floor3.getFloorId(), 1, "AVAILABLE"));
+                }
+                for (int m = 1; m <= 8; m++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F2-M%02d", cleanCode, m), floor3.getFloorId(), 2, "AVAILABLE"));
+                }
+                for (int l = 1; l <= 4; l++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F2-L%02d", cleanCode, l), floor3.getFloorId(), 3, "AVAILABLE"));
+                }
+            } else {
+                for (int m = 1; m <= 3; m++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F2-M%02d", cleanCode, m), floor3.getFloorId(), 2, "AVAILABLE"));
+                }
+                for (int l = 1; l <= 2; l++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F2-L%02d", cleanCode, l), floor3.getFloorId(), 3, "AVAILABLE"));
+                }
+            }
+        }
+
+        storageUnitRepository.saveAll(newUnits);
+
+        FacilityResponse res = mapFacilityToResponse(saved);
+        res.setFacilityCode(code);
+        res.setLayoutType(layout);
+        res.setFloorCount(floors);
+        return res;
+    }
+
+    // --- Cập nhật cơ sở kho vào Database ---
+    @Transactional
+    public FacilityResponse updateFacility(Integer facilityId, FacilityRequest req) {
+        Facility f = facilityRepository.findById(facilityId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy cơ sở ID: " + facilityId));
+        if (req.getFacilityName() != null) {
+            String name = req.getFacilityName().trim();
+            if (name.contains("(") && name.contains(")")) {
+                name = name.replaceAll("\\s*\\([^)]*\\)", "").trim();
+            }
+            f.setFacilityName(name);
+        }
+        if (req.getFacilityCode() != null) f.setFacilityCode(req.getFacilityCode().trim().toUpperCase());
+        if (req.getLayoutType() != null) f.setLayoutType(req.getLayoutType().trim().toUpperCase());
+        if (req.getAddress() != null) f.setAddress(req.getAddress().trim());
+        if (req.getPhone() != null) f.setPhone(req.getPhone().trim());
+        if (req.getStatus() != null) f.setStatus(req.getStatus().trim());
+        Facility saved = facilityRepository.save(f);
+        return mapFacilityToResponse(saved);
+    }
+
+    // --- Xóa mềm cơ sở kho vào Database (status = 'INACTIVE') ---
+    @Transactional
+    public void deleteFacility(Integer facilityId) {
+        Facility f = facilityRepository.findById(facilityId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy cơ sở ID: " + facilityId));
+        f.setStatus("INACTIVE");
+        facilityRepository.save(f);
     }
 
 }

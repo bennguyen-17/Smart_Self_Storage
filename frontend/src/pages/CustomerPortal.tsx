@@ -1,319 +1,216 @@
 import React, { useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
-import Header from '@/components/common/Header';
-import StorageMap2D from '@/features/portal/components/StorageMap2D';
-import BookingSidebar from '@/features/portal/components/BookingSidebar';
-import MyStorageTab from '@/features/portal/components/MyStorageTab';
-import DepositPaymentFlow from '@/features/portal/components/modals/DepositPaymentFlow';
-import ExtendPaymentFlow from '@/features/portal/components/modals/ExtendPaymentFlow';
-import CustomerProfileModal from '@/features/portal/components/modals/CustomerProfileModal';
-import SupportTicketModal from '@/features/portal/components/modals/SupportTicketModal';
-import ExtendContractModal from '@/features/portal/components/modals/ExtendContractModal';
-import ChatbotWidget from '@/components/common/ChatbotWidget';
-import SiteFooter from '@/components/common/SiteFooter';
-
-import { useTheme } from '@/components/common/theme-provider';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
+import { Warehouse, Boxes, KeyRound, Headset } from 'lucide-react';
+import CustomerLayout from '@/components/layouts/CustomerLayout';
 import { getCurrentCustomerProfile } from '@/features/portal/services/customerService';
-import { getBranches } from '@/features/portal/services/facilityService';
 
-export default function CustomerPortal() {
-  const { theme, setTheme } = useTheme();
-  const isDarkMode = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  const [activeTab, setActiveTab] = useState('grid'); // 'grid' | 'access'
-  const [facility, setFacility] = useState('HN-01');
-  const [currentFloor, setCurrentFloor] = useState(1);
+interface CustNavItem {
+  id: string;
+  label: string;
+  subtitle: string;
+  path: string;
+  icon: React.ComponentType<{ className?: string }>;
+  isFeatured?: boolean;
+  theme: {
+    cardBg: string;
+    border: string;
+    shadow: string;
+    iconBg: string;
+    textHover: string;
+    badge: string;
+    labelColor?: string;
+  };
+}
 
-  // Mặc định chưa chọn ô kho nào (null)
-  const [selectedUnit, setSelectedUnit] = useState(null);
+const CUSTOMER_NAV_ITEMS: CustNavItem[] = [
+  {
+    id: 'rent',
+    label: 'Thuê kho',
+    subtitle: 'Tìm & đặt ô kho 2D',
+    path: '/rent',
+    icon: Warehouse,
+    isFeatured: true,
+    theme: {
+      cardBg: 'bg-gradient-to-b from-blue-50/90 via-white/95 to-white/95 dark:from-blue-950/40 dark:via-slate-900/85 dark:to-slate-900/85',
+      border: 'border-2 border-blue-500/80 dark:border-cyan-400/80 ring-2 ring-blue-500/15 dark:ring-cyan-400/20',
+      shadow: 'shadow-xl shadow-blue-500/15 dark:shadow-[0_10px_30px_rgba(6,182,212,0.2)] hover:shadow-2xl hover:shadow-blue-500/25',
+      iconBg: 'bg-gradient-to-tr from-blue-600 via-sky-500 to-cyan-400 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/30',
+      labelColor: 'text-slate-900 dark:text-white',
+      textHover: 'group-hover:text-blue-600 dark:group-hover:text-cyan-400',
+      badge: 'bg-blue-600 text-white dark:bg-cyan-500 dark:text-slate-950 font-black shadow-md shadow-blue-600/25 dark:shadow-cyan-400/25 border border-blue-500 dark:border-cyan-300',
+    },
+  },
+  {
+    id: 'my-storage',
+    label: 'Kho của tôi',
+    subtitle: 'Quản lý hợp đồng & đồ',
+    path: '/my-storage',
+    icon: Boxes,
+    theme: {
+      cardBg: 'bg-white/90 hover:bg-white dark:bg-slate-900/80 dark:hover:bg-slate-800/90',
+      border: 'border border-blue-100 hover:border-blue-400/70 dark:border-slate-800 dark:hover:border-cyan-500/60 hover:ring-2 hover:ring-blue-400/15 dark:hover:ring-cyan-500/15',
+      shadow: 'shadow-lg shadow-blue-500/5 hover:shadow-xl hover:shadow-blue-500/15 dark:shadow-[0_10px_25px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_15px_30px_rgba(6,182,212,0.15)]',
+      iconBg: 'bg-gradient-to-tr from-blue-600 to-sky-500 text-white shadow-md shadow-blue-600/25',
+      labelColor: 'text-slate-900 dark:text-white',
+      textHover: 'group-hover:text-blue-600 dark:group-hover:text-cyan-400',
+      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/70 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30',
+    },
+  },
+  {
+    id: 'gate-pin',
+    label: 'Mã PIN mở cửa',
+    subtitle: 'Mở cửa tự động 24/7',
+    path: '/gate-pin',
+    icon: KeyRound,
+    theme: {
+      cardBg: 'bg-white/90 hover:bg-white dark:bg-slate-900/80 dark:hover:bg-slate-800/90',
+      border: 'border border-blue-100 hover:border-blue-400/70 dark:border-slate-800 dark:hover:border-cyan-500/60 hover:ring-2 hover:ring-blue-400/15 dark:hover:ring-cyan-500/15',
+      shadow: 'shadow-lg shadow-blue-500/5 hover:shadow-xl hover:shadow-blue-500/15 dark:shadow-[0_10px_25px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_15px_30px_rgba(6,182,212,0.15)]',
+      iconBg: 'bg-gradient-to-tr from-blue-600 to-sky-500 text-white shadow-md shadow-blue-600/25',
+      labelColor: 'text-slate-900 dark:text-white',
+      textHover: 'group-hover:text-blue-600 dark:group-hover:text-cyan-400',
+      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/70 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30',
+    },
+  },
+  {
+    id: 'support',
+    label: 'Gửi hỗ trợ',
+    subtitle: 'Gửi ticket & giải đáp',
+    path: '/support',
+    icon: Headset,
+    theme: {
+      cardBg: 'bg-white/90 hover:bg-white dark:bg-slate-900/80 dark:hover:bg-slate-800/90',
+      border: 'border border-blue-100 hover:border-blue-400/70 dark:border-slate-800 dark:hover:border-cyan-500/60 hover:ring-2 hover:ring-blue-400/15 dark:hover:ring-cyan-500/15',
+      shadow: 'shadow-lg shadow-blue-500/5 hover:shadow-xl hover:shadow-blue-500/15 dark:shadow-[0_10px_25px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_15px_30px_rgba(6,182,212,0.15)]',
+      iconBg: 'bg-gradient-to-tr from-blue-600 to-sky-500 text-white shadow-md shadow-blue-600/25',
+      labelColor: 'text-slate-900 dark:text-white',
+      textHover: 'group-hover:text-blue-600 dark:group-hover:text-cyan-400',
+      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/70 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30',
+    },
+  },
+];
 
-  // Modals
-  const [showDepositFlow, setShowDepositFlow] = useState(false);
-  const [showExtendPaymentFlow, setShowExtendPaymentFlow] = useState(false);
-  const [extendPaymentData, setExtendPaymentData] = useState<any>(null);
-  const [depositBookingData, setDepositBookingData] = useState(null);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showSupportModal, setShowSupportModal] = useState(false);
-  const [showExtendModal, setShowExtendModal] = useState(false);
-  const [extendUnitContext, setExtendUnitContext] = useState(null);
+interface CustomerPortalProps {
+  initialTab?: 'home' | 'grid' | 'access';
+}
 
-  const [mapRefreshTrigger, setMapRefreshTrigger] = useState(0);
-
-  // Dữ liệu khách hàng và cơ sở tải động từ Database
+export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalProps = {}) {
+  const navigate = useNavigate();
   const [customerProfile, setCustomerProfile] = useState<any>(null);
-  const [branches, setBranches] = useState<any[]>([]);
+
+  // Điều hướng nếu được gọi với initialTab từ route cũ
+  useEffect(() => {
+    if (initialTab === 'grid') {
+      navigate('/rent', { replace: true });
+    } else if (initialTab === 'access') {
+      navigate('/my-storage', { replace: true });
+    }
+  }, [initialTab, navigate]);
 
   useEffect(() => {
     let isMounted = true;
-    const fetchPortalData = async () => {
+    const fetchProfile = async () => {
       try {
-        const [profileRes, branchesRes] = await Promise.all([
-          getCurrentCustomerProfile(),
-          getBranches()
-        ]);
-        if (isMounted) {
-          if (profileRes.success && profileRes.data) {
-            setCustomerProfile(profileRes.data);
-          }
-          if (branchesRes.success && Array.isArray(branchesRes.data) && branchesRes.data.length > 0) {
-            setBranches(branchesRes.data);
-          }
+        const res = await getCurrentCustomerProfile();
+        if (isMounted && res.success && res.data) {
+          setCustomerProfile(res.data);
         }
       } catch (err) {
-        console.error('Lỗi tải dữ liệu cổng khách hàng:', err);
+        console.error('Lỗi tải thông tin khách hàng:', err);
       }
     };
-    fetchPortalData();
-
-    const handleProfileUpdate = () => {
-      fetchPortalData();
-    };
-    window.addEventListener('customer_profile_updated', handleProfileUpdate);
-
+    fetchProfile();
     return () => {
       isMounted = false;
-      window.removeEventListener('customer_profile_updated', handleProfileUpdate);
     };
   }, []);
 
-  // Lấy họ tên khách hàng thực tế từ DB hoặc session đăng nhập
   const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-  const parsedUser = storedUser ? (() => { try { return JSON.parse(storedUser); } catch(e) { return null; } })() : null;
+  const parsedUser = storedUser ? (() => { try { return JSON.parse(storedUser); } catch (e) { return null; } })() : null;
   const customerName = customerProfile?.fullName || parsedUser?.fullName || 'Khách Hàng';
-  const customerAvatar = customerProfile?.avatarText || (customerName !== 'Khách Hàng' ? customerName.trim().split(' ').pop()?.substring(0, 2).toUpperCase() : null);
-
-  // Toggle giữa Sáng và Tối thống nhất hệ thống
-  const toggleTheme = () => {
-    setTheme(isDarkMode ? 'light' : 'dark');
-  };
-
-  const handleOpenDepositModal = (bookingPayload?: Record<string, any>) => {
-    if (!selectedUnit) return;
-    const currentBranch = branches.find((b) => b.code === facility || b.id === facility);
-    const facilityDisplayName = currentBranch?.name || `SmartStorage (${facility})`;
-
-    setDepositBookingData({
-      facilityName: facilityDisplayName,
-      unitId: selectedUnit.id,
-      unitSize: `Size ${selectedUnit.size}`,
-      storageType: bookingPayload?.storageType || (selectedUnit as any).storageType || ((selectedUnit as any).isClimate ? 'CLIMATE_CONTROLLED' : 'STANDARD'),
-      typeLabel: bookingPayload?.typeLabel || (selectedUnit as any).typeLabel || ((selectedUnit as any).isClimate ? 'Kho Mát Điều Hòa (22-25°C)' : 'Kho Tiêu Chuẩn'),
-      isClimate: bookingPayload?.isClimate ?? (selectedUnit as any).isClimate,
-      startDate: bookingPayload?.startDate || new Date().toLocaleDateString('vi-VN'),
-      endDate: bookingPayload?.endDate || '',
-      effectiveDays: bookingPayload?.effectiveDays || 30,
-      estimatedTotalRental: bookingPayload?.estimatedTotalRental || (selectedUnit.monthlyPrice ? selectedUnit.monthlyPrice * 1 : selectedUnit.price * 30),
-      depositAmount: selectedUnit.deposit
-    });
-    setShowDepositFlow(true);
-  };
-
-  const handleOpenExtendModal = (unitInfo) => {
-    setExtendUnitContext(unitInfo);
-    setShowExtendModal(true);
-  };
-
-  const handleConfirmExtendPayment = (extData) => {
-    setShowExtendModal(false);
-    setDepositBookingData({
-      facilityName: `SmartStorage ${extData.unitCode}`,
-      unitId: extData.unitCode,
-      unitSize: `Size ${extData.size}`,
-      startDate: new Date().toLocaleDateString('vi-VN'),
-      depositAmount: extData.finalTotal
-    });
-    setShowDepositFlow(true);
-  };
-
-  const handleLogout = () => {
-    if (window.confirm("Bạn có chắc chắn muốn đăng xuất khỏi Cổng Khách Hàng SmartStorage?")) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      setShowProfileModal(false);
-      window.location.href = "/login";
-    }
-  };
 
   return (
-    <div className={`min-h-screen flex flex-col ${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'}`}>
-      {/* Header */}
-      <Header
-        isDarkMode={isDarkMode}
-        onToggleTheme={toggleTheme}
-        onOpenProfileModal={() => setShowProfileModal(true)}
-      />
+    <CustomerLayout activeNav="home">
+      {/* 1. KHU VỰC HERO DASHBOARD (TIÊU ĐỀ + CHÀO HỎI) */}
+      <motion.div
+        key="hero-dashboard-headline"
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center pt-10 sm:pt-14 pb-2 text-center"
+      >
+        <div className="relative flex flex-col items-center select-none w-full max-w-5xl">
+          {/* Ambient glow */}
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-full max-w-3xl h-40 bg-gradient-to-r from-blue-500/20 via-cyan-400/25 to-indigo-500/20 blur-3xl rounded-full pointer-events-none -z-10" />
 
-      {/* Main Body Container: Optimal 1280px max width & vertical centering for all screens */}
-      <main className="w-full max-w-[1280px] mx-auto px-3 sm:px-5 lg:px-6 flex-1 flex flex-col justify-center py-3.5 sm:py-5">
-        <div className="space-y-3 sm:space-y-3.5 w-full">
-          {/* CUSTOMER DASHBOARD HEADER BANNER */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white dark:bg-slate-900 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3 w-full"
-          >
-            {/* AVATAR & GREETING (Lấy động từ Database) */}
-            <div className="flex items-center space-x-3 shrink-0">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xs sm:text-sm shadow-sm shadow-blue-500/25 shrink-0 tracking-wider">
-                {customerAvatar || <i className="fa-solid fa-user-check"></i>}
-              </div>
-              <div>
-                <h1 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
-                  Xin chào, <span className="text-blue-600">{customerName}</span>!
-                </h1>
-                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">Hệ thống kho tự quản thông minh 24/7</p>
-              </div>
-            </div>
-
-            {/* TABS */}
-            <div className="inline-flex items-center p-0.5 sm:p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 gap-1 w-full sm:w-auto overflow-x-auto">
-              <button
-                type="button"
-                onClick={() => setActiveTab('grid')}
-                className={`px-3 py-1.5 rounded-lg font-bold text-xs flex items-center space-x-1.5 transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                  activeTab === 'grid'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-700'
-                }`}
-              >
-                <i className="fa-solid fa-map-location-dot text-xs"></i>
-                <span>Sơ đồ 2D & Thuê kho</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('access')}
-                className={`px-3 py-1.5 rounded-lg font-bold text-xs flex items-center space-x-1.5 transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                  activeTab === 'access'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-700'
-                }`}
-              >
-                <i className="fa-solid fa-boxes-stacked text-xs"></i>
-                <span>Kho của tôi & Mã PIN Cửa chính</span>
-              </button>
-            </div>
-
-            {/* SUPPORT TICKET BUTTON */}
-            <div className="flex items-center shrink-0">
-              <button
-                type="button"
-                onClick={() => setShowSupportModal(true)}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xs transition-transform duration-200 hover:scale-103 flex items-center space-x-1.5 cursor-pointer"
-              >
-                <i className="fa-solid fa-headset text-xs"></i>
-                <span>Gửi Hỗ Trợ / Báo Sự Cố</span>
-              </button>
-            </div>
-          </motion.div>
-
-          {/* TAB CONTENT WITH ANIMATION */}
-          <AnimatePresence mode="wait">
-            {activeTab === 'grid' ? (
-              <motion.div
-                key="grid-tab"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-                className="space-y-4"
-              >
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start w-full">
-                  {/* Sơ đồ kho 2D */}
-                  <div className="lg:col-span-8">
-                    <StorageMap2D
-                      facility={facility}
-                      refreshTrigger={mapRefreshTrigger}
-                      onFacilityChange={(fac) => {
-                        setFacility(fac);
-                        setSelectedUnit(null);
-                      }}
-                      currentFloor={currentFloor}
-                      onSelectFloor={(fl) => {
-                        setCurrentFloor(fl);
-                        setSelectedUnit(null);
-                      }}
-                      selectedUnit={selectedUnit}
-                      onSelectUnit={setSelectedUnit}
-                    />
-                  </div>
-
-                  {/* Sidebar Giỏ hàng & Đặt cọc */}
-                  <div className="lg:col-span-4 sticky top-4">
-                    <BookingSidebar
-                      selectedUnit={selectedUnit}
-                      onOpenDepositModal={handleOpenDepositModal}
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="access-tab"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-              >
-                <MyStorageTab onOpenExtendModal={handleOpenExtendModal} />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight uppercase text-center leading-[1.15]">
+            <span className="text-slate-900 dark:text-white drop-shadow-xs">
+              HỆ THỐNG KHO TỰ QUẢN
+            </span>
+            <br />
+            <span className="text-slate-900 dark:text-white drop-shadow-xs">
+              THÔNG MINH{' '}
+            </span>
+            <span className="text-blue-600 dark:text-cyan-400 drop-shadow-[0_4px_16px_rgba(37,99,235,0.35)] dark:drop-shadow-[0_4px_20px_rgba(6,182,212,0.6)]">
+              24/7
+            </span>
+          </h1>
         </div>
-      </main>
 
-      {/* Footer for Customer Portal */}
-      <SiteFooter />
+        {/* Customer Greeting */}
+        <div className="flex items-center justify-center mt-6 sm:mt-8">
+          <div className="inline-flex items-center gap-3 px-6 py-2.5 sm:px-7 sm:py-3 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-blue-200/90 dark:border-cyan-400/70 shadow-lg shadow-blue-500/10 text-sm sm:text-base font-bold text-slate-700 dark:text-slate-200">
+            <span className="flex h-3 w-3 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </span>
+            <span>Xin chào,</span>
+            <span className="text-blue-600 dark:text-cyan-400 font-black text-base sm:text-lg tracking-wide">
+              {customerName}
+            </span>
+          </div>
+        </div>
+      </motion.div>
 
-      {/* Floating Chatbot AI 24/7 Widget */}
-      <ChatbotWidget />
+      {/* 2. HÀNG 4 NÚT ĐIỀU HƯỚNG TỚI 4 TRANG RIÊNG BIỆT */}
+      <motion.div
+        key="home-action-cards"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+        className="w-full max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex justify-center"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7 lg:gap-8 w-full items-stretch">
+          {CUSTOMER_NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const theme = item.theme;
 
-      {/* Modals */}
-      {showProfileModal && (
-        <CustomerProfileModal
-          onClose={() => setShowProfileModal(false)}
-          onLogout={handleLogout}
-        />
-      )}
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => navigate(item.path)}
+                className={`group relative transition-all duration-300 cursor-pointer flex items-center p-6 sm:p-7 rounded-3xl backdrop-blur-xl border tracking-wide hover:-translate-y-1.5 hover:scale-[1.02] text-center flex-col justify-between min-h-[190px] sm:min-h-[210px] ${theme.cardBg} ${theme.border} ${theme.shadow}`}
+              >
+                <span className={`shrink-0 flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl group-hover:scale-105 transition-transform ${theme.iconBg}`}>
+                  <Icon className="size-7 sm:size-8" />
+                </span>
 
-      {showSupportModal && (
-        <SupportTicketModal
-          onClose={() => setShowSupportModal(false)}
-        />
-      )}
+                <div className="flex flex-col items-center mt-5 w-full">
+                  <span className={`font-black text-xl sm:text-2xl lg:text-3xl transition-colors whitespace-nowrap ${theme.labelColor || 'text-slate-900 dark:text-white'} ${theme.textHover}`}>
+                    {item.label}
+                  </span>
 
-      {showExtendModal && (
-        <ExtendContractModal
-          unitContext={extendUnitContext}
-          onClose={() => setShowExtendModal(false)}
-          onConfirmPayment={handleConfirmExtendPayment}
-        />
-      )}
-
-              {showExtendPaymentFlow && extendPaymentData && (
-          <ExtendPaymentFlow
-            initialBookingData={extendPaymentData}
-            onClose={() => setShowExtendPaymentFlow(false)}
-            onFinish={() => {
-              setShowExtendPaymentFlow(false);
-              setMapRefreshTrigger(prev => prev + 1);
-            }}
-          />
-        )}
-
-        {/* VietQR Deposit Flow Modal */}
-      {showDepositFlow && depositBookingData && (
-        <DepositPaymentFlow
-          initialBookingData={depositBookingData}
-          onClose={() => setShowDepositFlow(false)}
-          onFinish={() => {
-            setShowDepositFlow(false);
-            setSelectedUnit(null);
-            setMapRefreshTrigger(prev => prev + 1);
-            setActiveTab('access');
-          }}
-        />
-      )}
-    </div>
+                  <span className={`mt-2.5 text-xs sm:text-sm font-bold px-4 py-1.5 rounded-full transition-transform group-hover:scale-105 ${theme.badge}`}>
+                    {item.subtitle}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </motion.div>
+    </CustomerLayout>
   );
-}
+}

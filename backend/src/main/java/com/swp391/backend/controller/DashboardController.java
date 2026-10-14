@@ -26,7 +26,7 @@ public class DashboardController {
 
         Integer targetFacilityId = managerFacilityId != null ? managerFacilityId : facilityId;
         if (targetFacilityId == null) {
-            targetFacilityId = 1; // Mặc định cơ sở 1 (HN-01 Cầu Giấy) nếu chưa truyền header
+            targetFacilityId = 1; 
         }
 
         try {
@@ -39,7 +39,6 @@ public class DashboardController {
         }
     }
 
-    // --- US-33: Dashboard toàn chuỗi 7 cơ sở cho Ban Giám Đốc (BOM / Admin) ---
     @GetMapping("/admin/dashboard/chain-overview")
     public ResponseEntity<ChainDashboardResponse> getChainDashboardOverview() {
         ChainDashboardResponse response = dashboardService.getChainDashboard();

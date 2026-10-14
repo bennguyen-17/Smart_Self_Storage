@@ -151,7 +151,7 @@ export default function ChatbotWidget() {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         title="Mở Trợ lý AI"
-        className="bg-blue-600 hover:bg-blue-500 text-white w-12 h-12 rounded-full shadow-xl flex items-center justify-center text-lg transition-all duration-300 hover:scale-105 border-2 border-white cursor-pointer"
+        className="bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white w-12 h-12 rounded-full shadow-[0_0_20px_rgba(34,211,238,0.4)] flex items-center justify-center text-lg transition-all duration-300 hover:scale-110 border border-cyan-300/80 cursor-pointer"
       >
         <i className="fa-solid fa-comments"></i>
       </button>

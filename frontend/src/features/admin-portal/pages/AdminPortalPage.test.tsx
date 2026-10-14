@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom"
 import { beforeEach, describe, expect, test, vi } from "vitest"
@@ -25,52 +25,60 @@ function renderAt(path: string) {
   render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
-        <Route path="/admin" element={<AdminPortalPage />} />
+        <Route path="/admin/*" element={<AdminPortalPage />} />
         <Route path="/internal_login" element={<p>Trang đăng nhập nội bộ</p>} />
-        <Route path="/manager" element={<p>Trang quản lý cơ sở</p>} />
       </Routes>
       <LocationProbe />
     </MemoryRouter>
   )
+  return userEvent.setup()
 }
+
+const desktopNav = () => screen.getByRole("navigation", { name: /^các trang cổng quản trị hệ thống$/i })
 
 beforeEach(() => auth.signOut.mockReset())
 
-describe("AdminPortalPage: khung Cổng Quản trị hệ thống", () => {
-  test("đủ 3 tab theo chốt nhóm, mặc định tab Tài khoản đã gắn chức năng", async () => {
+describe("AdminPortalPage: navbar riêng của Admin + mỗi trang một link", () => {
+  test("/admin → /admin/users; navbar có đúng 3 trang của Admin, không có trang của Manager", async () => {
     renderAt("/admin")
-    expect(screen.getByText("Cổng Quản trị hệ thống", { selector: "span" })).toBeInTheDocument()
-    const nav = screen.getByRole("navigation", { name: /chức năng quản trị/i })
-    expect(nav.querySelectorAll("button")).toHaveLength(3)
-    expect(screen.getByRole("button", { name: /tài khoản & phân quyền/i })).toHaveAttribute("aria-current", "page")
-    expect(await screen.findByRole("heading", { name: /tài khoản nội bộ/i })).toBeInTheDocument()
-    expect(screen.queryByText(/chính sách/i)).not.toBeInTheDocument()
+    expect(screen.getByTestId("location")).toHaveTextContent("/admin/users")
+    expect(screen.getByRole("heading", { level: 1, name: "Tài khoản & phân quyền" })).toBeInTheDocument()
+    const links = within(desktopNav()).getAllByRole("link").map((a) => a.textContent)
+    expect(links).toEqual(["Tài khoản", "Chi nhánh", "Nhật ký hoạt động"])
+    expect(screen.queryByRole("link", { name: "Ô kho" })).not.toBeInTheDocument()
+    expect(await screen.findByRole("button", { name: /tạo tài khoản/i })).toBeInTheDocument()
   })
 
-  test("tab chưa có chức năng → ô 'đang phát triển' kèm người phụ trách", async () => {
-    const user = userEvent.setup()
-    renderAt("/admin")
-    await user.click(screen.getByRole("button", { name: /nhật ký hoạt động/i }))
-    expect(screen.getByTestId("location")).toHaveTextContent("/admin?tab=audit")
-    expect(screen.getByText(/đang phát triển · US-30 · phụ trách: Vy/i)).toBeInTheDocument()
+  test.each([
+    { link: "Chi nhánh", path: "/admin/facilities", title: "Chi nhánh" },
+    { link: "Nhật ký hoạt động", path: "/admin/audit", title: "Nhật ký hoạt động hệ thống" },
+  ])("bấm '$link' → $path, trang đã có chức năng (không còn ô giữ chỗ)", async ({ link, path, title }) => {
+    const user = renderAt("/admin/users")
+    await user.click(within(desktopNav()).getByRole("link", { name: link }))
+    expect(screen.getByTestId("location")).toHaveTextContent(path)
+    expect(screen.getByRole("heading", { level: 1, name: title })).toBeInTheDocument()
+    expect(screen.queryByText(/đang phát triển/i)).not.toBeInTheDocument()
   })
 
-  test("tab lạ trên URL → về tab mặc định", () => {
-    renderAt("/admin?tab=policy")
-    expect(screen.getByRole("button", { name: /tài khoản & phân quyền/i })).toHaveAttribute("aria-current", "page")
+  test.each([
+    { from: "/admin?tab=audit", to: "/admin/audit" },
+    { from: "/admin/policy", to: "/admin/users" },
+  ])("$from → $to", ({ from, to }) => {
+    renderAt(from)
+    expect(screen.getByTestId("location")).toHaveTextContent(to)
   })
 
-  test("lối tắt sang Cổng Quản lý cơ sở", async () => {
-    const user = userEvent.setup()
-    renderAt("/admin")
-    await user.click(screen.getByRole("link", { name: /cổng quản lý cơ sở/i }))
-    expect(screen.getByText("Trang quản lý cơ sở")).toBeInTheDocument()
+  test("không còn lối tắt sang cổng khác trong body", () => {
+    renderAt("/admin/users")
+    expect(screen.queryByRole("link", { name: /cổng quản lý cơ sở|đơn cọc/i })).not.toBeInTheDocument()
   })
 
-  test("đăng xuất → gọi signOut chung và về trang đăng nhập nội bộ", async () => {
-    const user = userEvent.setup()
-    renderAt("/admin")
-    await user.click(screen.getByRole("button", { name: /đăng xuất/i }))
+  test("popup hồ sơ: Admin thuộc toàn hệ thống; Đăng xuất gọi signOut chung và về trang đăng nhập nội bộ", async () => {
+    const user = renderAt("/admin/users")
+    await user.click(screen.getByRole("button", { name: /tài khoản: quản trị viên hệ thống/i }))
+    const profile = await screen.findByRole("dialog", { name: /hồ sơ nhân sự/i })
+    expect(within(profile).getByText("Toàn hệ thống")).toBeInTheDocument()
+    await user.click(within(profile).getByRole("button", { name: /đăng xuất/i }))
     expect(auth.signOut).toHaveBeenCalledTimes(1)
     expect(screen.getByText("Trang đăng nhập nội bộ")).toBeInTheDocument()
   })

@@ -4,11 +4,24 @@ import { Agentation } from "agentation"
 import AuthPage from "@/pages/AuthPage"
 import InternalLoginPage from "@/pages/InternalLoginPage"
 import CustomerPortal from "@/pages/CustomerPortal"
+import RentStoragePage from "@/pages/RentStoragePage"
+import MyStoragePage from "@/pages/MyStoragePage"
+import GatePinPage from "@/pages/GatePinPage"
+import CustomerSupportPage from "@/pages/CustomerSupportPage"
 import RolePortalPlaceholderPage from "@/pages/RolePortalPlaceholderPage"
 import LandingPage from "@/features/landing/pages/LandingPage"
 import ReservationManagementPage from "@/features/reservations/pages/ReservationManagementPage"
+import StaffPortalLayout from "@/features/checkin/pages/StaffPortalLayout"
 import StaffCheckinPage from "@/features/checkin/pages/StaffCheckinPage"
+import StaffSupportPage from "@/features/checkin/pages/StaffSupportPage"
+import StaffPinPage from "@/features/checkin/pages/StaffPinPage"
 import FloorPlanPage from "@/features/floor-plan/pages/FloorPlanPage"
+import BomLayout from "@/features/bom/layouts/BomLayout"
+import BomDashboardPage from "@/features/bom/pages/BomDashboardPage"
+import BomFacilitiesPage from "@/features/bom/pages/BomFacilitiesPage"
+import BomPricingPage from "@/features/bom/pages/BomPricingPage"
+import BomPoliciesPage from "@/features/bom/pages/BomPoliciesPage"
+import BomReportsPage from "@/features/bom/pages/BomReportsPage"
 import ManagerPortalPage from "@/features/manager-portal/pages/ManagerPortalPage"
 import AdminPortalPage from "@/features/admin-portal/pages/AdminPortalPage"
 import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
@@ -16,7 +29,8 @@ import { isTokenValid } from "@/lib/apiClient"
 
 // Route Guard độc lập cho Cổng Khách Hàng (không phụ thuộc vào cổng nội bộ)
 function CustomerProtectedRoute({ children }: { children: React.ReactNode }) {
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null
 
   if (!isTokenValid(token)) {
     if (typeof window !== "undefined") {
@@ -51,7 +65,7 @@ function App() {
         {/* US-03: Sơ đồ 2D chọn ô kho */}
         <Route path="/floor-plan" element={<FloorPlanPage />} />
 
-        {/* Cổng Khách Hàng (Bảo vệ độc lập bằng token khách hàng) */}
+        {/* Cổng Khách Hàng: Trang chủ Dashboard & 4 Màn hình tách riêng */}
         <Route
           path="/portal"
           element={
@@ -60,16 +74,101 @@ function App() {
             </CustomerProtectedRoute>
           }
         />
-
-        {/* Cổng Nhân Viên Vận Hành: Check-in tại quầy & Quản lý Ticket (Role STAFF, MANAGER, ADMIN) */}
         <Route
-          path="/staff/checkin"
+          path="/customer"
           element={
-            <RoleProtectedRoute allowedRoles={["STAFF", "MANAGER", "ADMIN"]}>
-              <StaffCheckinPage />
-            </RoleProtectedRoute>
+            <CustomerProtectedRoute>
+              <CustomerPortal />
+            </CustomerProtectedRoute>
           }
         />
+
+        {/* Màn hình 1: Thuê kho (Sơ đồ 2D & Đặt cọc) */}
+        <Route
+          path="/rent"
+          element={
+            <CustomerProtectedRoute>
+              <RentStoragePage />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/portal/rent"
+          element={
+            <CustomerProtectedRoute>
+              <RentStoragePage />
+            </CustomerProtectedRoute>
+          }
+        />
+
+        {/* Màn hình 2: Kho của tôi (Quản lý hợp đồng & đồ) */}
+        <Route
+          path="/my-storage"
+          element={
+            <CustomerProtectedRoute>
+              <MyStoragePage />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/portal/my-storage"
+          element={
+            <CustomerProtectedRoute>
+              <MyStoragePage />
+            </CustomerProtectedRoute>
+          }
+        />
+
+        {/* Màn hình 3: Mã PIN mở cửa 24/7 */}
+        <Route
+          path="/gate-pin"
+          element={
+            <CustomerProtectedRoute>
+              <GatePinPage />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/portal/gate-pin"
+          element={
+            <CustomerProtectedRoute>
+              <GatePinPage />
+            </CustomerProtectedRoute>
+          }
+        />
+
+        {/* Màn hình 4: Gửi hỗ trợ & Kênh liên hệ khẩn cấp */}
+        <Route
+          path="/support"
+          element={
+            <CustomerProtectedRoute>
+              <CustomerSupportPage />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/portal/support"
+          element={
+            <CustomerProtectedRoute>
+              <CustomerSupportPage />
+            </CustomerProtectedRoute>
+          }
+        />
+
+        {/* Cổng Nhân Viên Vận Hành: mỗi nghiệp vụ một URL riêng (Role STAFF, MANAGER, ADMIN) */}
+        <Route
+          path="/staff"
+          element={
+            <RoleProtectedRoute allowedRoles={["STAFF", "MANAGER", "ADMIN"]}>
+              <StaffPortalLayout />
+            </RoleProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/staff/checkin" replace />} />
+          <Route path="checkin" element={<StaffCheckinPage />} />
+          <Route path="support" element={<StaffSupportPage />} />
+          <Route path="pin" element={<StaffPinPage />} />
+        </Route>
 
         {/* US-06: Quản lý đơn đặt cọc & No-Show (Role STAFF, MANAGER, ADMIN) */}
         <Route
@@ -83,7 +182,7 @@ function App() {
 
         {/* Cổng Quản Lý Chi Nhánh: Manager Portal (Role MANAGER, ADMIN) */}
         <Route
-          path="/manager"
+          path="/manager/*"
           element={
             <RoleProtectedRoute allowedRoles={["MANAGER", "ADMIN"]}>
               {/* Khung Cổng Quản lý cơ sở (builder: Vỹ) */}
@@ -92,19 +191,28 @@ function App() {
           }
         />
 
-        {/* Cổng Ban Giám Đốc: BOM Portal (Role BOM, ADMIN) */}
+        {/* Cổng Ban Giám Đốc: BOM Portal với các Trang Route riêng biệt */}
         <Route
           path="/bom"
           element={
             <RoleProtectedRoute allowedRoles={["BOM", "ADMIN"]}>
-              <RolePortalPlaceholderPage portalType="BOM" />
+              <BomLayout />
             </RoleProtectedRoute>
           }
-        />
+        >
+          <Route index element={<BomDashboardPage />} />
+          <Route path="facilities" element={<BomFacilitiesPage />} />
+          <Route path="pricing" element={<BomPricingPage />} />
+          <Route path="policies" element={<BomPoliciesPage />} />
+          <Route path="reports" element={<BomReportsPage />} />
+        </Route>
+
+        {/* Alias /bom-portal tự động chuyển tiếp về /bom */}
+        <Route path="/bom-portal" element={<Navigate to="/bom" replace />} />
 
         {/* Cổng Quản Trị Hệ Thống: Admin Portal (Role ADMIN) */}
         <Route
-          path="/admin"
+          path="/admin/*"
           element={
             <RoleProtectedRoute allowedRoles={["ADMIN"]}>
               {/* Khung Cổng Quản trị hệ thống (builder: Vỹ) */}

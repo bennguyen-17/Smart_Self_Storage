@@ -16,8 +16,10 @@ import { CHECKIN_TABS, findCheckinTab, type CheckinTabKey } from "../constants"
 import type { StaffReservationItem } from "../types"
 import CheckinContractTable from "./CheckinContractTable"
 import ChangeUnitDialog from "./ChangeUnitDialog"
+import CollectPenaltyDialog from "./CollectPenaltyDialog"
 import ConfirmCheckinDialog from "./ConfirmCheckinDialog"
 import CounterCancelDialog from "./CounterCancelDialog"
+import RenewAtCounterDialog from "./RenewAtCounterDialog"
 import StaffCustomerDetailModal, {
   type CheckinTarget,
 } from "./StaffCustomerDetailModal"
@@ -77,6 +79,11 @@ function CheckinPanel() {
     null
   )
   const [inspection, setInspection] = useState<InspectionTarget | null>(null)
+  // US-20: thu phạt quá hạn & gia hạn tại quầy
+  const [penaltyContract, setPenaltyContract] = useState<CheckinTarget | null>(
+    null
+  )
+  const [renewContract, setRenewContract] = useState<CheckinTarget | null>(null)
 
   const { data, error, isLoading } = useAsyncData(`checkin:${reload}`, () =>
     listCheckinContracts()
@@ -222,6 +229,8 @@ function CheckinPanel() {
             depositAmount: item.depAmount,
           })
         }
+        onCollectPenalty={setPenaltyContract}
+        onRenew={setRenewContract}
         unitMeta={unitMeta}
       />
 
@@ -260,6 +269,24 @@ function CheckinPanel() {
       <StaffInspectionModal
         target={inspection}
         onClose={() => setInspection(null)}
+      />
+
+      <CollectPenaltyDialog
+        contract={penaltyContract}
+        onClose={() => setPenaltyContract(null)}
+        onCollected={() => {
+          setPenaltyContract(null)
+          refresh()
+        }}
+      />
+
+      <RenewAtCounterDialog
+        contract={renewContract}
+        onClose={() => setRenewContract(null)}
+        onRenewed={() => {
+          setRenewContract(null)
+          refresh()
+        }}
       />
     </div>
   )

@@ -88,9 +88,6 @@ function Body({
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "BANK_TRANSFER">(
-    "CASH"
-  )
 
   const collectAmount = contract.depRemainingAmount ?? 0
   const canCollect = collectAmount > 0
@@ -103,7 +100,7 @@ function Body({
     try {
       const response = await confirmCheckin(contract.reservationId, {
         collectedAmount: collectAmount,
-        paymentMethod,
+        paymentMethod: "CASH",
       })
       toast.success("Check-in thành công", {
         description: `Hợp đồng ${response.reservationCode ?? contract.reservationCode} đã chuyển sang ĐANG THUÊ.`,
@@ -128,16 +125,7 @@ function Body({
         />
         <div className="flex items-center justify-between gap-4 border-t border-slate-200 pt-1.5 dark:border-slate-800">
           <span className="text-muted">Hình thức thanh toán</span>
-          <select
-            value={paymentMethod}
-            onChange={(event) =>
-              setPaymentMethod(event.target.value as "CASH" | "BANK_TRANSFER")
-            }
-            className="portal-input h-8 rounded-lg border px-2.5 text-xs outline-none"
-          >
-            <option value="CASH">Tiền mặt (CASH)</option>
-            <option value="BANK_TRANSFER">Chuyển khoản (BANK_TRANSFER)</option>
-          </select>
+          <span className="text-title font-bold">Tiền mặt</span>
         </div>
       </div>
 

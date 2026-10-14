@@ -1,15 +1,89 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Check, MapPin, Snowflake, Layers, Filter } from 'lucide-react';
 import { getStorageUnits, getBranches } from '@/features/portal/services/facilityService';
 
-const facilityData = {
-  'HN-01': { name: 'SmartStorage Cầu Giấy (HN-01)', address: 'Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội', floors: 3 },
-  'HN-02': { name: 'SmartStorage Thanh Xuân (HN-02)', address: 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội', floors: 3 },
-  'HCM-01': { name: 'SmartStorage Quận 1 (HCM-01)', address: 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM', floors: 3 },
-  'HCM-02': { name: 'SmartStorage Quận 7 (HCM-02)', address: 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM', floors: 2 },
-  'HCM-03': { name: 'SmartStorage Thủ Đức (HCM-03)', address: 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM', floors: 3 },
-  'DN-01': { name: 'SmartStorage Hải Châu (DN-01)', address: 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng', floors: 2 },
-  'CT-01': { name: 'SmartStorage Ninh Kiều (CT-01)', address: 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', floors: 2 }
+export const facilityData: Record<string, {
+  name: string;
+  address: string;
+  floors: number;
+  city: string;
+  image: string;
+}> = {
+  'HN-01': {
+    name: 'SmartStorage Cầu Giấy (HN-01)',
+    address: 'Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội',
+    floors: 3,
+    city: 'Hà Nội',
+    image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80',
+  },
+  'HN-02': {
+    name: 'SmartStorage Thanh Xuân (HN-02)',
+    address: 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội',
+    floors: 3,
+    city: 'Hà Nội',
+    image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=600&q=80',
+  },
+  'HCM-01': {
+    name: 'SmartStorage Quận 1 (HCM-01)',
+    address: 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM',
+    floors: 3,
+    city: 'TP.HCM',
+    image: 'https://images.unsplash.com/photo-1590247813693-5541d1c609fd?auto=format&fit=crop&w=600&q=80',
+  },
+  'HCM-02': {
+    name: 'SmartStorage Quận 7 (HCM-02)',
+    address: 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM',
+    floors: 2,
+    city: 'TP.HCM',
+    image: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?auto=format&fit=crop&w=600&q=80',
+  },
+  'HCM-03': {
+    name: 'SmartStorage Thủ Đức (HCM-03)',
+    address: 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM',
+    floors: 3,
+    city: 'TP.HCM',
+    image: 'https://images.unsplash.com/photo-1568667256549-094345857637?auto=format&fit=crop&w=600&q=80',
+  },
+  'DN-01': {
+    name: 'SmartStorage Hải Châu (DN-01)',
+    address: 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng',
+    floors: 2,
+    city: 'Đà Nẵng',
+    image: 'https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=600&q=80',
+  },
+  'CT-01': {
+    name: 'SmartStorage Ninh Kiều (CT-01)',
+    address: 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ',
+    floors: 2,
+    city: 'Cần Thơ',
+    image: 'https://images.unsplash.com/photo-1730154838368-c37b1fdebcf6?auto=format&fit=crop&w=600&q=80',
+  }
 };
+
+const STORAGE_TYPES_DATA = [
+  {
+    id: 'ALL',
+    name: 'Tất cả ô kho',
+    desc: 'Hiển thị đầy đủ cả kho thường và kho mát',
+    badge: 'Toàn bộ',
+    image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'STANDARD',
+    name: 'Kho Thường (Standard)',
+    desc: 'Nhiệt độ phòng • Gia dụng, nội thất, tài liệu',
+    badge: '📦 Chuẩn',
+    image: 'https://images.unsplash.com/photo-1590247813693-5541d1c609fd?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'CLIMATE_CONTROLLED',
+    name: 'Kho Mát (22-25°C)',
+    desc: 'Điều hòa 24/7 • Ẩm <55% • Đồ hiệu, điện tử, rượu',
+    badge: '❄️ Mát 22-25°C',
+    image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=600&q=80'
+  }
+];
 
 export default function StorageMap2D({
   facility,
@@ -31,9 +105,15 @@ export default function StorageMap2D({
   const [branches, setBranches] = useState<any[]>([]);
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedStorageType, setSelectedStorageType] = useState<'ALL' | 'STANDARD' | 'CLIMATE_CONTROLLED'>('ALL');
+  const [selectedStorageType, setSelectedStorageType] = useState<'ALL' | 'STANDARD' | 'CLIMATE_CONTROLLED' | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string>('ALL');
 
-  // Tải danh sách chi nhánh cơ sở từ Database
+  // Khi đổi cơ sở kho, reset loại kho đã chọn để hiện lại tuần tự
+  useEffect(() => {
+    setSelectedStorageType(null);
+  }, [facility]);
+
+  // Tải danh sách chi nhánh cơ sở từ Database & lắng nghe sự kiện đồng bộ tự động
   useEffect(() => {
     let isMounted = true;
     const fetchBranches = async () => {
@@ -47,22 +127,38 @@ export default function StorageMap2D({
       }
     };
     fetchBranches();
+
+    // Lắng nghe sự kiện khi BOM thêm / xóa / sửa cơ sở
+    const handleSync = () => {
+      fetchBranches();
+    };
+
+    window.addEventListener('storage_facilities_updated', handleSync);
+    window.addEventListener('storage', handleSync);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('storage_facilities_updated', handleSync);
+      window.removeEventListener('storage', handleSync);
     };
   }, []);
 
   const matchedBranch = branches.find((b) => b.code === facility || b.id === facility);
   const currentFacilityObj = matchedBranch
     ? {
-        name: matchedBranch.name,
+        name: matchedBranch.name || matchedBranch.facilityName,
         address: matchedBranch.address,
         floors: matchedBranch.floors || 3,
+        layoutType: (matchedBranch.layoutType || 'A').toUpperCase(),
       }
-    : (facilityData[facility] || facilityData['HN-01']);
+    : (facility && facilityData[facility]) ? facilityData[facility] : null;
 
   // Gọi API lấy danh sách ô kho theo cơ sở và tầng
   useEffect(() => {
+    if (!facility) {
+      setUnits([]);
+      return;
+    }
     let isMounted = true;
     const fetchUnits = async () => {
       try {
@@ -152,399 +248,280 @@ export default function StorageMap2D({
     );
   };
 
-  const isClimateSelected = selectedStorageType === 'CLIMATE_CONTROLLED';
-  const priceS = isClimateSelected ? { daily: '36k/ngày', monthly: '720k/tháng' } : { daily: '30k/ngày', monthly: '600k/tháng' };
-  const priceM = isClimateSelected ? { daily: '72k/ngày', monthly: '1.44tr/tháng' } : { daily: '60k/ngày', monthly: '1.2tr/tháng' };
-  const priceL = isClimateSelected ? { daily: '144k/ngày', monthly: '2.88tr/tháng' } : { daily: '120k/ngày', monthly: '2.4tr/tháng' };
-  const priceXL = isClimateSelected ? { daily: '240k/ngày', monthly: '4.8tr/tháng' } : { daily: '200k/ngày', monthly: '4tr/tháng' };
-
   return (
     <div className="space-y-3">
-      {/* BƯỚC 1: LỰA CHỌN LOẠI KHO THEO NHU CẦU LƯU TRỮ */}
-      <div className="card-box p-3.5 sm:p-4 rounded-2xl border shadow-xs space-y-3 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2.5">
-          <div className="flex items-center space-x-2.5">
-            <span className="w-6 h-6 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-sm">1</span>
-            <div>
-              <h2 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                BƯỚC 1: CHỌN NHU CẦU LƯU TRỮ (LOẠI KHO)
-              </h2>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Chọn loại kho theo đặc tính hàng hóa để hệ thống phân loại & lọc ô kho trên sơ đồ</p>
-            </div>
-          </div>
-
-          <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 gap-1 shrink-0 self-end sm:self-auto">
-            <button
-              type="button"
-              onClick={() => setSelectedStorageType('ALL')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                selectedStorageType === 'ALL'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-blue-600'
-              }`}
-            >
-              Xem tất cả
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedStorageType('STANDARD')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                selectedStorageType === 'STANDARD'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-blue-600'
-              }`}
-            >
-              📦 Kho Thường
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedStorageType('CLIMATE_CONTROLLED')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                selectedStorageType === 'CLIMATE_CONTROLLED'
-                  ? 'bg-cyan-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-cyan-600'
-              }`}
-            >
-              ❄️ Kho Mát (22-25°C)
-            </button>
-          </div>
-        </div>
-
-        {/* 2 LỰA CHỌN KHO CARD TO */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {/* OPTION 1: KHO TIÊU CHUẨN */}
-          <div
-            onClick={() => setSelectedStorageType(selectedStorageType === 'STANDARD' ? 'ALL' : 'STANDARD')}
-            className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
-              selectedStorageType === 'STANDARD'
-                ? 'border-2 border-blue-600 bg-blue-50/70 dark:bg-blue-950/40 shadow-sm ring-2 ring-blue-500/20'
-                : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700'
-            }`}
-          >
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2.5">
-                  <span className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center text-lg shrink-0">
-                    📦
-                  </span>
-                  <div>
-                    <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
-                      Kho Tiêu Chuẩn (Standard)
-                      {selectedStorageType === 'STANDARD' && (
-                        <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded-md font-bold">Đang lọc</span>
-                      )}
-                    </h3>
-                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Đơn giá niêm yết chuẩn</span>
-                  </div>
-                </div>
-                <input
-                  type="radio"
-                  name="storageTypeRadio"
-                  checked={selectedStorageType === 'STANDARD'}
-                  onChange={() => {}}
-                  className="w-4 h-4 text-blue-600 cursor-pointer pointer-events-none"
-                />
-              </div>
-
-              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                Nhiệt độ phòng tự nhiên, hệ thống thông gió đối lưu liên tục, chống bụi và kiểm soát an toàn PCCC tiêu chuẩn.
-              </p>
-
-              <div className="flex flex-wrap gap-1 text-[10px]">
-                <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-slate-700 dark:text-slate-300">
-                  🏠 Đồ nội thất, bàn ghế
-                </span>
-                <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-slate-700 dark:text-slate-300">
-                  🚚 Đồ chuyển nhà
-                </span>
-                <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-slate-700 dark:text-slate-300">
-                  📦 Hàng hóa gia dụng
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-2.5 pt-2 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs">
-              <span className="text-slate-500 dark:text-slate-400 text-[11px]">Đơn giá thuê ngày:</span>
-              <span className="font-extrabold text-blue-600 dark:text-blue-400">Từ 30.000đ/ngày (600k/tháng)</span>
-            </div>
-          </div>
-
-          {/* OPTION 2: KHO KIỂM SOÁT NHIỆT ĐỘ & ĐỘ ẨM */}
-          <div
-            onClick={() => setSelectedStorageType(selectedStorageType === 'CLIMATE_CONTROLLED' ? 'ALL' : 'CLIMATE_CONTROLLED')}
-            className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
-              selectedStorageType === 'CLIMATE_CONTROLLED'
-                ? 'border-2 border-cyan-500 bg-cyan-50/70 dark:bg-cyan-950/40 shadow-sm ring-2 ring-cyan-500/20'
-                : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700'
-            }`}
-          >
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2.5">
-                  <span className="w-9 h-9 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 flex items-center justify-center text-lg shrink-0">
-                    ❄️
-                  </span>
-                  <div>
-                    <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
-                      Kho Kiểm Soát Nhiệt Độ & Độ Ẩm (22-25°C)
-                      {selectedStorageType === 'CLIMATE_CONTROLLED' && (
-                        <span className="text-[10px] bg-cyan-600 text-white px-1.5 py-0.2 rounded-md font-bold">Đang lọc</span>
-                      )}
-                    </h3>
-                    <span className="text-[11px] font-bold text-cyan-600 dark:text-cyan-400">+20% phụ phí điều hòa</span>
-                  </div>
-                </div>
-                <input
-                  type="radio"
-                  name="storageTypeRadio"
-                  checked={selectedStorageType === 'CLIMATE_CONTROLLED'}
-                  onChange={() => {}}
-                  className="w-4 h-4 text-cyan-600 cursor-pointer pointer-events-none"
-                />
-              </div>
-
-              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                Máy lạnh biến tần & máy hút ẩm công nghiệp 24/7 duy trì 22 - 25°C, độ ẩm &lt; 55% ngăn nấm mốc & chập vi mạch.
-              </p>
-
-              <div className="flex flex-wrap gap-1 text-[10px]">
-                <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-cyan-200 dark:border-cyan-800 font-semibold text-cyan-700 dark:text-cyan-300">
-                  💻 Đồ điện tử, linh kiện
-                </span>
-                <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-cyan-200 dark:border-cyan-800 font-semibold text-cyan-700 dark:text-cyan-300">
-                  📚 Tài liệu, sách quý
-                </span>
-                <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-cyan-200 dark:border-cyan-800 font-semibold text-cyan-700 dark:text-cyan-300">
-                  👜 Đồ da, mỹ phẩm, dược phẩm
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-2.5 pt-2 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs">
-              <span className="text-slate-500 dark:text-slate-400 text-[11px]">Đơn giá thuê ngày:</span>
-              <span className="font-extrabold text-cyan-600 dark:text-cyan-400">Từ 36.000đ/ngày (720k/tháng)</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* LOCATION & FLOOR CONTROLS */}
-      <div className="card-box p-3 sm:p-3.5 rounded-2xl border shadow-xs space-y-2.5 w-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-2.5">
-          {/* CHỌN CƠ SỞ */}
-          <div className="flex items-center gap-2 flex-1 min-w-[170px] sm:max-w-[380px]">
-            <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide flex items-center shrink-0">
-              <i className="fa-solid fa-location-dot text-rose-500 mr-1.5 text-sm"></i> Cơ sở kho:
+      {/* THANH ĐIỀU KHIỂN TRỰC QUAN: ẢNH 7 CƠ SỞ & ẢNH 2 LOẠI KHO */}
+      <div className="p-4 sm:p-5 rounded-3xl border shadow-sm w-full bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 space-y-4 text-slate-900 dark:text-white">
+        
+        {/* 1. CƠ SỞ KHO: 7 CƠ SỞ CÓ ẢNH RIÊNG */}
+        <div className="space-y-3 pb-4 border-b border-slate-100 dark:border-slate-800/80">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide flex items-center gap-1.5">
+              <MapPin className="size-4 text-blue-600 dark:text-cyan-400 shrink-0" />
+              <span>1. Chọn cơ sở kho (7 chi nhánh):</span>
             </span>
-            <div className="relative flex-1 min-w-0">
-              <select
-                value={facility}
-                onChange={(e) => onFacilityChange(e.target.value)}
-                className="w-full text-xs sm:text-sm font-bold px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer shadow-2xs transition-colors truncate"
-              >
-                {branches.length > 0 ? (
-                  <>
-                    {/* Filter and group by city prefix */}
-                    {['HN', 'HCM', 'DN', 'CT'].map((cityCode) => {
-                      const cityBranches = branches.filter((b) => (b.code || b.id).startsWith(cityCode));
-                      if (cityBranches.length === 0) return null;
-
-                      const cityName = 
-                        cityCode === 'HN' ? '📍 Hà Nội' : 
-                        cityCode === 'HCM' ? '📍 TP. Hồ Chí Minh' : 
-                        cityCode === 'DN' ? '📍 Đà Nẵng' : '📍 Cần Thơ';
-
-                      return (
-                        <optgroup key={cityCode} label={cityName}>
-                          {cityBranches.map((b) => (
-                            <option
-                              key={b.code || b.id}
-                              value={b.code || b.id}
-                              className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                            >
-                              {b.name || b.facilityName || facilityData[b.code]?.name || b.code}
-                            </option>
-                          ))}
-                        </optgroup>
-                      );
-                    })}
-                  </>
-                ) : (
-                  <>
-                    <optgroup label="📍 Hà Nội">
-                      <option value="HN-01">SmartStorage Cầu Giấy (HN-01)</option>
-                      <option value="HN-02">SmartStorage Thanh Xuân (HN-02)</option>
-                    </optgroup>
-                    <optgroup label="📍 TP. Hồ Chí Minh">
-                      <option value="HCM-01">SmartStorage Quận 1 (HCM-01)</option>
-                      <option value="HCM-02">SmartStorage Quận 7 (HCM-02)</option>
-                      <option value="HCM-03">SmartStorage Thủ Đức (HCM-03)</option>
-                    </optgroup>
-                    <optgroup label="📍 Đà Nẵng">
-                      <option value="DN-01">SmartStorage Hải Châu (DN-01)</option>
-                    </optgroup>
-                    <optgroup label="📍 Cần Thơ">
-                      <option value="CT-01">SmartStorage Ninh Kiều (CT-01)</option>
-                    </optgroup>
-                  </>
-                )}
-              </select>
-            </div>
+            {currentFacilityObj ? (
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full truncate max-w-full">
+                📍 Đang chọn: <strong className="text-blue-600 dark:text-cyan-400 font-bold">{currentFacilityObj.name}</strong> • {currentFacilityObj.address}
+              </span>
+            ) : (
+              <span className="text-xs font-bold text-blue-600 dark:text-cyan-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 px-3 py-1 rounded-full animate-pulse">
+                👉 Bước 1: Vui lòng bấm chọn một cơ sở kho bên dưới
+              </span>
+            )}
           </div>
 
-          {/* CHỌN TẦNG */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center shrink-0">
-              <i className="fa-solid fa-layer-group text-blue-600 mr-1.5 text-sm"></i> Chọn Tầng:
-            </span>
-            <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 gap-1.5 shrink-0">
-              <button
-                type="button"
-                onClick={() => onSelectFloor(1)}
-                className={`px-3 sm:px-3.5 py-1 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                  currentFloor === 1 ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-700'
-                }`}
-              >
-                Tầng Trệt
-              </button>
-              <button
-                type="button"
-                onClick={() => onSelectFloor(2)}
-                className={`px-3 sm:px-3.5 py-1 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                  currentFloor === 2 ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-700'
-                }`}
-              >
-                Tầng 1
-              </button>
-              {currentFacilityObj.floors > 2 && (
+          {/* BỘ LỌC ĐỊA ĐIỂM (TỈNH / THÀNH PHỐ) */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 scrollbar-none">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0 mr-1">
+              <Filter className="size-3.5 text-blue-600 dark:text-cyan-400" />
+              <span>Khu vực:</span>
+            </div>
+            {[
+              { id: 'ALL', label: 'Tất cả (7)' },
+              { id: 'Hà Nội', label: 'Hà Nội (2)' },
+              { id: 'TP.HCM', label: 'TP.HCM (3)' },
+              { id: 'Đà Nẵng', label: 'Đà Nẵng (1)' },
+              { id: 'Cần Thơ', label: 'Cần Thơ (1)' },
+            ].map((c) => {
+              const active = selectedCity === c.id;
+              return (
                 <button
+                  key={c.id}
                   type="button"
-                  onClick={() => onSelectFloor(3)}
-                  className={`px-3 sm:px-3.5 py-1 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                    currentFloor === 3 ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-700'
+                  onClick={() => setSelectedCity(c.id)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all duration-200 cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
+                    active
+                      ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-500/30'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  Tầng 2
+                  {c.label}
                 </button>
-              )}
-            </div>
+              );
+            })}
+          </div>
+
+          {/* Danh sách 7 card cơ sở với ảnh thực tế bự hơn */}
+          <div className="flex gap-4 overflow-x-auto pb-4 pt-1 scrollbar-thin">
+            {Object.entries(facilityData)
+              .filter(([_, fData]) => selectedCity === 'ALL' || fData.city === selectedCity)
+              .map(([fKey, fData]) => {
+                const isSelected = facility === fKey;
+                return (
+                <button
+                  key={fKey}
+                  type="button"
+                  onClick={() => onFacilityChange(fKey)}
+                  className={`group relative shrink-0 w-64 sm:w-72 text-left rounded-2xl overflow-hidden border-2 transition-all duration-200 cursor-pointer flex flex-col ${
+                    isSelected
+                      ? 'border-blue-600 dark:border-cyan-400 ring-4 ring-blue-500/20 shadow-xl bg-blue-50/20 dark:bg-blue-950/20 scale-[1.02]'
+                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-blue-300 dark:hover:border-slate-700 opacity-85 hover:opacity-100 hover:shadow-md'
+                  }`}
+                >
+                  {/* Ảnh cơ sở bự hơn */}
+                  <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                    <img
+                      src={fData.image}
+                      alt={fData.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+
+                    {/* Tag thành phố */}
+                    <span className="absolute top-3 left-3 text-xs font-black px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white border border-white/20">
+                      {fData.city}
+                    </span>
+
+                    {/* Dấu tích khi đang chọn */}
+                    {isSelected && (
+                      <span className="absolute top-3 right-3 w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg">
+                        <Check className="size-4 stroke-[3]" />
+                      </span>
+                    )}
+
+                    {/* Tên cơ sở in đè trên ảnh */}
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <p className="text-white text-base sm:text-lg font-black truncate leading-tight drop-shadow-sm">
+                        {fData.name.replace('SmartStorage ', '')}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Địa chỉ cơ sở: hiển thị đầy đủ, không bị cắt xén */}
+                  <div className="p-3 bg-white dark:bg-slate-900 flex-1 min-h-[58px] flex items-start gap-1.5 border-t border-slate-100 dark:border-slate-800/80">
+                    <MapPin className="size-3.5 text-blue-500 dark:text-cyan-400 shrink-0 mt-0.5" />
+                    <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium leading-snug">
+                      {fData.address}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
+      </div>
 
-        {/* THÔNG TIN ĐỊA CHỈ & TRẠNG THÁI */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs sm:text-sm">
-          <div className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-400">
-            <i className="fa-solid fa-map-pin text-blue-600 text-xs shrink-0"></i>
-            <span className="font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
-              {currentFacilityObj.address}
-            </span>
-          </div>
-          
-          <div className="flex items-center space-x-1.5 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1.5 rounded-lg border border-emerald-500/30 shrink-0 text-xs shadow-sm">
-            <span className="relative flex h-2.5 w-2.5 mr-1">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-            </span>
-            <span>
-              Tầng này đang trống {units.filter(u => u.status === 'AVAILABLE').length} / {units.length} ô kho
-              {selectedStorageType !== 'ALL' && (
-                <span className="ml-1 text-slate-500 dark:text-slate-400">
-                  ({units.filter(u => u.status === 'AVAILABLE' && u.storageType === selectedStorageType).length} ô phù hợp)
+      {/* 2. LOẠI KHO: CHỈ HIỆN RA KHI KHÁCH ĐÃ CHỌN CƠ SỞ KHO */}
+      <AnimatePresence>
+        {facility && (
+          <motion.div
+            key="section-storage-type"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="p-4 sm:p-5 rounded-3xl border shadow-sm w-full bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 space-y-3.5 text-slate-900 dark:text-white"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide flex items-center gap-1.5">
+                <Snowflake className="size-4 text-blue-600 dark:text-cyan-400 shrink-0" />
+                <span>2. Chọn loại kho lưu trữ:</span>
+              </span>
+              {!selectedStorageType && (
+                <span className="text-xs font-bold text-blue-600 dark:text-cyan-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 px-3 py-1 rounded-full animate-pulse">
+                  👉 Bước 2: Bấm chọn một loại kho bên dưới để xem sơ đồ mặt bằng
                 </span>
               )}
-            </span>
-          </div>
-        </div>
-      </div>
+            </div>
 
-      {/* BẢNG PHÂN LOẠI 4 KÍCH THƯỚC KHO */}
-      <div className="card-box p-2.5 sm:p-3 rounded-2xl border shadow-xs space-y-1.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-        <div className="flex items-center justify-between">
-          {isClimateSelected ? (
-            <span className="font-black text-xs text-cyan-600 dark:text-cyan-400 uppercase tracking-wider flex items-center">
-              <i className="fa-solid fa-snowflake text-cyan-500 mr-1.5"></i> BẢNG GIÁ KHO KIỂM SOÁT NHIỆT ĐỘ & ĐỘ ẨM (22-25°C) • ĐÃ GỒM +20% PHỤ PHÍ
-            </span>
-          ) : (
-            <span className="font-black text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center">
-              <i className="fa-solid fa-layer-group text-blue-600 mr-1.5"></i> BẢNG PHÂN LOẠI 4 KÍCH THƯỚC KHO TIÊU CHUẨN
-            </span>
-          )}
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {/* SIZE S */}
-          <div className="p-2 rounded-xl border border-emerald-500/30 flex items-center space-x-2 bg-emerald-50/60 dark:bg-emerald-950/25 transition-transform duration-200 hover:-translate-y-0.5">
-            <div className="w-8 h-8 rounded-lg border border-emerald-500 bg-emerald-500/20 flex flex-col items-center justify-center shrink-0">
-              <span className="font-black text-xs text-emerald-700 dark:text-emerald-400 leading-none">S</span>
-              <span className="text-[7px] font-bold text-emerald-600 dark:text-emerald-300">1m²</span>
-            </div>
-            <div className="text-[11px] leading-tight min-w-0">
-              <div className="font-black text-slate-900 dark:text-white truncate">Size S (1m²)</div>
-              <div className="text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px]">
-                {priceS.daily} <br/>
-                {priceS.monthly}
-              </div>
-              <div className="text-[9px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 500k</div>
-            </div>
-          </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {STORAGE_TYPES_DATA.map((t) => {
+                const isSelected = selectedStorageType === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedStorageType(t.id as any);
+                      onSelectUnit(null);
+                    }}
+                    className={`group relative text-left rounded-2xl overflow-hidden border-2 transition-all duration-200 cursor-pointer flex flex-col ${
+                      isSelected
+                        ? 'border-blue-600 dark:border-cyan-400 ring-4 ring-blue-500/20 shadow-lg bg-blue-50/30 dark:bg-blue-950/20 scale-[1.01]'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-blue-300 dark:hover:border-slate-700 opacity-80 hover:opacity-100 hover:shadow-xs'
+                    }`}
+                  >
+                    {/* Ảnh loại kho bự hơn */}
+                    <div className="relative h-44 sm:h-52 w-full shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-800">
+                      <img
+                        src={t.image}
+                        alt={t.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-          {/* SIZE M */}
-          <div className="p-2 rounded-xl border border-indigo-500/30 flex items-center space-x-2 bg-indigo-50/60 dark:bg-indigo-950/25 transition-transform duration-200 hover:-translate-y-0.5">
-            <div className="w-8 h-8 rounded-lg border border-indigo-500 bg-indigo-500/20 flex flex-col items-center justify-center shrink-0">
-              <span className="font-black text-xs text-indigo-700 dark:text-indigo-400 leading-none">M</span>
-              <span className="text-[7px] font-bold text-indigo-600 dark:text-indigo-300">3m²</span>
-            </div>
-            <div className="text-[11px] leading-tight min-w-0">
-              <div className="font-black text-slate-900 dark:text-white truncate">Size M (3m²)</div>
-              <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px]">
-                {priceM.daily} <br/>
-                {priceM.monthly}
-              </div>
-              <div className="text-[9px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 1tr</div>
-            </div>
-          </div>
+                      {/* Tag badge */}
+                      <span className="absolute top-2.5 left-2.5 text-xs font-black px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-white border border-white/20">
+                        {t.badge}
+                      </span>
 
-          {/* SIZE L */}
-          <div className="p-2 rounded-xl border border-blue-500/30 flex items-center space-x-2 bg-blue-50/60 dark:bg-blue-950/25 transition-transform duration-200 hover:-translate-y-0.5">
-            <div className="w-8 h-8 rounded-lg border border-blue-500 bg-blue-500/20 flex flex-col items-center justify-center shrink-0">
-              <span className="font-black text-xs text-blue-700 dark:text-blue-400 leading-none">L</span>
-              <span className="text-[7px] font-bold text-blue-600 dark:text-blue-300">6m²</span>
-            </div>
-            <div className="text-[11px] leading-tight min-w-0">
-              <div className="font-black text-slate-900 dark:text-white truncate">Size L (6m²)</div>
-              <div className="text-blue-600 dark:text-blue-400 font-extrabold text-[10px]">
-                {priceL.daily} <br/>
-                {priceL.monthly}
-              </div>
-              <div className="text-[9px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 2tr</div>
-            </div>
-          </div>
+                      {/* Dấu tích khi đang chọn */}
+                      {isSelected && (
+                        <span className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md">
+                          <Check className="size-4 stroke-[3]" />
+                        </span>
+                      )}
+                    </div>
 
-          {/* SIZE XL */}
-          <div className="p-2 rounded-xl border border-amber-500/30 flex items-center space-x-2 bg-amber-50/60 dark:bg-amber-950/25 transition-transform duration-200 hover:-translate-y-0.5">
-            <div className="w-8 h-8 rounded-lg border border-amber-500 bg-amber-500/20 flex flex-col items-center justify-center shrink-0">
-              <span className="font-black text-xs text-amber-700 dark:text-amber-400 leading-none">XL</span>
-              <span className="text-[7px] font-bold text-amber-600 dark:text-amber-300">10m²</span>
+                    {/* Thông tin loại kho */}
+                    <div className="p-3 flex-1 flex flex-col justify-center">
+                      <p className={`text-sm font-black ${isSelected ? 'text-blue-600 dark:text-cyan-400' : 'text-slate-900 dark:text-white'}`}>
+                        {t.name}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 font-medium mt-1">
+                        {t.desc}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-            <div className="text-[11px] leading-tight min-w-0">
-              <div className="font-black text-slate-900 dark:text-white truncate">Size XL (10m²)</div>
-              <div className="text-amber-600 dark:text-amber-400 font-extrabold text-[10px]">
-                {priceXL.daily} <br/>
-                {priceXL.monthly}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 3. TẦNG & SƠ ĐỒ MẶT BẰNG 2D: CHỈ HIỆN KHI ĐÃ CHỌN CƠ SỞ VÀ LOẠI KHO */}
+      <AnimatePresence>
+        {facility && selectedStorageType && (
+          <motion.div
+            key="section-blueprint-step"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 15 }}
+            transition={{ duration: 0.35 }}
+            className="space-y-4"
+          >
+            {/* 3. TẦNG */}
+            <div className="p-4 sm:p-5 rounded-3xl border shadow-sm bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-slate-900 dark:text-white">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide flex items-center shrink-0 min-w-[90px] gap-1.5">
+                  <Layers className="size-4 text-blue-600 dark:text-cyan-400 shrink-0" />
+                  <span>3. Chọn tầng:</span>
+                </span>
+                <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => onSelectFloor(1)}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                      currentFloor === 1 ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    Tầng Trệt
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSelectFloor(2)}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                      currentFloor === 2 ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    Tầng 1
+                  </button>
+                  {(currentFacilityObj?.floors || 3) > 2 && (
+                    <button
+                      type="button"
+                      onClick={() => onSelectFloor(3)}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                        currentFloor === 3 ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      Tầng 2
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="text-[9px] text-amber-600 dark:text-amber-400 font-bold">Cọc: 3tr</div>
+
+              {/* Thông tin ô kho đã chọn */}
+              {selectedUnit && (
+                <div className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                  <Check className="size-4 text-emerald-600 shrink-0" />
+                  <span>Đã chọn ô <strong>{selectedUnit.id}</strong> ({selectedUnit.dim} - {selectedUnit.isClimate ? 'Kho mát' : 'Kho thường'})</span>
+                </div>
+              )}
             </div>
-          </div>
-        </div>
-      </div>
 
       {/* SƠ ĐỒ MẶT BẰNG 2D BLUEPRINT */}
-      <div className="card-box p-3 sm:p-3.5 rounded-2xl border shadow-xs space-y-2.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-          <div className="flex items-center space-x-2 text-xs font-black text-slate-900 dark:text-white uppercase">
-            <i className="fa-solid fa-map text-blue-600 text-sm"></i>
+      <div className="p-3 sm:p-3.5 rounded-2xl border shadow-xs space-y-2.5 bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+        <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2 gap-2">
+          <div className="flex items-center space-x-2 text-xs font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide">
+            <i className="fa-solid fa-map text-blue-600 dark:text-cyan-400 text-sm"></i>
             <span>SƠ ĐỒ MẶT BẰNG Ô KHO • {currentFloor === 1 ? 'TẦNG TRỆT' : `TẦNG ${currentFloor - 1}`}</span>
           </div>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">Nhấp chọn ô kho trên sơ đồ</span>
+          <div className="flex items-center gap-2">
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+              currentFacilityObj.layoutType === 'B'
+                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                : 'bg-blue-500/10 text-blue-600 dark:text-cyan-400 border-blue-500/30'
+            }`}>
+              {currentFacilityObj.layoutType === 'B' ? 'Mô hình Layout B (15 ô kho)' : 'Mô hình Layout A (46 ô kho)'}
+            </span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">
+              {units.length} ô kho tầng này
+            </span>
+          </div>
         </div>
 
         {/* Blueprint Grid Container */}
@@ -560,26 +537,30 @@ export default function StorageMap2D({
                 <span className="flex items-center">
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span> Dãy Kho Mặt Tiền (XL - 10m²)
                 </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">5 ô kho</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{Math.min(units.length, 5)} ô kho</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
                 {units.slice(0, 5).map((u) => renderUnitCard(u))}
               </div>
             </div>
 
-            <div className="floor-corridor-strip">HÀNH LANG LỐI ĐI CHÍNH TRỤC XE TẢI / XE NÂNG</div>
+            {units.length > 5 && (
+              <>
+                <div className="floor-corridor-strip">HÀNH LANG LỐI ĐI CHÍNH TRỤC XE TẢI / XE NÂNG</div>
 
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
-                <span className="flex items-center">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span> Dãy Kho Hậu Cần (XL - 10m²)
-                </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">5 ô kho</span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
-                {units.slice(5, 10).map((u) => renderUnitCard(u))}
-              </div>
-            </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
+                    <span className="flex items-center">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span> Dãy Kho Hậu Cần (XL - 10m²)
+                    </span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.length - 5} ô kho</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
+                    {units.slice(5, 10).map((u) => renderUnitCard(u))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <div className="floor-blueprint-container p-3 sm:p-3.5 space-y-3 shadow-inner relative">
@@ -634,6 +615,9 @@ export default function StorageMap2D({
           </div>
         )}
       </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

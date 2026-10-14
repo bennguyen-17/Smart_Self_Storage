@@ -1,10 +1,9 @@
 import { useState } from "react"
-import { DoorOpenIcon, InboxIcon, InfoIcon, RotateCwIcon, SearchIcon } from "lucide-react"
+import { InboxIcon, RotateCwIcon, SearchIcon } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { useAsyncData } from "@/hooks/useAsyncData"
-import { isMockMode } from "@/lib/apiClient"
 import { formatDateTime } from "@/lib/format"
 
 import { listManualGateOpenLogs } from "../api/gateLogApi"
@@ -30,23 +29,6 @@ function GateLogPanel() {
 
   return (
     <section aria-label="Nhật ký mở cổng thủ công" className="space-y-4">
-      <div className="card-box space-y-1 rounded-2xl border p-4 shadow-sm">
-        <h3 className="text-title flex items-center gap-2 text-sm font-black tracking-wide sm:text-base">
-          <DoorOpenIcon aria-hidden="true" className="size-4 text-purple-500" />
-          NHẬT KÝ MỞ CỔNG THỦ CÔNG
-        </h3>
-        <p className="text-muted text-xs">
-          Mỗi lần nhân viên mở cổng bằng Thẻ Master hoặc chìa cơ đều được ghi lại kèm mã khách và lý do. Nhật ký
-          chỉ để xem và đối soát, không sửa hay xóa được.
-        </p>
-        {isMockMode() && (
-          <p className="flex items-center gap-1.5 pt-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
-            <InfoIcon aria-hidden="true" className="size-3.5" />
-            Đang xem dữ liệu mẫu (cơ sở HN-01).
-          </p>
-        )}
-      </div>
-
       {error ? (
         <Alert variant="destructive">
           <AlertTitle>Không tải được nhật ký mở cổng</AlertTitle>
@@ -72,7 +54,7 @@ function GateLogPanel() {
                   value={filter.query}
                   onChange={(e) => update({ query: e.target.value })}
                   placeholder="Mã khách, mã nhân viên hoặc lý do"
-                  className="inner-box text-title w-full rounded-lg border py-1.5 pr-2.5 pl-8 text-xs font-semibold outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-purple-500"
+                  className="inner-box text-title w-full rounded-lg border py-1.5 pr-2.5 pl-8 text-xs font-semibold outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500"
                 />
               </span>
             </label>
@@ -135,7 +117,7 @@ function GateLogPanel() {
                       <td className="text-title px-4 py-3 font-mono whitespace-nowrap">
                         {log.customerId != null ? `KH-${log.customerId}` : "—"}
                       </td>
-                      <td className="text-title px-4 py-3 whitespace-nowrap">
+                      <td className="text-title px-4 py-3 font-mono whitespace-nowrap">
                         {log.accountId != null ? `NV #${log.accountId}` : "—"}
                       </td>
                       <td className="text-title px-4 py-3">{log.reason || "—"}</td>
@@ -170,7 +152,7 @@ function DateInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-invalid={invalid}
-        className="inner-box text-title rounded-lg border px-2.5 py-1.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-purple-500 aria-invalid:border-rose-500"
+        className="inner-box text-title rounded-lg border px-2.5 py-1.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500 aria-invalid:border-rose-500"
       />
     </label>
   )
