@@ -32,7 +32,8 @@ async function renderPanel() {
 }
 
 function row(unitCode: string) {
-  return screen.getByText(unitCode).closest("tr") as HTMLElement
+  // Chỉ tìm trong bảng (tiêu đề ngăn Sửa cũng có mã ô); bảng bị ẩn với trình đọc màn hình khi ngăn đang mở
+  return within(screen.getByRole("table", { hidden: true })).getByText(unitCode).closest("tr") as HTMLElement
 }
 
 async function openEdit(user: ReturnType<typeof userEvent.setup>, unitCode: string) {

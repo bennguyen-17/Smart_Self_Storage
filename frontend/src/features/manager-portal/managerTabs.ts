@@ -12,7 +12,11 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
+import CheckoutDebtPanel from "@/features/facility-contracts/components/CheckoutDebtPanel"
+import CustomersContractsPanel from "@/features/facility-contracts/components/CustomersContractsPanel"
+import FacilityReportPanel from "@/features/facility-report/components/FacilityReportPanel"
 import GateLogPanel from "@/features/gate-logs/components/GateLogPanel"
+import ShiftsPanel from "@/features/staff-shifts/components/ShiftsPanel"
 import UnitManagementPanel from "@/features/unit-management/components/UnitManagementPanel"
 
 export type ManagerTabKey = "units" | "reports" | "customers" | "workflow" | "staff" | "gate-logs"
@@ -50,6 +54,7 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     stories: "US-33",
     owner: "Vỹ",
     description: "Ô trống, đã thuê, doanh thu, tỷ lệ lấp đầy và các ca quá hạn của cơ sở.",
+    component: FacilityReportPanel,
   },
   {
     key: "customers",
@@ -59,6 +64,7 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     stories: "US-24, US-25",
     owner: "Vỹ",
     description: "Theo dõi khách, hợp đồng, thời hạn thuê và tình trạng thanh toán của cơ sở.",
+    component: CustomersContractsPanel,
   },
   {
     key: "workflow",
@@ -68,6 +74,7 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     stories: "US-24, US-25, US-26, US-31",
     owner: "Vỹ",
     description: "Nghiệm thu trả kho, quyết toán cọc, truy thu và duyệt miễn/giảm phí.",
+    component: CheckoutDebtPanel,
   },
   {
     key: "staff",
@@ -77,6 +84,7 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     stories: "US-32",
     owner: "Vỹ",
     description: "Phân ca và phân công nhân viên hỗ trợ bàn giao, kiểm tra, xử lý sự cố.",
+    component: ShiftsPanel,
   },
   {
     key: "gate-logs",

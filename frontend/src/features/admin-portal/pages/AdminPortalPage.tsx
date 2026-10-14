@@ -1,9 +1,7 @@
 import { Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom"
 
-import { useTheme } from "@/components/common/theme-provider"
 import { useAuth } from "@/context/AuthContext"
 import TabPlaceholder from "@/features/manager-portal/components/TabPlaceholder"
-import { resolveIsDark } from "@/features/internal-shell/resolveIsDark"
 import { getRoleTitle, normalizeRole } from "@/lib/roles"
 
 import { DEFAULT_ADMIN_TAB, findAdminTab } from "../adminTabs"
@@ -16,8 +14,9 @@ import AdminNavbar from "../components/AdminNavbar"
  */
 function AdminPortalPage() {
   const navigate = useNavigate()
-  const { theme, setTheme } = useTheme()
   const { user, signOut } = useAuth()
+  // BE trả thêm phone, facilityId trong user dù kiểu AuthUser chưa khai báo
+  const extra = user as (typeof user & { phone?: string | null; facilityId?: number | null }) | null
   const params = useParams()
   const [search] = useSearchParams()
 
@@ -29,7 +28,6 @@ function AdminPortalPage() {
     return <Navigate to={`/admin/${legacy?.key ?? DEFAULT_ADMIN_TAB}`} replace />
   }
 
-  const isDark = resolveIsDark(theme)
   const Panel = tab.component
 
   const logout = () => {
@@ -38,13 +36,18 @@ function AdminPortalPage() {
   }
 
   return (
-    <div className="staff-portal flex min-h-screen flex-col antialiased">
+    // Dùng Inter (font của dự án) cho cả trang: class chung .staff-portal ưu tiên Plus Jakarta Sans,
+    // trong khi popup / ngăn bên được gắn ra ngoài trang nên chỉ có Inter → 2 font trên một màn hình.
+    <div className="staff-portal flex min-h-screen flex-col antialiased" style={{ fontFamily: "var(--font-sans)" }}>
       <AdminNavbar
-        fullName={user?.fullName ?? "Quản trị viên"}
-        roleLabel={getRoleTitle(normalizeRole(user?.role))}
-        email={user?.email}
-        isDark={isDark}
-        onToggleTheme={() => setTheme(isDark ? "light" : "dark")}
+        profile={{
+          accountId: user?.id ?? null,
+          fullName: user?.fullName ?? "Quản trị viên",
+          roleLabel: getRoleTitle(normalizeRole(user?.role)),
+          email: user?.email ?? null,
+          phone: extra?.phone ?? null,
+          facilityId: extra?.facilityId ?? null,
+        }}
         onLogout={logout}
       />
 

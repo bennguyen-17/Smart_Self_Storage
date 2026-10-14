@@ -54,7 +54,7 @@ function GateLogPanel() {
                   value={filter.query}
                   onChange={(e) => update({ query: e.target.value })}
                   placeholder="Mã khách, mã nhân viên hoặc lý do"
-                  className="inner-box text-title w-full rounded-lg border py-1.5 pr-2.5 pl-8 text-xs font-semibold outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-purple-500"
+                  className="inner-box text-title w-full rounded-lg border py-1.5 pr-2.5 pl-8 text-xs font-semibold outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500"
                 />
               </span>
             </label>
@@ -117,7 +117,7 @@ function GateLogPanel() {
                       <td className="text-title px-4 py-3 font-mono whitespace-nowrap">
                         {log.customerId != null ? `KH-${log.customerId}` : "—"}
                       </td>
-                      <td className="text-title px-4 py-3 whitespace-nowrap">
+                      <td className="text-title px-4 py-3 font-mono whitespace-nowrap">
                         {log.accountId != null ? `NV #${log.accountId}` : "—"}
                       </td>
                       <td className="text-title px-4 py-3">{log.reason || "—"}</td>
@@ -152,7 +152,7 @@ function DateInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-invalid={invalid}
-        className="inner-box text-title rounded-lg border px-2.5 py-1.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-purple-500 aria-invalid:border-rose-500"
+        className="inner-box text-title rounded-lg border px-2.5 py-1.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500 aria-invalid:border-rose-500"
       />
     </label>
   )

@@ -5,6 +5,8 @@
 import type { ComponentType } from "react"
 import { Building2Icon, ScrollTextIcon, UsersIcon, type LucideIcon } from "lucide-react"
 
+import AuditLogPanel from "@/features/audit-logs/components/AuditLogPanel"
+import BranchesPanel from "@/features/branches/components/BranchesPanel"
 import AccountsPanel from "@/features/internal-accounts/components/AccountsPanel"
 
 export type AdminTabKey = "users" | "facilities" | "audit"
@@ -41,6 +43,7 @@ export const ADMIN_TABS: readonly AdminTab[] = [
     stories: "chưa gán US",
     owner: "Vỹ",
     description: "Danh sách cơ sở, thông tin liên hệ và trạng thái hoạt động của từng chi nhánh.",
+    component: BranchesPanel,
   },
   {
     key: "audit",
@@ -50,6 +53,7 @@ export const ADMIN_TABS: readonly AdminTab[] = [
     stories: "US-30",
     owner: "Vỹ",
     description: "Tra cứu và xuất nhật ký thao tác của toàn hệ thống.",
+    component: AuditLogPanel,
   },
 ]
 

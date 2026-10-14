@@ -33,7 +33,7 @@ function renderAt(path: string) {
   return userEvent.setup()
 }
 
-const desktopNav = () => screen.getByRole("navigation", { name: /^các trang quản lý cơ sở$/i })
+const desktopNav = () => screen.getByRole("navigation", { name: /^các trang cổng quản lý cơ sở$/i })
 
 beforeEach(() => {
   auth.user = { id: 3, fullName: "Trần Văn Quản Lý", email: "manager.hn@smartstorage.vn", role: "MANAGER" }
@@ -52,16 +52,21 @@ describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
 
   test("body không còn thẻ chào và lối tắt sang cổng khác", () => {
     renderAt("/manager/units")
-    expect(screen.queryByText(/cổng quản lý cơ sở/i)).not.toBeInTheDocument()
+    expect(within(screen.getByRole("main")).queryByText(/cổng quản lý cơ sở|xin chào/i)).not.toBeInTheDocument()
     expect(screen.queryByRole("link", { name: /đơn cọc|check-in/i })).not.toBeInTheDocument()
   })
 
-  test("bấm 'Phân công' trên navbar → link /manager/staff, trang chưa có chức năng hiện ô giữ chỗ", async () => {
+  test.each([
+    { link: "Báo cáo", path: "/manager/reports", title: "Báo cáo cơ sở & KPI" },
+    { link: "Khách & hợp đồng", path: "/manager/customers", title: "Khách hàng & hợp đồng" },
+    { link: "Trả kho & công nợ", path: "/manager/workflow", title: "Trả kho & công nợ" },
+    { link: "Phân công", path: "/manager/staff", title: "Phân công nhân viên" },
+  ])("bấm '$link' → $path, trang đã có chức năng (không còn ô giữ chỗ)", async ({ link, path, title }) => {
     const user = renderAt("/manager/units")
-    await user.click(within(desktopNav()).getByRole("link", { name: "Phân công" }))
-    expect(screen.getByTestId("location")).toHaveTextContent("/manager/staff")
-    expect(screen.getByRole("heading", { level: 1, name: "Phân công nhân viên" })).toBeInTheDocument()
-    expect(screen.getByText(/đang phát triển · US-32 · phụ trách: Vỹ/i)).toBeInTheDocument()
+    await user.click(within(desktopNav()).getByRole("link", { name: link }))
+    expect(screen.getByTestId("location")).toHaveTextContent(path)
+    expect(screen.getByRole("heading", { level: 1, name: title })).toBeInTheDocument()
+    expect(screen.queryByText(/đang phát triển/i)).not.toBeInTheDocument()
   })
 
   test.each([
@@ -86,11 +91,13 @@ describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
     expect(screen.getByText("QL")).toBeInTheDocument()
   })
 
-  test("menu tài khoản: hiện vai trò, bấm Đăng xuất → signOut chung và về trang đăng nhập nội bộ", async () => {
+  test("bấm nút tài khoản → popup Hồ sơ nhân sự (vai trò, email); Đăng xuất → signOut chung và về trang đăng nhập nội bộ", async () => {
     const user = renderAt("/manager/units")
     await user.click(screen.getByRole("button", { name: /tài khoản: trần văn quản lý/i }))
-    expect(await screen.findByText(/quản lý chi nhánh/i)).toBeInTheDocument()
-    await user.click(screen.getByRole("menuitem", { name: /đăng xuất/i }))
+    const profile = await screen.findByRole("dialog", { name: /hồ sơ nhân sự/i })
+    expect(within(profile).getByText(/quản lý chi nhánh/i)).toBeInTheDocument()
+    expect(within(profile).getByText("manager.hn@smartstorage.vn")).toBeInTheDocument()
+    await user.click(within(profile).getByRole("button", { name: /đăng xuất/i }))
     expect(auth.signOut).toHaveBeenCalledTimes(1)
     expect(screen.getByText("Trang đăng nhập nội bộ")).toBeInTheDocument()
   })

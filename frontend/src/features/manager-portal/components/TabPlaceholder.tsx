@@ -13,7 +13,7 @@ function TabPlaceholder({ tab }: { tab: PortalTabInfo }) {
       aria-label={tab.label}
       className="card-box flex flex-col items-center gap-3 rounded-2xl border border-dashed px-6 py-14 text-center shadow-sm"
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-600/10 text-purple-600 dark:text-purple-400">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600/10 text-blue-600 dark:text-blue-400">
         <Icon className="size-6" aria-hidden="true" />
       </div>
       <p className="text-muted max-w-md text-xs">{tab.description}</p>

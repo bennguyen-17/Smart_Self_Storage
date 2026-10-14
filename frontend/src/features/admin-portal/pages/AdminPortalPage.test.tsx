@@ -34,7 +34,7 @@ function renderAt(path: string) {
   return userEvent.setup()
 }
 
-const desktopNav = () => screen.getByRole("navigation", { name: /^các trang quản trị hệ thống$/i })
+const desktopNav = () => screen.getByRole("navigation", { name: /^các trang cổng quản trị hệ thống$/i })
 
 beforeEach(() => auth.signOut.mockReset())
 
@@ -49,11 +49,15 @@ describe("AdminPortalPage: navbar riêng của Admin + mỗi trang một link", 
     expect(await screen.findByRole("button", { name: /tạo tài khoản/i })).toBeInTheDocument()
   })
 
-  test("bấm 'Nhật ký hoạt động' → /admin/audit, trang chưa có chức năng hiện ô giữ chỗ", async () => {
+  test.each([
+    { link: "Chi nhánh", path: "/admin/facilities", title: "Chi nhánh" },
+    { link: "Nhật ký hoạt động", path: "/admin/audit", title: "Nhật ký hoạt động hệ thống" },
+  ])("bấm '$link' → $path, trang đã có chức năng (không còn ô giữ chỗ)", async ({ link, path, title }) => {
     const user = renderAt("/admin/users")
-    await user.click(within(desktopNav()).getByRole("link", { name: "Nhật ký hoạt động" }))
-    expect(screen.getByTestId("location")).toHaveTextContent("/admin/audit")
-    expect(screen.getByText(/đang phát triển · US-30 · phụ trách: Vỹ/i)).toBeInTheDocument()
+    await user.click(within(desktopNav()).getByRole("link", { name: link }))
+    expect(screen.getByTestId("location")).toHaveTextContent(path)
+    expect(screen.getByRole("heading", { level: 1, name: title })).toBeInTheDocument()
+    expect(screen.queryByText(/đang phát triển/i)).not.toBeInTheDocument()
   })
 
   test.each([
@@ -69,10 +73,12 @@ describe("AdminPortalPage: navbar riêng của Admin + mỗi trang một link", 
     expect(screen.queryByRole("link", { name: /cổng quản lý cơ sở|đơn cọc/i })).not.toBeInTheDocument()
   })
 
-  test("menu tài khoản → Đăng xuất gọi signOut chung và về trang đăng nhập nội bộ", async () => {
+  test("popup hồ sơ: Admin thuộc toàn hệ thống; Đăng xuất gọi signOut chung và về trang đăng nhập nội bộ", async () => {
     const user = renderAt("/admin/users")
     await user.click(screen.getByRole("button", { name: /tài khoản: quản trị viên hệ thống/i }))
-    await user.click(await screen.findByRole("menuitem", { name: /đăng xuất/i }))
+    const profile = await screen.findByRole("dialog", { name: /hồ sơ nhân sự/i })
+    expect(within(profile).getByText("Toàn hệ thống")).toBeInTheDocument()
+    await user.click(within(profile).getByRole("button", { name: /đăng xuất/i }))
     expect(auth.signOut).toHaveBeenCalledTimes(1)
     expect(screen.getByText("Trang đăng nhập nội bộ")).toBeInTheDocument()
   })

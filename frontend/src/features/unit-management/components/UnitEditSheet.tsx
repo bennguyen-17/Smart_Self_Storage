@@ -86,7 +86,9 @@ function UnitEditSheet({ unit, floorLabel, ctx, onClose, onSaved }: UnitEditShee
         className="top-0 right-0 left-auto flex h-dvh max-h-dvh w-full max-w-full translate-x-0 translate-y-0 flex-col gap-0 rounded-none p-0 sm:max-w-md data-open:slide-in-from-right-10 data-open:zoom-in-100 data-closed:slide-out-to-right-10 data-closed:zoom-out-100"
       >
         <DialogHeader className="border-b p-4 pr-12">
-          <DialogTitle className="font-mono text-base font-black">Sửa ô {unit.unitCode}</DialogTitle>
+          <DialogTitle className="text-base font-black">
+            Sửa ô <span className="font-mono">{unit.unitCode}</span>
+          </DialogTitle>
           <DialogDescription>
             {floorLabel} · {unit.typeName ?? "—"}
           </DialogDescription>
@@ -197,7 +199,7 @@ function UnitEditSheet({ unit, floorLabel, ctx, onClose, onSaved }: UnitEditShee
             disabled={submitting || plan.ops.length === 0}
             title={plan.ops.length === 0 ? "Chưa có thay đổi nào" : undefined}
             onClick={save}
-            className="bg-purple-600 text-white hover:bg-purple-500"
+            className="bg-blue-600 text-white hover:bg-blue-500"
           >
             {submitting && <Spinner />}
             Lưu thay đổi
@@ -248,7 +250,7 @@ function ChoiceCard({
     <label
       className={cn(
         "flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors",
-        checked ? "border-purple-500 bg-purple-50 dark:bg-purple-950/30" : "hover:bg-muted/60",
+        checked ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30" : "hover:bg-muted/60",
         blocked && "cursor-not-allowed opacity-60 hover:bg-transparent"
       )}
     >
@@ -258,7 +260,7 @@ function ChoiceCard({
         checked={checked}
         disabled={blocked}
         onChange={onChange}
-        className="mt-0.5 size-4 accent-purple-600"
+        className="mt-0.5 size-4 accent-blue-600"
       />
       <span className="space-y-0.5">
         <span className="flex items-center gap-1.5 text-sm font-semibold">

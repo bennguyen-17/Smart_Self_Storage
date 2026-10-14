@@ -118,7 +118,7 @@ function AccountsPanel() {
                   value={filter.query}
                   onChange={(e) => update({ query: e.target.value })}
                   placeholder="Họ tên, email hoặc số điện thoại"
-                  className="inner-box text-title w-full rounded-lg border py-1.5 pr-2.5 pl-8 text-xs font-semibold outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-purple-500"
+                  className="inner-box text-title w-full rounded-lg border py-1.5 pr-2.5 pl-8 text-xs font-semibold outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500"
                 />
               </span>
             </label>
@@ -149,7 +149,7 @@ function AccountsPanel() {
             />
             <Button
               onClick={() => setDialog({ kind: "create" })}
-              className="ml-auto bg-purple-600 text-white hover:bg-purple-500"
+              className="ml-auto bg-blue-600 text-white hover:bg-blue-500"
             >
               <PlusIcon aria-hidden="true" /> Tạo tài khoản
             </Button>
@@ -378,7 +378,7 @@ function AccountForm({
           <select
             value={values.role}
             onChange={(e) => set({ role: e.target.value as InternalRole })}
-            className="rounded-lg border bg-background px-2.5 py-2 text-xs font-semibold outline-none focus:ring-2 focus:ring-purple-500"
+            className="rounded-lg border bg-background px-2.5 py-2 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500"
           >
             {INTERNAL_ROLES.map((r) => (
               <option key={r} value={r}>
@@ -395,7 +395,7 @@ function AccountForm({
             onChange={(e) => set({ facilityId: e.target.value === "" ? "" : Number(e.target.value) })}
             aria-invalid={Boolean(visible.facilityId)}
             aria-describedby={visible.facilityId ? "acc-facility-error" : undefined}
-            className="rounded-lg border bg-background px-2.5 py-2 text-xs font-semibold outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-60 aria-invalid:border-rose-500"
+            className="rounded-lg border bg-background px-2.5 py-2 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 aria-invalid:border-rose-500"
           >
             <option value="">{needsFacility ? "Chọn cơ sở" : "Toàn hệ thống"}</option>
             {facilities.map((f) => (
@@ -422,7 +422,7 @@ function AccountForm({
         <Button type="button" variant="outline" disabled={submitting} onClick={onCancel}>
           Hủy
         </Button>
-        <Button type="submit" disabled={submitting} className="bg-purple-600 text-white hover:bg-purple-500">
+        <Button type="submit" disabled={submitting} className="bg-blue-600 text-white hover:bg-blue-500">
           {submitting && <Spinner />}
           {mode === "create" ? "Tạo tài khoản" : "Lưu thay đổi"}
         </Button>
@@ -478,7 +478,7 @@ function StatusConfirm({
         <Button
           disabled={submitting}
           onClick={confirm}
-          className={locking ? "bg-rose-600 text-white hover:bg-rose-500" : "bg-purple-600 text-white hover:bg-purple-500"}
+          className={locking ? "bg-rose-600 text-white hover:bg-rose-500" : "bg-blue-600 text-white hover:bg-blue-500"}
         >
           {submitting && <Spinner />}
           {locking ? "Khóa tài khoản" : "Mở khóa"}
@@ -517,7 +517,7 @@ function TextField({
         onChange={(e) => onChange(e.target.value)}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${id}-error` : undefined}
-        className="rounded-lg border bg-background px-2.5 py-2 text-xs font-semibold outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-purple-500 aria-invalid:border-rose-500"
+        className="rounded-lg border bg-background px-2.5 py-2 text-xs font-semibold outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 aria-invalid:border-rose-500"
       />
       {error && (
         <span id={`${id}-error`} className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">
@@ -545,7 +545,7 @@ function SelectField({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="inner-box text-title min-w-36 cursor-pointer rounded-lg border px-2.5 py-1.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-purple-500"
+        className="inner-box text-title min-w-36 cursor-pointer rounded-lg border px-2.5 py-1.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>

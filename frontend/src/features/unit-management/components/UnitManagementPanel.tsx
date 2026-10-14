@@ -190,7 +190,7 @@ function UnitRow({ unit, floorLabel, onEdit }: { unit: ManagerUnit; floorLabel: 
           {unit.typeName ?? "—"}
         </span>
       </td>
-      <td className="px-4 py-3 text-right whitespace-nowrap">
+      <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">
         {formatVnd(unit.dailyPrice)} / {formatVnd(unit.monthlyPrice)}
       </td>
       <td className="px-4 py-3">
@@ -225,7 +225,7 @@ function FilterSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="inner-box text-title min-w-36 cursor-pointer rounded-lg border px-2.5 py-1.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-purple-500"
+        className="inner-box text-title min-w-36 cursor-pointer rounded-lg border px-2.5 py-1.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
@@ -244,8 +244,8 @@ function StatusChip({ active, onClick, label }: { active: boolean; onClick: () =
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "cursor-pointer rounded-full border px-3 py-1 text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none",
-        active ? "border-transparent bg-purple-600 text-white shadow" : "inner-box text-title hover:border-purple-400"
+        "cursor-pointer rounded-full border px-3 py-1 text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none",
+        active ? "border-transparent bg-blue-600 text-white shadow" : "inner-box text-title hover:border-blue-400"
       )}
     >
       {label}
