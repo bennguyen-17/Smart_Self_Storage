@@ -5,7 +5,6 @@ import { describe, expect, test, vi } from "vitest"
 import type { StaffReservationItem } from "../types"
 import CheckinContractTable from "./CheckinContractTable"
 
-// US-20: HĐ OVERDUE phải có 2 nút "Thu phạt" & "Gia hạn" ở cột Trạng thái.
 const overdueItem: StaffReservationItem = {
   reservationId: 104,
   reservationCode: "HD-CG-8812",
@@ -50,7 +49,7 @@ function renderTable(item: StaffReservationItem) {
   return { user, onCollectPenalty, onRenew }
 }
 
-describe("CheckinContractTable: hành động cho HĐ OVERDUE (US-20)", () => {
+describe("CheckinContractTable: hành động cho hợp đồng quá hạn", () => {
   test("hiển thị nút Thu phạt & Gia hạn", () => {
     renderTable(overdueItem)
     expect(
