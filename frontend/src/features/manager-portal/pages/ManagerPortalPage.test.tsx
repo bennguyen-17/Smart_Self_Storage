@@ -14,6 +14,11 @@ const auth = vi.hoisted(() => ({
   signOut: vi.fn(),
 }))
 vi.mock("@/context/AuthContext", () => ({ useAuth: () => auth }))
+// Trang mặc định cần dữ liệu ô kho: test chạy bằng dữ liệu mẫu, không phụ thuộc cấu hình apiClient
+vi.mock("@/lib/apiClient", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/apiClient")>()
+  return { ...actual, isMockMode: () => true }
+})
 
 function LocationProbe() {
   const location = useLocation()
