@@ -30,6 +30,18 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/customer/contracts/overdue-alerts")
+                        .hasRole("AUTHENTICATED")
+
+                        .requestMatchers("/api/staff/contracts/overdue-alerts")
+                        .hasRole("STAFF")
+
+                        .requestMatchers("/api/manager/contracts/overdue-alerts")
+                        .hasRole("MANAGER")
+
+                        .requestMatchers("/api/contracts/*/cancel-deposit")
+                        .hasRole("AUTHENTICATED")
+
                         .requestMatchers(
                                 "/api/staff/reservations",
                                 "/api/staff/reservations/lookup",
