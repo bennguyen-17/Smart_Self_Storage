@@ -46,9 +46,8 @@ function ReservationManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <main className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-        <header className="space-y-1">
+    <div className="space-y-6 text-foreground">
+      <header className="space-y-1">
           <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
             Cổng nhân viên · Quản trị
           </p>
@@ -149,7 +148,6 @@ function ReservationManagementPage() {
             setReloadCount((n) => n + 1)
           }}
         />
-      </main>
     </div>
   )
 }

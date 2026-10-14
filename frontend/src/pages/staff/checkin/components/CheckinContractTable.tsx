@@ -78,9 +78,9 @@ function CheckinContractTable({
       <table className="w-full table-fixed text-left text-sm">
         <thead className="border-b bg-slate-100 text-[11px] font-bold tracking-wider text-slate-500 uppercase dark:bg-slate-800/80 dark:text-slate-400">
           <tr>
-            <th className="w-[15%] px-4 py-3.5">Mã Hợp Đồng / Đặt Chỗ</th>
+            <th className="w-[15%] px-4 py-3.5">Mã Hợp Đồng</th>
             <th className="w-[15%] px-4 py-3.5">Thông tin Khách hàng</th>
-            <th className="w-[15%] px-4 py-3.5">Kho &amp; Vị trí</th>
+            <th className="w-[15%] px-4 py-3.5">Mã kho</th>
             <th className="w-[15%] px-4 py-3.5">Trạng thái</th>
             <th className="w-[15%] px-4 py-3.5">Chi tiết</th>
           </tr>
@@ -140,10 +140,7 @@ function CheckinContractTable({
 
                   <td className="px-4 py-3.5 align-middle">
                     <span className="text-title block font-bold">
-                      Kho {item.unitCode ?? "—"}
-                    </span>
-                    <span className="block text-[11px] text-muted">
-                      {[item.floorName, meta].filter(Boolean).join(" • ")}
+                      {item.unitCode ?? "—"}
                     </span>
                   </td>
 

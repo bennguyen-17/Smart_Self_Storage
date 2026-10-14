@@ -1,10 +1,7 @@
 import { Outlet } from "react-router-dom"
-import { Building2Icon, UserCogIcon } from "lucide-react"
-
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useTheme } from "@/components/common/theme-provider"
-import { useAuth } from "@/context/AuthContext"
 
 import StaffSidebar from "@/pages/staff/checkin/components/StaffSidebar"
 
@@ -22,21 +19,10 @@ function resolveIsDark(theme: string): boolean {
  */
 function StaffPortalLayout() {
   const { theme, setTheme } = useTheme()
-  const { user } = useAuth()
-
   const isDark = resolveIsDark(theme)
-  const staffName = user?.fullName || "Nguyễn Văn Staff"
-  const staffBranch =
-    (user as { facilityName?: string })?.facilityName || "Quận 9 (Khu FPT)"
-  const staffRole =
-    user?.role === "STAFF"
-      ? "Chuyên viên Vận hành"
-      : user?.role === "MANAGER"
-        ? "Quản lý Cơ sở"
-        : user?.role || "Chuyên viên Vận hành"
 
   return (
-    <div className="staff-portal antialiased">
+    <div className="staff-portal min-h-screen antialiased">
       {/* Nền ambient  */}
       <div
         className={`pointer-events-none fixed inset-0 z-0 transition-colors ${
@@ -55,41 +41,18 @@ function StaffPortalLayout() {
             onToggleTheme={() => setTheme(isDark ? "light" : "dark")}
           />
 
-          <SidebarInset className="relative z-10 bg-transparent">
-            <div className="mx-auto w-full max-w-7xl flex-1 space-y-4 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
-              {/* STAFF IDENTITY */}
-              <div className="card-box flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-2xl border px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow">
-                    <UserCogIcon className="size-5" strokeWidth={2.5} />
-                  </div>
-                  <div className="leading-tight">
-                    <div className="text-title text-sm font-extrabold">
-                      {staffName}
-                    </div>
-                    <div className="text-[11px] font-bold text-muted">
-                      {staffRole}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inner-box inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold">
-                    <Building2Icon
-                      className="size-3.5 shrink-0 text-blue-600 dark:text-blue-400"
-                      strokeWidth={2.5}
-                    />
-                    <span className="text-title">{staffBranch}</span>
-                  </span>
-                  <span className="inner-box inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                    <span className="size-2 shrink-0 animate-pulse rounded-full bg-emerald-500" />
-                    <span>Trực ca 08:00 - 20:00</span>
-                  </span>
-                </div>
-              </div>
-
-              <Outlet />
+          <SidebarInset className="relative z-10 flex min-h-screen flex-1 flex-col bg-transparent">
+            {/* Top mobile navigation bar (chỉ hiển thị trên màn hình nhỏ để bật tắt sidebar) */}
+            <div className="flex items-center gap-3 border-b border-border/40 bg-card/60 px-4 py-2.5 backdrop-blur-md md:hidden">
+              <SidebarTrigger className="shrink-0" />
+              <span className="text-xs font-black tracking-wide uppercase text-title">
+                Smart Storage • Cổng Nhân Viên
+              </span>
             </div>
+
+            <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+              <Outlet />
+            </main>
           </SidebarInset>
         </SidebarProvider>
       </TooltipProvider>

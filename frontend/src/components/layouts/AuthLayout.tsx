@@ -58,9 +58,7 @@ function AuthLayout({ children }: AuthLayoutProps) {
                 </h2>
               </div>
 
-              <span className="rounded-full border border-primary/20 bg-primary/10 text-primary dark:border-primary/30 dark:bg-primary/20 px-3 py-1 text-xs font-semibold sm:text-sm">
-                7/7 Cơ sở trực tuyến 24/7
-              </span>
+             
             </div>
 
             <div className="relative z-10 flex flex-1 items-center justify-center py-0.5">
