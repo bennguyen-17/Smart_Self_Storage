@@ -384,13 +384,13 @@ INSERT INTO Role (roleId, roleName) VALUES
 
 -- 2. 7 Cơ sở kho toàn quốc (Khớp 100% tài liệu Take note.txt)
 INSERT INTO Facility (facilityId, facilityName, facilityCode, layoutType, address, phone, status) VALUES
-(1, 'SmartStorage Cầu Giấy', 'HN-01', 'A', 'Số 391 Cầu Giấy, Q. Cầu Giấy, Hà Nội', '02439100001', 'ACTIVE'),
-(2, 'SmartStorage Thanh Xuân', 'HN-02', 'B', 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội', '02439100002', 'ACTIVE'),
-(3, 'SmartStorage Quận 1', 'HCM-01', 'A', 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM', '02839100001', 'ACTIVE'),
-(4, 'SmartStorage Quận 7', 'HCM-02', 'B', 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM', '02839100002', 'ACTIVE'),
-(5, 'SmartStorage Thủ Đức', 'HCM-03', 'B', 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM', '02839100003', 'ACTIVE'),
-(6, 'SmartStorage Hải Châu', 'DN-01', 'A', 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng', '02369100001', 'ACTIVE'),
-(7, 'SmartStorage Ninh Kiều', 'CT-01', 'B', 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', '02929100001', 'ACTIVE');
+(1, 'SmartStorage Cầu Giấy', 'HN01', 'A', 'Số 391 Cầu Giấy, Q. Cầu Giấy, Hà Nội', '02439100001', 'ACTIVE'),
+(2, 'SmartStorage Thanh Xuân', 'HN02', 'B', 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội', '02439100002', 'ACTIVE'),
+(3, 'SmartStorage Quận 1', 'HCM01', 'A', 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM', '02839100001', 'ACTIVE'),
+(4, 'SmartStorage Quận 7', 'HCM02', 'B', 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM', '02839100002', 'ACTIVE'),
+(5, 'SmartStorage Thủ Đức', 'HCM03', 'B', 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM', '02839100003', 'ACTIVE'),
+(6, 'SmartStorage Hải Châu', 'DN01', 'A', 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng', '02369100001', 'ACTIVE'),
+(7, 'SmartStorage Ninh Kiều', 'CT01', 'B', 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', '02929100001', 'ACTIVE');
 
 -- 3. Tài khoản người dùng (Accounts)
 -- Mật khẩu mặc định dev/test: 123456@Test (BCrypt: $2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW)
@@ -508,7 +508,7 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 ('HN01-G-XL04', 1, 4, 'AVAILABLE'),
 ('HN01-G-XL05', 1, 4, 'UNDER_MAINTENANCE'),
 ('HN01-G-XL06', 1, 4, 'AVAILABLE'),
-('HN01-G-XL07', 1, 4, 'HOLD'),
+('HN01-G-XL07', 1, 4, 'RESERVED'),
 ('HN01-G-XL08', 1, 4, 'AVAILABLE'),
 ('HN01-G-XL09', 1, 4, 'OCCUPIED'),
 ('HN01-G-XL10', 1, 4, 'AVAILABLE'),
@@ -524,7 +524,7 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 ('HN01-F1-M01', 2, 2, 'OCCUPIED'),
 ('HN01-F1-M02', 2, 2, 'AVAILABLE'),
 ('HN01-F1-M03', 2, 2, 'AVAILABLE'),
-('HN01-F1-M04', 2, 2, 'HOLD'),
+('HN01-F1-M04', 2, 2, 'RESERVED'),
 ('HN01-F1-M05', 2, 2, 'AVAILABLE'),
 ('HN01-F1-M06', 2, 2, 'AVAILABLE'),
 ('HN01-F1-L01', 2, 3, 'AVAILABLE'),
@@ -541,7 +541,7 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 ('HN01-F2-M01', 3, 2, 'AVAILABLE'),
 ('HN01-F2-M02', 3, 2, 'AVAILABLE'),
 ('HN01-F2-M03', 3, 2, 'OCCUPIED'),
-('HN01-F2-M04', 3, 2, 'HOLD'),
+('HN01-F2-M04', 3, 2, 'RESERVED'),
 ('HN01-F2-M05', 3, 2, 'AVAILABLE'),
 ('HN01-F2-M06', 3, 2, 'AVAILABLE'),
 ('HN01-F2-M07', 3, 2, 'AVAILABLE'),
@@ -767,7 +767,11 @@ INSERT INTO Reservation (reservationId, reservationCode, accountId, unitCode, st
 -- DN-01
 (12, 'RES-DN01-202609-001', 18, 'DN01-G-XL01', '2026-09-15', '2026-10-15', 'MONTHLY', 2400000.00, 2000000.00, 0.00, 'CONFIRMED', '2026-09-14 09:00:00', NULL),
 -- CT-01
-(13, 'RES-CT01-202609-001', 16, 'CT01-G-XL02', '2026-09-10', '2026-11-10', 'MONTHLY', 8000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-09-09 11:20:00', NULL);
+(13, 'RES-CT01-202609-001', 16, 'CT01-G-XL02', '2026-09-10', '2026-11-10', 'MONTHLY', 8000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-09-09 11:20:00', NULL),
+-- HN-01 (Dữ liệu sẵn sàng cho nhân viên HN-01 kiểm tra quy trình Check-in tại quầy)
+(14, 'RES-HN01-202610-001', 13, 'HN01-F1-M04', '2026-10-15', '2026-11-15', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-10-14 10:00:00', NULL),
+(15, 'RES-HN01-202610-002', 15, 'HN01-G-XL07', '2026-10-15', '2026-11-15', 'MONTHLY', 4000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-10-14 14:00:00', NULL),
+(16, 'RES-HN01-202610-003', 17, 'HN01-F2-M04', '2026-10-15', '2026-11-15', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-10-14 16:30:00', NULL);
 
 -- 15. Hợp đồng thuê kho (Contracts) đa dạng trạng thái (ACTIVE, OVERDUE, PENDING_CHECKIN)
 INSERT INTO Contract (contractId, reservationId, pdfUrl, activatedAt, terminatedAt, status, cancelReason, refundBankName, refundAccountNumber, refundAccountName) VALUES
@@ -783,7 +787,11 @@ INSERT INTO Contract (contractId, reservationId, pdfUrl, activatedAt, terminated
 (10, 10, '/contracts/HD-HCM02-202609-001.pdf', '2026-09-02 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
 (11, 11, '/contracts/HD-HCM03-202609-001.pdf', '2026-09-05 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
 (12, 12, '/contracts/HD-DN01-202609-001.pdf', '2026-09-15 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
-(13, 13, '/contracts/HD-CT01-202609-001.pdf', '2026-09-10 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL);
+(13, 13, '/contracts/HD-CT01-202609-001.pdf', '2026-09-10 00:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
+-- Hợp đồng chờ check-in (PENDING_CHECKIN) cho cơ sở HN-01
+(14, 14, '/contracts/HD-HN01-202610-001.pdf', NULL, NULL, 'PENDING_CHECKIN', NULL, NULL, NULL, NULL),
+(15, 15, '/contracts/HD-HN01-202610-002.pdf', NULL, NULL, 'PENDING_CHECKIN', NULL, NULL, NULL, NULL),
+(16, 16, '/contracts/HD-HN01-202610-003.pdf', NULL, NULL, 'PENDING_CHECKIN', NULL, NULL, NULL, NULL);
 
 -- 16. Hóa đơn và Thanh toán (Payments)
 INSERT INTO Payment (paymentId, contractId, invoiceNumber, invoiceType, amount, paidAmount, remainingAmount, pdfUrl, issuedAt, dueAt, status, paymentMethod, transactionCode, paymentStatus, gatewayTransactionId, paidAt) VALUES
@@ -800,7 +808,11 @@ INSERT INTO Payment (paymentId, contractId, invoiceNumber, invoiceType, amount, 
 (10, 10, 'INV-HCM02-2609-001', 'INITIAL_RENTAL', 8000000.00, 8000000.00, 0.00, '/invoices/INV-010.pdf', '2026-08-31 16:10:00', '2026-09-02 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_552199', 'SUCCESS', 'VNP552199', '2026-08-31 16:15:00'),
 (11, 11, 'INV-HCM03-2609-001', 'INITIAL_RENTAL', 4000000.00, 4000000.00, 0.00, '/invoices/INV-011.pdf', '2026-09-04 10:40:00', '2026-09-05 23:59:59', 'PAID', 'BANK_TRANSFER', 'TCB_992102', 'SUCCESS', 'TCB992102', '2026-09-04 10:45:00'),
 (12, 12, 'INV-DN01-2609-001', 'INITIAL_RENTAL', 2400000.00, 2400000.00, 0.00, '/invoices/INV-012.pdf', '2026-09-14 09:10:00', '2026-09-15 23:59:59', 'PAID', 'VIETQR', 'VIETQR_771920', 'SUCCESS', 'QR771920', '2026-09-14 09:15:00'),
-(13, 13, 'INV-CT01-2609-001', 'INITIAL_RENTAL', 8000000.00, 8000000.00, 0.00, '/invoices/INV-013.pdf', '2026-09-09 11:30:00', '2026-09-10 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_119201', 'SUCCESS', 'VNP119201', '2026-09-09 11:35:00');
+(13, 13, 'INV-CT01-2609-001', 'INITIAL_RENTAL', 8000000.00, 8000000.00, 0.00, '/invoices/INV-013.pdf', '2026-09-09 11:30:00', '2026-09-10 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_119201', 'SUCCESS', 'VNP119201', '2026-09-09 11:35:00'),
+-- Hóa đơn tiền cọc và thanh toán check-in cho HĐ 14, 15, 16 (Chuẩn BR-16, BR-37: cọc nộp online -> PARTIALLY_PAID)
+(14, 14, 'DEP-HN01-2610-001', 'DEP', 2200000.00, 1000000.00, 1200000.00, '/invoices/INV-014.pdf', '2026-10-14 10:10:00', '2026-10-15 23:59:59', 'PARTIALLY_PAID', 'VNPAY', 'TXN_VNP_14001', 'SUCCESS', 'VNP14001', '2026-10-14 10:15:00'),
+(15, 15, 'DEP-HN01-2610-002', 'DEP', 7000000.00, 7000000.00, 0.00, '/invoices/INV-015.pdf', '2026-10-14 14:10:00', '2026-10-15 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_15001', 'SUCCESS', 'VNP15001', '2026-10-14 14:15:00'),
+(16, 16, 'DEP-HN01-2610-003', 'DEP', 2200000.00, 1000000.00, 1200000.00, '/invoices/INV-016.pdf', '2026-10-14 16:35:00', '2026-10-15 23:59:59', 'PARTIALLY_PAID', 'VIETQR', 'TXN_VQR_16001', 'SUCCESS', 'QR16001', '2026-10-14 16:40:00');
 
 -- 17. Mã PIN động mở cổng IoT 24/7 (GatePins)
 INSERT INTO GatePin (gatePinId, contractId, pinCode, status, generatedAt, expiresAt) VALUES
