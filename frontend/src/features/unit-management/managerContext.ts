@@ -15,6 +15,21 @@ function toId(value: unknown): number | null {
   return Number.isInteger(n) && n > 0 ? n : null
 }
 
+export class MissingFacilityError extends Error {
+  constructor() {
+    super("Tài khoản quản lý chưa được gắn cơ sở, nên chưa xem được dữ liệu. Vui lòng liên hệ quản trị hệ thống.")
+    this.name = "MissingFacilityError"
+  }
+}
+
+/** Header BE dùng để biết cơ sở và người thao tác; thiếu cơ sở thì báo lỗi rõ, không đoán */
+export function managerHeaders(ctx: ManagerContext): Record<string, string> {
+  if (ctx.facilityId === null) throw new MissingFacilityError()
+  const headers: Record<string, string> = { "X-Facility-Id": String(ctx.facilityId) }
+  if (ctx.accountId !== null) headers["X-Account-Id"] = String(ctx.accountId)
+  return headers
+}
+
 export function getManagerContext(): ManagerContext {
   const user = getStoredUser()
   const isDemo = isMockMode()
