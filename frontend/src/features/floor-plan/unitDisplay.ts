@@ -27,6 +27,16 @@ export function unitAreaOf(unit: UnitDetailResponse): number | null {
   return size ? SIZE_AREA_M2[size] : null
 }
 
+/**
+ * Suy size từ mã ô kho khi chưa tải được dữ liệu ô ("F2-M205" → "M", "HN01-G-XL05" → "XL").
+ * Chỉ là fallback hiển thị; dữ liệu từ API ô kho luôn được ưu tiên.
+ */
+export function unitSizeFromCode(unitCode: string): UnitSize | null {
+  const match = /([A-Za-z]{1,2})\d+$/.exec(unitCode.trim())
+  const size = match?.[1]?.toUpperCase() as UnitSize | undefined
+  return size && UNIT_SIZES.includes(size) ? size : null
+}
+
 /** Dài × Rộng × Cao (m). Nếu thiếu thì tách từ chuỗi size "2m x 2m x 2.5m". */
 export function unitDimensionsOf(
   unit: UnitDetailResponse

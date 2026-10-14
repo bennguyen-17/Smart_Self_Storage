@@ -7,7 +7,10 @@ import CustomerPortal from "@/pages/CustomerPortal"
 import RolePortalPlaceholderPage from "@/pages/RolePortalPlaceholderPage"
 import LandingPage from "@/features/landing/pages/LandingPage"
 import ReservationManagementPage from "@/features/reservations/pages/ReservationManagementPage"
+import StaffPortalLayout from "@/features/checkin/pages/StaffPortalLayout"
 import StaffCheckinPage from "@/features/checkin/pages/StaffCheckinPage"
+import StaffSupportPage from "@/features/checkin/pages/StaffSupportPage"
+import StaffPinPage from "@/features/checkin/pages/StaffPinPage"
 import FloorPlanPage from "@/features/floor-plan/pages/FloorPlanPage"
 import ManagerPortalPage from "@/features/manager-portal/pages/ManagerPortalPage"
 import AdminPortalPage from "@/features/admin-portal/pages/AdminPortalPage"
@@ -16,7 +19,8 @@ import { isTokenValid } from "@/lib/apiClient"
 
 // Route Guard độc lập cho Cổng Khách Hàng (không phụ thuộc vào cổng nội bộ)
 function CustomerProtectedRoute({ children }: { children: React.ReactNode }) {
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null
 
   if (!isTokenValid(token)) {
     if (typeof window !== "undefined") {
@@ -61,15 +65,20 @@ function App() {
           }
         />
 
-        {/* Cổng Nhân Viên Vận Hành: Check-in tại quầy & Quản lý Ticket (Role STAFF, MANAGER, ADMIN) */}
+        {/* Cổng Nhân Viên Vận Hành: mỗi nghiệp vụ một URL riêng (Role STAFF, MANAGER, ADMIN) */}
         <Route
-          path="/staff/checkin"
+          path="/staff"
           element={
             <RoleProtectedRoute allowedRoles={["STAFF", "MANAGER", "ADMIN"]}>
-              <StaffCheckinPage />
+              <StaffPortalLayout />
             </RoleProtectedRoute>
           }
-        />
+        >
+          <Route index element={<Navigate to="/staff/checkin" replace />} />
+          <Route path="checkin" element={<StaffCheckinPage />} />
+          <Route path="support" element={<StaffSupportPage />} />
+          <Route path="pin" element={<StaffPinPage />} />
+        </Route>
 
         {/* US-06: Quản lý đơn đặt cọc & No-Show (Role STAFF, MANAGER, ADMIN) */}
         <Route

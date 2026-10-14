@@ -9,7 +9,6 @@ import {
   IdCardIcon,
   InfoIcon,
   KeyRoundIcon,
-  RefreshCwIcon,
   SearchIcon,
   UserCheckIcon,
   WrenchIcon,
@@ -22,9 +21,7 @@ import apiClient, { isMockMode } from "@/lib/apiClient"
 import StaffInspectionModal, {
   type InspectionTarget,
 } from "./StaffInspectionModal"
-import StaffUnlockModal, {
-  type UnlockTicketInfo,
-} from "./StaffUnlockModal"
+import StaffUnlockModal, { type UnlockTicketInfo } from "./StaffUnlockModal"
 
 type TicketStatus = "SUBMITTED" | "IN_PROGRESS" | "RESOLVED"
 
@@ -62,7 +59,9 @@ const INITIAL_FALLBACK_TICKETS: TicketItem[] = [
     contractCode: "HD-CG-2026-801",
     description:
       "Quên chìa khóa cơ ở nhà, đang đứng trước kho cần Staff lên đối chiếu CCCD và hỗ trợ mở khóa gấp.",
-    slaDeadline: new Date(Date.now() + 13 * 60 * 1000 + 45 * 1000).toISOString(),
+    slaDeadline: new Date(
+      Date.now() + 13 * 60 * 1000 + 45 * 1000
+    ).toISOString(),
     createdAt: new Date().toISOString(),
   },
   {
@@ -107,30 +106,19 @@ const FILTERS: { key: "ALL" | TicketStatus; label: string }[] = [
 
 function getSlaInfo(ticket: TicketItem, now: number) {
   if (ticket.status === "RESOLVED") {
-    return {
-      text: "Đã Hoàn Tất",
-      className:
-        "text-emerald-700 bg-emerald-100 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300",
-      isBreached: false,
-    }
+    return { text: "Đã Hoàn Tất", className: "text-muted", isBreached: false }
   }
 
   if (ticket.type === "EARLY_TERMINATION") {
     return {
       text: ticket.desiredDate ? `Hẹn: ${ticket.desiredDate}` : "Hẹn Hôm Nay",
-      className:
-        "text-blue-700 bg-blue-100 border-blue-300 dark:bg-blue-950/60 dark:text-blue-300",
+      className: "text-muted",
       isBreached: false,
     }
   }
 
   if (!ticket.slaDeadline) {
-    return {
-      text: "15m SLA",
-      className:
-        "text-amber-700 bg-amber-100 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300",
-      isBreached: false,
-    }
+    return { text: "15m SLA", className: "text-muted", isBreached: false }
   }
 
   const deadlineMs = new Date(ticket.slaDeadline).getTime()
@@ -138,9 +126,8 @@ function getSlaInfo(ticket: TicketItem, now: number) {
 
   if (diffSec <= 0) {
     return {
-      text: "🚨 SLA Quá Hạn",
-      className:
-        "text-rose-700 bg-rose-100 border-rose-300 animate-pulse dark:bg-rose-950/60 dark:text-rose-300",
+      text: "SLA Quá Hạn",
+      className: "text-rose-600 dark:text-rose-400",
       isBreached: true,
     }
   }
@@ -149,19 +136,9 @@ function getSlaInfo(ticket: TicketItem, now: number) {
   const s = diffSec % 60
   const timeStr = `${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s SLA`
 
-  if (m < 5) {
-    return {
-      text: timeStr,
-      className:
-        "text-rose-700 bg-rose-100 border-rose-300 animate-pulse dark:bg-rose-950/60 dark:text-rose-300",
-      isBreached: false,
-    }
-  }
-
   return {
     text: timeStr,
-    className:
-      "text-amber-700 bg-amber-100 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300",
+    className: m < 5 ? "text-rose-600 dark:text-rose-400" : "text-muted",
     isBreached: false,
   }
 }
@@ -171,13 +148,17 @@ function StaffTicketPanel() {
   const [tickets, setTickets] = useState<TicketItem[]>(INITIAL_FALLBACK_TICKETS)
   const [filter, setFilter] = useState<"ALL" | TicketStatus>("ALL")
   const [searchQuery, setSearchQuery] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
   const [now, setNow] = useState(Date.now())
 
   // Modals state
-  const [inspectionTarget, setInspectionTarget] = useState<InspectionTarget | null>(null)
-  const [inspectionTicketId, setInspectionTicketId] = useState<string | number | null>(null)
-  const [unlockTarget, setUnlockTarget] = useState<UnlockTicketInfo | null>(null)
+  const [inspectionTarget, setInspectionTarget] =
+    useState<InspectionTarget | null>(null)
+  const [inspectionTicketId, setInspectionTicketId] = useState<
+    string | number | null
+  >(null)
+  const [unlockTarget, setUnlockTarget] = useState<UnlockTicketInfo | null>(
+    null
+  )
 
   // Real-time SLA timer
   useEffect(() => {
@@ -186,7 +167,6 @@ function StaffTicketPanel() {
   }, [])
 
   const fetchTickets = useCallback(async () => {
-    setIsLoading(true)
     try {
       if (!isMockMode()) {
         const res: any = await apiClient.get("/staff/tickets")
@@ -194,7 +174,11 @@ function StaffTicketPanel() {
           const mapped: TicketItem[] = res.map((t: any) => ({
             id: t.id,
             ticketCode: t.ticketCode || `TCK-${t.id}`,
-            title: t.title || (t.type === "EARLY_TERMINATION" ? "Trả Kho Sớm Trước Hạn" : "Báo Cáo Sự Cố Ô Kho"),
+            title:
+              t.title ||
+              (t.type === "EARLY_TERMINATION"
+                ? "Trả Kho Sớm Trước Hạn"
+                : "Báo Cáo Sự Cố Ô Kho"),
             type: t.type || "INCIDENT",
             status: t.status || "SUBMITTED",
             customerId: t.customerId,
@@ -202,7 +186,9 @@ function StaffTicketPanel() {
             customerPhone: t.customerPhone || "0988 xxx xxx",
             unitCode: t.unitCode || "—",
             contractId: t.contractId,
-            contractCode: t.contractCode || (t.contractId ? `HD-${t.contractId}` : undefined),
+            contractCode:
+              t.contractCode ||
+              (t.contractId ? `HD-${t.contractId}` : undefined),
             description: t.description || "Không có mô tả chi tiết.",
             desiredDate: t.desiredDate ? String(t.desiredDate) : undefined,
             slaDeadline: t.slaDeadline ? String(t.slaDeadline) : undefined,
@@ -217,8 +203,6 @@ function StaffTicketPanel() {
       setTickets(INITIAL_FALLBACK_TICKETS)
     } catch {
       setTickets(INITIAL_FALLBACK_TICKETS)
-    } finally {
-      setIsLoading(false)
     }
   }, [])
 
@@ -238,9 +222,13 @@ function StaffTicketPanel() {
         await apiClient.post(`/staff/tickets/${ticket.id}/accept`)
       }
       updateStatus(ticket.id, "IN_PROGRESS")
-      toast.success(`Nhân viên đã tiếp nhận Ticket #${ticket.ticketCode} (IN_PROGRESS).`)
+      toast.success(
+        `Nhân viên đã tiếp nhận Ticket #${ticket.ticketCode} (IN_PROGRESS).`
+      )
     } catch (err: any) {
-      toast.error(err?.response?.data || "Không thể tiếp nhận ticket, vui lòng thử lại.")
+      toast.error(
+        err?.response?.data || "Không thể tiếp nhận ticket, vui lòng thử lại."
+      )
     }
   }
 
@@ -252,16 +240,24 @@ function StaffTicketPanel() {
         })
       }
       updateStatus(ticket.id, "RESOLVED")
-      toast.success(`Ticket #${ticket.ticketCode} đã xử lý hoàn tất (RESOLVED).`)
+      toast.success(
+        `Ticket #${ticket.ticketCode} đã xử lý hoàn tất (RESOLVED).`
+      )
     } catch (err: any) {
-      toast.error(err?.response?.data || "Không thể đóng ticket, vui lòng thử lại.")
+      toast.error(
+        err?.response?.data || "Không thể đóng ticket, vui lòng thử lại."
+      )
     }
   }
 
   function handleOpenInspection(ticket: TicketItem) {
     setInspectionTicketId(ticket.id)
     setInspectionTarget({
-      contractCode: ticket.contractCode || (ticket.contractId ? `HD-CG-2026-${ticket.contractId}` : `HD-${ticket.unitCode || "902"}`),
+      contractCode:
+        ticket.contractCode ||
+        (ticket.contractId
+          ? `HD-CG-2026-${ticket.contractId}`
+          : `HD-${ticket.unitCode || "902"}`),
       customerName: ticket.customerName || "Khách hàng trả kho",
       unitCode: ticket.unitCode || "F1-S105",
       depositAmount: 1_000_000,
@@ -328,23 +324,13 @@ function StaffTicketPanel() {
                   TRUNG TÂM TIẾP NHẬN &amp; XỬ LÝ SỰ CỐ (SUPPORT TICKETS)
                 </h3>
                 <p className="text-xs text-muted">
-                  Cam kết thời gian phản hồi SLA 15 phút • Khung giờ trực quầy: 08:00 - 20:00 hàng ngày
+                  Cam kết thời gian phản hồi SLA 15 phút • Khung giờ trực quầy:
+                  08:00 - 20:00 hàng ngày
                 </p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
-              <button
-                type="button"
-                onClick={fetchTickets}
-                disabled={isLoading}
-                title="Tải lại danh sách ticket"
-                className="flex cursor-pointer items-center space-x-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold text-title shadow-sm transition hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50"
-              >
-                <RefreshCwIcon className={cn("size-3.5", isLoading && "animate-spin")} />
-                <span>{isLoading ? "Đang tải..." : "Tải lại"}</span>
-              </button>
-
               <span className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
                 <span className="size-2 animate-pulse rounded-full bg-emerald-500" />
                 Ca Trực Hoạt Động (08:00 - 20:00)
@@ -389,16 +375,21 @@ function StaffTicketPanel() {
           </div>
 
           <div className="flex items-center gap-1.5 text-[11px] text-muted">
-            <InfoIcon className="size-3.5 text-amber-500" /> Quá 15 phút chưa tiếp nhận sẽ tự động gửi cảnh báo lên Facility Manager.
+            <InfoIcon className="size-3.5 text-amber-500" /> Quá 15 phút chưa
+            tiếp nhận sẽ tự động gửi cảnh báo lên Facility Manager.
           </div>
         </div>
 
         {/* TICKET CARDS GRID */}
         {filtered.length === 0 ? (
           <div className="card-box flex flex-col items-center justify-center rounded-2xl border py-12 text-center text-muted">
-            <CheckCircle2Icon className="size-10 text-emerald-500/80 mb-2" />
-            <h4 className="text-sm font-bold text-title">Không có ticket nào trong danh mục này</h4>
-            <p className="text-xs">Tất cả yêu cầu đã được xử lý hoặc không khớp với bộ lọc.</p>
+            <CheckCircle2Icon className="mb-2 size-10 text-muted" />
+            <h4 className="text-title text-sm font-bold">
+              Không có ticket nào trong danh mục này
+            </h4>
+            <p className="text-xs">
+              Tất cả yêu cầu đã được xử lý hoặc không khớp với bộ lọc.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -410,6 +401,11 @@ function StaffTicketPanel() {
                   ticket.title.toLowerCase().includes("khóa") ||
                   ticket.description?.toLowerCase().includes("chìa"))
               const isEarlyTerm = ticket.type === "EARLY_TERMINATION"
+              const typeColor = isUnlock
+                ? "text-amber-600 dark:text-amber-400"
+                : isEarlyTerm
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-blue-600 dark:text-blue-400"
 
               return (
                 <div
@@ -423,20 +419,25 @@ function StaffTicketPanel() {
                         <span className="font-mono text-xs font-black text-blue-600 dark:text-blue-400">
                           #{ticket.ticketCode}
                         </span>
-                        <h5 className="text-title mt-0.5 flex items-center gap-1.5 text-sm font-extrabold">
+                        <h5
+                          className={cn(
+                            "mt-0.5 flex items-center gap-1.5 text-sm font-extrabold",
+                            typeColor
+                          )}
+                        >
                           {isUnlock ? (
-                            <KeyRoundIcon className="size-3.5 text-amber-500 shrink-0" />
+                            <KeyRoundIcon className="size-3.5 shrink-0" />
                           ) : isEarlyTerm ? (
-                            <ArchiveIcon className="size-3.5 text-emerald-600 shrink-0" />
+                            <ArchiveIcon className="size-3.5 shrink-0" />
                           ) : (
-                            <WrenchIcon className="size-3.5 text-blue-600 shrink-0" />
+                            <WrenchIcon className="size-3.5 shrink-0" />
                           )}
                           <span>{ticket.title}</span>
                         </h5>
                       </div>
                       <span
                         className={cn(
-                          "rounded-full border px-2.5 py-1 text-[10px] font-black whitespace-nowrap",
+                          "rounded-full px-2.5 py-1 text-[10px] font-black whitespace-nowrap",
                           sla.className
                         )}
                       >
@@ -461,23 +462,16 @@ function StaffTicketPanel() {
                           <span className="shrink-0">Khách hàng:</span>
                           <span className="text-title text-right font-bold">
                             {ticket.customerName}
-                            {ticket.customerPhone ? ` • ${ticket.customerPhone}` : ""}
+                            {ticket.customerPhone
+                              ? ` • ${ticket.customerPhone}`
+                              : ""}
                           </span>
                         </div>
                       )}
 
                       <div className="flex items-center justify-between text-muted">
                         <span>Trạng thái:</span>
-                        <span
-                          className={cn(
-                            "rounded-md border px-2 py-0.5 text-[10px] font-extrabold",
-                            ticket.status === "SUBMITTED"
-                              ? "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300"
-                              : ticket.status === "IN_PROGRESS"
-                                ? "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950/60 dark:text-blue-300"
-                                : "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300"
-                          )}
-                        >
+                        <span className="text-title rounded-md border px-2 py-0.5 text-[10px] font-extrabold">
                           {ticket.status === "SUBMITTED"
                             ? "⌛ SUBMITTED (Chờ Tiếp Nhận)"
                             : ticket.status === "IN_PROGRESS"
@@ -512,7 +506,7 @@ function StaffTicketPanel() {
                       <button
                         type="button"
                         onClick={() => handleOpenUnlock(ticket)}
-                        className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700"
+                        className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-blue-600 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700"
                       >
                         <IdCardIcon className="size-3.5" />
                         <span>Đối Chiếu CCCD &amp; Mở Khóa</span>
@@ -523,23 +517,25 @@ function StaffTicketPanel() {
                       <button
                         type="button"
                         onClick={() => handleOpenInspection(ticket)}
-                        className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2 text-xs font-extrabold text-white shadow-sm transition hover:bg-emerald-700"
+                        className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-blue-600 py-2 text-xs font-extrabold text-white shadow-sm transition hover:bg-blue-700"
                       >
                         <ClipboardCheckIcon className="size-3.5" />
                         <span>Mở Biên Bản Nghiệm Thu &amp; Quyết Toán</span>
                       </button>
                     )}
 
-                    {ticket.status === "IN_PROGRESS" && !isUnlock && !isEarlyTerm && (
-                      <button
-                        type="button"
-                        onClick={() => handleResolveGeneral(ticket)}
-                        className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-blue-600 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700"
-                      >
-                        <CircleCheckIcon className="size-3.5" />
-                        <span>Xác Nhận Đã Sửa Xong ➔ Đóng Ticket</span>
-                      </button>
-                    )}
+                    {ticket.status === "IN_PROGRESS" &&
+                      !isUnlock &&
+                      !isEarlyTerm && (
+                        <button
+                          type="button"
+                          onClick={() => handleResolveGeneral(ticket)}
+                          className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-blue-600 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700"
+                        >
+                          <CircleCheckIcon className="size-3.5" />
+                          <span>Xác Nhận Đã Sửa Xong ➔ Đóng Ticket</span>
+                        </button>
+                      )}
 
                     {ticket.status === "RESOLVED" && (
                       <button
@@ -547,7 +543,7 @@ function StaffTicketPanel() {
                         disabled
                         className="flex w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-slate-200 py-2 text-xs font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                       >
-                        <CircleCheckIcon className="size-3.5 text-emerald-600" />
+                        <CircleCheckIcon className="size-3.5 text-muted" />
                         <span>Đã Đóng Ticket Hoàn Tất</span>
                       </button>
                     )}

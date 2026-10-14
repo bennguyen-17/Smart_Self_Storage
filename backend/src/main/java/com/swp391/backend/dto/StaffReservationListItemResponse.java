@@ -2,17 +2,23 @@ package com.swp391.backend.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class StaffReservationListItemResponse {
     private Integer reservationId;
     private String reservationCode;
     private String customerName;
+    private String customerIdNumber;
+    private String customerEmail;
     private String customerPhone;
     private String unitCode;
     private String floorName;
     private String reservationStatus;
     private LocalDate checkInDate;
     private String contractStatus;
+    private LocalDate reservationStartDate;
+    private LocalDate reservationEndDate;
+    private String rentalDuration;
     private String depStatus;
     private String depPaymentStatus;
     private BigDecimal depAmount;
@@ -49,4 +55,45 @@ public class StaffReservationListItemResponse {
     public void setDepPaidAmount(BigDecimal depPaidAmount) { this.depPaidAmount = depPaidAmount; }
     public BigDecimal getDepRemainingAmount() { return depRemainingAmount; }
     public void setDepRemainingAmount(BigDecimal depRemainingAmount) { this.depRemainingAmount = depRemainingAmount; }
+
+    public String getCustomerIdNumber() {
+        return customerIdNumber;
+    }
+
+    public void setCustomerIdNumber(String customerIdNumber) {
+        this.customerIdNumber = customerIdNumber;
+    }
+
+    public String getCustomerEmail() {
+        return customerEmail;
+    }
+
+    public void setCustomerEmail(String customerEmail) {
+        this.customerEmail = customerEmail;
+    }
+
+    public LocalDate getReservationStartDate() {
+        return reservationStartDate;
+    }
+
+    public void setReservationStartDate(LocalDate reservationStartDate) {
+        this.reservationStartDate = reservationStartDate;
+    }
+
+    public LocalDate getReservationEndDate() {
+        return reservationEndDate;
+    }
+
+    public void setReservationEndDate(LocalDate reservationEndDate) {
+        this.reservationEndDate = reservationEndDate;
+    }
+
+    public String getRentalDuration() {
+        return rentalDuration;
+    }
+
+    public void setRentalDuration(String rentalDuration) {
+        this.rentalDuration = rentalDuration;
+    }
+    
 }

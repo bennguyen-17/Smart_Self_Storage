@@ -1,5 +1,10 @@
 import { useNavigate } from "react-router-dom"
-import { KeyRoundIcon, LogOutIcon, ShieldCheckIcon, UserShieldIcon } from "lucide-react"
+import {
+  KeyRoundIcon,
+  LogOutIcon,
+  ShieldCheckIcon,
+  UserShieldIcon,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { useAuth } from "@/context/AuthContext"
@@ -25,7 +30,9 @@ function StaffProfileModal({ open, onClose }: StaffProfileModalProps) {
   const staffName = user?.fullName || "Nguyễn Văn Staff"
   const staffEmail = user?.email || "staff.nguyen@swp391.vn"
   const staffPhone = (user as { phone?: string })?.phone || "0909 888 999"
-  const staffCode = user?.id ? `ST-${String(user.id).padStart(4, "0")}` : "ST-391-8899"
+  const staffCode = user?.id
+    ? `ST-${String(user.id).padStart(4, "0")}`
+    : "ST-391-8899"
   const branchName =
     (user as { facilityName?: string })?.facilityName || "Quận 9 (Khu FPT)"
   const roleName =
@@ -128,13 +135,14 @@ function StaffProfileModal({ open, onClose }: StaffProfileModalProps) {
           />
         </div>
       </div>
-
       {/* FOOTER */}
       <div className="flex items-center space-x-2 pt-2">
         <button
           type="button"
           onClick={() =>
-            toast.info("Vui lòng liên hệ Quản trị viên IT để thay đổi mật khẩu hệ thống.")
+            toast.info(
+              "Vui lòng liên hệ Quản trị viên IT để thay đổi mật khẩu hệ thống."
+            )
           }
           className="flex flex-1 cursor-pointer items-center justify-center space-x-1.5 rounded-xl bg-slate-200 py-2.5 text-xs font-extrabold text-slate-800 transition hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
         >
@@ -176,7 +184,7 @@ function Field({
   return (
     <div>
       <span className="block text-[10px] text-muted">{label}:</span>
-      <span className={`text-sm font-bold text-title ${className ?? ""}`}>
+      <span className={`text-title text-sm font-bold ${className ?? ""}`}>
         {value}
       </span>
     </div>

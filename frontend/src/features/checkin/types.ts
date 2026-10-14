@@ -10,6 +10,8 @@ export interface StaffReservationItem {
   reservationId: number
   reservationCode: string
   customerName: string | null
+  customerIdNumber: string | null // CCCD / CMND
+  customerEmail: string | null
   customerPhone: string | null
   unitCode: string | null
   floorName: string | null
@@ -21,6 +23,13 @@ export interface StaffReservationItem {
   depAmount: number | null
   depPaidAmount: number | null
   depRemainingAmount: number | null
+  // US-20: thông tin quá hạn & phạt cho tab CHECK-IN
+  endDate: string | null // YYYY-MM-DD
+  /** BE-16 bổ sung: nhãn thời gian thuê (vd "1 tháng") */
+  rentalDuration: string | null
+  overdueDays: number | null
+  unpaidPenaltyAmount: number | null
+  monthlyPrice: number | null
 }
 
 /** Kết quả tra cứu (StaffReservationLookupResponse = item + unitStatus + contractPdfUrl). */
@@ -72,4 +81,41 @@ export interface StaffCancelReservationResponse {
   reservationCode: string | null
   refundAmount: number | null
   penaltyAmount: number | null
+}
+
+// --- US-20: Thu phạt quá hạn tại quầy ---
+export interface CollectPenaltyRequest {
+  paymentMethod: string // CASH | BANK_TRANSFER
+}
+
+export interface CollectPenaltyResponse {
+  success: boolean
+  message: string
+  reservationId: number | null
+  reservationCode: string | null
+  contractStatus: string | null
+  unitStatus: string | null
+  invoiceNumber: string | null // Hóa đơn gộp PEN (PAID)
+  collectedAmount: number | null
+  overdueDays: number | null
+}
+
+// --- US-20: Gia hạn tại quầy ---
+export interface RenewAtCounterRequest {
+  months: number // 1 | 2 | 3 | 6 | 12
+  paymentMethod: string // CASH | BANK_TRANSFER
+}
+
+export interface RenewAtCounterResponse {
+  success: boolean
+  message: string
+  reservationId: number | null
+  reservationCode: string | null
+  contractStatus: string | null
+  unitStatus: string | null
+  invoiceNumber: string | null // Hóa đơn EXT (PAID)
+  amount: number | null
+  discountPercent: number | null
+  newExpiryDate: string | null // YYYY-MM-DD
+  gatePin: string | null
 }
