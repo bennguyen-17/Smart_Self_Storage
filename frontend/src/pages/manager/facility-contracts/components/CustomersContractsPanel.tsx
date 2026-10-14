@@ -3,11 +3,13 @@ import { useMemo, useState } from "react"
 import {
   FilterBar,
   LoadError,
+  Pagination,
   ResultCount,
   SearchFilter,
   SelectFilter,
   TableCard,
 } from "@/components/internal/components/PanelKit"
+import { usePagedRows } from "@/components/internal/usePagedRows"
 import { getManagerContext } from "@/pages/manager/unit-management/managerContext"
 import { useAsyncData } from "@/hooks/useAsyncData"
 import { formatDate, todayInVietnam } from "@/lib/format"
@@ -28,6 +30,7 @@ function CustomersContractsPanel() {
   const { data, error, isLoading } = useAsyncData(`contracts#${reloadCount}`, () => listFacilityContracts(ctx))
   const all = data ?? []
   const rows = filterContracts(all, filter)
+  const { slice, pagination } = usePagedRows(rows, JSON.stringify(filter))
   const update = (patch: Partial<ContractFilter>) => setFilter((f) => ({ ...f, ...patch }))
 
   if (error) {
@@ -77,7 +80,7 @@ function CustomersContractsPanel() {
         isEmpty={rows.length === 0}
         emptyText={all.length === 0 ? "Cơ sở chưa có hợp đồng nào" : "Không có hợp đồng phù hợp bộ lọc"}
       >
-        {rows.map((c) => (
+        {slice.rows.map((c) => (
           <tr key={c.contractId} className="border-b last:border-0">
             <td className="px-4 py-3">
               <p className="text-title font-bold">{c.customerName}</p>
@@ -100,6 +103,8 @@ function CustomersContractsPanel() {
           </tr>
         ))}
       </TableCard>
+
+      {!isLoading && <Pagination {...pagination} unit="hợp đồng" />}
     </section>
   )
 }

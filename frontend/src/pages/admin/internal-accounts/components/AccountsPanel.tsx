@@ -23,6 +23,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
+import { Pagination } from "@/components/internal/components/PanelKit"
+import { usePagedRows } from "@/components/internal/usePagedRows"
 import { getFacilities } from "@/pages/floorplan/api/floorPlanApi"
 import { useAsyncData } from "@/hooks/useAsyncData"
 import { getStoredUser } from "@/hooks/useAuthSession"
@@ -83,6 +85,7 @@ function AccountsPanel() {
 
   const all = accounts.data ?? []
   const rows = filterAccounts(all, filter)
+  const { slice, pagination } = usePagedRows(rows, JSON.stringify(filter))
   const update = (patch: Partial<AccountFilter>) => setFilter((f) => ({ ...f, ...patch }))
 
   function done(message: string) {
@@ -190,7 +193,7 @@ function AccountsPanel() {
                   </tr>
                 )}
                 {!accounts.isLoading &&
-                  rows.map((a) => {
+                  slice.rows.map((a) => {
                     const self = isSelf(a, currentId)
                     const selfNote = self ? "Không thể tự khóa hoặc tự đổi vai trò của chính mình" : undefined
                     return (
@@ -262,6 +265,8 @@ function AccountsPanel() {
               </tbody>
             </table>
           </div>
+
+          {!accounts.isLoading && <Pagination {...pagination} unit="tài khoản" />}
         </>
       )}
 

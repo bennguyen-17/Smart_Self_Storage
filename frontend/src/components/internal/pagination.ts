@@ -1,6 +1,6 @@
 // Phân trang phía FE cho các bảng của cổng nội bộ. Hàm thuần, kiểm bằng bảng DDT.
 
-export const PAGE_SIZE_OPTIONS = [20, 50, 100] as const
+export const PAGE_SIZE_OPTIONS = [10, 20, 50] as const
 
 export interface PageSlice<T> {
   rows: T[]

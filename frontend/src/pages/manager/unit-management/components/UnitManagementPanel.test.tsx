@@ -24,10 +24,12 @@ vi.mock("@/lib/apiClient", () => ({
   isTokenValid: () => true,
 }))
 
-async function renderPanel() {
+/** Các test sửa ô cần thấy đủ ô trên một trang → chọn 50 dòng mỗi trang */
+async function renderPanel({ allRows = true } = {}) {
   const user = userEvent.setup()
   render(<UnitManagementPanel />)
   await screen.findByText("HN01-F1-M01")
+  if (allRows) await user.selectOptions(screen.getByRole("combobox", { name: /số dòng mỗi trang/i }), "50")
   return { user }
 }
 
@@ -131,6 +133,18 @@ describe("UnitManagementPanel: bảng ô kho + nút Sửa (US-13)", () => {
     const bodyRows = screen.getAllByRole("row").slice(1)
     expect(bodyRows).toHaveLength(2)
     for (const r of bodyRows) expect(within(r).getByText("Bảo trì / vệ sinh")).toBeInTheDocument()
+  })
+
+  test("mặc định 10 ô mỗi trang; lọc theo trạng thái thì về trang 1", async () => {
+    const { user } = await renderPanel({ allRows: false })
+    const nav = screen.getByRole("navigation", { name: "Phân trang" })
+    expect(screen.getAllByRole("row").slice(1)).toHaveLength(10)
+    expect(nav).toHaveTextContent(/Hiển thị 1 – 10 trong tổng số \d+ ô kho/)
+    await user.click(within(nav).getByRole("button", { name: "Trang 2" }))
+    expect(nav).toHaveTextContent(/Hiển thị 11 –/)
+    await user.click(screen.getByRole("button", { name: /^Bảo trì \/ vệ sinh \(2\)$/ }))
+    expect(screen.getAllByRole("row").slice(1)).toHaveLength(2)
+    expect(screen.getByRole("navigation", { name: "Phân trang" })).toHaveTextContent("Hiển thị 1 – 2 trong tổng số 2 ô kho")
   })
 
   test("chạy thật mà tài khoản chưa gắn cơ sở → báo rõ, không tự đoán cơ sở", async () => {

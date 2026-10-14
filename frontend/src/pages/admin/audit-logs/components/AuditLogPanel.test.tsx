@@ -124,11 +124,11 @@ describe("AuditLogPanel: phân trang khi có nhiều log", () => {
     return user
   }
 
-  test("mặc định 20 dòng mỗi trang, ghi rõ đang xem dòng nào trong tổng số", async () => {
+  test("mặc định 10 dòng mỗi trang, ghi rõ đang xem dòng nào trong tổng số", async () => {
     await renderMany()
-    expect(bodyRows()).toHaveLength(20)
+    expect(bodyRows()).toHaveLength(10)
     const nav = screen.getByRole("navigation", { name: "Phân trang" })
-    expect(nav).toHaveTextContent("Hiển thị 1 – 20 trong tổng số 45 bản ghi")
+    expect(nav).toHaveTextContent("Hiển thị 1 – 10 trong tổng số 45 bản ghi")
     expect(
       within(nav).getByRole("button", { name: "Trang 1" })
     ).toHaveAttribute("aria-current", "page")
@@ -140,7 +140,7 @@ describe("AuditLogPanel: phân trang khi có nhiều log", () => {
   test("sang trang cuối → còn 5 dòng cũ nhất, nút Trang sau bị khóa", async () => {
     const user = await renderMany()
     const nav = screen.getByRole("navigation", { name: "Phân trang" })
-    await user.click(within(nav).getByRole("button", { name: "Trang 3" }))
+    await user.click(within(nav).getByRole("button", { name: "Trang 5" }))
     expect(bodyRows()).toHaveLength(5)
     expect(screen.getByText("Người dùng 1")).toBeInTheDocument()
     expect(nav).toHaveTextContent("Hiển thị 41 – 45")
@@ -162,19 +162,19 @@ describe("AuditLogPanel: phân trang khi có nhiều log", () => {
     ).toHaveTextContent("Hiển thị 1 – 45")
   })
 
-  test("đang ở trang 3 mà lọc lại → quay về trang 1 của kết quả lọc", async () => {
+  test("đang ở trang cuối mà lọc lại → quay về trang 1 của kết quả lọc", async () => {
     const user = await renderMany()
-    await user.click(screen.getByRole("button", { name: "Trang 3" }))
+    await user.click(screen.getByRole("button", { name: "Trang 5" }))
     await user.selectOptions(
       screen.getByRole("combobox", { name: /hành động/i }),
       "LOGIN_SUCCESS"
     )
-    // Lọc xong vẫn còn 44 dòng (3 trang): phải về trang 1 chứ không đứng lại trang 3
-    expect(bodyRows()).toHaveLength(20)
+    // Lọc xong vẫn còn 44 dòng (5 trang): phải về trang 1 chứ không đứng lại trang 5
+    expect(bodyRows()).toHaveLength(10)
     expect(screen.getByText("Người dùng 45")).toBeInTheDocument()
     expect(
       screen.getByRole("navigation", { name: "Phân trang" })
-    ).toHaveTextContent("Hiển thị 1 – 20 trong tổng số 44")
+    ).toHaveTextContent("Hiển thị 1 – 10 trong tổng số 44")
   })
 
   test("Xuất CSV xuất toàn bộ kết quả lọc, không chỉ trang đang xem", async () => {

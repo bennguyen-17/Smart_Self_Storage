@@ -5,6 +5,8 @@ import { cn } from "cn"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Pagination } from "@/components/internal/components/PanelKit"
+import { usePagedRows } from "@/components/internal/usePagedRows"
 import { shortFloorName, unitSizeOf, UNIT_SIZES } from "@/pages/floorplan/unitDisplay"
 import { useAsyncData } from "@/hooks/useAsyncData"
 import { formatVnd } from "@/lib/format"
@@ -46,6 +48,7 @@ function UnitManagementPanel() {
     return acc
   }, {})
   const rows = bySize.filter((u) => status === "ALL" || normalizeUnitStatus(u.status) === status)
+  const { slice, pagination } = usePagedRows(rows, `${floorId}|${condition}|${size}|${status}`)
   const floorName = (id: number) =>
     shortFloorName(floors.data?.find((f) => f.floorId === id)?.floorName ?? `Tầng ${id}`)
 
@@ -148,7 +151,7 @@ function UnitManagementPanel() {
                   </tr>
                 )}
                 {!units.isLoading &&
-                  rows.map((u) => (
+                  slice.rows.map((u) => (
                     <UnitRow
                       key={u.unitCode}
                       unit={u}
@@ -159,6 +162,8 @@ function UnitManagementPanel() {
               </tbody>
             </table>
           </div>
+
+          {!units.isLoading && <Pagination {...pagination} unit="ô kho" />}
         </>
       )}
 
