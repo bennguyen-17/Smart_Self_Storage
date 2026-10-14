@@ -175,10 +175,14 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
       fetchPortalData();
     };
     window.addEventListener('customer_profile_updated', handleProfileUpdate);
+    window.addEventListener('storage_facilities_updated', handleProfileUpdate);
+    window.addEventListener('storage', handleProfileUpdate);
 
     return () => {
       isMounted = false;
       window.removeEventListener('customer_profile_updated', handleProfileUpdate);
+      window.removeEventListener('storage_facilities_updated', handleProfileUpdate);
+      window.removeEventListener('storage', handleProfileUpdate);
     };
   }, []);
 

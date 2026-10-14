@@ -157,9 +157,9 @@ public class DashboardService {
         }).count();
 
         ManagerDashboardResponse resp = new ManagerDashboardResponse();
-        resp.setFacilityId(facilityId);
-        resp.setFacilityName(fac.getFacilityName());
-        resp.setFacilityCode(facilityCode);
+        com.swp391.backend.dto.FacilityResponse mappedFac = storageService.mapFacilityToResponse(fac);
+        resp.setFacilityName(mappedFac.getFacilityName());
+        resp.setFacilityCode(mappedFac.getFacilityCode());
 
         // Lấy thông tin Quản lý chi nhánh (Manager) từ DB
         List<com.swp391.backend.entity.EmployeeProfile> employees = employeeProfileRepository.findAll();
@@ -173,7 +173,9 @@ public class DashboardService {
 
         if (mgrEmp.isPresent()) {
             accountRepository.findAccountByAccountId(mgrEmp.get().getAccountId()).ifPresent(acc -> {
-                resp.setManagerName(acc.getFullName());
+                String rawName = acc.getFullName() != null ? acc.getFullName() : "";
+                String cleanName = rawName.replaceAll("\\s*\\([A-Z0-9-]+\\)\\s*$", "").trim();
+                resp.setManagerName(cleanName.isEmpty() ? rawName : cleanName);
                 resp.setManagerEmail(acc.getEmail());
                 resp.setManagerPhone(acc.getPhone());
             });

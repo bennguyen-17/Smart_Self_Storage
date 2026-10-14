@@ -29,6 +29,8 @@ DROP TABLE IF EXISTS Facility;
 CREATE TABLE Facility (
     facilityId INT AUTO_INCREMENT PRIMARY KEY,
     facilityName VARCHAR(100) NOT NULL,
+    facilityCode VARCHAR(20) NOT NULL UNIQUE,
+    layoutType VARCHAR(10) NOT NULL DEFAULT 'A',
     address VARCHAR(255) NOT NULL,
     phone VARCHAR(15) NOT NULL,
     status ENUM('ACTIVE', 'INACTIVE', 'MAINTENANCE') NOT NULL DEFAULT 'ACTIVE'
@@ -381,14 +383,14 @@ INSERT INTO Role (roleId, roleName) VALUES
 (5, 'CUSTOMER');
 
 -- 2. 7 Cơ sở kho toàn quốc (Khớp 100% tài liệu Take note.txt)
-INSERT INTO Facility (facilityId, facilityName, address, phone, status) VALUES
-(1, 'SmartStorage Cầu Giấy (HN-01)', 'Số 391 Cầu Giấy, Q. Cầu Giấy, Hà Nội', '02439100001', 'ACTIVE'),
-(2, 'SmartStorage Thanh Xuân (HN-02)', 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội', '02439100002', 'ACTIVE'),
-(3, 'SmartStorage Quận 1 (HCM-01)', 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM', '02839100001', 'ACTIVE'),
-(4, 'SmartStorage Quận 7 (HCM-02)', 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM', '02839100002', 'ACTIVE'),
-(5, 'SmartStorage Thủ Đức (HCM-03)', 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM', '02839100003', 'ACTIVE'),
-(6, 'SmartStorage Hải Châu (DN-01)', 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng', '02369100001', 'ACTIVE'),
-(7, 'SmartStorage Ninh Kiều (CT-01)', 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', '02929100001', 'ACTIVE');
+INSERT INTO Facility (facilityId, facilityName, facilityCode, layoutType, address, phone, status) VALUES
+(1, 'SmartStorage Cầu Giấy', 'HN-01', 'A', 'Số 391 Cầu Giấy, Q. Cầu Giấy, Hà Nội', '02439100001', 'ACTIVE'),
+(2, 'SmartStorage Thanh Xuân', 'HN-02', 'B', 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội', '02439100002', 'ACTIVE'),
+(3, 'SmartStorage Quận 1', 'HCM-01', 'A', 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM', '02839100001', 'ACTIVE'),
+(4, 'SmartStorage Quận 7', 'HCM-02', 'B', 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM', '02839100002', 'ACTIVE'),
+(5, 'SmartStorage Thủ Đức', 'HCM-03', 'B', 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM', '02839100003', 'ACTIVE'),
+(6, 'SmartStorage Hải Châu', 'DN-01', 'A', 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng', '02369100001', 'ACTIVE'),
+(7, 'SmartStorage Ninh Kiều', 'CT-01', 'B', 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', '02929100001', 'ACTIVE');
 
 -- 3. Tài khoản người dùng (Accounts)
 -- Mật khẩu mặc định dev/test: 123456@Test (BCrypt: $2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW)
@@ -398,18 +400,18 @@ INSERT INTO Account (accountId, roleId, phone, fullName, email, password, status
 (2, 2, '0900000002', 'Ban Giám Đốc Điều Hành (BOM)', 'bom@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
 
 -- Quản lý chi nhánh (Managers) cho ĐẦY ĐỦ 7 CƠ SỞ (Facility 1 -> 7)
-(3, 3, '0900000003', 'Trần Văn Quản Lý (HN-01)', 'manager.hn01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
-(4, 3, '0900000004', 'Hoàng Minh Quản Lý (HN-02)', 'manager.hn02@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
-(5, 3, '0900000005', 'Lê Thị Quản Lý (HCM-01)', 'manager.hcm01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
-(6, 3, '0900000006', 'Đỗ Đức Quản Lý (HCM-02)', 'manager.hcm02@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
-(7, 3, '0900000007', 'Vũ Đình Quản Lý (HCM-03)', 'manager.hcm03@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
-(8, 3, '0900000008', 'Nguyễn Thanh Quản Lý (DN-01)', 'manager.dn01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
-(9, 3, '0900000009', 'Bùi Tuấn Quản Lý (CT-01)', 'manager.ct01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(3, 3, '0900000003', 'Trần Văn Quản Lý', 'manager.hn01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(4, 3, '0900000004', 'Hoàng Minh Quản Lý', 'manager.hn02@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(5, 3, '0900000005', 'Lê Thị Quản Lý', 'manager.hcm01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(6, 3, '0900000006', 'Đỗ Đức Quản Lý', 'manager.hcm02@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(7, 3, '0900000007', 'Vũ Đình Quản Lý', 'manager.hcm03@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(8, 3, '0900000008', 'Nguyễn Thanh Quản Lý', 'manager.dn01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(9, 3, '0900000009', 'Bùi Tuấn Quản Lý', 'manager.ct01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
 
 -- Nhân viên vận hành tại cơ sở (Staffs)
-(10, 4, '0900000010', 'Nguyễn Văn Nhân Viên (HN-01)', 'staff.hn01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
-(11, 4, '0900000011', 'Phạm Thị Nhân Viên (HCM-01)', 'staff.hcm01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
-(12, 4, '0900000012', 'Đinh Văn Nhân Viên (HCM-02)', 'staff.hcm02@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(10, 4, '0900000010', 'Nguyễn Văn Nhân Viên', 'staff.hn01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(11, 4, '0900000011', 'Phạm Thị Nhân Viên', 'staff.hcm01@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(12, 4, '0900000012', 'Đinh Văn Nhân Viên', 'staff.hcm02@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
 
 -- Khách hàng cá nhân & Doanh nghiệp (Customers)
 (13, 5, '0912345678', 'Nguyễn Khách Hàng A', 'customer.a@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
@@ -441,33 +443,42 @@ INSERT INTO EmployeeProfile (employeeId, accountId, facilityId) VALUES
 (9, 11, 3), -- Nhân viên HCM-01
 (10, 12, 4); -- Nhân viên HCM-02
 
--- 6. Danh sách Tầng cho 7 Cơ sở (18 tầng phân bổ theo đặc thù thiết kế)
+-- 6. Danh sách Tầng cho 7 Cơ sở (Mỗi cơ sở chuẩn hóa 3 tầng: Tầng Trệt, Tầng 1, Tầng 2)
 INSERT INTO Floor (floorId, facilityId, floorName, maxLoadPerM2, status) VALUES
--- HN-01 (Mẫu A - Nhà phố 3 tầng)
+-- HN-01 (Cơ sở 1 - Mẫu Layout A 3 tầng)
 (1, 1, 'Tầng Trệt (Sảnh & Kho XL)', 1000.00, 'ACTIVE'),
 (2, 1, 'Tầng 1 (Kho S, M, L)', 500.00, 'ACTIVE'),
 (3, 1, 'Tầng 2 (Kho S, M, L)', 500.00, 'ACTIVE'),
--- HN-02 (Mẫu B - Kho dài Logistics 3 tầng)
+
+-- HN-02 (Cơ sở 2 - Mẫu Layout B 3 tầng)
 (4, 2, 'Tầng Trệt (Kho XL Logistics)', 1200.00, 'ACTIVE'),
 (5, 2, 'Tầng 1 (Kho M & L)', 600.00, 'ACTIVE'),
 (6, 2, 'Tầng 2 (Kho M & L)', 600.00, 'ACTIVE'),
--- HCM-01 (Mẫu A - Tòa nhà VIP 3 tầng 100% Kho mát Climate-Controlled)
+
+-- HCM-01 (Cơ sở 3 - Mẫu Layout A 3 tầng VIP 100% Kho mát)
 (7, 3, 'Tầng Trệt (Kho Mát XL VIP)', 1000.00, 'ACTIVE'),
 (8, 3, 'Tầng 1 (Kho Mát M & L)', 500.00, 'ACTIVE'),
 (9, 3, 'Tầng 2 (Kho Mát M & L)', 500.00, 'ACTIVE'),
--- HCM-02 (Mẫu B - Cảng kho 2 tầng)
+
+-- HCM-02 (Cơ sở 4 - Mẫu Layout B 3 tầng)
 (10, 4, 'Tầng Trệt (Kho XL Pallet)', 1200.00, 'ACTIVE'),
-(11, 4, 'Tầng 1 (Kho S, M, L)', 600.00, 'ACTIVE'),
--- HCM-03 (Mẫu B - Khu công nghệ cao 3 tầng bàn cờ)
-(12, 5, 'Tầng Trệt (Kho XL Startup)', 1000.00, 'ACTIVE'),
-(13, 5, 'Tầng 1 (Kho M & L)', 500.00, 'ACTIVE'),
-(14, 5, 'Tầng 2 (Kho S & M)', 500.00, 'ACTIVE'),
--- DN-01 (Mẫu A - Du lịch homestay 2 tầng)
-(15, 6, 'Tầng Trệt (Kho L & XL)', 800.00, 'ACTIVE'),
-(16, 6, 'Tầng 1 (Kho S du lịch & M)', 500.00, 'ACTIVE'),
--- CT-01 (Mẫu B - Nông sản miền Tây 2 tầng)
-(17, 7, 'Tầng Trệt (Kho XL Hàng mẫu)', 1000.00, 'ACTIVE'),
-(18, 7, 'Tầng 1 (Kho S & M Tiểu thương)', 500.00, 'ACTIVE');
+(11, 4, 'Tầng 1 (Kho M & L)', 600.00, 'ACTIVE'),
+(12, 4, 'Tầng 2 (Kho M & L)', 600.00, 'ACTIVE'),
+
+-- HCM-03 (Cơ sở 5 - Mẫu Layout B 3 tầng)
+(13, 5, 'Tầng Trệt (Kho XL Startup)', 1000.00, 'ACTIVE'),
+(14, 5, 'Tầng 1 (Kho M & L)', 500.00, 'ACTIVE'),
+(15, 5, 'Tầng 2 (Kho M & L)', 500.00, 'ACTIVE'),
+
+-- DN-01 (Cơ sở 6 - Mẫu Layout A 3 tầng)
+(16, 6, 'Tầng Trệt (Kho XL)', 1000.00, 'ACTIVE'),
+(17, 6, 'Tầng 1 (Kho S, M, L)', 500.00, 'ACTIVE'),
+(18, 6, 'Tầng 2 (Kho S, M, L)', 500.00, 'ACTIVE'),
+
+-- CT-01 (Cơ sở 7 - Mẫu Layout B 3 tầng)
+(19, 7, 'Tầng Trệt (Kho XL Hàng mẫu)', 1000.00, 'ACTIVE'),
+(20, 7, 'Tầng 1 (Kho M & L)', 600.00, 'ACTIVE'),
+(21, 7, 'Tầng 2 (Kho M & L)', 600.00, 'ACTIVE');
 
 -- 7. Loại kho chuẩn (UnitTypes - Chiều cao cố định 2.0m)
 INSERT INTO UnitType (unitTypeId, typeName, size, storageCondition, status) VALUES
@@ -540,7 +551,7 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 ('HN01-F2-L03', 3, 3, 'OCCUPIED'),
 ('HN01-F2-L04', 3, 3, 'AVAILABLE'),
 
--- === CƠ SỞ 2: HN-02 (Thanh Xuân, Hà Nội) ===
+-- === CƠ SỞ 2: HN-02 (Thanh Xuân, Hà Nội - Mẫu B: 15 Ô Kho) ===
 ('HN02-G-XL01', 4, 4, 'OCCUPIED'),
 ('HN02-G-XL02', 4, 4, 'AVAILABLE'),
 ('HN02-G-XL03', 4, 4, 'AVAILABLE'),
@@ -553,56 +564,156 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 ('HN02-F1-L02', 5, 3, 'AVAILABLE'),
 ('HN02-F2-M01', 6, 2, 'AVAILABLE'),
 ('HN02-F2-M02', 6, 2, 'AVAILABLE'),
+('HN02-F2-M03', 6, 2, 'AVAILABLE'),
 ('HN02-F2-L01', 6, 3, 'AVAILABLE'),
 ('HN02-F2-L02', 6, 3, 'OCCUPIED'),
 
--- === CƠ SỞ 3: HCM-01 (Quận 1, TP.HCM - 100% KHO MÁT) ===
+-- === CƠ SỞ 3: HCM-01 (Quận 1, TP.HCM - Mẫu A VIP: 46 Ô Kho Mát) ===
 ('HCM01-G-XL01', 7, 6, 'OCCUPIED'),
 ('HCM01-G-XL02', 7, 6, 'AVAILABLE'),
 ('HCM01-G-XL03', 7, 6, 'AVAILABLE'),
 ('HCM01-G-XL04', 7, 6, 'OCCUPIED'),
+('HCM01-G-XL05', 7, 6, 'AVAILABLE'),
+('HCM01-G-XL06', 7, 6, 'AVAILABLE'),
+('HCM01-G-XL07', 7, 6, 'AVAILABLE'),
+('HCM01-G-XL08', 7, 6, 'AVAILABLE'),
+('HCM01-G-XL09', 7, 6, 'AVAILABLE'),
+('HCM01-G-XL10', 7, 6, 'AVAILABLE'),
+('HCM01-F1-S01', 8, 1, 'AVAILABLE'),
+('HCM01-F1-S02', 8, 1, 'AVAILABLE'),
+('HCM01-F1-S03', 8, 1, 'AVAILABLE'),
+('HCM01-F1-S04', 8, 1, 'AVAILABLE'),
+('HCM01-F1-S05', 8, 1, 'AVAILABLE'),
+('HCM01-F1-S06', 8, 1, 'AVAILABLE'),
+('HCM01-F1-S07', 8, 1, 'AVAILABLE'),
+('HCM01-F1-S08', 8, 1, 'AVAILABLE'),
 ('HCM01-F1-M01', 8, 5, 'OCCUPIED'),
 ('HCM01-F1-M02', 8, 5, 'AVAILABLE'),
 ('HCM01-F1-M03', 8, 5, 'HOLD'),
+('HCM01-F1-M04', 8, 5, 'AVAILABLE'),
+('HCM01-F1-M05', 8, 5, 'AVAILABLE'),
+('HCM01-F1-M06', 8, 5, 'AVAILABLE'),
 ('HCM01-F1-L01', 8, 6, 'AVAILABLE'),
 ('HCM01-F1-L02', 8, 6, 'OCCUPIED'),
+('HCM01-F1-L03', 8, 6, 'AVAILABLE'),
+('HCM01-F1-L04', 8, 6, 'AVAILABLE'),
+('HCM01-F2-S01', 9, 1, 'AVAILABLE'),
+('HCM01-F2-S02', 9, 1, 'AVAILABLE'),
+('HCM01-F2-S03', 9, 1, 'AVAILABLE'),
+('HCM01-F2-S04', 9, 1, 'AVAILABLE'),
+('HCM01-F2-S05', 9, 1, 'AVAILABLE'),
+('HCM01-F2-S06', 9, 1, 'AVAILABLE'),
+('HCM01-F2-S07', 9, 1, 'AVAILABLE'),
+('HCM01-F2-S08', 9, 1, 'AVAILABLE'),
 ('HCM01-F2-M01', 9, 5, 'AVAILABLE'),
 ('HCM01-F2-M02', 9, 5, 'OCCUPIED'),
+('HCM01-F2-M03', 9, 5, 'AVAILABLE'),
+('HCM01-F2-M04', 9, 5, 'AVAILABLE'),
+('HCM01-F2-M05', 9, 5, 'AVAILABLE'),
+('HCM01-F2-M06', 9, 5, 'AVAILABLE'),
 ('HCM01-F2-L01', 9, 6, 'AVAILABLE'),
+('HCM01-F2-L02', 9, 6, 'AVAILABLE'),
+('HCM01-F2-L03', 9, 6, 'AVAILABLE'),
+('HCM01-F2-L04', 9, 6, 'AVAILABLE'),
 
--- === CƠ SỞ 4: HCM-02 (Quận 7, TP.HCM) ===
+-- === CƠ SỞ 4: HCM-02 (Quận 7, TP.HCM - Mẫu B: 15 Ô Kho) ===
 ('HCM02-G-XL01', 10, 4, 'OCCUPIED'),
 ('HCM02-G-XL02', 10, 4, 'OCCUPIED'),
 ('HCM02-G-XL03', 10, 4, 'AVAILABLE'),
 ('HCM02-G-XL04', 10, 4, 'AVAILABLE'),
+('HCM02-G-XL05', 10, 4, 'AVAILABLE'),
 ('HCM02-F1-M01', 11, 2, 'AVAILABLE'),
 ('HCM02-F1-M02', 11, 2, 'OCCUPIED'),
+('HCM02-F1-M03', 11, 2, 'AVAILABLE'),
 ('HCM02-F1-L01', 11, 3, 'AVAILABLE'),
 ('HCM02-F1-L02', 11, 3, 'OCCUPIED'),
+('HCM02-F2-M01', 12, 2, 'AVAILABLE'),
+('HCM02-F2-M02', 12, 2, 'AVAILABLE'),
+('HCM02-F2-M03', 12, 2, 'AVAILABLE'),
+('HCM02-F2-L01', 12, 3, 'AVAILABLE'),
+('HCM02-F2-L02', 12, 3, 'AVAILABLE'),
 
--- === CƠ SỞ 5: HCM-03 (Thủ Đức, TP.HCM) ===
-('HCM03-G-XL01', 12, 4, 'AVAILABLE'),
-('HCM03-G-XL02', 12, 4, 'OCCUPIED'),
-('HCM03-G-XL03', 12, 4, 'AVAILABLE'),
-('HCM03-F1-M01', 13, 2, 'AVAILABLE'),
-('HCM03-F1-M02', 13, 2, 'OCCUPIED'),
-('HCM03-F1-L01', 13, 3, 'AVAILABLE'),
-('HCM03-F2-S01', 14, 1, 'AVAILABLE'),
-('HCM03-F2-S02', 14, 1, 'OCCUPIED'),
+-- === CƠ SỞ 5: HCM-03 (Thủ Đức, TP.HCM - Mẫu B: 15 Ô Kho) ===
+('HCM03-G-XL01', 13, 4, 'AVAILABLE'),
+('HCM03-G-XL02', 13, 4, 'OCCUPIED'),
+('HCM03-G-XL03', 13, 4, 'AVAILABLE'),
+('HCM03-G-XL04', 13, 4, 'AVAILABLE'),
+('HCM03-G-XL05', 13, 4, 'AVAILABLE'),
+('HCM03-F1-M01', 14, 2, 'AVAILABLE'),
+('HCM03-F1-M02', 14, 2, 'OCCUPIED'),
+('HCM03-F1-M03', 14, 2, 'AVAILABLE'),
+('HCM03-F1-L01', 14, 3, 'AVAILABLE'),
+('HCM03-F1-L02', 14, 3, 'AVAILABLE'),
+('HCM03-F2-M01', 15, 2, 'AVAILABLE'),
+('HCM03-F2-M02', 15, 2, 'AVAILABLE'),
+('HCM03-F2-M03', 15, 2, 'AVAILABLE'),
+('HCM03-F2-L01', 15, 3, 'AVAILABLE'),
+('HCM03-F2-L02', 15, 3, 'AVAILABLE'),
 
--- === CƠ SỞ 6: DN-01 (Hải Châu, Đà Nẵng) ===
-('DN01-G-L01', 15, 3, 'OCCUPIED'),
-('DN01-G-XL01', 15, 4, 'AVAILABLE'),
-('DN01-G-XL02', 15, 4, 'AVAILABLE'),
-('DN01-F1-S01', 16, 1, 'AVAILABLE'),
-('DN01-F1-S02', 16, 1, 'OCCUPIED'),
-('DN01-F1-M01', 16, 2, 'AVAILABLE'),
+-- === CƠ SỞ 6: DN-01 (Hải Châu, Đà Nẵng - Mẫu A: 46 Ô Kho) ===
+('DN01-G-XL01', 16, 4, 'AVAILABLE'),
+('DN01-G-XL02', 16, 4, 'AVAILABLE'),
+('DN01-G-XL03', 16, 4, 'AVAILABLE'),
+('DN01-G-XL04', 16, 4, 'AVAILABLE'),
+('DN01-G-XL05', 16, 4, 'AVAILABLE'),
+('DN01-G-XL06', 16, 4, 'AVAILABLE'),
+('DN01-G-XL07', 16, 4, 'AVAILABLE'),
+('DN01-G-XL08', 16, 4, 'AVAILABLE'),
+('DN01-G-XL09', 16, 4, 'AVAILABLE'),
+('DN01-G-XL10', 16, 4, 'AVAILABLE'),
+('DN01-F1-S01', 17, 1, 'AVAILABLE'),
+('DN01-F1-S02', 17, 1, 'OCCUPIED'),
+('DN01-F1-S03', 17, 1, 'AVAILABLE'),
+('DN01-F1-S04', 17, 1, 'AVAILABLE'),
+('DN01-F1-S05', 17, 1, 'AVAILABLE'),
+('DN01-F1-S06', 17, 1, 'AVAILABLE'),
+('DN01-F1-S07', 17, 1, 'AVAILABLE'),
+('DN01-F1-S08', 17, 1, 'AVAILABLE'),
+('DN01-F1-M01', 17, 2, 'AVAILABLE'),
+('DN01-F1-M02', 17, 2, 'AVAILABLE'),
+('DN01-F1-M03', 17, 2, 'AVAILABLE'),
+('DN01-F1-M04', 17, 2, 'AVAILABLE'),
+('DN01-F1-M05', 17, 2, 'AVAILABLE'),
+('DN01-F1-M06', 17, 2, 'AVAILABLE'),
+('DN01-F1-L01', 17, 3, 'AVAILABLE'),
+('DN01-F1-L02', 17, 3, 'AVAILABLE'),
+('DN01-F1-L03', 17, 3, 'AVAILABLE'),
+('DN01-F1-L04', 17, 3, 'AVAILABLE'),
+('DN01-F2-S01', 18, 1, 'AVAILABLE'),
+('DN01-F2-S02', 18, 1, 'AVAILABLE'),
+('DN01-F2-S03', 18, 1, 'AVAILABLE'),
+('DN01-F2-S04', 18, 1, 'AVAILABLE'),
+('DN01-F2-S05', 18, 1, 'AVAILABLE'),
+('DN01-F2-S06', 18, 1, 'AVAILABLE'),
+('DN01-F2-S07', 18, 1, 'AVAILABLE'),
+('DN01-F2-S08', 18, 1, 'AVAILABLE'),
+('DN01-F2-M01', 18, 2, 'AVAILABLE'),
+('DN01-F2-M02', 18, 2, 'AVAILABLE'),
+('DN01-F2-M03', 18, 2, 'AVAILABLE'),
+('DN01-F2-M04', 18, 2, 'AVAILABLE'),
+('DN01-F2-M05', 18, 2, 'AVAILABLE'),
+('DN01-F2-M06', 18, 2, 'AVAILABLE'),
+('DN01-F2-L01', 18, 3, 'AVAILABLE'),
+('DN01-F2-L02', 18, 3, 'AVAILABLE'),
+('DN01-F2-L03', 18, 3, 'AVAILABLE'),
+('DN01-F2-L04', 18, 3, 'AVAILABLE'),
 
--- === CƠ SỞ 7: CT-01 (Ninh Kiều, Cần Thơ) ===
-('CT01-G-XL01', 17, 4, 'AVAILABLE'),
-('CT01-G-XL02', 17, 4, 'OCCUPIED'),
-('CT01-F1-S01', 18, 1, 'AVAILABLE'),
-('CT01-F1-M01', 18, 2, 'OCCUPIED');
+-- === CƠ SỞ 7: CT-01 (Ninh Kiều, Cần Thơ - Mẫu B: 15 Ô Kho) ===
+('CT01-G-XL01', 19, 4, 'AVAILABLE'),
+('CT01-G-XL02', 19, 4, 'OCCUPIED'),
+('CT01-G-XL03', 19, 4, 'AVAILABLE'),
+('CT01-G-XL04', 19, 4, 'AVAILABLE'),
+('CT01-G-XL05', 19, 4, 'AVAILABLE'),
+('CT01-F1-M01', 20, 2, 'OCCUPIED'),
+('CT01-F1-M02', 20, 2, 'AVAILABLE'),
+('CT01-F1-M03', 20, 2, 'AVAILABLE'),
+('CT01-F1-L01', 20, 3, 'AVAILABLE'),
+('CT01-F1-L02', 20, 3, 'AVAILABLE'),
+('CT01-F2-M01', 21, 2, 'AVAILABLE'),
+('CT01-F2-M02', 21, 2, 'AVAILABLE'),
+('CT01-F2-M03', 21, 2, 'AVAILABLE'),
+('CT01-F2-L01', 21, 3, 'AVAILABLE'),
+('CT01-F2-L02', 21, 3, 'AVAILABLE');
 
 -- 10. Ca trực vận hành (Shifts)
 INSERT INTO Shift (shiftId, shiftName, startTime, endTime, status) VALUES
@@ -654,7 +765,7 @@ INSERT INTO Reservation (reservationId, reservationCode, accountId, unitCode, st
 -- HCM-03
 (11, 'RES-HCM03-202609-001', 14, 'HCM03-G-XL02', '2026-09-05', '2026-10-05', 'MONTHLY', 4000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-09-04 10:30:00', NULL),
 -- DN-01
-(12, 'RES-DN01-202609-001', 18, 'DN01-G-L01', '2026-09-15', '2026-10-15', 'MONTHLY', 2400000.00, 2000000.00, 0.00, 'CONFIRMED', '2026-09-14 09:00:00', NULL),
+(12, 'RES-DN01-202609-001', 18, 'DN01-G-XL01', '2026-09-15', '2026-10-15', 'MONTHLY', 2400000.00, 2000000.00, 0.00, 'CONFIRMED', '2026-09-14 09:00:00', NULL),
 -- CT-01
 (13, 'RES-CT01-202609-001', 16, 'CT01-G-XL02', '2026-09-10', '2026-11-10', 'MONTHLY', 8000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-09-09 11:20:00', NULL);
 

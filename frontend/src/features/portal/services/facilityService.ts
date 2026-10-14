@@ -2,13 +2,13 @@ import apiClient, { isMockMode } from '@/lib/apiClient';
 
 // Dữ liệu mẫu Chi Nhánh (Khớp bảng Branch trong MySQL)
 const MOCK_BRANCHES = [
-  { id: 'HN-01', code: 'HN-01', name: 'SmartStorage Cầu Giấy (HN-01)', address: 'Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội', floors: 3 },
-  { id: 'HN-02', code: 'HN-02', name: 'SmartStorage Thanh Xuân (HN-02)', address: 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội', floors: 3 },
-  { id: 'HCM-01', code: 'HCM-01', name: 'SmartStorage Quận 1 (HCM-01)', address: 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM', floors: 3 },
-  { id: 'HCM-02', code: 'HCM-02', name: 'SmartStorage Quận 7 (HCM-02)', address: 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM', floors: 2 },
-  { id: 'HCM-03', code: 'HCM-03', name: 'SmartStorage Thủ Đức (HCM-03)', address: 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM', floors: 3 },
-  { id: 'DN-01', code: 'DN-01', name: 'SmartStorage Hải Châu (DN-01)', address: 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng', floors: 2 },
-  { id: 'CT-01', code: 'CT-01', name: 'SmartStorage Ninh Kiều (CT-01)', address: 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', floors: 2 }
+  { id: 'HN-01', code: 'HN-01', name: 'SmartStorage Cầu Giấy', address: 'Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội', floors: 3, layoutType: 'A' },
+  { id: 'HN-02', code: 'HN-02', name: 'SmartStorage Thanh Xuân', address: 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội', floors: 3, layoutType: 'B' },
+  { id: 'HCM-01', code: 'HCM-01', name: 'SmartStorage Quận 1', address: 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM', floors: 3, layoutType: 'A' },
+  { id: 'HCM-02', code: 'HCM-02', name: 'SmartStorage Quận 7', address: 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM', floors: 3, layoutType: 'B' },
+  { id: 'HCM-03', code: 'HCM-03', name: 'SmartStorage Thủ Đức', address: 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM', floors: 3, layoutType: 'B' },
+  { id: 'DN-01', code: 'DN-01', name: 'SmartStorage Hải Châu', address: 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng', floors: 3, layoutType: 'A' },
+  { id: 'CT-01', code: 'CT-01', name: 'SmartStorage Ninh Kiều', address: 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', floors: 3, layoutType: 'B' }
 ];
 
 // Hàm sinh sơ đồ ô kho mẫu theo tầng
@@ -254,7 +254,16 @@ export const getStorageUnits = async (facilityCode: string, floor: number) => {
   }
 
   try {
-    const facilityId = FACILITY_CODE_TO_ID[facilityCode] || 1;
+    let facilityId = FACILITY_CODE_TO_ID[facilityCode];
+    if (!facilityId) {
+      if (!isNaN(Number(facilityCode))) {
+        facilityId = Number(facilityCode);
+      } else {
+        const branchRes = await getBranches();
+        const found = (branchRes?.data || []).find((b: any) => b.code === facilityCode || b.id === facilityCode);
+        facilityId = found?.backendId || 1;
+      }
+    }
     const res: any = await apiClient.get('/units/filter', {
       params: { facilityId, floorId: floor }
     });

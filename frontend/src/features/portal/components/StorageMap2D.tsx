@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { getStorageUnits, getBranches } from '@/features/portal/services/facilityService';
 
 const facilityData = {
-  'HN-01': { name: 'SmartStorage Cầu Giấy (HN-01)', address: 'Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội', floors: 3 },
-  'HN-02': { name: 'SmartStorage Thanh Xuân (HN-02)', address: 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội', floors: 3 },
-  'HCM-01': { name: 'SmartStorage Quận 1 (HCM-01)', address: 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM', floors: 3 },
-  'HCM-02': { name: 'SmartStorage Quận 7 (HCM-02)', address: 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM', floors: 2 },
-  'HCM-03': { name: 'SmartStorage Thủ Đức (HCM-03)', address: 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM', floors: 3 },
-  'DN-01': { name: 'SmartStorage Hải Châu (DN-01)', address: 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng', floors: 2 },
-  'CT-01': { name: 'SmartStorage Ninh Kiều (CT-01)', address: 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', floors: 2 }
+  'HN-01': { name: 'SmartStorage Cầu Giấy', address: 'Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội', floors: 3 },
+  'HN-02': { name: 'SmartStorage Thanh Xuân', address: 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội', floors: 3 },
+  'HCM-01': { name: 'SmartStorage Quận 1', address: 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM', floors: 3 },
+  'HCM-02': { name: 'SmartStorage Quận 7', address: 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM', floors: 3 },
+  'HCM-03': { name: 'SmartStorage Thủ Đức', address: 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM', floors: 3 },
+  'DN-01': { name: 'SmartStorage Hải Châu', address: 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng', floors: 3 },
+  'CT-01': { name: 'SmartStorage Ninh Kiều', address: 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', floors: 3 }
 };
 
 export default function StorageMap2D({
@@ -33,7 +33,7 @@ export default function StorageMap2D({
   const [loading, setLoading] = useState(false);
   const [selectedStorageType, setSelectedStorageType] = useState<'ALL' | 'STANDARD' | 'CLIMATE_CONTROLLED'>('ALL');
 
-  // Tải danh sách chi nhánh cơ sở từ Database
+  // Tải danh sách chi nhánh cơ sở từ Database & lắng nghe sự kiện đồng bộ tự động
   useEffect(() => {
     let isMounted = true;
     const fetchBranches = async () => {
@@ -47,19 +47,34 @@ export default function StorageMap2D({
       }
     };
     fetchBranches();
+
+    // Lắng nghe sự kiện khi BOM thêm / xóa / sửa cơ sở
+    const handleSync = () => {
+      fetchBranches();
+    };
+
+    window.addEventListener('storage_facilities_updated', handleSync);
+    window.addEventListener('storage', handleSync);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('storage_facilities_updated', handleSync);
+      window.removeEventListener('storage', handleSync);
     };
   }, []);
 
   const matchedBranch = branches.find((b) => b.code === facility || b.id === facility);
   const currentFacilityObj = matchedBranch
     ? {
-        name: matchedBranch.name,
+        name: matchedBranch.name || matchedBranch.facilityName,
         address: matchedBranch.address,
         floors: matchedBranch.floors || 3,
+        layoutType: (matchedBranch.layoutType || 'A').toUpperCase(),
       }
-    : (facilityData[facility] || facilityData['HN-01']);
+    : {
+        ...(facilityData[facility] || facilityData['HN-01']),
+        layoutType: ['HN-02', 'HCM-02', 'HCM-03', 'CT-01'].includes(facility) ? 'B' : 'A',
+      };
 
   // Gọi API lấy danh sách ô kho theo cơ sở và tầng
   useEffect(() => {
@@ -169,46 +184,78 @@ export default function StorageMap2D({
             >
               {branches.length > 0 ? (
                 <>
-                  {['HN', 'HCM', 'DN', 'CT'].map((cityCode) => {
-                    const cityBranches = branches.filter((b) => (b.code || b.id).startsWith(cityCode));
+                  {['HN', 'HCM', 'DN', 'CT', 'HP', 'BD'].map((cityCode) => {
+                    const cityBranches = branches.filter((b) => (b.code || b.id || '').toUpperCase().startsWith(cityCode));
                     if (cityBranches.length === 0) return null;
 
                     const cityName = 
                       cityCode === 'HN' ? '📍 Hà Nội' : 
                       cityCode === 'HCM' ? '📍 TP. Hồ Chí Minh' : 
-                      cityCode === 'DN' ? '📍 Đà Nẵng' : '📍 Cần Thơ';
+                      cityCode === 'DN' ? '📍 Đà Nẵng' : 
+                      cityCode === 'CT' ? '📍 Cần Thơ' : 
+                      cityCode === 'HP' ? '📍 Hải Phòng' : '📍 Bình Dương';
 
                     return (
                       <optgroup key={cityCode} label={cityName} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                        {cityBranches.map((b) => (
-                          <option
-                            key={b.code || b.id}
-                            value={b.code || b.id}
-                            className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                          >
-                            {b.name || b.facilityName || facilityData[b.code]?.name || b.code}
-                          </option>
-                        ))}
+                        {cityBranches.map((b) => {
+                          const raw = b.name || b.facilityName || facilityData[b.code]?.name || b.code;
+                          const clean = raw.replace(/\s*\([A-Z0-9-]+\)\s*$/, '').trim();
+                          return (
+                            <option
+                              key={b.code || b.id}
+                              value={b.code || b.id}
+                              className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                            >
+                              {clean}
+                            </option>
+                          );
+                        })}
                       </optgroup>
                     );
                   })}
+
+                  {/* Nhóm chi nhánh mở rộng / khu vực khác */}
+                  {(() => {
+                    const otherBranches = branches.filter((b) => {
+                      const c = (b.code || b.id || '').toUpperCase();
+                      return !c.startsWith('HN') && !c.startsWith('HCM') && !c.startsWith('DN') && !c.startsWith('CT') && !c.startsWith('HP') && !c.startsWith('BD');
+                    });
+                    if (otherBranches.length === 0) return null;
+                    return (
+                      <optgroup label="📍 Khu vực khác" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                        {otherBranches.map((b) => {
+                          const raw = b.name || b.facilityName || b.code;
+                          const clean = raw.replace(/\s*\([A-Z0-9-]+\)\s*$/, '').trim();
+                          return (
+                            <option
+                              key={b.code || b.id}
+                              value={b.code || b.id}
+                              className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                            >
+                              {clean}
+                            </option>
+                          );
+                        })}
+                      </optgroup>
+                    );
+                  })()}
                 </>
               ) : (
                 <>
                   <optgroup label="📍 Hà Nội" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                    <option value="HN-01" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Cầu Giấy (HN-01)</option>
-                    <option value="HN-02" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Thanh Xuân (HN-02)</option>
+                    <option value="HN-01" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Cầu Giấy</option>
+                    <option value="HN-02" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Thanh Xuân</option>
                   </optgroup>
                   <optgroup label="📍 TP. Hồ Chí Minh" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                    <option value="HCM-01" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Quận 1 (HCM-01)</option>
-                    <option value="HCM-02" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Quận 7 (HCM-02)</option>
-                    <option value="HCM-03" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Thủ Đức (HCM-03)</option>
+                    <option value="HCM-01" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Quận 1</option>
+                    <option value="HCM-02" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Quận 7</option>
+                    <option value="HCM-03" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Thủ Đức</option>
                   </optgroup>
                   <optgroup label="📍 Đà Nẵng" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                    <option value="DN-01" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Hải Châu (DN-01)</option>
+                    <option value="DN-01" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Hải Châu</option>
                   </optgroup>
                   <optgroup label="📍 Cần Thơ" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                    <option value="CT-01" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Ninh Kiều (CT-01)</option>
+                    <option value="CT-01" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Ninh Kiều</option>
                   </optgroup>
                 </>
               )}
@@ -307,10 +354,22 @@ export default function StorageMap2D({
 
       {/* SƠ ĐỒ MẶT BẰNG 2D BLUEPRINT */}
       <div className="p-3 sm:p-3.5 rounded-2xl border shadow-xs space-y-2.5 bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
-        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+        <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2 gap-2">
           <div className="flex items-center space-x-2 text-xs font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide">
             <i className="fa-solid fa-map text-blue-600 dark:text-cyan-400 text-sm"></i>
             <span>SƠ ĐỒ MẶT BẰNG Ô KHO • {currentFloor === 1 ? 'TẦNG TRỆT' : `TẦNG ${currentFloor - 1}`}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+              currentFacilityObj.layoutType === 'B'
+                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                : 'bg-blue-500/10 text-blue-600 dark:text-cyan-400 border-blue-500/30'
+            }`}>
+              {currentFacilityObj.layoutType === 'B' ? 'Mô hình Layout B (15 ô kho)' : 'Mô hình Layout A (46 ô kho)'}
+            </span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">
+              {units.length} ô kho tầng này
+            </span>
           </div>
         </div>
 
@@ -327,26 +386,30 @@ export default function StorageMap2D({
                 <span className="flex items-center">
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span> Dãy Kho Mặt Tiền (XL - 10m²)
                 </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">5 ô kho</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{Math.min(units.length, 5)} ô kho</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
                 {units.slice(0, 5).map((u) => renderUnitCard(u))}
               </div>
             </div>
 
-            <div className="floor-corridor-strip">HÀNH LANG LỐI ĐI CHÍNH TRỤC XE TẢI / XE NÂNG</div>
+            {units.length > 5 && (
+              <>
+                <div className="floor-corridor-strip">HÀNH LANG LỐI ĐI CHÍNH TRỤC XE TẢI / XE NÂNG</div>
 
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
-                <span className="flex items-center">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span> Dãy Kho Hậu Cần (XL - 10m²)
-                </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">5 ô kho</span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
-                {units.slice(5, 10).map((u) => renderUnitCard(u))}
-              </div>
-            </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
+                    <span className="flex items-center">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span> Dãy Kho Hậu Cần (XL - 10m²)
+                    </span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.length - 5} ô kho</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
+                    {units.slice(5, 10).map((u) => renderUnitCard(u))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <div className="floor-blueprint-container p-3 sm:p-3.5 space-y-3 shadow-inner relative">

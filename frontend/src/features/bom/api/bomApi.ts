@@ -54,7 +54,16 @@ export const bomApi = {
   getFacilities: async (): Promise<FacilityApiItem[]> => {
     return apiClient.get('/facilities')
   },
-  createFacility: async (data: { facilityName: string; address: string; phone?: string }): Promise<FacilityApiItem> => {
+  createFacility: async (data: {
+    facilityName: string
+    address: string
+    phone?: string
+    facilityCode?: string
+    layoutType?: string
+    floorCount?: number
+    isAllClimate?: boolean
+    managerName?: string
+  }): Promise<FacilityApiItem> => {
     return apiClient.post('/facilities', data)
   },
   updateFacility: async (facilityId: number, data: { facilityName?: string; address?: string; phone?: string; status?: string }): Promise<FacilityApiItem> => {

@@ -14,29 +14,29 @@ const MODULE_CARDS = [
   {
     path: "/bom/facilities",
     label: "Giám Sát & Cơ Sở",
-    badge: "7 Cơ Sở Kho",
-    shortDesc: "Theo dõi KPI, tỷ lệ lấp đầy & cấu hình 7 cụm cơ sở kho toàn chuỗi",
+    badge: "Mặt Bằng & Lấp Đầy",
+    shortDesc: "Theo dõi tỷ lệ lấp đầy, sức chứa và cấu hình các chi nhánh kho toàn hệ thống",
     icon: Warehouse,
   },
   {
     path: "/bom/pricing",
     label: "Khung Giá & Phụ Phí",
-    badge: "Size S / M / L / XL",
-    shortDesc: "Biểu giá thuê chuẩn Size S/M/L/XL & danh mục phụ phí toàn chuỗi",
+    badge: "Biểu Giá Thuê",
+    shortDesc: "Biểu giá thuê chuẩn các kích cỡ ngăn kho & danh mục phụ phí dịch vụ toàn chuỗi",
     icon: SlidersHorizontal,
   },
   {
     path: "/bom/policies",
     label: "Thông Số Vận Hành",
-    badge: "4 Mốc Chế Tài",
-    shortDesc: "Quy chuẩn an ninh mã PIN & các mốc chế tài xử lý nợ quá hạn",
+    badge: "An Ninh & Chế Tài",
+    shortDesc: "Quy chuẩn an ninh mã PIN mở cửa & quy trình chế tài xử lý nợ quá hạn",
     icon: ShieldAlert,
   },
   {
     path: "/bom/reports",
     label: "Báo Cáo Doanh Thu",
-    badge: "Xuất Excel / PDF",
-    shortDesc: "Tổng hợp dòng tiền thực thu, tỷ lệ lấp đầy & kết xuất báo cáo kiểm toán",
+    badge: "Kiểm Toán Dòng Tiền",
+    shortDesc: "Tổng hợp dòng tiền thực thu, đối soát tài chính & kết xuất báo cáo kiểm toán",
     icon: FileSpreadsheet,
   },
 ]
@@ -82,31 +82,36 @@ export default function BomDashboardPage() {
         <BomKpiCards />
       </div>
 
-      {/* 4 cụm chức năng  */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-4 w-full max-w-6xl mx-auto"
-      >
+      {/* 4 cụm chức năng - Liên kết trực tiếp layoutId với thanh navbar bên trái */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-4 w-full max-w-6xl mx-auto">
         {MODULE_CARDS.map((item) => {
           const Icon = item.icon
           return (
             <motion.button
               key={item.path}
-              variants={cardVariants}
+              layoutId={`bom-module-card-${item.path}`}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 28,
+                mass: 0.85,
+              }}
               whileHover={{ y: -6, scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => navigate(item.path)}
-              className="group p-6 rounded-3xl min-h-[230px] flex flex-col justify-between items-start text-left cursor-pointer border-2 border-sky-400/80 hover:border-sky-300 bg-slate-950/70 hover:bg-slate-900/90 shadow-[0_0_25px_rgba(56,189,248,0.2)] hover:shadow-[0_0_35px_rgba(56,189,248,0.45)] backdrop-blur-md relative overflow-hidden transition-all duration-300"
+              className="group p-6 rounded-3xl min-h-[230px] flex flex-col justify-between items-start text-left cursor-pointer border-2 border-sky-400/80 hover:border-sky-300 bg-slate-950/80 hover:bg-slate-900/90 shadow-[0_0_25px_rgba(56,189,248,0.2)] hover:shadow-[0_0_35px_rgba(56,189,248,0.45)] backdrop-blur-md relative overflow-hidden transition-colors"
             >
               {/* Lớp nền gradient ánh sáng nhẹ khi hover */}
               <div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
               <div className="flex items-center justify-between w-full relative z-10">
-                <div className="p-3.5 rounded-2xl bg-sky-500/15 border border-sky-400/30 text-sky-400 group-hover:bg-sky-500 group-hover:text-slate-950 transition-colors shadow-md">
+                <motion.div
+                  layoutId={`bom-module-icon-${item.path}`}
+                  transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                  className="p-3.5 rounded-2xl bg-sky-500/15 border border-sky-400/30 text-sky-400 group-hover:bg-sky-500 group-hover:text-slate-950 transition-colors shadow-md"
+                >
                   <Icon className="size-7" />
-                </div>
+                </motion.div>
                 <span className="text-[10px] font-black tracking-wider uppercase px-2.5 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-300">
                   {item.badge}
                 </span>
@@ -114,9 +119,13 @@ export default function BomDashboardPage() {
 
               <div className="mt-4 space-y-2 w-full relative z-10">
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-black text-white group-hover:text-sky-300 tracking-tight transition-colors">
+                  <motion.span
+                    layoutId={`bom-module-title-${item.path}`}
+                    transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                    className="text-lg font-black text-white group-hover:text-sky-300 tracking-tight transition-colors"
+                  >
                     {item.label}
-                  </span>
+                  </motion.span>
                   <ArrowUpRight className="size-5 text-slate-400 group-hover:text-sky-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                 </div>
                 <p className="text-xs text-slate-400 font-medium line-clamp-2 leading-relaxed">
@@ -126,7 +135,7 @@ export default function BomDashboardPage() {
             </motion.button>
           )
         })}
-      </motion.div>
+      </div>
     </div>
   )
 }

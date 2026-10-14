@@ -12,6 +12,9 @@ import {
   ChevronDown,
   X,
   LogOut,
+  PanelLeft,
+  LayoutGrid,
+  ChevronRight,
 } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 import { useTheme } from "@/components/common/theme-provider"
@@ -19,35 +22,33 @@ import { useAuth } from "@/context/AuthContext"
 import ThreeBackground from "../components/ThreeBackground"
 import { BomProvider } from "../context/BomContext"
 
-const NAV_ITEMS = [
-  {
-    path: "/bom",
-    label: "Tổng Quan Điều Hành",
-    navLabel: "Tổng Quan",
-    icon: Home,
-  },
+const NAV_MODULES = [
   {
     path: "/bom/facilities",
     label: "Giám Sát & Cơ Sở",
     navLabel: "Cơ Sở Kho",
+    subLabel: "Mặt bằng & Tỷ lệ lấp đầy",
     icon: Warehouse,
   },
   {
     path: "/bom/pricing",
     label: "Khung Giá & Phụ Phí",
     navLabel: "Khung Giá & Phí",
+    subLabel: "Biểu giá thuê & Phí dịch vụ",
     icon: SlidersHorizontal,
   },
   {
     path: "/bom/policies",
     label: "Thông Số Vận Hành",
     navLabel: "Quy Chuẩn",
+    subLabel: "Quy chuẩn an ninh & Chế tài",
     icon: ShieldAlert,
   },
   {
     path: "/bom/reports",
     label: "Báo Cáo Doanh Thu",
     navLabel: "Báo Cáo",
+    subLabel: "Dòng tiền & Đối soát tài chính",
     icon: FileSpreadsheet,
   },
 ]
@@ -60,6 +61,7 @@ function BomLayoutContent() {
   const outlet = useOutlet()
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
 
   const isDarkMode =
     theme === "dark" ||
@@ -69,7 +71,7 @@ function BomLayoutContent() {
 
   // Thông tin người dùng lấy trực tiếp từ Auth / Session
   const storedUser = typeof window !== "undefined" ? localStorage.getItem("user") : null
-  const parsedStoredUser = storedUser ? (() => { try { return JSON.parse(storedUser); } catch(e) { return null; } })() : null
+  const parsedStoredUser = storedUser ? (() => { try { return JSON.parse(storedUser); } catch (e) { return null; } })() : null
   const currentUserName = user?.fullName || parsedStoredUser?.fullName || "Quản Trị Viên"
   const currentUserRole = user?.role ? (user.role === "BOM" ? "Ban Điều Hành (BOM)" : user.role) : "Chuyên viên Quản lý Vận hành"
   const currentUserEmail = user?.email || parsedStoredUser?.email || "bom@smartstorage.vn"
@@ -97,58 +99,46 @@ function BomLayoutContent() {
       {/* 3D Dynamic Waves Background */}
       <ThreeBackground theme={theme} />
 
-      {/* Top Header - Fixed cố định vĩnh viễn trên đỉnh khi cuộn trang */}
+      {/* Top Header - Fixed cố định trên đỉnh */}
       <header className="fixed top-0 left-0 right-0 z-50 w-full min-h-[58px] bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-sky-500/20 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4 shrink-0 shadow-lg text-slate-900 dark:text-white transition-colors">
-        {/* BRAND LOGO (Đã bỏ chữ BOM theo yêu cầu) */}
-        <div className="shrink-0 flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={() => navigate("/bom")}>
-          <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20 hover:scale-105 transition-transform">
-            <Warehouse className="size-5" />
-          </div>
-          <div>
-            <div className="text-base sm:text-lg font-black tracking-tight leading-tight text-slate-900 dark:text-white flex items-center gap-1.5">
-              <span>Smart Storage</span>
+        {/* BRAND LOGO & NÚT MENU MOBILE */}
+        <div className="shrink-0 flex items-center gap-2 sm:gap-3">
+          {/* Nút toggle mở sidebar trên mobile khi đang ở trang con */}
+          {!isHome && (
+            <button
+              type="button"
+              onClick={() => setIsMobileSidebarOpen((prev) => !prev)}
+              className="lg:hidden p-2 rounded-xl bg-slate-800 text-sky-400 hover:text-white hover:bg-slate-700 border border-slate-700/80 cursor-pointer transition shadow-xs"
+              title="Mở thanh điều hướng"
+            >
+              <PanelLeft className="size-4.5" />
+            </button>
+          )}
+
+          <div
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer group"
+            onClick={() => {
+              navigate("/bom")
+              setIsMobileSidebarOpen(false)
+            }}
+            title="Về Trang Chủ Điều Hành"
+          >
+            <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20 group-hover:scale-105 transition-transform">
+              <Warehouse className="size-5" />
             </div>
-            <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden xl:block leading-none mt-0.5">
-              Hệ thống cho thuê kho tự quản thông minh 24/7
+            <div>
+              <div className="text-base sm:text-lg font-black tracking-tight leading-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+                <span>Smart Storage</span>
+              </div>
+              <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden xl:block leading-none mt-0.5">
+                Hệ thống cho thuê kho tự quản thông minh 24/7
+              </div>
             </div>
           </div>
         </div>
 
-        {/* CENTER CONTENT (NAVBAR TABS PILL - LUÔN HIỆN DIỆN, CHUYỂN ĐỘNG TRƯỢT LIÊN KẾT SIÊU MƯỢT) */}
-        <div className="flex-1 flex justify-center items-center px-1 min-w-0">
-          <div className="flex items-center gap-0.5 sm:gap-1 p-1 bg-slate-100/90 dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-sky-500/30 shadow-md backdrop-blur-md shrink-0">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon
-              const isActive =
-                item.path === "/bom"
-                  ? location.pathname === "/bom" || location.pathname === "/bom/"
-                  : location.pathname.startsWith(item.path)
-
-              return (
-                <button
-                  key={item.path}
-                  type="button"
-                  onClick={() => navigate(item.path)}
-                  className={`relative px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs tracking-wide flex items-center gap-1.5 whitespace-nowrap transition-colors duration-200 cursor-pointer shrink-0 ${
-                    isActive
-                      ? "text-white dark:text-slate-950 font-black"
-                      : "text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white"
-                  }`}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="bom-active-pill-indicator"
-                      transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                      className="absolute inset-0 bg-sky-500 dark:bg-sky-500 rounded-xl shadow-md shadow-sky-500/30 -z-10"
-                    />
-                  )}
-                  <Icon className="size-3.5 sm:size-4 shrink-0" />
-                  <span className="hidden sm:inline">{item.navLabel}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
+        {/* CENTER CONTENT - ĐÃ LOẠI BỎ THANH NAVBAR CHÍNH GIỮA THEO YÊU CẦU */}
+        <div className="flex-1" />
 
         {/* CONTROLS & USER PROFILE */}
         <div className="flex items-center space-x-2 sm:space-x-2.5 shrink-0">
@@ -190,15 +180,142 @@ function BomLayoutContent() {
         </div>
       </header>
 
-      {/* Main Workspace Outlet với hiệu ứng chuyển trang mượt mà liên kết */}
-      <main className="relative z-10 w-full max-w-[1850px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 pt-20 pb-12 sm:pt-22">
-        <AnimatePresence mode="wait">
+      {/* THANH ĐIỀU HƯỚNG DỌC BÊN TRÁI (CHỈ XUẤT HIỆN KHI Ở TRANG CON, CÓ ANIMATION MƯỢT MÀ) */}
+      <AnimatePresence>
+        {!isHome && (
+          <>
+            {/* Lớp phủ mờ (Backdrop) trên màn hình mobile */}
+            {isMobileSidebarOpen && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setIsMobileSidebarOpen(false)}
+                className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-xs lg:hidden"
+              />
+            )}
+
+            {/* Thanh Sidebar dọc bên trái */}
+            <motion.aside
+              key="bom-vertical-sidebar"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className={`fixed top-[58px] bottom-0 left-0 z-40 w-64 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-2xl border-r border-slate-800/90 dark:border-sky-500/20 flex flex-col justify-between p-4 shadow-2xl transition-transform duration-300 lg:translate-x-0 ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+                }`}
+            >
+              {/* Phần trên: Nút quay lại Tổng quan & Danh mục 4 Phân hệ */}
+              <div className="space-y-4">
+                {/* Nút Quay Về Tổng Quan (Hub 4 Cụm) */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigate("/bom")
+                    setIsMobileSidebarOpen(false)
+                  }}
+                  className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-bold text-slate-300 hover:text-white bg-slate-800/70 hover:bg-slate-800 border border-slate-700/60 transition cursor-pointer group shadow-sm"
+                  title="Quay về trang Tổng quan 4 cụm chức năng"
+                >
+                  <div className="size-8 rounded-xl bg-sky-500/15 text-sky-400 group-hover:bg-sky-500 group-hover:text-slate-950 flex items-center justify-center transition-colors shrink-0">
+                    <LayoutGrid className="size-4.5" />
+                  </div>
+                  <div className="text-left flex-1 min-w-0">
+                    <div className="text-xs font-black text-white truncate">Tổng Quan</div>
+                  </div>
+                  <ChevronRight className="size-4 text-slate-500 group-hover:text-sky-400 group-hover:translate-x-0.5 transition shrink-0" />
+                </button>
+
+                {/* Tiêu đề nhóm quản trị */}
+                <div className="pt-2">
+                  <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 px-2 pb-2">
+                    Danh Mục Quản Lý
+                  </div>
+                  <nav className="space-y-1.5">
+                    {NAV_MODULES.map((item) => {
+                      const Icon = item.icon
+                      const isActive = location.pathname.startsWith(item.path)
+
+                      return (
+                        <motion.button
+                          key={item.path}
+                          layoutId={`bom-module-card-${item.path}`}
+                          transition={{
+                            type: "spring",
+                            stiffness: 300,
+                            damping: 28,
+                            mass: 0.85,
+                          }}
+                          type="button"
+                          onClick={() => {
+                            navigate(item.path)
+                            setIsMobileSidebarOpen(false)
+                          }}
+                          className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl font-bold text-xs tracking-wide transition-colors cursor-pointer text-left ${
+                            isActive
+                              ? "text-slate-950 font-black shadow-lg shadow-sky-500/25"
+                              : "text-slate-300 dark:text-slate-300 hover:text-white hover:bg-slate-800/60"
+                          }`}
+                        >
+                          {isActive && (
+                            <motion.div
+                              layoutId="bom-sidebar-active-indicator"
+                              transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                              className="absolute inset-0 bg-sky-500 rounded-2xl -z-10"
+                            />
+                          )}
+                          <motion.div
+                            layoutId={`bom-module-icon-${item.path}`}
+                            transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                            className={`size-8 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                              isActive
+                                ? "bg-slate-950/20 text-slate-950"
+                                : "bg-slate-800/80 text-sky-400"
+                            }`}
+                          >
+                            <Icon className="size-4" />
+                          </motion.div>
+                          <div className="flex-1 min-w-0">
+                            <motion.div
+                              layoutId={`bom-module-title-${item.path}`}
+                              transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                              className="text-xs truncate font-extrabold"
+                            >
+                              {item.label}
+                            </motion.div>
+                            <div
+                              className={`text-[10.5px] truncate font-semibold mt-0.5 ${
+                                isActive ? "text-slate-950/90 font-bold" : "text-slate-400"
+                              }`}
+                            >
+                              {item.subLabel}
+                            </div>
+                          </div>
+                        </motion.button>
+                      )
+                    })}
+                  </nav>
+                </div>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      <main
+        className={`relative z-10 w-full transition-all duration-300 pt-20 pb-12 sm:pt-22 ${isHome
+            ? "max-w-[1850px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12"
+            : "lg:pl-72 px-4 sm:px-6 lg:pr-8 xl:pr-12 max-w-[1920px] mx-auto"
+          }`}
+      >
+        <AnimatePresence mode="popLayout">
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: isHome ? -10 : 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="w-full"
           >
             {outlet}

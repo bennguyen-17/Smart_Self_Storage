@@ -206,70 +206,44 @@ public class StorageService {
     public FacilityResponse mapFacilityToResponse(Facility f) {
         FacilityResponse res = new FacilityResponse();
         res.setFacilityId(f.getFacilityId());
-        res.setFacilityName(f.getFacilityName());
+
+        String rawName = f.getFacilityName() != null ? f.getFacilityName().trim() : "";
+        if (rawName.contains("(") && rawName.contains(")")) {
+            rawName = rawName.replaceAll("\\s*\\([^)]*\\)", "").trim();
+        }
+        res.setFacilityName(rawName);
         res.setAddress(f.getAddress());
         res.setPhone(f.getPhone());
         res.setStatus(f.getStatus());
 
-        // Gán metadata chuẩn theo Take note.txt
-        switch (f.getFacilityId()) {
-            case 1:
-                res.setFacilityCode("HN-01");
-                res.setShortCode("CG");
-                res.setFloorCount(3);
-                res.setLayoutType("A");
-                res.setIsAllClimate(false);
-                break;
-            case 2:
-                res.setFacilityCode("HN-02");
-                res.setShortCode("TX");
-                res.setFloorCount(3);
-                res.setLayoutType("B");
-                res.setIsAllClimate(false);
-                break;
-            case 3:
-                res.setFacilityCode("HCM-01");
-                res.setShortCode("Q1");
-                res.setFloorCount(3);
-                res.setLayoutType("A");
-                res.setIsAllClimate(true); // 100% kho mát
-                break;
-            case 4:
-                res.setFacilityCode("HCM-02");
-                res.setShortCode("Q7");
-                res.setFloorCount(2);
-                res.setLayoutType("B");
-                res.setIsAllClimate(false);
-                break;
-            case 5:
-                res.setFacilityCode("HCM-03");
-                res.setShortCode("TD");
-                res.setFloorCount(3);
-                res.setLayoutType("B");
-                res.setIsAllClimate(false);
-                break;
-            case 6:
-                res.setFacilityCode("DN-01");
-                res.setShortCode("HC");
-                res.setFloorCount(2);
-                res.setLayoutType("A");
-                res.setIsAllClimate(false);
-                break;
-            case 7:
-                res.setFacilityCode("CT-01");
-                res.setShortCode("NK");
-                res.setFloorCount(2);
-                res.setLayoutType("B");
-                res.setIsAllClimate(false);
-                break;
-            default:
-                res.setFacilityCode("FAC-0" + f.getFacilityId());
-                res.setShortCode("FC");
-                res.setFloorCount(2);
-                res.setLayoutType("A");
-                res.setIsAllClimate(false);
-                break;
+        // Lấy mã cơ sở và layout chuẩn hóa trực tiếp từ entity
+        String code = f.getFacilityCode();
+        String layout = f.getLayoutType();
+
+        if (code == null || code.trim().isEmpty()) {
+            switch (f.getFacilityId()) {
+                case 1: code = "HN-01"; layout = "A"; break;
+                case 2: code = "HN-02"; layout = "B"; break;
+                case 3: code = "HCM-01"; layout = "A"; break;
+                case 4: code = "HCM-02"; layout = "B"; break;
+                case 5: code = "HCM-03"; layout = "B"; break;
+                case 6: code = "DN-01"; layout = "A"; break;
+                case 7: code = "CT-01"; layout = "B"; break;
+                default: code = "FAC-" + String.format("%02d", f.getFacilityId()); break;
+            }
         }
+        if (layout == null || layout.trim().isEmpty()) {
+            layout = "A";
+        }
+
+        res.setFacilityCode(code);
+        res.setShortCode(code.replace("-", ""));
+        res.setLayoutType(layout.toUpperCase());
+        res.setIsAllClimate("HCM-01".equalsIgnoreCase(code));
+
+        List<Floor> actualFloors = floorRepository.findByFacilityId(f.getFacilityId());
+        res.setFloorCount(actualFloors.isEmpty() ? 3 : actualFloors.size());
+
         return res;
     }
 
@@ -592,16 +566,148 @@ public class StorageService {
         return req;
     }
 
-    // --- Thêm cơ sở kho mới vào Database ---
+    // --- Thêm cơ sở kho mới vào Database kèm Tự Động Sinh Tầng & Ô Kho theo Layout ---
     @Transactional
     public FacilityResponse createFacility(FacilityRequest req) {
+        // 1. Tự động sinh mã cơ sở thông minh không trùng lặp nếu chưa có
+        String code = req.getFacilityCode();
+        if (code == null || code.trim().isEmpty()) {
+            String addr = (req.getAddress() != null ? req.getAddress().toLowerCase() : "") + " " + (req.getFacilityName() != null ? req.getFacilityName().toLowerCase() : "");
+            String cityPrefix = "HN";
+            if (addr.contains("hồ chí minh") || addr.contains("ho chi minh") || addr.contains("hcm") || addr.contains("sài gòn") || addr.contains("sai gon") || addr.contains("tp.hcm")) {
+                cityPrefix = "HCM";
+            } else if (addr.contains("đà nẵng") || addr.contains("da nang") || addr.contains("dn")) {
+                cityPrefix = "DN";
+            } else if (addr.contains("cần thơ") || addr.contains("can tho") || addr.contains("ct")) {
+                cityPrefix = "CT";
+            } else if (addr.contains("hải phòng") || addr.contains("hai phong") || addr.contains("hp")) {
+                cityPrefix = "HP";
+            } else if (addr.contains("bình dương") || addr.contains("binh duong") || addr.contains("bd")) {
+                cityPrefix = "BD";
+            }
+
+            final String finalPrefix = cityPrefix;
+            List<Facility> allFacs = facilityRepository.findAll();
+            int maxNum = 0;
+            for (Facility fac : allFacs) {
+                String c = fac.getFacilityCode();
+                if (c == null) {
+                    FacilityResponse fr = mapFacilityToResponse(fac);
+                    c = fr.getFacilityCode();
+                }
+                if (c != null && c.toUpperCase().startsWith(finalPrefix + "-")) {
+                    try {
+                        String numPart = c.substring(finalPrefix.length() + 1);
+                        int num = Integer.parseInt(numPart);
+                        if (num > maxNum) maxNum = num;
+                    } catch (Exception ignored) {}
+                }
+            }
+            code = String.format("%s-%02d", cityPrefix, maxNum + 1);
+        } else {
+            code = code.trim().toUpperCase();
+        }
+
+        // 2. TÊN CƠ SỞ HOÀN TOÀN THUẦN TÚY - KHÔNG GHÉP MÃ VÀO TÊN
+        String rawName = req.getFacilityName() != null ? req.getFacilityName().trim() : "SmartStorage Cơ Sở Mới";
+        if (rawName.contains("(") && rawName.contains(")")) {
+            rawName = rawName.replaceAll("\\s*\\([^)]*\\)", "").trim();
+        }
+
+        String layout = (req.getLayoutType() != null && req.getLayoutType().equalsIgnoreCase("B")) ? "B" : "A";
+
         Facility f = new Facility();
-        f.setFacilityName(req.getFacilityName());
-        f.setAddress(req.getAddress());
+        f.setFacilityName(rawName);
+        f.setFacilityCode(code);
+        f.setLayoutType(layout);
+        f.setAddress(req.getAddress() != null ? req.getAddress().trim() : "Chưa cập nhật địa chỉ");
         f.setPhone(req.getPhone() != null && !req.getPhone().trim().isEmpty() ? req.getPhone() : "0900000000");
         f.setStatus("ACTIVE");
         Facility saved = facilityRepository.save(f);
-        return mapFacilityToResponse(saved);
+
+        // 3. Tự động sinh danh sách Tầng (Floor) (chuẩn 3 tầng)
+        int floors = (req.getFloorCount() != null && req.getFloorCount() >= 1) ? req.getFloorCount() : 3;
+        List<Floor> createdFloors = new java.util.ArrayList<>();
+        for (int fl = 1; fl <= floors; fl++) {
+            Floor floor = new Floor();
+            floor.setFacilityId(saved.getFacilityId());
+            floor.setFloorName(fl == 1 ? "Tầng Trệt" : "Tầng " + (fl - 1));
+            floor.setMaxLoadPerM2(fl == 1 ? BigDecimal.valueOf(1000) : BigDecimal.valueOf(500));
+            floor.setStatus("ACTIVE");
+            createdFloors.add(floorRepository.save(floor));
+        }
+
+        // 4. Tự động sinh danh sách Ô Kho (StorageUnit) theo Layout A hoặc B
+        String cleanCode = code.replace("-", "");
+        List<StorageUnit> newUnits = new java.util.ArrayList<>();
+
+        // Floor 1 (Tầng Trệt):
+        // Layout A: 10 ô XL
+        // Layout B: 5 ô XL
+        Floor floor1 = createdFloors.get(0);
+        int xlCount = layout.equals("A") ? 10 : 5;
+        for (int i = 1; i <= xlCount; i++) {
+            String unitCode = String.format("%s-G-XL%02d", cleanCode, i);
+            newUnits.add(new StorageUnit(unitCode, floor1.getFloorId(), 4, "AVAILABLE"));
+        }
+
+        // Floor 2 (Tầng 1):
+        // Layout A: 8 ô S, 6 ô M, 4 ô L (18 ô)
+        // Layout B: 3 ô M, 2 ô L (5 ô)
+        if (createdFloors.size() >= 2) {
+            Floor floor2 = createdFloors.get(1);
+            if (layout.equals("A")) {
+                for (int s = 1; s <= 8; s++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F1-S%02d", cleanCode, s), floor2.getFloorId(), 1, "AVAILABLE"));
+                }
+                for (int m = 1; m <= 6; m++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F1-M%02d", cleanCode, m), floor2.getFloorId(), 2, "AVAILABLE"));
+                }
+                for (int l = 1; l <= 4; l++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F1-L%02d", cleanCode, l), floor2.getFloorId(), 3, "AVAILABLE"));
+                }
+            } else {
+                for (int m = 1; m <= 3; m++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F1-M%02d", cleanCode, m), floor2.getFloorId(), 2, "AVAILABLE"));
+                }
+                for (int l = 1; l <= 2; l++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F1-L%02d", cleanCode, l), floor2.getFloorId(), 3, "AVAILABLE"));
+                }
+            }
+        }
+
+        // Floor 3 (Tầng 2):
+        // Layout A: 6 ô S, 8 ô M, 4 ô L (18 ô)
+        // Layout B: 3 ô M, 2 ô L (5 ô)
+        if (createdFloors.size() >= 3) {
+            Floor floor3 = createdFloors.get(2);
+            if (layout.equals("A")) {
+                for (int s = 1; s <= 6; s++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F2-S%02d", cleanCode, s), floor3.getFloorId(), 1, "AVAILABLE"));
+                }
+                for (int m = 1; m <= 8; m++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F2-M%02d", cleanCode, m), floor3.getFloorId(), 2, "AVAILABLE"));
+                }
+                for (int l = 1; l <= 4; l++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F2-L%02d", cleanCode, l), floor3.getFloorId(), 3, "AVAILABLE"));
+                }
+            } else {
+                for (int m = 1; m <= 3; m++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F2-M%02d", cleanCode, m), floor3.getFloorId(), 2, "AVAILABLE"));
+                }
+                for (int l = 1; l <= 2; l++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F2-L%02d", cleanCode, l), floor3.getFloorId(), 3, "AVAILABLE"));
+                }
+            }
+        }
+
+        storageUnitRepository.saveAll(newUnits);
+
+        FacilityResponse res = mapFacilityToResponse(saved);
+        res.setFacilityCode(code);
+        res.setLayoutType(layout);
+        res.setFloorCount(floors);
+        return res;
     }
 
     // --- Cập nhật cơ sở kho vào Database ---
@@ -609,10 +715,18 @@ public class StorageService {
     public FacilityResponse updateFacility(Integer facilityId, FacilityRequest req) {
         Facility f = facilityRepository.findById(facilityId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy cơ sở ID: " + facilityId));
-        if (req.getFacilityName() != null) f.setFacilityName(req.getFacilityName());
-        if (req.getAddress() != null) f.setAddress(req.getAddress());
-        if (req.getPhone() != null) f.setPhone(req.getPhone());
-        if (req.getStatus() != null) f.setStatus(req.getStatus());
+        if (req.getFacilityName() != null) {
+            String name = req.getFacilityName().trim();
+            if (name.contains("(") && name.contains(")")) {
+                name = name.replaceAll("\\s*\\([^)]*\\)", "").trim();
+            }
+            f.setFacilityName(name);
+        }
+        if (req.getFacilityCode() != null) f.setFacilityCode(req.getFacilityCode().trim().toUpperCase());
+        if (req.getLayoutType() != null) f.setLayoutType(req.getLayoutType().trim().toUpperCase());
+        if (req.getAddress() != null) f.setAddress(req.getAddress().trim());
+        if (req.getPhone() != null) f.setPhone(req.getPhone().trim());
+        if (req.getStatus() != null) f.setStatus(req.getStatus().trim());
         Facility saved = facilityRepository.save(f);
         return mapFacilityToResponse(saved);
     }
