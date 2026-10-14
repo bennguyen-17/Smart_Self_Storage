@@ -25,6 +25,7 @@ import BomReportsPage from "@/features/bom/pages/BomReportsPage"
 import ManagerPortalPage from "@/features/manager-portal/pages/ManagerPortalPage"
 import AdminPortalPage from "@/features/admin-portal/pages/AdminPortalPage"
 import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
+import PaymentResultPage from "@/pages/PaymentResultPage"
 import { isTokenValid } from "@/lib/apiClient"
 
 // Route Guard độc lập cho Cổng Khách Hàng (không phụ thuộc vào cổng nội bộ)
@@ -220,6 +221,9 @@ function App() {
             </RoleProtectedRoute>
           }
         />
+
+        {/* Kết quả thanh toán từ Cổng VNPay */}
+        <Route path="/payment-result" element={<PaymentResultPage />} />
 
         {/* Đường dẫn lạ tự động quay về trang đăng nhập */}
         <Route path="*" element={<Navigate to="/customer_login" replace />} />
