@@ -68,11 +68,7 @@ public class ManagerShiftService {
             date = LocalDate.now();
         }
 
-        // Đảm bảo có sẵn 3 ca chuẩn 08:00 - 20:00 trong database
         List<Shift> shifts = shiftRepository.findByStatusOrderByStartTimeAsc("ACTIVE");
-        if (shifts.isEmpty()) {
-            shifts = initDefaultShifts();
-        }
 
         List<StaffShift> staffShifts = Collections.emptyList();
         if (facilityId != null) {
@@ -147,14 +143,5 @@ public class ManagerShiftService {
 
         // Trả về lịch cả ngày sau khi lưu
         return getShiftSchedule(facilityId, date);
-    }
-
-    private List<Shift> initDefaultShifts() {
-        List<Shift> defaults = List.of(
-                new Shift(null, "Ca Sáng", LocalTime.of(8, 0), LocalTime.of(12, 0), "ACTIVE"),
-                new Shift(null, "Ca Chiều", LocalTime.of(12, 0), LocalTime.of(16, 0), "ACTIVE"),
-                new Shift(null, "Ca Tối", LocalTime.of(16, 0), LocalTime.of(20, 0), "ACTIVE")
-        );
-        return shiftRepository.saveAll(defaults);
     }
 }

@@ -85,97 +85,109 @@ public class StaffCheckInService {
         if (employee.isEmpty()) {
             return checkInFailure("Employee profile was not found.");
         }
-        if (request == null || request.getCollectedAmount() == null
-                || request.getCollectedAmount().signum() <= 0) {
-            return checkInFailure("A positive collectedAmount is required.");
+        if (request == null) {
+            return checkInFailure("Dữ liệu yêu cầu check-in không được để trống.");
         }
         String paymentMethod = request.getPaymentMethod() == null
-                ? ""
+                ? "CASH"
                 : request.getPaymentMethod().trim().toUpperCase();
         if (!"CASH".equals(paymentMethod) && !"BANK_TRANSFER".equals(paymentMethod)) {
-            return checkInFailure("paymentMethod must be CASH or BANK_TRANSFER.");
+            paymentMethod = "CASH";
         }
 
         Optional<Reservation> reservationOpt = reservationRepository.findByReservationIdForUpdate(reservationId);
         if (reservationOpt.isEmpty()) {
-            return checkInFailure("Reservation was not found.");
+            return checkInFailure("Không tìm thấy thông tin đặt chỗ.");
         }
         Reservation reservation = reservationOpt.get();
-        if (!RESERVATION_CONFIRMED.equals(reservation.getStatus())) {
-            return checkInFailure("Reservation must be CONFIRMED to check in.");
+        if (!"CONFIRMED".equalsIgnoreCase(reservation.getStatus())) {
+            return checkInFailure("Đơn đặt chỗ phải ở trạng thái CONFIRMED (đã hoàn tất cọc online theo BR-16) để làm thủ tục check-in.");
         }
 
         Optional<Contract> contractOpt = contractRepository.findByReservationIdForUpdate(reservationId);
         if (contractOpt.isEmpty()) {
-            return checkInFailure("Contract was not found.");
+            return checkInFailure("Không tìm thấy hợp đồng của đặt chỗ này.");
         }
         Contract contract = contractOpt.get();
-        if (!CONTRACT_PENDING_CHECKIN.equals(contract.getStatus())) {
-            return checkInFailure("Contract must be PENDING_CHECKIN to check in.");
+        if (!CONTRACT_PENDING_CHECKIN.equalsIgnoreCase(contract.getStatus())) {
+            return checkInFailure("Hợp đồng phải ở trạng thái PENDING_CHECKIN để check-in.");
         }
 
         Optional<StorageUnit> unitOpt = storageUnitRepository.findByUnitCodeForUpdate(reservation.getUnitCode());
         if (unitOpt.isEmpty()) {
-            return checkInFailure("Reservation storage unit was not found.");
+            return checkInFailure("Không tìm thấy ô kho tương ứng.");
         }
         StorageUnit unit = unitOpt.get();
 
-        List<Payment> deposits = paymentRepository.findPartiallyPaidDepByContractIdForUpdate(contract.getContractId())
-                .stream()
-                .filter(payment -> "SUCCESS".equalsIgnoreCase(payment.getPaymentStatus()))
-                .toList();
-        if (deposits.size() != 1) {
-            return checkInFailure("Exactly one successful DEP invoice in PARTIALLY_PAID status is required.");
-        }
-        Payment deposit = deposits.get(0);
-
         if (!belongsToFacility(unit, employee.get().getFacilityId())) {
-            return checkInFailure("Reservation was not found in the staff member's facility.");
+            return checkInFailure("Ô kho không thuộc cơ sở do nhân viên quản lý.");
         }
-        if (!"RESERVED".equals(unit.getStatus())) {
-            return checkInFailure("Storage unit must be RESERVED to check in.");
+        if (!"RESERVED".equalsIgnoreCase(unit.getStatus())) {
+            return checkInFailure("Ô kho phải ở trạng thái RESERVED (đã được giữ chỗ cọc theo BR-11, BR-16) để làm thủ tục bàn giao.");
         }
-        BigDecimal remainingAmount = deposit.getRemainingAmount();
-        if (remainingAmount == null || remainingAmount.signum() <= 0) {
-            return checkInFailure("DEP must have a positive remainingAmount.");
-        }
-        if (request.getCollectedAmount().compareTo(remainingAmount) != 0) {
-            return checkInFailure("collectedAmount must equal the DEP remainingAmount of " + remainingAmount + ".");
+
+        List<Payment> deposits = paymentRepository.findDepositInvoicesForUpdate(contract.getContractId());
+        Payment deposit = !deposits.isEmpty() ? deposits.get(0) : null;
+
+        BigDecimal remainingAmount = deposit != null && deposit.getRemainingAmount() != null
+                ? deposit.getRemainingAmount()
+                : BigDecimal.ZERO;
+
+        BigDecimal collectedAmount = request.getCollectedAmount() == null
+                ? BigDecimal.ZERO
+                : request.getCollectedAmount();
+
+        if (remainingAmount.signum() > 0) {
+            if (collectedAmount.compareTo(remainingAmount) != 0) {
+                return checkInFailure("Số tiền thu tại quầy (" + collectedAmount
+                        + ") phải khớp với số tiền còn lại (" + remainingAmount + ").");
+            }
+        } else {
+            collectedAmount = BigDecimal.ZERO;
         }
 
         LocalDateTime now = LocalDateTime.now();
-        BigDecimal oldPaidAmount = deposit.getPaidAmount() == null
-                ? BigDecimal.ZERO
-                : deposit.getPaidAmount();
+        if (deposit != null) {
+            BigDecimal oldPaid = deposit.getPaidAmount() == null
+                    ? BigDecimal.ZERO
+                    : deposit.getPaidAmount();
+            deposit.setPaidAmount(oldPaid.add(collectedAmount));
+            deposit.setRemainingAmount(BigDecimal.ZERO);
+            deposit.setStatus("PAID");
+            deposit.setPaymentStatus("SUCCESS");
+            if (collectedAmount.signum() > 0) {
+                deposit.setPaymentMethod(paymentMethod);
+                deposit.setPaidAt(now);
+            } else if (deposit.getPaidAt() == null) {
+                deposit.setPaidAt(now);
+            }
+            paymentRepository.save(deposit);
+        }
 
-        deposit.setPaidAmount(oldPaidAmount.add(request.getCollectedAmount()));
-        deposit.setRemainingAmount(BigDecimal.ZERO);
-        deposit.setStatus("PAID");
-        deposit.setPaymentStatus("SUCCESS");
-        deposit.setPaymentMethod(paymentMethod);
-        deposit.setPaidAt(now);
-
-        paymentRepository.save(deposit);
         contract.setStatus("ACTIVE");
         contract.setActivatedAt(now);
         unit.setStatus("OCCUPIED");
-        GatePinResult gatePin = gatePinService.generatePin(contract);
+        reservation.setStatus("CONFIRMED");
+
+        reservationRepository.save(reservation);
         contractRepository.save(contract);
         storageUnitRepository.save(unit);
 
+        GatePinResult gatePin = gatePinService.generatePin(contract);
+
         writeActivityLog(staffAccountId, "STAFF_RESERVATION_CHECK_IN",
                 "RES " + reservation.getReservationCode() + " (id=" + reservationId
-                        + "): collected " + request.getCollectedAmount() + " via " + paymentMethod
+                        + "): collected " + collectedAmount + " via " + paymentMethod
                         + "; contract=ACTIVE; unit=OCCUPIED; result=SUCCESS");
 
         sendCheckInEmail(reservation, contract, gatePin.getPin());
 
-        StaffCheckInResponse response = new StaffCheckInResponse(true, "Check-in completed.");
+        StaffCheckInResponse response = new StaffCheckInResponse(true, "Thủ tục check-in và bàn giao kho thành công.");
         response.setReservationId(reservationId);
         response.setReservationCode(reservation.getReservationCode());
         response.setContractStatus(contract.getStatus());
         response.setUnitStatus(unit.getStatus());
-        response.setCollectedAmount(request.getCollectedAmount());
+        response.setCollectedAmount(collectedAmount);
         response.setGatePin(gatePin.getPin());
         response.setRemainingAmount(BigDecimal.ZERO);
         return response;
@@ -205,9 +217,9 @@ public class StaffCheckInService {
                     "Smart Storage - Check-in completed",
                     content
             );
-        } catch (MailException exception) {
-            log.warn("Check-in completed but confirmation email could not be sent to {}",
-                    account.getEmail(), exception);
+        } catch (Exception exception) {
+            log.warn("Check-in completed but confirmation email could not be sent to {}: {}",
+                    account.getEmail(), exception.getMessage());
         }
     }
 

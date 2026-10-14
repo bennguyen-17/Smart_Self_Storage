@@ -87,14 +87,22 @@ public class DepositService {
             return DepositInitiateResponse.error(priceRes.getMessage());
         }
 
-        // Lấy thông tin cơ sở để sinh mã
-        String facilityCode = "FAC";
+        // Lấy thông tin cơ sở chuẩn BR-07 (HN01, HN02, HCM01, ...)
+        String facilityCode = "HN01";
         Optional<Floor> floorOpt = floorRepository.findById(unit.getFloorId());
         if (floorOpt.isPresent()) {
             Optional<Facility> facOpt = facilityRepository.findById(floorOpt.get().getFacilityId());
-            if (facOpt.isPresent()) {
-                facilityCode = "F" + facOpt.get().getFacilityId();
+            if (facOpt.isPresent() && facOpt.get().getFacilityCode() != null && !facOpt.get().getFacilityCode().isBlank()) {
+                facilityCode = facOpt.get().getFacilityCode().replace("-", "").toUpperCase();
             }
+        }
+
+        // Lấy 4 số cuối SĐT khách hàng theo chuẩn BR-15
+        String phoneSuffix = "8899";
+        Optional<Account> accOpt = accountRepository.findAccountByAccountId(request.getAccountId());
+        if (accOpt.isPresent() && accOpt.get().getPhone() != null && accOpt.get().getPhone().length() >= 4) {
+            String fullPhone = accOpt.get().getPhone().trim();
+            phoneSuffix = fullPhone.substring(fullPhone.length() - 4);
         }
 
         // Khóa tạm ô kho sang HOLD
@@ -113,11 +121,11 @@ public class DepositService {
         reservation.setStatus("PENDING");
         reservation.setHoldExpiresAt(LocalDateTime.now().plusMinutes(15)); // Giữ chỗ 15 phút để thanh toán
 
-        // Sinh mã Reservation Code: [Mã Cơ Sở]-[4 số cuối]-[4 ký tự random]
+        // Sinh mã Reservation Code chuẩn BR-15: RES-[Mã Cơ Sở]-[4 số cuối SĐT Khách]-[4 ký tự ngẫu nhiên]
         String resCode;
         do {
             String randomSuffix = String.format("%04X", new Random().nextInt(0xFFFF));
-            resCode = "RES-" + facilityCode + "-" + String.format("%04d", request.getAccountId() % 10000) + "-" + randomSuffix;
+            resCode = "RES-" + facilityCode + "-" + phoneSuffix + "-" + randomSuffix;
         } while (reservationRepository.existsByReservationCode(resCode));
         reservation.setReservationCode(resCode);
         reservation = reservationRepository.save(reservation);

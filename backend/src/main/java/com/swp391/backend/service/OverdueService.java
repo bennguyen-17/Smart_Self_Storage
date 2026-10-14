@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -20,6 +21,7 @@ public class OverdueService {
 
     private static final BigDecimal DAILY_OVERDUE_FEE = new BigDecimal("50000.00");
     private static final DateTimeFormatter INVOICE_DATE_FORMAT = DateTimeFormatter.BASIC_ISO_DATE;
+    private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
     private final ContractRepository contractRepository;
     private final ReservationRepository reservationRepository;
@@ -71,7 +73,7 @@ public class OverdueService {
     }
 
     private void createMissingDailyFines(Contract contract, LocalDate endDate, LocalDate today) {
-        LocalDateTime issuedAt = LocalDateTime.now();
+        LocalDateTime issuedAt = LocalDateTime.now(VIETNAM_ZONE);
         for (LocalDate fineDate = endDate.plusDays(1);
              !fineDate.isAfter(today);
              fineDate = fineDate.plusDays(1)) {
