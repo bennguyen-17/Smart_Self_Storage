@@ -27,6 +27,8 @@ export interface ManagerTab {
   label: string
   /** Tiêu đề đầy đủ của trang (thẻ h1) */
   title: string
+  /** Mô tả ngắn dưới tên trang trên thanh điều hướng dọc */
+  hint: string
   icon: LucideIcon
   /** User story và người phụ trách chức năng của trang */
   stories: string
@@ -40,6 +42,7 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     key: "units",
     label: "Ô kho",
     title: "Quản lý ô kho",
+    hint: "Loại kho & bảo trì",
     icon: WarehouseIcon,
     stories: "US-13, US-14",
     owner: "Vỹ",
@@ -50,6 +53,7 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     key: "reports",
     label: "Báo cáo",
     title: "Báo cáo cơ sở & KPI",
+    hint: "Lấp đầy, doanh thu, SLA",
     icon: ChartColumnIcon,
     stories: "US-33",
     owner: "Vỹ",
@@ -60,6 +64,7 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     key: "customers",
     label: "Khách & hợp đồng",
     title: "Khách hàng & hợp đồng",
+    hint: "Thời hạn & công nợ",
     icon: UsersRoundIcon,
     stories: "US-24, US-25",
     owner: "Vỹ",
@@ -70,6 +75,7 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     key: "workflow",
     label: "Trả kho & công nợ",
     title: "Trả kho & công nợ",
+    hint: "Quá hạn, trả kho, miễn giảm",
     icon: ClipboardListIcon,
     stories: "US-24, US-25, US-26, US-31",
     owner: "Vỹ",
@@ -80,6 +86,7 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     key: "staff",
     label: "Phân công",
     title: "Phân công nhân viên",
+    hint: "Ai trực ca nào",
     icon: UserCheckIcon,
     stories: "US-32",
     owner: "Vỹ",
@@ -90,6 +97,7 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     key: "gate-logs",
     label: "Nhật ký cổng",
     title: "Nhật ký mở cổng thủ công",
+    hint: "Mở bằng Thẻ Master",
     icon: DoorOpenIcon,
     stories: "US-18",
     owner: "Vỹ",

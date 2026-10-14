@@ -14,6 +14,11 @@ const auth = vi.hoisted(() => ({
   signOut: vi.fn(),
 }))
 vi.mock("@/context/AuthContext", () => ({ useAuth: () => auth }))
+// Trang mặc định cần dữ liệu ô kho: test chạy bằng dữ liệu mẫu, không phụ thuộc cấu hình apiClient
+vi.mock("@/lib/apiClient", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/apiClient")>()
+  return { ...actual, isMockMode: () => true }
+})
 
 function LocationProbe() {
   const location = useLocation()
@@ -46,7 +51,7 @@ describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
     expect(screen.getByTestId("location")).toHaveTextContent("/manager/units")
     expect(screen.getByRole("heading", { level: 1, name: "Quản lý ô kho" })).toBeInTheDocument()
     expect(within(desktopNav()).getAllByRole("link")).toHaveLength(6)
-    expect(within(desktopNav()).getByRole("link", { name: "Ô kho" })).toHaveAttribute("aria-current", "page")
+    expect(within(desktopNav()).getByRole("link", { name: /^Ô kho/ })).toHaveAttribute("aria-current", "page")
     expect(await screen.findByText("HN01-F1-M01")).toBeInTheDocument()
   })
 
@@ -63,7 +68,7 @@ describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
     { link: "Phân công", path: "/manager/staff", title: "Phân công nhân viên" },
   ])("bấm '$link' → $path, trang đã có chức năng (không còn ô giữ chỗ)", async ({ link, path, title }) => {
     const user = renderAt("/manager/units")
-    await user.click(within(desktopNav()).getByRole("link", { name: link }))
+    await user.click(within(desktopNav()).getByRole("link", { name: new RegExp(`^${link}`) }))
     expect(screen.getByTestId("location")).toHaveTextContent(path)
     expect(screen.getByRole("heading", { level: 1, name: title })).toBeInTheDocument()
     expect(screen.queryByText(/đang phát triển/i)).not.toBeInTheDocument()
@@ -102,14 +107,31 @@ describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
     expect(screen.getByText("Trang đăng nhập nội bộ")).toBeInTheDocument()
   })
 
-  test("màn hẹp: nút ☰ mở danh sách trang, chọn trang thì tự đóng", async () => {
+  test("màn hẹp: nút mở thanh điều hướng dọc; chọn trang thì tự đóng; Esc cũng đóng", async () => {
     const user = renderAt("/manager/units")
     const toggle = screen.getByRole("button", { name: /mở danh sách trang/i })
     expect(toggle).toHaveAttribute("aria-expanded", "false")
     await user.click(toggle)
-    const mobileNav = screen.getByRole("navigation", { name: /màn hẹp/i })
-    await user.click(within(mobileNav).getByRole("link", { name: "Nhật ký cổng" }))
+    expect(screen.getByRole("button", { name: /đóng danh sách trang/i })).toHaveAttribute("aria-expanded", "true")
+    await user.click(within(desktopNav()).getByRole("link", { name: /^Nhật ký cổng/ }))
     expect(screen.getByTestId("location")).toHaveTextContent("/manager/gate-logs")
-    expect(screen.queryByRole("navigation", { name: /màn hẹp/i })).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /mở danh sách trang/i })).toHaveAttribute("aria-expanded", "false")
+    await user.click(screen.getByRole("button", { name: /mở danh sách trang/i }))
+    await user.keyboard("{Escape}")
+    expect(screen.getByRole("button", { name: /mở danh sách trang/i })).toHaveAttribute("aria-expanded", "false")
+  })
+
+  test("có footer chung của web: bản quyền, chính sách, điều khoản, hotline", () => {
+    renderAt("/manager/units")
+    const footer = screen.getByRole("contentinfo")
+    expect(within(footer).getByText("© 2026 Smart Storage")).toBeInTheDocument()
+    expect(within(footer).getByRole("button", { name: /chính sách bảo mật/i })).toBeInTheDocument()
+    expect(within(footer).getByRole("button", { name: /điều khoản dịch vụ/i })).toBeInTheDocument()
+    expect(within(footer).getByRole("link", { name: /hotline/i })).toHaveAttribute("href", "tel:1900391391")
+  })
+
+  test("mỗi mục trên thanh dọc có dòng mô tả ngắn", () => {
+    renderAt("/manager/units")
+    expect(within(desktopNav()).getByText("Loại kho & bảo trì")).toBeInTheDocument()
   })
 })

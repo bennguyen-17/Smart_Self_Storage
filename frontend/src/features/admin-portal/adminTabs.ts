@@ -17,6 +17,8 @@ export interface AdminTab {
   label: string
   /** Tiêu đề đầy đủ của trang (thẻ h1) */
   title: string
+  /** Mô tả ngắn dưới tên trang trên thanh điều hướng dọc */
+  hint: string
   icon: LucideIcon
   stories: string
   owner: string
@@ -29,6 +31,7 @@ export const ADMIN_TABS: readonly AdminTab[] = [
     key: "users",
     label: "Tài khoản",
     title: "Tài khoản & phân quyền",
+    hint: "Vai trò & cơ sở",
     icon: UsersIcon,
     stories: "US-29",
     owner: "Vỹ",
@@ -39,6 +42,7 @@ export const ADMIN_TABS: readonly AdminTab[] = [
     key: "facilities",
     label: "Chi nhánh",
     title: "Chi nhánh",
+    hint: "Danh sách cơ sở",
     icon: Building2Icon,
     stories: "chưa gán US",
     owner: "Vỹ",
@@ -49,6 +53,7 @@ export const ADMIN_TABS: readonly AdminTab[] = [
     key: "audit",
     label: "Nhật ký hoạt động",
     title: "Nhật ký hoạt động hệ thống",
+    hint: "Thao tác toàn hệ thống",
     icon: ScrollTextIcon,
     stories: "US-30",
     owner: "Vỹ",
