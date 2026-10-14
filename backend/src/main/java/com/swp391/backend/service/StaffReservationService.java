@@ -10,6 +10,7 @@ import com.swp391.backend.dto.StaffReservationLookupResponse;
 import com.swp391.backend.entity.Account;
 import com.swp391.backend.entity.ActivityLog;
 import com.swp391.backend.entity.Contract;
+import com.swp391.backend.entity.CustomerProfile;
 import com.swp391.backend.entity.EmployeeProfile;
 import com.swp391.backend.entity.Payment;
 import com.swp391.backend.entity.Reservation;
@@ -17,6 +18,7 @@ import com.swp391.backend.entity.StorageUnit;
 import com.swp391.backend.repository.ActivityLogRepository;
 import com.swp391.backend.repository.AccountRepository;
 import com.swp391.backend.repository.ContractRepository;
+import com.swp391.backend.repository.CustomerProfileRepository;
 import com.swp391.backend.repository.EmployeeProfileRepository;
 import com.swp391.backend.repository.FloorRepository;
 import com.swp391.backend.repository.PaymentRepository;
@@ -32,6 +34,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
@@ -51,6 +54,7 @@ public class StaffReservationService {
     private final PaymentRepository paymentRepository;
     private final StorageUnitRepository storageUnitRepository;
     private final EmployeeProfileRepository employeeProfileRepository;
+    private final CustomerProfileRepository customerProfileRepository;
     private final FloorRepository floorRepository;
     private final ActivityLogRepository activityLogRepository;
     private final StorageService storageService;
@@ -62,6 +66,7 @@ public class StaffReservationService {
             PaymentRepository paymentRepository,
             StorageUnitRepository storageUnitRepository,
             EmployeeProfileRepository employeeProfileRepository,
+            CustomerProfileRepository customerProfileRepository,
             FloorRepository floorRepository,
             ActivityLogRepository activityLogRepository,
             StorageService storageService) {
@@ -71,6 +76,7 @@ public class StaffReservationService {
         this.paymentRepository = paymentRepository;
         this.storageUnitRepository = storageUnitRepository;
         this.employeeProfileRepository = employeeProfileRepository;
+        this.customerProfileRepository = customerProfileRepository;
         this.floorRepository = floorRepository;
         this.activityLogRepository = activityLogRepository;
         this.storageService = storageService;
@@ -79,7 +85,8 @@ public class StaffReservationService {
     public StaffReservationListResponse listReservations() {
         Integer accountId = getAuthenticatedAccountId();
         if (accountId == null) {
-            return new StaffReservationListResponse(false, "Không tìm thấy tài khoản nhân viên đã xác thực.", List.of());
+            return new StaffReservationListResponse(false, "Không tìm thấy tài khoản nhân viên đã xác thực.",
+                    List.of());
         }
         Optional<EmployeeProfile> employee = employeeProfileRepository.findByAccountId(accountId);
         if (employee.isEmpty()) {
@@ -90,8 +97,8 @@ public class StaffReservationService {
                 .findByFacilityId(employee.get().getFacilityId()).stream()
                 .map(this::toListItem)
                 .sorted(Comparator
-                        .comparing((StaffReservationListItemResponse item) ->
-                                !CONTRACT_PENDING_CHECKIN.equals(item.getContractStatus()))
+                        .comparing((StaffReservationListItemResponse item) -> !CONTRACT_PENDING_CHECKIN
+                                .equals(item.getContractStatus()))
                         .thenComparing(StaffReservationListItemResponse::getCheckInDate,
                                 Comparator.nullsLast(Comparator.naturalOrder())))
                 .toList();
@@ -205,7 +212,8 @@ public class StaffReservationService {
         }
         Payment depositInvoice = depositInvoices.get(0);
 
-        int duration = (int) Math.max(1L, ChronoUnit.DAYS.between(reservation.getStartDate(), reservation.getEndDate()));
+        int duration = (int) Math.max(1L,
+                ChronoUnit.DAYS.between(reservation.getStartDate(), reservation.getEndDate()));
         CalculatePriceResponse newPrice = storageService.calculateRentalPrice(
                 new CalculatePriceRequest(newUnit.getUnitTypeId(), reservation.getRentalType(), duration));
         if (!newPrice.isSuccess()) {
@@ -378,7 +386,8 @@ public class StaffReservationService {
         LocalDateTime now = LocalDateTime.now();
         Payment refund = new Payment();
         refund.setContractId(contractId);
-        refund.setInvoiceNumber("REF-" + contractId + "-" + UUID.randomUUID().toString().replace("-", "").substring(0, 20));
+        refund.setInvoiceNumber(
+                "REF-" + contractId + "-" + UUID.randomUUID().toString().replace("-", "").substring(0, 20));
         refund.setInvoiceType("REF");
         refund.setAmount(refundAmount);
         refund.setPaidAmount(BigDecimal.ZERO);
@@ -412,11 +421,19 @@ public class StaffReservationService {
         item.setReservationId(reservation.getReservationId());
         item.setReservationCode(reservation.getReservationCode());
         item.setReservationStatus(reservation.getStatus());
-        item.setCheckInDate(reservation.getStartDate());
+        item.setCheckInDate(LocalDate.now());
+        item.setReservationStartDate(reservation.getStartDate());
+        item.setReservationEndDate(reservation.getEndDate());
+        item.setRentalDuration(calculateRentalDuration(reservation.getStartDate(), reservation.getEndDate()));
         accountRepository.findAccountByAccountId(reservation.getAccountId()).ifPresent(account -> {
             item.setCustomerName(account.getFullName());
             item.setCustomerPhone(account.getPhone());
+            item.setCustomerEmail(account.getEmail());
         });
+        customerProfileRepository.findByAccountId(reservation.getAccountId()).ifPresent(customer -> {
+            item.setCustomerIdNumber(customer.getIdentityNumber());
+        });
+
         storageUnitRepository.findById(reservation.getUnitCode()).ifPresent(unit -> {
             item.setUnitCode(unit.getUnitCode());
             floorRepository.findById(unit.getFloorId()).ifPresent(floor -> item.setFloorName(floor.getFloorName()));
@@ -440,16 +457,20 @@ public class StaffReservationService {
     }
 
     private void copyListItem(StaffReservationListItemResponse source,
-                              StaffReservationLookupResponse target) {
+            StaffReservationLookupResponse target) {
         target.setReservationId(source.getReservationId());
         target.setReservationCode(source.getReservationCode());
         target.setCustomerName(source.getCustomerName());
+        target.setCustomerIdNumber(source.getCustomerIdNumber());
+        target.setCustomerEmail(source.getCustomerEmail());
         target.setCustomerPhone(source.getCustomerPhone());
         target.setUnitCode(source.getUnitCode());
         target.setFloorName(source.getFloorName());
         target.setReservationStatus(source.getReservationStatus());
         target.setCheckInDate(source.getCheckInDate());
         target.setContractStatus(source.getContractStatus());
+        target.setReservationStartDate(source.getReservationStartDate());
+        target.setReservationEndDate(source.getReservationEndDate());
         target.setDepStatus(source.getDepStatus());
         target.setDepPaymentStatus(source.getDepPaymentStatus());
         target.setDepAmount(source.getDepAmount());
@@ -479,5 +500,26 @@ public class StaffReservationService {
     }
 
     private record LockedUnits(Optional<StorageUnit> oldUnit, Optional<StorageUnit> newUnit) {
+    }
+
+    private String calculateRentalDuration(
+            LocalDate startDate,
+            LocalDate endDate) {
+
+        Period period = Period.between(startDate, endDate);
+
+        if (period.toTotalMonths() < 1) {
+            long days = ChronoUnit.DAYS.between(startDate, endDate);
+            return days + " ngày";
+        }
+
+        long months = period.toTotalMonths();
+        long days = period.getDays();
+
+        if (days == 0) {
+            return months + " tháng";
+        }
+
+        return months + " tháng " + days + " ngày";
     }
 }
