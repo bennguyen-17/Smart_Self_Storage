@@ -1,5 +1,6 @@
 package com.swp391.backend.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,4 +22,13 @@ public interface ContractRepository extends JpaRepository<Contract, Integer> {
     Optional<Contract> findByReservationIdForUpdate(@Param("reservationId") Integer reservationId);
 
     List<Contract> findByStatus(String status);
+
+    @Query("""
+            select contract
+            from Contract contract, Reservation reservation
+            where contract.reservationId = reservation.reservationId
+              and contract.status in ('ACTIVE', 'OVERDUE')
+              and reservation.endDate < :cutoffDate
+            """)
+    List<Contract> findActiveOrOverdueContractsExpiredBefore(@Param("cutoffDate") LocalDate cutoffDate);
 }
