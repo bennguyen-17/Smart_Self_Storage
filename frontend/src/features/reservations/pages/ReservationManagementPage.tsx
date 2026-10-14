@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { useAsyncData } from "@/hooks/useAsyncData"
 
 import { listReservations } from "../api/reservationApi"
+import RefundQueuePanel from "../components/RefundQueuePanel"
 import ReservationDetailDialog from "../components/ReservationDetailDialog"
 import ReservationTable from "../components/ReservationTable"
 import RunNoShowScanButton from "../components/RunNoShowScanButton"
@@ -72,6 +73,11 @@ function ReservationManagementPage() {
             }}
           />
         )}
+
+        <RefundQueuePanel
+          reloadKey={reloadCount}
+          onRefunded={() => setReloadCount((n) => n + 1)}
+        />
 
         <nav
           aria-label="Lọc theo trạng thái đơn"
@@ -137,7 +143,11 @@ function ReservationManagementPage() {
 
         <ReservationDetailDialog
           reservationCode={openCode}
-          onClose={() => setOpenCode(null)}
+          onClose={() => {
+            setOpenCode(null)
+            // Có thể vừa xác nhận hoàn cọc trong chi tiết đơn: làm mới hàng đợi và danh sách
+            setReloadCount((n) => n + 1)
+          }}
         />
       </main>
     </div>

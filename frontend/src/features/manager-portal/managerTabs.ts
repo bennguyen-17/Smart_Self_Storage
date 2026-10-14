@@ -6,15 +6,17 @@ import type { ComponentType } from "react"
 import {
   ChartColumnIcon,
   ClipboardListIcon,
+  DoorOpenIcon,
   UserCheckIcon,
   UsersRoundIcon,
   WarehouseIcon,
   type LucideIcon,
 } from "lucide-react"
 
+import GateLogPanel from "@/features/gate-logs/components/GateLogPanel"
 import UnitManagementPanel from "@/features/unit-management/components/UnitManagementPanel"
 
-export type ManagerTabKey = "reports" | "units" | "customers" | "workflow" | "staff"
+export type ManagerTabKey = "reports" | "units" | "customers" | "workflow" | "staff" | "gate-logs"
 
 export interface ManagerTab {
   key: ManagerTabKey
@@ -68,6 +70,16 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     stories: "US-32",
     owner: "Vy",
     description: "Phân ca và phân công nhân viên hỗ trợ bàn giao, kiểm tra, xử lý sự cố.",
+  },
+  // Không có trong prototype; thêm để Manager xem nhật ký theo AC US-18 (builder quyết định 13/10)
+  {
+    key: "gate-logs",
+    label: "Nhật ký cổng",
+    icon: DoorOpenIcon,
+    stories: "US-18",
+    owner: "Vỹ",
+    description: "Xem và lọc nhật ký mở cổng thủ công bằng Thẻ Master của cơ sở (chỉ đọc).",
+    component: GateLogPanel,
   },
 ]
 

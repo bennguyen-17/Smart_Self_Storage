@@ -64,12 +64,16 @@ export async function changeUnitType(
   return unwrapApiData<ManagerUnit>(body)
 }
 
-/** POST /api/manager/units/{unitCode}/maintenance */
-export async function startMaintenance(ctx: ManagerContext, unitCode: string): Promise<ManagerUnit> {
+/** POST /api/manager/units/{unitCode}/maintenance  body { note }: ghi chú sự cố, BE lưu vào nhật ký */
+export async function startMaintenance(
+  ctx: ManagerContext,
+  unitCode: string,
+  note: string
+): Promise<ManagerUnit> {
   if (isMockMode()) return mockStartMaintenance(unitCode)
   const body = await apiClient.post(
     `/manager/units/${encodeURIComponent(unitCode)}/maintenance`,
-    null,
+    { note: note.trim() },
     { headers: contextHeaders(ctx) }
   )
   return unwrapApiData<ManagerUnit>(body)

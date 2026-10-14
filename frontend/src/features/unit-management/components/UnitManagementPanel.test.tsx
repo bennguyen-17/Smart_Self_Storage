@@ -2,8 +2,15 @@ import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
+import { startMaintenance } from "../api/unitManagementApi"
 import { resetManagerUnitsMock } from "../api/unitManagementApi.mock"
 import UnitManagementPanel from "./UnitManagementPanel"
+
+// Giữ hàm API thật (chạy mock) nhưng theo dõi được panel gọi với tham số gì
+vi.mock("../api/unitManagementApi", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../api/unitManagementApi")>()
+  return { ...actual, startMaintenance: vi.fn(actual.startMaintenance) }
+})
 
 // Mặc định chạy dữ liệu mẫu; một test tắt mock để kiểm trường hợp thiếu cơ sở khi chạy thật
 const env = vi.hoisted(() => ({ mockMode: true }))
@@ -27,6 +34,7 @@ function row(unitCode: string) {
 beforeEach(() => {
   env.mockMode = true
   resetManagerUnitsMock()
+  vi.mocked(startMaintenance).mockClear()
 })
 afterEach(() => localStorage.clear())
 
@@ -69,10 +77,26 @@ describe("UnitManagementPanel: quản lý ô kho tại cơ sở (US-13)", () => 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
   })
 
-  test("đưa ô trống vào bảo trì → trạng thái đổi thành Bảo trì", async () => {
+  test("bảo trì mà chưa ghi chú sự cố → báo lỗi, không gửi, ô giữ nguyên trạng thái", async () => {
     const { user } = await renderPanel()
     await user.click(within(row("HN01-F1-S01")).getByRole("button", { name: /bảo trì/i }))
-    await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: /xác nhận/i }))
+    const dialog = await screen.findByRole("dialog")
+    await user.type(within(dialog).getByLabelText(/ghi chú sự cố/i), "   ")
+    await user.click(within(dialog).getByRole("button", { name: /xác nhận/i }))
+    expect(within(dialog).getByText(/vui lòng ghi chú sự cố/i)).toBeInTheDocument()
+    expect(within(dialog).getByLabelText(/ghi chú sự cố/i)).toHaveAttribute("aria-invalid", "true")
+    expect(startMaintenance).not.toHaveBeenCalled()
+    expect(screen.getByRole("dialog")).toBeInTheDocument()
+    expect(within(row("HN01-F1-S01")).getByText("Còn trống")).toBeInTheDocument()
+  })
+
+  test("đưa ô trống vào bảo trì kèm ghi chú → trạng thái đổi thành Bảo trì", async () => {
+    const { user } = await renderPanel()
+    await user.click(within(row("HN01-F1-S01")).getByRole("button", { name: /bảo trì/i }))
+    const dialog = await screen.findByRole("dialog")
+    await user.type(within(dialog).getByLabelText(/ghi chú sự cố/i), "Khóa cửa bị kẹt")
+    await user.click(within(dialog).getByRole("button", { name: /xác nhận/i }))
+    expect(startMaintenance).toHaveBeenCalledWith(expect.anything(), "HN01-F1-S01", "Khóa cửa bị kẹt")
     await waitFor(() => expect(within(row("HN01-F1-S01")).getByText("Bảo trì / vệ sinh")).toBeInTheDocument(), {
       timeout: 3000,
     })

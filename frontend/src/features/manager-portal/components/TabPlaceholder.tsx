@@ -2,8 +2,11 @@ import { HammerIcon } from "lucide-react"
 
 import type { ManagerTab } from "../managerTabs"
 
+/** Thông tin tối thiểu của một tab; dùng chung cho Manager Portal và Admin Portal */
+export type PortalTabInfo = Pick<ManagerTab, "label" | "icon" | "stories" | "owner" | "description">
+
 /** Ô giữ chỗ cho tab chưa gắn chức năng: nói rõ ai phụ trách để nhóm biết tab này đang chờ ai */
-function TabPlaceholder({ tab }: { tab: ManagerTab }) {
+function TabPlaceholder({ tab }: { tab: PortalTabInfo }) {
   const Icon = tab.icon
   return (
     <section

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { BuildingIcon, FileTextIcon, UserCheckIcon } from "lucide-react"
 import { cn } from "cn"
@@ -36,6 +37,12 @@ function ManagerPortalPage() {
   const isDark = resolveIsDark(theme)
   const activeTab = findManagerTab(params.get("tab"))
   const Panel = activeTab.component
+  const activeTabRef = useRef<HTMLButtonElement>(null)
+
+  // Màn hẹp: thanh tab cuộn ngang, nên đưa tab đang chọn vào tầm nhìn (ví dụ mở thẳng ?tab= của tab cuối)
+  useEffect(() => {
+    activeTabRef.current?.scrollIntoView?.({ block: "nearest", inline: "nearest" })
+  }, [activeTab.key])
 
   const logout = () => {
     signOut()
@@ -89,6 +96,7 @@ function ManagerPortalPage() {
             return (
               <button
                 key={tab.key}
+                ref={active ? activeTabRef : undefined}
                 type="button"
                 aria-current={active ? "page" : undefined}
                 onClick={() => setParams({ tab: tab.key })}
