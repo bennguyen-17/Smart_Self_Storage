@@ -13,7 +13,12 @@ import LandingPage from "@/features/landing/pages/LandingPage"
 import ReservationManagementPage from "@/features/reservations/pages/ReservationManagementPage"
 import StaffCheckinPage from "@/features/checkin/pages/StaffCheckinPage"
 import FloorPlanPage from "@/features/floor-plan/pages/FloorPlanPage"
-import BomPortalPage from "@/features/bom/pages/BomPortalPage"
+import BomLayout from "@/features/bom/layouts/BomLayout"
+import BomDashboardPage from "@/features/bom/pages/BomDashboardPage"
+import BomFacilitiesPage from "@/features/bom/pages/BomFacilitiesPage"
+import BomPricingPage from "@/features/bom/pages/BomPricingPage"
+import BomPoliciesPage from "@/features/bom/pages/BomPoliciesPage"
+import BomReportsPage from "@/features/bom/pages/BomReportsPage"
 import ManagerPortalPage from "@/features/manager-portal/pages/ManagerPortalPage"
 import AdminPortalPage from "@/features/admin-portal/pages/AdminPortalPage"
 import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
@@ -177,15 +182,24 @@ function App() {
           }
         />
 
-        {/* Cổng Ban Giám Đốc: BOM Portal (Role BOM, ADMIN) */}
+        {/* Cổng Ban Giám Đốc: BOM Portal với các Trang Route riêng biệt */}
         <Route
           path="/bom"
           element={
             <RoleProtectedRoute allowedRoles={["BOM", "ADMIN"]}>
-              <BomPortalPage />
+              <BomLayout />
             </RoleProtectedRoute>
           }
-        />
+        >
+          <Route index element={<BomDashboardPage />} />
+          <Route path="facilities" element={<BomFacilitiesPage />} />
+          <Route path="pricing" element={<BomPricingPage />} />
+          <Route path="policies" element={<BomPoliciesPage />} />
+          <Route path="reports" element={<BomReportsPage />} />
+        </Route>
+
+        {/* Alias /bom-portal tự động chuyển tiếp về /bom */}
+        <Route path="/bom-portal" element={<Navigate to="/bom" replace />} />
 
         {/* Cổng Quản Trị Hệ Thống: Admin Portal (Role ADMIN) */}
         <Route
