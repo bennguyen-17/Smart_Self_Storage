@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "gatepin")
+@Table(name = "GatePin")
 public class GatePin {
 
     @Id

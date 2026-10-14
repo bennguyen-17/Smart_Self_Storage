@@ -12,6 +12,12 @@ import StaffCheckinPage from "@/features/checkin/pages/StaffCheckinPage"
 import StaffSupportPage from "@/features/checkin/pages/StaffSupportPage"
 import StaffPinPage from "@/features/checkin/pages/StaffPinPage"
 import FloorPlanPage from "@/features/floor-plan/pages/FloorPlanPage"
+import BomLayout from "@/features/bom/layouts/BomLayout"
+import BomDashboardPage from "@/features/bom/pages/BomDashboardPage"
+import BomFacilitiesPage from "@/features/bom/pages/BomFacilitiesPage"
+import BomPricingPage from "@/features/bom/pages/BomPricingPage"
+import BomPoliciesPage from "@/features/bom/pages/BomPoliciesPage"
+import BomReportsPage from "@/features/bom/pages/BomReportsPage"
 import ManagerPortalPage from "@/features/manager-portal/pages/ManagerPortalPage"
 import AdminPortalPage from "@/features/admin-portal/pages/AdminPortalPage"
 import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
@@ -55,12 +61,36 @@ function App() {
         {/* US-03: Sơ đồ 2D chọn ô kho */}
         <Route path="/floor-plan" element={<FloorPlanPage />} />
 
-        {/* Cổng Khách Hàng (Bảo vệ độc lập bằng token khách hàng) */}
+        {/* Cổng Khách Hàng (Customer Portal - Bảo vệ bằng token khách hàng) */}
         <Route
           path="/portal"
           element={
             <CustomerProtectedRoute>
-              <CustomerPortal />
+              <CustomerPortal initialTab="home" />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/customer"
+          element={
+            <CustomerProtectedRoute>
+              <CustomerPortal initialTab="home" />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/rent"
+          element={
+            <CustomerProtectedRoute>
+              <CustomerPortal initialTab="grid" />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-storage"
+          element={
+            <CustomerProtectedRoute>
+              <CustomerPortal initialTab="access" />
             </CustomerProtectedRoute>
           }
         />
@@ -101,15 +131,24 @@ function App() {
           }
         />
 
-        {/* Cổng Ban Giám Đốc: BOM Portal (Role BOM, ADMIN) */}
+        {/* Cổng Ban Giám Đốc: BOM Portal với các Trang Route riêng biệt */}
         <Route
           path="/bom"
           element={
             <RoleProtectedRoute allowedRoles={["BOM", "ADMIN"]}>
-              <RolePortalPlaceholderPage portalType="BOM" />
+              <BomLayout />
             </RoleProtectedRoute>
           }
-        />
+        >
+          <Route index element={<BomDashboardPage />} />
+          <Route path="facilities" element={<BomFacilitiesPage />} />
+          <Route path="pricing" element={<BomPricingPage />} />
+          <Route path="policies" element={<BomPoliciesPage />} />
+          <Route path="reports" element={<BomReportsPage />} />
+        </Route>
+
+        {/* Alias /bom-portal tự động chuyển tiếp về /bom */}
+        <Route path="/bom-portal" element={<Navigate to="/bom" replace />} />
 
         {/* Cổng Quản Trị Hệ Thống: Admin Portal (Role ADMIN) */}
         <Route

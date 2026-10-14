@@ -22,6 +22,8 @@ public class DashboardService {
     private final PaymentRepository paymentRepository;
     private final SupportTicketRepository supportTicketRepository;
     private final StorageService storageService;
+    private final com.swp391.backend.repository.EmployeeProfileRepository employeeProfileRepository;
+    private final com.swp391.backend.repository.AccountRepository accountRepository;
 
     public DashboardService(FacilityRepository facilityRepository,
                             FloorRepository floorRepository,
@@ -30,7 +32,9 @@ public class DashboardService {
                             ReservationRepository reservationRepository,
                             PaymentRepository paymentRepository,
                             SupportTicketRepository supportTicketRepository,
-                            StorageService storageService) {
+                            StorageService storageService,
+                            com.swp391.backend.repository.EmployeeProfileRepository employeeProfileRepository,
+                            com.swp391.backend.repository.AccountRepository accountRepository) {
         this.facilityRepository = facilityRepository;
         this.floorRepository = floorRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -39,6 +43,8 @@ public class DashboardService {
         this.paymentRepository = paymentRepository;
         this.supportTicketRepository = supportTicketRepository;
         this.storageService = storageService;
+        this.employeeProfileRepository = employeeProfileRepository;
+        this.accountRepository = accountRepository;
     }
 
     /**
@@ -63,9 +69,9 @@ public class DashboardService {
 
         long totalUnits = allUnits.size();
         long availableUnits = allUnits.stream().filter(u -> "AVAILABLE".equalsIgnoreCase(u.getStatus())).count();
-        long occupiedUnits = allUnits.stream().filter(u -> "OCCUPIED".equalsIgnoreCase(u.getStatus())).count();
+        long occupiedUnits = allUnits.stream().filter(u -> "OCCUPIED".equalsIgnoreCase(u.getStatus()) || "RENTED".equalsIgnoreCase(u.getStatus())).count();
         long reservedUnits = allUnits.stream().filter(u -> "RESERVED".equalsIgnoreCase(u.getStatus()) || "HOLD".equalsIgnoreCase(u.getStatus())).count();
-        long maintenanceUnits = allUnits.stream().filter(u -> "UNDER_MAINTENANCE".equalsIgnoreCase(u.getStatus())).count();
+        long maintenanceUnits = allUnits.stream().filter(u -> "UNDER_MAINTENANCE".equalsIgnoreCase(u.getStatus()) || "MAINTENANCE".equalsIgnoreCase(u.getStatus())).count();
 
         double occupancyRate = totalUnits > 0 ? ((double) occupiedUnits / totalUnits) * 100.0 : 0.0;
 
@@ -151,9 +157,29 @@ public class DashboardService {
         }).count();
 
         ManagerDashboardResponse resp = new ManagerDashboardResponse();
-        resp.setFacilityId(facilityId);
-        resp.setFacilityName(fac.getFacilityName());
-        resp.setFacilityCode(facilityCode);
+        com.swp391.backend.dto.FacilityResponse mappedFac = storageService.mapFacilityToResponse(fac);
+        resp.setFacilityName(mappedFac.getFacilityName());
+        resp.setFacilityCode(mappedFac.getFacilityCode());
+
+        // Lấy thông tin Quản lý chi nhánh (Manager) từ DB
+        List<com.swp391.backend.entity.EmployeeProfile> employees = employeeProfileRepository.findAll();
+        Optional<com.swp391.backend.entity.EmployeeProfile> mgrEmp = employees.stream()
+                .filter(e -> facilityId.equals(e.getFacilityId()))
+                .filter(e -> {
+                    Optional<com.swp391.backend.entity.Account> acc = accountRepository.findAccountByAccountId(e.getAccountId());
+                    return acc.isPresent() && Long.valueOf(3L).equals(acc.get().getRoleId());
+                })
+                .findFirst();
+
+        if (mgrEmp.isPresent()) {
+            accountRepository.findAccountByAccountId(mgrEmp.get().getAccountId()).ifPresent(acc -> {
+                String rawName = acc.getFullName() != null ? acc.getFullName() : "";
+                String cleanName = rawName.replaceAll("\\s*\\([A-Z0-9-]+\\)\\s*$", "").trim();
+                resp.setManagerName(cleanName.isEmpty() ? rawName : cleanName);
+                resp.setManagerEmail(acc.getEmail());
+                resp.setManagerPhone(acc.getPhone());
+            });
+        }
 
         resp.setTotalUnits(totalUnits);
         resp.setAvailableUnits(availableUnits);

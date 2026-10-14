@@ -16,18 +16,26 @@ export default function SupportTicketModal({ onClose }) {
     const fetchContracts = async () => {
       const res = await getMyContracts();
       if (res.success && res.data) {
-        // Lấy các hợp đồng đang có hiệu lực hoặc chờ check-in
-        const activeUnits = res.data.filter((c: any) => c.status === 'ACTIVE' || c.status === 'PENDING_CHECKIN');
+        // Chỉ lấy các hợp đồng đang có hiệu lực ACTIVE
+        const activeUnits = res.data.filter((c: any) => c.status === 'ACTIVE');
         setMyUnits(activeUnits);
         if (activeUnits.length > 0) {
           setUnitSelect(activeUnits[0].unitCode);
+        } else {
+          setUnitSelect('');
         }
       }
     };
     fetchContracts();
   }, []);
 
+  const hasActiveContracts = myUnits.length > 0;
+
   const handleSubmit = async () => {
+    if (!hasActiveContracts) {
+      alert("Chỉ những tài khoản có hợp đồng đang có hiệu lực (ACTIVE) mới có thể gửi yêu cầu hỗ trợ kỹ thuật!");
+      return;
+    }
     if (!description.trim()) {
       alert("Vui lòng nhập mô tả chi tiết sự cố!");
       return;
@@ -130,30 +138,53 @@ export default function SupportTicketModal({ onClose }) {
           <div className="space-y-1">
             <label className="block font-bold text-slate-900 dark:text-white">2. Ô kho cần hỗ trợ:</label>
             <select
+              disabled={!hasActiveContracts}
               value={unitSelect}
               onChange={(e) => setUnitSelect(e.target.value)}
-              className="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+              className={`w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none ${
+                !hasActiveContracts ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              {myUnits.map((unit, index) => (
-                <option key={unit.unitCode} value={unit.unitCode}>
-                  Kho {index + 1}: {unit.unitCode} ({unit.branchName || unit.branchCode})
-                </option>
-              ))}
-              <option value="GATE">Cổng chính ra vào tòa nhà 24/7</option>
+              {!hasActiveContracts ? (
+                <option value="">Không có ô kho nào đang hoạt động (ACTIVE)</option>
+              ) : (
+                <>
+                  <option value="GATE">Cổng chính ra vào tòa nhà 24/7</option>
+                  {myUnits.map((unit, index) => (
+                    <option key={unit.unitCode} value={unit.unitCode}>
+                      Kho {index + 1}: {unit.unitCode} ({unit.branchName || unit.branchCode})
+                    </option>
+                  ))}
+                </>
+              )}
             </select>
           </div>
 
           <div className="space-y-1">
             <label className="block font-bold text-slate-900 dark:text-white">3. Mô tả chi tiết tình trạng: <span className="text-red-500">*</span></label>
             <textarea
+              disabled={!hasActiveContracts}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              placeholder="Ví dụ: Bàn phím số bị liệt, hoặc đèn trong ô kho không sáng..."
-              className="w-full text-xs p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none resize-none font-medium"
+              placeholder={
+                !hasActiveContracts
+                  ? "Chức năng gửi ticket bị khóa do chưa có hợp đồng ACTIVE..."
+                  : "Ví dụ: Bàn phím số bị liệt, hoặc đèn trong ô kho không sáng..."
+              }
+              className={`w-full text-xs p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none resize-none font-medium ${
+                !hasActiveContracts ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             />
           </div>
         </div>
+
+        {!hasActiveContracts && (
+          <div className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-600 dark:text-amber-400 text-xs font-medium flex items-start gap-2 mt-2">
+            <i className="fa-solid fa-triangle-exclamation mt-0.5"></i>
+            <p>Tài khoản chưa có hợp đồng thuê kho nào đang có hiệu lực (ACTIVE). Chức năng gửi ticket hỗ trợ kỹ thuật chỉ áp dụng cho khách hàng đang có hợp đồng hoạt động.</p>
+          </div>
+        )}
 
         {isOutsideWorkingHours && (
           <div className="p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-xs font-medium flex items-start gap-2 mt-2">
@@ -173,11 +204,17 @@ export default function SupportTicketModal({ onClose }) {
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={submitting || isOutsideWorkingHours}
+            disabled={submitting || isOutsideWorkingHours || !hasActiveContracts}
             className="flex-1 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-black text-xs py-3 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 cursor-pointer"
           >
             <i className="fa-solid fa-paper-plane text-xs"></i>
-            <span>{submitting ? 'Đang gửi...' : 'Gửi Yêu Cầu Ngay'}</span>
+            <span>
+              {submitting
+                ? 'Đang gửi...'
+                : !hasActiveContracts
+                ? 'Yêu cầu hợp đồng ACTIVE'
+                : 'Gửi Yêu Cầu Ngay'}
+            </span>
           </button>
         </div>
       </div>

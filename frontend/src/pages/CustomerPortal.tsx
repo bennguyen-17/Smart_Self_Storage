@@ -1,40 +1,147 @@
 import React, { useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
+import { Warehouse, Boxes, KeyRound, Headset, Home } from 'lucide-react';
 import Header from '@/components/common/Header';
 import StorageMap2D from '@/features/portal/components/StorageMap2D';
 import BookingSidebar from '@/features/portal/components/BookingSidebar';
 import MyStorageTab from '@/features/portal/components/MyStorageTab';
+import GatePinTab from '@/features/portal/components/GatePinTab';
+import SupportTab from '@/features/portal/components/SupportTab';
 import DepositPaymentFlow from '@/features/portal/components/modals/DepositPaymentFlow';
 import ExtendPaymentFlow from '@/features/portal/components/modals/ExtendPaymentFlow';
 import CustomerProfileModal from '@/features/portal/components/modals/CustomerProfileModal';
-import SupportTicketModal from '@/features/portal/components/modals/SupportTicketModal';
+import RentStorageWizardModal from '@/features/portal/components/modals/RentStorageWizardModal';
 import ExtendContractModal from '@/features/portal/components/modals/ExtendContractModal';
-import ChatbotWidget from '@/components/common/ChatbotWidget';
+import GatePinModal from '@/features/portal/components/modals/GatePinModal';
+import SupportTicketModal from '@/features/portal/components/modals/SupportTicketModal';
+
 import SiteFooter from '@/components/common/SiteFooter';
 
 import { useTheme } from '@/components/common/theme-provider';
 import { getCurrentCustomerProfile } from '@/features/portal/services/customerService';
 import { getBranches } from '@/features/portal/services/facilityService';
 
-export default function CustomerPortal() {
+type TabType = 'home' | 'rent' | 'my-storage' | 'gate-pin' | 'support';
+
+interface CustNavItem {
+  id: 'rent' | 'my-storage' | 'gate-pin' | 'support';
+  label: string;
+  subtitle: string;
+  icon: React.ComponentType<{ className?: string }>;
+  theme: {
+    cardBg: string;
+    border: string;
+    shadow: string;
+    iconBg: string;
+    textHover: string;
+    badge: string;
+  };
+}
+
+const CUSTOMER_NAV_ITEMS: CustNavItem[] = [
+  {
+    id: 'rent',
+    label: 'Thuê kho',
+    subtitle: 'Tìm & đặt ô kho 2D',
+    icon: Warehouse,
+    theme: {
+      cardBg: 'bg-slate-50/90 hover:bg-slate-100/95 dark:bg-slate-900/85 dark:hover:bg-slate-800/90',
+      border: 'border border-slate-200/80 hover:border-blue-400/60 hover:ring-2 hover:ring-blue-400/15 dark:border-slate-800 dark:hover:border-cyan-500/60 dark:hover:ring-2 dark:hover:ring-cyan-500/20',
+      shadow: 'shadow-lg shadow-slate-300/30 hover:shadow-xl hover:shadow-blue-500/20 dark:shadow-[0_10px_30px_rgba(0,0,0,0.6)] dark:hover:shadow-[0_15px_35px_rgba(6,182,212,0.2)]',
+      iconBg: 'bg-gradient-to-tr from-blue-600 to-sky-500 text-white shadow-md shadow-blue-600/30',
+      textHover: 'group-hover:text-blue-600 dark:group-hover:text-cyan-400',
+      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/60 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30',
+    },
+  },
+  {
+    id: 'my-storage',
+    label: 'Kho của tôi',
+    subtitle: 'Quản lý hợp đồng & đồ',
+    icon: Boxes,
+    theme: {
+      cardBg: 'bg-slate-50/90 hover:bg-slate-100/95 dark:bg-slate-900/85 dark:hover:bg-slate-800/90',
+      border: 'border border-slate-200/80 hover:border-blue-400/60 hover:ring-2 hover:ring-blue-400/15 dark:border-slate-800 dark:hover:border-cyan-500/60 dark:hover:ring-2 dark:hover:ring-cyan-500/20',
+      shadow: 'shadow-lg shadow-slate-300/30 hover:shadow-xl hover:shadow-blue-500/20 dark:shadow-[0_10px_30px_rgba(0,0,0,0.6)] dark:hover:shadow-[0_15px_35px_rgba(6,182,212,0.2)]',
+      iconBg: 'bg-gradient-to-tr from-emerald-600 to-teal-400 text-white shadow-md shadow-emerald-600/30',
+      textHover: 'group-hover:text-blue-600 dark:group-hover:text-cyan-400',
+      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/60 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30',
+    },
+  },
+  {
+    id: 'gate-pin',
+    label: 'Mã PIN mở cửa',
+    subtitle: 'Mở cửa tự động 24/7',
+    icon: KeyRound,
+    theme: {
+      cardBg: 'bg-slate-50/90 hover:bg-slate-100/95 dark:bg-slate-900/85 dark:hover:bg-slate-800/90',
+      border: 'border border-slate-200/80 hover:border-blue-400/60 hover:ring-2 hover:ring-blue-400/15 dark:border-slate-800 dark:hover:border-cyan-500/60 dark:hover:ring-2 dark:hover:ring-cyan-500/20',
+      shadow: 'shadow-lg shadow-slate-300/30 hover:shadow-xl hover:shadow-blue-500/20 dark:shadow-[0_10px_30px_rgba(0,0,0,0.6)] dark:hover:shadow-[0_15px_35px_rgba(6,182,212,0.2)]',
+      iconBg: 'bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/30',
+      textHover: 'group-hover:text-blue-600 dark:group-hover:text-cyan-400',
+      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/60 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30',
+    },
+  },
+  {
+    id: 'support',
+    label: 'Gửi hỗ trợ',
+    subtitle: 'Gửi ticket & giải đáp',
+    icon: Headset,
+    theme: {
+      cardBg: 'bg-slate-50/90 hover:bg-slate-100/95 dark:bg-slate-900/85 dark:hover:bg-slate-800/90',
+      border: 'border border-slate-200/80 hover:border-blue-400/60 hover:ring-2 hover:ring-blue-400/15 dark:border-slate-800 dark:hover:border-cyan-500/60 dark:hover:ring-2 dark:hover:ring-cyan-500/20',
+      shadow: 'shadow-lg shadow-slate-300/30 hover:shadow-xl hover:shadow-blue-500/20 dark:shadow-[0_10px_30px_rgba(0,0,0,0.6)] dark:hover:shadow-[0_15px_35px_rgba(6,182,212,0.2)]',
+      iconBg: 'bg-gradient-to-tr from-violet-600 to-purple-500 text-white shadow-md shadow-violet-600/30',
+      textHover: 'group-hover:text-blue-600 dark:group-hover:text-cyan-400',
+      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/60 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30',
+    },
+  },
+];
+
+
+const CUST_NAV_TRANSITION = {
+  type: 'spring' as const,
+  stiffness: 110,
+  damping: 20,
+  mass: 1.1,
+};
+
+interface CustomerPortalProps {
+  initialTab?: 'home' | 'grid' | 'access';
+}
+
+export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalProps = {}) {
   const { theme, setTheme } = useTheme();
   const isDarkMode = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  const [activeTab, setActiveTab] = useState('grid'); // 'grid' | 'access'
+
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    if (initialTab === 'grid') return 'rent';
+    if (initialTab === 'access') return 'my-storage';
+    return 'home';
+  });
+
+  useEffect(() => {
+    // Chuyển sang Light mode theo yêu cầu giao diện sáng
+    if (localStorage.getItem('theme') === 'dark') {
+      setTheme('light');
+    }
+  }, []);
+
+  const [showRentModal, setShowRentModal] = useState(false);
+  const [showGatePinModal, setShowGatePinModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
+
   const [facility, setFacility] = useState('HN-01');
   const [currentFloor, setCurrentFloor] = useState(1);
-
-  // Mặc định chưa chọn ô kho nào (null)
-  const [selectedUnit, setSelectedUnit] = useState(null);
+  const [selectedUnit, setSelectedUnit] = useState<any>(null);
 
   // Modals
   const [showDepositFlow, setShowDepositFlow] = useState(false);
   const [showExtendPaymentFlow, setShowExtendPaymentFlow] = useState(false);
   const [extendPaymentData, setExtendPaymentData] = useState<any>(null);
-  const [depositBookingData, setDepositBookingData] = useState(null);
+  const [depositBookingData, setDepositBookingData] = useState<any>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showSupportModal, setShowSupportModal] = useState(false);
   const [showExtendModal, setShowExtendModal] = useState(false);
-  const [extendUnitContext, setExtendUnitContext] = useState(null);
+  const [extendUnitContext, setExtendUnitContext] = useState<any>(null);
 
   const [mapRefreshTrigger, setMapRefreshTrigger] = useState(0);
 
@@ -68,10 +175,14 @@ export default function CustomerPortal() {
       fetchPortalData();
     };
     window.addEventListener('customer_profile_updated', handleProfileUpdate);
+    window.addEventListener('storage_facilities_updated', handleProfileUpdate);
+    window.addEventListener('storage', handleProfileUpdate);
 
     return () => {
       isMounted = false;
       window.removeEventListener('customer_profile_updated', handleProfileUpdate);
+      window.removeEventListener('storage_facilities_updated', handleProfileUpdate);
+      window.removeEventListener('storage', handleProfileUpdate);
     };
   }, []);
 
@@ -79,9 +190,7 @@ export default function CustomerPortal() {
   const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
   const parsedUser = storedUser ? (() => { try { return JSON.parse(storedUser); } catch(e) { return null; } })() : null;
   const customerName = customerProfile?.fullName || parsedUser?.fullName || 'Khách Hàng';
-  const customerAvatar = customerProfile?.avatarText || (customerName !== 'Khách Hàng' ? customerName.trim().split(' ').pop()?.substring(0, 2).toUpperCase() : null);
 
-  // Toggle giữa Sáng và Tối thống nhất hệ thống
   const toggleTheme = () => {
     setTheme(isDarkMode ? 'light' : 'dark');
   };
@@ -107,12 +216,12 @@ export default function CustomerPortal() {
     setShowDepositFlow(true);
   };
 
-  const handleOpenExtendModal = (unitInfo) => {
+  const handleOpenExtendModal = (unitInfo: any) => {
     setExtendUnitContext(unitInfo);
     setShowExtendModal(true);
   };
 
-  const handleConfirmExtendPayment = (extData) => {
+  const handleConfirmExtendPayment = (extData: any) => {
     setShowExtendModal(false);
     setDepositBookingData({
       facilityName: `SmartStorage ${extData.unitCode}`,
@@ -134,141 +243,307 @@ export default function CustomerPortal() {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col ${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'}`}>
-      {/* Header */}
+    <div className={`relative min-h-screen flex flex-col transition-colors ${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'}`}>
+      {/* Background Image with Adaptive Light / Dark Cyber Gradient Overlay */}
+      <div 
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0"
+        style={{ backgroundImage: `url('/images/tech-storage-bg.jpg')` }}
+      >
+        <div className={`absolute inset-0 backdrop-blur-[2px] transition-colors ${
+          isDarkMode 
+            ? 'bg-gradient-to-b from-slate-950/90 via-[#031525]/70 to-slate-950/95' 
+            : 'bg-gradient-to-b from-slate-100/80 via-sky-100/50 to-slate-200/75'
+        }`} />
+      </div>
+
+      {/* Header with integrated Tab Navbar */}
       <Header
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
         onOpenProfileModal={() => setShowProfileModal(true)}
-      />
-
-      {/* Main Body Container: Optimal 1280px max width & vertical centering for all screens */}
-      <main className="w-full max-w-[1280px] mx-auto px-3 sm:px-5 lg:px-6 flex-1 flex flex-col justify-center py-3.5 sm:py-5">
-        <div className="space-y-3 sm:space-y-3.5 w-full">
-          {/* CUSTOMER DASHBOARD HEADER BANNER */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white dark:bg-slate-900 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3 w-full"
-          >
-            {/* AVATAR & GREETING (Lấy động từ Database) */}
-            <div className="flex items-center space-x-3 shrink-0">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xs sm:text-sm shadow-sm shadow-blue-500/25 shrink-0 tracking-wider">
-                {customerAvatar || <i className="fa-solid fa-user-check"></i>}
-              </div>
-              <div>
-                <h1 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
-                  Xin chào, <span className="text-blue-600">{customerName}</span>!
-                </h1>
-                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">Hệ thống kho tự quản thông minh 24/7</p>
-              </div>
-            </div>
-
-            {/* TABS */}
-            <div className="inline-flex items-center p-0.5 sm:p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 gap-1 w-full sm:w-auto overflow-x-auto">
-              <button
-                type="button"
-                onClick={() => setActiveTab('grid')}
-                className={`px-3 py-1.5 rounded-lg font-bold text-xs flex items-center space-x-1.5 transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                  activeTab === 'grid'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-700'
-                }`}
-              >
-                <i className="fa-solid fa-map-location-dot text-xs"></i>
-                <span>Sơ đồ 2D & Thuê kho</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('access')}
-                className={`px-3 py-1.5 rounded-lg font-bold text-xs flex items-center space-x-1.5 transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                  activeTab === 'access'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-700'
-                }`}
-              >
-                <i className="fa-solid fa-boxes-stacked text-xs"></i>
-                <span>Kho của tôi & Mã PIN Cửa chính</span>
-              </button>
-            </div>
-
-            {/* SUPPORT TICKET BUTTON */}
-            <div className="flex items-center shrink-0">
-              <button
-                type="button"
-                onClick={() => setShowSupportModal(true)}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xs transition-transform duration-200 hover:scale-103 flex items-center space-x-1.5 cursor-pointer"
-              >
-                <i className="fa-solid fa-headset text-xs"></i>
-                <span>Gửi Hỗ Trợ / Báo Sự Cố</span>
-              </button>
-            </div>
-          </motion.div>
-
-          {/* TAB CONTENT WITH ANIMATION */}
-          <AnimatePresence mode="wait">
-            {activeTab === 'grid' ? (
+        onGoHome={() => setActiveTab('home')}
+        isSticky={true}
+        centerContent={
+          <AnimatePresence>
+            {activeTab !== 'home' && (
               <motion.div
-                key="grid-tab"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-                className="space-y-4"
+                key="header-nav-pill"
+                initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                className="flex items-center gap-1 sm:gap-1.5 p-1 bg-slate-100/90 dark:bg-slate-800/90 rounded-2xl border border-slate-200/90 dark:border-slate-700/80 shadow-xs backdrop-blur-md overflow-x-auto no-scrollbar"
               >
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start w-full">
-                  {/* Sơ đồ kho 2D */}
-                  <div className="lg:col-span-8">
-                    <StorageMap2D
-                      facility={facility}
-                      refreshTrigger={mapRefreshTrigger}
-                      onFacilityChange={(fac) => {
-                        setFacility(fac);
-                        setSelectedUnit(null);
-                      }}
-                      currentFloor={currentFloor}
-                      onSelectFloor={(fl) => {
-                        setCurrentFloor(fl);
-                        setSelectedUnit(null);
-                      }}
-                      selectedUnit={selectedUnit}
-                      onSelectUnit={setSelectedUnit}
-                    />
-                  </div>
+                {/* Nút Về Trang Chủ */}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('home')}
+                  title="Về Trang Chủ"
+                  className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-blue-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition cursor-pointer shrink-0"
+                >
+                  <Home className="size-4 sm:size-4.5" />
+                </button>
 
-                  {/* Sidebar Giỏ hàng & Đặt cọc */}
-                  <div className="lg:col-span-4 sticky top-4">
-                    <BookingSidebar
-                      selectedUnit={selectedUnit}
-                      onOpenDepositModal={handleOpenDepositModal}
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="access-tab"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-              >
-                <MyStorageTab onOpenExtendModal={handleOpenExtendModal} />
+                {/* 4 Nút mục con */}
+                {CUSTOMER_NAV_ITEMS.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setActiveTab(item.id)}
+                      className={`px-3 sm:px-4 py-1.5 rounded-xl font-bold text-xs sm:text-sm tracking-wide flex items-center gap-1.5 whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                        isActive
+                          ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30 dark:bg-cyan-500 dark:text-slate-950 dark:shadow-cyan-400/30'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-700/70'
+                      }`}
+                    >
+                      <Icon
+                        className={`size-4 shrink-0 ${
+                          isActive ? 'text-white dark:text-slate-950' : 'text-slate-500 dark:text-slate-400'
+                        }`}
+                      />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
-      </main>
+        }
+      />
+
+      {/* Main Container */}
+      <LayoutGroup id="customer-portal-nav">
+        <main className="relative z-10 flex-1 flex flex-col w-full">
+          {/* 1. KHU VỰC HERO (TIÊU ĐỀ + CHÀO HỎI): Thu gọn mượt mà khi bấm vào các mục */}
+          <AnimatePresence>
+            {activeTab === 'home' && (
+              <motion.div
+                key="hero-dashboard-headline"
+                initial={{ opacity: 0, height: 0, scale: 0.95 }}
+                animate={{ opacity: 1, height: 'auto', scale: 1 }}
+                exit={{ opacity: 0, height: 0, scale: 0.95, y: -20 }}
+                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-hidden flex flex-col items-center pt-10 sm:pt-14 pb-2 text-center"
+              >
+                {/* Main Headline */}
+                <div className="relative flex flex-col items-center select-none w-full max-w-5xl">
+                  {/* Glowing ambient radial aura behind headline */}
+                  <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-full max-w-3xl h-40 bg-gradient-to-r from-blue-500/20 via-cyan-400/25 to-indigo-500/20 blur-3xl rounded-full pointer-events-none -z-10" />
+
+                  <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight uppercase text-center leading-[1.15]">
+                    <span className="text-slate-900 dark:text-white drop-shadow-[0_2px_12px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
+                      HỆ THỐNG KHO TỰ QUẢN
+                    </span>
+                    <br />
+                    <span className="text-slate-900 dark:text-white drop-shadow-[0_2px_12px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
+                      THÔNG MINH{' '}
+                    </span>
+                    <span className="text-blue-600 dark:text-cyan-400 drop-shadow-[0_4px_16px_rgba(37,99,235,0.4)] dark:drop-shadow-[0_4px_20px_rgba(6,182,212,0.6)]">
+                      24/7
+                    </span>
+                  </h1>
+                </div>
+
+
+                {/* Customer Greeting */}
+                <div className="flex items-center justify-center mt-6 sm:mt-8">
+                  <div className="inline-flex items-center gap-3 px-6 py-2.5 sm:px-7 sm:py-3 rounded-full bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xl border-2 border-blue-400/70 dark:border-cyan-400/70 shadow-xl shadow-blue-500/15 text-sm sm:text-base font-bold text-slate-700 dark:text-slate-200">
+                    <span className="flex h-3 w-3 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </span>
+                    <span>Xin chào,</span>
+                    <span className="text-blue-600 dark:text-cyan-400 font-black text-base sm:text-lg tracking-wide">
+                      {customerName}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* 2. HÀNG 4 NÚT DASHBOARD (CHỈ HIỂN THỊ KHI Ở TRANG CHỦ) */}
+          <AnimatePresence>
+            {activeTab === 'home' && (
+              <motion.div
+                key="home-action-cards"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+                className="w-full max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex justify-center"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7 lg:gap-8 w-full">
+                  {CUSTOMER_NAV_ITEMS.map((item) => {
+                    const Icon = item.icon;
+                    const theme = item.theme;
+
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setActiveTab(item.id)}
+                        className={`transition-all duration-300 cursor-pointer flex items-center p-5 sm:p-6 lg:p-7 rounded-3xl backdrop-blur-xl border tracking-wide hover:scale-[1.04] text-center flex-col justify-between min-h-[180px] sm:min-h-[210px] ${theme.cardBg} ${theme.border} ${theme.shadow}`}
+                      >
+                        <span className={`shrink-0 flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl group-hover:scale-110 transition-transform ${theme.iconBg}`}>
+                          <Icon className="size-7 sm:size-8" />
+                        </span>
+
+                        <div className="flex flex-col items-center mt-5 w-full">
+                          <span className={`font-black text-xl sm:text-2xl lg:text-3xl text-slate-900 dark:text-white transition-colors whitespace-nowrap ${theme.textHover}`}>
+                            {item.label}
+                          </span>
+
+                          <span className={`mt-2.5 text-xs sm:text-sm font-bold px-3.5 py-1 rounded-full ${theme.badge}`}>
+                            {item.subtitle}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* 3. PHÂN TRANG CHI TIẾT TỪNG MỤC (PAGE TAB CONTENT) */}
+          <AnimatePresence mode="wait">
+            {activeTab !== 'home' && (
+              <motion.div
+                key={`tab-content-active-${activeTab}`}
+                initial={{ opacity: 0, y: 25 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+                className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1"
+              >
+                {/* PHÂN TRANG 1: THUÊ KHO */}
+                {activeTab === 'rent' && (
+                  <motion.div
+                    key="tab-rent"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    className="space-y-6"
+                  >
+                    {/* Bản đồ 2D + Sidebar đặt cọc */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
+                      <div className="lg:col-span-8">
+                        <StorageMap2D
+                          facility={facility}
+                          refreshTrigger={mapRefreshTrigger}
+                          onFacilityChange={(fac) => {
+                            setFacility(fac);
+                            setSelectedUnit(null);
+                          }}
+                          currentFloor={currentFloor}
+                          onSelectFloor={(fl) => {
+                            setCurrentFloor(fl);
+                            setSelectedUnit(null);
+                          }}
+                          selectedUnit={selectedUnit}
+                          onSelectUnit={setSelectedUnit}
+                        />
+                      </div>
+
+                      <div className="lg:col-span-4 sticky top-20">
+                        <BookingSidebar
+                          selectedUnit={selectedUnit}
+                          onOpenDepositModal={handleOpenDepositModal}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* PHÂN TRANG 2: KHO CỦA TÔI */}
+                {activeTab === 'my-storage' && (
+                  <motion.div
+                    key="tab-my-storage"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    className="w-full"
+                  >
+                    <MyStorageTab
+                      onOpenExtendModal={handleOpenExtendModal}
+                      onOpenPinModal={() => setActiveTab('gate-pin')}
+                    />
+                  </motion.div>
+                )}
+
+                {/* PHÂN TRANG 3: MÃ PIN MỞ CỬA */}
+                {activeTab === 'gate-pin' && (
+                  <motion.div
+                    key="tab-gate-pin"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    className="w-full"
+                  >
+                    <GatePinTab />
+                  </motion.div>
+                )}
+
+                {/* PHÂN TRANG 4: GỬI HỖ TRỢ */}
+                {activeTab === 'support' && (
+                  <motion.div
+                    key="tab-support"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    className="w-full"
+                  >
+                    <SupportTab />
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
+      </LayoutGroup>
 
       {/* Footer for Customer Portal */}
-      <SiteFooter />
+      <div className="relative z-10">
+        <SiteFooter />
+      </div>
 
-      {/* Floating Chatbot AI 24/7 Widget */}
-      <ChatbotWidget />
 
-      {/* Modals */}
+      {/* 1. Modal Thuê kho 5 bước (Dạng Popup Wizard tiện dụng khi người dùng bấm mở wizard) */}
+      <RentStorageWizardModal
+        isOpen={showRentModal}
+        onClose={() => setShowRentModal(false)}
+        facility={facility}
+        onFacilityChange={setFacility}
+        branches={branches}
+        onSuccess={() => {
+          setShowRentModal(false);
+          setMapRefreshTrigger((prev) => prev + 1);
+          setActiveTab('my-storage');
+        }}
+      />
+
+      {/* 2. Modal Mã PIN Cửa Chính (nếu gọi từ chỗ khác) */}
+      <GatePinModal
+        isOpen={showGatePinModal}
+        onClose={() => setShowGatePinModal(false)}
+      />
+
+      {/* 3. Modal Support */}
+      {showSupportModal && (
+        <SupportTicketModal
+          onClose={() => setShowSupportModal(false)}
+        />
+      )}
+
+      {/* 4. Modal Profile */}
       {showProfileModal && (
         <CustomerProfileModal
           onClose={() => setShowProfileModal(false)}
@@ -276,12 +551,7 @@ export default function CustomerPortal() {
         />
       )}
 
-      {showSupportModal && (
-        <SupportTicketModal
-          onClose={() => setShowSupportModal(false)}
-        />
-      )}
-
+      {/* 5. Modal Gia hạn hợp đồng */}
       {showExtendModal && (
         <ExtendContractModal
           unitContext={extendUnitContext}
@@ -290,18 +560,20 @@ export default function CustomerPortal() {
         />
       )}
 
-              {showExtendPaymentFlow && extendPaymentData && (
-          <ExtendPaymentFlow
-            initialBookingData={extendPaymentData}
-            onClose={() => setShowExtendPaymentFlow(false)}
-            onFinish={() => {
-              setShowExtendPaymentFlow(false);
-              setMapRefreshTrigger(prev => prev + 1);
-            }}
-          />
-        )}
+      {/* 6. Luồng thanh toán gia hạn */}
+      {showExtendPaymentFlow && extendPaymentData && (
+        <ExtendPaymentFlow
+          initialBookingData={extendPaymentData}
+          onClose={() => setShowExtendPaymentFlow(false)}
+          onFinish={() => {
+            setShowExtendPaymentFlow(false);
+            setMapRefreshTrigger((prev) => prev + 1);
+            setActiveTab('my-storage');
+          }}
+        />
+      )}
 
-        {/* VietQR Deposit Flow Modal */}
+      {/* 7. Luồng thanh toán đặt cọc VietQR */}
       {showDepositFlow && depositBookingData && (
         <DepositPaymentFlow
           initialBookingData={depositBookingData}
@@ -309,11 +581,11 @@ export default function CustomerPortal() {
           onFinish={() => {
             setShowDepositFlow(false);
             setSelectedUnit(null);
-            setMapRefreshTrigger(prev => prev + 1);
-            setActiveTab('access');
+            setMapRefreshTrigger((prev) => prev + 1);
+            setActiveTab('my-storage');
           }}
         />
       )}
     </div>
   );
-}
+}
