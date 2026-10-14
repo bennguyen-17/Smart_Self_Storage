@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react"
 import {
   InboxIcon,
-  InfoIcon,
   KeyRoundIcon,
   LockIcon,
   LockOpenIcon,
@@ -9,7 +8,6 @@ import {
   RotateCwIcon,
   SearchIcon,
   UserCogIcon,
-  UsersIcon,
 } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "cn"
@@ -29,7 +27,6 @@ import { getFacilities } from "@/features/floor-plan/api/floorPlanApi"
 import { useAsyncData } from "@/hooks/useAsyncData"
 import { getStoredUser } from "@/hooks/useAuthSession"
 import { getErrorMessage } from "@/lib/api"
-import { isMockMode } from "@/lib/apiClient"
 import { formatDateTime } from "@/lib/format"
 import type { Facility } from "@/types"
 
@@ -96,28 +93,6 @@ function AccountsPanel() {
 
   return (
     <section aria-label="Quản lý tài khoản nội bộ" className="space-y-4">
-      <div className="card-box flex flex-wrap items-start justify-between gap-3 rounded-2xl border p-4 shadow-sm">
-        <div className="space-y-1">
-          <h3 className="text-title flex items-center gap-2 text-sm font-black tracking-wide sm:text-base">
-            <UsersIcon aria-hidden="true" className="size-4 text-purple-500" />
-            TÀI KHOẢN NỘI BỘ
-          </h3>
-          <p className="text-muted max-w-2xl text-xs">
-            Tạo tài khoản cho nhân viên, quản lý cơ sở và ban giám đốc. Nhân viên và quản lý chỉ thấy dữ liệu của cơ sở
-            được gán. Tài khoản mới nhận mật khẩu tạm qua email và phải đổi ở lần đăng nhập đầu.
-          </p>
-          {isMockMode() && (
-            <p className="flex items-center gap-1.5 pt-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
-              <InfoIcon aria-hidden="true" className="size-3.5" />
-              Đang xem dữ liệu mẫu.
-            </p>
-          )}
-        </div>
-        <Button onClick={() => setDialog({ kind: "create" })} className="bg-purple-600 text-white hover:bg-purple-500">
-          <PlusIcon aria-hidden="true" /> Tạo tài khoản
-        </Button>
-      </div>
-
       {accounts.error ? (
         <Alert variant="destructive">
           <AlertTitle>Không tải được danh sách tài khoản</AlertTitle>
@@ -172,6 +147,12 @@ function AccountsPanel() {
                 { value: "LOCKED", label: "Đã khóa" },
               ]}
             />
+            <Button
+              onClick={() => setDialog({ kind: "create" })}
+              className="ml-auto bg-purple-600 text-white hover:bg-purple-500"
+            >
+              <PlusIcon aria-hidden="true" /> Tạo tài khoản
+            </Button>
           </div>
 
           <p className="text-muted text-xs" aria-live="polite">

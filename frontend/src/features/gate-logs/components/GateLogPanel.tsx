@@ -1,10 +1,9 @@
 import { useState } from "react"
-import { DoorOpenIcon, InboxIcon, InfoIcon, RotateCwIcon, SearchIcon } from "lucide-react"
+import { InboxIcon, RotateCwIcon, SearchIcon } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { useAsyncData } from "@/hooks/useAsyncData"
-import { isMockMode } from "@/lib/apiClient"
 import { formatDateTime } from "@/lib/format"
 
 import { listManualGateOpenLogs } from "../api/gateLogApi"
@@ -30,23 +29,6 @@ function GateLogPanel() {
 
   return (
     <section aria-label="Nhật ký mở cổng thủ công" className="space-y-4">
-      <div className="card-box space-y-1 rounded-2xl border p-4 shadow-sm">
-        <h3 className="text-title flex items-center gap-2 text-sm font-black tracking-wide sm:text-base">
-          <DoorOpenIcon aria-hidden="true" className="size-4 text-purple-500" />
-          NHẬT KÝ MỞ CỔNG THỦ CÔNG
-        </h3>
-        <p className="text-muted text-xs">
-          Mỗi lần nhân viên mở cổng bằng Thẻ Master hoặc chìa cơ đều được ghi lại kèm mã khách và lý do. Nhật ký
-          chỉ để xem và đối soát, không sửa hay xóa được.
-        </p>
-        {isMockMode() && (
-          <p className="flex items-center gap-1.5 pt-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
-            <InfoIcon aria-hidden="true" className="size-3.5" />
-            Đang xem dữ liệu mẫu (cơ sở HN-01).
-          </p>
-        )}
-      </div>
-
       {error ? (
         <Alert variant="destructive">
           <AlertTitle>Không tải được nhật ký mở cổng</AlertTitle>
