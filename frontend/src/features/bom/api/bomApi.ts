@@ -66,7 +66,7 @@ export const bomApi = {
   }): Promise<FacilityApiItem> => {
     return apiClient.post('/facilities', data)
   },
-  updateFacility: async (facilityId: number, data: { facilityName?: string; address?: string; phone?: string; status?: string }): Promise<FacilityApiItem> => {
+  updateFacility: async (facilityId: number, data: { facilityName?: string; address?: string; phone?: string; status?: string; managerName?: string; managerPhone?: string; managerEmail?: string }): Promise<FacilityApiItem> => {
     return apiClient.put(`/facilities/${facilityId}`, data)
   },
   deleteFacility: async (facilityId: number): Promise<any> => {

@@ -14,9 +14,29 @@ import {
   Building2,
   MapPin,
   ShieldCheck,
+  User,
+  UserCheck,
+  UserX,
+  Phone,
+  Mail,
+  ChevronDown,
 } from "lucide-react"
 import { useBomContext } from "../context/BomContext"
 import { type FacilityPerformance } from "../data/bomData"
+
+const MANAGER_PRESETS = [
+  { name: "Trần Văn Quản Lý", phone: "0912 345 678", email: "quanly.tran@smartstorage.vn" },
+  { name: "Nguyễn Thị Mai", phone: "0987 654 321", email: "mai.nguyen@smartstorage.vn" },
+  { name: "Lê Hoàng Long", phone: "0903 888 999", email: "long.le@smartstorage.vn" },
+  { name: "Phạm Minh Tuấn", phone: "0934 112 233", email: "tuan.pham@smartstorage.vn" },
+]
+
+const getInitials = (name: string) => {
+  if (!name || !name.trim() || name === "Chưa phân công") return "FM"
+  const parts = name.trim().split(/\s+/)
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
 
 const CITY_REGIONS = [
   { prefix: "HN", label: "Hà Nội", hint: "VD: Số 88 Mễ Trì Hạ, P. Mễ Trì, Q. Nam Từ Liêm, Hà Nội" },
@@ -56,6 +76,9 @@ export default function BomFacilitiesPage() {
   const [isFacilityModalOpen, setIsFacilityModalOpen] = useState(false)
   const [selectedFacility, setSelectedFacility] = useState<FacilityPerformance | null>(null)
   const [facilityMultiplier, setFacilityMultiplier] = useState<number>(1.0)
+  const [editManagerName, setEditManagerName] = useState("")
+  const [editManagerPhone, setEditManagerPhone] = useState("")
+  const [editManagerEmail, setEditManagerEmail] = useState("")
 
   // Modal State Thêm cơ sở kho mới
   const [isAddFacilityModalOpen, setIsAddFacilityModalOpen] = useState(false)
@@ -77,6 +100,28 @@ export default function BomFacilitiesPage() {
   const computedTotalUnits = useMemo(() => {
     return newFacLayout === "A" ? 46 : 15
   }, [newFacLayout])
+
+  // Danh sách quản lý khả dụng (từ Preset & cơ sở hiện có)
+  const availableManagers = useMemo(() => {
+    const map = new Map<string, { name: string; phone: string; email: string }>()
+
+    MANAGER_PRESETS.forEach((p) => {
+      map.set(p.name, p)
+    })
+
+    facilities.forEach((f) => {
+      const clean = (f.managerName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+      if (clean && clean !== "Chưa phân công" && !map.has(clean)) {
+        map.set(clean, {
+          name: clean,
+          phone: f.managerPhone || "",
+          email: f.managerEmail || "manager@smartstorage.vn",
+        })
+      }
+    })
+
+    return Array.from(map.values())
+  }, [facilities])
 
   const handleOpenAddModal = () => {
     const defaultCity = "HN"
@@ -100,30 +145,49 @@ export default function BomFacilitiesPage() {
   const handleOpenFacilityModal = (fac: FacilityPerformance) => {
     setSelectedFacility(fac)
     setFacilityMultiplier(fac.priceMultiplier || 1.0)
+    const cleanManager = (!fac.managerName || fac.managerName === "Chưa phân công")
+      ? ""
+      : fac.managerName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+    setEditManagerName(cleanManager)
+    setEditManagerPhone(fac.managerPhone || "")
+    setEditManagerEmail(fac.managerEmail || "")
     setIsFacilityModalOpen(true)
   }
 
   const handleSaveFacilityModal = async () => {
     if (!selectedFacility) return
+    const finalManagerName = editManagerName.trim() || "Chưa phân công"
+    const finalManagerPhone = editManagerPhone.trim()
+    const finalManagerEmail = editManagerEmail.trim() || "manager@smartstorage.vn"
+
     const success = await updateFacilityInDb(Number(selectedFacility.id), {
       facilityName: selectedFacility.name,
       address: selectedFacility.address,
-      phone: selectedFacility.managerPhone,
+      phone: finalManagerPhone || selectedFacility.managerPhone,
+      managerName: finalManagerName,
+      managerPhone: finalManagerPhone,
+      managerEmail: finalManagerEmail,
+      priceMultiplier: facilityMultiplier,
     })
-    if (success) {
-      toast.success(`Đã lưu thông số cơ sở kho ${selectedFacility.name} vào Database!`)
-    } else {
-      setFacilities((prev) =>
-        prev.map((f) =>
-          f.id === selectedFacility.id
-            ? {
-                ...f,
-                priceMultiplier: facilityMultiplier,
-              }
-            : f
-        )
+
+    setFacilities((prev) =>
+      prev.map((f) =>
+        f.id === selectedFacility.id
+          ? {
+              ...f,
+              managerName: finalManagerName,
+              managerPhone: finalManagerPhone,
+              managerEmail: finalManagerEmail,
+              priceMultiplier: facilityMultiplier,
+            }
+          : f
       )
-      toast.success(`Đã cập nhật thông số vận hành cho ${selectedFacility.name}`)
+    )
+
+    if (success) {
+      toast.success(`Đã lưu cấu hình cơ sở & quản lý kho ${selectedFacility.name}!`)
+    } else {
+      toast.success(`Đã cập nhật cấu hình cơ sở ${selectedFacility.name}!`)
     }
     setIsFacilityModalOpen(false)
   }
@@ -369,16 +433,154 @@ export default function BomFacilitiesPage() {
             </div>
 
             <div className="space-y-4 text-xs">
-              <div className="p-3 rounded-xl bg-sky-950/40 border border-sky-900 flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-sky-600 text-white font-black flex items-center justify-center text-sm">
-                  FM
+              {/* PHÂN CÔNG QUẢN LÝ CƠ SỞ */}
+              <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="size-4 text-sky-400" />
+                    <span className="text-[11px] text-slate-300 uppercase font-black tracking-wider">
+                      Phân công Quản Lý Cơ Sở (Facility Manager)
+                    </span>
+                  </div>
+                  {editManagerName.trim() ? (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                      Đã gán quản lý
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                      Chưa phân công
+                    </span>
+                  )}
                 </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Quản Lý Cơ Sở:</span>
-                  <span className="font-extrabold text-sky-200 text-sm">
-                    {selectedFacility.managerName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "")}
-                  </span>
+
+                {/* 1. MENU SỔ XUỐNG ĐƯA LÊN TRÊN CÙNG */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1.5">
+                      <span>Chọn nhân sự quản lý (Sổ xuống):</span>
+                    </label>
+                    {editManagerName && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditManagerName("")
+                          setEditManagerPhone("")
+                          setEditManagerEmail("")
+                        }}
+                        className="text-[10px] text-rose-400 hover:text-rose-300 font-bold hover:underline flex items-center gap-1 cursor-pointer transition"
+                      >
+                        <UserX className="size-3" />
+                        <span>Bỏ phân công</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <select
+                      value={
+                        availableManagers.some(
+                          (p) => p.name.trim().toLowerCase() === editManagerName.trim().toLowerCase()
+                        )
+                          ? availableManagers.find(
+                              (p) => p.name.trim().toLowerCase() === editManagerName.trim().toLowerCase()
+                            )?.name
+                          : editManagerName.trim()
+                          ? "__CUSTOM__"
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const val = e.target.value
+                        if (!val) {
+                          setEditManagerName("")
+                          setEditManagerPhone("")
+                          setEditManagerEmail("")
+                        } else if (val === "__CUSTOM__") {
+                          // Giữ nguyên dữ liệu tự nhập
+                        } else {
+                          const found = availableManagers.find((p) => p.name === val)
+                          if (found) {
+                            setEditManagerName(found.name)
+                            setEditManagerPhone(found.phone)
+                            setEditManagerEmail(found.email)
+                          }
+                        }
+                      }}
+                      className="w-full appearance-none px-3.5 py-2.5 pr-10 rounded-xl border border-slate-700 bg-slate-900 font-bold text-xs text-white outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition cursor-pointer shadow-inner"
+                    >
+                      <option value="" className="bg-slate-900 text-slate-400 font-normal">
+                        -- Chọn quản lý từ danh sách nhân sự --
+                      </option>
+                      {availableManagers.map((p) => (
+                        <option key={p.name} value={p.name} className="bg-slate-900 text-white font-medium py-1">
+                          👤 {p.name} {p.phone ? `• SĐT: ${p.phone}` : ""}
+                        </option>
+                      ))}
+                      {editManagerName.trim() &&
+                        !availableManagers.some(
+                          (p) => p.name.trim().toLowerCase() === editManagerName.trim().toLowerCase()
+                        ) && (
+                          <option value="__CUSTOM__" className="bg-slate-900 text-sky-300 font-medium">
+                            ✍️ Tùy chỉnh: {editManagerName}
+                          </option>
+                        )}
+                    </select>
+                    <ChevronDown className="absolute right-3.5 top-3 size-4 text-slate-400 pointer-events-none" />
+                  </div>
                 </div>
+
+                {/* 2. KHI BẤM CHỌN -> HIỆN THÔNG TIN MANAGER XUỐNG DƯỚI */}
+                {editManagerName.trim() ? (
+                  <div className="pt-2 border-t border-slate-800/80 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <div>
+                      <label className="block text-[9.5px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
+                        <User className="size-3 text-slate-400" />
+                        <span>Họ và tên Quản Lý:</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={editManagerName}
+                        onChange={(e) => setEditManagerName(e.target.value)}
+                        placeholder="VD: Trần Văn Quản Lý..."
+                        className="w-full px-3 py-2 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white placeholder-slate-500 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[9.5px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
+                          <Phone className="size-3 text-slate-400" />
+                          <span>Số điện thoại:</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={editManagerPhone}
+                          onChange={(e) => setEditManagerPhone(e.target.value)}
+                          placeholder="VD: 0912 345 678"
+                          className="w-full px-2.5 py-2 rounded-lg border border-slate-700 bg-slate-950 font-medium text-xs text-white placeholder-slate-500 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9.5px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
+                          <Mail className="size-3 text-slate-400" />
+                          <span>Email liên hệ:</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={editManagerEmail}
+                          onChange={(e) => setEditManagerEmail(e.target.value)}
+                          placeholder="VD: manager@smartstorage.vn"
+                          className="w-full px-2.5 py-2 rounded-lg border border-slate-700 bg-slate-950 font-medium text-xs text-white placeholder-slate-500 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="pt-2 border-t border-slate-800/80 p-3 rounded-xl bg-slate-900/40 border border-dashed border-slate-800 text-center">
+                    <span className="text-[11px] text-slate-500 italic">
+                      Chưa có quản lý được chọn. Vui lòng chọn nhân sự ở menu sổ xuống phía trên.
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">

@@ -672,30 +672,6 @@ export default function BomPricingPage() {
                   </div>
                 </div>
               </div>
-
-              {/* Nút chọn nhanh mức cọc chuẩn */}
-              <div className="flex items-center gap-1.5 pt-1">
-                <span className="text-[10px] text-slate-400 font-bold mr-1">Mức cọc mẫu:</span>
-                {[
-                  { label: "500k (Size S)", val: 500000 },
-                  { label: "1tr (Size M)", val: 1000000 },
-                  { label: "2tr (Size L)", val: 2000000 },
-                  { label: "3tr (Size XL)", val: 3000000 },
-                ].map((preset) => (
-                  <button
-                    key={preset.val}
-                    type="button"
-                    onClick={() => setEditDepositAmount(preset.val)}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition cursor-pointer ${
-                      editDepositAmount === preset.val
-                        ? "bg-sky-500 text-slate-950 border-sky-400 font-black shadow-sm"
-                        : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
