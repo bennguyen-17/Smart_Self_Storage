@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
+import { useSearchParams } from 'react-router-dom';
 import CustomerLayout from '@/components/layouts/CustomerLayout';
 import SupportTab from '@/features/portal/components/SupportTab';
 import SupportTicketModal from '@/features/portal/components/modals/SupportTicketModal';
 
 export default function CustomerSupportPage() {
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [searchParams] = useSearchParams();
+  const tab = searchParams.get('tab');
+  const activeNav = (tab === 'tickets' || tab === 'history') ? 'tickets' : 'support';
 
   return (
-    <CustomerLayout activeNav="support">
+    <CustomerLayout activeNav={activeNav}>
       <motion.div
         key="page-customer-support"
         initial={{ opacity: 0, y: 15 }}
