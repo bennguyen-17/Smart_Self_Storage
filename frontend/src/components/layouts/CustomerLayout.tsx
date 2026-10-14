@@ -4,9 +4,9 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Warehouse, Boxes, KeyRound, Headset, Home, ClipboardList } from 'lucide-react';
 import Header from '@/components/common/Header';
 import SiteFooter from '@/components/common/SiteFooter';
-import CustomerProfileModal from '@/features/portal/components/modals/CustomerProfileModal';
+import CustomerProfileModal from '@/components/common/CustomerProfileModal';
 import { useTheme } from '@/components/common/theme-provider';
-import { getMySupportTickets } from '@/features/portal/services/supportService';
+import { getMySupportTickets } from '@/pages/customer/support/supportApi';
 
 export type CustomerNavTab = 'home' | 'rent' | 'my-storage' | 'gate-pin' | 'support' | 'tickets';
 
@@ -15,13 +15,21 @@ interface CustomerLayoutProps {
   activeNav?: CustomerNavTab;
 }
 
-const NAV_ITEMS = [
+interface NavItem {
+  id: CustomerNavTab;
+  label: string;
+  path: string;
+  icon: any;
+  hasBadge?: boolean;
+}
+
+const NAV_ITEMS: readonly NavItem[] = [
   { id: 'rent', label: 'Thuê kho', path: '/rent', icon: Warehouse },
-  { id: 'my-storage', label: 'Kho của tôi', path: '/my-storage', icon: Boxes },
-  { id: 'gate-pin', label: 'Mã PIN mở cửa', path: '/gate-pin', icon: KeyRound },
+  { id: 'my-storage', label: 'Kho của tôi', path: '/storage', icon: Boxes },
+  { id: 'gate-pin', label: 'Mã PIN mở cửa', path: '/pin', icon: KeyRound },
   { id: 'support', label: 'Gửi hỗ trợ', path: '/support?tab=create', icon: Headset },
   { id: 'tickets', label: 'Yêu Cầu Của Tôi', path: '/support?tab=tickets', icon: ClipboardList, hasBadge: true },
-] as const;
+];
 
 export default function CustomerLayout({ children, activeNav = 'home' }: CustomerLayoutProps) {
   const navigate = useNavigate();

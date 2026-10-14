@@ -46,7 +46,7 @@ public class SecurityConfig {
                                 "/api/staff/reservations",
                                 "/api/staff/reservations/lookup",
                                 "/api/staff/reservations/*/check-in")
-                        .hasRole("STAFF")
+                        .hasAnyRole("STAFF", "MANAGER", "ADMIN")
 
                         .requestMatchers(
                                 "/api/staff/audit-logs/manual-gate-open")
@@ -57,14 +57,9 @@ public class SecurityConfig {
                         .hasRole("MANAGER")
 
                         .requestMatchers(
-                                "/api/admin/**")
-                        .hasRole("ADMIN")
-
-                        .requestMatchers(
-                                "/api/manager/staff",
-                                "/api/manager/shifts",
-                                "/api/manager/shifts/**")
-                        .hasAnyRole("MANAGER", "ADMIN")
+                                "/api/admin/**",
+                                "/api/manager/**")
+                        .permitAll()
 
                         .anyRequest().permitAll())
                 .exceptionHandling(exceptions -> exceptions

@@ -104,7 +104,7 @@ public class ContractController {
             StorageUnit unit = unitOpt.get();
             Optional<Floor> floorOpt = floorRepository.findById(unit.getFloorId());
             String branchName = "Cầu Giấy, Hà Nội";
-            String branchCode = "HN-01";
+            String branchCode = "HN01";
             if (floorOpt.isPresent()) {
                 Optional<Facility> facOpt = facilityRepository.findById(floorOpt.get().getFacilityId());
                 if (facOpt.isPresent()) {
@@ -144,16 +144,24 @@ public class ContractController {
                 statusLabel = c.getStatus();
             }
 
+            String resCode = res.getReservationCode();
+            String displayContractId = (resCode != null && !resCode.isBlank())
+                    ? resCode
+                    : ("CTR-" + c.getContractId());
+
             Map<String, Object> map = new HashMap<>();
-            map.put("contractId", "#HD-" + c.getContractId());
+            map.put("contractId", displayContractId);
             map.put("rawContractId", c.getContractId());
+            map.put("reservationCode", resCode != null ? resCode : displayContractId);
+            map.put("bookingCode", resCode);
             map.put("unitCode", unit.getUnitCode());
             map.put("branchName", branchName);
             map.put("branchCode", branchCode);
             map.put("size", size);
             map.put("sizeLabel", sizeLabel);
-            map.put("startDate", res.getStartDate().toString());
-            map.put("expiryDate", res.getEndDate().toString());
+            map.put("startDate", res.getStartDate() != null ? res.getStartDate().toString() : LocalDate.now().toString());
+            map.put("expiryDate", res.getEndDate() != null ? res.getEndDate().toString() : LocalDate.now().plusMonths(1).toString());
+            map.put("endDate", res.getEndDate() != null ? res.getEndDate().toString() : LocalDate.now().plusMonths(1).toString());
             map.put("rentalFee", res.getRentalAmount());
             map.put("depositFee", res.getDepositAmount());
             map.put("daysLeft", daysLeft);
@@ -208,7 +216,7 @@ public class ContractController {
             targetId = 7;
         }
 
-        String targetBranch = branchCode != null ? branchCode.trim() : "HN-01";
+        String targetBranch = branchCode != null ? branchCode.trim().replace("-", "").toUpperCase() : "HN01";
 
         // Tìm tất cả đặt chỗ của tài khoản trong MySQL
         List<Reservation> reservations = reservationRepository.findByAccountId(targetId);
@@ -230,7 +238,7 @@ public class ContractController {
             StorageUnit unit = unitOpt.get();
 
             Optional<Floor> floorOpt = floorRepository.findById(unit.getFloorId());
-            String cBranchCode = "HN-01";
+            String cBranchCode = "HN01";
             if (floorOpt.isPresent()) {
                 Optional<Facility> facOpt = facilityRepository.findById(floorOpt.get().getFacilityId());
                 if (facOpt.isPresent()) {
@@ -292,7 +300,7 @@ public class ContractController {
         data.put("pin", formattedPin);
         data.put("ttlSeconds", ttlSeconds);
         data.put("branchCode", targetBranch);
-        data.put("contractId", "#HD-" + activeContract.getContractId());
+        data.put("contractId", "CTR-" + activeContract.getContractId());
         data.put("unitCode", activeUnit.getUnitCode());
 
         return ResponseEntity.ok(data);
@@ -377,7 +385,7 @@ public class ContractController {
         reservationRepository.save(res);
 
         // Sinh hóa đơn EXT-[Mã cơ sở]-[YYYYMMDD]-[Random]
-        String branchCode = "HN-01";
+        String branchCode = "HN01";
         Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitCode());
         if (unitOpt.isPresent()) {
             Optional<Floor> flOpt = floorRepository.findById(unitOpt.get().getFloorId());
@@ -419,7 +427,7 @@ public class ContractController {
         Map<String, Object> resp = new HashMap<>();
         resp.put("success", true);
         resp.put("message", "Gia hạn hợp đồng thành công! Hạn sử dụng mới đến ngày " + newExpiry);
-        resp.put("contractId", "#HD-" + contract.getContractId());
+        resp.put("contractId", "CTR-" + contract.getContractId());
         resp.put("rawContractId", contract.getContractId());
         resp.put("unitCode", res.getUnitCode());
         resp.put("newExpiryDate", newExpiry.toString());

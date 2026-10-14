@@ -45,14 +45,14 @@ export type RentalType = 'DAILY' | 'MONTHLY';
 
 export interface Facility {
   facilityId: number;
-  facilityCode: string; // HN-01, HN-02, HCM-01, ...
+  facilityCode: string; // HN01, HN02, HCM01, ...
   shortCode: string;    // CG, TX, Q1, Q7, TD, HC, NK
   facilityName: string;
   address: string;
   phone: string;
   floorCount: number;   // 2 hoặc 3
   layoutType: 'A' | 'B'; // 'A' (Urban) hoặc 'B' (Logistics)
-  isAllClimate: boolean; // true nếu là HCM-01 (100% kho mát)
+  isAllClimate: boolean; // true nếu là HCM01 (100% kho mát)
   status: FacilityStatus;
 }
 

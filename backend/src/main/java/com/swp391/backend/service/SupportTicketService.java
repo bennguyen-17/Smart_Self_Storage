@@ -120,6 +120,59 @@ public class SupportTicketService {
         return supportTicketRepository.save(ticket);
     }
 
+    @Transactional
+    public SupportTicket createSupportFormTicket(Integer accountId, String type, String unitCode, String description) {
+        if (unitCode == null || unitCode.trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng chọn ô kho có hợp đồng đang có hiệu lực (ACTIVE)!");
+        }
+
+        // Kiểm tra xem ô kho này có hợp đồng ACTIVE của account này hay không
+        List<Reservation> reservations = reservationRepository.findByAccountId(accountId);
+        Contract activeContract = null;
+        for (Reservation res : reservations) {
+            if (unitCode.equalsIgnoreCase(res.getUnitCode())) {
+                Optional<Contract> cOpt = contractRepository.findByReservationId(res.getReservationId());
+                if (cOpt.isPresent() && "ACTIVE".equalsIgnoreCase(cOpt.get().getStatus())) {
+                    activeContract = cOpt.get();
+                    break;
+                }
+            }
+        }
+
+        if (activeContract == null) {
+            throw new IllegalArgumentException("Chỉ có thể gửi ticket hỗ trợ cho ô kho có hợp đồng đang HIỆU LỰC (ACTIVE)!");
+        }
+
+        Integer customerProfileId = customerProfileRepository.findByAccountId(accountId)
+                .map(CustomerProfile::getCustomerId)
+                .orElseGet(() -> {
+                    CustomerProfile cp = new CustomerProfile(accountId, "0012010" + accountId);
+                    return customerProfileRepository.save(cp).getCustomerId();
+                });
+
+        Integer facilityId = getFacilityIdByUnit(unitCode);
+
+        SupportTicket ticket = new SupportTicket();
+        ticket.setTicketCode("TCK-" + (System.currentTimeMillis() % 1000000));
+        ticket.setType(type != null ? type : "UNLOCK");
+        ticket.setStatus("SUBMITTED");
+        ticket.setCustomerId(customerProfileId);
+        ticket.setFacilityId(facilityId);
+        ticket.setUnitCode(unitCode);
+        ticket.setContractId(activeContract.getContractId());
+        ticket.setTitle("Yêu cầu hỗ trợ: " + (type != null ? type : "UNLOCK") + " - Ô kho " + unitCode);
+        ticket.setDescription(description != null ? description : "");
+        ticket.setCreatedAt(LocalDateTime.now());
+        ticket.setSlaDeadline(LocalDateTime.now().plusMinutes(15));
+        ticket.setIsSlaBreached(false);
+        ticket.setIdentityVerified(false);
+
+        return supportTicketRepository.save(ticket);
+    }
+
+    public SupportTicket saveTicket(SupportTicket ticket) {
+        return supportTicketRepository.save(ticket);
+    }
     // --- US-21: 3. Gửi OTP xác thực trả kho trước hạn ---
     @Transactional
     public Map<String, Object> sendEarlyTerminationOtp(Integer contractId, Integer customerId) {

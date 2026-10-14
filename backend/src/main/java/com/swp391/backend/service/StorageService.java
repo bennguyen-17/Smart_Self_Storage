@@ -222,24 +222,25 @@ public class StorageService {
 
         if (code == null || code.trim().isEmpty()) {
             switch (f.getFacilityId()) {
-                case 1: code = "HN-01"; layout = "A"; break;
-                case 2: code = "HN-02"; layout = "B"; break;
-                case 3: code = "HCM-01"; layout = "A"; break;
-                case 4: code = "HCM-02"; layout = "B"; break;
-                case 5: code = "HCM-03"; layout = "B"; break;
-                case 6: code = "DN-01"; layout = "A"; break;
-                case 7: code = "CT-01"; layout = "B"; break;
-                default: code = "FAC-" + String.format("%02d", f.getFacilityId()); break;
+                case 1: code = "HN01"; layout = "A"; break;
+                case 2: code = "HN02"; layout = "B"; break;
+                case 3: code = "HCM01"; layout = "A"; break;
+                case 4: code = "HCM02"; layout = "B"; break;
+                case 5: code = "HCM03"; layout = "B"; break;
+                case 6: code = "DN01"; layout = "A"; break;
+                case 7: code = "CT01"; layout = "B"; break;
+                default: code = "FAC" + String.format("%02d", f.getFacilityId()); break;
             }
         }
         if (layout == null || layout.trim().isEmpty()) {
             layout = "A";
         }
 
+        code = code.replace("-", "").toUpperCase();
         res.setFacilityCode(code);
-        res.setShortCode(code.replace("-", ""));
+        res.setShortCode(code);
         res.setLayoutType(layout.toUpperCase());
-        res.setIsAllClimate("HCM-01".equalsIgnoreCase(code));
+        res.setIsAllClimate("HCM01".equalsIgnoreCase(code));
 
         List<Floor> actualFloors = floorRepository.findByFacilityId(f.getFacilityId());
         res.setFloorCount(actualFloors.isEmpty() ? 3 : actualFloors.size());
@@ -595,17 +596,20 @@ public class StorageService {
                     FacilityResponse fr = mapFacilityToResponse(fac);
                     c = fr.getFacilityCode();
                 }
-                if (c != null && c.toUpperCase().startsWith(finalPrefix + "-")) {
-                    try {
-                        String numPart = c.substring(finalPrefix.length() + 1);
-                        int num = Integer.parseInt(numPart);
-                        if (num > maxNum) maxNum = num;
-                    } catch (Exception ignored) {}
+                if (c != null) {
+                    String norm = c.replace("-", "").toUpperCase();
+                    if (norm.startsWith(finalPrefix)) {
+                        try {
+                            String numPart = norm.substring(finalPrefix.length());
+                            int num = Integer.parseInt(numPart);
+                            if (num > maxNum) maxNum = num;
+                        } catch (Exception ignored) {}
+                    }
                 }
             }
-            code = String.format("%s-%02d", cityPrefix, maxNum + 1);
+            code = String.format("%s%02d", cityPrefix, maxNum + 1);
         } else {
-            code = code.trim().toUpperCase();
+            code = code.trim().toUpperCase().replace("-", "");
         }
 
         // 2. TÊN CƠ SỞ HOÀN TOÀN THUẦN TÚY - KHÔNG GHÉP MÃ VÀO TÊN
@@ -722,7 +726,7 @@ public class StorageService {
             }
             f.setFacilityName(name);
         }
-        if (req.getFacilityCode() != null) f.setFacilityCode(req.getFacilityCode().trim().toUpperCase());
+        if (req.getFacilityCode() != null) f.setFacilityCode(req.getFacilityCode().trim().toUpperCase().replace("-", ""));
         if (req.getLayoutType() != null) f.setLayoutType(req.getLayoutType().trim().toUpperCase());
         if (req.getAddress() != null) f.setAddress(req.getAddress().trim());
         if (req.getPhone() != null) f.setPhone(req.getPhone().trim());
