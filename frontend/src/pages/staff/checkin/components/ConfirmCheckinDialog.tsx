@@ -114,24 +114,24 @@ function Body({
   return (
     <>
       <div className="inner-box space-y-2 rounded-2xl border p-3.5 text-xs">
-        <Row label="Tổng tiền (DEP)" value={formatVnd(contract.depAmount)} />
-        <Row label="Đã thu" value={formatVnd(contract.depPaidAmount)} />
+        <Row label="Tổng giá trị hợp đồng" value={formatVnd(contract.depAmount)} />
+        <Row label="Đã cọc online (100% Tiền cọc)" value={formatVnd(contract.depPaidAmount)} />
         <Row
-          label="Tổng cần thu tại quầy"
+          label="Tiền thuê cần thu tại quầy"
           value={formatVnd(collectAmount)}
           strong
         />
         <div className="flex items-center justify-between gap-4 border-t border-slate-200 pt-1.5 dark:border-slate-800">
           <span className="text-muted">Hình thức thanh toán</span>
           <span className="text-title font-bold">
-            {collectAmount > 0 ? "Tiền mặt tại quầy" : "Đã thanh toán đủ"}
+            {collectAmount > 0 ? "Tiền mặt tại quầy" : "Đã thanh toán đủ online"}
           </span>
         </div>
       </div>
 
       {collectAmount <= 0 && (
         <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-xs font-semibold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300">
-          Khách hàng đã thanh toán đủ 100% tiền thuê & cọc online. Bấm xác nhận để bàn giao kho và cấp mã PIN.
+          Khách hàng đã thanh toán đủ 100% tiền thuê &amp; cọc online. Bấm xác nhận để kích hoạt hợp đồng có hiệu lực và cấp mã PIN.
         </div>
       )}
 
@@ -168,8 +168,8 @@ function Body({
             {isSubmitting
               ? "Đang xử lý..."
               : collectAmount > 0
-                ? `Xác nhận thu ${formatVnd(collectAmount)} & Bàn giao`
-                : "Xác nhận bàn giao kho"}
+                ? `Xác nhận thu ${formatVnd(collectAmount)} & Kích hoạt`
+                : "Xác nhận bàn giao & Kích hoạt"}
           </span>
         </button>
       </div>
