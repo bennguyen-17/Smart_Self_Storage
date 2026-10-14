@@ -127,7 +127,10 @@ function Body({
   return (
     <>
       <div className="inner-box space-y-2 rounded-2xl border p-3.5 text-xs">
-        <Row label="Hạn thuê hiện tại" value={formatDate(contract.endDate)} />
+        <Row
+          label="Hạn thuê hiện tại"
+          value={formatDate(contract.reservationEndDate)}
+        />
         <Row
           label="Số ngày quá hạn"
           value={`${contract.overdueDays ?? 0} ngày`}
@@ -257,20 +260,17 @@ function SuccessPanel({
       <div className="inner-box space-y-2 rounded-2xl border p-3.5 text-xs">
         <Row label="Hợp đồng" value={result.reservationCode ?? "—"} />
         <Row label="Trạng thái hợp đồng" value={result.contractStatus ?? "—"} />
-        <Row label="Hóa đơn gia hạn (EXT)" value={result.invoiceNumber ?? "—"} />
         <Row
-          label="Chiết khấu"
-          value={`${result.discountPercent ?? 0}%`}
+          label="Hóa đơn gia hạn (EXT)"
+          value={result.invoiceNumber ?? "—"}
         />
+        <Row label="Chiết khấu" value={`${result.discountPercent ?? 0}%`} />
         <Row
           label="Đã thu tại quầy"
           value={formatVnd(result.amount ?? 0)}
           strong
         />
-        <Row
-          label="Hạn thuê mới"
-          value={formatDate(result.newExpiryDate)}
-        />
+        <Row label="Hạn thuê mới" value={formatDate(result.newExpiryDate)} />
       </div>
 
       <div className="rounded-2xl border border-blue-300 bg-blue-50 p-3.5 text-xs dark:border-blue-800 dark:bg-blue-950/30">
