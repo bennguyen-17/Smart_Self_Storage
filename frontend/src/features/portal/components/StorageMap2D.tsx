@@ -1,15 +1,89 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Check, MapPin, Snowflake, Layers, Filter } from 'lucide-react';
 import { getStorageUnits, getBranches } from '@/features/portal/services/facilityService';
 
-const facilityData = {
-  'HN-01': { name: 'SmartStorage Cầu Giấy (HN-01)', address: 'Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội', floors: 3 },
-  'HN-02': { name: 'SmartStorage Thanh Xuân (HN-02)', address: 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội', floors: 3 },
-  'HCM-01': { name: 'SmartStorage Quận 1 (HCM-01)', address: 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM', floors: 3 },
-  'HCM-02': { name: 'SmartStorage Quận 7 (HCM-02)', address: 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM', floors: 2 },
-  'HCM-03': { name: 'SmartStorage Thủ Đức (HCM-03)', address: 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM', floors: 3 },
-  'DN-01': { name: 'SmartStorage Hải Châu (DN-01)', address: 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng', floors: 2 },
-  'CT-01': { name: 'SmartStorage Ninh Kiều (CT-01)', address: 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', floors: 2 }
+export const facilityData: Record<string, {
+  name: string;
+  address: string;
+  floors: number;
+  city: string;
+  image: string;
+}> = {
+  'HN-01': {
+    name: 'SmartStorage Cầu Giấy (HN-01)',
+    address: 'Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội',
+    floors: 3,
+    city: 'Hà Nội',
+    image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80',
+  },
+  'HN-02': {
+    name: 'SmartStorage Thanh Xuân (HN-02)',
+    address: 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội',
+    floors: 3,
+    city: 'Hà Nội',
+    image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=600&q=80',
+  },
+  'HCM-01': {
+    name: 'SmartStorage Quận 1 (HCM-01)',
+    address: 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM',
+    floors: 3,
+    city: 'TP.HCM',
+    image: 'https://images.unsplash.com/photo-1590247813693-5541d1c609fd?auto=format&fit=crop&w=600&q=80',
+  },
+  'HCM-02': {
+    name: 'SmartStorage Quận 7 (HCM-02)',
+    address: 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM',
+    floors: 2,
+    city: 'TP.HCM',
+    image: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?auto=format&fit=crop&w=600&q=80',
+  },
+  'HCM-03': {
+    name: 'SmartStorage Thủ Đức (HCM-03)',
+    address: 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM',
+    floors: 3,
+    city: 'TP.HCM',
+    image: 'https://images.unsplash.com/photo-1568667256549-094345857637?auto=format&fit=crop&w=600&q=80',
+  },
+  'DN-01': {
+    name: 'SmartStorage Hải Châu (DN-01)',
+    address: 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng',
+    floors: 2,
+    city: 'Đà Nẵng',
+    image: 'https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=600&q=80',
+  },
+  'CT-01': {
+    name: 'SmartStorage Ninh Kiều (CT-01)',
+    address: 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ',
+    floors: 2,
+    city: 'Cần Thơ',
+    image: 'https://images.unsplash.com/photo-1730154838368-c37b1fdebcf6?auto=format&fit=crop&w=600&q=80',
+  }
 };
+
+const STORAGE_TYPES_DATA = [
+  {
+    id: 'ALL',
+    name: 'Tất cả ô kho',
+    desc: 'Hiển thị đầy đủ cả kho thường và kho mát',
+    badge: 'Toàn bộ',
+    image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'STANDARD',
+    name: 'Kho Thường (Standard)',
+    desc: 'Nhiệt độ phòng • Gia dụng, nội thất, tài liệu',
+    badge: '📦 Chuẩn',
+    image: 'https://images.unsplash.com/photo-1590247813693-5541d1c609fd?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'CLIMATE_CONTROLLED',
+    name: 'Kho Mát (22-25°C)',
+    desc: 'Điều hòa 24/7 • Ẩm <55% • Đồ hiệu, điện tử, rượu',
+    badge: '❄️ Mát 22-25°C',
+    image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=600&q=80'
+  }
+];
 
 export default function StorageMap2D({
   facility,
@@ -31,7 +105,13 @@ export default function StorageMap2D({
   const [branches, setBranches] = useState<any[]>([]);
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedStorageType, setSelectedStorageType] = useState<'ALL' | 'STANDARD' | 'CLIMATE_CONTROLLED'>('ALL');
+  const [selectedStorageType, setSelectedStorageType] = useState<'ALL' | 'STANDARD' | 'CLIMATE_CONTROLLED' | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string>('ALL');
+
+  // Khi đổi cơ sở kho, reset loại kho đã chọn để hiện lại tuần tự
+  useEffect(() => {
+    setSelectedStorageType(null);
+  }, [facility]);
 
   // Tải danh sách chi nhánh cơ sở từ Database
   useEffect(() => {
@@ -59,10 +139,14 @@ export default function StorageMap2D({
         address: matchedBranch.address,
         floors: matchedBranch.floors || 3,
       }
-    : (facilityData[facility] || facilityData['HN-01']);
+    : (facility && facilityData[facility]) ? facilityData[facility] : null;
 
   // Gọi API lấy danh sách ô kho theo cơ sở và tầng
   useEffect(() => {
+    if (!facility) {
+      setUnits([]);
+      return;
+    }
     let isMounted = true;
     const fetchUnits = async () => {
       try {
@@ -154,156 +238,258 @@ export default function StorageMap2D({
 
   return (
     <div className="space-y-3">
-      {/* THANH ĐIỀU KHIỂN: THIẾT KẾ TRÊN - DƯỚI */}
-      <div className="p-3 sm:p-3.5 rounded-2xl border shadow-xs w-full bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 space-y-2.5 text-slate-900 dark:text-white">
-        {/* HÀNG TRÊN: CƠ SỞ KHO & ĐỊA CHỈ */}
-        <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
-          <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide flex items-center shrink-0">
-            <i className="fa-solid fa-location-dot text-blue-600 dark:text-cyan-400 mr-1.5 text-sm"></i> Cơ sở kho:
-          </span>
-          <div className="relative min-w-[200px] sm:min-w-[260px]">
-            <select
-              value={facility}
-              onChange={(e) => onFacilityChange(e.target.value)}
-              className="w-full text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-cyan-500 outline-none cursor-pointer shadow-2xs transition-colors truncate"
-            >
-              {branches.length > 0 ? (
-                <>
-                  {['HN', 'HCM', 'DN', 'CT'].map((cityCode) => {
-                    const cityBranches = branches.filter((b) => (b.code || b.id).startsWith(cityCode));
-                    if (cityBranches.length === 0) return null;
-
-                    const cityName = 
-                      cityCode === 'HN' ? '📍 Hà Nội' : 
-                      cityCode === 'HCM' ? '📍 TP. Hồ Chí Minh' : 
-                      cityCode === 'DN' ? '📍 Đà Nẵng' : '📍 Cần Thơ';
-
-                    return (
-                      <optgroup key={cityCode} label={cityName} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                        {cityBranches.map((b) => (
-                          <option
-                            key={b.code || b.id}
-                            value={b.code || b.id}
-                            className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                          >
-                            {b.name || b.facilityName || facilityData[b.code]?.name || b.code}
-                          </option>
-                        ))}
-                      </optgroup>
-                    );
-                  })}
-                </>
-              ) : (
-                <>
-                  <optgroup label="📍 Hà Nội" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                    <option value="HN-01" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Cầu Giấy (HN-01)</option>
-                    <option value="HN-02" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Thanh Xuân (HN-02)</option>
-                  </optgroup>
-                  <optgroup label="📍 TP. Hồ Chí Minh" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                    <option value="HCM-01" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Quận 1 (HCM-01)</option>
-                    <option value="HCM-02" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Quận 7 (HCM-02)</option>
-                    <option value="HCM-03" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Thủ Đức (HCM-03)</option>
-                  </optgroup>
-                  <optgroup label="📍 Đà Nẵng" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                    <option value="DN-01" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Hải Châu (DN-01)</option>
-                  </optgroup>
-                  <optgroup label="📍 Cần Thơ" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                    <option value="CT-01" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">SmartStorage Ninh Kiều (CT-01)</option>
-                  </optgroup>
-                </>
-              )}
-            </select>
-          </div>
-
-          {/* ĐỊA CHỈ */}
-          <div className="flex items-center space-x-1.5 text-xs text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 max-w-full">
-            <i className="fa-solid fa-map-pin text-blue-600 dark:text-cyan-400 text-xs shrink-0"></i>
-            <span className="font-semibold truncate max-w-[300px] sm:max-w-[500px]" title={currentFacilityObj.address}>
-              {currentFacilityObj.address}
+      {/* THANH ĐIỀU KHIỂN TRỰC QUAN: ẢNH 7 CƠ SỞ & ẢNH 2 LOẠI KHO */}
+      <div className="p-4 sm:p-5 rounded-3xl border shadow-sm w-full bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 space-y-4 text-slate-900 dark:text-white">
+        
+        {/* 1. CƠ SỞ KHO: 7 CƠ SỞ CÓ ẢNH RIÊNG */}
+        <div className="space-y-3 pb-4 border-b border-slate-100 dark:border-slate-800/80">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide flex items-center gap-1.5">
+              <MapPin className="size-4 text-blue-600 dark:text-cyan-400 shrink-0" />
+              <span>1. Chọn cơ sở kho (7 chi nhánh):</span>
             </span>
-          </div>
-        </div>
-
-        {/* DÒNG 2: LOẠI KHO */}
-        <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
-          <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide flex items-center shrink-0 min-w-[90px]">
-            <i className="fa-solid fa-snowflake text-blue-600 dark:text-cyan-400 mr-1.5 text-xs"></i> Loại kho:
-          </span>
-          <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 gap-1 shrink-0">
-            <button
-              type="button"
-              onClick={() => setSelectedStorageType('ALL')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                selectedStorageType === 'ALL'
-                  ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
-              }`}
-            >
-              Tất cả
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedStorageType('STANDARD')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                selectedStorageType === 'STANDARD'
-                  ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
-              }`}
-            >
-              📦 Thường
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedStorageType('CLIMATE_CONTROLLED')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                selectedStorageType === 'CLIMATE_CONTROLLED'
-                  ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
-              }`}
-            >
-              ❄️ Mát (22-25°C)
-            </button>
-          </div>
-        </div>
-
-        {/* DÒNG 3: TẦNG */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide flex items-center shrink-0 min-w-[90px]">
-            <i className="fa-solid fa-layer-group text-blue-600 dark:text-cyan-400 mr-1.5 text-xs"></i> Tầng:
-          </span>
-          <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 gap-1 shrink-0">
-            <button
-              type="button"
-              onClick={() => onSelectFloor(1)}
-              className={`px-3.5 py-1 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                currentFloor === 1 ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
-              }`}
-            >
-              Tầng Trệt
-            </button>
-            <button
-              type="button"
-              onClick={() => onSelectFloor(2)}
-              className={`px-3.5 py-1 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                currentFloor === 2 ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
-              }`}
-            >
-              Tầng 1
-            </button>
-            {currentFacilityObj.floors > 2 && (
-              <button
-                type="button"
-                onClick={() => onSelectFloor(3)}
-                className={`px-3.5 py-1 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                  currentFloor === 3 ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
-                }`}
-              >
-                Tầng 2
-              </button>
+            {currentFacilityObj ? (
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full truncate max-w-full">
+                📍 Đang chọn: <strong className="text-blue-600 dark:text-cyan-400 font-bold">{currentFacilityObj.name}</strong> • {currentFacilityObj.address}
+              </span>
+            ) : (
+              <span className="text-xs font-bold text-blue-600 dark:text-cyan-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 px-3 py-1 rounded-full animate-pulse">
+                👉 Bước 1: Vui lòng bấm chọn một cơ sở kho bên dưới
+              </span>
             )}
+          </div>
+
+          {/* BỘ LỌC ĐỊA ĐIỂM (TỈNH / THÀNH PHỐ) */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 scrollbar-none">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0 mr-1">
+              <Filter className="size-3.5 text-blue-600 dark:text-cyan-400" />
+              <span>Khu vực:</span>
+            </div>
+            {[
+              { id: 'ALL', label: 'Tất cả (7)' },
+              { id: 'Hà Nội', label: 'Hà Nội (2)' },
+              { id: 'TP.HCM', label: 'TP.HCM (3)' },
+              { id: 'Đà Nẵng', label: 'Đà Nẵng (1)' },
+              { id: 'Cần Thơ', label: 'Cần Thơ (1)' },
+            ].map((c) => {
+              const active = selectedCity === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setSelectedCity(c.id)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all duration-200 cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
+                    active
+                      ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-500/30'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Danh sách 7 card cơ sở với ảnh thực tế bự hơn */}
+          <div className="flex gap-4 overflow-x-auto pb-4 pt-1 scrollbar-thin">
+            {Object.entries(facilityData)
+              .filter(([_, fData]) => selectedCity === 'ALL' || fData.city === selectedCity)
+              .map(([fKey, fData]) => {
+                const isSelected = facility === fKey;
+                return (
+                <button
+                  key={fKey}
+                  type="button"
+                  onClick={() => onFacilityChange(fKey)}
+                  className={`group relative shrink-0 w-64 sm:w-72 text-left rounded-2xl overflow-hidden border-2 transition-all duration-200 cursor-pointer flex flex-col ${
+                    isSelected
+                      ? 'border-blue-600 dark:border-cyan-400 ring-4 ring-blue-500/20 shadow-xl bg-blue-50/20 dark:bg-blue-950/20 scale-[1.02]'
+                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-blue-300 dark:hover:border-slate-700 opacity-85 hover:opacity-100 hover:shadow-md'
+                  }`}
+                >
+                  {/* Ảnh cơ sở bự hơn */}
+                  <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                    <img
+                      src={fData.image}
+                      alt={fData.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+
+                    {/* Tag thành phố */}
+                    <span className="absolute top-3 left-3 text-xs font-black px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white border border-white/20">
+                      {fData.city}
+                    </span>
+
+                    {/* Dấu tích khi đang chọn */}
+                    {isSelected && (
+                      <span className="absolute top-3 right-3 w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg">
+                        <Check className="size-4 stroke-[3]" />
+                      </span>
+                    )}
+
+                    {/* Tên cơ sở in đè trên ảnh */}
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <p className="text-white text-base sm:text-lg font-black truncate leading-tight drop-shadow-sm">
+                        {fData.name.replace('SmartStorage ', '')}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Địa chỉ cơ sở: hiển thị đầy đủ, không bị cắt xén */}
+                  <div className="p-3 bg-white dark:bg-slate-900 flex-1 min-h-[58px] flex items-start gap-1.5 border-t border-slate-100 dark:border-slate-800/80">
+                    <MapPin className="size-3.5 text-blue-500 dark:text-cyan-400 shrink-0 mt-0.5" />
+                    <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium leading-snug">
+                      {fData.address}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
+
+      {/* 2. LOẠI KHO: CHỈ HIỆN RA KHI KHÁCH ĐÃ CHỌN CƠ SỞ KHO */}
+      <AnimatePresence>
+        {facility && (
+          <motion.div
+            key="section-storage-type"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="p-4 sm:p-5 rounded-3xl border shadow-sm w-full bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 space-y-3.5 text-slate-900 dark:text-white"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide flex items-center gap-1.5">
+                <Snowflake className="size-4 text-blue-600 dark:text-cyan-400 shrink-0" />
+                <span>2. Chọn loại kho lưu trữ:</span>
+              </span>
+              {!selectedStorageType && (
+                <span className="text-xs font-bold text-blue-600 dark:text-cyan-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 px-3 py-1 rounded-full animate-pulse">
+                  👉 Bước 2: Bấm chọn một loại kho bên dưới để xem sơ đồ mặt bằng
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {STORAGE_TYPES_DATA.map((t) => {
+                const isSelected = selectedStorageType === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedStorageType(t.id as any);
+                      onSelectUnit(null);
+                    }}
+                    className={`group relative text-left rounded-2xl overflow-hidden border-2 transition-all duration-200 cursor-pointer flex flex-col ${
+                      isSelected
+                        ? 'border-blue-600 dark:border-cyan-400 ring-4 ring-blue-500/20 shadow-lg bg-blue-50/30 dark:bg-blue-950/20 scale-[1.01]'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-blue-300 dark:hover:border-slate-700 opacity-80 hover:opacity-100 hover:shadow-xs'
+                    }`}
+                  >
+                    {/* Ảnh loại kho bự hơn */}
+                    <div className="relative h-44 sm:h-52 w-full shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-800">
+                      <img
+                        src={t.image}
+                        alt={t.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                      {/* Tag badge */}
+                      <span className="absolute top-2.5 left-2.5 text-xs font-black px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-white border border-white/20">
+                        {t.badge}
+                      </span>
+
+                      {/* Dấu tích khi đang chọn */}
+                      {isSelected && (
+                        <span className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md">
+                          <Check className="size-4 stroke-[3]" />
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Thông tin loại kho */}
+                    <div className="p-3 flex-1 flex flex-col justify-center">
+                      <p className={`text-sm font-black ${isSelected ? 'text-blue-600 dark:text-cyan-400' : 'text-slate-900 dark:text-white'}`}>
+                        {t.name}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 font-medium mt-1">
+                        {t.desc}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 3. TẦNG & SƠ ĐỒ MẶT BẰNG 2D: CHỈ HIỆN KHI ĐÃ CHỌN CƠ SỞ VÀ LOẠI KHO */}
+      <AnimatePresence>
+        {facility && selectedStorageType && (
+          <motion.div
+            key="section-blueprint-step"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 15 }}
+            transition={{ duration: 0.35 }}
+            className="space-y-4"
+          >
+            {/* 3. TẦNG */}
+            <div className="p-4 sm:p-5 rounded-3xl border shadow-sm bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-slate-900 dark:text-white">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide flex items-center shrink-0 min-w-[90px] gap-1.5">
+                  <Layers className="size-4 text-blue-600 dark:text-cyan-400 shrink-0" />
+                  <span>3. Chọn tầng:</span>
+                </span>
+                <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => onSelectFloor(1)}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                      currentFloor === 1 ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    Tầng Trệt
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSelectFloor(2)}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                      currentFloor === 2 ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    Tầng 1
+                  </button>
+                  {(currentFacilityObj?.floors || 3) > 2 && (
+                    <button
+                      type="button"
+                      onClick={() => onSelectFloor(3)}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                        currentFloor === 3 ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      Tầng 2
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Thông tin ô kho đã chọn */}
+              {selectedUnit && (
+                <div className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                  <Check className="size-4 text-emerald-600 shrink-0" />
+                  <span>Đã chọn ô <strong>{selectedUnit.id}</strong> ({selectedUnit.dim} - {selectedUnit.isClimate ? 'Kho mát' : 'Kho thường'})</span>
+                </div>
+              )}
+            </div>
 
       {/* SƠ ĐỒ MẶT BẰNG 2D BLUEPRINT */}
       <div className="p-3 sm:p-3.5 rounded-2xl border shadow-xs space-y-2.5 bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
@@ -401,6 +587,9 @@ export default function StorageMap2D({
           </div>
         )}
       </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
