@@ -17,42 +17,116 @@ beforeEach(() => {
   vi.mocked(saveShift).mockClear()
 })
 
-async function openShift(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
+async function renderPanel() {
+  const user = userEvent.setup()
   render(<ShiftsPanel />)
-  await screen.findByText("Hoàng Minh Tuấn")
-  await user.click(screen.getByRole("button", { name }))
-  return screen.findByRole("dialog")
+  await screen.findByRole("region", { name: "Ca Sáng" })
+  return user
 }
 
-describe("ShiftsPanel: phân ca nhân viên (US-32)", () => {
-  test("bảng 3 ca; ca tối chưa có người được báo rõ, kèm việc còn thiếu", async () => {
-    render(<ShiftsPanel />)
-    const evening = (await screen.findByText("Ca tối")).closest("tr") as HTMLElement
-    expect(within(evening).getByText("Chưa có người trực")).toBeInTheDocument()
-    expect(within(evening).getByText("Xử lý sự cố")).toBeInTheDocument()
+const card = (name: string) => screen.getByRole("region", { name })
+
+describe("ShiftsPanel: phân ai trực ca nào (US-32)", () => {
+  test("dải 7 ngày thứ 2 → chủ nhật; các ca và giờ ca lấy từ dữ liệu, không chia việc", async () => {
+    await renderPanel()
+    const days = within(
+      screen.getByRole("group", { name: /chọn ngày trong tuần/i })
+    ).getAllByRole("button")
+    expect(days).toHaveLength(7)
+    expect(days[0]).toHaveTextContent(/^T2/)
+    expect(days[6]).toHaveTextContent(/^CN/)
+    expect(
+      days.filter((d) => d.getAttribute("aria-pressed") === "true")
+    ).toHaveLength(1)
+    expect(
+      within(card("Ca Sáng")).getByText("06:00 – 14:00")
+    ).toBeInTheDocument()
+    expect(
+      within(card("Ca Đêm")).getByText("22:00 – 06:00 (qua đêm)")
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText(/nhiệm vụ|việc phụ trách|còn thiếu/i)
+    ).not.toBeInTheDocument()
   })
 
-  test("chỉ chọn được nhân viên cơ sở mình, đang hoạt động, chưa có trong ca", async () => {
-    const user = userEvent.setup()
-    const sheet = await openShift(user, /phân công ca sáng/i)
-    const select = within(sheet).getByRole("combobox", { name: /nhân viên của cơ sở/i })
-    const names = within(select).getAllByRole("option").map((o) => o.textContent)
-    expect(names).toEqual(["Chọn nhân viên", "Hoàng Minh Tuấn"])
+  test("ca chưa có ai → cảnh báo rõ", async () => {
+    await renderPanel()
+    const night = card("Ca Đêm")
+    expect(
+      within(night).getByText("Ca chưa có nhân viên trực")
+    ).toBeInTheDocument()
+    expect(within(night).getByText("0 người trực")).toBeInTheDocument()
+    expect(
+      within(card("Ca Sáng")).queryByText("Ca chưa có nhân viên trực")
+    ).not.toBeInTheDocument()
   })
 
-  test("thêm người vào ca tối rồi lưu → gửi đúng danh sách, bảng cập nhật", async () => {
-    const user = userEvent.setup()
-    const sheet = await openShift(user, /phân công ca tối/i)
-    expect(within(sheet).getByRole("button", { name: /lưu phân công/i })).toBeDisabled()
-    await user.selectOptions(within(sheet).getByRole("combobox", { name: /nhân viên của cơ sở/i }), "8")
-    await user.selectOptions(within(sheet).getByRole("combobox", { name: /việc phụ trách/i }), "INCIDENT")
-    await user.click(within(sheet).getByRole("button", { name: /thêm vào ca/i }))
-    expect(within(sheet).getByText(/cũng trực ca sáng hôm nay/i)).toBeInTheDocument()
-    await user.click(within(sheet).getByRole("button", { name: /lưu phân công/i }))
-    expect(saveShift).toHaveBeenCalledWith(expect.anything(), expect.any(String), "EVENING", [
-      { accountId: 8, fullName: "Bùi Thị Lan", duty: "INCIDENT" },
-    ])
-    const evening = () => screen.getByText("Ca tối").closest("tr") as HTMLElement
-    await waitFor(() => expect(within(evening()).getByText("Bùi Thị Lan")).toBeInTheDocument(), { timeout: 3000 })
+  test("ô chọn chỉ có nhân viên cơ sở mình, đang hoạt động, chưa có trong ca", async () => {
+    await renderPanel()
+    const select = within(card("Ca Sáng")).getByRole("combobox", {
+      name: /nhân viên thêm vào ca sáng/i,
+    })
+    expect(
+      within(select)
+        .getAllByRole("option")
+        .map((o) => o.textContent)
+    ).toEqual(["Chọn nhân viên…", "Hoàng Minh Tuấn"])
+  })
+
+  test("thêm người đã trực ca khác vào Ca Đêm → cảnh báo; Lưu gửi đúng danh sách employeeId", async () => {
+    const user = await renderPanel()
+    const night = card("Ca Đêm")
+    expect(
+      within(night).getByRole("button", { name: /lưu ca đêm/i })
+    ).toBeDisabled()
+    await user.selectOptions(
+      within(night).getByRole("combobox", { name: /nhân viên thêm/i }),
+      "4"
+    )
+    await user.click(within(night).getByRole("button", { name: /^thêm$/i }))
+    expect(within(night).getByText("Đã trực Ca Sáng")).toBeInTheDocument()
+    await user.click(within(night).getByRole("button", { name: /lưu ca đêm/i }))
+    expect(saveShift).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.any(String),
+      3,
+      [4]
+    )
+    await waitFor(
+      () =>
+        expect(
+          within(card("Ca Đêm")).getByText("1 người trực")
+        ).toBeInTheDocument(),
+      { timeout: 3000 }
+    )
+  })
+
+  test("bỏ người khỏi ca rồi Lưu → gửi danh sách còn lại", async () => {
+    const user = await renderPanel()
+    const morning = card("Ca Sáng")
+    await user.click(
+      within(morning).getByRole("button", {
+        name: "Bỏ Bùi Thị Lan khỏi Ca Sáng",
+      })
+    )
+    await user.click(
+      within(morning).getByRole("button", { name: /lưu ca sáng/i })
+    )
+    expect(saveShift).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.any(String),
+      1,
+      [1]
+    )
+  })
+
+  test("bấm ngày khác trong tuần → đổi ngày đang chọn", async () => {
+    const user = await renderPanel()
+    const group = screen.getByRole("group", { name: /chọn ngày trong tuần/i })
+    const target = within(group)
+      .getAllByRole("button")
+      .find((b) => b.getAttribute("aria-pressed") !== "true")!
+    await user.click(target)
+    expect(target).toHaveAttribute("aria-pressed", "true")
   })
 })

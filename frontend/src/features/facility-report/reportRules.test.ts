@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 
-import { buildReportSections, percentOf, reportCsvRows } from "./reportRules"
+import { barWidths, buildReportSections, donutArcs, percentOf, reportCsvRows, unitMix } from "./reportRules"
 import type { ManagerDashboard } from "./types"
 
 const D: ManagerDashboard = {
@@ -62,5 +62,53 @@ describe("reportCsvRows: file CSV đúng số liệu đang xem", () => {
     expect(rows).toContainEqual(["Doanh thu", "Doanh thu thuần", 114_500_000])
     expect(rows).toContainEqual(["Ô kho", "Tỷ lệ lấp đầy", 84])
     expect(rows.every((r) => r.length === 3)).toBe(true)
+  })
+})
+
+describe("unitMix: các phần của thanh ô kho cộng đủ 100%", () => {
+  test.each([
+    { name: "dữ liệu mẫu", d: D, expected: [80, 4, 12, 4] },
+    { name: "chia lẻ 1/3", d: { ...D, occupiedUnits: 1, reservedUnits: 1, availableUnits: 1, maintenanceUnits: 0 }, expected: [33.4, 33.3, 33.3, 0] },
+    { name: "cơ sở chưa có ô", d: { ...D, occupiedUnits: 0, reservedUnits: 0, availableUnits: 0, maintenanceUnits: 0 }, expected: [0, 0, 0, 0] },
+  ])("$name → $expected", ({ d, expected }) => {
+    const mix = unitMix(d)
+    expect(mix.map((s) => s.percent)).toEqual(expected)
+    expect(mix.map((s) => s.key)).toEqual(["occupied", "reserved", "available", "maintenance"])
+  })
+})
+
+describe("barWidths: độ dài thanh theo giá trị lớn nhất", () => {
+  test.each([
+    { values: [110, 55, 0], expected: [100, 50, 0] },
+    { values: [100, -50], expected: [100, 50] },
+    { values: [1000, 1], expected: [100, 2] },
+    { values: [0, 0], expected: [0, 0] },
+    { values: [], expected: [] },
+  ])("$values → $expected", ({ values, expected }) => {
+    expect(barWidths(values)).toEqual(expected)
+  })
+})
+
+describe("donutArcs: cung của biểu đồ vành khuyên", () => {
+  const seg = (key: "occupied" | "reserved" | "available" | "maintenance", percent: number) => ({ key, label: key, count: percent, percent })
+  test("4 lát: nối tiếp nhau, mỗi lát trừ 1% khe", () => {
+    expect(donutArcs([seg("occupied", 80), seg("reserved", 4), seg("available", 12), seg("maintenance", 4)])).toEqual([
+      { key: "occupied", start: 0, length: 79 },
+      { key: "reserved", start: 80, length: 3 },
+      { key: "available", start: 84, length: 11 },
+      { key: "maintenance", start: 96, length: 3 },
+    ])
+  })
+  test("bỏ lát 0%", () => {
+    expect(donutArcs([seg("occupied", 50), seg("reserved", 0), seg("available", 50), seg("maintenance", 0)]).map((a) => a.key)).toEqual(["occupied", "available"])
+  })
+  test("chỉ 1 lát → trọn vòng, không khe", () => {
+    expect(donutArcs([seg("occupied", 0), seg("reserved", 0), seg("available", 100), seg("maintenance", 0)])).toEqual([{ key: "available", start: 0, length: 100 }])
+  })
+  test("lát rất nhỏ vẫn còn thấy (tối thiểu 0,5%)", () => {
+    expect(donutArcs([seg("occupied", 99.6), seg("maintenance", 0.4)])[1].length).toBe(0.5)
+  })
+  test("không có ô nào → không có cung", () => {
+    expect(donutArcs([seg("occupied", 0), seg("available", 0)])).toEqual([])
   })
 })

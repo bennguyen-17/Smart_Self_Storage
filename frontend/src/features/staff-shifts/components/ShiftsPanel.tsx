@@ -1,115 +1,141 @@
 import { useMemo, useState } from "react"
-import { CalendarCogIcon } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import { toast } from "sonner"
+import { cn } from "cn"
 
 import { Button } from "@/components/ui/button"
-import { DateFilter, FilterBar, LoadError, StatusBadge, TableCard } from "@/features/internal-shell/components/PanelKit"
+import {
+  DateFilter,
+  FilterBar,
+  LoadError,
+} from "@/features/internal-shell/components/PanelKit"
 import { getManagerContext } from "@/features/unit-management/managerContext"
 import { useAsyncData } from "@/hooks/useAsyncData"
-import { todayInVietnam } from "@/lib/format"
+import { addDays, todayInVietnam } from "@/lib/format"
 
 import { getDaySchedule, listFacilityStaff } from "../api/shiftApi"
-import { DUTY_LABEL, missingDuties, SHIFTS } from "../shiftRules"
-import type { ShiftKey } from "../types"
-import ShiftAssignSheet from "./ShiftAssignSheet"
+import { weekDays } from "../shiftRules"
+import ShiftCard from "./ShiftCard"
 
-/** US-32: Manager xếp người trực 3 ca trong ngày cho cơ sở mình và giao việc cho từng người */
+/**
+ * US-32: ma trận phân ca theo prototype manager_portal: chọn ngày trên dải tuần (thứ 2 → chủ nhật),
+ * mỗi ca (tên, giờ lấy từ bảng Shift) là một thẻ, thêm người và lưu ngay trong từng thẻ.
+ * Chỉ phân ai trực ca nào; không chia việc trong ca.
+ */
 function ShiftsPanel() {
   const ctx = useMemo(() => getManagerContext(), [])
-  const [date, setDate] = useState(todayInVietnam())
+  const today = todayInVietnam()
+  const [date, setDate] = useState(today)
   const [reloadCount, setReloadCount] = useState(0)
-  const [editing, setEditing] = useState<ShiftKey | null>(null)
 
   const staff = useAsyncData("facility-staff", () => listFacilityStaff(ctx))
-  const schedule = useAsyncData(date ? `shifts:${date}#${reloadCount}` : null, () => getDaySchedule(ctx, date))
+  const schedule = useAsyncData(`shifts:${date}#${reloadCount}`, () =>
+    getDaySchedule(ctx, date)
+  )
   const error = staff.error ?? schedule.error
   const isLoading = staff.isLoading || schedule.isLoading
+  const week = weekDays(date)
 
   if (error) {
-    return <LoadError title="Không tải được lịch phân ca" message={error} onRetry={() => setReloadCount((n) => n + 1)} />
+    return (
+      <LoadError
+        title="Không tải được lịch phân ca"
+        message={error}
+        onRetry={() => setReloadCount((n) => n + 1)}
+      />
+    )
   }
 
   return (
     <section aria-label="Phân ca nhân viên" className="space-y-4">
-      <FilterBar>
-        <DateFilter label="Ngày" value={date} onChange={(v) => v && setDate(v)} />
-        <p className="text-muted pb-1.5 text-xs">Khung trực chuẩn 08:00 – 20:00, chia 3 ca.</p>
+      <FilterBar className="items-center">
+        <DateFilter
+          label="Ngày phân ca"
+          value={date}
+          onChange={(v) => v && setDate(v)}
+        />
+        <div className="flex min-w-0 flex-1 items-end gap-1.5">
+          <Button
+            variant="outline"
+            size="icon-sm"
+            aria-label="Tuần trước"
+            onClick={() => setDate(addDays(date, -7))}
+          >
+            <ChevronLeftIcon aria-hidden="true" />
+          </Button>
+          <div
+            role="group"
+            aria-label="Chọn ngày trong tuần"
+            className="flex min-w-0 flex-1 gap-1 overflow-x-auto"
+          >
+            {week.map((d) => {
+              const active = d.date === date
+              return (
+                <button
+                  key={d.date}
+                  type="button"
+                  aria-pressed={active}
+                  aria-label={`${d.weekday} ${d.dayMonth}`}
+                  onClick={() => setDate(d.date)}
+                  className={cn(
+                    "flex min-w-14 flex-1 cursor-pointer flex-col items-center rounded-xl border px-2 py-1.5 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none",
+                    active
+                      ? "border-blue-600 bg-blue-600 text-white"
+                      : "inner-box text-title hover:border-blue-400"
+                  )}
+                >
+                  <span className="font-black">{d.weekday}</span>
+                  <span
+                    className={cn(
+                      "tabular-nums",
+                      active ? "text-blue-100" : "text-muted"
+                    )}
+                  >
+                    {d.dayMonth}
+                    {d.date === today && " ·"}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            aria-label="Tuần sau"
+            onClick={() => setDate(addDays(date, 7))}
+          >
+            <ChevronRightIcon aria-hidden="true" />
+          </Button>
+        </div>
       </FilterBar>
 
-      <TableCard
-        caption="Phân ca trong ngày"
-        columns={[
-          { header: "Ca" },
-          { header: "Người trực" },
-          { header: "Còn thiếu" },
-          { header: "Thao tác", srOnly: true },
-        ]}
-        minWidth={820}
-        isLoading={isLoading}
-        isEmpty={false}
-        emptyText=""
-      >
-        {SHIFTS.map((s) => {
-          const assignments = schedule.data?.shifts.find((x) => x.shift === s.key)?.assignments ?? []
-          const missing = missingDuties(assignments)
-          return (
-            <tr key={s.key} className="border-b align-top last:border-0">
-              <td className="px-4 py-3 whitespace-nowrap">
-                <p className="text-title font-bold">{s.label}</p>
-                <p className="text-muted">{s.time}</p>
-              </td>
-              <td className="px-4 py-3">
-                {assignments.length === 0 ? (
-                  <span className="font-semibold text-rose-600 dark:text-rose-400">Chưa có người trực</span>
-                ) : (
-                  <ul className="space-y-1">
-                    {assignments.map((a) => (
-                      <li key={a.accountId} className="text-title">
-                        <span className="font-semibold">{a.fullName}</span>
-                        <span className="text-muted"> · {DUTY_LABEL[a.duty]}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </td>
-              <td className="px-4 py-3">
-                {missing.length === 0 ? (
-                  <StatusBadge tone="green">Đủ việc</StatusBadge>
-                ) : (
-                  <div className="flex flex-wrap gap-1">
-                    {missing.map((d) => (
-                      <StatusBadge key={d} tone="amber">
-                        {DUTY_LABEL[d]}
-                      </StatusBadge>
-                    ))}
-                  </div>
-                )}
-              </td>
-              <td className="px-4 py-3 text-right">
-                <Button variant="outline" size="sm" aria-label={`Phân công ${s.label.toLowerCase()}`} onClick={() => setEditing(s.key)}>
-                  <CalendarCogIcon aria-hidden="true" /> Phân công
-                </Button>
-              </td>
-            </tr>
-          )
-        })}
-      </TableCard>
+      <p className="text-xs text-muted">
+        Chỉ chọn được nhân viên đang làm việc tại cơ sở của bạn.
+      </p>
 
-      {editing && schedule.data && (
-        <ShiftAssignSheet
-          key={`${date}:${editing}`}
-          ctx={ctx}
-          schedule={schedule.data}
-          shift={editing}
-          staff={staff.data ?? []}
-          onClose={() => setEditing(null)}
-          onSaved={(message) => {
-            toast.success(message)
-            setEditing(null)
-            setReloadCount((n) => n + 1)
-          }}
-        />
-      )}
+      <div className="grid gap-4 lg:grid-cols-3">
+        {isLoading || !schedule.data
+          ? [0, 1, 2].map((i) => (
+              <div
+                key={i}
+                aria-hidden="true"
+                className="card-box h-64 animate-pulse rounded-2xl border"
+              />
+            ))
+          : schedule.data.shifts.map((s) => (
+              <ShiftCard
+                key={`${date}:${s.shiftId}#${reloadCount}`}
+                ctx={ctx}
+                schedule={schedule.data!}
+                shift={s}
+                staff={staff.data ?? []}
+                onSaved={(message) => {
+                  toast.success(message)
+                  setReloadCount((n) => n + 1)
+                }}
+              />
+            ))}
+      </div>
     </section>
   )
 }

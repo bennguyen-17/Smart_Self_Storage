@@ -38,5 +38,6 @@ public interface ActivityLogRepository
                         @Param("ipAddress") String ipAddress);
 
       List<ActivityLog> findByAccountId(Integer accountId);
-
+      List<ActivityLog> findByCreatedAtBetweenOrderByCreatedAtDesc(LocalDateTime from, LocalDateTime to);
+      List<ActivityLog> findAllByOrderByCreatedAtDesc();
 }

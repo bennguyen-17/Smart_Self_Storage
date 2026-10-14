@@ -209,6 +209,8 @@ function toItem(seed: Seed): StaffReservationItem {
     reservationStatus: seed.reservationStatus,
     checkInDate: seed.checkInDate,
     endDate: seed.endDate,
+    reservationStartDate: seed.checkInDate,
+    reservationEndDate: seed.endDate,
     overdueDays: seed.overdueDays,
     unpaidPenaltyAmount: seed.unpaidPenaltyAmount,
     monthlyPrice: seed.monthlyPrice,

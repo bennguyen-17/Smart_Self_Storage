@@ -2,7 +2,7 @@ import PortalNavbar, { type PortalNavbarProps } from "@/features/internal-shell/
 
 import { MANAGER_TABS } from "../managerTabs"
 
-const MANAGER_NAV_ITEMS = MANAGER_TABS.map((t) => ({ to: `/manager/${t.key}`, label: t.label, icon: t.icon }))
+const MANAGER_NAV_ITEMS = MANAGER_TABS.map((t) => ({ to: `/manager/${t.key}`, label: t.label, hint: t.hint, icon: t.icon }))
 
 /** Navbar riêng của cổng Quản lý cơ sở: các trang vận hành tại một cơ sở */
 function ManagerNavbar(props: Omit<PortalNavbarProps, "portalName" | "items">) {

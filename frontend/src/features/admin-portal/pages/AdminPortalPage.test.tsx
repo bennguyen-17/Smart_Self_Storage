@@ -43,9 +43,12 @@ describe("AdminPortalPage: navbar riêng của Admin + mỗi trang một link", 
     renderAt("/admin")
     expect(screen.getByTestId("location")).toHaveTextContent("/admin/users")
     expect(screen.getByRole("heading", { level: 1, name: "Tài khoản & phân quyền" })).toBeInTheDocument()
-    const links = within(desktopNav()).getAllByRole("link").map((a) => a.textContent)
-    expect(links).toEqual(["Tài khoản", "Chi nhánh", "Nhật ký hoạt động"])
-    expect(screen.queryByRole("link", { name: "Ô kho" })).not.toBeInTheDocument()
+    const links = within(desktopNav()).getAllByRole("link")
+    expect(links).toHaveLength(3)
+    for (const [i, label] of ["Tài khoản", "Chi nhánh", "Nhật ký hoạt động"].entries()) {
+      expect(links[i]).toHaveTextContent(new RegExp(`^${label}`))
+    }
+    expect(screen.queryByRole("link", { name: /^Ô kho/ })).not.toBeInTheDocument()
     expect(await screen.findByRole("button", { name: /tạo tài khoản/i })).toBeInTheDocument()
   })
 
@@ -54,7 +57,7 @@ describe("AdminPortalPage: navbar riêng của Admin + mỗi trang một link", 
     { link: "Nhật ký hoạt động", path: "/admin/audit", title: "Nhật ký hoạt động hệ thống" },
   ])("bấm '$link' → $path, trang đã có chức năng (không còn ô giữ chỗ)", async ({ link, path, title }) => {
     const user = renderAt("/admin/users")
-    await user.click(within(desktopNav()).getByRole("link", { name: link }))
+    await user.click(within(desktopNav()).getByRole("link", { name: new RegExp(`^${link}`) }))
     expect(screen.getByTestId("location")).toHaveTextContent(path)
     expect(screen.getByRole("heading", { level: 1, name: title })).toBeInTheDocument()
     expect(screen.queryByText(/đang phát triển/i)).not.toBeInTheDocument()

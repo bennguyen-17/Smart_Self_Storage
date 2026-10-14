@@ -38,7 +38,7 @@ function ManagerPortalPage() {
   return (
     // Dùng Inter (font của dự án) cho cả trang: class chung .staff-portal ưu tiên Plus Jakarta Sans,
     // trong khi popup / ngăn bên được gắn ra ngoài trang nên chỉ có Inter → 2 font trên một màn hình.
-    <div className="staff-portal flex min-h-screen flex-col antialiased" style={{ fontFamily: "var(--font-sans)" }}>
+    <div className="staff-portal antialiased" style={{ fontFamily: "var(--font-sans)" }}>
       <ManagerNavbar
         profile={{
           accountId: user?.id ?? null,
@@ -49,12 +49,10 @@ function ManagerPortalPage() {
           facilityId: extra?.facilityId ?? null,
         }}
         onLogout={logout}
-      />
-
-      <main className="mx-auto w-full max-w-7xl flex-1 space-y-4 px-4 py-6 sm:px-6 lg:px-8">
+      >
         <h1 className="text-title text-xl font-black tracking-tight">{tab.title}</h1>
         {Panel ? <Panel /> : <TabPlaceholder tab={tab} />}
-      </main>
+      </ManagerNavbar>
     </div>
   )
 }
