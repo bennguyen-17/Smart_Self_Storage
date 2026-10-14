@@ -100,8 +100,9 @@ public class StaffCheckInService {
             return checkInFailure("Không tìm thấy thông tin đặt chỗ.");
         }
         Reservation reservation = reservationOpt.get();
-        if (!"CONFIRMED".equalsIgnoreCase(reservation.getStatus())) {
-            return checkInFailure("Đơn đặt chỗ phải ở trạng thái CONFIRMED (đã hoàn tất cọc online theo BR-16) để làm thủ tục check-in.");
+        // Hợp đồng đã chuyển sang trang staff (PENDING_CHECKIN) thì 100% đã cọc đủ
+        if (!"CONFIRMED".equalsIgnoreCase(reservation.getStatus()) && !"PENDING".equalsIgnoreCase(reservation.getStatus())) {
+            return checkInFailure("Đơn đặt chỗ không ở trạng thái hợp lệ để làm thủ tục check-in.");
         }
 
         Optional<Contract> contractOpt = contractRepository.findByReservationIdForUpdate(reservationId);
@@ -122,25 +123,37 @@ public class StaffCheckInService {
         if (!belongsToFacility(unit, employee.get().getFacilityId())) {
             return checkInFailure("Ô kho không thuộc cơ sở do nhân viên quản lý.");
         }
-        if (!"RESERVED".equalsIgnoreCase(unit.getStatus())) {
-            return checkInFailure("Ô kho phải ở trạng thái RESERVED (đã được giữ chỗ cọc theo BR-11, BR-16) để làm thủ tục bàn giao.");
+        if (!"RESERVED".equalsIgnoreCase(unit.getStatus()) && !"HOLD".equalsIgnoreCase(unit.getStatus()) && !"AVAILABLE".equalsIgnoreCase(unit.getStatus())) {
+            return checkInFailure("Ô kho không ở trạng thái sẵn sàng để làm thủ tục bàn giao.");
         }
 
         List<Payment> deposits = paymentRepository.findDepositInvoicesForUpdate(contract.getContractId());
         Payment deposit = !deposits.isEmpty() ? deposits.get(0) : null;
 
-        BigDecimal remainingAmount = deposit != null && deposit.getRemainingAmount() != null
-                ? deposit.getRemainingAmount()
-                : BigDecimal.ZERO;
+        BigDecimal totalAmount = deposit != null && deposit.getAmount() != null
+                ? deposit.getAmount()
+                : (reservation.getRentalAmount() != null ? reservation.getRentalAmount() : BigDecimal.ZERO);
+        BigDecimal depAmount = reservation.getDepositAmount() != null ? reservation.getDepositAmount() : BigDecimal.ZERO;
+        BigDecimal paidSoFar = deposit != null && deposit.getPaidAmount() != null ? deposit.getPaidAmount() : BigDecimal.ZERO;
+
+        if (paidSoFar.compareTo(depAmount) < 0) {
+            paidSoFar = depAmount;
+        }
+
+        BigDecimal remainingAmount = totalAmount.subtract(paidSoFar);
+        if (remainingAmount.signum() < 0) {
+            remainingAmount = BigDecimal.ZERO;
+        }
 
         BigDecimal collectedAmount = request.getCollectedAmount() == null
                 ? BigDecimal.ZERO
                 : request.getCollectedAmount();
 
+        // Kiểm tra số tiền thu tại quầy: chấp nhận số tiền còn lại (tiền thuê) hoặc tổng tiền
         if (remainingAmount.signum() > 0) {
-            if (collectedAmount.compareTo(remainingAmount) != 0) {
+            if (collectedAmount.compareTo(remainingAmount) != 0 && collectedAmount.compareTo(totalAmount) != 0) {
                 return checkInFailure("Số tiền thu tại quầy (" + collectedAmount
-                        + ") phải khớp với số tiền còn lại (" + remainingAmount + ").");
+                        + ") phải khớp với số tiền cần thu (" + remainingAmount + ").");
             }
         } else {
             collectedAmount = BigDecimal.ZERO;
@@ -148,22 +161,18 @@ public class StaffCheckInService {
 
         LocalDateTime now = LocalDateTime.now();
         if (deposit != null) {
-            BigDecimal oldPaid = deposit.getPaidAmount() == null
-                    ? BigDecimal.ZERO
-                    : deposit.getPaidAmount();
-            deposit.setPaidAmount(oldPaid.add(collectedAmount));
+            deposit.setPaidAmount(totalAmount);
             deposit.setRemainingAmount(BigDecimal.ZERO);
             deposit.setStatus("PAID");
             deposit.setPaymentStatus("SUCCESS");
             if (collectedAmount.signum() > 0) {
                 deposit.setPaymentMethod(paymentMethod);
-                deposit.setPaidAt(now);
-            } else if (deposit.getPaidAt() == null) {
-                deposit.setPaidAt(now);
             }
+            deposit.setPaidAt(now);
             paymentRepository.save(deposit);
         }
 
+        // Chuyển đổi trạng thái hợp đồng sang CÓ HIỆU LỰC (ACTIVE)
         contract.setStatus("ACTIVE");
         contract.setActivatedAt(now);
         unit.setStatus("OCCUPIED");

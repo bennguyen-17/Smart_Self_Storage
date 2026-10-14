@@ -446,11 +446,22 @@ public class StaffReservationService {
                             || "INITIAL_RENTAL".equalsIgnoreCase(payment.getInvoiceType()))
                     .max(Comparator.comparing(Payment::getPaymentId))
                     .ifPresent(payment -> {
-                        item.setDepStatus(payment.getStatus());
-                        item.setDepPaymentStatus(payment.getPaymentStatus());
-                        item.setDepAmount(payment.getAmount());
-                        item.setDepPaidAmount(payment.getPaidAmount());
-                        item.setDepRemainingAmount(payment.getRemainingAmount());
+                        BigDecimal totalAmt = payment.getAmount() != null ? payment.getAmount() : BigDecimal.ZERO;
+                        BigDecimal depAmt = reservation.getDepositAmount() != null ? reservation.getDepositAmount() : BigDecimal.ZERO;
+                        BigDecimal paid = payment.getPaidAmount() != null ? payment.getPaidAmount() : BigDecimal.ZERO;
+
+                        // Hợp đồng đã chuyển sang trang staff (PENDING_CHECKIN) thì 100% đã cọc đủ
+                        if (paid.compareTo(depAmt) < 0 && CONTRACT_PENDING_CHECKIN.equals(contract.getStatus())) {
+                            paid = depAmt;
+                        }
+                        BigDecimal remaining = totalAmt.subtract(paid);
+                        if (remaining.signum() < 0) remaining = BigDecimal.ZERO;
+
+                        item.setDepStatus(remaining.signum() == 0 ? "PAID" : "PARTIALLY_PAID");
+                        item.setDepPaymentStatus("SUCCESS");
+                        item.setDepAmount(totalAmt);
+                        item.setDepPaidAmount(paid);
+                        item.setDepRemainingAmount(remaining);
                     });
         });
         return item;
