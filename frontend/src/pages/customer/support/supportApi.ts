@@ -1,5 +1,29 @@
 import apiClient, { isMockMode } from '@/lib/apiClient';
 
+export const getStoredAccountId = (): number => {
+  try {
+    const rawAuth = localStorage.getItem('auth_session') || sessionStorage.getItem('auth_session');
+    if (rawAuth) {
+      const parsed = JSON.parse(rawAuth);
+      if (parsed?.user?.id || parsed?.user?.accountId) {
+        return Number(parsed.user.id || parsed.user.accountId);
+      }
+    }
+  } catch (e) {}
+
+  try {
+    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+    if (userStr) {
+      const u = JSON.parse(userStr);
+      if (u.accountId || u.id) {
+        return Number(u.accountId || u.id);
+      }
+    }
+  } catch (e) {}
+
+  return 13;
+};
+
 /**
  * Gửi yêu cầu hỗ trợ kỹ thuật (Ticket)
  * SWAGGER ENDPOINT: POST /api/support/tickets
@@ -16,17 +40,15 @@ export const submitSupportTicket = async (ticketData: any) => {
     };
   }
 
-  let accountId: number | undefined;
-  try {
-    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-    if (userStr) {
-      const u = JSON.parse(userStr);
-      accountId = u.accountId || u.id;
-    }
-  } catch (e) {}
+  const accountId = getStoredAccountId();
 
-  const res: any = await apiClient.post('/support/tickets', ticketData, {
-    headers: accountId ? { 'X-Account-Id': String(accountId) } : undefined
+  const payload = {
+    accountId,
+    ...ticketData
+  };
+
+  const res: any = await apiClient.post('/support/tickets', payload, {
+    headers: { 'X-Account-Id': String(accountId) }
   });
   return { success: true, data: res.data || res };
 };
@@ -40,18 +62,12 @@ export const getMySupportTickets = async () => {
     return { success: true, data: [] };
   }
 
-  let accountId: number | undefined;
-  try {
-    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-    if (userStr) {
-      const u = JSON.parse(userStr);
-      accountId = u.accountId || u.id;
-    }
-  } catch (e) {}
+  const accountId = getStoredAccountId();
 
   try {
     const res: any = await apiClient.get('/customer/tickets', {
-      headers: accountId ? { 'X-Account-Id': String(accountId) } : undefined
+      headers: { 'X-Account-Id': String(accountId) },
+      params: { accountId }
     });
     const data = Array.isArray(res) ? res : res.data || [];
     return { success: true, data };

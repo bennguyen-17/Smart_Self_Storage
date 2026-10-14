@@ -50,7 +50,7 @@ export default function CustomerLayout({ children, activeNav = 'home' }: Custome
     let isMounted = true;
     const fetchCount = async () => {
       try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const token = typeof window !== 'undefined' ? (localStorage.getItem('token') || localStorage.getItem('auth_session') || sessionStorage.getItem('auth_session')) : null;
         if (!token) return;
         const res = await getMySupportTickets();
         if (isMounted && res.success && Array.isArray(res.data)) {
