@@ -8,6 +8,10 @@ import apiClient, { isMockMode } from "@/lib/apiClient"
 import type { UnitDetailResponse } from "@/types"
 
 import type {
+  CollectPenaltyRequest,
+  CollectPenaltyResponse,
+  RenewAtCounterRequest,
+  RenewAtCounterResponse,
   StaffCancelReservationResponse,
   StaffChangeUnitResponse,
   StaffCheckInRequest,
@@ -19,8 +23,10 @@ import {
   mockCancelReservation,
   mockChangeUnit,
   mockCheckIn,
+  mockCollectPenalty,
   mockListReservations,
   mockLookupReservation,
+  mockRenewAtCounter,
 } from "./checkinApi.mock"
 
 /** GET /api/staff/reservations — BE tự lọc theo cơ sở của Staff. */
@@ -77,6 +83,38 @@ export async function counterCancel(
     {}
   )
   return unwrapApiData<StaffCancelReservationResponse>(body)
+}
+
+/**
+ * US-20: POST /api/staff/reservations/{id}/collect-penalty — thu phạt quá hạn tại quầy.
+ * Gộp toàn bộ phạt UNPAID thành 1 hóa đơn PEN (PAID); HĐ vẫn OVERDUE, PIN vẫn khóa.
+ */
+export async function collectPenalty(
+  reservationId: number,
+  payload: CollectPenaltyRequest
+): Promise<CollectPenaltyResponse> {
+  if (isMockMode()) return mockCollectPenalty(reservationId)
+  const body = await apiClient.post(
+    `/staff/reservations/${reservationId}/collect-penalty`,
+    payload
+  )
+  return unwrapApiData<CollectPenaltyResponse>(body)
+}
+
+/**
+ * US-20: POST /api/staff/reservations/{id}/renew-at-counter — gia hạn tại quầy khi OVERDUE.
+ * HĐ về ACTIVE, hóa đơn EXT, khôi phục quyền sinh PIN. BE chặn nếu còn phạt UNPAID.
+ */
+export async function renewAtCounter(
+  reservationId: number,
+  payload: RenewAtCounterRequest
+): Promise<RenewAtCounterResponse> {
+  if (isMockMode()) return mockRenewAtCounter(reservationId, payload)
+  const body = await apiClient.post(
+    `/staff/reservations/${reservationId}/renew-at-counter`,
+    payload
+  )
+  return unwrapApiData<RenewAtCounterResponse>(body)
 }
 
 /**

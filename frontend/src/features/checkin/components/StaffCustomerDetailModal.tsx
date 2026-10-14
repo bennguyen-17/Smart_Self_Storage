@@ -1,6 +1,6 @@
 import { IdCardIcon } from "lucide-react"
 
-import { formatVnd } from "@/lib/format"
+import { formatDate, formatVnd } from "@/lib/format"
 
 import type { StaffReservationItem } from "../types"
 import ProtoModal from "./ProtoModal"
@@ -132,12 +132,30 @@ function Body({
             </div>
             <div className="flex items-center justify-between">
               <span>Ngày bắt đầu:</span>
-              <b className="text-title">{contract.checkInDate ?? "—"}</b>
+              <b className="text-title">{formatDate(contract.checkInDate)}</b>
             </div>
             <div className="flex items-center justify-between">
               <span>Ngày kết thúc:</span>
-              <b className="text-title">—</b>
+              <b className="text-rose-600 dark:text-rose-400">
+                {formatDate(contract.endDate)}
+              </b>
             </div>
+            {contract.contractStatus === "OVERDUE" && (
+              <>
+                <div className="flex items-center justify-between">
+                  <span>Số ngày quá hạn:</span>
+                  <b className="text-rose-600">
+                    {contract.overdueDays ?? 0} ngày
+                  </b>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Phạt chưa nộp:</span>
+                  <b className="text-rose-600">
+                    {formatVnd(contract.unpaidPenaltyAmount)}
+                  </b>
+                </div>
+              </>
+            )}
             <div className="flex items-center justify-between">
               <span>Cọc:</span>
               <b className="text-green-600">{formatVnd(contract.depAmount)}</b>

@@ -1,9 +1,10 @@
 import {
   BanIcon,
+  CalendarPlusIcon,
   EyeIcon,
   InboxIcon,
   PackageOpenIcon,
-  TriangleAlertIcon,
+  ReceiptTextIcon,
   UserCheckIcon,
 } from "lucide-react"
 import { cn } from "cn"
@@ -18,6 +19,10 @@ interface CheckinContractTableProps {
   onOpenDetail: (item: StaffReservationItem) => void
   onCheckin: (item: StaffReservationItem) => void
   onCheckout: (item: StaffReservationItem) => void
+  /** US-20: mở dialog thu phạt quá hạn tại quầy */
+  onCollectPenalty: (item: StaffReservationItem) => void
+  /** US-20: mở dialog gia hạn tại quầy */
+  onRenew: (item: StaffReservationItem) => void
   /** unitCode → nhãn "Size M (3m²)" để hiển thị cạnh vị trí kho */
   unitMeta?: Record<string, string>
 }
@@ -50,6 +55,8 @@ function CheckinContractTable({
   onOpenDetail,
   onCheckin,
   onCheckout,
+  onCollectPenalty,
+  onRenew,
   unitMeta,
 }: CheckinContractTableProps) {
   if (error) {
@@ -156,6 +163,8 @@ function CheckinContractTable({
                       item={item}
                       onCheckin={onCheckin}
                       onCheckout={onCheckout}
+                      onCollectPenalty={onCollectPenalty}
+                      onRenew={onRenew}
                     />
                   </td>
 
@@ -182,10 +191,14 @@ function StatusAction({
   item,
   onCheckin,
   onCheckout,
+  onCollectPenalty,
+  onRenew,
 }: {
   item: StaffReservationItem
   onCheckin: (item: StaffReservationItem) => void
   onCheckout: (item: StaffReservationItem) => void
+  onCollectPenalty: (item: StaffReservationItem) => void
+  onRenew: (item: StaffReservationItem) => void
 }) {
   if (item.contractStatus === "PENDING_CHECKIN") {
     return (
@@ -214,11 +227,26 @@ function StatusAction({
   }
 
   if (item.contractStatus === "OVERDUE") {
+    // US-20: thu phạt quá hạn & gia hạn tại quầy
     return (
-      <span className="flex w-36 items-center justify-center space-x-1.5 rounded-xl border border-rose-300 bg-rose-100 px-3 py-2 text-[11px] font-extrabold whitespace-nowrap text-rose-800 shadow-sm dark:border-rose-800 dark:bg-rose-950/80 dark:text-rose-300">
-        <TriangleAlertIcon className="size-3" />
-        <span>QUÁ HẠN</span>
-      </span>
+      <div className="flex w-36 flex-col gap-1">
+        <button
+          type="button"
+          onClick={() => onCollectPenalty(item)}
+          className="flex w-full cursor-pointer items-center justify-center space-x-1.5 rounded-xl bg-rose-600 px-3 py-1.5 text-[11px] font-extrabold whitespace-nowrap text-white shadow-sm transition hover:bg-rose-700"
+        >
+          <ReceiptTextIcon className="size-3.5" />
+          <span>Thu phạt</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onRenew(item)}
+          className="flex w-full cursor-pointer items-center justify-center space-x-1.5 rounded-xl border border-rose-300 bg-rose-100 px-3 py-1.5 text-[11px] font-extrabold whitespace-nowrap text-rose-800 shadow-sm transition hover:bg-rose-200 dark:border-rose-800 dark:bg-rose-950/80 dark:text-rose-300"
+        >
+          <CalendarPlusIcon className="size-3.5" />
+          <span>Gia hạn</span>
+        </button>
+      </div>
     )
   }
 
