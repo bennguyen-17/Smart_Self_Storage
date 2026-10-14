@@ -3,10 +3,13 @@ package com.swp391.backend.controller;
 import com.swp391.backend.entity.*;
 import com.swp391.backend.dto.CustomerCancelReservationRequest;
 import com.swp391.backend.dto.CustomerCancelReservationResponse;
+import com.swp391.backend.dto.ApiResponse;
+import com.swp391.backend.dto.GatePinVerificationRequest;
 import com.swp391.backend.repository.*;
 import com.swp391.backend.service.JwtService;
 import com.swp391.backend.service.StorageService;
 import com.swp391.backend.service.CustomerReservationService;
+import com.swp391.backend.service.GatePinService;
 import io.jsonwebtoken.Claims;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -35,6 +38,7 @@ public class ContractController {
     private final PaymentRepository paymentRepository;
     private final ActivityLogRepository activityLogRepository;
     private final CustomerReservationService customerReservationService;
+    private final GatePinService gatePinService;
 
     public ContractController(ContractRepository contractRepository,
                               ReservationRepository reservationRepository,
@@ -47,7 +51,8 @@ public class ContractController {
                               JwtService jwtService,
                               PaymentRepository paymentRepository,
                               ActivityLogRepository activityLogRepository,
-                              CustomerReservationService customerReservationService) {
+                              CustomerReservationService customerReservationService,
+                              GatePinService gatePinService) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -60,6 +65,7 @@ public class ContractController {
         this.paymentRepository = paymentRepository;
         this.activityLogRepository = activityLogRepository;
         this.customerReservationService = customerReservationService;
+        this.gatePinService = gatePinService;
     }
 
     @GetMapping("/contracts/my-contracts")
@@ -290,6 +296,15 @@ public class ContractController {
         data.put("unitCode", activeUnit.getUnitCode());
 
         return ResponseEntity.ok(data);
+    }
+
+    @PostMapping("/gate-pins/verify")
+    public ResponseEntity<ApiResponse> verifyGatePin(@RequestBody GatePinVerificationRequest request) {
+        boolean valid = request != null && gatePinService.verifyPin(request.getPinCode());
+        if (!valid) {
+            return ResponseEntity.status(403).body(new ApiResponse(false, "PIN không hợp lệ, đã hết hạn hoặc hợp đồng không còn hiệu lực."));
+        }
+        return ResponseEntity.ok(new ApiResponse(true, "PIN hợp lệ. Cho phép mở cửa."));
     }
 
     /**
