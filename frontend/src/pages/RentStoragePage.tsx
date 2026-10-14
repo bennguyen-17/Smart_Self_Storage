@@ -14,12 +14,16 @@ import {
   Check,
   ShieldAlert,
   Boxes,
+  ShieldCheck,
+  Lock,
+  ExternalLink,
 } from 'lucide-react';
 import CustomerLayout from '@/components/layouts/CustomerLayout';
 import StorageMap2D from '@/features/portal/components/StorageMap2D';
 import { getBranches, markUnitAsHeld } from '@/features/portal/services/facilityService';
 import { addNewBookingContract } from '@/features/portal/services/contractService';
 import { createDepositTransaction, mockPayDeposit } from '@/features/portal/services/bookingApi';
+import apiClient from '@/lib/apiClient';
 import {
   calcRentalTotal,
   clampRentalDays,
@@ -30,7 +34,7 @@ const RENT_STEPS = [
   { id: 1, title: '1. Chọn ô kho (2D)', shortTitle: '1. Chọn kho' },
   { id: 2, title: '2. Bảng giá & Hạn', shortTitle: '2. Bảng giá' },
   { id: 3, title: '3. Thỏa thuận cọc', shortTitle: '3. Thỏa thuận' },
-  { id: 4, title: '4. Thanh toán QR', shortTitle: '4. Thanh toán' },
+  { id: 4, title: '4. Thanh toán VNPay', shortTitle: '4. Thanh toán' },
 ] as const;
 
 export default function RentStoragePage() {
@@ -187,8 +191,31 @@ export default function RentStoragePage() {
     setIsPaymentCompleted(true);
   };
 
+  const [isRedirectingVNPay, setIsRedirectingVNPay] = useState(false);
+
+  const handleOpenVNPay = async () => {
+    setIsRedirectingVNPay(true);
+    try {
+      const res: any = await apiClient.post('/payment/vnpay/create-payment-url', {
+        invoiceNumber: `DEP-${bookingCode}`,
+        amount: selectedUnit?.deposit || 500000,
+        orderInfo: `Thanh toan tien coc kho ${selectedUnit?.id || bookingCode}`
+      });
+      const url = res.data?.paymentUrl || res.paymentUrl;
+      if (url) {
+        window.location.href = url;
+      } else {
+        alert('Không nhận được liên kết thanh toán từ cổng VNPay!');
+      }
+    } catch (err: any) {
+      console.error('Lỗi khởi tạo thanh toán VNPay:', err);
+      alert('Lỗi kết nối cổng thanh toán VNPay: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsRedirectingVNPay(false);
+    }
+  };
+
   const depositAmount = selectedUnit?.deposit || 3000000;
-  const qrUrl = `https://img.vietqr.io/image/MB-0909888999-compact2.png?amount=${depositAmount}&addInfo=DEP-${bookingCode}&accountName=SELF%20STORAGE%20391`;
 
   return (
     <CustomerLayout activeNav="rent">
@@ -647,11 +674,11 @@ export default function RentStoragePage() {
           )}
 
           {/* ========================================================
-              BƯỚC 4: THANH TOÁN TIỀN CỌC VIETQR & HOÀN TẤT
+              BƯỚC 4: THANH TOÁN TIỀN CỌC QUA CỔNG VNPAY
              ======================================================== */}
           {step === 4 && selectedUnit && (
             <motion.div
-              key="step-4-vietqr-payment"
+              key="step-4-vnpay-payment"
               initial={{ opacity: 0, x: 15 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -15 }}
@@ -674,73 +701,96 @@ export default function RentStoragePage() {
                     </span>
                   </div>
 
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl p-6 space-y-4">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl p-6 sm:p-7 space-y-5">
                     {/* Header */}
-                    <div className="text-center pb-2 border-b border-slate-200 dark:border-slate-800">
-                      <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white">
-                        THANH TOÁN TIỀN CỌC VIETQR
+                    <div className="text-center pb-3 border-b border-slate-100 dark:border-slate-800 space-y-1.5">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-xs font-bold">
+                        <Lock className="size-3.5" />
+                        <span>Thanh toán trực tuyến bảo mật</span>
+                      </div>
+                      <h3 className="font-black text-base uppercase text-slate-900 dark:text-white tracking-tight">
+                        CỔNG THANH TOÁN VNPAY
                       </h3>
-                      <p className="text-[11px] text-slate-500 mt-0.5">Quét mã chuyển khoản tức thì 24/7</p>
+                      <p className="text-xs text-slate-500">
+                        Hệ thống kết nối trực tiếp đến cổng thanh toán VNPay Sandbox
+                      </p>
                     </div>
 
-                    {/* Thanh đếm ngược thời gian giữ chỗ */}
-                    <div className="p-3 rounded-2xl bg-amber-500/10 dark:bg-amber-950/25 border border-amber-500/30 dark:border-amber-500/40 flex items-center justify-between text-xs">
-                      <span className="font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-                        <Clock className="size-4 text-amber-600 animate-spin" />
-                        <span>Thời gian giữ chỗ:</span>
-                      </span>
-                      <span className="font-mono font-black text-rose-600 dark:text-rose-400 text-sm animate-pulse">
-                        {Math.floor(timeLeft / 60).toString().padStart(2, '0')}:{(timeLeft % 60).toString().padStart(2, '0')}
-                      </span>
-                    </div>
-
-                    {/* Khung mã QR */}
-                    <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-center space-y-3">
-                      <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">
-                        QUÉT MÃ VIETQR THANH TOÁN 24/7:
-                      </span>
-                      <div className="w-48 h-48 bg-white border-2 border-slate-300 dark:border-slate-700 rounded-2xl mx-auto p-2 shadow-md">
-                        <img src={qrUrl} alt="Mã VietQR" className="w-full h-full object-contain rounded-lg" />
+                    {/* Chi tiết đơn đặt cọc */}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 space-y-3 text-xs">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500 dark:text-slate-400">Mã giao dịch:</span>
+                        <span className="font-mono font-black text-slate-900 dark:text-white bg-white dark:bg-slate-900 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                          DEP-{bookingCode}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500 dark:text-slate-400">Ô kho giữ chỗ:</span>
+                        <span className="font-bold text-slate-900 dark:text-white">
+                          {selectedUnit.id} ({selectedUnit.size || selectedUnit.typeName || 'Tiêu chuẩn'})
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500 dark:text-slate-400">Cơ sở lưu trữ:</span>
+                        <span className="font-medium text-slate-800 dark:text-slate-200">{facilityDisplayName}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500 dark:text-slate-400">Thời gian giữ chỗ:</span>
+                        <span className="font-mono font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5 animate-pulse">
+                          <Clock className="size-3.5" />
+                          <span>{Math.floor(timeLeft / 60).toString().padStart(2, '0')}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
+                        </span>
                       </div>
 
-                      {/* Chi tiết tài khoản ngân hàng */}
-                      <div className="text-xs text-slate-800 dark:text-slate-200 space-y-2 bg-white dark:bg-slate-800/90 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700/60 text-left">
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">Ngân hàng:</span>
-                          <strong className="text-slate-900 dark:text-white">MB BANK (Ngân hàng Quân Đội)</strong>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">Chủ tài khoản:</span>
-                          <strong className="text-slate-900 dark:text-white">SELF STORAGE 391</strong>
-                        </div>
-                        <div className="flex justify-between items-center pt-1 border-t border-slate-200 dark:border-slate-700">
-                          <span className="text-slate-500">Số tiền cọc:</span>
-                          <strong className="font-mono font-black text-amber-500 text-sm">
-                            {depositAmount.toLocaleString('vi-VN')} VNĐ
-                          </strong>
-                        </div>
-                        <div className="flex justify-between items-center pt-1 border-t border-slate-200 dark:border-slate-700">
-                          <span className="text-slate-500">Nội dung CK:</span>
-                          <span className="font-mono font-black text-blue-600 bg-blue-50 dark:bg-blue-950 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
-                            DEP-{bookingCode}
-                          </span>
-                        </div>
+                      <div className="pt-3 border-t border-slate-200 dark:border-slate-700 flex justify-between items-baseline">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                          Số tiền cọc cần thanh toán:
+                        </span>
+                        <span className="font-mono text-xl font-black text-blue-600 dark:text-blue-400">
+                          {depositAmount.toLocaleString('vi-VN')} VNĐ
+                        </span>
                       </div>
                     </div>
 
-                    {/* Nút Xác nhận đã thanh toán */}
-                    <button
-                      type="button"
-                      disabled={isSubmittingPayment}
-                      onClick={handleConfirmPayment}
-                      className="w-full py-3.5 rounded-2xl font-black text-sm text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01]"
-                    >
-                      <Check className="size-4.5" />
-                      <span>{isSubmittingPayment ? 'Đang kích hoạt ô kho...' : 'Xác nhận đã thanh toán'}</span>
-                    </button>
-                    <p className="text-[11px] text-center text-slate-500">
-                      Hệ thống sẽ kiểm tra giao dịch và kích hoạt ô kho ngay lập tức.
-                    </p>
+                    {/* Huy hiệu bảo mật */}
+                    <div className="flex items-center justify-center gap-4 text-[11px] text-slate-500 dark:text-slate-400">
+                      <span className="flex items-center gap-1">
+                        <ShieldCheck className="size-3.5 text-emerald-500" />
+                        <span>Mã hóa SSL 256-bit</span>
+                      </span>
+                      <span>•</span>
+                      <span>Chữ ký số SHA-512</span>
+                    </div>
+
+                    {/* Nút Mở Cổng VNPay */}
+                    <div className="space-y-2 pt-1">
+                      <button
+                        type="button"
+                        disabled={isRedirectingVNPay}
+                        onClick={handleOpenVNPay}
+                        className={`w-full py-3.5 rounded-2xl font-black text-xs uppercase shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 ${
+                          isRedirectingVNPay
+                            ? 'bg-blue-800 opacity-80 cursor-wait text-white'
+                            : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/30 hover:shadow-blue-600/50 hover:scale-[1.01]'
+                        }`}
+                      >
+                        {isRedirectingVNPay ? (
+                          <>
+                            <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Đang chuyển đến cổng VNPay...</span>
+                          </>
+                        ) : (
+                          <>
+                            <CreditCard className="size-4.5" />
+                            <span>MỞ CỔNG VNPAY ĐỂ THANH TOÁN</span>
+                            <ExternalLink className="size-3.5 opacity-80" />
+                          </>
+                        )}
+                      </button>
+                      <p className="text-[11px] text-center text-slate-500 dark:text-slate-400">
+                        Bạn sẽ được chuyển hướng an toàn đến Cổng VNPay để hoàn tất giao dịch.
+                      </p>
+                    </div>
                   </div>
                 </>
               ) : (
