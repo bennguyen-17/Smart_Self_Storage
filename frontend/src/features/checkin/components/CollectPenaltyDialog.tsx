@@ -86,9 +86,6 @@ function Body({
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "BANK_TRANSFER">(
-    "CASH"
-  )
 
   const overdueDays = contract.overdueDays ?? 0
   const total = contract.unpaidPenaltyAmount ?? penaltyTotal(overdueDays)
@@ -100,7 +97,7 @@ function Body({
     setErrorMsg(null)
     try {
       const response = await collectPenalty(contract.reservationId, {
-        paymentMethod,
+        paymentMethod: "CASH",
       })
       toast.success("Thu phạt thành công", {
         description: `Đã xuất hóa đơn ${response.invoiceNumber ?? "PEN"} và gộp toàn bộ ngày phạt.`,
@@ -121,23 +118,10 @@ function Body({
           label="Phí phạt mỗi ngày"
           value={formatVnd(OVERDUE_PENALTY_PER_DAY)}
         />
-        <Row
-          label="Tổng tiền phạt cần thu"
-          value={formatVnd(total)}
-          strong
-        />
+        <Row label="Tổng tiền phạt cần thu" value={formatVnd(total)} strong />
         <div className="flex items-center justify-between gap-4 border-t border-slate-200 pt-1.5 dark:border-slate-800">
           <span className="text-muted">Hình thức thanh toán</span>
-          <select
-            value={paymentMethod}
-            onChange={(event) =>
-              setPaymentMethod(event.target.value as "CASH" | "BANK_TRANSFER")
-            }
-            className="portal-input h-8 rounded-lg border px-2.5 text-xs outline-none"
-          >
-            <option value="CASH">Tiền mặt (CASH)</option>
-            <option value="BANK_TRANSFER">Chuyển khoản / Quẹt thẻ</option>
-          </select>
+          <span className="text-title font-bold">Tiền mặt</span>
         </div>
       </div>
 
@@ -215,10 +199,7 @@ function SuccessPanel({
 
       <div className="inner-box space-y-2 rounded-2xl border p-3.5 text-xs">
         <Row label="Hợp đồng" value={result.reservationCode ?? "—"} />
-        <Row
-          label="Hóa đơn phạt (PEN)"
-          value={result.invoiceNumber ?? "—"}
-        />
+        <Row label="Hóa đơn phạt (PEN)" value={result.invoiceNumber ?? "—"} />
         <Row
           label="Số ngày phạt đã thu"
           value={`${result.overdueDays ?? 0} ngày`}
