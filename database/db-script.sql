@@ -717,9 +717,9 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 
 -- 10. Ca trực vận hành (Shifts)
 INSERT INTO Shift (shiftId, shiftName, startTime, endTime, status) VALUES
-(1, 'Ca Sáng (Mở cổng & Kiểm tra sáng)', '06:00:00', '14:00:00', 'ACTIVE'),
-(2, 'Ca Chiều (Vận hành & Hỗ trợ khách)', '14:00:00', '22:00:00', 'ACTIVE'),
-(3, 'Ca Đêm (Giám sát an ninh IoT)', '22:00:00', '06:00:00', 'ACTIVE');
+(1, 'Ca Sáng', '08:00:00', '12:00:00', 'ACTIVE'),
+(2, 'Ca Chiều', '12:00:00', '16:00:00', 'ACTIVE'),
+(3, 'Ca Tối', '16:00:00', '20:00:00', 'ACTIVE');
 
 -- 11. Phân công ca trực mẫu (StaffShifts)
 INSERT INTO StaffShift (staffShiftId, employeeId, facilityId, shiftId, workDate, status) VALUES

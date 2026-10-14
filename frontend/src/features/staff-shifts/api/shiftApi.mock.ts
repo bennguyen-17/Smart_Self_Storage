@@ -12,9 +12,9 @@ import type {
 const LATENCY = 250
 
 const SHIFTS: Omit<DayShift, "staff">[] = [
-  { shiftId: 1, shiftName: "Ca Sáng", startTime: "06:00", endTime: "14:00" },
-  { shiftId: 2, shiftName: "Ca Chiều", startTime: "14:00", endTime: "22:00" },
-  { shiftId: 3, shiftName: "Ca Đêm", startTime: "22:00", endTime: "06:00" },
+  { shiftId: 1, shiftName: "Ca Sáng", startTime: "08:00", endTime: "12:00" },
+  { shiftId: 2, shiftName: "Ca Chiều", startTime: "12:00", endTime: "16:00" },
+  { shiftId: 3, shiftName: "Ca Tối", startTime: "16:00", endTime: "20:00" },
 ]
 
 const STAFF: FacilityStaff[] = [
