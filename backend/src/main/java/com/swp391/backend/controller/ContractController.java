@@ -1,6 +1,8 @@
 package com.swp391.backend.controller;
 
 import com.swp391.backend.entity.*;
+import com.swp391.backend.dto.CustomerCancelReservationRequest;
+import com.swp391.backend.dto.CustomerCancelReservationResponse;
 import com.swp391.backend.repository.*;
 import com.swp391.backend.service.JwtService;
 import com.swp391.backend.service.StorageService;
@@ -163,9 +165,9 @@ public class ContractController {
     }
 
     @PostMapping("/contracts/{contractId}/cancel-deposit")
-    public ResponseEntity<Map<String, Object>> cancelDeposit(
+    public ResponseEntity<CustomerCancelReservationResponse> cancelDeposit(
             @PathVariable Integer contractId,
-            @RequestBody(required = false) Map<String, Object> body,
+            @RequestBody(required = false) CustomerCancelReservationRequest body,
             @AuthenticationPrincipal Integer accountId) {
         return ResponseEntity.ok(customerReservationService.cancelDeposit(contractId, accountId, body));
     }

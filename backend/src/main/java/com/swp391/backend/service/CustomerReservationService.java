@@ -5,6 +5,8 @@ import com.swp391.backend.entity.Contract;
 import com.swp391.backend.entity.Payment;
 import com.swp391.backend.entity.Reservation;
 import com.swp391.backend.entity.StorageUnit;
+import com.swp391.backend.dto.CustomerCancelReservationRequest;
+import com.swp391.backend.dto.CustomerCancelReservationResponse;
 import com.swp391.backend.repository.AccountRepository;
 import com.swp391.backend.repository.ContractRepository;
 import com.swp391.backend.repository.PaymentRepository;
@@ -21,8 +23,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -49,7 +49,8 @@ public class CustomerReservationService {
     }
 
     @Transactional
-    public Map<String, Object> cancelDeposit(Integer contractId, Integer accountId, Map<String, Object> body) {
+    public CustomerCancelReservationResponse cancelDeposit(Integer contractId, Integer accountId,
+                                                            CustomerCancelReservationRequest body) {
         if (accountId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Yêu cầu đăng nhập.");
         }
@@ -98,9 +99,9 @@ public class CustomerReservationService {
         BigDecimal refundAmount = paidDeposit.multiply(rate).setScale(2, RoundingMode.HALF_UP);
         BigDecimal forfeitedAmount = paidDeposit.subtract(refundAmount);
 
-        String bankName = value(body, "bankName");
-        String bankAccountNumber = value(body, "bankAccountNumber");
-        String bankAccountName = value(body, "bankAccountName");
+        String bankName = value(body != null ? body.getBankName() : null);
+        String bankAccountNumber = value(body != null ? body.getBankAccountNumber() : null);
+        String bankAccountName = value(body != null ? body.getBankAccountName() : null);
         if (refundAmount.signum() > 0
                 && (bankName == null || bankAccountNumber == null || bankAccountName == null)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cần cung cấp đầy đủ thông tin ngân hàng để nhận hoàn tiền.");
@@ -134,17 +135,17 @@ public class CustomerReservationService {
             paymentRepository.save(refund);
         }
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("refundEligible", refundAmount.signum() > 0);
-        response.put("refundRate", rate);
-        response.put("refundAmount", refundAmount);
-        response.put("forfeitAmount", forfeitedAmount);
-        response.put("daysUntilStart", daysUntilStart);
-        response.put("refundBankName", bankName != null ? bankName : "");
-        response.put("refundAccountNumber", bankAccountNumber != null ? bankAccountNumber : "");
-        response.put("refundAccountName", bankAccountName != null ? bankAccountName.toUpperCase() : "");
-        response.put("message", refundAmount.signum() > 0
+        CustomerCancelReservationResponse response = new CustomerCancelReservationResponse();
+        response.setSuccess(true);
+        response.setRefundEligible(refundAmount.signum() > 0);
+        response.setRefundRate(rate);
+        response.setRefundAmount(refundAmount);
+        response.setForfeitAmount(forfeitedAmount);
+        response.setDaysUntilStart(daysUntilStart);
+        response.setRefundBankName(bankName != null ? bankName : "");
+        response.setRefundAccountNumber(bankAccountNumber != null ? bankAccountNumber : "");
+        response.setRefundAccountName(bankAccountName != null ? bankAccountName.toUpperCase() : "");
+        response.setMessage(refundAmount.signum() > 0
                 ? "Hủy đặt chỗ thành công. Yêu cầu hoàn tiền đang chờ xử lý."
                 : "Hủy đặt chỗ thành công. Không ghi nhận tiền cọc DEP đã thu để hoàn.");
         return response;
@@ -160,9 +161,9 @@ public class CustomerReservationService {
         return BigDecimal.ZERO;
     }
 
-    private String value(Map<String, Object> body, String key) {
-        if (body == null || body.get(key) == null) return null;
-        String value = body.get(key).toString().trim();
+    private String value(String input) {
+        if (input == null) return null;
+        String value = input.trim();
         return value.isEmpty() ? null : value;
     }
 }
