@@ -77,4 +77,39 @@ public class CustomerTicketController {
     ) {
         return ResponseEntity.ok(supportTicketService.getCustomerTickets(customerId));
     }
+
+    // --- US-21: 6. Khách hàng gửi Ticket hỗ trợ kỹ thuật từ SupportForm ---
+    @PostMapping("/support/tickets")
+    public ResponseEntity<?> submitSupportTicket(
+            @RequestBody java.util.Map<String, Object> body,
+            @RequestHeader(value = "X-Account-Id", required = false) Integer customerId
+    ) {
+        String type = body.get("type") != null ? body.get("type").toString() : "UNLOCK";
+        String unitCode = body.get("unitCode") != null ? body.get("unitCode").toString() : "";
+        String description = body.get("description") != null ? body.get("description").toString() : "";
+
+        Integer accountId = customerId;
+        if (accountId == null && body.get("accountId") != null) {
+            try {
+                accountId = Integer.parseInt(body.get("accountId").toString());
+            } catch (Exception ignored) {}
+        }
+        if (accountId == null) {
+            accountId = 13;
+        }
+
+        try {
+            SupportTicket saved = supportTicketService.createSupportFormTicket(accountId, type, unitCode, description);
+            return ResponseEntity.ok(java.util.Map.of(
+                    "success", true,
+                    "ticketId", saved.getTicketCode(),
+                    "status", saved.getStatus(),
+                    "unitCode", saved.getUnitCode()
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("success", false, "message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(java.util.Map.of("success", false, "message", e.getMessage()));
+        }
+    }
 }

@@ -27,4 +27,13 @@ public interface PaymentRepository extends JpaRepository<Payment, Integer> {
             order by payment.paymentId
             """)
     List<Payment> findPartiallyPaidDepByContractIdForUpdate(@Param("contractId") Integer contractId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select payment from Payment payment
+            where payment.contractId = :contractId
+              and (payment.invoiceType = 'DEP' or payment.invoiceType = 'INITIAL_RENTAL')
+            order by payment.paymentId desc
+            """)
+    List<Payment> findDepositInvoicesForUpdate(@Param("contractId") Integer contractId);
 }
