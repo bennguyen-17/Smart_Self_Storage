@@ -162,9 +162,40 @@ function Body({
                 </div>
               </>
             )}
+            {/* TIỀN THUÊ KHO & TIỀN CỌC */}
             <div className="flex items-center justify-between">
-              <span>Cọc:</span>
-              <b className="text-green-600">{formatVnd(contract.depAmount)}</b>
+              <span>Tiền thuê kho:</span>
+              <b className="text-title font-mono font-bold">
+                {formatVnd(contract.rentalAmount ?? contract.depRemainingAmount)}
+              </b>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Tiền cọc giữ chỗ:</span>
+              <b className="text-amber-600 dark:text-amber-400 font-mono font-bold">
+                {formatVnd(contract.depositAmount ?? contract.depPaidAmount)}
+              </b>
+            </div>
+            <div className="flex items-center justify-between border-t border-slate-200/80 pt-1.5 dark:border-slate-800">
+              <span className="font-bold">Tổng giá trị hợp đồng:</span>
+              <b className="text-title font-mono font-extrabold text-sm text-blue-600 dark:text-blue-400">
+                {formatVnd(contract.depAmount ?? ((contract.rentalAmount ?? 0) + (contract.depositAmount ?? 0)))}
+              </b>
+            </div>
+            <div className="flex items-center justify-between border-t border-slate-200/60 pt-1 dark:border-slate-800">
+              <span>Tình trạng thanh toán:</span>
+              {contract.contractStatus === "ACTIVE" ? (
+                <b className="text-emerald-600 dark:text-emerald-400 font-bold">
+                  Đã thanh toán đủ 100%
+                </b>
+              ) : (contract.depRemainingAmount ?? 0) > 0 ? (
+                <b className="text-rose-600 dark:text-rose-400 font-bold">
+                  Cần thu tại quầy: {formatVnd(contract.depRemainingAmount ?? contract.rentalAmount)}
+                </b>
+              ) : (
+                <b className="text-emerald-600 dark:text-emerald-400 font-bold">
+                  Đã cọc online (100% Tiền cọc)
+                </b>
+              )}
             </div>
           </div>
         </div>

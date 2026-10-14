@@ -9,8 +9,9 @@ export default function ContractDetailModal({ contract, onClose }: { contract: a
   const startDate = formatDate(contract.startDate);
   const endDate = formatDate(contract.expiryDate || contract.endDate);
   
-  const rentalFee = contract.rentalFee || 0;
-  const depositFee = contract.depositFee || 0;
+  const rentalFee = contract.rentalFee ?? contract.rentalAmount ?? 0;
+  const depositFee = contract.depositFee ?? contract.depositAmount ?? 0;
+  const totalAmount = contract.totalAmount ?? (Number(rentalFee) + Number(depositFee));
 
   return (
     <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -103,10 +104,28 @@ export default function ContractDetailModal({ contract, onClose }: { contract: a
               </div>
             </div>
 
-            {/* Bottom Row: Tiền cọc */}
-            <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
-              <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-300">Tiền cọc giữ chỗ:</span>
-              <span className="font-mono font-black text-base sm:text-xl text-amber-500">{Number(depositFee).toLocaleString('vi-VN')} VNĐ</span>
+            {/* Bottom Row: Chi tiết tài chính */}
+            <div className="pt-3 border-t border-slate-200/60 dark:border-slate-700/60 space-y-2">
+              <div className="flex items-center justify-between text-xs sm:text-sm">
+                <span className="text-slate-600 dark:text-slate-400">Tiền cọc giữ chỗ:</span>
+                <span className="font-mono font-bold text-amber-500">{Number(depositFee).toLocaleString('vi-VN')} VNĐ</span>
+              </div>
+              <div className="flex items-center justify-between text-xs sm:text-sm">
+                <span className="font-bold text-slate-800 dark:text-slate-200">Tổng giá trị hợp đồng:</span>
+                <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-sm sm:text-base">
+                  {Number(totalAmount).toLocaleString('vi-VN')} VNĐ
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] sm:text-xs pt-1 border-t border-slate-200/40 dark:border-slate-700/40">
+                <span className="text-slate-500">Tình trạng thanh toán:</span>
+                {contract.status === 'ACTIVE' ? (
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">Đã thanh toán đủ 100%</span>
+                ) : (
+                  <span className="font-bold text-amber-600 dark:text-amber-400">
+                    Đã cọc online {Number(depositFee).toLocaleString('vi-VN')} đ · Cần nộp tại quầy {Number(rentalFee).toLocaleString('vi-VN')} đ
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
