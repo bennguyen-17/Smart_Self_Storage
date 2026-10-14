@@ -10,16 +10,34 @@ const MOCK_PINS = {
   'HN-02': '931 405'
 };
 
+export const getCurrentAccountId = (): number | null => {
+  try {
+    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+    if (userStr) {
+      const u = JSON.parse(userStr);
+      const id = u.accountId ?? u.id;
+      return id != null ? Number(id) : null;
+    }
+  } catch (e) {}
+  return null;
+};
+
+const getStorageKey = () => {
+  const accId = getCurrentAccountId();
+  return accId ? `smart_storage_contracts_${accId}` : 'smart_storage_contracts_guest';
+};
+
 export const getLocalContracts = () => {
   try {
-    const raw = localStorage.getItem('smart_storage_contracts');
+    const key = getStorageKey();
+    const raw = localStorage.getItem(key);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
         // Lọc bỏ triệt để các mã mock bị fix cứng như #HD-2
         const cleaned = parsed.filter((c: any) => c.contractId !== '#HD-2' && c.rawContractId !== 2);
         if (cleaned.length !== parsed.length) {
-          localStorage.setItem('smart_storage_contracts', JSON.stringify(cleaned));
+          localStorage.setItem(key, JSON.stringify(cleaned));
         }
         return cleaned;
       }
@@ -30,7 +48,8 @@ export const getLocalContracts = () => {
 
 export const saveLocalContracts = (list: any[], notify = true) => {
   try {
-    localStorage.setItem('smart_storage_contracts', JSON.stringify(list));
+    const key = getStorageKey();
+    localStorage.setItem(key, JSON.stringify(list));
   } catch (e) {}
   if (notify && typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('storage_contracts_updated', { detail: { contracts: list } }));
@@ -41,6 +60,7 @@ export const saveLocalContracts = (list: any[], notify = true) => {
  * Thêm hợp đồng mới vừa nộp cọc thành công vào danh sách quản lý
  */
 export const addNewBookingContract = (bookingData: any) => {
+  const currentAccId = getCurrentAccountId();
   const currentList = getLocalContracts();
   const rawId = bookingData.contractId || Math.floor(100 + Math.random() * 900);
   const uId = bookingData.unitId || 'HN01-G-XL04';
@@ -65,6 +85,7 @@ export const addNewBookingContract = (bookingData: any) => {
   const newContract = {
     contractId: `#HD-${rawId}`,
     rawContractId: rawId,
+    accountId: currentAccId,
     unitCode: uId,
     branchName: bookingData.facilityName || 'SmartStorage Cầu Giấy (HN-01)',
     branchCode: branchCode,
@@ -131,6 +152,7 @@ export const cancelDepositContract = async (
  * SWAGGER ENDPOINT: GET /api/contracts/my-contracts
  */
 export const getMyContracts = async () => {
+  const currentAccId = getCurrentAccountId();
   const localList = getLocalContracts();
 
   if (isMockMode()) {
@@ -138,20 +160,11 @@ export const getMyContracts = async () => {
   }
 
   try {
-    const userStr = localStorage.getItem('user');
-    let accountId: number | undefined = undefined;
-    if (userStr) {
-      try {
-        const u = JSON.parse(userStr);
-        accountId = u.accountId || u.id;
-      } catch (e) {}
-    }
-
     const res: any = await apiClient.get('/contracts/my-contracts', {
-      params: accountId ? { accountId } : undefined
+      params: currentAccId ? { accountId: currentAccId } : undefined
     });
-    const apiData = res.data || res;
-    if (Array.isArray(apiData) && apiData.length > 0) {
+    const apiData = res.data ?? res;
+    if (Array.isArray(apiData)) {
       const mappedApiData = apiData
         .filter((c: any) => c.contractId !== '#HD-2' && c.rawContractId !== 2)
         .map((c: any) => {
@@ -166,16 +179,22 @@ export const getMyContracts = async () => {
           };
         });
 
-      // Merge newly added local pending contracts if not yet returned by backend
+      // Chỉ gộp hợp đồng vừa cọc trên máy NẾU thuộc đúng tài khoản này và chưa có trên server
       const apiUnitCodes = new Set(mappedApiData.map((c: any) => c.unitCode));
-      const localOnly = localList.filter((c: any) => !apiUnitCodes.has(c.unitCode) && c.status === 'PENDING_CHECKIN' && c.contractId !== '#HD-2');
+      const localOnly = localList.filter(
+        (c: any) =>
+          !apiUnitCodes.has(c.unitCode) &&
+          c.status === 'PENDING_CHECKIN' &&
+          c.contractId !== '#HD-2' &&
+          (!c.accountId || c.accountId === currentAccId)
+      );
       const merged = [...localOnly, ...mappedApiData];
       saveLocalContracts(merged, false);
       return { success: true, data: merged };
     }
     return { success: true, data: localList.filter((c: any) => c.contractId !== '#HD-2') };
   } catch (error) {
-    console.warn('API error, falling back to local contracts:', error);
+    console.warn('API error, falling back to local contracts for current account:', error);
     return { success: true, data: localList.filter((c: any) => c.contractId !== '#HD-2') };
   }
 };

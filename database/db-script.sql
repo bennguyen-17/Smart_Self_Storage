@@ -10,6 +10,10 @@ DROP DATABASE IF EXISTS smart_storage;
 CREATE DATABASE smart_storage CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE smart_storage;
 
+-- Đảm bảo kết nối dùng chuẩn UTF-8 toàn vẹn tiếng Việt
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
 -- Tắt kiểm tra khóa ngoại để khởi tạo sạch sẽ không bị xung đột thứ tự
 SET FOREIGN_KEY_CHECKS = 0;
 

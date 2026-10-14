@@ -71,14 +71,9 @@ export default function MyStorageTab({ onOpenExtendModal, onOpenPinModal }: { on
   };
 
   useEffect(() => {
-    // Dọn dẹp cache nếu từng lưu #HD-2
+    // Dọn dẹp cache toàn cục cũ để tránh hợp đồng test cũ rò rỉ sang tài khoản mới
     try {
-      const raw = localStorage.getItem('smart_storage_contracts');
-      if (raw && (raw.includes('#HD-2') || raw.includes('"rawContractId":2'))) {
-        const parsed = JSON.parse(raw);
-        const filtered = parsed.filter((c: any) => c.contractId !== '#HD-2' && c.rawContractId !== 2);
-        localStorage.setItem('smart_storage_contracts', JSON.stringify(filtered));
-      }
+      localStorage.removeItem('smart_storage_contracts');
     } catch (e) {}
 
     fetchContracts(true);

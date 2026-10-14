@@ -65,6 +65,7 @@ export default function RentStoragePage() {
   const [timeLeft, setTimeLeft] = useState(300); // 5:00
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const [isPaymentCompleted, setIsPaymentCompleted] = useState(false);
+  const [paymentData, setPaymentData] = useState<any>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -136,17 +137,24 @@ export default function RentStoragePage() {
   const handleProceedToStep4 = async () => {
     if (!noProhibitedGoods || !agreedTerms) return;
 
-    const generatedCode = `RES-${Math.floor(1000 + Math.random() * 9000)}`;
-    setBookingCode(generatedCode);
+    const fallbackCode = `RES-${Math.floor(1000 + Math.random() * 9000)}`;
+    setBookingCode(fallbackCode);
     setTimeLeft(300);
 
     try {
-      await createDepositTransaction({
+      const res = await createDepositTransaction({
         unitId: selectedUnit.id,
         facilityName: facilityDisplayName,
         depositAmount: selectedUnit.deposit,
-        bookingCode: generatedCode,
+        startDate: startDate,
+        effectiveDays: effectiveDays,
       });
+
+      if (res && res.success && res.data) {
+        setPaymentData(res.data);
+        const resolvedCode = res.data.bookingCode || res.data.invoiceNumber || fallbackCode;
+        setBookingCode(resolvedCode);
+      }
     } catch (e) {
       console.warn('Backend createDepositTransaction:', e);
     }
@@ -155,13 +163,13 @@ export default function RentStoragePage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Hoàn tất xác nhận thanh toán ở Bước 4
+  // Hoàn tất xác nhận thanh toán ở Bước 4 (Chuyển khoản trực tiếp / Mock Pay)
   const handleConfirmPayment = async () => {
     setIsSubmittingPayment(true);
-    const transferMemo = `DEP-${bookingCode}`;
+    const invoiceNum = paymentData?.invoiceNumber || paymentData?.bankInfo?.transferMemo || `DEP-${bookingCode}`;
 
     try {
-      await mockPayDeposit(transferMemo);
+      await mockPayDeposit(invoiceNum);
     } catch (e) {
       console.warn('Backend mockPayDeposit:', e);
     }
@@ -179,8 +187,9 @@ export default function RentStoragePage() {
       effectiveDays,
       estimatedTotalRental: rental.total,
       depositAmount: selectedUnit.deposit,
-      contractId: `#HD-${Math.floor(100 + Math.random() * 900)}`,
-      bookingCode,
+      contractId: paymentData?.contractId ? `#HD-${paymentData.contractId}` : `#HD-${Math.floor(100 + Math.random() * 900)}`,
+      rawContractId: paymentData?.contractId,
+      bookingCode: paymentData?.bookingCode || bookingCode,
     };
     addNewBookingContract(bookingPayload);
 
@@ -195,9 +204,10 @@ export default function RentStoragePage() {
 
   const handleOpenVNPay = async () => {
     setIsRedirectingVNPay(true);
+    const invoiceNum = paymentData?.invoiceNumber || paymentData?.bankInfo?.transferMemo || `DEP-${bookingCode}`;
     try {
       const res: any = await apiClient.post('/payment/vnpay/create-payment-url', {
-        invoiceNumber: `DEP-${bookingCode}`,
+        invoiceNumber: invoiceNum,
         amount: selectedUnit?.deposit || 500000,
         orderInfo: `Thanh toan tien coc kho ${selectedUnit?.id || bookingCode}`
       });
@@ -752,6 +762,27 @@ export default function RentStoragePage() {
                       </div>
                     </div>
 
+                    {/* Mã QR Chuyển khoản nếu có */}
+                    {paymentData?.bankInfo?.qrImageUrl && (
+                      <div className="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 text-center space-y-3">
+                        <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                          Quét mã VietQR chuyển khoản đặt cọc:
+                        </p>
+                        <div className="bg-white p-2 rounded-xl inline-block shadow-sm mx-auto">
+                          <img
+                            src={paymentData.bankInfo.qrImageUrl}
+                            alt="VietQR Đặt cọc"
+                            className="w-44 h-44 object-contain mx-auto"
+                          />
+                        </div>
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 space-y-0.5 font-medium">
+                          <p>Ngân hàng: <strong>{paymentData.bankInfo.bankName || 'MBBank'}</strong></p>
+                          <p>Số tài khoản: <strong className="font-mono text-slate-900 dark:text-white">{paymentData.bankInfo.accountNo || '0900000001'}</strong></p>
+                          <p>Nội dung: <strong className="font-mono text-blue-600 dark:text-cyan-400">{paymentData.bankInfo.transferMemo || bookingCode}</strong></p>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Huy hiệu bảo mật */}
                     <div className="flex items-center justify-center gap-4 text-[11px] text-slate-500 dark:text-slate-400">
                       <span className="flex items-center gap-1">
@@ -762,13 +793,14 @@ export default function RentStoragePage() {
                       <span>Chữ ký số SHA-512</span>
                     </div>
 
-                    {/* Nút Mở Cổng VNPay */}
-                    <div className="space-y-2 pt-1">
+                    {/* Các nút thanh toán */}
+                    <div className="space-y-2.5 pt-1">
+                      {/* Nút 1: Mở Cổng VNPay */}
                       <button
                         type="button"
-                        disabled={isRedirectingVNPay}
+                        disabled={isRedirectingVNPay || isSubmittingPayment}
                         onClick={handleOpenVNPay}
-                        className={`w-full py-3.5 rounded-2xl font-black text-xs uppercase shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 ${
+                        className={`w-full py-3 rounded-2xl font-black text-xs uppercase shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 ${
                           isRedirectingVNPay
                             ? 'bg-blue-800 opacity-80 cursor-wait text-white'
                             : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/30 hover:shadow-blue-600/50 hover:scale-[1.01]'
@@ -787,8 +819,40 @@ export default function RentStoragePage() {
                           </>
                         )}
                       </button>
+
+                      <div className="relative flex items-center justify-center my-1">
+                        <div className="border-t border-slate-200 dark:border-slate-700 w-full"></div>
+                        <span className="bg-white dark:bg-slate-900 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider absolute">
+                          HOẶC
+                        </span>
+                      </div>
+
+                      {/* Nút 2: Xác nhận đã nộp cọc / Mock Pay */}
+                      <button
+                        type="button"
+                        disabled={isSubmittingPayment || isRedirectingVNPay}
+                        onClick={handleConfirmPayment}
+                        className={`w-full py-3 rounded-2xl font-black text-xs uppercase shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 ${
+                          isSubmittingPayment
+                            ? 'bg-emerald-800 opacity-80 cursor-wait text-white'
+                            : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20 hover:scale-[1.01]'
+                        }`}
+                      >
+                        {isSubmittingPayment ? (
+                          <>
+                            <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Đang ghi nhận đặt cọc...</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="size-4.5" />
+                            <span>TÔI ĐÃ CHUYỂN KHOẢN / XÁC NHẬN NỘP CỌC NGAY</span>
+                          </>
+                        )}
+                      </button>
+
                       <p className="text-[11px] text-center text-slate-500 dark:text-slate-400">
-                        Bạn sẽ được chuyển hướng an toàn đến Cổng VNPay để hoàn tất giao dịch.
+                        Sau khi nộp cọc thành công, hợp đồng sẽ được kích hoạt ở trạng thái Chờ Check-in trong Kho Của Tôi.
                       </p>
                     </div>
                   </div>
