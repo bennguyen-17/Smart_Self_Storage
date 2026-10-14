@@ -41,16 +41,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String role = claims.get("role", String.class);
 
                 if (accountId != null) {
-                    boolean isStaff = "4".equals(role) || "STAFF".equalsIgnoreCase(role);
-
+                    boolean isAdmin = "1".equals(role) || "ADMIN".equalsIgnoreCase(role);
+                    boolean isBom = "2".equals(role) || "BOM".equalsIgnoreCase(role);
                     boolean isManager = "3".equals(role) || "MANAGER".equalsIgnoreCase(role);
+                    boolean isStaff = "4".equals(role) || "STAFF".equalsIgnoreCase(role);
 
                     String authority;
 
-                    if (isStaff) {
-                        authority = "ROLE_STAFF";
+                    if (isAdmin) {
+                        authority = "ROLE_ADMIN";
+                    } else if (isBom) {
+                        authority = "ROLE_BOM";
                     } else if (isManager) {
                         authority = "ROLE_MANAGER";
+                    } else if (isStaff) {
+                        authority = "ROLE_STAFF";
                     } else {
                         authority = "ROLE_AUTHENTICATED";
                     }

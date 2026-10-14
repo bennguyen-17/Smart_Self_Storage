@@ -56,6 +56,16 @@ public class SecurityConfig {
                                 "/api/manager/audit-logs/manual-gate-open")
                         .hasRole("MANAGER")
 
+                        .requestMatchers(
+                                "/api/admin/**")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers(
+                                "/api/manager/staff",
+                                "/api/manager/shifts",
+                                "/api/manager/shifts/**")
+                        .hasAnyRole("MANAGER", "ADMIN")
+
                         .anyRequest().permitAll())
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
