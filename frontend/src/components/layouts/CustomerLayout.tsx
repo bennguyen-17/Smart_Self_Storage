@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Warehouse, Boxes, KeyRound, Headset, Home } from 'lucide-react';
 import Header from '@/components/common/Header';
 import SiteFooter from '@/components/common/SiteFooter';
-import CustomerProfileModal from '@/features/portal/components/modals/CustomerProfileModal';
+import CustomerProfileModal from '@/components/common/CustomerProfileModal';
 import { useTheme } from '@/components/common/theme-provider';
 
 export type CustomerNavTab = 'home' | 'rent' | 'my-storage' | 'gate-pin' | 'support';
@@ -16,8 +16,8 @@ interface CustomerLayoutProps {
 
 const NAV_ITEMS = [
   { id: 'rent', label: 'Thuê kho', path: '/rent', icon: Warehouse },
-  { id: 'my-storage', label: 'Kho của tôi', path: '/my-storage', icon: Boxes },
-  { id: 'gate-pin', label: 'Mã PIN mở cửa', path: '/gate-pin', icon: KeyRound },
+  { id: 'my-storage', label: 'Kho của tôi', path: '/storage', icon: Boxes },
+  { id: 'gate-pin', label: 'Mã PIN mở cửa', path: '/pin', icon: KeyRound },
   { id: 'support', label: 'Gửi hỗ trợ', path: '/support', icon: Headset },
 ] as const;
 

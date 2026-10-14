@@ -1,4 +1,4 @@
-﻿/* eslint-disable react-refresh/only-export-components */
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useCallback,
@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react"
 
-import type { AuthUser } from "@/features/auth/api/authApi"
+import type { AuthUser } from "@/pages/auth/authApi"
 
 const STORAGE_KEY = "auth_session"
 

@@ -37,13 +37,13 @@ const PINS: MapPin[] = [
     labelCenterX: 97,
     facilities: [
       {
-        code: "HN-01",
+        code: "HN01",
         name: "SmartStorage Cầu Giấy",
         address: "Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội",
         floors: 3,
       },
       {
-        code: "HN-02",
+        code: "HN02",
         name: "SmartStorage Thanh Xuân",
         address: "Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội",
         floors: 3,
@@ -60,7 +60,7 @@ const PINS: MapPin[] = [
     labelCenterX: 392,
     facilities: [
       {
-        code: "DN-01",
+        code: "DN01",
         name: "SmartStorage Hải Châu",
         address: "Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng",
         floors: 2,
@@ -77,19 +77,19 @@ const PINS: MapPin[] = [
     labelCenterX: 332,
     facilities: [
       {
-        code: "HCM-01",
+        code: "HCM01",
         name: "SmartStorage Quận 1",
         address: "Số 123 Nguyễn Huệ, Quận 1, TP.HCM",
         floors: 3,
       },
       {
-        code: "HCM-02",
+        code: "HCM02",
         name: "SmartStorage Quận 7",
         address: "Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM",
         floors: 2,
       },
       {
-        code: "HCM-03",
+        code: "HCM03",
         name: "SmartStorage Thủ Đức",
         address: "Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM",
         floors: 3,
@@ -106,7 +106,7 @@ const PINS: MapPin[] = [
     labelCenterX: 107,
     facilities: [
       {
-        code: "CT-01",
+        code: "CT01",
         name: "SmartStorage Ninh Kiều",
         address: "Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ",
         floors: 2,
