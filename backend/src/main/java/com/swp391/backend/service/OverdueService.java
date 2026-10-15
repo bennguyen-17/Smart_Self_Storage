@@ -13,14 +13,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
 public class OverdueService {
 
     private static final BigDecimal DAILY_OVERDUE_FEE = new BigDecimal("50000.00");
-    private static final DateTimeFormatter INVOICE_DATE_FORMAT = DateTimeFormatter.BASIC_ISO_DATE;
     private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
     private final ContractRepository contractRepository;
@@ -65,36 +64,44 @@ public class OverdueService {
             }
 
             if ("OVERDUE".equalsIgnoreCase(contract.getStatus())) {
-                createMissingDailyFines(contract, reservation.getEndDate(), today);
+                createOrUpdateOverdueFine(contract, reservation.getEndDate(), today);
             }
         }
 
         return updatedCount;
     }
 
-    private void createMissingDailyFines(Contract contract, LocalDate endDate, LocalDate today) {
+    private void createOrUpdateOverdueFine(Contract contract, LocalDate endDate, LocalDate today) {
+        long overdueDays = ChronoUnit.DAYS.between(endDate, today);
+        BigDecimal totalFine = DAILY_OVERDUE_FEE.multiply(BigDecimal.valueOf(overdueDays));
+        String invoiceNumber = "OVD-" + contract.getContractId();
         LocalDateTime issuedAt = LocalDateTime.now(VIETNAM_ZONE);
-        for (LocalDate fineDate = endDate.plusDays(1);
-             !fineDate.isAfter(today);
-             fineDate = fineDate.plusDays(1)) {
-            String invoiceNumber = "OVD-" + contract.getContractId() + "-"
-                    + fineDate.format(INVOICE_DATE_FORMAT);
-            if (paymentRepository.findByInvoiceNumber(invoiceNumber).isPresent()) {
-                continue;
-            }
 
-            Payment payment = new Payment();
+        Payment payment = paymentRepository.findByInvoiceNumber(invoiceNumber)
+                .orElseGet(Payment::new);
+        if (payment.getPaymentId() == null) {
             payment.setContractId(contract.getContractId());
             payment.setInvoiceNumber(invoiceNumber);
             payment.setInvoiceType("OVERDUE_FEE");
-            payment.setAmount(DAILY_OVERDUE_FEE);
             payment.setPaidAmount(BigDecimal.ZERO);
-            payment.setRemainingAmount(DAILY_OVERDUE_FEE);
             payment.setIssuedAt(issuedAt);
             payment.setDueAt(issuedAt.plusDays(1));
             payment.setStatus("PENDING");
             payment.setPaymentStatus("PENDING");
-            paymentRepository.save(payment);
         }
+
+        BigDecimal paidAmount = payment.getPaidAmount() == null
+                ? BigDecimal.ZERO
+                : payment.getPaidAmount();
+        BigDecimal remainingAmount = totalFine.subtract(paidAmount).max(BigDecimal.ZERO);
+        payment.setAmount(totalFine);
+        payment.setRemainingAmount(remainingAmount);
+        payment.setStatus(remainingAmount.signum() == 0
+                ? "PAID"
+                : paidAmount.signum() > 0 ? "PARTIALLY_PAID" : "PENDING");
+        if (remainingAmount.signum() > 0) {
+            payment.setPaymentStatus("PENDING");
+        }
+        paymentRepository.save(payment);
     }
 }
