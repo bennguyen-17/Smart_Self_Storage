@@ -1,0 +1,54 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: smart-storage-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "rootpassword"
+      MYSQL_DATABASE: "smart_storage"
+      MYSQL_USER: "root"
+      MYSQL_PASSWORD: "123456"
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./database/db-script.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    networks:
+      - smart-storage-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: smart-storage-backend
+    restart: always
+    depends_on:
+      - mysql
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/smart_storage?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&useUnicode=true"
+      SPRING_DATASOURCE_USERNAME: "root"
+      SPRING_DATASOURCE_PASSWORD: "rootpassword"
+    ports:
+      - "8080:8080"
+    networks:
+      - smart-storage-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: smart-storage-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+    networks:
+      - smart-storage-net
+
+volumes:
+  mysql-data:
+
+networks:
+  smart-storage-net:
+    driver: bridge
