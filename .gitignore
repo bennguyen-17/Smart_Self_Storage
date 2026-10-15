@@ -53,9 +53,6 @@ node_modules/
 .env
 .env.*
 
-# --- [DOCKER] ---
-docker-compose.yml
-
 # Local project references - DO NOT COMMIT
 business-rule/
 prototype/
