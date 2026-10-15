@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react"
 
-import type { AuthUser } from "@/pages/auth/authApi"
+import type { AuthUser } from "@/features/auth/authApi"
 
 const STORAGE_KEY = "auth_session"
 

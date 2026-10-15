@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMyContracts } from '@/pages/customer/storage/storageApi';
+import { getMyContracts } from '@/features/customer/storage/storageApi';
 import { getGatePin } from '../pinApi';
 import { KeyRound, ShieldCheck, ShieldAlert, MapPin, Clock, DoorOpen, AlertTriangle, ArrowRight, Warehouse } from 'lucide-react';
 

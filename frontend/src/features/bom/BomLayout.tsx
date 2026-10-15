@@ -19,8 +19,8 @@ import {
 import { motion, AnimatePresence } from "motion/react"
 import { useTheme } from "@/components/common/theme-provider"
 import { useAuth } from "@/context/AuthContext"
-import ThreeBackground from "@/pages/bom/components/ThreeBackground"
-import { BomProvider } from "@/pages/bom/context/BomContext"
+import ThreeBackground from "@/features/bom/components/ThreeBackground"
+import { BomProvider } from "@/features/bom/context/BomContext"
 
 const NAV_MODULES = [
   {

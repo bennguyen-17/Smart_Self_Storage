@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { submitSupportTicket, getMySupportTickets } from '../supportApi';
-import { getMyContracts } from '@/pages/customer/storage/storageApi';
+import { getMyContracts } from '@/features/customer/storage/storageApi';
 import {
   Headset,
   PhoneCall,

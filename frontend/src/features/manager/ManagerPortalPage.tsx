@@ -3,9 +3,9 @@ import { Navigate, useNavigate, useParams, useSearchParams } from "react-router-
 import { useAuth } from "@/context/AuthContext"
 import { getRoleTitle, normalizeRole } from "@/lib/roles"
 
-import ManagerNavbar from "@/pages/manager/components/ManagerNavbar"
-import TabPlaceholder from "@/pages/manager/components/TabPlaceholder"
-import { DEFAULT_MANAGER_TAB, findManagerTab } from "@/pages/manager/managerTabs"
+import ManagerNavbar from "@/features/manager/components/ManagerNavbar"
+import TabPlaceholder from "@/features/manager/components/TabPlaceholder"
+import { DEFAULT_MANAGER_TAB, findManagerTab } from "@/features/manager/managerTabs"
 
 /**
  * Cổng Quản lý cơ sở (Vỹ). Mỗi trang có link riêng /manager/<trang>, chuyển trang bằng navbar.

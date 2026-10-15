@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
-import { unitSizeOf } from "@/pages/floorplan/unitDisplay"
+import { unitSizeOf } from "@/features/floorplan/unitDisplay"
 import { getErrorMessage } from "@/lib/api"
 import { formatVnd } from "@/lib/format"
 

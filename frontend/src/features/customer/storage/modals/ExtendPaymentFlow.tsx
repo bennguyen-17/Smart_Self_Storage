@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 
 import ExtendPaymentModal from './ExtendPaymentModal';
 import ExtendSuccessModal from './ExtendSuccessModal';
-import { createDepositTransaction } from '@/pages/customer/rent/rentApi';
-import { addNewBookingContract } from '@/pages/customer/rent/rentApi';
-import { markUnitAsHeld } from '@/pages/customer/rent/rentApi';
+import { createDepositTransaction } from '@/features/customer/rent/rentApi';
+import { addNewBookingContract } from '@/features/customer/rent/rentApi';
+import { markUnitAsHeld } from '@/features/customer/rent/rentApi';
 
 export default function ExtendPaymentFlow({ initialBookingData, onClose, onFinish }: { initialBookingData?: Record<string, unknown>; onClose?: () => void; onFinish?: () => void }) {
   const [step, setStep] = useState('PAYMENT');

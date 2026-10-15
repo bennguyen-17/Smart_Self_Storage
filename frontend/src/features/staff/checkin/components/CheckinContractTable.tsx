@@ -12,7 +12,7 @@ import { cn } from "cn"
 import {
   SIZE_AREA_M2,
   unitSizeFromCode,
-} from "@/pages/floorplan/unitDisplay"
+} from "@/features/floorplan/unitDisplay"
 
 import type { StaffReservationItem } from "../types"
 

@@ -9,7 +9,7 @@ import {
   FilterBar,
   LoadError,
 } from "@/components/internal/components/PanelKit"
-import { getManagerContext } from "@/pages/manager/unit-management/managerContext"
+import { getManagerContext } from "@/features/manager/unit-management/managerContext"
 import { useAsyncData } from "@/hooks/useAsyncData"
 import { addDays, todayInVietnam } from "@/lib/format"
 

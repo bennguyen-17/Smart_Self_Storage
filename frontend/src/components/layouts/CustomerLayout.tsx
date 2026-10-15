@@ -6,7 +6,7 @@ import Header from '@/components/common/Header';
 import SiteFooter from '@/components/common/SiteFooter';
 import CustomerProfileModal from '@/components/common/CustomerProfileModal';
 import { useTheme } from '@/components/common/theme-provider';
-import { getMySupportTickets } from '@/pages/customer/support/supportApi';
+import { getMySupportTickets } from '@/features/customer/support/supportApi';
 
 export type CustomerNavTab = 'home' | 'rent' | 'my-storage' | 'gate-pin' | 'support' | 'tickets';
 

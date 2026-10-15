@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
-import type { ManagerContext } from "@/pages/manager/unit-management/types"
+import type { ManagerContext } from "@/features/manager/unit-management/types"
 
 const env = vi.hoisted(() => ({ mockMode: false }))
 const http = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }))

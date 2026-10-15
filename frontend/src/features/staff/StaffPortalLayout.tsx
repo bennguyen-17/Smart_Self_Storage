@@ -3,7 +3,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useTheme } from "@/components/common/theme-provider"
 
-import StaffSidebar from "@/pages/staff/checkin/components/StaffSidebar"
+import StaffSidebar from "@/features/staff/checkin/components/StaffSidebar"
 
 function resolveIsDark(theme: string): boolean {
   if (theme === "dark") return true

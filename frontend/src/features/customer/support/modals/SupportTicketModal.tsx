@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { submitSupportTicket } from '../supportApi';
-import { getMyContracts } from '@/pages/customer/storage/storageApi';
+import { getMyContracts } from '@/features/customer/storage/storageApi';
 
 export default function SupportTicketModal({ onClose }) {
   const [ticketType, setTicketType] = useState('UNLOCK');
