@@ -4,7 +4,7 @@ import { ShieldCheck } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
-import { resendOtp, verifyOtp } from "@/features/auth/api/authApi"
+import { resendOtp, verifyOtp } from "../authApi"
 
 import { Button } from "@/components/ui/button"
 import {

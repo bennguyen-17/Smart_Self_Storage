@@ -81,7 +81,13 @@ public class SupportTicketService {
         ticket.setTicketCode("TCK-INC-" + System.currentTimeMillis() % 1000000);
         ticket.setType("INCIDENT");
         ticket.setStatus("SUBMITTED");
-        ticket.setCustomerId(customerId);
+        Integer targetCustomerId = customerId;
+        if (customerId != null) {
+            targetCustomerId = customerProfileRepository.findByAccountId(customerId)
+                    .map(CustomerProfile::getCustomerId)
+                    .orElse(customerId);
+        }
+        ticket.setCustomerId(targetCustomerId != null ? targetCustomerId : 1);
         ticket.setFacilityId(req.getFacilityId());
         ticket.setUnitCode(req.getUnitCode());
         ticket.setTitle(req.getTitle() != null ? req.getTitle() : "Báo sự cố ô kho");
@@ -95,6 +101,91 @@ public class SupportTicketService {
         return supportTicketRepository.save(ticket);
     }
 
+    // --- US-21: Tạo Ticket Hỗ trợ kỹ thuật 24/7 (Sự cố, Mở khóa, Bảo trì, Thắc mắc) ---
+    @Transactional
+    public SupportTicket createTicketGeneric(String type, String unitCode, String title, String description, Integer customerId) {
+        SupportTicket ticket = new SupportTicket();
+        String prefix = type != null ? type.toUpperCase() : "INC";
+        if (prefix.length() > 5) prefix = prefix.substring(0, 5);
+        ticket.setTicketCode("TCK-" + prefix + "-" + (System.currentTimeMillis() % 1000000));
+        ticket.setType(type != null ? type.toUpperCase() : "INCIDENT");
+        ticket.setStatus("SUBMITTED");
+
+        Integer targetCustomerId = customerId;
+        if (customerId != null) {
+            targetCustomerId = customerProfileRepository.findByAccountId(customerId)
+                    .map(CustomerProfile::getCustomerId)
+                    .orElse(customerId);
+        }
+        ticket.setCustomerId(targetCustomerId != null ? targetCustomerId : 1);
+
+        Integer facId = getFacilityIdByUnit(unitCode);
+        if (facId == null) facId = 1;
+        ticket.setFacilityId(facId);
+        ticket.setUnitCode(unitCode);
+        ticket.setTitle(title != null && !title.isEmpty() ? title : "Yêu cầu hỗ trợ: " + type);
+        ticket.setDescription(description);
+        ticket.setCreatedAt(LocalDateTime.now());
+        ticket.setSlaDeadline(LocalDateTime.now().plusMinutes(15));
+        ticket.setIsSlaBreached(false);
+        ticket.setIdentityVerified("UNLOCK".equalsIgnoreCase(type) ? false : true);
+
+        return supportTicketRepository.save(ticket);
+    }
+
+    @Transactional
+    public SupportTicket createSupportFormTicket(Integer accountId, String type, String unitCode, String description) {
+        if (unitCode == null || unitCode.trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng chọn ô kho có hợp đồng đang có hiệu lực (ACTIVE)!");
+        }
+
+        // Kiểm tra xem ô kho này có hợp đồng ACTIVE của account này hay không
+        List<Reservation> reservations = reservationRepository.findByAccountId(accountId);
+        Contract activeContract = null;
+        for (Reservation res : reservations) {
+            if (unitCode.equalsIgnoreCase(res.getUnitCode())) {
+                Optional<Contract> cOpt = contractRepository.findByReservationId(res.getReservationId());
+                if (cOpt.isPresent() && "ACTIVE".equalsIgnoreCase(cOpt.get().getStatus())) {
+                    activeContract = cOpt.get();
+                    break;
+                }
+            }
+        }
+
+        if (activeContract == null) {
+            throw new IllegalArgumentException("Chỉ có thể gửi ticket hỗ trợ cho ô kho có hợp đồng đang HIỆU LỰC (ACTIVE)!");
+        }
+
+        Integer customerProfileId = customerProfileRepository.findByAccountId(accountId)
+                .map(CustomerProfile::getCustomerId)
+                .orElseGet(() -> {
+                    CustomerProfile cp = new CustomerProfile(accountId, "0012010" + accountId);
+                    return customerProfileRepository.save(cp).getCustomerId();
+                });
+
+        Integer facilityId = getFacilityIdByUnit(unitCode);
+
+        SupportTicket ticket = new SupportTicket();
+        ticket.setTicketCode("TCK-" + (System.currentTimeMillis() % 1000000));
+        ticket.setType(type != null ? type : "UNLOCK");
+        ticket.setStatus("SUBMITTED");
+        ticket.setCustomerId(customerProfileId);
+        ticket.setFacilityId(facilityId);
+        ticket.setUnitCode(unitCode);
+        ticket.setContractId(activeContract.getContractId());
+        ticket.setTitle("Yêu cầu hỗ trợ: " + (type != null ? type : "UNLOCK") + " - Ô kho " + unitCode);
+        ticket.setDescription(description != null ? description : "");
+        ticket.setCreatedAt(LocalDateTime.now());
+        ticket.setSlaDeadline(LocalDateTime.now().plusMinutes(15));
+        ticket.setIsSlaBreached(false);
+        ticket.setIdentityVerified(false);
+
+        return supportTicketRepository.save(ticket);
+    }
+
+    public SupportTicket saveTicket(SupportTicket ticket) {
+        return supportTicketRepository.save(ticket);
+    }
     // --- US-21: 3. Gửi OTP xác thực trả kho trước hạn ---
     @Transactional
     public Map<String, Object> sendEarlyTerminationOtp(Integer contractId, Integer customerId) {
@@ -105,7 +196,13 @@ public class SupportTicketService {
             throw new IllegalArgumentException("Chỉ có thể yêu cầu trả kho cho hợp đồng đang có hiệu lực (ACTIVE)!");
         }
 
-        Account account = accountRepository.findById(Long.valueOf(customerId))
+        Long targetAccountId = Long.valueOf(customerId);
+        Optional<CustomerProfile> cpOpt = customerProfileRepository.findById(customerId);
+        if (cpOpt.isPresent() && cpOpt.get().getAccountId() != null) {
+            targetAccountId = Long.valueOf(cpOpt.get().getAccountId());
+        }
+
+        Account account = accountRepository.findById(targetAccountId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản khách hàng!"));
 
         // Sinh mã OTP 6 số thực tế và lưu thời hạn 5 phút vào tài khoản
@@ -140,7 +237,13 @@ public class SupportTicketService {
             throw new IllegalArgumentException("Vui lòng nhập mã OTP xác thực email!");
         }
 
-        Account account = accountRepository.findById(Long.valueOf(customerId))
+        Long targetAccountId = Long.valueOf(customerId);
+        Optional<CustomerProfile> cpOpt = customerProfileRepository.findById(customerId);
+        if (cpOpt.isPresent() && cpOpt.get().getAccountId() != null) {
+            targetAccountId = Long.valueOf(cpOpt.get().getAccountId());
+        }
+
+        Account account = accountRepository.findById(targetAccountId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản khách hàng!"));
 
         if (account.getOtpCode() == null || !account.getOtpCode().equals(req.getOtpCode().trim())) {
@@ -157,11 +260,18 @@ public class SupportTicketService {
 
         Reservation reservation = reservationRepository.findById(contract.getReservationId()).orElse(null);
 
+        Integer targetCustomerId = customerId;
+        if (customerId != null) {
+            targetCustomerId = customerProfileRepository.findByAccountId(customerId)
+                    .map(CustomerProfile::getCustomerId)
+                    .orElse(customerId);
+        }
+
         SupportTicket ticket = new SupportTicket();
         ticket.setTicketCode("TCK-TRM-" + System.currentTimeMillis() % 1000000);
         ticket.setType("EARLY_TERMINATION");
         ticket.setStatus("SUBMITTED");
-        ticket.setCustomerId(customerId);
+        ticket.setCustomerId(targetCustomerId != null ? targetCustomerId : 1);
         ticket.setContractId(contract.getContractId());
         ticket.setFacilityId(reservation != null ? getFacilityIdByUnit(reservation.getUnitCode()) : null);
         ticket.setUnitCode(reservation != null ? reservation.getUnitCode() : null);
@@ -176,8 +286,42 @@ public class SupportTicketService {
     }
 
     // --- US-21: 5. Khách xem danh sách ticket của mình ---
-    public List<SupportTicket> getCustomerTickets(Integer customerId) {
-        return supportTicketRepository.findByCustomerIdOrderByCreatedAtDesc(customerId);
+    public List<SupportTicket> getCustomerTickets(Integer accountOrCustomerId) {
+        if (accountOrCustomerId == null) return Collections.emptyList();
+
+        Set<Integer> targetCustomerIds = new LinkedHashSet<>();
+        targetCustomerIds.add(accountOrCustomerId);
+
+        // Trường hợp accountOrCustomerId là accountId: tìm customerProfile.customerId
+        customerProfileRepository.findByAccountId(accountOrCustomerId)
+                .ifPresent(cp -> targetCustomerIds.add(cp.getCustomerId()));
+
+        // Trường hợp accountOrCustomerId là customerId: tìm customerProfile tương ứng
+        customerProfileRepository.findById(accountOrCustomerId)
+                .ifPresent(cp -> {
+                    targetCustomerIds.add(cp.getCustomerId());
+                    if (cp.getAccountId() != null) {
+                        targetCustomerIds.add(cp.getAccountId());
+                    }
+                });
+
+        List<SupportTicket> results = new ArrayList<>();
+        Set<Long> seenIds = new HashSet<>();
+        for (Integer cid : targetCustomerIds) {
+            List<SupportTicket> list = supportTicketRepository.findByCustomerIdOrderByCreatedAtDesc(cid);
+            for (SupportTicket t : list) {
+                if (t.getId() != null && seenIds.add(t.getId())) {
+                    results.add(t);
+                }
+            }
+        }
+
+        results.sort((a, b) -> {
+            if (a.getCreatedAt() == null || b.getCreatedAt() == null) return 0;
+            return b.getCreatedAt().compareTo(a.getCreatedAt());
+        });
+
+        return results;
     }
 
     // --- US-22: 1. Staff xem hàng đợi Ticket của cơ sở kèm đếm lùi SLA 15 phút ---

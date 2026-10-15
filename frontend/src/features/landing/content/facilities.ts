@@ -26,7 +26,7 @@ export const CITIES: readonly City[] = [
 
 export const FACILITIES: readonly PublicFacility[] = [
   {
-    code: "HN-01",
+    code: "HN01",
     name: "SmartStorage Cầu Giấy",
     city: "HN",
     address: "391 Cầu Giấy, Q. Cầu Giấy, Hà Nội",
@@ -34,7 +34,7 @@ export const FACILITIES: readonly PublicFacility[] = [
     isClimate: false,
   },
   {
-    code: "HN-02",
+    code: "HN02",
     name: "SmartStorage Thanh Xuân",
     city: "HN",
     address: "120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội",
@@ -42,7 +42,7 @@ export const FACILITIES: readonly PublicFacility[] = [
     isClimate: false,
   },
   {
-    code: "HCM-01",
+    code: "HCM01",
     name: "SmartStorage Quận 1",
     city: "HCM",
     address: "123 Nguyễn Huệ, Quận 1, TP.HCM",
@@ -53,7 +53,7 @@ export const FACILITIES: readonly PublicFacility[] = [
     isClimate: false,
   },
   {
-    code: "HCM-02",
+    code: "HCM02",
     name: "SmartStorage Quận 7",
     city: "HCM",
     address: "456 Nguyễn Thị Thập, Quận 7, TP.HCM",
@@ -61,7 +61,7 @@ export const FACILITIES: readonly PublicFacility[] = [
     isClimate: false,
   },
   {
-    code: "HCM-03",
+    code: "HCM03",
     name: "SmartStorage Thủ Đức",
     city: "HCM",
     address: "789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM",
@@ -69,7 +69,7 @@ export const FACILITIES: readonly PublicFacility[] = [
     isClimate: false,
   },
   {
-    code: "DN-01",
+    code: "DN01",
     name: "SmartStorage Hải Châu",
     city: "DN",
     address: "68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng",
@@ -80,7 +80,7 @@ export const FACILITIES: readonly PublicFacility[] = [
     isClimate: false,
   },
   {
-    code: "CT-01",
+    code: "CT01",
     name: "SmartStorage Ninh Kiều",
     city: "CT",
     address: "12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ",

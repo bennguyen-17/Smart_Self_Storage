@@ -33,11 +33,25 @@ interface BomContextType {
     isAllClimate?: boolean
     managerName?: string
   }) => Promise<boolean>
-  updateFacilityInDb: (facilityId: number, data: { facilityName?: string; address?: string; phone?: string; status?: string }) => Promise<boolean>
+  updateFacilityInDb: (facilityId: number, data: { facilityName?: string; address?: string; phone?: string; status?: string; managerName?: string; managerPhone?: string; managerEmail?: string; priceMultiplier?: number }) => Promise<boolean>
   deleteFacilityInDb: (facilityId: number) => Promise<boolean>
 }
 
 const BomContext = createContext<BomContextType | undefined>(undefined)
+
+function fixMojibake(str?: string): string {
+  if (!str) return ""
+  try {
+    if (/(?:Ã|áº|á»|Ä|É|Å|Ë|Ì|Í|Î|Ï)/.test(str)) {
+      const bytes = new Uint8Array(str.split("").map((c) => c.charCodeAt(0)))
+      const decoded = new TextDecoder("utf-8").decode(bytes)
+      if (decoded && !decoded.includes("\ufffd")) {
+        return decoded
+      }
+    }
+  } catch (e) {}
+  return str
+}
 
 export function BomProvider({ children }: { children: React.ReactNode }) {
   const [chainOverview, setChainOverview] = useState<ChainDashboardData | null>(null)
@@ -114,6 +128,15 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
           })
         }
 
+        const savedManagersMap = (() => {
+          try {
+            const raw = localStorage.getItem("smart_storage_facility_managers")
+            return raw ? JSON.parse(raw) : {}
+          } catch (e) {
+            return {}
+          }
+        })()
+
         const mappedFacilities: FacilityPerformance[] = apiFacilities.map((f: any, idx: number) => {
           const facId = Number(f.facilityId ?? f.id ?? idx + 1)
           const breakdown = breakdownMap.get(facId)
@@ -130,20 +153,26 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
           const realRevenue = Number(rawRevenue) > 0 ? `₫${Number(rawRevenue).toLocaleString("vi-VN")}` : "₫0"
 
           const rawName = f.facilityName || breakdown?.facilityName || `Cơ sở ${facId}`
-          const cleanName = rawName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+          const fixedName = fixMojibake(rawName)
+          const cleanName = fixedName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+          const fixedAddress = fixMojibake(f.address || "Hệ thống cơ sở kho")
 
           const rawMgr = breakdown?.managerName || f.managerName || (f.managerId ? `Quản lý ID #${f.managerId}` : "Chưa phân công")
-          const cleanMgr = rawMgr.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+          const cleanMgr = fixMojibake(rawMgr).replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+          const savedMgr = savedManagersMap[facId] || savedManagersMap[f.facilityCode]
+          const finalMgrName = savedMgr?.name || cleanMgr || rawMgr || "Chưa phân công"
+          const finalMgrEmail = savedMgr?.email || breakdown?.managerEmail || (f.managerId ? `manager${f.managerId}@smartstorage.vn` : "manager@smartstorage.vn")
+          const finalMgrPhone = savedMgr?.phone || breakdown?.managerPhone || f.phone || "0900000000"
           const stdUnits = (f.layoutType === "B" || f.layoutType === "Layout B") ? 15 : 46
 
           return {
             id: facId,
             code: f.facilityCode || breakdown?.facilityCode || `FAC-0${idx + 1}`,
             name: cleanName || rawName,
-            address: f.address || "Hệ thống cơ sở kho",
-            managerName: cleanMgr || rawMgr,
-            managerEmail: breakdown?.managerEmail || (f.managerId ? `manager${f.managerId}@smartstorage.vn` : "manager@smartstorage.vn"),
-            managerPhone: breakdown?.managerPhone || f.phone || "0900000000",
+            address: fixedAddress,
+            managerName: finalMgrName,
+            managerEmail: finalMgrEmail,
+            managerPhone: finalMgrPhone,
             totalUnits: totalUnits > 0 ? totalUnits : stdUnits,
             occupied: occupied,
             rentedUnits: breakdown?.occupiedUnits ?? occupied,
@@ -155,7 +184,7 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
             overdueUnits: breakdown?.overdueContracts || 0,
             status: f.status || "ACTIVE",
             rating: "5.0 ★",
-            priceMultiplier: 1.0,
+            priceMultiplier: savedMgr?.priceMultiplier || 1.0,
             layoutType: f.layoutType || "A",
             floorCount: f.floorCount || 3,
             note: "Dữ liệu vận hành đồng bộ trực tiếp từ Database",
@@ -279,9 +308,33 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
   // Cập nhật cơ sở kho lưu trực tiếp vào Database
   const updateFacilityInDb = async (
     facilityId: number,
-    data: { facilityName?: string; address?: string; phone?: string; status?: string }
+    data: {
+      facilityName?: string
+      address?: string
+      phone?: string
+      status?: string
+      managerName?: string
+      managerPhone?: string
+      managerEmail?: string
+      priceMultiplier?: number
+    }
   ): Promise<boolean> => {
     try {
+      if (data.managerName !== undefined || data.priceMultiplier !== undefined) {
+        try {
+          const raw = localStorage.getItem("smart_storage_facility_managers")
+          const curr = raw ? JSON.parse(raw) : {}
+          curr[facilityId] = {
+            ...(curr[facilityId] || {}),
+            name: data.managerName,
+            phone: data.managerPhone || "",
+            email: data.managerEmail || "",
+            priceMultiplier: data.priceMultiplier,
+          }
+          localStorage.setItem("smart_storage_facility_managers", JSON.stringify(curr))
+        } catch (e) {}
+      }
+
       await bomApi.updateFacility(facilityId, data)
       await loadLiveData()
       if (typeof window !== "undefined") {

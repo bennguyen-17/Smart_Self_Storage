@@ -6,7 +6,7 @@ import { Controller, useForm } from "react-hook-form"
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
-import { login, type LockedResponse } from "@/features/auth/api/authApi"
+import { login, type LockedResponse } from "../authApi"
 import { useAuth } from "@/context/AuthContext"
 import {
   getRoleDestination,
@@ -20,7 +20,7 @@ import {
   type InternalLoginFormValues,
 } from "@/utils/validation"
 
-import SignedInPanel from "@/features/portal/components/SignedInPanel"
+import SignedInPanel from "./SignedInPanel"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {

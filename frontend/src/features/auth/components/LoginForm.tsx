@@ -7,7 +7,7 @@ import { Link, useNavigate } from "react-router-dom"
 
 import { toast } from "sonner"
 
-import { login } from "@/features/auth/api/authApi"
+import { login } from "../authApi"
 import { loginSchema, type LoginFormValues } from "@/utils/validation"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"

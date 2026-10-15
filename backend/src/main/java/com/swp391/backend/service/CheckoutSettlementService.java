@@ -124,7 +124,7 @@ public class CheckoutSettlementService {
 
         boolean isRefund = netAmount.compareTo(BigDecimal.ZERO) >= 0;
 
-        String branchCode = "HN-01";
+        String branchCode = "HN01";
         Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitCode());
         if (unitOpt.isPresent()) {
             Optional<Floor> flOpt = floorRepository.findById(unitOpt.get().getFloorId());
@@ -137,10 +137,10 @@ public class CheckoutSettlementService {
         }
 
         CheckoutPreviewResponse resp = new CheckoutPreviewResponse();
-        resp.setSuccess(true);
-        resp.setMessage("Tính toán dự thảo quyết toán trả kho thành công!");
+        String resCode = res.getReservationCode();
+        String displayCode = (resCode != null && !resCode.isBlank()) ? resCode : ("CTR-" + contract.getContractId());
         resp.setContractId(contract.getContractId());
-        resp.setContractCode("#HD-" + contract.getContractId());
+        resp.setContractCode(displayCode);
         resp.setUnitCode(res.getUnitCode());
         resp.setBranchCode(branchCode);
         resp.setContractStatus(contract.getStatus());
@@ -241,7 +241,7 @@ public class CheckoutSettlementService {
         BigDecimal totalCredits = unusedRentalRefund.add(depositAmount);
         BigDecimal netAmount = totalCredits.subtract(totalDeductions);
 
-        String branchCode = "HN-01";
+        String branchCode = "HN01";
         Optional<Facility> facOpt = facilityRepository.findById(unitFacilityId);
         if (facOpt.isPresent()) {
             branchCode = storageService.mapFacilityToResponse(facOpt.get()).getFacilityCode();

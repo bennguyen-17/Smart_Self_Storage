@@ -14,6 +14,7 @@
 *.njsproj
 *.sln
 *.sw?
+*.log
 
 # --- [BACKEND - SPRING BOOT (JAVA)] ---
 backend/HELP.md
@@ -51,9 +52,7 @@ frontend/.env.*
 node_modules/
 .env
 .env.*
-
-# --- [DOCKER] ---
-docker-compose.yml
+!.env.example
 
 # Local project references - DO NOT COMMIT
 business-rule/

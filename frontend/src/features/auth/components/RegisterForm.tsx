@@ -6,7 +6,7 @@ import { Controller, useForm, useWatch, type Control } from "react-hook-form"
 import { Link } from "react-router-dom"
 import { cn } from "cn"
 
-import { register } from "@/features/auth/api/authApi"
+import { register } from "../authApi"
 import {
   passwordRules,
   registerSchema,
