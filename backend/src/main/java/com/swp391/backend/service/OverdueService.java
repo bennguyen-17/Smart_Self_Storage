@@ -96,9 +96,7 @@ public class OverdueService {
         BigDecimal remainingAmount = totalFine.subtract(paidAmount).max(BigDecimal.ZERO);
         payment.setAmount(totalFine);
         payment.setRemainingAmount(remainingAmount);
-        payment.setStatus(remainingAmount.signum() == 0
-                ? "PAID"
-                : paidAmount.signum() > 0 ? "PARTIALLY_PAID" : "PENDING");
+        payment.setStatus(remainingAmount.signum() == 0 ? "PAID" : "PENDING");
         if (remainingAmount.signum() > 0) {
             payment.setPaymentStatus("PENDING");
         }
