@@ -16,7 +16,7 @@ describe("gateLogApi: nhật ký mở cổng thủ công (chỉ đọc)", () => 
   test("GET đúng path hiện có của BE", async () => {
     await listManualGateOpenLogs()
     expect(http.get).toHaveBeenCalledWith(MANUAL_GATE_OPEN_LOGS_PATH)
-    expect(MANUAL_GATE_OPEN_LOGS_PATH).toBe("/staff/audit-logs/manager/audit-logs/manual-gate-open")
+    expect(MANUAL_GATE_OPEN_LOGS_PATH).toBe("/manager/audit-logs/manual-gate-open")
   })
 
   test("BE trả null → coi như danh sách rỗng", async () => {

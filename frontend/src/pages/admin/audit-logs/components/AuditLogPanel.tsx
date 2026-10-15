@@ -8,11 +8,13 @@ import {
   DateFilter,
   FilterBar,
   LoadError,
+  Pagination,
   ResultCount,
   SearchFilter,
   SelectFilter,
   TableCard,
 } from "@/components/internal/components/PanelKit"
+import { usePagedRows } from "@/components/internal/usePagedRows"
 import { useAsyncData } from "@/hooks/useAsyncData"
 import { formatDateTime, todayInVietnam } from "@/lib/format"
 
@@ -49,6 +51,7 @@ function AuditLogPanel() {
   )
   const all = data ?? []
   const rows = filterActivityLogs(all, filter)
+  const { slice, pagination } = usePagedRows(rows, JSON.stringify(filter))
   const rangeOk = isRangeValid(filter.from, filter.to)
   const update = (patch: Partial<ActivityFilter>) =>
     setFilter((f) => ({ ...f, ...patch }))
@@ -144,7 +147,7 @@ function AuditLogPanel() {
             : "Không có bản ghi phù hợp bộ lọc"
         }
       >
-        {rows.map((l) => (
+        {slice.rows.map((l) => (
           <tr
             key={l.activityLogId}
             className="border-b align-top last:border-0"
@@ -180,6 +183,8 @@ function AuditLogPanel() {
           </tr>
         ))}
       </TableCard>
+
+      <Pagination {...pagination} unit="bản ghi" />
     </section>
   )
 }

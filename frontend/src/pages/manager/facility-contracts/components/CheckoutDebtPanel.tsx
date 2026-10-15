@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button"
 import {
   FilterBar,
   LoadError,
+  Pagination,
   ResultCount,
   SearchFilter,
   SelectFilter,
   TableCard,
 } from "@/components/internal/components/PanelKit"
+import { usePagedRows } from "@/components/internal/usePagedRows"
 import { matchesQuery } from "@/components/internal/textSearch"
 import { getManagerContext } from "@/pages/manager/unit-management/managerContext"
 import { useAsyncData } from "@/hooks/useAsyncData"
@@ -48,6 +50,7 @@ function CheckoutDebtPanel() {
     .filter((c) => matchesFocus(c, focus))
     .filter((c) => matchesQuery(query, [c.customerName, c.customerPhone, c.contractCode, c.unitCode]))
     .sort((a, b) => unpaidTotal(b) - unpaidTotal(a))
+  const { slice, pagination } = usePagedRows(rows, `${query}|${focus}`)
 
   if (error) {
     return <LoadError title="Không tải được hồ sơ trả kho & công nợ" message={error} onRetry={() => setReloadCount((n) => n + 1)} />
@@ -86,7 +89,7 @@ function CheckoutDebtPanel() {
         isEmpty={rows.length === 0}
         emptyText={followUps.length === 0 ? "Không có hồ sơ nào cần xử lý" : "Không có hồ sơ phù hợp bộ lọc"}
       >
-        {rows.map((c) => {
+        {slice.rows.map((c) => {
           const unpaid = c.fees.filter((f) => f.status === "UNPAID")
           return (
             <tr key={c.contractId} className="border-b align-top last:border-0">
@@ -129,6 +132,8 @@ function CheckoutDebtPanel() {
           )
         })}
       </TableCard>
+
+      {!isLoading && <Pagination {...pagination} unit="hồ sơ" />}
 
       {discounting && (
         <FeeDiscountSheet

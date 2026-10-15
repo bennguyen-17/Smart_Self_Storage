@@ -2,11 +2,13 @@
 // để mọi trang có cùng cách trình bày (cùng ô lọc, cùng bảng, cùng trạng thái đang tải / trống / lỗi).
 
 import type { ReactNode } from "react"
-import { InboxIcon, RotateCwIcon, SearchIcon } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon, InboxIcon, RotateCwIcon, SearchIcon } from "lucide-react"
 import { cn } from "cn"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+
+import { PAGE_SIZE_OPTIONS, pageWindow, type PageSlice } from "../pagination"
 
 export function FilterBar({ children, className }: { children: ReactNode; className?: string }) {
   return (
@@ -205,5 +207,86 @@ export function ResultCount({ shown, total, unit, isLoading }: { shown: number; 
     <p className="text-muted text-xs" aria-live="polite">
       {isLoading ? "Đang tải…" : `${shown} / ${total} ${unit}`}
     </p>
+  )
+}
+
+/**
+ * Thanh phân trang dưới bảng: "Hiển thị x – y trong tổng số N", chọn số dòng mỗi trang,
+ * nút trang trước / sau và số trang (theo kiểu bảng hợp đồng ở cổng khách hàng).
+ */
+export function Pagination({
+  slice,
+  total,
+  unit,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+}: {
+  slice: PageSlice<unknown>
+  total: number
+  unit: string
+  pageSize: number
+  onPageChange: (page: number) => void
+  onPageSizeChange: (size: number) => void
+}) {
+  if (total === 0) return null
+  const { page, totalPages, from, to } = slice
+  return (
+    <nav aria-label="Phân trang" className="flex flex-wrap items-center justify-between gap-3 text-xs">
+      <p className="text-muted" aria-live="polite">
+        Hiển thị <span className="text-title font-bold tabular-nums">{from}</span> –{" "}
+        <span className="text-title font-bold tabular-nums">{to}</span> trong tổng số{" "}
+        <span className="font-bold text-blue-600 tabular-nums dark:text-blue-400">{total}</span> {unit}
+      </p>
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="text-muted flex items-center gap-2">
+          Số dòng mỗi trang
+          <select
+            value={pageSize}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            className="inner-box text-title rounded-lg border px-2 py-1 font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {PAGE_SIZE_OPTIONS.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="flex items-center gap-1">
+          <Button variant="outline" size="icon-sm" aria-label="Trang trước" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
+            <ChevronLeftIcon aria-hidden="true" />
+          </Button>
+          {pageWindow(page, totalPages).map((p, i) =>
+            p === "…" ? (
+              <span key={`gap-${i}`} aria-hidden="true" className="text-muted px-1">
+                …
+              </span>
+            ) : (
+              <Button
+                key={p}
+                size="icon-sm"
+                variant={p === page ? "default" : "outline"}
+                aria-label={`Trang ${p}`}
+                aria-current={p === page ? "page" : undefined}
+                onClick={() => onPageChange(p)}
+                className={cn("tabular-nums", p === page && "bg-blue-600 text-white hover:bg-blue-500")}
+              >
+                {p}
+              </Button>
+            )
+          )}
+          <Button
+            variant="outline"
+            size="icon-sm"
+            aria-label="Trang sau"
+            disabled={page >= totalPages}
+            onClick={() => onPageChange(page + 1)}
+          >
+            <ChevronRightIcon aria-hidden="true" />
+          </Button>
+        </div>
+      </div>
+    </nav>
   )
 }

@@ -39,10 +39,10 @@ describe("ShiftsPanel: phân ai trực ca nào (US-32)", () => {
       days.filter((d) => d.getAttribute("aria-pressed") === "true")
     ).toHaveLength(1)
     expect(
-      within(card("Ca Sáng")).getByText("06:00 – 14:00")
+      within(card("Ca Sáng")).getByText("08:00 – 12:00")
     ).toBeInTheDocument()
     expect(
-      within(card("Ca Đêm")).getByText("22:00 – 06:00 (qua đêm)")
+      within(card("Ca Tối")).getByText("16:00 – 20:00")
     ).toBeInTheDocument()
     expect(
       screen.queryByText(/nhiệm vụ|việc phụ trách|còn thiếu/i)
@@ -51,7 +51,7 @@ describe("ShiftsPanel: phân ai trực ca nào (US-32)", () => {
 
   test("ca chưa có ai → cảnh báo rõ", async () => {
     await renderPanel()
-    const night = card("Ca Đêm")
+    const night = card("Ca Tối")
     expect(
       within(night).getByText("Ca chưa có nhân viên trực")
     ).toBeInTheDocument()
@@ -73,11 +73,11 @@ describe("ShiftsPanel: phân ai trực ca nào (US-32)", () => {
     ).toEqual(["Chọn nhân viên…", "Hoàng Minh Tuấn"])
   })
 
-  test("thêm người đã trực ca khác vào Ca Đêm → cảnh báo; Lưu gửi đúng danh sách employeeId", async () => {
+  test("thêm người đã trực ca khác vào Ca Tối → cảnh báo; Lưu gửi đúng danh sách employeeId", async () => {
     const user = await renderPanel()
-    const night = card("Ca Đêm")
+    const night = card("Ca Tối")
     expect(
-      within(night).getByRole("button", { name: /lưu ca đêm/i })
+      within(night).getByRole("button", { name: /lưu ca tối/i })
     ).toBeDisabled()
     await user.selectOptions(
       within(night).getByRole("combobox", { name: /nhân viên thêm/i }),
@@ -85,7 +85,7 @@ describe("ShiftsPanel: phân ai trực ca nào (US-32)", () => {
     )
     await user.click(within(night).getByRole("button", { name: /^thêm$/i }))
     expect(within(night).getByText("Đã trực Ca Sáng")).toBeInTheDocument()
-    await user.click(within(night).getByRole("button", { name: /lưu ca đêm/i }))
+    await user.click(within(night).getByRole("button", { name: /lưu ca tối/i }))
     expect(saveShift).toHaveBeenCalledWith(
       expect.anything(),
       expect.any(String),
@@ -95,7 +95,7 @@ describe("ShiftsPanel: phân ai trực ca nào (US-32)", () => {
     await waitFor(
       () =>
         expect(
-          within(card("Ca Đêm")).getByText("1 người trực")
+          within(card("Ca Tối")).getByText("1 người trực")
         ).toBeInTheDocument(),
       { timeout: 3000 }
     )

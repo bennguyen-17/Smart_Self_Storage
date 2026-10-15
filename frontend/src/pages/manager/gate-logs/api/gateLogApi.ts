@@ -8,11 +8,8 @@ import apiClient, { isMockMode } from "@/lib/apiClient"
 import type { GateLog } from "../types"
 import { mockListManualGateOpenLogs } from "./gateLogApi.mock"
 
-/**
- * Path hiện tại của BE bị lồng tiền tố controller (/api/staff/audit-logs + /manager/audit-logs/…).
- * Đã báo nhóm BE (qa-log); khi BE sửa thành /manager/audit-logs/manual-gate-open thì chỉ cần đổi hằng này.
- */
-export const MANUAL_GATE_OPEN_LOGS_PATH = "/staff/audit-logs/manager/audit-logs/manual-gate-open"
+/** BE đã gỡ tiền tố lồng (trước đây là /staff/audit-logs/manager/…) */
+export const MANUAL_GATE_OPEN_LOGS_PATH = "/manager/audit-logs/manual-gate-open"
 
 /** GET nhật ký mở cổng thủ công của cơ sở Manager đang phụ trách (chỉ đọc) */
 export async function listManualGateOpenLogs(): Promise<GateLog[]> {
