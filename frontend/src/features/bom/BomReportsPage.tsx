@@ -12,7 +12,7 @@ import {
   Sparkles,
 } from "lucide-react"
 import { toast } from "sonner"
-import { useBomContext } from "@/pages/bom/context/BomContext"
+import { useBomContext } from "@/features/bom/context/BomContext"
 
 export default function BomReportsPage() {
   const { chainOverview, facilities, totalOverdueCount } = useBomContext()

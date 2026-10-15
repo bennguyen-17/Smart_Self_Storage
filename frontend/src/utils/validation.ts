@@ -30,39 +30,36 @@ const loginPasswordSchema = z.string().superRefine((value, ctx) => {
   }
 })
 
-/** Đăng nhập khách hàng: chỉ dùng số điện thoại. */
-export const loginSchema = z.object({
-  phone: z.string().superRefine((value, ctx) => {
-    if (!value.trim()) {
-      ctx.addIssue({ code: "custom", message: "Vui lòng nhập số điện thoại" })
-      return
-    }
+const validateIdentifier = (value: string, ctx: z.RefinementCtx) => {
+  const trimmed = value.trim()
+  if (!trimmed) {
+    ctx.addIssue({ code: "custom", message: "Vui lòng nhập Email hoặc Số điện thoại" })
+    return
+  }
 
-    if (!PHONE_REGEX.test(value)) {
+  if (trimmed.includes("@")) {
+    if (!EMAIL_REGEX.test(trimmed)) {
+      ctx.addIssue({ code: "custom", message: "Địa chỉ Email không đúng định dạng" })
+    }
+  } else {
+    if (!PHONE_REGEX.test(trimmed)) {
       ctx.addIssue({
         code: "custom",
         message: "Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số",
       })
     }
-  }),
+  }
+}
+
+/** Đăng nhập khách hàng: hỗ trợ Số điện thoại hoặc Email. */
+export const loginSchema = z.object({
+  phone: z.string().superRefine(validateIdentifier),
   password: loginPasswordSchema,
 })
 
-/** Đăng nhập nội bộ: chỉ dùng số điện thoại. */
+/** Đăng nhập nội bộ: hỗ trợ Số điện thoại hoặc Email. */
 export const internalLoginSchema = z.object({
-  phone: z.string().superRefine((value, ctx) => {
-    if (!value.trim()) {
-      ctx.addIssue({ code: "custom", message: "Vui lòng nhập số điện thoại" })
-      return
-    }
-
-    if (!PHONE_REGEX.test(value)) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số",
-      })
-    }
-  }),
+  phone: z.string().superRefine(validateIdentifier),
   password: loginPasswordSchema,
 })
 

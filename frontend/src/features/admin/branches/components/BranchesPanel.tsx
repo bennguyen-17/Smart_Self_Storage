@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { SnowflakeIcon } from "lucide-react"
 
-import { getFacilities } from "@/pages/floorplan/api/floorPlanApi"
+import { getFacilities } from "@/features/floorplan/api/floorPlanApi"
 import {
   FilterBar,
   LoadError,

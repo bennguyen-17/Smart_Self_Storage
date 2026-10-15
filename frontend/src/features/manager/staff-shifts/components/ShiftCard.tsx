@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { StatusBadge } from "@/components/internal/components/PanelKit"
 import { initials } from "@/components/internal/initials"
-import type { ManagerContext } from "@/pages/manager/unit-management/types"
+import type { ManagerContext } from "@/features/manager/unit-management/types"
 import { getErrorMessage } from "@/lib/api"
 
 import { saveShift } from "../api/shiftApi"

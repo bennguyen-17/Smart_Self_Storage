@@ -16,8 +16,8 @@ import {
   Tag,
   Sparkles,
 } from "lucide-react"
-import { useBomContext } from "@/pages/bom/context/BomContext"
-import { type UnitPricing, type SurchargeItem } from "@/pages/bom/data/bomData"
+import { useBomContext } from "@/features/bom/context/BomContext"
+import { type UnitPricing, type SurchargeItem } from "@/features/bom/data/bomData"
 
 const SIZE_THEMES: Record<string, { badge: string; border: string; glow: string; text: string; lightBg: string }> = {
   S: {

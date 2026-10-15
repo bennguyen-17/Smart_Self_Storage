@@ -10,12 +10,12 @@ import { cn } from "cn"
 import { Button } from "@/components/ui/button"
 import { useAsyncData } from "@/hooks/useAsyncData"
 
-import { listReservations } from "@/pages/staff/reservations/api/reservationApi"
-import RefundQueuePanel from "@/pages/staff/reservations/components/RefundQueuePanel"
-import ReservationDetailDialog from "@/pages/staff/reservations/components/ReservationDetailDialog"
-import ReservationTable from "@/pages/staff/reservations/components/ReservationTable"
-import RunNoShowScanButton from "@/pages/staff/reservations/components/RunNoShowScanButton"
-import { PAGE_SIZE, RESERVATION_TABS, findTab } from "@/pages/staff/reservations/constants"
+import { listReservations } from "@/features/staff/reservations/api/reservationApi"
+import RefundQueuePanel from "@/features/staff/reservations/components/RefundQueuePanel"
+import ReservationDetailDialog from "@/features/staff/reservations/components/ReservationDetailDialog"
+import ReservationTable from "@/features/staff/reservations/components/ReservationTable"
+import RunNoShowScanButton from "@/features/staff/reservations/components/RunNoShowScanButton"
+import { PAGE_SIZE, RESERVATION_TABS, findTab } from "@/features/staff/reservations/constants"
 
 const DEMO_TOOLS_ENABLED = import.meta.env.VITE_ENABLE_DEMO_TOOLS === "true"
 

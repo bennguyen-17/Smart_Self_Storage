@@ -8,7 +8,8 @@ import {
   type ReactNode,
 } from "react"
 
-import type { AuthUser } from "@/pages/auth/authApi"
+import type { AuthUser } from "@/features/auth/authApi"
+import { isTokenValid } from "@/lib/http"
 
 const STORAGE_KEY = "auth_session"
 
@@ -39,20 +40,31 @@ function parseSession(raw: string | null): AuthSession | undefined {
   }
 }
 
-/**
- * "Ghi nhớ đăng nhập" -> localStorage (giữ qua các lần mở trình duyệt).
- * Không tick -> sessionStorage (mất khi đóng tab).
- */
-function readStoredSession(): AuthSession | undefined {
-  return (
-    parseSession(localStorage.getItem(STORAGE_KEY)) ??
-    parseSession(sessionStorage.getItem(STORAGE_KEY))
-  )
-}
-
 function clearStoredSession() {
   localStorage.removeItem(STORAGE_KEY)
   sessionStorage.removeItem(STORAGE_KEY)
+  localStorage.removeItem("token")
+  sessionStorage.removeItem("token")
+  localStorage.removeItem("user")
+  sessionStorage.removeItem("user")
+}
+
+/**
+ * "Ghi nhớ đăng nhập" -> localStorage (giữ qua các lần mở trình duyệt).
+ * Không tick -> sessionStorage (mất khi đóng tab).
+ * Tự động hủy phiên và đăng xuất nếu JWT token đã hết hạn.
+ */
+function readStoredSession(): AuthSession | undefined {
+  const session =
+    parseSession(localStorage.getItem(STORAGE_KEY)) ??
+    parseSession(sessionStorage.getItem(STORAGE_KEY))
+
+  if (session && !isTokenValid(session.token)) {
+    clearStoredSession()
+    return undefined
+  }
+
+  return session
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -65,12 +77,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const otherStore = remember ? sessionStorage : localStorage
 
     otherStore.removeItem(STORAGE_KEY)
+    otherStore.removeItem("token")
+    otherStore.removeItem("user")
+
     store.setItem(STORAGE_KEY, JSON.stringify(nextSession))
+    store.setItem("token", nextSession.token)
+    store.setItem("user", JSON.stringify(nextSession.user))
     setSession(nextSession)
   }, [])
 
   const signOut = useCallback(() => {
     clearStoredSession()
+    localStorage.removeItem("token")
+    sessionStorage.removeItem("token")
+    localStorage.removeItem("user")
+    sessionStorage.removeItem("user")
     setSession(undefined)
   }, [])
 

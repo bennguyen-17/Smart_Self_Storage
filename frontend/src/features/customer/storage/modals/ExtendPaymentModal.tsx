@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { checkBookingStatus, mockPayDeposit } from '@/pages/customer/rent/rentApi';
+import { checkBookingStatus, mockPayDeposit } from '@/features/customer/rent/rentApi';
 
 export default function ExtendPaymentModal({ paymentData, onPaymentSuccess, onBack }) {
   const { bookingCode, extendAmount, bankInfo } = paymentData;

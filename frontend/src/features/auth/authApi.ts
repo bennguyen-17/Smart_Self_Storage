@@ -59,12 +59,31 @@ export const resendOtp = async (phone: string) => {
 };
 
 export const login = async (identifier: string, password: string, portalType: string = "CUSTOMER") => {
+  const trimmed = identifier.trim();
+  const isEmail = trimmed.includes("@");
   const response = await axios.post(`${API_BASE}/login`, {
-    phone: identifier,
-    identifier,
+    email: isEmail ? trimmed : undefined,
+    phone: !isEmail ? trimmed : undefined,
+    identifier: trimmed,
     password,
     portalType,
   });
 
+  return response.data;
+};
+
+export const requestForgotPasswordOtp = async (email: string) => {
+  const response = await axios.post(`${API_BASE}/forgot-password`, {
+    phone: email.trim(),
+  });
+  return response.data;
+};
+
+export const resetPassword = async (email: string, otpCode: string, newPassword: string) => {
+  const response = await axios.post(`${API_BASE}/reset-password`, {
+    phone: email.trim(),
+    otpCode: otpCode.trim(),
+    newPassword,
+  });
   return response.data;
 };

@@ -4,7 +4,7 @@
 
 import { unwrapApiData } from "@/lib/api"
 import apiClient, { isMockMode } from "@/lib/apiClient"
-import { getFloors } from "@/pages/floorplan/api/floorPlanApi"
+import { getFloors } from "@/features/floorplan/api/floorPlanApi"
 import type { Floor } from "@/types"
 
 import { managerHeaders as contextHeaders, MissingFacilityError } from "../managerContext"

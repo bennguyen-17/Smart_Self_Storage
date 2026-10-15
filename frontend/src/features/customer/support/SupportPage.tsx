@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'motion/react';
 import { useSearchParams } from 'react-router-dom';
 import CustomerLayout from '@/components/layouts/CustomerLayout';
 import SupportForm from './components/SupportForm';
-import SupportTicketModal from './modals/SupportTicketModal';
 
 export default function SupportPage() {
-  const [showSupportModal, setShowSupportModal] = useState(false);
   const [searchParams] = useSearchParams();
   const tab = searchParams.get('tab');
   const activeNav = (tab === 'tickets' || tab === 'history') ? 'tickets' : 'support';
@@ -23,13 +21,6 @@ export default function SupportPage() {
       >
         <SupportForm />
       </motion.div>
-
-      {/* Modal gửi ticket nếu người dùng cần */}
-      {showSupportModal && (
-        <SupportTicketModal
-          onClose={() => setShowSupportModal(false)}
-        />
-      )}
     </CustomerLayout>
   );
 }

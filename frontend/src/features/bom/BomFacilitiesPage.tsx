@@ -21,8 +21,8 @@ import {
   Mail,
   ChevronDown,
 } from "lucide-react"
-import { useBomContext } from "@/pages/bom/context/BomContext"
-import { type FacilityPerformance } from "@/pages/bom/data/bomData"
+import { useBomContext } from "@/features/bom/context/BomContext"
+import { type FacilityPerformance } from "@/features/bom/data/bomData"
 
 const MANAGER_PRESETS = [
   { name: "Trần Văn Quản Lý", phone: "0912 345 678", email: "quanly.tran@smartstorage.vn" },

@@ -5,9 +5,9 @@
 import type { ComponentType } from "react"
 import { Building2Icon, ScrollTextIcon, UsersIcon, type LucideIcon } from "lucide-react"
 
-import AuditLogPanel from "@/pages/admin/audit-logs/components/AuditLogPanel"
-import BranchesPanel from "@/pages/admin/branches/components/BranchesPanel"
-import AccountsPanel from "@/pages/admin/internal-accounts/components/AccountsPanel"
+import AuditLogPanel from "@/features/admin/audit-logs/components/AuditLogPanel"
+import BranchesPanel from "@/features/admin/branches/components/BranchesPanel"
+import AccountsPanel from "@/features/admin/internal-accounts/components/AccountsPanel"
 
 export type AdminTabKey = "users" | "facilities" | "audit"
 

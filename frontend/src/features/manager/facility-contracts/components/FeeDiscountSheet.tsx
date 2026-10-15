@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
-import type { ManagerContext } from "@/pages/manager/unit-management/types"
+import type { ManagerContext } from "@/features/manager/unit-management/types"
 import { getErrorMessage } from "@/lib/api"
 import { formatVnd } from "@/lib/format"
 

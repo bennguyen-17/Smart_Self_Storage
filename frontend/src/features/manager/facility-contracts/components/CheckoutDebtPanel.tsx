@@ -14,7 +14,7 @@ import {
 } from "@/components/internal/components/PanelKit"
 import { usePagedRows } from "@/components/internal/usePagedRows"
 import { matchesQuery } from "@/components/internal/textSearch"
-import { getManagerContext } from "@/pages/manager/unit-management/managerContext"
+import { getManagerContext } from "@/features/manager/unit-management/managerContext"
 import { useAsyncData } from "@/hooks/useAsyncData"
 import { formatVnd } from "@/lib/format"
 
