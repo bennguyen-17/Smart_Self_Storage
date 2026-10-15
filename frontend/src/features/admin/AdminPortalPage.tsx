@@ -1,7 +1,6 @@
 import { Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom"
 
 import { useAuth } from "@/context/AuthContext"
-import TabPlaceholder from "@/features/manager/components/TabPlaceholder"
 import { getRoleTitle, normalizeRole } from "@/lib/roles"
 
 import { DEFAULT_ADMIN_TAB, findAdminTab } from "@/features/admin/adminTabs"
@@ -51,7 +50,7 @@ function AdminPortalPage() {
         onLogout={logout}
       >
         <h1 className="text-title text-xl font-black tracking-tight">{tab.title}</h1>
-        {Panel ? <Panel /> : <TabPlaceholder tab={tab} />}
+        {Panel && <Panel />}
       </AdminNavbar>
     </div>
   )

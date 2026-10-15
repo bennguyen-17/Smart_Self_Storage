@@ -4,7 +4,6 @@ import { useAuth } from "@/context/AuthContext"
 import { getRoleTitle, normalizeRole } from "@/lib/roles"
 
 import ManagerNavbar from "@/features/manager/components/ManagerNavbar"
-import TabPlaceholder from "@/features/manager/components/TabPlaceholder"
 import { DEFAULT_MANAGER_TAB, findManagerTab } from "@/features/manager/managerTabs"
 
 /**
@@ -51,7 +50,7 @@ function ManagerPortalPage() {
         onLogout={logout}
       >
         <h1 className="text-title text-xl font-black tracking-tight">{tab.title}</h1>
-        {Panel ? <Panel /> : <TabPlaceholder tab={tab} />}
+        {Panel && <Panel />}
       </ManagerNavbar>
     </div>
   )

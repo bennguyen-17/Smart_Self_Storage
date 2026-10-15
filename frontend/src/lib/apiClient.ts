@@ -1,3 +1,3 @@
-export * from '@/shared/lib/http';
-import http from '@/shared/lib/http';
+export * from './http';
+import http from './http';
 export default http;

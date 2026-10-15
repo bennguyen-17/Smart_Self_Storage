@@ -22,17 +22,12 @@ function StaffPortalLayout() {
   const isDark = resolveIsDark(theme)
 
   return (
-    <div className="staff-portal min-h-screen antialiased">
-      {/* Nền ambient  */}
+    <div className="staff-portal relative min-h-screen bg-[#eef5fc] text-slate-900 dark:bg-[#0b1120] dark:text-slate-100 antialiased">
+      {/* Vầng sáng xanh mờ phía trên vùng nội dung, đồng bộ với Manager và Cổng Khách */}
       <div
-        className={`pointer-events-none fixed inset-0 z-0 transition-colors ${
-          isDark
-            ? "bg-gradient-to-b from-slate-950 via-[#0a1628] to-slate-950"
-            : "bg-gradient-to-b from-[#eaf4fe] via-[#f1f7ff] to-[#e4effb]"
-        }`}
-      >
-        <div className="absolute -top-32 left-1/2 h-[500px] w-full max-w-6xl -translate-x-1/2 rounded-full bg-gradient-to-b from-sky-200/50 via-blue-100/30 to-transparent blur-3xl" />
-      </div>
+        aria-hidden="true"
+        className="pointer-events-none fixed top-0 left-1/2 -z-0 h-64 w-full max-w-4xl -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-500/20 via-cyan-400/25 to-indigo-500/20 blur-3xl lg:left-[calc(50%+8rem)] dark:from-blue-500/10 dark:via-cyan-400/10 dark:to-indigo-500/10"
+      />
 
       <TooltipProvider>
         <SidebarProvider>
@@ -42,10 +37,10 @@ function StaffPortalLayout() {
           />
 
           <SidebarInset className="relative z-10 flex min-h-screen flex-1 flex-col bg-transparent">
-            {/* Top mobile navigation bar (chỉ hiển thị trên màn hình nhỏ để bật tắt sidebar) */}
-            <div className="flex items-center gap-3 border-b border-border/40 bg-card/60 px-4 py-2.5 backdrop-blur-md md:hidden">
-              <SidebarTrigger className="shrink-0" />
-              <span className="text-xs font-black tracking-wide uppercase text-title">
+            {/* Top mobile navigation bar (đồng bộ header với Manager) */}
+            <div className="flex items-center gap-3 border-b border-slate-200/80 bg-slate-50/95 px-4 py-2.5 shadow-xs backdrop-blur-xl md:hidden dark:border-slate-800 dark:bg-slate-950/95">
+              <SidebarTrigger className="shrink-0 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" />
+              <span className="text-xs font-black tracking-wide uppercase text-slate-900 dark:text-white">
                 Smart Storage • Cổng Nhân Viên
               </span>
             </div>

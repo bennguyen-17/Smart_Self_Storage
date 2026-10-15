@@ -6,7 +6,6 @@ import Header from '@/components/common/Header';
 import SiteFooter from '@/components/common/SiteFooter';
 import CustomerProfileModal from '@/components/common/CustomerProfileModal';
 import { useTheme } from '@/components/common/theme-provider';
-import { getMySupportTickets } from '@/features/customer/support/supportApi';
 
 export type CustomerNavTab = 'home' | 'rent' | 'my-storage' | 'gate-pin' | 'support' | 'tickets';
 
@@ -20,7 +19,6 @@ interface NavItem {
   label: string;
   path: string;
   icon: any;
-  hasBadge?: boolean;
 }
 
 const NAV_ITEMS: readonly NavItem[] = [
@@ -28,7 +26,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   { id: 'my-storage', label: 'Kho của tôi', path: '/storage', icon: Boxes },
   { id: 'gate-pin', label: 'Mã PIN mở cửa', path: '/pin', icon: KeyRound },
   { id: 'support', label: 'Gửi hỗ trợ', path: '/support?tab=create', icon: Headset },
-  { id: 'tickets', label: 'Yêu Cầu Của Tôi', path: '/support?tab=tickets', icon: ClipboardList, hasBadge: true },
+  { id: 'tickets', label: 'Yêu Cầu Của Tôi', path: '/support?tab=tickets', icon: ClipboardList },
 ];
 
 export default function CustomerLayout({ children, activeNav = 'home' }: CustomerLayoutProps) {
@@ -36,46 +34,6 @@ export default function CustomerLayout({ children, activeNav = 'home' }: Custome
   const { theme, setTheme } = useTheme();
   const isDarkMode = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [ticketCount, setTicketCount] = useState<number>(0);
-
-  useEffect(() => {
-    // Đảm bảo chế độ sáng hiển thị nền xanh nhạt theo yêu cầu
-    if (theme !== 'light') {
-      setTheme('light');
-    }
-  }, []);
-
-  // Lấy số lượng ticket của khách hàng để hiển thị badge trên Header
-  useEffect(() => {
-    let isMounted = true;
-    const fetchCount = async () => {
-      try {
-        const token = typeof window !== 'undefined' ? (localStorage.getItem('token') || localStorage.getItem('auth_session') || sessionStorage.getItem('auth_session')) : null;
-        if (!token) return;
-        const res = await getMySupportTickets();
-        if (isMounted && res.success && Array.isArray(res.data)) {
-          setTicketCount(res.data.length);
-        }
-      } catch (e) {
-        // ignore
-      }
-    };
-
-    fetchCount();
-
-    const handleTicketUpdated = () => {
-      fetchCount();
-    };
-
-    window.addEventListener('ticket-updated', handleTicketUpdated);
-    window.addEventListener('focus', fetchCount);
-
-    return () => {
-      isMounted = false;
-      window.removeEventListener('ticket-updated', handleTicketUpdated);
-      window.removeEventListener('focus', fetchCount);
-    };
-  }, []);
 
   const toggleTheme = () => {
     setTheme(isDarkMode ? 'light' : 'dark');
@@ -151,17 +109,6 @@ export default function CustomerLayout({ children, activeNav = 'home' }: Custome
                       }`}
                     />
                     <span>{item.label}</span>
-                    {item.hasBadge && ticketCount > 0 && (
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-black transition-colors ${
-                          isActive
-                            ? 'bg-white/20 text-white dark:bg-black/20 dark:text-slate-950'
-                            : 'bg-blue-100 text-blue-700 dark:bg-cyan-950/80 dark:text-cyan-300'
-                        }`}
-                      >
-                        {ticketCount}
-                      </span>
-                    )}
                   </button>
                 );
               })}

@@ -157,14 +157,14 @@ function InternalLoginForm() {
 
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
         <FieldGroup className="gap-4">
-          {/* Phone */}
+          {/* Phone / Email */}
           <Controller
             name="phone"
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor={field.name}>
-                  Số điện thoại nội bộ
+                  Email hoặc Số điện thoại
                   <span className="text-rose-500">*</span>
                 </FieldLabel>
 
@@ -176,10 +176,9 @@ function InternalLoginForm() {
                   <InputGroupInput
                     {...field}
                     id={field.name}
-                    placeholder="0900 xxx xxx"
-                    inputMode="numeric"
-                    maxLength={10}
-                    autoComplete="tel"
+                    placeholder="Email hoặc số điện thoại (VD: 0900...)"
+                    maxLength={100}
+                    autoComplete="username"
                     aria-invalid={fieldState.invalid}
                   />
                 </InputGroup>

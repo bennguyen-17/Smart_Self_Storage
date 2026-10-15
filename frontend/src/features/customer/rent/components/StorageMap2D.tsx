@@ -66,22 +66,19 @@ const STORAGE_TYPES_DATA = [
   {
     id: 'ALL',
     name: 'Tất cả ô kho',
-    desc: 'Hiển thị đầy đủ cả kho thường và kho mát',
-    badge: 'Toàn bộ',
+    desc: 'Hiển thị tất cả loại kho',
     image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80'
   },
   {
     id: 'STANDARD',
-    name: 'Kho Thường (Standard)',
-    desc: 'Nhiệt độ phòng • Gia dụng, nội thất, tài liệu',
-    badge: '📦 Chuẩn',
+    name: 'Kho Thường',
+    desc: 'Phù hợp cho đồ gia dụng, quần áo, sách vở, đồ dùng cá nhân',
     image: 'https://images.unsplash.com/photo-1590247813693-5541d1c609fd?auto=format&fit=crop&w=600&q=80'
   },
   {
     id: 'CLIMATE_CONTROLLED',
-    name: 'Kho Mát (22-25°C)',
-    desc: 'Điều hòa 24/7 • Ẩm <55% • Đồ hiệu, điện tử, rượu',
-    badge: '❄️ Mát 22-25°C',
+    name: 'Kho Mát',
+    desc: 'Phù hợp cho đồ điện tử, tranh dễ ảnh hưởng bởi nhiệt độ',
     image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=600&q=80'
   }
 ];
@@ -264,17 +261,8 @@ export default function StorageMap2D({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide flex items-center gap-1.5">
               <MapPin className="size-4 text-blue-600 dark:text-cyan-400 shrink-0" />
-              <span>1. Chọn cơ sở kho (7 chi nhánh):</span>
+              <span>1. Chọn cơ sở kho:</span>
             </span>
-            {currentFacilityObj ? (
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full truncate max-w-full">
-                📍 Đang chọn: <strong className="text-blue-600 dark:text-cyan-400 font-bold">{currentFacilityObj.name}</strong> • {currentFacilityObj.address}
-              </span>
-            ) : (
-              <span className="text-xs font-bold text-blue-600 dark:text-cyan-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 px-3 py-1 rounded-full animate-pulse">
-                👉 Bước 1: Vui lòng bấm chọn một cơ sở kho bên dưới
-              </span>
-            )}
           </div>
 
           {/* BỘ LỌC ĐỊA ĐIỂM (TỈNH / THÀNH PHỐ) */}
@@ -385,11 +373,6 @@ export default function StorageMap2D({
                 <Snowflake className="size-4 text-blue-600 dark:text-cyan-400 shrink-0" />
                 <span>2. Chọn loại kho lưu trữ:</span>
               </span>
-              {!selectedStorageType && (
-                <span className="text-xs font-bold text-blue-600 dark:text-cyan-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 px-3 py-1 rounded-full animate-pulse">
-                  👉 Bước 2: Bấm chọn một loại kho bên dưới để xem sơ đồ mặt bằng
-                </span>
-              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -418,12 +401,6 @@ export default function StorageMap2D({
                         loading="lazy"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                      {/* Tag badge */}
-                      <span className="absolute top-2.5 left-2.5 text-xs font-black px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-white border border-white/20">
-                        {t.badge}
-                      </span>
-
                       {/* Dấu tích khi đang chọn */}
                       {isSelected && (
                         <span className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md">
@@ -433,7 +410,7 @@ export default function StorageMap2D({
                     </div>
 
                     {/* Thông tin loại kho */}
-                    <div className="p-3 flex-1 flex flex-col justify-center">
+                    <div className="p-3 flex-1 flex flex-col justify-center text-center">
                       <p className={`text-sm font-black ${isSelected ? 'text-blue-600 dark:text-cyan-400' : 'text-slate-900 dark:text-white'}`}>
                         {t.name}
                       </p>
@@ -517,13 +494,6 @@ export default function StorageMap2D({
             <span>SƠ ĐỒ MẶT BẰNG Ô KHO • {currentFloor === 1 ? 'TẦNG TRỆT' : `TẦNG ${currentFloor - 1}`}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-              currentFacilityObj?.layoutType === 'B'
-                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
-                : 'bg-blue-500/10 text-blue-600 dark:text-cyan-400 border-blue-500/30'
-            }`}>
-              {currentFacilityObj?.layoutType === 'B' ? 'Mô hình Layout B (15 ô kho)' : 'Mô hình Layout A (46 ô kho)'}
-            </span>
             <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">
               {units.length} ô kho tầng này
             </span>

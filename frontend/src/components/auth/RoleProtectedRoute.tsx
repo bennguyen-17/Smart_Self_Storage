@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { Link, Navigate, useNavigate } from "react-router-dom"
 import { LogOutIcon, ShieldAlertIcon } from "lucide-react"
 
+import { isTokenValid } from "@/lib/http"
 import { useAuth } from "@/context/AuthContext"
 import {
   getRoleBadgeClass,
@@ -19,18 +20,19 @@ interface RoleProtectedRouteProps {
 
 /**
  * Route Guard bảo vệ route theo vai trò (RBAC):
- * - Chưa đăng nhập -> redirect về cổng đăng nhập tương ứng.
+ * - Chưa đăng nhập hoặc token đã hết hạn -> đăng xuất & redirect về cổng đăng nhập tương ứng.
  * - Đã đăng nhập nhưng sai vai trò -> hiển thị màn hình 403 Access Denied với nút về đúng portal.
  */
 function RoleProtectedRoute({
   allowedRoles,
   children,
 }: RoleProtectedRouteProps) {
-  const { user, isAuthenticated, signOut } = useAuth()
+  const { user, token, isAuthenticated, signOut } = useAuth()
   const navigate = useNavigate()
 
-  // 1. Kiểm tra trạng thái đăng nhập
-  if (!isAuthenticated || !user) {
+  // 1. Kiểm tra trạng thái đăng nhập và tính hợp lệ của token
+  if (!isAuthenticated || !user || !isTokenValid(token)) {
+    if (isAuthenticated) signOut()
     const isCustomerRoute = allowedRoles.includes("CUSTOMER")
     return (
       <Navigate

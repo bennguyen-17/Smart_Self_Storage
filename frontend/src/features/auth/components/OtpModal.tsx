@@ -65,7 +65,7 @@ function OtpModal({ phone, onClose }: OtpModalProps) {
     }
 
     if (timeLeft <= 0) {
-      setError("Mã OTP đã hết hạn. Vui lòng gửi lại mã mới.")
+      setError("Mã OTP đã hết hạn. Vui lòng nhập mã mới")
       return
     }
 
@@ -75,7 +75,7 @@ function OtpModal({ phone, onClose }: OtpModalProps) {
       await verifyOtp(phone, otp)
 
       toast.success("Kích hoạt thành công!", {
-        description: "Tài khoản của bạn đã được kích hoạt.",
+        description: "Tài khoản của bạn đã được kích hoạt thành công.",
       })
 
       navigate("/customer_login")

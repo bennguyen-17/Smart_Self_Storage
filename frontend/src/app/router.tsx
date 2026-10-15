@@ -35,7 +35,7 @@ import BomPoliciesPage from "@/features/bom/BomPoliciesPage"
 import BomReportsPage from "@/features/bom/BomReportsPage"
 
 import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
-import { isTokenValid } from "@/shared/lib/http"
+import { isTokenValid } from "@/lib/http"
 
 // Route Guard độc lập cho Cổng Khách Hàng
 export function CustomerProtectedRoute({ children }: { children: React.ReactNode }) {

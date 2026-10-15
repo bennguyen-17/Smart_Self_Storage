@@ -27,7 +27,7 @@ const CUSTOMER_NAV_ITEMS: CustNavItem[] = [
   {
     id: 'rent',
     label: 'Thuê kho',
-    subtitle: 'Tìm & đặt ô kho 2D',
+    subtitle: 'Xem sơ đồ đặt ô kho 2D',
     path: '/rent',
     icon: Warehouse,
     theme: {
@@ -43,7 +43,7 @@ const CUSTOMER_NAV_ITEMS: CustNavItem[] = [
   {
     id: 'my-storage',
     label: 'Kho của tôi',
-    subtitle: 'Quản lý hợp đồng & đồ',
+    subtitle: 'Quản lý hợp đồng cá nhân',
     path: '/storage',
     icon: Boxes,
     theme: {
@@ -75,7 +75,7 @@ const CUSTOMER_NAV_ITEMS: CustNavItem[] = [
   {
     id: 'support',
     label: 'Gửi hỗ trợ',
-    subtitle: 'Gửi ticket & giải đáp',
+    subtitle: 'Gửi yêu cầu trợ giúp',
     path: '/support',
     icon: Headset,
     theme: {
