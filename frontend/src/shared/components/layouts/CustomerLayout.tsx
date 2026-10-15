@@ -109,27 +109,23 @@ export default function CustomerLayout({ children, activeNav = 'home' }: Custome
         onToggleTheme={toggleTheme}
         onOpenProfileModal={() => setShowProfileModal(true)}
         onGoHome={() => navigate('/portal')}
-        isSticky={true}
         centerContent={
-          <AnimatePresence>
-            <motion.div
-              key="header-nav-pill"
-              initial={{ opacity: 0, y: -8, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.95 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="flex items-center gap-1 sm:gap-1.5 p-1 bg-slate-100/90 dark:bg-slate-800/90 rounded-2xl border border-slate-200/90 dark:border-slate-700/80 shadow-xs backdrop-blur-md overflow-x-auto no-scrollbar max-w-full"
-            >
+          activeNav !== 'home' ? (
+            <AnimatePresence>
+              <motion.div
+                key="header-nav-pill"
+                initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                className="flex items-center gap-1 sm:gap-1.5 p-1 bg-slate-100/90 dark:bg-slate-800/90 rounded-2xl border border-slate-200/90 dark:border-slate-700/80 shadow-xs backdrop-blur-md overflow-x-auto no-scrollbar max-w-full"
+              >
               {/* Nút Về Trang Chủ */}
               <button
                 type="button"
                 onClick={() => navigate('/portal')}
                 title="Về Trang Chủ"
-                className={`p-1.5 sm:p-2 rounded-xl transition cursor-pointer shrink-0 ${
-                  activeNav === 'home'
-                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30 dark:bg-cyan-500 dark:text-slate-950 font-bold'
-                    : 'text-slate-500 hover:text-blue-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700'
-                }`}
+                className="p-1.5 sm:p-2 rounded-xl transition cursor-pointer shrink-0 text-slate-500 hover:text-blue-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700"
               >
                 <Home className="size-4 sm:size-4.5" />
               </button>
@@ -171,7 +167,8 @@ export default function CustomerLayout({ children, activeNav = 'home' }: Custome
               })}
             </motion.div>
           </AnimatePresence>
-        }
+        ) : null
+      }
       />
 
       {/* Main Content */}
