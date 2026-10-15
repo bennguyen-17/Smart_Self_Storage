@@ -52,6 +52,7 @@ frontend/.env.*
 node_modules/
 .env
 .env.*
+!.env.example
 
 # Local project references - DO NOT COMMIT
 business-rule/
