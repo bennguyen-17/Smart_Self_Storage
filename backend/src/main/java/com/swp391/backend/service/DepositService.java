@@ -121,25 +121,25 @@ public class DepositService {
         reservation.setStatus("PENDING");
         reservation.setHoldExpiresAt(LocalDateTime.now().plusMinutes(15)); // Giữ chỗ 15 phút để thanh toán
 
-        // Sinh mã Reservation Code chuẩn BR-15: RES-[Mã Cơ Sở]-[4 số cuối SĐT Khách]-[4 ký tự ngẫu nhiên]
-        String resCode;
+        // Sinh Mã Hợp Đồng theo quy tắc thống nhất: CTR-[Mã Cơ Sở]-[DDMMYY]-[4 số ngẫu nhiên]
+        String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyy"));
+        String contractCode;
         do {
-            String randomSuffix = String.format("%04X", new Random().nextInt(0xFFFF));
-            resCode = "RES-" + facilityCode + "-" + phoneSuffix + "-" + randomSuffix;
-        } while (reservationRepository.existsByReservationCode(resCode));
-        reservation.setReservationCode(resCode);
+            String randomSuffix = String.format("%04d", new Random().nextInt(10000));
+            contractCode = "CTR-" + facilityCode + "-" + dateStr + "-" + randomSuffix;
+        } while (reservationRepository.existsByReservationCode(contractCode));
+        reservation.setReservationCode(contractCode);
         reservation = reservationRepository.save(reservation);
 
         // Tạo Hợp đồng dự thảo với trạng thái PENDING_CHECKIN
         Contract contract = new Contract();
         contract.setReservationId(reservation.getReservationId());
-        contract.setPdfUrl("/contracts/DRAFT-" + resCode + ".pdf");
+        contract.setPdfUrl("/contracts/" + contractCode + ".pdf");
         contract.setStatus("PENDING_CHECKIN");
         contract = contractRepository.save(contract);
 
-        // Tạo Hóa đơn tiền cọc (Payment): DEP-[Facility]-[YYYYMMDD]-[4 số random]
-        String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String invoiceNumber = "DEP-" + facilityCode + "-" + dateStr + "-" + String.format("%04d", new Random().nextInt(10000));
+        // Tạo Hóa đơn tiền cọc (Payment): DEP-[Mã Hợp Đồng]
+        String invoiceNumber = "DEP-" + contractCode;
 
         Payment payment = new Payment();
         payment.setContractId(contract.getContractId());
@@ -180,7 +180,7 @@ public class DepositService {
         response.setSuccess(true);
         response.setMessage("Tạo đơn đặt cọc thành công! Vui lòng quét mã VietQR để hoàn tất giữ chỗ.");
         response.setReservationId(reservation.getReservationId());
-        response.setReservationCode(resCode);
+        response.setReservationCode(contractCode);
         response.setContractId(contract.getContractId());
         response.setContractDraftUrl(contract.getPdfUrl());
         response.setPaymentId(payment.getPaymentId());
@@ -264,7 +264,6 @@ public class DepositService {
         return new ApiResponse(true, "Xác nhận nộp cọc thành công! Hợp đồng ở trạng thái PENDING_CHECKIN và ô kho đã được bảo lưu giữ chỗ.");
     }
 
-
     // --- 3. Kiểm tra trạng thái thanh toán Cọc ---
     public ApiResponse checkDepositStatus(String invoiceNumber) {
         if (invoiceNumber == null || invoiceNumber.trim().isEmpty()) {
@@ -279,5 +278,127 @@ public class DepositService {
                 || ("PARTIALLY_PAID".equalsIgnoreCase(p.getStatus())
                 && "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()));
         return new ApiResponse(true, isPaid ? "PAID" : "PENDING");
+    }
+
+    // --- 4. Webhook / Xác nhận thanh toán Gia hạn Hợp đồng (EXT-) ---
+    @Transactional
+    public ApiResponse confirmExtensionPayment(DepositWebhookRequest request) {
+        if (request.getInvoiceNumber() == null || request.getInvoiceNumber().trim().isEmpty()) {
+            return new ApiResponse(false, "Mã hóa đơn gia hạn không hợp lệ!");
+        }
+
+        String invoiceNumber = request.getInvoiceNumber().trim();
+        // Lấy mã hợp đồng từ invoiceNumber (ví dụ: EXT-CTR-HN01-171026-0042-8821 -> CTR-HN01-171026-0042)
+        String contractCode = invoiceNumber.startsWith("EXT-") ? invoiceNumber.substring(4) : invoiceNumber;
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(CTR-[A-Z0-9]+-\\d{6}-\\d{4})").matcher(invoiceNumber);
+        if (m.find()) {
+            contractCode = m.group(1);
+        } else if (contractCode.contains("-")) {
+            int lastDash = contractCode.lastIndexOf("-");
+            String potential = contractCode.substring(0, lastDash);
+            if (reservationRepository.existsByReservationCode(potential)) {
+                contractCode = potential;
+            }
+        }
+
+        Optional<Payment> paymentOpt = paymentRepository.findByInvoiceNumber(invoiceNumber);
+        Payment payment;
+        Contract contract = null;
+        Reservation res = null;
+
+        if (paymentOpt.isPresent()) {
+            payment = paymentOpt.get();
+            contract = contractRepository.findById(payment.getContractId()).orElse(null);
+            if (contract != null) {
+                res = reservationRepository.findById(contract.getReservationId()).orElse(null);
+            }
+        } else {
+            // Tìm contract theo mã hợp đồng
+            Optional<Reservation> resOpt = reservationRepository.findByReservationCode(contractCode);
+            if (resOpt.isPresent()) {
+                res = resOpt.get();
+                contract = contractRepository.findByReservationId(res.getReservationId()).orElse(null);
+            }
+            if (contract == null && contractCode.startsWith("CTR-")) {
+                try {
+                    int cId = Integer.parseInt(contractCode.substring(4));
+                    contract = contractRepository.findById(cId).orElse(null);
+                    if (contract != null) {
+                        res = reservationRepository.findById(contract.getReservationId()).orElse(null);
+                    }
+                } catch (Exception ignored) {}
+            }
+
+            // Fallback: Tìm kiếm trong tất cả reservation
+            if (contract == null) {
+                for (Reservation r : reservationRepository.findAll()) {
+                    if (r.getReservationCode() != null && !r.getReservationCode().isBlank()) {
+                        if (contractCode.equalsIgnoreCase(r.getReservationCode()) 
+                                || invoiceNumber.contains(r.getReservationCode()) 
+                                || r.getReservationCode().contains(contractCode)) {
+                            res = r;
+                            contract = contractRepository.findByReservationId(r.getReservationId()).orElse(null);
+                            if (contract != null) break;
+                        }
+                    }
+                }
+            }
+
+            if (contract == null || res == null) {
+                return new ApiResponse(false, "Không tìm thấy hợp đồng ứng với mã gia hạn: " + invoiceNumber);
+            }
+
+            payment = new Payment();
+            payment.setContractId(contract.getContractId());
+            payment.setInvoiceNumber(invoiceNumber);
+            payment.setInvoiceType("MONTHLY_RENEWAL");
+            BigDecimal rentAmount = res.getRentalAmount() != null ? res.getRentalAmount() : BigDecimal.valueOf(1440000);
+            payment.setAmount(rentAmount);
+            payment.setIssuedAt(LocalDateTime.now());
+            payment.setDueAt(LocalDateTime.now().plusDays(1));
+        }
+
+        if ("PAID".equalsIgnoreCase(payment.getStatus()) && "SUCCESS".equalsIgnoreCase(payment.getPaymentStatus())) {
+            return new ApiResponse(true, "Hóa đơn gia hạn này đã được ghi nhận thanh toán trước đó!");
+        }
+
+        // Cộng dồn thời hạn thuê (30 ngày)
+        int days = 30;
+        LocalDate currentEnd = res.getEndDate() != null ? res.getEndDate() : LocalDate.now();
+        if (currentEnd.isBefore(LocalDate.now())) {
+            currentEnd = LocalDate.now();
+        }
+        LocalDate newEnd = currentEnd.plusDays(days);
+        res.setEndDate(newEnd);
+        reservationRepository.save(res);
+
+        // Đảm bảo Contract duy trì trạng thái ACTIVE
+        if (!"ACTIVE".equalsIgnoreCase(contract.getStatus())) {
+            contract.setStatus("ACTIVE");
+            contractRepository.save(contract);
+        }
+
+        // Cập nhật Payment sang PAID & SUCCESS
+        payment.setStatus("PAID");
+        payment.setPaymentStatus("SUCCESS");
+        payment.setPaidAmount(payment.getAmount());
+        payment.setRemainingAmount(BigDecimal.ZERO);
+        payment.setPaymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod() : "VNPAY");
+        payment.setTransactionCode(request.getTransactionCode() != null ? request.getTransactionCode() : "TXN_EXT_" + System.currentTimeMillis());
+        payment.setGatewayTransactionId(request.getGatewayTransactionId());
+        payment.setPaidAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+
+        // Ghi nhật ký kiểm toán (ActivityLog)
+        ActivityLog log = new ActivityLog();
+        log.setAccountId(res.getAccountId());
+        log.setAction("EXTEND_CONTRACT_VNPAY");
+        log.setDescription(String.format("Gia hạn thành công hợp đồng %s thêm %d ngày qua VNPay. Hạn mới: %s. Hóa đơn: %s",
+                contractCode, days, newEnd, invoiceNumber));
+        log.setCreatedAt(LocalDateTime.now());
+        log.setIpAddress("127.0.0.1");
+        activityLogRepository.save(log);
+
+        return new ApiResponse(true, "Gia hạn hợp đồng thuê kho thành công qua cổng thanh toán VNPay! Hạn sử dụng mới đến ngày " + newEnd);
     }
 }

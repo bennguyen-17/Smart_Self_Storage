@@ -176,7 +176,7 @@ function InternalLoginForm() {
                   <InputGroupInput
                     {...field}
                     id={field.name}
-                    placeholder="Email hoặc số điện thoại (VD: 0900...)"
+                    placeholder="Email hoặc số điện thoại"
                     maxLength={100}
                     autoComplete="username"
                     aria-invalid={fieldState.invalid}

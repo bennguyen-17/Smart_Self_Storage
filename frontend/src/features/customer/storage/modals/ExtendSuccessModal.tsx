@@ -1,4 +1,4 @@
-﻿import React, { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
 
 export default function ExtendSuccessModal({ successData, onGoHome }) {
@@ -25,14 +25,19 @@ export default function ExtendSuccessModal({ successData, onGoHome }) {
           <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
             GIA HẠN THÀNH CÔNG!
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Giao dịch cọc giữ chỗ đã được xác nhận thành công.</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Hợp đồng thuê ô kho của bạn đã được gia hạn thời gian thành công.</p>
         </div>
 
-        {/* Thẻ hiển thị nổi bật Mã Đặt Chỗ */}
+        {/* Thẻ hiển thị nổi bật Mã Gia Hạn & Hạn mới */}
         {bookingCode && (
-          <div className="p-4 rounded-2xl bg-slate-900 text-white shadow-xl space-y-1">
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">MÃ ĐẶT CHỖ (BOOKING CODE)</span>
-            <div className="text-3xl font-mono font-black text-amber-400 tracking-widest">{bookingCode}</div>
+          <div className="p-4 rounded-2xl bg-slate-900 text-white shadow-xl space-y-2">
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">MÃ GIA HẠN HỢP ĐỒNG</span>
+            <div className="text-xl font-mono font-black text-amber-400 tracking-wider">{bookingCode}</div>
+            {successData?.newExpiryDate && (
+              <div className="pt-2 border-t border-slate-800 text-xs text-slate-300">
+                Hạn trả kho mới: <strong className="text-emerald-400 font-mono font-bold">{successData.newExpiryDate}</strong>
+              </div>
+            )}
           </div>
         )}
 

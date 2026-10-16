@@ -246,14 +246,14 @@ public class CheckoutSettlementService {
         if (facOpt.isPresent()) {
             branchCode = storageService.mapFacilityToResponse(facOpt.get()).getFacilityCode();
         }
-
-        String dateStr = LocalDate.now().toString().replace("-", "");
+        String dateStr = LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("ddMMyy"));
         int randomSuffix = (int) (1000 + (Math.random() * 9000));
+        String cleanBranch = branchCode.replace("-", "").toUpperCase();
 
         // Nếu tiền cọc + hoàn < tổng khấu trừ -> Bị âm tiền (Khách phải nộp thêm truy thu CMP)
         if (netAmount.compareTo(BigDecimal.ZERO) < 0) {
             BigDecimal compensationDue = netAmount.abs();
-            String cmpInvoice = String.format("CMP-%s-%s-%d", branchCode, dateStr, randomSuffix);
+            String cmpInvoice = String.format("CMP-%s-%s-%04d", cleanBranch, dateStr, randomSuffix);
 
             Payment cmpPayment = new Payment();
             cmpPayment.setContractId(contract.getContractId());
@@ -306,7 +306,7 @@ public class CheckoutSettlementService {
         // Sinh lệnh hoàn tiền REF trạng thái PENDING (chờ giải ngân trong 24-48h)
         String refInvoice = null;
         if (netAmount.compareTo(BigDecimal.ZERO) > 0) {
-            refInvoice = String.format("REF-%s-%s-%d", branchCode, dateStr, randomSuffix);
+            refInvoice = String.format("REF-%s-%s-%04d", cleanBranch, dateStr, randomSuffix);
             Payment refPayment = new Payment();
             refPayment.setContractId(contract.getContractId());
             refPayment.setInvoiceNumber(refInvoice);
@@ -494,7 +494,7 @@ public class CheckoutSettlementService {
             Reservation r = (c != null) ? reservationRepository.findById(c.getReservationId()).orElse(null) : null;
             Account acc = (r != null && r.getAccountId() != null) ? accountRepository.findAccountByAccountId(r.getAccountId()).orElse(null) : null;
 
-            String reservationCode = (r != null) ? r.getReservationCode() : ("RES-" + p.getContractId());
+            String reservationCode = (r != null) ? r.getReservationCode() : ("CTR-" + p.getContractId());
             String unitCode = (r != null) ? r.getUnitCode() : "N/A";
             String customerName = (acc != null) ? acc.getFullName() : "Khách hàng";
             String customerPhone = (acc != null) ? acc.getPhone() : "";
