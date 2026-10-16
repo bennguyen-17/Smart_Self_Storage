@@ -385,10 +385,17 @@ public class StaffReservationService {
             return;
         }
         LocalDateTime now = LocalDateTime.now();
+        Contract c = contractRepository.findById(contractId).orElse(null);
+        String cCode = "CTR-" + contractId;
+        if (c != null) {
+            Reservation r = reservationRepository.findById(c.getReservationId()).orElse(null);
+            if (r != null && r.getReservationCode() != null && !r.getReservationCode().isBlank()) {
+                cCode = r.getReservationCode();
+            }
+        }
         Payment refund = new Payment();
         refund.setContractId(contractId);
-        refund.setInvoiceNumber(
-                "REF-" + contractId + "-" + UUID.randomUUID().toString().replace("-", "").substring(0, 20));
+        refund.setInvoiceNumber("REF-" + cCode);
         refund.setInvoiceType("REF");
         refund.setAmount(refundAmount);
         refund.setPaidAmount(BigDecimal.ZERO);

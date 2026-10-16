@@ -55,7 +55,7 @@ export default function ContractDetailModal({ contract, onClose }: { contract: a
               <div>
                 <span className="font-bold text-sm block text-amber-900 dark:text-amber-100">Hướng dẫn nhận kho tại quầy lễ tân</span>
                 <span className="text-[12px] leading-relaxed mt-0.5 block text-amber-800 dark:text-amber-200">
-                  Vui lòng cung cấp mã đặt chỗ <strong className="font-mono font-black text-amber-700 dark:text-amber-300 text-sm px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/60 rounded-md border border-amber-300 dark:border-amber-700">{contract.reservationCode || contract.bookingCode || contract.contractId}</strong> hoặc số điện thoại đăng ký cho nhân viên lễ tân khi đến cơ sở để ký hợp đồng và nhận quyền truy cập mở kho.
+                  Vui lòng cung cấp mã hợp đồng <strong className="font-mono font-black text-amber-700 dark:text-amber-300 text-sm px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/60 rounded-md border border-amber-300 dark:border-amber-700">{contract.reservationCode || contract.bookingCode || contract.contractId}</strong> hoặc số điện thoại đăng ký cho nhân viên lễ tân khi đến cơ sở để ký hợp đồng và nhận quyền truy cập mở kho.
                 </span>
               </div>
             </div>

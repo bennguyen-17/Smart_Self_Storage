@@ -62,7 +62,7 @@ export default function RentStoragePage() {
   const [agreedTerms, setAgreedTerms] = useState(false);
 
   // Dữ liệu thanh toán VietQR & VNPay ở Bước 4
-  const [bookingCode, setBookingCode] = useState('RES-3801');
+  const [bookingCode, setBookingCode] = useState('CTR-HN01-171026-0042');
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [timeLeft, setTimeLeft] = useState(300); // 5:00
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
@@ -812,22 +812,6 @@ export default function RentStoragePage() {
                       <p className="text-[11px] text-center text-slate-500 dark:text-slate-400">
                         Bạn sẽ được chuyển hướng an toàn đến Cổng VNPay để hoàn tất giao dịch.
                       </p>
-
-                      <div className="relative flex py-1 items-center">
-                        <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
-                        <span className="flex-shrink mx-2 text-[10px] uppercase font-bold text-slate-400">Hoặc</span>
-                        <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
-                      </div>
-
-                      <button
-                        type="button"
-                        disabled={isSubmittingPayment}
-                        onClick={handleConfirmPayment}
-                        className="w-full py-2.5 rounded-xl font-bold text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
-                      >
-                        <CheckCircle2 className="size-3.5 text-emerald-500" />
-                        <span>Xác nhận đã chuyển khoản cọc (Test mô phỏng)</span>
-                      </button>
                     </div>
                   </div>
                 </>
@@ -849,7 +833,7 @@ export default function RentStoragePage() {
 
                   <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-left space-y-2 font-medium">
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500">Mã đặt giữ chỗ (Mã RES):</span>
+                      <span className="text-slate-500">Mã Hợp Đồng (Mã CTR):</span>
                       <strong className="font-mono text-amber-600 dark:text-amber-400 font-black text-sm">{bookingCode}</strong>
                     </div>
                     <div className="flex justify-between">
