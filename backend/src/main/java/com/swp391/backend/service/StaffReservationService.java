@@ -24,6 +24,7 @@ import com.swp391.backend.repository.FloorRepository;
 import com.swp391.backend.repository.PaymentRepository;
 import com.swp391.backend.repository.ReservationRepository;
 import com.swp391.backend.repository.StorageUnitRepository;
+import com.swp391.backend.repository.SupportTicketRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -59,6 +60,7 @@ public class StaffReservationService {
     private final FloorRepository floorRepository;
     private final ActivityLogRepository activityLogRepository;
     private final StorageService storageService;
+    private final SupportTicketRepository supportTicketRepository;
 
     public StaffReservationService(
             ReservationRepository reservationRepository,
@@ -70,7 +72,8 @@ public class StaffReservationService {
             CustomerProfileRepository customerProfileRepository,
             FloorRepository floorRepository,
             ActivityLogRepository activityLogRepository,
-            StorageService storageService) {
+            StorageService storageService,
+            SupportTicketRepository supportTicketRepository) {
         this.reservationRepository = reservationRepository;
         this.accountRepository = accountRepository;
         this.contractRepository = contractRepository;
@@ -81,6 +84,7 @@ public class StaffReservationService {
         this.floorRepository = floorRepository;
         this.activityLogRepository = activityLogRepository;
         this.storageService = storageService;
+        this.supportTicketRepository = supportTicketRepository;
     }
 
     public StaffReservationListResponse listReservations() {
@@ -451,6 +455,11 @@ public class StaffReservationService {
 
         contractRepository.findByReservationId(reservation.getReservationId()).ifPresent(contract -> {
             item.setContractStatus(contract.getStatus());
+            item.setCancelReason(contract.getCancelReason());
+            boolean isReturnReq = "EARLY_TERMINATION".equalsIgnoreCase(contract.getCancelReason())
+                    || supportTicketRepository.findByContractId(contract.getContractId()).stream()
+                            .anyMatch(t -> "EARLY_TERMINATION".equalsIgnoreCase(t.getType()) && !"RESOLVED".equalsIgnoreCase(t.getStatus()));
+            item.setReturnRequested(isReturnReq);
             paymentRepository.findByContractId(contract.getContractId()).stream()
                     .filter(payment -> "DEP".equalsIgnoreCase(payment.getInvoiceType())
                             || "INITIAL_RENTAL".equalsIgnoreCase(payment.getInvoiceType()))

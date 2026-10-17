@@ -26,6 +26,8 @@ public class StaffReservationListItemResponse {
     private BigDecimal depRemainingAmount;
     private BigDecimal depositAmount;
     private BigDecimal rentalAmount;
+    private Boolean returnRequested;
+    private String cancelReason;
 
     public StaffReservationListItemResponse() {}
 
@@ -112,5 +114,21 @@ public class StaffReservationListItemResponse {
 
     public void setRentalAmount(BigDecimal rentalAmount) {
         this.rentalAmount = rentalAmount;
+    }
+
+    public Boolean getReturnRequested() {
+        return returnRequested;
+    }
+
+    public void setReturnRequested(Boolean returnRequested) {
+        this.returnRequested = returnRequested;
+    }
+
+    public String getCancelReason() {
+        return cancelReason;
+    }
+
+    public void setCancelReason(String cancelReason) {
+        this.cancelReason = cancelReason;
     }
 }

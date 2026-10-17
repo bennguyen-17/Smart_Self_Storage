@@ -33,8 +33,11 @@ interface CheckinContractTableProps {
 }
 
 /** Dòng phụ dưới mã HĐ (bám prototype) */
-function codeSubtitle(status: string | null): string | null {
-  if (status === "CANCELED") return "Đã hoàn tiền cọc"
+function codeSubtitle(item: StaffReservationItem): string | null {
+  if (item.contractStatus === "CANCELED") return "Đã hoàn tiền cọc"
+  if (item.contractStatus === "ACTIVE" && (item.returnRequested || item.cancelReason === "EARLY_TERMINATION")) {
+    return "Khách yêu cầu trả kho"
+  }
   return null
 }
 
@@ -108,7 +111,7 @@ function CheckinContractTable({
 
           {!isLoading &&
             rows?.map((item) => {
-              const subtitle = codeSubtitle(item.contractStatus)
+              const subtitle = codeSubtitle(item)
               return (
                 <tr
                   key={item.reservationId}
@@ -197,15 +200,27 @@ function StatusAction({
   }
 
   if (item.contractStatus === "ACTIVE") {
+    const isReturnRequested = Boolean(
+      item.returnRequested || item.cancelReason === "EARLY_TERMINATION"
+    )
+    if (isReturnRequested) {
+      return (
+        <button
+          type="button"
+          onClick={() => onCheckout(item)}
+          className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-bold whitespace-nowrap text-emerald-700 transition hover:bg-emerald-100 shadow-xs ring-2 ring-emerald-500/20 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/50 animate-pulse"
+          title="Khách hàng đã gửi yêu cầu trả kho. Bấm để lập biên bản nghiệm thu & quyết toán cọc."
+        >
+          <PackageOpenIcon className="size-3.5" />
+          <span>Xác nhận trả kho</span>
+        </button>
+      )
+    }
+
     return (
-      <button
-        type="button"
-        onClick={() => onCheckout(item)}
-        className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold whitespace-nowrap text-emerald-700 transition hover:bg-emerald-100 shadow-2xs dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
-      >
-        <PackageOpenIcon className="size-3.5" />
-        <span>Xác nhận trả kho</span>
-      </button>
+      <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300">
+        Đang thuê
+      </span>
     )
   }
 

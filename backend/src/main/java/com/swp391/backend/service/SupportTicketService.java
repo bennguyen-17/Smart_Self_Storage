@@ -7,6 +7,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
@@ -134,7 +135,7 @@ public class SupportTicketService {
     }
 
     @Transactional
-    public SupportTicket createSupportFormTicket(Integer accountId, String type, String unitCode, String description) {
+    public SupportTicket createSupportFormTicket(Integer accountId, String type, String unitCode, String description, LocalDate desiredDate) {
         if (unitCode == null || unitCode.trim().isEmpty()) {
             throw new IllegalArgumentException("Vui lòng chọn ô kho có hợp đồng đang có hiệu lực (ACTIVE)!");
         }
@@ -172,8 +173,14 @@ public class SupportTicketService {
         ticket.setCustomerId(customerProfileId);
         ticket.setFacilityId(facilityId);
         ticket.setUnitCode(unitCode);
-        ticket.setContractId(activeContract.getContractId());
-        ticket.setTitle("Yêu cầu hỗ trợ: " + (type != null ? type : "UNLOCK") + " - Ô kho " + unitCode);
+        if ("EARLY_TERMINATION".equalsIgnoreCase(type)) {
+            ticket.setTitle("Yêu cầu trả kho sớm - Ô kho " + unitCode);
+            ticket.setDesiredDate(desiredDate != null ? desiredDate : LocalDate.now());
+            activeContract.setCancelReason("EARLY_TERMINATION");
+            contractRepository.save(activeContract);
+        } else {
+            ticket.setTitle("Yêu cầu hỗ trợ: " + (type != null ? type : "UNLOCK") + " - Ô kho " + unitCode);
+        }
         ticket.setDescription(description != null ? description : "");
         ticket.setCreatedAt(LocalDateTime.now());
         ticket.setSlaDeadline(LocalDateTime.now().plusMinutes(15));
@@ -181,6 +188,11 @@ public class SupportTicketService {
         ticket.setIdentityVerified(false);
 
         return supportTicketRepository.save(ticket);
+    }
+
+    @Transactional
+    public SupportTicket createSupportFormTicket(Integer accountId, String type, String unitCode, String description) {
+        return createSupportFormTicket(accountId, type, unitCode, description, null);
     }
 
     public SupportTicket saveTicket(SupportTicket ticket) {
@@ -338,8 +350,20 @@ public class SupportTicketService {
         }
 
         LocalDateTime now = LocalDateTime.now();
-        // Kiểm tra & cập nhật cờ vi phạm SLA 15 phút
+        // Kiểm tra & cập nhật cờ vi phạm SLA 15 phút, đồng thời nạp tên & SĐT khách
         for (SupportTicket t : tickets) {
+            if (t.getCustomerId() != null) {
+                try {
+                    customerProfileRepository.findById(t.getCustomerId()).ifPresent(cp -> {
+                        if (cp.getAccountId() != null) {
+                            accountRepository.findById(Long.valueOf(cp.getAccountId())).ifPresent(acc -> {
+                                t.setCustomerName(acc.getFullName());
+                                t.setCustomerPhone(acc.getPhone());
+                            });
+                        }
+                    });
+                } catch (Exception ignored) {}
+            }
             if ("INCIDENT".equalsIgnoreCase(t.getType())
                     && "SUBMITTED".equalsIgnoreCase(t.getStatus())
                     && t.getSlaDeadline() != null

@@ -336,6 +336,20 @@ public class CheckoutSettlementService {
                 ticketResolved = true;
             }
         }
+        try {
+            List<SupportTicket> openTickets = supportTicketRepository.findByContractId(contract.getContractId());
+            for (SupportTicket t : openTickets) {
+                if ("EARLY_TERMINATION".equalsIgnoreCase(t.getType()) && !"RESOLVED".equalsIgnoreCase(t.getStatus())) {
+                    t.setStatus("RESOLVED");
+                    t.setResolvedAt(LocalDateTime.now());
+                    t.setResolutionNote("Nhân viên đã hoàn tất nghiệm thu và nhận bàn giao ô kho lúc " + LocalDateTime.now());
+                    if (staffAccountId != null) {
+                        t.setAssignedStaffId(staffAccountId);
+                    }
+                    supportTicketRepository.save(t);
+                }
+            }
+        } catch (Exception ignored) {}
 
         // Ghi nhật ký kiểm toán
         if (activityLogRepository != null) {

@@ -7,6 +7,7 @@ interface StorageCardListProps {
   onViewContract: (contract: any) => void;
   onCancelDeposit: (contract: any) => void;
   onExtend: (contract: any) => void;
+  onRequestReturn: (contract: any) => void;
   getCancelReasonLabel: (reason?: string) => string;
 }
 
@@ -15,6 +16,7 @@ export default function StorageCardList({
   onViewContract,
   onCancelDeposit,
   onExtend,
+  onRequestReturn,
   getCancelReasonLabel
 }: StorageCardListProps) {
   return (
@@ -23,6 +25,7 @@ export default function StorageCardList({
         const isPending = item.status === 'PENDING_CHECKIN';
         const isActive = item.status === 'ACTIVE';
         const isCanceled = item.status === 'CANCELED';
+        const isReturnRequested = Boolean(item.returnRequested || item.cancelReason === 'EARLY_TERMINATION');
 
         return (
           <div key={item.contractId} className="p-4 sm:p-5 space-y-3 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
@@ -42,16 +45,22 @@ export default function StorageCardList({
                 </span>
               </div>
               <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                isActive
+                isReturnRequested
+                  ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700'
+                  : isActive
                   ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                   : isPending
                   ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
               }`}>
                 <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                  isActive ? 'bg-emerald-500' : isPending ? 'bg-amber-500' : 'bg-slate-400'
+                  isReturnRequested ? 'bg-amber-500 animate-pulse' : isActive ? 'bg-emerald-500' : isPending ? 'bg-amber-500' : 'bg-slate-400'
                 }`}></span>
-                {isPending ? 'CHỜ CHECK-IN' : (item.statusLabel || item.status)}
+                {isReturnRequested
+                  ? 'CHỜ TRẢ KHO'
+                  : isPending
+                  ? 'CHỜ CHECK-IN'
+                  : (item.statusLabel || item.status)}
               </span>
             </div>
 
@@ -90,7 +99,8 @@ export default function StorageCardList({
                 </button>
               )}
 
-              {canExtendOnline(item.status) && (
+              {/* Chỉ HĐ ACTIVE chưa yêu cầu trả kho mới được gia hạn online */}
+              {canExtendOnline(item.status) && !isReturnRequested && (
                 <button
                   type="button"
                   onClick={() => onExtend(item)}

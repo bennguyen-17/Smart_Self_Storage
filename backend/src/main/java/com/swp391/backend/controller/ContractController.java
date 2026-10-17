@@ -39,6 +39,7 @@ public class ContractController {
     private final ActivityLogRepository activityLogRepository;
     private final CustomerReservationService customerReservationService;
     private final GatePinService gatePinService;
+    private final SupportTicketRepository supportTicketRepository;
 
     public ContractController(ContractRepository contractRepository,
                               ReservationRepository reservationRepository,
@@ -52,7 +53,8 @@ public class ContractController {
                               PaymentRepository paymentRepository,
                               ActivityLogRepository activityLogRepository,
                               CustomerReservationService customerReservationService,
-                              GatePinService gatePinService) {
+                              GatePinService gatePinService,
+                              SupportTicketRepository supportTicketRepository) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -66,6 +68,7 @@ public class ContractController {
         this.activityLogRepository = activityLogRepository;
         this.customerReservationService = customerReservationService;
         this.gatePinService = gatePinService;
+        this.supportTicketRepository = supportTicketRepository;
     }
 
     @GetMapping("/contracts/my-contracts")
@@ -178,10 +181,55 @@ public class ContractController {
             map.put("refundAccountNumber", c.getRefundAccountNumber());
             map.put("refundAccountName", c.getRefundAccountName());
 
+            boolean isReturnReq = "EARLY_TERMINATION".equalsIgnoreCase(c.getCancelReason())
+                    || supportTicketRepository.findByContractId(c.getContractId()).stream()
+                            .anyMatch(t -> "EARLY_TERMINATION".equalsIgnoreCase(t.getType()) && !"RESOLVED".equalsIgnoreCase(t.getStatus()));
+            map.put("returnRequested", isReturnReq);
+
             result.add(map);
         }
 
         return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Khách hàng gửi yêu cầu trả kho trước hạn
+     * Staff sẽ nhìn thấy nút [Xác nhận trả kho] sau khi khách gửi yêu cầu này.
+     */
+    @PostMapping("/contracts/{contractId}/request-checkout")
+    public ResponseEntity<?> requestCheckout(
+            @PathVariable Integer contractId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        Contract contract = contractRepository.findById(contractId)
+                .orElse(null);
+        if (contract == null) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Không tìm thấy hợp đồng #" + contractId));
+        }
+
+        if (!"ACTIVE".equalsIgnoreCase(contract.getStatus())) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Chỉ hợp đồng ĐANG THUÊ (ACTIVE) mới có thể yêu cầu trả kho"));
+        }
+
+        String reason = body != null && body.get("reason") != null ? body.get("reason").toString() : "Khách hàng yêu cầu trả kho";
+        contract.setCancelReason("EARLY_TERMINATION");
+        contractRepository.save(contract);
+
+        try {
+            Reservation reservation = reservationRepository.findById(contract.getReservationId()).orElse(null);
+            SupportTicket ticket = new SupportTicket();
+            ticket.setTicketCode("TCK-TRM-" + (System.currentTimeMillis() % 1000000));
+            ticket.setType("EARLY_TERMINATION");
+            ticket.setStatus("SUBMITTED");
+            ticket.setCustomerId(reservation != null ? reservation.getAccountId() : 1);
+            ticket.setContractId(contract.getContractId());
+            ticket.setUnitCode(reservation != null ? reservation.getUnitCode() : null);
+            ticket.setTitle("Yêu cầu trả kho - " + (reservation != null ? reservation.getUnitCode() : ""));
+            ticket.setDescription(reason);
+            ticket.setCreatedAt(LocalDateTime.now());
+            supportTicketRepository.save(ticket);
+        } catch (Exception ignored) {}
+
+        return ResponseEntity.ok(Map.of("success", true, "message", "Đã gửi yêu cầu trả kho thành công! Nhân viên sẽ tiến hành nghiệm thu."));
     }
 
     @PostMapping("/contracts/{contractId}/cancel-deposit")

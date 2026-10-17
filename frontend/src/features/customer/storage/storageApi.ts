@@ -102,3 +102,27 @@ export const cancelDepositContract = async (
   }
   return { success: true, message: 'Đã hủy cọc và hoàn trả ô kho về trạng thái trống thành công!' };
 };
+
+/**
+ * Gửi yêu cầu trả kho trước hạn (Check-out request)
+ * Sau khi gửi, hợp đồng sẽ hiển thị nút [Xác nhận trả kho] bên phía nhân viên (Staff).
+ */
+export const requestCheckoutContract = async (
+  contract: any,
+  data?: { reason?: string; desiredDate?: string }
+) => {
+  const rawId = contract.rawContractId || (typeof contract.contractId === 'string' ? contract.contractId.replace('#HD-', '').replace('CTR-', '') : contract.contractId);
+  try {
+    if (rawId) {
+      const res: any = await apiClient.post(`/contracts/${rawId}/request-checkout`, data || {});
+      return { success: true, data: res?.data || res };
+    }
+    return { success: false, message: 'Không xác định được mã hợp đồng' };
+  } catch (err: any) {
+    console.warn('Backend request-checkout error:', err);
+    return {
+      success: false,
+      message: err?.response?.data?.message || err?.message || 'Lỗi khi gửi yêu cầu trả kho'
+    };
+  }
+};

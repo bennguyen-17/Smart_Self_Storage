@@ -35,6 +35,8 @@ export interface StaffReservationItem {
   overdueDays: number | null
   unpaidPenaltyAmount: number | null
   monthlyPrice: number | null
+  returnRequested?: boolean | null
+  cancelReason?: string | null
 }
 
 /** Kết quả tra cứu (StaffReservationLookupResponse = item + unitStatus + contractPdfUrl). */

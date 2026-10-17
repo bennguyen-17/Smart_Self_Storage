@@ -23,7 +23,9 @@ import {
   ShieldCheck,
   Building2,
   FileCheck,
-  ChevronDown
+  ChevronDown,
+  PackageOpen,
+  CalendarDays
 } from 'lucide-react';
 
 export default function SupportForm() {
@@ -33,6 +35,7 @@ export default function SupportForm() {
   const [activeSubTab, setActiveSubTab] = useState<'create' | 'history'>(isHistoryTab ? 'history' : 'create');
   const [ticketType, setTicketType] = useState('UNLOCK');
   const [unitSelect, setUnitSelect] = useState('GATE');
+  const [desiredDate, setDesiredDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [myUnits, setMyUnits] = useState<any[]>([]);
@@ -134,7 +137,8 @@ export default function SupportForm() {
       const res = await submitSupportTicket({
         type: ticketType,
         unitCode: unitSelect,
-        description
+        description,
+        desiredDate: ticketType === 'EARLY_TERMINATION' ? desiredDate : undefined
       });
       if (res.success) {
         setSubmittedSuccess(true);
@@ -321,9 +325,10 @@ export default function SupportForm() {
                   <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                     Loại sự cố / Yêu cầu:
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {[
                       { id: 'UNLOCK', label: 'Mở khóa khẩn cấp', icon: ShieldAlert },
+                      { id: 'EARLY_TERMINATION', label: 'Trả kho sớm', icon: PackageOpen },
                       { id: 'MAINTENANCE', label: 'Bảo trì / Sửa chữa', icon: Clock },
                       { id: 'INCIDENT', label: 'Báo sự cố an ninh', icon: AlertCircle },
                       { id: 'OTHER', label: 'Thắc mắc / Khác', icon: MessageSquare },
@@ -348,10 +353,10 @@ export default function SupportForm() {
                   </div>
                 </div>
 
-                {/* Chọn Ô kho liên quan */}
+                {/* Chọn Ô kho liên quan / Ô kho muốn trả sớm */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                    Vị trí / Ô kho liên quan:
+                    {ticketType === 'EARLY_TERMINATION' ? 'Chọn ô kho muốn trả sớm:' : 'Vị trí / Ô kho liên quan:'}
                   </label>
                   <select
                     disabled={!hasActiveContracts}
@@ -373,10 +378,30 @@ export default function SupportForm() {
                   </select>
                 </div>
 
+                {/* Chọn Ngày đến trả kho khi là Trả kho sớm */}
+                {ticketType === 'EARLY_TERMINATION' && (
+                  <div className="space-y-1.5 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 animate-in fade-in duration-200">
+                    <label className="block text-xs font-black text-amber-700 dark:text-amber-300 uppercase tracking-wide flex items-center gap-1.5">
+                      <CalendarDays className="size-4" />
+                      <span>Ngày đến trả kho:</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={desiredDate}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => setDesiredDate(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-bold text-xs sm:text-sm focus:border-amber-500 focus:outline-none"
+                    />
+                    <p className="text-[11px] text-amber-700/90 dark:text-amber-300/90 leading-relaxed">
+                      Nhân viên tại cơ sở sẽ nhận thông báo, tiếp nhận yêu cầu và có mặt nghiệm thu ô kho cùng bạn vào ngày đã hẹn.
+                    </p>
+                  </div>
+                )}
+
                 {/* Nội dung mô tả - Tự động giãn đều chiều cao theo thẻ */}
                 <div className="space-y-1.5 flex-1 flex flex-col min-h-[130px]">
                   <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                    Mô tả chi tiết sự cố:
+                    {ticketType === 'EARLY_TERMINATION' ? 'Lý do trả kho sớm (hoặc ghi chú):' : 'Mô tả chi tiết sự cố:'}
                   </label>
                   <textarea
                     disabled={!hasActiveContracts}
@@ -385,6 +410,8 @@ export default function SupportForm() {
                     placeholder={
                       !hasActiveContracts
                         ? "Chức năng gửi ticket bị khóa do tài khoản chưa có hợp đồng ACTIVE..."
+                        : ticketType === 'EARLY_TERMINATION'
+                        ? "Nhập lý do trả kho sớm (VD: Đã hết nhu cầu lưu trữ hàng hóa, chuyển về địa điểm mới...)"
                         : "Ví dụ: Cửa cuốn ô kho A-102 kẹt không mở được, hoặc quên mã bảo mật, cần mở khóa từ xa..."
                     }
                     className={`w-full flex-1 min-h-[120px] p-3.5 rounded-xl border border-slate-200 dark:border-cyan-500/30 bg-slate-50 dark:bg-slate-900/90 text-slate-900 dark:text-white text-xs sm:text-sm focus:border-blue-500 dark:focus:border-cyan-400 focus:outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none ${
