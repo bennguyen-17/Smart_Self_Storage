@@ -91,7 +91,7 @@ export default function StorageTable({
                         : 'bg-slate-400'
                     }`}></span>
                     {isReturnRequested
-                      ? 'CHỜ NGHIỆM THU TRẢ KHO'
+                      ? 'CHỜ TRẢ KHO'
                       : isPending
                       ? 'CHỜ CHECK-IN'
                       : isTerminated
