@@ -59,7 +59,7 @@ public class VNPayConfig {
                 sb.append(fieldName);
                 sb.append("=");
                 try {
-                    sb.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+                    sb.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()));
                 } catch (UnsupportedEncodingException e) {
                     sb.append(fieldValue);
                 }

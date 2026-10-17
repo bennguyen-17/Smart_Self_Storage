@@ -28,10 +28,10 @@ export default function DepositSuccessModal({ successData, onGoHome }) {
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Giao dịch cọc giữ chỗ đã được xác nhận thành công.</p>
         </div>
 
-        {/* Thẻ hiển thị nổi bật Mã Đặt Chỗ */}
+        {/* Thẻ hiển thị nổi bật Mã Hợp Đồng */}
         {bookingCode && (
           <div className="p-4 rounded-2xl bg-slate-900 text-white shadow-xl space-y-1">
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">MÃ ĐẶT CHỖ (BOOKING CODE)</span>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">MÃ HỢP ĐỒNG (CONTRACT CODE)</span>
             <div className="text-3xl font-mono font-black text-amber-400 tracking-widest">{bookingCode}</div>
           </div>
         )}

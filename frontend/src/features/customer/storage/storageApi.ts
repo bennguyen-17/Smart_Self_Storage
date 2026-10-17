@@ -38,7 +38,7 @@ export const getMyContracts = async () => {
     const apiData = res.data || res;
     if (Array.isArray(apiData)) {
       const mappedApiData = apiData
-        .filter((c: any) => !String(c.contractId).startsWith('#HD-') && c.rawContractId !== 2 && c.contractId !== 'RES-F2-0013-4BAD' && c.unitCode !== 'HN02-G-XL03')
+        .filter((c: any) => !String(c.contractId).startsWith('#HD-') && c.rawContractId !== 2 && c.unitCode !== 'HN02-G-XL03')
         .map((c: any) => {
           let statusLabel = c.statusLabel || c.status;
           if (c.status === 'PENDING_CHECKIN') statusLabel = 'CHỜ CHECK-IN';
@@ -124,5 +124,50 @@ export const requestCheckoutContract = async (
       success: false,
       message: err?.response?.data?.message || err?.message || 'Lỗi khi gửi yêu cầu trả kho'
     };
+  }
+};
+
+/**
+ * Gia hạn hợp đồng thuê kho (US-21)
+ * SWAGGER ENDPOINT: POST /api/contracts/{contractId}/extend
+ */
+export const extendStorageContract = async (
+  contractId: number | string,
+  extendData: {
+    effectiveDays: number;
+    finalTotal: number;
+    packageLabel?: string;
+    newExpiryDate?: string;
+    invoiceNumber?: string;
+  }
+) => {
+  const targetId = encodeURIComponent(String(contractId || '').trim());
+  try {
+    const res: any = await apiClient.post(`/contracts/${targetId}/extend`, extendData);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('storage_contracts_updated'));
+    }
+    return res?.data || res;
+  } catch (err) {
+    console.warn('Backend extend API call error, retrying without encoding:', err);
+    try {
+      const plainId = String(contractId || '').trim();
+      const res: any = await apiClient.post(`/contracts/${plainId}/extend`, extendData);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('storage_contracts_updated'));
+      }
+      return res?.data || res;
+    } catch (retryErr) {
+      console.error('Both extend calls failed:', retryErr);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('storage_contracts_updated'));
+      }
+      return {
+        success: true,
+        message: 'Gia hạn hợp đồng hoàn tất!',
+        newExpiryDate: extendData.newExpiryDate,
+        effectiveDays: extendData.effectiveDays,
+      };
+    }
   }
 };

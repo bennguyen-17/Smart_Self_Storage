@@ -378,22 +378,62 @@ public class ContractController {
      */
     @PostMapping("/contracts/{contractId}/extend")
     public ResponseEntity<?> extendContract(
-            @PathVariable Integer contractId,
+            @PathVariable String contractId,
             @RequestBody(required = false) Map<String, Object> payload,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
-        Optional<Contract> contractOpt = contractRepository.findById(contractId);
+        if (contractId == null || contractId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Mã hợp đồng không hợp lệ!"));
+        }
+
+        String rawInput = contractId.trim();
+        Optional<Contract> contractOpt = Optional.empty();
+
+        // 1. Thử parse ID số nguyên (ví dụ: 1, 2, 104)
+        try {
+            int numericId = Integer.parseInt(rawInput);
+            contractOpt = contractRepository.findById(numericId);
+        } catch (NumberFormatException ignored) {}
+
+        // 2. Tìm theo reservationCode (ví dụ: CTR-HN01-171026-0042)
         if (contractOpt.isEmpty()) {
-            return ResponseEntity.status(404).body(Map.of("success", false, "message", "Không tìm thấy hợp đồng #" + contractId));
+            Optional<Reservation> resByCode = reservationRepository.findByReservationCode(rawInput);
+            if (resByCode.isPresent()) {
+                contractOpt = contractRepository.findByReservationId(resByCode.get().getReservationId());
+            }
+        }
+
+        // 3. Nếu có dạng CTR-[id số] (ví dụ: CTR-1)
+        if (contractOpt.isEmpty() && rawInput.startsWith("CTR-")) {
+            String suffix = rawInput.substring(4);
+            try {
+                int num = Integer.parseInt(suffix);
+                contractOpt = contractRepository.findById(num);
+            } catch (NumberFormatException ignored) {}
+        }
+
+        // 4. Tìm kiếm tương đối reservationCode chứa mã hoặc ID
+        if (contractOpt.isEmpty()) {
+            List<Reservation> allRes = reservationRepository.findAll();
+            for (Reservation r : allRes) {
+                if (r.getReservationCode() != null && (r.getReservationCode().equalsIgnoreCase(rawInput) || r.getReservationCode().endsWith(rawInput))) {
+                    contractOpt = contractRepository.findByReservationId(r.getReservationId());
+                    if (contractOpt.isPresent()) break;
+                }
+            }
+        }
+
+        if (contractOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("success", false, "message", "Không tìm thấy hợp đồng: " + contractId));
         }
 
         Contract contract = contractOpt.get();
 
-        // Chỉ cho phép gia hạn khi hợp đồng đang ACTIVE
-        if (!"ACTIVE".equalsIgnoreCase(contract.getStatus())) {
+        // Chỉ cho phép gia hạn khi hợp đồng đang ACTIVE hoặc PENDING_CHECKIN
+        if (!"ACTIVE".equalsIgnoreCase(contract.getStatus()) && !"PENDING_CHECKIN".equalsIgnoreCase(contract.getStatus())) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", "Chỉ hợp đồng đang có HIỆU LỰC (ACTIVE) mới được phép gia hạn trực tuyến. Hợp đồng quá hạn hoặc không hợp lệ vui lòng liên hệ nhân viên tại quầy để được hỗ trợ!"
+                    "message", "Chỉ hợp đồng đang có HIỆU LỰC (ACTIVE) mới được phép gia hạn trực tuyến. Hợp đồng trạng thái " + contract.getStatus() + " vui lòng liên hệ nhân viên tại quầy!"
             ));
         }
 
@@ -438,7 +478,7 @@ public class ContractController {
         res.setEndDate(newExpiry);
         reservationRepository.save(res);
 
-        // Sinh hóa đơn EXT-[Mã cơ sở]-[YYYYMMDD]-[Random]
+        // Sinh hóa đơn EXT-[Mã hợp đồng] theo chuẩn DDMMYY
         String branchCode = "HN01";
         Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitCode());
         if (unitOpt.isPresent()) {
@@ -451,11 +491,18 @@ public class ContractController {
             }
         }
 
-        String dateStr = LocalDate.now().toString().replace("-", "");
-        int randomSuffix = (int) (1000 + (Math.random() * 9000));
-        String invoiceNumber = String.format("EXT-%s-%s-%d", branchCode, dateStr, randomSuffix);
+        String dateStr = LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("ddMMyy"));
+        String cleanFac = branchCode.replace("-", "").toUpperCase();
+        String contractCode = (res.getReservationCode() != null && !res.getReservationCode().isBlank())
+                ? res.getReservationCode()
+                : String.format("CTR-%s-%s-%04d", cleanFac, dateStr, contract.getContractId());
 
-        Payment payment = new Payment();
+        String invoiceNumber = "EXT-" + contractCode + "-" + String.format("%04d", new Random().nextInt(10000));
+        if (payload != null && payload.get("invoiceNumber") != null && !payload.get("invoiceNumber").toString().isBlank()) {
+            invoiceNumber = payload.get("invoiceNumber").toString().trim();
+        }
+
+        Payment payment = paymentRepository.findByInvoiceNumber(invoiceNumber).orElseGet(Payment::new);
         payment.setContractId(contract.getContractId());
         payment.setInvoiceNumber(invoiceNumber);
         payment.setInvoiceType("MONTHLY_RENEWAL");
@@ -463,7 +510,7 @@ public class ContractController {
         payment.setIssuedAt(LocalDateTime.now());
         payment.setDueAt(LocalDateTime.now().plusDays(1));
         payment.setStatus("PAID");
-        payment.setPaymentMethod("VIETQR");
+        payment.setPaymentMethod("VNPAY");
         payment.setPaymentStatus("SUCCESS");
         payment.setTransactionCode("TXN_EXT_" + System.currentTimeMillis());
         payment.setPaidAt(LocalDateTime.now());
@@ -473,15 +520,15 @@ public class ContractController {
         ActivityLog log = new ActivityLog();
         log.setAccountId(res.getAccountId());
         log.setAction("EXTEND_CONTRACT");
-        log.setDescription(String.format("Gia hạn thành công hợp đồng #%d (ô %s) thêm %d ngày (%s). Hạn mới: %s. Hóa đơn: %s",
-                contract.getContractId(), res.getUnitCode(), effectiveDays, packageLabel, newExpiry, invoiceNumber));
+        log.setDescription(String.format("Gia hạn thành công hợp đồng %s (ô %s) thêm %d ngày (%s). Hạn mới: %s. Hóa đơn: %s",
+                contractCode, res.getUnitCode(), effectiveDays, packageLabel, newExpiry, invoiceNumber));
         log.setCreatedAt(LocalDateTime.now());
         activityLogRepository.save(log);
 
         Map<String, Object> resp = new HashMap<>();
         resp.put("success", true);
         resp.put("message", "Gia hạn hợp đồng thành công! Hạn sử dụng mới đến ngày " + newExpiry);
-        resp.put("contractId", "CTR-" + contract.getContractId());
+        resp.put("contractId", contractCode);
         resp.put("rawContractId", contract.getContractId());
         resp.put("unitCode", res.getUnitCode());
         resp.put("newExpiryDate", newExpiry.toString());

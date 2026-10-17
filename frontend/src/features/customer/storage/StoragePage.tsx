@@ -51,17 +51,17 @@ export default function StoragePage() {
   const getCancelReasonLabel = (reason?: string) => {
     switch (reason) {
       case 'NO_SHOW':
-        return 'Đã hủy do No-Show (quá hạn nhận kho)';
+        return 'Hủy do quá hạn nhận kho';
       case 'CUSTOMER_REQUEST':
-        return 'Đã hủy theo yêu cầu (được hoàn cọc)';
+        return 'Hủy theo yêu cầu';
       case 'VIOLATION':
-        return 'Đã hủy do vi phạm quy định';
+        return 'Hủy do vi phạm quy định';
       case 'EARLY_TERMINATION':
-        return 'Đã trả kho trước hạn';
+        return 'Trả kho trước hạn';
       case 'COUNTER_CANCEL':
-        return 'Đã hủy tại quầy';
+        return 'Hủy tại quầy';
       default:
-        return 'Đã hủy cọc';
+        return 'Hủy cọc';
     }
   };
 
@@ -112,11 +112,15 @@ export default function StoragePage() {
     setExtendUnitContext({
       name: `Kho: ${item.unitCode}`,
       branch: item.branchName,
-      expiry: item.expiryDate,
+      expiry: item.expiryDate || item.endDate,
       daysLeft: item.daysLeft || 30,
       size: item.size,
       unitCode: item.unitCode,
-      rentalFee: item.rentalFee
+      rentalFee: item.rentalFee,
+      contractId: item.contractId,
+      rawContractId: item.rawContractId,
+      reservationCode: item.reservationCode || item.bookingCode || item.contractId,
+      bookingCode: item.bookingCode || item.reservationCode || item.contractId,
     });
     setShowExtendModal(true);
   };
@@ -124,11 +128,19 @@ export default function StoragePage() {
   const handleConfirmExtendPayment = (extData: any) => {
     setShowExtendModal(false);
     setExtendPaymentData({
-      facilityName: `SmartStorage ${extData.unitCode}`,
+      facilityName: extendUnitContext?.branch ? `SmartStorage ${extendUnitContext.branch}` : `SmartStorage ${extData.unitCode}`,
       unitId: extData.unitCode,
       unitSize: `Size ${extData.size}`,
       startDate: new Date().toLocaleDateString('vi-VN'),
       depositAmount: extData.finalTotal,
+      extendAmount: extData.finalTotal,
+      effectiveDays: extData.effectiveDays,
+      newExpiryDate: extData.newExpiryDate,
+      packageLabel: extData.packageLabel,
+      contractId: extendUnitContext?.contractId,
+      rawContractId: extendUnitContext?.rawContractId,
+      reservationCode: extendUnitContext?.reservationCode,
+      bookingCode: extendUnitContext?.bookingCode,
     });
     setShowExtendPaymentFlow(true);
   };

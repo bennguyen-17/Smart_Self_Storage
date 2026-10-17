@@ -52,9 +52,13 @@ public class VNPayService {
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-        cld.add(Calendar.MINUTE, 15);
-        String vnp_ExpireDate = formatter.format(cld.getTime());
-        vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
+        // Sanitize orderInfo to avoid special character mismatch with VNPay
+        String cleanOrderInfo = (orderInfo != null && !orderInfo.isBlank()) ? orderInfo : ("Thanh toan hoa don " + invoiceNumber);
+        // Normalize Vietnamese characters without accents for maximum gateway compatibility
+        cleanOrderInfo = java.text.Normalizer.normalize(cleanOrderInfo, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .replaceAll("[^a-zA-Z0-9\\s_-]", " ");
+        vnp_Params.put("vnp_OrderInfo", cleanOrderInfo.trim());
 
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames);
@@ -69,11 +73,11 @@ public class VNPayService {
                 try {
                     hashData.append(fieldName);
                     hashData.append('=');
-                    hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+                    hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()));
 
-                    query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
+                    query.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8.toString()));
                     query.append('=');
-                    query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+                    query.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()));
 
                     if (itr.hasNext()) {
                         query.append('&');
@@ -116,6 +120,9 @@ public class VNPayService {
                     "VNPAY",
                     "GATEWAY_" + bankCode + "_" + vnpayTransactionNo
             );
+            if (invoiceNumber != null && invoiceNumber.startsWith("EXT-")) {
+                return depositService.confirmExtensionPayment(webhookRequest);
+            }
             return depositService.confirmDepositPayment(webhookRequest);
         } else {
             return new ApiResponse(false, "Giao dịch thanh toán VNPay không thành công! Mã lỗi: " + responseCode);

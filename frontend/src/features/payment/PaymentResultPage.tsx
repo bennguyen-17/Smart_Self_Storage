@@ -27,13 +27,23 @@ export default function PaymentResultPage() {
 
       setDetails({ invoiceNumber, amount, bankCode, txnNo, responseCode });
 
+      const isExtension = String(invoiceNumber || '').startsWith('EXT-');
+
       // Nếu có chữ ký vnp_SecureHash thì gọi Backend xác thực
       if (paramsObj.vnp_SecureHash) {
         try {
           const res: any = await apiClient.post('/payment/vnpay/verify', paramsObj);
           if (res && (res.success || res.data?.success)) {
             setSuccess(true);
-            setMessage(res.message || 'Xác nhận nộp cọc thành công! Hợp đồng đã sẵn sàng để check-in.');
+            setMessage(
+              res.message ||
+                (isExtension
+                  ? 'Gia hạn hợp đồng thuê kho thành công! Hạn dùng đã được cộng dồn.'
+                  : 'Xác nhận nộp cọc thành công! Hợp đồng đã sẵn sàng để check-in.')
+            );
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new Event('storage_contracts_updated'));
+            }
           } else {
             setSuccess(false);
             setMessage(res.message || 'Thanh toán không hợp lệ hoặc đã bị hủy.');
@@ -42,7 +52,10 @@ export default function PaymentResultPage() {
           console.error('Lỗi xác thực VNPay:', err);
           if (responseCode === '00') {
             setSuccess(true);
-            setMessage('Thanh toán VNPay thành công!');
+            setMessage(isExtension ? 'Gia hạn thành công qua VNPay!' : 'Thanh toán VNPay thành công!');
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new Event('storage_contracts_updated'));
+            }
           } else {
             setSuccess(false);
             setMessage('Giao dịch không thành công hoặc người dùng đã hủy giao dịch.');
@@ -54,13 +67,23 @@ export default function PaymentResultPage() {
         // Trường hợp backend redirect về kèm param success
         const isSuccessParam = paramsObj.success === 'true' || responseCode === '00';
         setSuccess(isSuccessParam);
-        setMessage(paramsObj.message || (isSuccessParam ? 'Đặt cọc thành công qua cổng VNPay!' : 'Giao dịch chưa hoàn tất.'));
+        setMessage(
+          paramsObj.message ||
+            (isSuccessParam
+              ? (isExtension ? 'Gia hạn hợp đồng thành công qua cổng VNPay!' : 'Đặt cọc thành công qua cổng VNPay!')
+              : 'Giao dịch chưa hoàn tất.')
+        );
+        if (isSuccessParam && typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('storage_contracts_updated'));
+        }
         setLoading(false);
       }
     };
 
     verifyPayment();
   }, [searchParams]);
+
+  const isExtension = String(details?.invoiceNumber || '').startsWith('EXT-');
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
@@ -80,10 +103,12 @@ export default function PaymentResultPage() {
 
             <div className="space-y-1">
               <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                ĐẶT CỌC THÀNH CÔNG!
+                {isExtension ? 'GIA HẠN HỢP ĐỒNG THÀNH CÔNG!' : 'ĐẶT CỌC THÀNH CÔNG!'}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Giao dịch của bạn đã được Cổng thanh toán VNPay xác nhận và lưu vào hệ thống.
+                {isExtension
+                  ? 'Thời gian thuê ô kho của bạn đã được cộng dồn vào hợp đồng hiện tại thành công.'
+                  : 'Giao dịch của bạn đã được Cổng thanh toán VNPay xác nhận và lưu vào hệ thống.'}
               </p>
             </div>
 
@@ -91,13 +116,17 @@ export default function PaymentResultPage() {
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-xs text-left space-y-2.5">
               {details?.invoiceNumber && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Mã hóa đơn cọc:</span>
+                  <span className="text-slate-500 dark:text-slate-400">
+                    {isExtension ? 'Mã hóa đơn gia hạn:' : 'Mã hóa đơn cọc:'}
+                  </span>
                   <span className="font-mono font-bold text-slate-900 dark:text-white">{details.invoiceNumber}</span>
                 </div>
               )}
               {details?.amount && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Số tiền cọc:</span>
+                  <span className="text-slate-500 dark:text-slate-400">
+                    {isExtension ? 'Số tiền gia hạn:' : 'Số tiền cọc:'}
+                  </span>
                   <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">{details.amount} VNĐ</span>
                 </div>
               )}
@@ -115,8 +144,12 @@ export default function PaymentResultPage() {
               )}
               <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-700">
                 <span className="text-slate-500 dark:text-slate-400">Trạng thái hợp đồng:</span>
-                <span className="font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">
-                  CHỜ CHECK-IN (Tại quầy)
+                <span className={`font-bold px-2 py-0.5 rounded ${
+                  isExtension
+                    ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300'
+                }`}>
+                  {isExtension ? 'HIỆU LỰC (ACTIVE)' : 'CHỜ CHECK-IN (Tại quầy)'}
                 </span>
               </div>
             </div>
