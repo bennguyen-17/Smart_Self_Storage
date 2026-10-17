@@ -15,6 +15,7 @@ import { checkinErrorMessage, collectPenalty, renewAtCounter } from "../api/chec
 import {
   RENEWAL_PACKAGES,
   renewalAmount,
+  renewalAmountByDays,
   renewalPackageLabel,
 } from "../lib/overdueRules"
 import type { RenewAtCounterResponse } from "../types"
@@ -116,6 +117,8 @@ function Body({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [months, setMonths] = useState<number>(1)
+  const [isCustomDays, setIsCustomDays] = useState(false)
+  const [customDays, setCustomDays] = useState<number>(14)
   const paymentMethod = "CASH"
 
   const [unpaidPenalty, setUnpaidPenalty] = useState(
@@ -123,7 +126,9 @@ function Body({
   )
   const [isCollectingPenalty, setIsCollectingPenalty] = useState(false)
   const blockedByPenalty = unpaidPenalty > 0
-  const preview = renewalAmount(contract.monthlyPrice, months)
+  const preview = isCustomDays
+    ? renewalAmountByDays(contract.monthlyPrice, customDays)
+    : renewalAmount(contract.monthlyPrice, months)
 
   async function handleQuickCollectPenalty() {
     setIsCollectingPenalty(true)
@@ -149,11 +154,12 @@ function Body({
     setErrorMsg(null)
     try {
       const response = await renewAtCounter(contract.reservationId, {
-        months,
+        months: isCustomDays ? Math.max(1, Math.round(customDays / 30)) : months,
+        days: isCustomDays ? customDays : undefined,
         paymentMethod: "CASH",
       })
       toast.success("Gia hạn tại quầy thành công", {
-        description: `Hợp đồng ${response.reservationCode ?? contract.reservationCode} đã về ACTIVE.`,
+        description: `Hợp đồng ${response.reservationCode ?? contract.reservationCode} đã về ACTIVE (${isCustomDays ? `${customDays} ngày` : `${months} tháng`}).`,
       })
       onSuccess(response)
     } catch (error) {
@@ -181,17 +187,27 @@ function Body({
       </div>
 
       <div className="space-y-2">
-        <div className="text-[10px] font-bold tracking-wider text-muted uppercase">
-          Chọn thời hạn gia hạn (chuẩn 30 ngày/tháng)
+        <div className="flex items-center justify-between">
+          <div className="text-[10px] font-bold tracking-wider text-muted uppercase">
+            Chọn thời hạn gia hạn
+          </div>
+          {isCustomDays && (
+            <span className="text-[10px] font-bold text-blue-600 dark:text-cyan-400">
+              (Tùy chọn từ 1 – 720 ngày)
+            </span>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           {RENEWAL_PACKAGES.map((option) => {
-            const active = option === months
+            const active = !isCustomDays && option === months
             return (
               <button
                 key={option}
                 type="button"
-                onClick={() => setMonths(option)}
+                onClick={() => {
+                  setIsCustomDays(false)
+                  setMonths(option)
+                }}
                 aria-pressed={active}
                 className={cn(
                   "cursor-pointer rounded-xl border px-3 py-1.5 text-[11px] font-extrabold shadow-sm transition",
@@ -204,10 +220,53 @@ function Body({
               </button>
             )
           })}
+          <button
+            type="button"
+            onClick={() => setIsCustomDays(true)}
+            aria-pressed={isCustomDays}
+            className={cn(
+              "cursor-pointer rounded-xl border px-3 py-1.5 text-[11px] font-extrabold shadow-sm transition",
+              isCustomDays
+                ? "border-transparent bg-blue-600 text-white"
+                : "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            )}
+          >
+            Tùy chọn ngày
+          </button>
         </div>
+
+        {isCustomDays && (
+          <div className="mt-2 flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50/60 p-3 text-xs dark:border-slate-700 dark:bg-slate-800/60">
+            <span className="font-bold text-slate-700 dark:text-slate-200">
+              Số ngày gia hạn tùy chọn:
+            </span>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min="1"
+                max="720"
+                value={customDays}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10)
+                  setCustomDays(Number.isNaN(val) ? 1 : Math.max(1, Math.min(720, val)))
+                }}
+                className="w-20 rounded-lg border border-slate-300 bg-white px-3 py-1 text-center font-black text-slate-900 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-white"
+              />
+              <span className="font-bold text-slate-600 dark:text-slate-400">ngày</span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="inner-box space-y-2 rounded-2xl border p-3.5 text-xs">
+        <Row
+          label="Thời gian gia hạn"
+          value={
+            isCustomDays
+              ? `${customDays} ngày (Tùy chọn)`
+              : `${months} tháng (${months * 30} ngày)`
+          }
+        />
         <Row
           label="Tiền gia hạn dự kiến"
           value={preview == null ? "—" : formatVnd(preview)}

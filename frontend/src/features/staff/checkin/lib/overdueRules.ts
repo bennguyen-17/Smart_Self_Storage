@@ -29,6 +29,15 @@ export function renewalAmount(
   return Math.round(base * (1 - renewalDiscountPercent(months) / 100))
 }
 
+/** Tiền gia hạn theo ngày tùy chọn: (giá thuê tháng / 30) × số ngày. */
+export function renewalAmountByDays(
+  monthlyPrice: number | null | undefined,
+  days: number
+): number | null {
+  if (monthlyPrice == null || monthlyPrice <= 0 || days <= 0) return null
+  return Math.round((monthlyPrice / DAYS_PER_MONTH) * days)
+}
+
 /** Tổng tiền phạt theo số ngày quá hạn. */
 export function penaltyTotal(overdueDays: number | null | undefined): number {
   return Math.max(0, overdueDays ?? 0) * OVERDUE_PENALTY_PER_DAY

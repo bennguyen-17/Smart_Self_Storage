@@ -2,6 +2,7 @@ package com.swp391.backend.dto;
 
 public class RenewAtCounterRequest {
     private Integer months;
+    private Integer days;
     private String paymentMethod;
 
     public RenewAtCounterRequest() {}
@@ -12,6 +13,14 @@ public class RenewAtCounterRequest {
 
     public void setMonths(Integer months) {
         this.months = months;
+    }
+
+    public Integer getDays() {
+        return days;
+    }
+
+    public void setDays(Integer days) {
+        this.days = days;
     }
 
     public String getPaymentMethod() {

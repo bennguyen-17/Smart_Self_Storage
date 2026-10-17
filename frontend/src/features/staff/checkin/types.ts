@@ -110,7 +110,8 @@ export interface CollectPenaltyResponse {
 
 // --- US-20: Gia hạn tại quầy ---
 export interface RenewAtCounterRequest {
-  months: number // 1 | 2 | 3 | 6 | 12
+  months?: number // 1 | 2 | 3 | 6 | 12
+  days?: number
   paymentMethod: string // CASH | BANK_TRANSFER
 }
 

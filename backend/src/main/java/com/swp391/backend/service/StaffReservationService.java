@@ -795,18 +795,7 @@ public class StaffReservationService {
             return new RenewAtCounterResponse(false, "Còn tiền phạt quá hạn chưa nộp (50.000đ/ngày). Vui lòng thu phạt trước khi gia hạn.");
         }
 
-        // 2. Thời gian gia hạn (số tháng)
-        int months = (request != null && request.getMonths() != null && request.getMonths() > 0)
-                ? request.getMonths()
-                : 1;
-
-        // 3. Tính chiết khấu: 12 tháng -> 15%, 6 tháng -> 10%, 3 tháng -> 5%, khác -> 0%
-        int discountPercent = 0;
-        if (months >= 12) discountPercent = 15;
-        else if (months >= 6) discountPercent = 10;
-        else if (months >= 3) discountPercent = 5;
-
-        // 4. Lấy giá thuê tháng (monthlyPrice)
+        // 2. Lấy giá thuê tháng (monthlyPrice)
         BigDecimal monthlyPrice = BigDecimal.ZERO;
         if (unitOpt.isPresent()) {
             Optional<Price> pOpt = priceRepository.findByUnitTypeIdAndStatus(unitOpt.get().getUnitTypeId(), "ACTIVE");
@@ -818,12 +807,33 @@ public class StaffReservationService {
             monthlyPrice = reservation.getRentalAmount();
         }
 
-        BigDecimal rawTotal = monthlyPrice.multiply(BigDecimal.valueOf(months));
-        BigDecimal discountFactor = BigDecimal.valueOf(100 - discountPercent).divide(BigDecimal.valueOf(100));
-        BigDecimal finalAmount = rawTotal.multiply(discountFactor);
+        // 3. Thời gian gia hạn: Hỗ trợ cả gói tháng và số ngày tùy chọn
+        boolean isCustomDays = (request != null && request.getDays() != null && request.getDays() > 0);
+        int addedDays;
+        int discountPercent = 0;
+        BigDecimal finalAmount;
+        int months = (request != null && request.getMonths() != null && request.getMonths() > 0)
+                ? request.getMonths()
+                : 1;
 
-        // 5. Cập nhật ngày kết thúc của Reservation (chuẩn hóa 30 ngày/tháng)
-        int addedDays = months * 30;
+        if (isCustomDays) {
+            addedDays = request.getDays();
+            // Đơn giá ngày = monthlyPrice / 30
+            BigDecimal dailyPrice = monthlyPrice.divide(BigDecimal.valueOf(30), 2, java.math.RoundingMode.HALF_UP);
+            finalAmount = dailyPrice.multiply(BigDecimal.valueOf(addedDays)).setScale(0, java.math.RoundingMode.HALF_UP);
+        } else {
+            addedDays = months * 30;
+            // Chiết khấu: 12 tháng -> 15%, 6 tháng -> 10%, 3 tháng -> 5%, khác -> 0%
+            if (months >= 12) discountPercent = 15;
+            else if (months >= 6) discountPercent = 10;
+            else if (months >= 3) discountPercent = 5;
+
+            BigDecimal rawTotal = monthlyPrice.multiply(BigDecimal.valueOf(months));
+            BigDecimal discountFactor = BigDecimal.valueOf(100 - discountPercent).divide(BigDecimal.valueOf(100));
+            finalAmount = rawTotal.multiply(discountFactor).setScale(0, java.math.RoundingMode.HALF_UP);
+        }
+
+        // 4. Cập nhật ngày kết thúc của Reservation
         LocalDate currentExpiry = reservation.getEndDate() != null ? reservation.getEndDate() : LocalDate.now();
         if (currentExpiry.isBefore(LocalDate.now())) {
             currentExpiry = LocalDate.now();
@@ -866,7 +876,7 @@ public class StaffReservationService {
         } catch (Exception ignored) {}
 
         writeActivityLog(staffAccountId, "RENEW_AT_COUNTER",
-                "Gia hạn hợp đồng tại quầy bằng tiền mặt (CASH) cho đơn " + reservation.getReservationCode() + ", thời hạn " + months + " tháng, số tiền: " + finalAmount + " VND, hạn mới: " + newExpiry);
+                "Gia hạn hợp đồng tại quầy bằng tiền mặt (CASH) cho đơn " + reservation.getReservationCode() + ", thời hạn " + (isCustomDays ? (addedDays + " ngày") : (months + " tháng")) + ", số tiền: " + finalAmount + " VND, hạn mới: " + newExpiry);
 
         RenewAtCounterResponse resp = new RenewAtCounterResponse();
         resp.setSuccess(true);
