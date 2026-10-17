@@ -1,59 +1,167 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your storage is ready</title>
+    <title>Hợp đồng điện tử cho thuê kho tự quản - Smart Self Storage</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #F1F5F9; font-family: Arial, sans-serif; color: #1E293B;">
-    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F1F5F9; padding: 32px 16px;">
+<body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 30px 12px;">
         <tr>
             <td align="center">
-                <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px;">
+                <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 680px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.06);">
+                    
+                    <!-- Header thương hiệu -->
                     <tr>
-                        <td style="padding: 24px 32px; border-bottom: 1px solid #E2E8F0;">
-                            <p style="margin: 0; color: #155DFC; font-size: 18px; line-height: 24px; font-weight: 700;">Smart Self Storage</p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 32px;">
-                            <p style="margin: 0 0 8px; color: #155DFC; font-size: 13px; line-height: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;">Check-in complete</p>
-                            <h1 style="margin: 0 0 12px; color: #1E293B; font-size: 28px; line-height: 36px; font-weight: 700;">Your storage is ready.</h1>
-                            <p style="margin: 0 0 24px; color: #64748B; font-size: 15px; line-height: 24px;">Hello {{displayName}}, your check-in has been completed successfully. Your storage access details are below.</p>
-
-                            <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border: 1px solid #E2E8F0; border-radius: 8px;">
+                        <td style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding: 24px 32px; text-align: left; border-bottom: 3px solid #2563eb;">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
                                 <tr>
-                                    <td style="padding: 16px 20px; border-bottom: 1px solid #E2E8F0; color: #64748B; font-size: 14px; line-height: 20px;">Contract code</td>
-                                    <td align="right" style="padding: 16px 20px; border-bottom: 1px solid #E2E8F0; color: #1E293B; font-size: 14px; line-height: 20px; font-weight: 700;">{{reservationCode}}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 16px 20px; border-bottom: 1px solid #E2E8F0; color: #64748B; font-size: 14px; line-height: 20px;">Storage unit</td>
-                                    <td align="right" style="padding: 16px 20px; border-bottom: 1px solid #E2E8F0; color: #1E293B; font-size: 14px; line-height: 20px; font-weight: 700;">{{unitCode}}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 16px 20px; color: #64748B; font-size: 14px; line-height: 20px;">Contract status</td>
-                                    <td align="right" style="padding: 16px 20px; color: #155DFC; font-size: 14px; line-height: 20px; font-weight: 700;">{{contractStatus}}</td>
-                                </tr>
-                            </table>
-
-                            <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 24px; background-color: #F1F5F9; border: 1px solid #D5E2FF; border-radius: 8px;">
-                                <tr>
-                                    <td align="center" style="padding: 20px 24px;">
-                                        <p style="margin: 0 0 8px; color: #64748B; font-size: 12px; line-height: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Your Gate PIN</p>
-                                        <p style="margin: 0; color: #155DFC; font-family: Arial, sans-serif; font-size: 32px; line-height: 40px; font-weight: 700; letter-spacing: 6px;">{{gatePin}}</p>
+                                    <td>
+                                        <div style="font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;">SMART SELF STORAGE</div>
+                                        <div style="font-size: 12px; color: #93c5fd; margin-top: 3px; font-weight: 500;">Hệ thống cho thuê kho lưu trữ tự quản thông minh 24/7</div>
+                                    </td>
+                                    <td align="right">
+                                        <span style="display: inline-block; background-color: #10b981; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">✓ {{contractStatus}}</span>
                                     </td>
                                 </tr>
                             </table>
+                        </td>
+                    </tr>
 
-                            <p style="margin: 24px 0 0; color: #64748B; font-size: 14px; line-height: 22px;">Use your Gate PIN to access your storage unit. Please keep it secure.</p>
-                        </td>
-                    </tr>
+                    <!-- Tiêu đề Hợp đồng -->
                     <tr>
-                        <td style="padding: 20px 32px; background-color: #F1F5F9; border-top: 1px solid #E2E8F0;">
-                            <p style="margin: 0; color: #64748B; font-size: 12px; line-height: 18px; text-align: center;">For your security, do not share your Gate PIN with anyone.</p>
-                            <p style="margin: 8px 0 0; color: #64748B; font-size: 12px; line-height: 18px; text-align: center;">Smart Self Storage</p>
+                        <td style="padding: 28px 32px 16px 32px; text-align: center; background-color: #ffffff;">
+                            <h1 style="margin: 0; color: #0f172a; font-size: 22px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">HỢP ĐỒNG ĐIỆN TỬ CHO THUÊ KHO TỰ QUẢN</h1>
+                            <p style="margin: 6px 0 0 0; color: #2563eb; font-size: 14px; font-weight: 700; font-family: 'Courier New', Courier, monospace;">Mã số hợp đồng: {{contractCode}}</p>
+                            <p style="margin: 4px 0 0 0; color: #64748b; font-size: 12px;">Ngày xác lập và kích hoạt: {{createdDate}}</p>
                         </td>
                     </tr>
+
+                    <!-- Lời dẫn -->
+                    <tr>
+                        <td style="padding: 0 32px 20px 32px;">
+                            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; font-size: 13px; color: #334155;">
+                                Kính gửi Quý khách <strong>{{customerName}}</strong>, thủ tục check-in tại quầy và bàn giao ô kho lưu trữ của Quý khách đã hoàn tất thành công. Dưới đây là văn bản <strong>Hợp đồng điện tử</strong> chính thức xác nhận việc thuê kho của Quý khách.
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Thông tin các bên ký kết -->
+                    <tr>
+                        <td style="padding: 0 32px 20px 32px;">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: separate; border-spacing: 12px 0; margin: 0 -12px;">
+                                <tr>
+                                    <!-- Bên A -->
+                                    <td width="50%" valign="top" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;">
+                                        <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: 800; color: #1e3a8a; text-transform: uppercase;">BÊN CHO THUÊ (BÊN A)</p>
+                                        <div style="font-size: 12px; color: #1e293b; line-height: 1.7;">
+                                            <strong>CÔNG TY CP SMART SELF STORAGE</strong><br>
+                                            <strong>Cơ sở:</strong> {{facilityName}}<br>
+                                            <strong>Địa chỉ:</strong> {{facilityAddress}}<br>
+                                            <strong>Hotline:</strong> {{facilityPhone}}<br>
+                                            <strong>Email:</strong> hotro@smartstorage.vn
+                                        </div>
+                                    </td>
+                                    <!-- Bên B -->
+                                    <td width="50%" valign="top" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;">
+                                        <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: 800; color: #1e3a8a; text-transform: uppercase;">BÊN THUÊ (BÊN B)</p>
+                                        <div style="font-size: 12px; color: #1e293b; line-height: 1.7;">
+                                            <strong>Họ tên:</strong> {{customerName}}<br>
+                                            <strong>Số CCCD:</strong> {{citizenId}}<br>
+                                            <strong>Điện thoại:</strong> {{customerPhone}}<br>
+                                            <strong>Email:</strong> {{customerEmail}}<br>
+                                            <strong>Định danh:</strong> Đã xác thực CCCD & OTP
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Chi tiết hợp đồng (Bảng điều khoản) -->
+                    <tr>
+                        <td style="padding: 0 32px 24px 32px;">
+                            
+                            <!-- Điều 1 -->
+                            <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; margin-bottom: 14px;">
+                                <h3 style="margin: 0 0 10px 0; font-size: 13px; font-weight: 800; color: #0f172a; text-transform: uppercase;">
+                                    ĐIỀU 1: THÔNG TIN Ô KHO VÀ THỜI HẠN THUÊ
+                                </h3>
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px;">
+                                    <tr style="background-color: #f8fafc;">
+                                        <td style="padding: 9px 14px; border-bottom: 1px solid #e2e8f0; color: #64748b; width: 45%;">Cơ sở lưu kho:</td>
+                                        <td style="padding: 9px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #0f172a; text-align: right;">{{facilityName}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 9px 14px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Mã ô kho bàn giao:</td>
+                                        <td style="padding: 9px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #0f172a; text-align: right;">{{unitCode}}</td>
+                                    </tr>
+                                    <tr style="background-color: #f8fafc;">
+                                        <td style="padding: 9px 14px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Quy cách / Kích thước kho:</td>
+                                        <td style="padding: 9px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #0f172a; text-align: right;">{{unitType}} ({{unitSize}})</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 9px 14px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Ngày bắt đầu thuê (Check-in):</td>
+                                        <td style="padding: 9px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #059669; text-align: right;">{{startDate}}</td>
+                                    </tr>
+                                    <tr style="background-color: #f8fafc;">
+                                        <td style="padding: 9px 14px; color: #64748b;">Hạn kết thúc hợp đồng (Check-out):</td>
+                                        <td style="padding: 9px 14px; font-weight: 700; color: #dc2626; text-align: right;">{{endDate}}</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- Điều 2 -->
+                            <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; margin-bottom: 14px;">
+                                <h3 style="margin: 0 0 10px 0; font-size: 13px; font-weight: 800; color: #0f172a; text-transform: uppercase;">
+                                    ĐIỀU 2: PHÍ DỊCH VỤ VÀ THANH TOÁN
+                                </h3>
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px;">
+                                    <tr style="background-color: #f8fafc;">
+                                        <td style="padding: 9px 14px; border-bottom: 1px solid #e2e8f0; color: #64748b; width: 45%;">Tiền cọc đảm bảo hợp đồng (Deposit):</td>
+                                        <td style="padding: 9px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #059669; text-align: right;">{{depositAmount}} (Đã thanh toán)</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 9px 14px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Tiền thuê kho theo kỳ hạn:</td>
+                                        <td style="padding: 9px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #0f172a; text-align: right;">{{rentalAmount}}</td>
+                                    </tr>
+                                    <tr style="background-color: #eff6ff;">
+                                        <td style="padding: 10px 14px; font-weight: 800; color: #1e3a8a;">Tổng giá trị giao dịch:</td>
+                                        <td style="padding: 10px 14px; font-weight: 800; color: #1d4ed8; text-align: right; font-size: 14px;">{{totalAmount}}</td>
+                                    </tr>
+                                </table>
+                                <p style="margin: 6px 0 0 0; font-size: 11px; color: #64748b;">* Tiền cọc sẽ được hoàn trả cho Bên B sau khi hoàn tất thủ tục trả kho (Check-out) theo đúng quy định.</p>
+                            </div>
+
+                            <!-- Điều 3 & Điều 4: Cam kết an ninh & Quá hạn -->
+                            <div style="font-size: 12px; color: #334155; line-height: 1.6;">
+                                <h3 style="margin: 0 0 6px 0; font-size: 13px; font-weight: 800; color: #0f172a; text-transform: uppercase;">
+                                    ĐIỀU 3: QUY ĐỊNH AN TOÀN VÀ HÀNG HÓA LƯU TRỮ
+                                </h3>
+                                <p style="margin: 0 0 8px 0;">
+                                    Bên B cam kết <strong>tuyệt đối không lưu trữ</strong>: Hóa chất độc hại, chất cháy nổ, xăng dầu, bình gas, vũ khí, ma túy, động vật sống, hàng quốc cấm hoặc thực phẩm tươi sống dễ ôi thiu bốc mùi. Bên B tự chịu hoàn toàn trách nhiệm pháp lý nếu vi phạm.
+                                </p>
+
+                                <h3 style="margin: 12px 0 6px 0; font-size: 13px; font-weight: 800; color: #0f172a; text-transform: uppercase;">
+                                    ĐIỀU 4: GIA HẠN VÀ XỬ LÝ QUÁ HẠN HỢP ĐỒNG
+                                </h3>
+                                <p style="margin: 0;">
+                                    - Bên B có thể chủ động gia hạn hợp đồng trên Website trước ngày hết hạn.<br>
+                                    - Khi hợp đồng hết hạn mà Bên B chưa gia hạn hoặc chưa trả kho, hệ thống sẽ tự động tạm khóa quyền ra vào ô kho và áp dụng tính phí phạt quá hạn theo quy chế hệ thống.
+                                </p>
+                            </div>
+
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8fafc; padding: 22px 32px; text-align: center; border-top: 1px solid #e2e8f0;">
+                            <p style="margin: 0; font-size: 12px; color: #475569; font-weight: 700;">HỆ THỐNG LƯU KHO THÔNG MINH SMART SELF STORAGE</p>
+                            <p style="margin: 4px 0 0 0; font-size: 11px; color: #94a3b8;">Email hỗ trợ: hotro@smartstorage.vn | Hotline tổng đài: 1900 8899 | Website: smartstorage.vn</p>
+                        </td>
+                    </tr>
+
                 </table>
             </td>
         </tr>
