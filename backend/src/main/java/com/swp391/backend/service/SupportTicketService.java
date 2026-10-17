@@ -24,6 +24,7 @@ public class SupportTicketService {
     private final ActivityLogRepository activityLogRepository;
     private final StorageUnitRepository storageUnitRepository;
     private final FloorRepository floorRepository;
+    private final EmailService emailService;
 
     public SupportTicketService(SupportTicketRepository supportTicketRepository,
                                 ContractRepository contractRepository,
@@ -32,7 +33,8 @@ public class SupportTicketService {
                                 CustomerProfileRepository customerProfileRepository,
                                 ActivityLogRepository activityLogRepository,
                                 StorageUnitRepository storageUnitRepository,
-                                FloorRepository floorRepository) {
+                                FloorRepository floorRepository,
+                                EmailService emailService) {
         this.supportTicketRepository = supportTicketRepository;
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
@@ -41,6 +43,7 @@ public class SupportTicketService {
         this.activityLogRepository = activityLogRepository;
         this.storageUnitRepository = storageUnitRepository;
         this.floorRepository = floorRepository;
+        this.emailService = emailService;
     }
 
     private Integer getFacilityIdByUnit(String unitCode) {
@@ -223,6 +226,10 @@ public class SupportTicketService {
         account.setOtpCode(otp);
         account.setOtpExpiryTime(LocalDateTime.now().plusMinutes(5));
         accountRepository.save(account);
+
+        if (account.getEmail() != null && !account.getEmail().isBlank()) {
+            emailService.sendOtpEmail(account.getEmail(), account.getFullName(), otp, "Yêu cầu trả kho trước hạn");
+        }
 
         return Map.of(
                 "success", true,

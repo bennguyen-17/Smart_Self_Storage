@@ -392,6 +392,7 @@ function RegisterForm() {
       {showOtp && (
         <OtpModal
           phone={phone || "0912345678"}
+          email={email}
           onClose={() => setShowOtp(false)}
         />
       )}
