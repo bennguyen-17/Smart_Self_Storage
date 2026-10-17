@@ -175,11 +175,6 @@ function Body({
           value={`${contract.overdueDays ?? 0} ngày`}
         />
         <Row
-          label="Phạt chưa nộp"
-          value={formatVnd(unpaidPenalty)}
-          strong={blockedByPenalty}
-        />
-        <Row
           label="Giá thuê / tháng"
           value={formatVnd(contract.monthlyPrice)}
         />
