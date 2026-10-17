@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMyContracts } from '@/pages/customer/storage/storageApi';
+import { getMyContracts } from '@/features/customer/storage/storageApi';
 import { getGatePin } from '../pinApi';
 import { KeyRound, ShieldCheck, ShieldAlert, MapPin, Clock, DoorOpen, AlertTriangle, ArrowRight, Warehouse } from 'lucide-react';
 
@@ -149,7 +149,7 @@ export default function PinDisplay() {
               MÃ PIN MỞ CỬA CHÍNH 24/7
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-              Mã bảo mật điện tử tự động cấp quyền vào cơ sở kho lưu trữ của bạn bất kỳ lúc nào.
+              Mã bảo mật dùng để ra vào cửa chính của cơ sở kho bạn thuê
             </p>
           </div>
         </div>
@@ -191,25 +191,6 @@ export default function PinDisplay() {
 
           {/* Header Status */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              {currentFacPermission.hasAccess ? (
-                <span className="flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-emerald-700 dark:text-emerald-300 font-bold text-xs">
-                  <ShieldCheck className="size-4" />
-                  <span>CỬA ĐƯỢC CẤP PHÉP LIVE 24/7</span>
-                </span>
-              ) : pendingContracts.length > 0 ? (
-                <span className="flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-400/40 text-amber-700 dark:text-amber-300 font-bold text-xs">
-                  <AlertTriangle className="size-4" />
-                  <span>CHỜ CHECK-IN NHẬN KHO</span>
-                </span>
-              ) : (
-                <span className="flex items-center space-x-2 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-400/40 text-rose-700 dark:text-rose-300 font-bold text-xs">
-                  <ShieldAlert className="size-4" />
-                  <span>CHƯA CÓ QUYỀN MỞ CỬA</span>
-                </span>
-              )}
-            </div>
-
             {currentFacPermission.hasAccess && (
               <div className="flex items-center space-x-2 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-cyan-500/30 text-blue-600 dark:text-cyan-300 text-xs font-mono font-bold">
                 <Clock className="size-3.5 text-blue-600 dark:text-cyan-400" />
@@ -223,11 +204,10 @@ export default function PinDisplay() {
             <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold">
               MÃ BÀN PHÍM CỬA CHÍNH (6 CHỮ SỐ)
             </p>
-            <div className={`text-4xl sm:text-6xl font-black font-mono tracking-[0.25em] select-all transition-all duration-300 ${
-              currentFacPermission.hasAccess
+            <div className={`text-4xl sm:text-6xl font-black font-mono tracking-[0.25em] select-all transition-all duration-300 ${currentFacPermission.hasAccess
                 ? 'text-blue-600 dark:text-cyan-300 dark:drop-shadow-[0_0_25px_rgba(34,211,238,0.7)]'
                 : 'text-slate-300 dark:text-slate-600'
-            }`}>
+              }`}>
               {currentFacPermission.hasAccess ? pinValue : '--- ---'}
             </div>
 
@@ -320,7 +300,8 @@ export default function PinDisplay() {
               <span>Lưu ý bảo mật an ninh</span>
             </p>
             <p className="leading-relaxed text-slate-700 dark:text-slate-300">
-              Tuyệt đối không chia sẻ mã PIN cho người lạ. Hệ thống camera AI nhận diện khuôn mặt giám sát liên tục 24/7 để bảo đảm an toàn cho tài sản của bạn.
+              <div className="">Tuyệt đối không chia sẻ mã PIN cho người lạ. </div>
+              <div className="">Nếu có bất kì mất mát nào xảy ra, bạn phải chịu hoàn toàn trách nhiệm</div>
             </p>
           </div>
         </div>

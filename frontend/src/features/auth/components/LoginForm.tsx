@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
 import { login } from "../authApi"
+import ForgotPasswordModal from "./ForgotPasswordModal"
 import { loginSchema, type LoginFormValues } from "@/utils/validation"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -32,11 +33,10 @@ function LoginForm() {
   const [serverError, setServerError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false)
 
   const handleForgotPassword = () => {
-    toast.info("Yêu cầu đặt lại mật khẩu", {
-      description: "Vui lòng liên hệ Bộ phận Chăm sóc Khách hàng (Hotline: 1900 3910) để được hỗ trợ cấp lại mật khẩu.",
-    })
+    setIsForgotPasswordOpen(true)
   }
 
   const form = useForm<LoginFormValues>({
@@ -76,7 +76,7 @@ function LoginForm() {
         } else if (error.response?.status === 401) {
           setServerError(
             error.response.data?.message ||
-            "Số điện thoại hoặc mật khẩu không đúng."
+            "Số điện thoại/email hoặc mật khẩu không đúng."
           )
         } else {
           setServerError(
@@ -123,29 +123,28 @@ function LoginForm() {
         </h2>
 
         <p className="mt-1.5 text-xs text-muted-foreground sm:text-sm">
-          Nhập số điện thoại và mật khẩu để truy cập hệ thống.
+          Đăng nhập bằng email hoặc số điện thoại 
         </p>
       </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
         <FieldGroup className="space-y-3.5">
-          {/* Phone */}
+          {/* Phone / Email */}
           <Controller
             name="phone"
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor={field.name} className="text-xs font-semibold sm:text-sm">
-                  Số điện thoại
+                  Email hoặc Số điện thoại
                 </FieldLabel>
 
                 <Input
                   {...field}
                   id={field.name}
-                  placeholder="0988123456"
-                  inputMode="numeric"
-                  maxLength={10}
-                  autoComplete="tel"
+                  placeholder="Email hoặc số điện thoại"
+                  maxLength={100}
+                  autoComplete="username"
                   aria-invalid={fieldState.invalid}
                   className="h-10 text-sm rounded-xl"
                 />
@@ -239,6 +238,11 @@ function LoginForm() {
           Vào cổng nội bộ
         </Link>
       </p>
+
+      <ForgotPasswordModal
+        open={isForgotPasswordOpen}
+        onOpenChange={setIsForgotPasswordOpen}
+      />
     </div>
   )
 }

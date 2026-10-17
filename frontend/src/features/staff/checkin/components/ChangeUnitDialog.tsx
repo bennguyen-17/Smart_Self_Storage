@@ -5,7 +5,7 @@ import { cn } from "cn"
 
 import { useAsyncData } from "@/hooks/useAsyncData"
 import { formatVnd } from "@/lib/format"
-import { unitAreaOf, unitSizeOf } from "@/pages/floorplan/unitDisplay"
+import { unitAreaOf, unitSizeOf } from "@/features/floorplan/unitDisplay"
 
 import {
   changeUnit,

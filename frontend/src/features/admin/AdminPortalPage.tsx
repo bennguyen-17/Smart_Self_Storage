@@ -1,11 +1,10 @@
 import { Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom"
 
 import { useAuth } from "@/context/AuthContext"
-import TabPlaceholder from "@/pages/manager/components/TabPlaceholder"
 import { getRoleTitle, normalizeRole } from "@/lib/roles"
 
-import { DEFAULT_ADMIN_TAB, findAdminTab } from "@/pages/admin/adminTabs"
-import AdminNavbar from "@/pages/admin/components/AdminNavbar"
+import { DEFAULT_ADMIN_TAB, findAdminTab } from "@/features/admin/adminTabs"
+import AdminNavbar from "@/features/admin/components/AdminNavbar"
 
 /**
  * Cổng Quản trị hệ thống (Vỹ). Mỗi trang có link riêng /admin/<trang>, chuyển trang bằng navbar.
@@ -51,7 +50,7 @@ function AdminPortalPage() {
         onLogout={logout}
       >
         <h1 className="text-title text-xl font-black tracking-tight">{tab.title}</h1>
-        {Panel ? <Panel /> : <TabPlaceholder tab={tab} />}
+        {Panel && <Panel />}
       </AdminNavbar>
     </div>
   )

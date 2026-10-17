@@ -8,13 +8,13 @@ import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { useAsyncData } from "@/hooks/useAsyncData"
 
-import { getFacilities, getFloors, getUnits } from "@/pages/floorplan/api/floorPlanApi"
-import FloorPlanFilters from "@/pages/floorplan/components/FloorPlanFilters"
-import StatusLegend from "@/pages/floorplan/components/StatusLegend"
-import UnitDetailDialog from "@/pages/floorplan/components/UnitDetailDialog"
-import UnitGrid from "@/pages/floorplan/components/UnitGrid"
-import type { ClimateFilter, SizeFilter, UnitDetailResponse } from "@/pages/floorplan/types"
-import { UNIT_SIZES, unitSizeOf } from "@/pages/floorplan/unitDisplay"
+import { getFacilities, getFloors, getUnits } from "@/features/floorplan/api/floorPlanApi"
+import FloorPlanFilters from "@/features/floorplan/components/FloorPlanFilters"
+import StatusLegend from "@/features/floorplan/components/StatusLegend"
+import UnitDetailDialog from "@/features/floorplan/components/UnitDetailDialog"
+import UnitGrid from "@/features/floorplan/components/UnitGrid"
+import type { ClimateFilter, SizeFilter, UnitDetailResponse } from "@/features/floorplan/types"
+import { UNIT_SIZES, unitSizeOf } from "@/features/floorplan/unitDisplay"
 
 const CLIMATE_VALUES: ClimateFilter[] = ["ALL", "NORMAL", "CLIMATE_CONTROLLED"]
 

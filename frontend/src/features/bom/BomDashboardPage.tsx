@@ -7,8 +7,8 @@ import {
   ArrowUpRight,
 } from "lucide-react"
 import { motion, type Variants } from "motion/react"
-import { useBomContext } from "@/pages/bom/context/BomContext"
-import BomKpiCards from "@/pages/bom/components/BomKpiCards"
+import { useBomContext } from "@/features/bom/context/BomContext"
+import BomKpiCards from "@/features/bom/components/BomKpiCards"
 
 const MODULE_CARDS = [
   {

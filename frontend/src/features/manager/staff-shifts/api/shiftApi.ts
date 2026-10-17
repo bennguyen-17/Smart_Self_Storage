@@ -4,8 +4,8 @@
 
 import { unwrapApiData } from "@/lib/api"
 import apiClient, { isMockMode } from "@/lib/apiClient"
-import { managerHeaders } from "@/pages/manager/unit-management/managerContext"
-import type { ManagerContext } from "@/pages/manager/unit-management/types"
+import { managerHeaders } from "@/features/manager/unit-management/managerContext"
+import type { ManagerContext } from "@/features/manager/unit-management/types"
 
 import type { DaySchedule, FacilityStaff } from "../types"
 import {

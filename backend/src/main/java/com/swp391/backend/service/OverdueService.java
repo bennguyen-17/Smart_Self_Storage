@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class OverdueService {
@@ -74,7 +75,12 @@ public class OverdueService {
     private void createOrUpdateOverdueFine(Contract contract, LocalDate endDate, LocalDate today) {
         long overdueDays = ChronoUnit.DAYS.between(endDate, today);
         BigDecimal totalFine = DAILY_OVERDUE_FEE.multiply(BigDecimal.valueOf(overdueDays));
-        String invoiceNumber = "OVD-" + contract.getContractId();
+        String contractCode = "CTR-" + contract.getContractId();
+        Optional<Reservation> resOpt = reservationRepository.findById(contract.getReservationId());
+        if (resOpt.isPresent() && resOpt.get().getReservationCode() != null && !resOpt.get().getReservationCode().isBlank()) {
+            contractCode = resOpt.get().getReservationCode();
+        }
+        String invoiceNumber = "PEN-" + contractCode;
         LocalDateTime issuedAt = LocalDateTime.now(VIETNAM_ZONE);
 
         Payment payment = paymentRepository.findByInvoiceNumber(invoiceNumber)

@@ -12,12 +12,12 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-import CheckoutDebtPanel from "@/pages/manager/facility-contracts/components/CheckoutDebtPanel"
-import CustomersContractsPanel from "@/pages/manager/facility-contracts/components/CustomersContractsPanel"
-import FacilityReportPanel from "@/pages/manager/facility-report/components/FacilityReportPanel"
-import GateLogPanel from "@/pages/manager/gate-logs/components/GateLogPanel"
-import ShiftsPanel from "@/pages/manager/staff-shifts/components/ShiftsPanel"
-import UnitManagementPanel from "@/pages/manager/unit-management/components/UnitManagementPanel"
+import CheckoutDebtPanel from "@/features/manager/facility-contracts/components/CheckoutDebtPanel"
+import CustomersContractsPanel from "@/features/manager/facility-contracts/components/CustomersContractsPanel"
+import FacilityReportPanel from "@/features/manager/facility-report/components/FacilityReportPanel"
+import GateLogPanel from "@/features/manager/gate-logs/components/GateLogPanel"
+import ShiftsPanel from "@/features/manager/staff-shifts/components/ShiftsPanel"
+import UnitManagementPanel from "@/features/manager/unit-management/components/UnitManagementPanel"
 
 export type ManagerTabKey = "units" | "reports" | "customers" | "workflow" | "staff" | "gate-logs"
 

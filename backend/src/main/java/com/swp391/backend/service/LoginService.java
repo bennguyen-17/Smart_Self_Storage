@@ -30,6 +30,7 @@ public class LoginService {
     private final JwtService jwtService;
     private final ActivityLogRepository activityLogRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public LoginService(
             AccountRepository accountRepository,
@@ -37,7 +38,8 @@ public class LoginService {
             com.swp391.backend.repository.EmployeeProfileRepository employeeProfileRepository,
             JwtService jwtService,
             ActivityLogRepository activityLogRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            EmailService emailService) {
 
         this.accountRepository = accountRepository;
         this.customerProfileRepository = customerProfileRepository;
@@ -45,6 +47,7 @@ public class LoginService {
         this.jwtService = jwtService;
         this.activityLogRepository = activityLogRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     public LoginResult login(LoginRequest request, String ipAddress) {
@@ -207,12 +210,18 @@ public class LoginService {
 
     public ApiResponse forgotPassword(ResendOtpRequest request) {
         if (request.getPhone() == null || request.getPhone().trim().isEmpty()) {
-            return new ApiResponse(false, "Số điện thoại không được để trống!");
+            return new ApiResponse(false, "Vui lòng nhập Email tài khoản!");
         }
 
-        Optional<Account> accountOptional = accountRepository.findByPhone(request.getPhone());
+        String input = request.getPhone().trim();
+        if (!input.contains("@")) {
+            return new ApiResponse(false, "Hệ thống chỉ hỗ trợ gửi mã OTP qua Email. Vui lòng nhập địa chỉ Email!");
+        }
+
+        Optional<Account> accountOptional = accountRepository.findByEmail(input);
+
         if (accountOptional.isEmpty()) {
-            return new ApiResponse(false, "Không tìm thấy tài khoản với số điện thoại này!");
+            return new ApiResponse(false, "Không tìm thấy tài khoản với email này!");
         }
 
         Account account = accountOptional.get();
@@ -222,33 +231,50 @@ public class LoginService {
         accountRepository.save(account);
 
         System.out.println("==========================================");
-        System.out.println(">>> OTP đặt lại mật khẩu cho " + request.getPhone() + " là: " + otpCode + " <<<");
+        System.out.println(">>> OTP đặt lại mật khẩu cho " + account.getEmail() + " là: " + otpCode + " <<<");
         System.out.println("==========================================");
 
-        return new ApiResponse(true, "Đã tạo OTP. Vui lòng kiểm tra console để thử nghiệm.");
+        if (emailService != null && account.getEmail() != null && !account.getEmail().isBlank()) {
+            try {
+                emailService.sendTextEmail(
+                        account.getEmail(),
+                        "[Smart Storage] Mã OTP đặt lại mật khẩu",
+                        "Xin chào " + account.getFullName() + ",\n\n"
+                                + "Mã OTP để đặt lại mật khẩu tài khoản Smart Storage của bạn là: " + otpCode + "\n"
+                                + "Mã này có hiệu lực trong 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai.\n\n"
+                                + "Trân trọng,\nĐội ngũ Smart Storage"
+                );
+            } catch (Exception e) {
+                System.err.println("Không thể gửi email OTP (sử dụng console OTP để test): " + e.getMessage());
+            }
+        }
+
+        return new ApiResponse(true, "Mã xác thực OTP đã được gửi về email đăng ký của bạn. Vui lòng kiểm tra hộp thư!");
     }
 
     public ApiResponse resetPassword(ResetPasswordRequest request) {
         if (request.getPhone() == null || request.getPhone().trim().isEmpty()) {
-            return new ApiResponse(false, "Số điện thoại không được để trống!");
+            return new ApiResponse(false, "Vui lòng nhập Email tài khoản!");
         }
 
-        Optional<Account> accountOptional = accountRepository.findByPhone(request.getPhone());
+        String input = request.getPhone().trim();
+        Optional<Account> accountOptional = accountRepository.findByEmail(input);
+
         if (accountOptional.isEmpty()) {
-            return new ApiResponse(false, "Không tìm thấy tài khoản với số điện thoại này!");
+            return new ApiResponse(false, "Không tìm thấy tài khoản với email này!");
         }
 
         Account account = accountOptional.get();
 
         if (account.getOtpCode() == null
                 || request.getOtpCode() == null
-                || !account.getOtpCode().equals(request.getOtpCode())) {
+                || !account.getOtpCode().equals(request.getOtpCode().trim())) {
             return new ApiResponse(false, "Mã OTP không chính xác!");
         }
 
         if (account.getOtpExpiryTime() == null
                 || !account.getOtpExpiryTime().isAfter(LocalDateTime.now())) {
-            return new ApiResponse(false, "Mã OTP đã hết hạn!");
+            return new ApiResponse(false, "Mã OTP đã hết hạn! Vui lòng gửi lại mã mới.");
         }
 
         if (request.getNewPassword() == null || request.getNewPassword().trim().isEmpty()) {
@@ -260,7 +286,7 @@ public class LoginService {
         account.setOtpExpiryTime(null);
         accountRepository.save(account);
 
-        return new ApiResponse(true, "Đặt lại mật khẩu thành công!");
+        return new ApiResponse(true, "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay.");
     }
 
     private Long handleFailedLogin(

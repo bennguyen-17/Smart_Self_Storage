@@ -12,7 +12,7 @@ import { cn } from "cn"
 import {
   SIZE_AREA_M2,
   unitSizeFromCode,
-} from "@/pages/floorplan/unitDisplay"
+} from "@/features/floorplan/unitDisplay"
 
 import type { StaffReservationItem } from "../types"
 
@@ -74,21 +74,21 @@ function CheckinContractTable({
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm dark:border-slate-800">
-      <table className="w-full table-fixed text-left text-sm">
-        <thead className="border-b bg-slate-100 text-[11px] font-bold tracking-wider text-slate-500 uppercase dark:bg-slate-800/80 dark:text-slate-400">
+    <div className="card-box relative overflow-x-auto rounded-2xl border border-slate-200/80 shadow-sm dark:border-slate-800">
+      <table className="w-full text-left text-xs">
+        <thead className="border-b border-slate-200/80 bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400">
           <tr>
-            <th className="w-[15%] px-4 py-3.5">Mã Hợp Đồng</th>
-            <th className="w-[15%] px-4 py-3.5">Thông tin Khách hàng</th>
-            <th className="w-[15%] px-4 py-3.5">Mã kho</th>
-            <th className="w-[15%] px-4 py-3.5">Trạng thái</th>
-            <th className="w-[15%] px-4 py-3.5">Chi tiết</th>
+            <th scope="col" className="px-4 py-3 font-bold">Mã Hợp Đồng</th>
+            <th scope="col" className="px-4 py-3 font-bold">Thông tin Khách hàng</th>
+            <th scope="col" className="px-4 py-3 font-bold">Mã kho</th>
+            <th scope="col" className="px-4 py-3 font-bold">Trạng thái</th>
+            <th scope="col" className="px-4 py-3 text-right font-bold">Thao tác</th>
           </tr>
         </thead>
-        <tbody className="text-title divide-y divide-slate-200 dark:divide-slate-800">
+        <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800">
           {isLoading &&
             Array.from({ length: 4 }, (_, i) => (
-              <tr key={i}>
+              <tr key={i} className="border-b last:border-0">
                 {Array.from({ length: 5 }, (_, j) => (
                   <td key={j} className="px-4 py-3.5">
                     <div className="h-4 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
@@ -100,8 +100,8 @@ function CheckinContractTable({
           {!isLoading && rows?.length === 0 && (
             <tr>
               <td colSpan={5} className="px-4 py-12 text-center">
-                <InboxIcon className="mx-auto mb-2 size-8 text-muted" />
-                <p className="font-medium text-muted">Không có hợp đồng nào</p>
+                <InboxIcon className="mx-auto mb-2 size-8 text-slate-400 dark:text-slate-500" />
+                <p className="font-semibold text-slate-600 dark:text-slate-400">Không có hợp đồng nào</p>
               </td>
             </tr>
           )}
@@ -109,37 +109,34 @@ function CheckinContractTable({
           {!isLoading &&
             rows?.map((item) => {
               const subtitle = codeSubtitle(item.contractStatus)
-              const meta = item.unitCode
-                ? (unitMeta?.[item.unitCode] ?? sizeMetaFromCode(item.unitCode))
-                : undefined
               return (
                 <tr
                   key={item.reservationId}
                   className={cn(
-                    "transition hover:bg-blue-500/5",
+                    "transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/40",
                     item.contractStatus === "CANCELED" && "opacity-75"
                   )}
                   data-status={item.contractStatus ?? ""}
                 >
-                  <td className="px-4 py-3.5 align-middle font-mono font-bold">
-                    <span className="text-title block font-bold">
+                  <td className="px-4 py-3.5 align-middle font-mono whitespace-nowrap">
+                    <span className="block font-bold text-slate-900 dark:text-white">
                       {item.reservationCode}
                     </span>
                     {subtitle && (
-                      <span className="block text-[11px] font-normal text-muted">
+                      <span className="block text-[11px] font-normal font-sans text-slate-500 dark:text-slate-400 mt-0.5">
                         {subtitle}
                       </span>
                     )}
                   </td>
 
                   <td className="px-4 py-3.5 align-middle">
-                    <div className="text-title text-sm font-extrabold">
+                    <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                       {item.customerName ?? "—"}
                     </div>
                   </td>
 
-                  <td className="px-4 py-3.5 align-middle">
-                    <span className="text-title block font-bold">
+                  <td className="px-4 py-3.5 align-middle whitespace-nowrap">
+                    <span className="text-sm font-mono font-semibold text-slate-800 dark:text-slate-200">
                       {item.unitCode ?? "—"}
                     </span>
                   </td>
@@ -154,13 +151,13 @@ function CheckinContractTable({
                     />
                   </td>
 
-                  <td className="px-4 py-3.5 align-middle">
+                  <td className="px-4 py-3.5 align-middle text-right">
                     <button
                       type="button"
                       onClick={() => onOpenDetail(item)}
-                      className="flex cursor-pointer items-center space-x-1 rounded-xl bg-slate-200 px-3 py-1.5 text-[11px] font-bold text-slate-700 transition hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-200"
+                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                     >
-                      <EyeIcon className="size-3.5" />
+                      <EyeIcon className="size-3.5 text-slate-400 group-hover:text-slate-600 dark:text-slate-400" />
                       <span>Xem chi tiết</span>
                     </button>
                   </td>
@@ -191,7 +188,7 @@ function StatusAction({
       <button
         type="button"
         onClick={() => onCheckin(item)}
-        className="flex w-36 cursor-pointer items-center justify-center space-x-1.5 rounded-xl border border-blue-300 bg-blue-100 px-3 py-2 text-[11px] font-extrabold whitespace-nowrap text-blue-700 transition hover:bg-blue-200 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/50"
+        className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold whitespace-nowrap text-blue-700 transition hover:bg-blue-100 shadow-2xs dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/50"
       >
         <UserCheckIcon className="size-3.5" />
         <span>Check-in</span>
@@ -204,7 +201,7 @@ function StatusAction({
       <button
         type="button"
         onClick={() => onCheckout(item)}
-        className="flex w-36 cursor-pointer items-center justify-center space-x-1.5 rounded-xl border border-emerald-300 bg-emerald-100 px-3 py-2 text-[11px] font-extrabold whitespace-nowrap text-emerald-700 transition hover:bg-emerald-200 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
+        className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold whitespace-nowrap text-emerald-700 transition hover:bg-emerald-100 shadow-2xs dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
       >
         <PackageOpenIcon className="size-3.5" />
         <span>Xác nhận trả kho</span>
@@ -215,11 +212,11 @@ function StatusAction({
   if (item.contractStatus === "OVERDUE") {
     // US-20: thu phạt quá hạn & gia hạn tại quầy
     return (
-      <div className="flex w-36 flex-col gap-1">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center">
         <button
           type="button"
           onClick={() => onCollectPenalty(item)}
-          className="flex w-full cursor-pointer items-center justify-center space-x-1.5 rounded-xl border border-rose-300 bg-rose-100 px-3 py-1.5 text-[11px] font-extrabold whitespace-nowrap text-rose-700 transition hover:bg-rose-200 dark:border-rose-800 dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-900/50"
+          className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-rose-700 transition hover:bg-rose-100 shadow-2xs dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-900/50"
         >
           <ReceiptTextIcon className="size-3.5" />
           <span>Thu phạt</span>
@@ -227,7 +224,7 @@ function StatusAction({
         <button
           type="button"
           onClick={() => onRenew(item)}
-          className="flex w-full cursor-pointer items-center justify-center space-x-1.5 rounded-xl border border-rose-300 bg-rose-100 px-3 py-1.5 text-[11px] font-extrabold whitespace-nowrap text-rose-800 shadow-sm transition hover:bg-rose-200 dark:border-rose-800 dark:bg-rose-950/80 dark:text-rose-300"
+          className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-rose-700 transition hover:bg-rose-100 shadow-2xs dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-900/50"
         >
           <CalendarPlusIcon className="size-3.5" />
           <span>Gia hạn</span>
@@ -237,7 +234,7 @@ function StatusAction({
   }
 
   return (
-    <span className="flex w-36 items-center justify-center space-x-1.5 rounded-xl border border-slate-300 bg-slate-200 px-3 py-2 text-[11px] font-extrabold whitespace-nowrap text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+    <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100/80 px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap text-slate-500 shadow-2xs dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-400">
       <BanIcon className="size-3" />
       <span>ĐÃ HỦY ĐƠN</span>
     </span>

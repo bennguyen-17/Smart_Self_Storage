@@ -33,22 +33,38 @@ export const http = axios.create({
   },
 });
 
-// Request Interceptor: Tự động đính kèm Token khi gọi API
+// Request Interceptor: Tự động đính kèm Token, X-Facility-Id và X-Account-Id khi gọi API
 http.interceptors.request.use(
   (config) => {
     let token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    if (!token) {
+    let user: Record<string, any> | null = null;
+    try {
+      const rawUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+      if (rawUser) user = JSON.parse(rawUser);
+    } catch {}
+
+    if (!token || !user) {
       try {
         const rawAuth = localStorage.getItem('auth_session') || sessionStorage.getItem('auth_session');
         if (rawAuth) {
           const parsed = JSON.parse(rawAuth);
-          token = parsed?.token;
+          if (!token) token = parsed?.token;
+          if (!user) user = parsed?.user;
         }
-      } catch (e) {}
+      } catch {}
     }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    if (user?.facilityId && !config.headers['X-Facility-Id']) {
+      config.headers['X-Facility-Id'] = String(user.facilityId);
+    }
+    if ((user?.id || user?.accountId) && !config.headers['X-Account-Id']) {
+      config.headers['X-Account-Id'] = String(user.id || user.accountId);
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -58,8 +74,27 @@ http.interceptors.request.use(
 http.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      console.warn('[HTTP 401/403] Phiên đăng nhập hết hạn hoặc không đủ quyền.');
+    const isLoginRequest =
+      error.config?.url?.includes('/login') ||
+      error.config?.url?.includes('/auth/login');
+
+    if (error.response?.status === 401 && !isLoginRequest) {
+      console.warn('[HTTP 401] Phiên đăng nhập đã hết hạn. Đang đăng xuất...');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('auth_session');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
+      sessionStorage.removeItem('auth_session');
+
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('login')) {
+        const isInternal =
+          window.location.pathname.startsWith('/staff') ||
+          window.location.pathname.startsWith('/manager') ||
+          window.location.pathname.startsWith('/admin') ||
+          window.location.pathname.startsWith('/bom');
+        window.location.href = isInternal ? '/internal_login' : '/customer_login';
+      }
     }
     return Promise.reject(error);
   }
@@ -84,8 +119,14 @@ export function unwrapApiData<T>(body: unknown): T {
 /** Lấy thông báo lỗi dễ đọc cho người dùng từ lỗi axios hoặc lỗi bất kỳ */
 export function getErrorMessage(error: unknown): string {
   if (isAxiosError(error)) {
-    const serverMessage = (error.response?.data as { message?: string })?.message;
+    const data = error.response?.data;
+    if (typeof data === 'string' && data.trim()) return data;
+    const serverMessage = (data as { message?: string })?.message;
     if (serverMessage) return serverMessage;
+    if (error.response?.status === 401)
+      return 'Phiên đăng nhập hết hạn hoặc chưa đăng nhập. Vui lòng đăng nhập lại.';
+    if (error.response?.status === 403)
+      return 'Tài khoản không đủ quyền hoặc chưa được gắn cơ sở.';
     if (error.response?.status === 404)
       return 'Không tìm thấy API (404). Kiểm tra backend.';
     if (!error.response) return 'Không thể kết nối đến máy chủ Backend.';

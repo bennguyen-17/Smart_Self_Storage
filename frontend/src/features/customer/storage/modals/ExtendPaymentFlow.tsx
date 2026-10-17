@@ -2,82 +2,116 @@ import React, { useState, useEffect } from 'react';
 
 import ExtendPaymentModal from './ExtendPaymentModal';
 import ExtendSuccessModal from './ExtendSuccessModal';
-import { createDepositTransaction } from '@/pages/customer/rent/rentApi';
-import { addNewBookingContract } from '@/pages/customer/rent/rentApi';
-import { markUnitAsHeld } from '@/pages/customer/rent/rentApi';
+import { extendStorageContract } from '@/features/customer/storage/storageApi';
 
-export default function ExtendPaymentFlow({ initialBookingData, onClose, onFinish }: { initialBookingData?: Record<string, unknown>; onClose?: () => void; onFinish?: () => void }) {
+export default function ExtendPaymentFlow({
+  initialBookingData,
+  onClose,
+  onFinish,
+}: {
+  initialBookingData?: Record<string, unknown>;
+  onClose?: () => void;
+  onFinish?: () => void;
+}) {
   const [step, setStep] = useState('PAYMENT');
-  useEffect(() => { handleProceedToPayment(); }, []); // CONTRACT -> PAYMENT -> SUCCESS
-  const [paymentData, setPaymentData] = useState(null);
-  const [successData, setSuccessData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [paymentData, setPaymentData] = useState<any>(null);
+  const [successData, setSuccessData] = useState<any>(null);
 
-  const handleProceedToPayment = async () => {
-    setLoading(true);
-    const bookingCode = `RES-${Math.floor(1000 + Math.random() * 9000)}`;
-    const extendAmount = (initialBookingData as any)?.extendAmount || 3000000;
-    const transferMemo = `EXT-${bookingCode}`;
-    const defaultData = {
-      bookingCode,
-      invoiceNumber: transferMemo,
-      unitId: (initialBookingData as any)?.unitId || 'HN01-G-XL04',
-      facilityName: (initialBookingData as any)?.facilityName || 'SmartStorage Cầu Giấy (HN01)',
-      unitSize: (initialBookingData as any)?.unitSize || 'Size XL',
-      startDate: (initialBookingData as any)?.startDate || new Date().toLocaleDateString('vi-VN'),
+  useEffect(() => {
+    handleProceedToPayment();
+  }, []);
+
+  const handleProceedToPayment = () => {
+    const rawContract = initialBookingData as any;
+    const contractCode =
+      rawContract?.contractId ||
+      rawContract?.reservationCode ||
+      rawContract?.bookingCode ||
+      (rawContract?.rawContractId ? `CTR-${rawContract.rawContractId}` : 'CTR-HN01-171026-0042');
+
+    const extendAmount =
+      rawContract?.extendAmount ||
+      rawContract?.depositAmount ||
+      rawContract?.totalAmount ||
+      1440000;
+
+    const randomSuffix = `${Date.now().toString().slice(-4)}${Math.floor(10 + Math.random() * 90)}`;
+    const invoiceNumber = `EXT-${contractCode}-${randomSuffix}`;
+
+    const data = {
+      ...(initialBookingData || {}),
+      bookingCode: contractCode,
+      contractCode,
+      contractId: contractCode,
+      rawContractId: rawContract?.rawContractId,
+      invoiceNumber,
+      unitId: rawContract?.unitId || rawContract?.unitCode || 'HN01-G-XL04',
+      facilityName: rawContract?.facilityName || rawContract?.branchName || 'SmartStorage Cầu Giấy (HN01)',
+      unitSize: rawContract?.unitSize || rawContract?.sizeLabel || 'Size XL',
+      startDate: rawContract?.startDate || new Date().toLocaleDateString('vi-VN'),
       extendAmount,
+      depositAmount: extendAmount,
+      effectiveDays: rawContract?.effectiveDays || 30,
+      newExpiryDate: rawContract?.newExpiryDate || '',
+      packageLabel: rawContract?.packageLabel || '1 Tháng',
       bankInfo: {
-        bankName: 'MB BANK (Ngân hàng Quân Đội)',
-        accountNo: '0909888999',
-        accountName: 'SELF STORAGE 391',
-        transferMemo,
-        qrImageUrl: `https://img.vietqr.io/image/MB-0909888999-compact2.png?amount=${extendAmount}&addInfo=${encodeURIComponent(transferMemo)}&accountName=SELF%20STORAGE%20391`
-      }
+        transferMemo: invoiceNumber,
+      },
     };
 
-    try {
-      const res = await createDepositTransaction(initialBookingData);
-      if (res && res.success && res.data) {
-        setPaymentData(res.data);
-      } else {
-        setPaymentData(defaultData);
-      }
-    } catch (err: any) {
-      console.warn('Backend API tạm thời không phản hồi (500/Network), tự động tạo VietQR đặt chỗ:', err);
-      setPaymentData(defaultData);
-    } finally {
-      setLoading(false);
-      setStep('PAYMENT');
-    }
+    setPaymentData(data);
+    setStep('PAYMENT');
   };
 
-  const handlePaymentSuccess = (statusData) => {
-    // 1. Cập nhật hợp đồng sang CHỜ CHECK-IN (PENDING_CHECKIN) trong danh sách hợp đồng quản lý
-    const bookingPayload = {
-      ...(initialBookingData || {}),
-      contractId: paymentData?.contractId || statusData?.contractId,
-      bookingCode: statusData?.bookingCode || paymentData?.bookingCode,
-    };
-    addNewBookingContract(bookingPayload);
-    
-    // 2. Cập nhật ô kho sang HOLD (Đã giữ chỗ) trên sơ đồ mặt bằng 2D
-    const uId = (initialBookingData as any)?.unitId;
-    if (uId) {
-      markUnitAsHeld(uId, 'HOLD');
+  const handlePaymentSuccess = async (statusData: any) => {
+    const rawContract = initialBookingData as any;
+    const targetId = rawContract?.rawContractId || rawContract?.contractId || paymentData?.contractCode;
+
+    let resExpiry = paymentData?.newExpiryDate;
+    try {
+      const res: any = await extendStorageContract(targetId, {
+        effectiveDays: paymentData?.effectiveDays || 30,
+        finalTotal: paymentData?.extendAmount || 1440000,
+        packageLabel: paymentData?.packageLabel || '1 Tháng',
+        newExpiryDate: paymentData?.newExpiryDate,
+        invoiceNumber: paymentData?.invoiceNumber,
+      });
+      if (res?.newExpiryDate) {
+        resExpiry = res.newExpiryDate;
+      }
+    } catch (e) {
+      console.warn('Lỗi gọi extend contract API:', e);
     }
 
-    setSuccessData({ ...initialBookingData, bookingCode: statusData?.bookingCode || paymentData?.bookingCode });
+    setSuccessData({
+      ...initialBookingData,
+      bookingCode: paymentData?.invoiceNumber || paymentData?.contractCode,
+      contractCode: paymentData?.contractCode,
+      invoiceNumber: paymentData?.invoiceNumber,
+      newExpiryDate: resExpiry,
+      effectiveDays: paymentData?.effectiveDays,
+    });
     setStep('SUCCESS');
   };
 
-
   return (
     <>
-      {step === 'PAYMENT' && paymentData && <ExtendPaymentModal paymentData={paymentData} onPaymentSuccess={handlePaymentSuccess} onBack={onClose} />}
-      {step === 'SUCCESS' && <ExtendSuccessModal successData={successData} onGoHome={() => { onFinish?.(); onClose?.(); }} />}
+      {step === 'PAYMENT' && paymentData && (
+        <ExtendPaymentModal
+          paymentData={paymentData}
+          onPaymentSuccess={handlePaymentSuccess}
+          onBack={() => onClose?.()}
+        />
+      )}
+      {step === 'SUCCESS' && (
+        <ExtendSuccessModal
+          successData={successData}
+          onGoHome={() => {
+            onFinish?.();
+            onClose?.();
+          }}
+        />
+      )}
     </>
   );
 }
-
-
-

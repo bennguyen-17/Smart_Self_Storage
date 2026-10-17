@@ -4,7 +4,7 @@ import { SearchIcon, UsersIcon } from "lucide-react"
 import { cn } from "cn"
 
 import { useAsyncData } from "@/hooks/useAsyncData"
-import { unitAreaOf, unitSizeOf } from "@/pages/floorplan/unitDisplay"
+import { unitAreaOf, unitSizeOf } from "@/features/floorplan/unitDisplay"
 
 import {
   checkinErrorMessage,
@@ -148,72 +148,71 @@ function CheckinPanel() {
   }
 
   return (
-    <div className="card-box space-y-5 rounded-3xl border p-5 shadow-xl sm:p-6">
-      <div className="flex flex-col items-start justify-between gap-3 border-b pb-4 sm:flex-row sm:items-center">
-        <h3 className="text-title flex items-center space-x-2 text-sm font-extrabold sm:text-base">
-          <UsersIcon className="size-4 text-blue-600" />
-          <span>
-            QUẢN LÝ DANH SÁCH KHÁCH HÀNG &amp; HỖ TRỢ CHECK-IN BÀN GIAO KHO
-          </span>
-        </h3>
+    <section aria-label="Quản lý khách hàng và check-in" className="space-y-4">
+      {/* Tiêu đề trang - Nằm trực tiếp trên nền ambient xanh mờ như Manager */}
+      <div>
+        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+          <UsersIcon className="size-5 text-blue-600 dark:text-blue-400" />
+          <span>Quản lý danh sách khách hàng &amp; Hỗ trợ check-in bàn giao kho</span>
+        </h1>
       </div>
 
-      {/* SEARCH & FILTER TOOLBAR */}
-      <div className="space-y-3">
-        <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-          <div className="flex max-w-xl flex-1 space-x-2">
-            <div className="relative flex-1">
-              <SearchIcon className="pointer-events-none absolute top-3 left-3.5 size-3.5 text-muted" />
-              <input
-                type="text"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") handleLookup()
-                }}
-                placeholder="Tìm theo Mã HĐ, Tên khách hàng, SĐT hoặc Mã kho..."
-                className="inner-box text-title w-full rounded-xl border px-3.5 py-2.5 pl-9 font-mono text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={handleLookup}
-              className="shrink-0 cursor-pointer rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-black text-white shadow transition hover:bg-blue-700"
-            >
-              {isLookingUp ? "Đang tìm..." : "Tra cứu"}
-            </button>
+      {/* Cụm Tìm kiếm - Thẻ card kính mờ độc lập */}
+      <div className="card-box flex flex-col justify-between gap-3 rounded-2xl border p-4 shadow-sm md:flex-row md:items-center">
+        <div className="flex max-w-xl flex-1 space-x-2">
+          <div className="relative flex-1">
+            <SearchIcon className="pointer-events-none absolute top-2.5 left-3.5 size-4 text-muted" />
+            <input
+              type="text"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") handleLookup()
+              }}
+              placeholder="Tìm theo Mã HĐ, Tên khách hàng, SĐT hoặc Mã kho..."
+              className="inner-box w-full rounded-xl border border-slate-200/80 px-3.5 py-2 pl-9 text-xs font-normal outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700"
+            />
           </div>
-
-          <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 text-[11px] font-extrabold sm:pb-0">
-            {CHECKIN_TABS.map((t) => {
-              const active = t.key === tab.key
-              return (
-                <button
-                  key={t.key}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => setSearchParams({ tab: t.key })}
-                  className={cn(
-                    "cursor-pointer rounded-xl border px-3 py-1.5 whitespace-nowrap shadow-sm transition",
-                    active
-                      ? "border-transparent bg-blue-600 font-extrabold text-white"
-                      : cn("border-white", TAB_COLORS[t.key])
-                  )}
-                >
-                  {t.label} ({countOf(t.contractStatus)})
-                </button>
-              )
-            })}
-          </div>
+          <button
+            type="button"
+            onClick={handleLookup}
+            className="shrink-0 cursor-pointer rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-2xs transition hover:bg-blue-700"
+          >
+            {isLookingUp ? "Đang tìm..." : "Tra cứu"}
+          </button>
         </div>
-
-        {lookupError && (
-          <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-xs font-semibold text-rose-700 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-300">
-            {lookupError}
-          </div>
-        )}
       </div>
 
+      {lookupError && (
+        <div className="rounded-xl border border-rose-300 bg-rose-50/80 p-3 text-xs font-semibold text-rose-700 backdrop-blur-sm dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
+          {lookupError}
+        </div>
+      )}
+
+      {/* Cụm Filter Chips theo trạng thái - Nằm trực tiếp trên nền như Manager */}
+      <div role="group" aria-label="Lọc theo trạng thái hợp đồng" className="flex flex-wrap items-center gap-2">
+        {CHECKIN_TABS.map((t) => {
+          const active = t.key === tab.key
+          return (
+            <button
+              key={t.key}
+              type="button"
+              aria-pressed={active}
+              onClick={() => setSearchParams({ tab: t.key })}
+              className={cn(
+                "cursor-pointer rounded-full border px-3 py-1 text-xs font-semibold whitespace-nowrap shadow-2xs transition backdrop-blur-sm",
+                active
+                  ? "border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-500/20"
+                  : "border-slate-200/90 bg-white/80 text-slate-700 hover:bg-white hover:text-slate-900 dark:border-slate-700/80 dark:bg-slate-800/70 dark:text-slate-200 dark:hover:bg-slate-800"
+              )}
+            >
+              {t.label} ({countOf(t.contractStatus)})
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Bảng danh sách hợp đồng - Thẻ card kính mờ riêng biệt */}
       <CheckinContractTable
         rows={rows}
         isLoading={isLoading}
@@ -288,7 +287,7 @@ function CheckinPanel() {
           refresh()
         }}
       />
-    </div>
+    </section>
   )
 }
 

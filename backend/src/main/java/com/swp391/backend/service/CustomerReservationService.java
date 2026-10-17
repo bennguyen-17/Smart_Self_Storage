@@ -120,9 +120,12 @@ public class CustomerReservationService {
         storageUnitRepository.save(unit);
 
         if (refundAmount.signum() > 0) {
+            String contractCode = (reservation.getReservationCode() != null && !reservation.getReservationCode().isBlank())
+                    ? reservation.getReservationCode()
+                    : ("CTR-" + contractId);
             Payment refund = new Payment();
             refund.setContractId(contractId);
-            refund.setInvoiceNumber("REF-" + contractId + "-" + UUID.randomUUID().toString().replace("-", ""));
+            refund.setInvoiceNumber("REF-" + contractCode);
             refund.setInvoiceType("REF");
             refund.setAmount(refundAmount);
             refund.setPaidAmount(BigDecimal.ZERO.setScale(2));

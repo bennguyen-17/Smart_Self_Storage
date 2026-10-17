@@ -1,7 +1,7 @@
 import { IdCardIcon, LogOutIcon, ShieldCheckIcon } from "lucide-react"
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
-import { getFacilities } from "@/pages/floorplan/api/floorPlanApi"
+import { getFacilities } from "@/features/floorplan/api/floorPlanApi"
 import { useAsyncData } from "@/hooks/useAsyncData"
 
 import { initials } from "../initials"

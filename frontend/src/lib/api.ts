@@ -1,1 +1,1 @@
-export { unwrapApiData, getErrorMessage } from '@/shared/lib/http';
+export { unwrapApiData, getErrorMessage } from './http';

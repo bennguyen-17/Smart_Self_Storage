@@ -3,8 +3,8 @@
 
 import { unwrapApiData } from "@/lib/api"
 import apiClient, { isMockMode } from "@/lib/apiClient"
-import { managerHeaders } from "@/pages/manager/unit-management/managerContext"
-import type { ManagerContext } from "@/pages/manager/unit-management/types"
+import { managerHeaders } from "@/features/manager/unit-management/managerContext"
+import type { ManagerContext } from "@/features/manager/unit-management/types"
 
 import type { ManagerDashboard } from "../types"
 import { mockGetManagerDashboard } from "./reportApi.mock"
