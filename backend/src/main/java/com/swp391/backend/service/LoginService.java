@@ -230,23 +230,8 @@ public class LoginService {
         account.setOtpExpiryTime(LocalDateTime.now().plusMinutes(5));
         accountRepository.save(account);
 
-        System.out.println("==========================================");
-        System.out.println(">>> OTP đặt lại mật khẩu cho " + account.getEmail() + " là: " + otpCode + " <<<");
-        System.out.println("==========================================");
-
         if (emailService != null && account.getEmail() != null && !account.getEmail().isBlank()) {
-            try {
-                emailService.sendTextEmail(
-                        account.getEmail(),
-                        "[Smart Storage] Mã OTP đặt lại mật khẩu",
-                        "Xin chào " + account.getFullName() + ",\n\n"
-                                + "Mã OTP để đặt lại mật khẩu tài khoản Smart Storage của bạn là: " + otpCode + "\n"
-                                + "Mã này có hiệu lực trong 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai.\n\n"
-                                + "Trân trọng,\nĐội ngũ Smart Storage"
-                );
-            } catch (Exception e) {
-                System.err.println("Không thể gửi email OTP (sử dụng console OTP để test): " + e.getMessage());
-            }
+            emailService.sendOtpEmail(account.getEmail(), account.getFullName(), otpCode, "Đặt lại mật khẩu");
         }
 
         return new ApiResponse(true, "Mã xác thực OTP đã được gửi về email đăng ký của bạn. Vui lòng kiểm tra hộp thư!");

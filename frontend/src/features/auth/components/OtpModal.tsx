@@ -29,6 +29,7 @@ import { Spinner } from "@/components/ui/spinner"
 
 interface OtpModalProps {
   phone: string
+  email?: string
   onClose: () => void
 }
 
@@ -36,7 +37,7 @@ const OTP_LENGTH = 6
 const OTP_TTL = 300
 const RESEND_COOLDOWN = 60
 
-function OtpModal({ phone, onClose }: OtpModalProps) {
+function OtpModal({ phone, email, onClose }: OtpModalProps) {
   const navigate = useNavigate()
 
   const [otp, setOtp] = useState("")
@@ -142,7 +143,7 @@ function OtpModal({ phone, onClose }: OtpModalProps) {
 
           <DialogDescription>
             Chúng tôi đã gửi mã OTP gồm 6 số đến{" "}
-            <span className="font-medium text-foreground">{phone}</span>
+            <span className="font-medium text-foreground">{email || phone}</span>
           </DialogDescription>
         </DialogHeader>
 
