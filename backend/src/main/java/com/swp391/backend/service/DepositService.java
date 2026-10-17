@@ -264,41 +264,6 @@ public class DepositService {
         unit.setStatus("RESERVED");
         storageUnitRepository.save(unit);
 
-        // Gửi email xác nhận đặt cọc thành công đến khách hàng
-        try {
-            if (res.getAccountId() != null) {
-                Optional<Account> accOpt = accountRepository.findById(Long.valueOf(res.getAccountId()));
-                if (accOpt.isPresent()) {
-                    Account acc = accOpt.get();
-                    if (acc.getEmail() != null && !acc.getEmail().isBlank()) {
-                        String facilityName = "Smart Self Storage";
-                        Optional<Floor> flOpt = floorRepository.findById(unit.getFloorId());
-                        if (flOpt.isPresent()) {
-                            Optional<Facility> facOpt = facilityRepository.findById(flOpt.get().getFacilityId());
-                            if (facOpt.isPresent()) {
-                                facilityName = facOpt.get().getFacilityName();
-                            }
-                        }
-
-                        emailService.sendDepositSuccessEmail(
-                                acc.getEmail(),
-                                acc.getFullName(),
-                                res.getReservationCode(),
-                                res.getUnitCode(),
-                                facilityName,
-                                res.getStartDate(),
-                                res.getEndDate(),
-                                depositAmount,
-                                initialRentalAmount
-                        );
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            org.slf4j.LoggerFactory.getLogger(DepositService.class)
-                    .error("Lỗi khi gửi email xác nhận đặt cọc cho reservation {}: {}", res.getReservationCode(), ex.getMessage());
-        }
-
         return new ApiResponse(true, "Xác nhận nộp cọc thành công! Hợp đồng ở trạng thái PENDING_CHECKIN và ô kho đã được bảo lưu giữ chỗ.");
     }
 
