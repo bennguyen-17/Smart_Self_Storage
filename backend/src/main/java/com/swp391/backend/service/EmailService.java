@@ -3,6 +3,7 @@ package com.swp391.backend.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -15,9 +16,13 @@ import java.nio.charset.StandardCharsets;
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    private final String fromAddress;
 
-    public EmailService(JavaMailSender mailSender) {
+    public EmailService(
+            JavaMailSender mailSender,
+            @Value("${app.mail.from}") String fromAddress) {
         this.mailSender = mailSender;
+        this.fromAddress = fromAddress;
     }
 
     // 1. Send plain text email
@@ -28,6 +33,7 @@ public class EmailService {
 
         SimpleMailMessage message = new SimpleMailMessage();
 
+        message.setFrom(fromAddress);
         message.setTo(to);
         message.setSubject(subject);
         message.setText(content);
@@ -47,9 +53,9 @@ public class EmailService {
         MimeMessageHelper helper = new MimeMessageHelper(
                 message,
                 false,
-                StandardCharsets.UTF_8.name()
-        );
+                StandardCharsets.UTF_8.name());
 
+        helper.setFrom(fromAddress);
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(htmlContent, true);
@@ -70,9 +76,9 @@ public class EmailService {
         MimeMessageHelper helper = new MimeMessageHelper(
                 message,
                 true,
-                StandardCharsets.UTF_8.name()
-        );
+                StandardCharsets.UTF_8.name());
 
+        helper.setFrom(fromAddress);
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(content, false);
