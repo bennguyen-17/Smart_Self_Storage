@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your storage is ready</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #F1F5F9; font-family: Arial, sans-serif; color: #1E293B;">
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F1F5F9; padding: 32px 16px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px;">
+                    <tr>
+                        <td style="padding: 24px 32px; border-bottom: 1px solid #E2E8F0;">
+                            <p style="margin: 0; color: #155DFC; font-size: 18px; line-height: 24px; font-weight: 700;">Smart Self Storage</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 32px;">
+                            <p style="margin: 0 0 8px; color: #155DFC; font-size: 13px; line-height: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;">Check-in complete</p>
+                            <h1 style="margin: 0 0 12px; color: #1E293B; font-size: 28px; line-height: 36px; font-weight: 700;">Your storage is ready.</h1>
+                            <p style="margin: 0 0 24px; color: #64748B; font-size: 15px; line-height: 24px;">Hello {{displayName}}, your check-in has been completed successfully. Your storage access details are below.</p>
+
+                            <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border: 1px solid #E2E8F0; border-radius: 8px;">
+                                <tr>
+                                    <td style="padding: 16px 20px; border-bottom: 1px solid #E2E8F0; color: #64748B; font-size: 14px; line-height: 20px;">Contract code</td>
+                                    <td align="right" style="padding: 16px 20px; border-bottom: 1px solid #E2E8F0; color: #1E293B; font-size: 14px; line-height: 20px; font-weight: 700;">{{reservationCode}}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 16px 20px; border-bottom: 1px solid #E2E8F0; color: #64748B; font-size: 14px; line-height: 20px;">Storage unit</td>
+                                    <td align="right" style="padding: 16px 20px; border-bottom: 1px solid #E2E8F0; color: #1E293B; font-size: 14px; line-height: 20px; font-weight: 700;">{{unitCode}}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 16px 20px; color: #64748B; font-size: 14px; line-height: 20px;">Contract status</td>
+                                    <td align="right" style="padding: 16px 20px; color: #155DFC; font-size: 14px; line-height: 20px; font-weight: 700;">{{contractStatus}}</td>
+                                </tr>
+                            </table>
+
+                            <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 24px; background-color: #F1F5F9; border: 1px solid #D5E2FF; border-radius: 8px;">
+                                <tr>
+                                    <td align="center" style="padding: 20px 24px;">
+                                        <p style="margin: 0 0 8px; color: #64748B; font-size: 12px; line-height: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Your Gate PIN</p>
+                                        <p style="margin: 0; color: #155DFC; font-family: Arial, sans-serif; font-size: 32px; line-height: 40px; font-weight: 700; letter-spacing: 6px;">{{gatePin}}</p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin: 24px 0 0; color: #64748B; font-size: 14px; line-height: 22px;">Use your Gate PIN to access your storage unit. Please keep it secure.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 20px 32px; background-color: #F1F5F9; border-top: 1px solid #E2E8F0;">
+                            <p style="margin: 0; color: #64748B; font-size: 12px; line-height: 18px; text-align: center;">For your security, do not share your Gate PIN with anyone.</p>
+                            <p style="margin: 8px 0 0; color: #64748B; font-size: 12px; line-height: 18px; text-align: center;">Smart Self Storage</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
