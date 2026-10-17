@@ -5,12 +5,15 @@ import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -26,7 +29,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username:smartstorage.support@gmail.com}")
+    @Value("${app.mail.from}")
     private String fromEmail;
 
     public EmailService(JavaMailSender mailSender) {
@@ -62,6 +65,40 @@ public class EmailService {
         helper.setText(htmlContent, true);
         mailSender.send(message);
         log.info("Đã gửi email HTML thành công tới: {}", to);
+    }
+
+    public void sendCheckInCompletionEmail(
+            String to,
+            String displayName,
+            String reservationCode,
+            String unitCode,
+            String contractStatus,
+            String gatePin) throws IOException, MessagingException, UnsupportedEncodingException {
+        String template;
+        ClassPathResource resource = new ClassPathResource("templates/email/check-in-completion.html");
+        try (InputStream input = resource.getInputStream()) {
+            template = new String(input.readAllBytes(), StandardCharsets.UTF_8);
+        }
+
+        String html = template
+                .replace("{{displayName}}", escapeHtml(displayName))
+                .replace("{{reservationCode}}", escapeHtml(reservationCode))
+                .replace("{{unitCode}}", escapeHtml(unitCode))
+                .replace("{{contractStatus}}", escapeHtml(contractStatus))
+                .replace("{{gatePin}}", escapeHtml(gatePin));
+
+        sendHtmlEmail(to, "Smart Storage - Check-in completed", html);
+    }
+
+    private String escapeHtml(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
     }
 
     // 3. Send email with an attachment

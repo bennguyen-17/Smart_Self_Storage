@@ -212,19 +212,14 @@ public class StaffCheckInService {
         }
 
         Account account = accountOpt.get();
-        String content = "Hello " + account.getFullName() + ",\n\n"
-                + "Your storage check-in has been completed successfully.\n"
-                + "Reservation code: " + reservation.getReservationCode() + "\n"
-                + "Storage unit: " + reservation.getUnitCode() + "\n"
-                + "Contract status: " + contract.getStatus() + "\n"
-                + "Gate PIN: " + gatePin + "\n\n"
-                + "Thank you for using Smart Storage.";
-
         try {
-            emailService.sendTextEmail(
+            emailService.sendCheckInCompletionEmail(
                     account.getEmail(),
-                    "Smart Storage - Check-in completed",
-                    content
+                    account.getFullName(),
+                    reservation.getReservationCode(),
+                    reservation.getUnitCode(),
+                    contract.getStatus(),
+                    gatePin
             );
         } catch (Exception exception) {
             log.warn("Check-in completed but confirmation email could not be sent to {}: {}",
