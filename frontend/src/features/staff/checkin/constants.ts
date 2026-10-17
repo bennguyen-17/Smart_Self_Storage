@@ -1,7 +1,7 @@
 import type { ContractStatus } from "./types"
 
 export type CheckinTabKey =
-  "all" | "pending" | "active" | "overdue" | "canceled"
+  "all" | "pending" | "active" | "overdue" | "terminated" | "canceled"
 
 export interface CheckinTab {
   key: CheckinTabKey
@@ -14,6 +14,7 @@ export const CHECKIN_TABS: CheckinTab[] = [
   { key: "pending", label: "Chờ Check-in", contractStatus: "PENDING_CHECKIN" },
   { key: "active", label: "Đang thuê", contractStatus: "ACTIVE" },
   { key: "overdue", label: "Quá hạn", contractStatus: "OVERDUE" },
+  { key: "terminated", label: "Đã trả kho", contractStatus: "TERMINATED" },
   { key: "canceled", label: "Đã hủy", contractStatus: "CANCELED" },
 ]
 

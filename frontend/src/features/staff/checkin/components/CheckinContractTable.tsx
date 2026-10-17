@@ -1,6 +1,7 @@
 import {
   BanIcon,
   CalendarPlusIcon,
+  CheckCircle2Icon,
   EyeIcon,
   InboxIcon,
   PackageOpenIcon,
@@ -33,8 +34,12 @@ interface CheckinContractTableProps {
 }
 
 /** Dòng phụ dưới mã HĐ (bám prototype) */
-function codeSubtitle(status: string | null): string | null {
-  if (status === "CANCELED") return "Đã hoàn tiền cọc"
+function codeSubtitle(item: StaffReservationItem): string | null {
+  if (item.contractStatus === "TERMINATED") return "Hợp đồng đã thanh lý"
+  if (item.contractStatus === "CANCELED") return "Đã hoàn tiền cọc"
+  if (item.contractStatus === "ACTIVE" && (item.returnRequested || item.cancelReason === "EARLY_TERMINATION")) {
+    return "Khách yêu cầu trả kho"
+  }
   return null
 }
 
@@ -108,7 +113,7 @@ function CheckinContractTable({
 
           {!isLoading &&
             rows?.map((item) => {
-              const subtitle = codeSubtitle(item.contractStatus)
+              const subtitle = codeSubtitle(item)
               return (
                 <tr
                   key={item.reservationId}
@@ -197,39 +202,75 @@ function StatusAction({
   }
 
   if (item.contractStatus === "ACTIVE") {
+    const isReturnRequested = Boolean(
+      item.returnRequested || item.cancelReason === "EARLY_TERMINATION"
+    )
+    if (isReturnRequested) {
+      return (
+        <button
+          type="button"
+          onClick={() => onCheckout(item)}
+          className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-bold whitespace-nowrap text-emerald-700 transition hover:bg-emerald-100 shadow-xs ring-2 ring-emerald-500/20 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/50 animate-pulse"
+          title="Khách hàng đã gửi yêu cầu trả kho. Bấm để lập biên bản nghiệm thu & quyết toán cọc."
+        >
+          <PackageOpenIcon className="size-3.5" />
+          <span>Xác nhận trả kho</span>
+        </button>
+      )
+    }
+
     return (
-      <button
-        type="button"
-        onClick={() => onCheckout(item)}
-        className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold whitespace-nowrap text-emerald-700 transition hover:bg-emerald-100 shadow-2xs dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
-      >
-        <PackageOpenIcon className="size-3.5" />
-        <span>Xác nhận trả kho</span>
-      </button>
+      <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300">
+        Đang thuê
+      </span>
     )
   }
 
   if (item.contractStatus === "OVERDUE") {
-    // US-20: thu phạt quá hạn & gia hạn tại quầy
-    return (
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center">
+    // Nếu khách còn nợ phạt -> chỉ hiện nút Thu phạt. Sau khi thu phạt -> hiển thị 2 nút: Gia hạn hoặc Trả kho
+    const hasUnpaidPenalty = (item.unpaidPenaltyAmount ?? 0) > 0
+    if (hasUnpaidPenalty) {
+      return (
         <button
           type="button"
           onClick={() => onCollectPenalty(item)}
-          className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-rose-700 transition hover:bg-rose-100 shadow-2xs dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-900/50"
+          className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-full border border-rose-300 bg-rose-50 px-3 py-1 text-xs font-bold whitespace-nowrap text-rose-700 transition hover:bg-rose-100 shadow-2xs dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-900/50"
         >
           <ReceiptTextIcon className="size-3.5" />
           <span>Thu phạt</span>
         </button>
+      )
+    }
+
+    return (
+      <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center">
         <button
           type="button"
           onClick={() => onRenew(item)}
-          className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-rose-700 transition hover:bg-rose-100 shadow-2xs dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-900/50"
+          className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-blue-700 transition hover:bg-blue-100 shadow-2xs dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/50"
         >
           <CalendarPlusIcon className="size-3.5" />
           <span>Gia hạn</span>
         </button>
+        <button
+          type="button"
+          onClick={() => onCheckout(item)}
+          className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-amber-700 transition hover:bg-amber-100 shadow-2xs dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/50"
+          title="Nhận bàn giao & trả kho (nghiệm thu hoàn cọc)"
+        >
+          <PackageOpenIcon className="size-3.5" />
+          <span>Trả kho</span>
+        </button>
       </div>
+    )
+  }
+
+  if (item.contractStatus === "TERMINATED") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-slate-100 px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+        <CheckCircle2Icon className="size-3.5 text-emerald-600" />
+        <span>Đã thanh lý trả kho</span>
+      </span>
     )
   }
 

@@ -110,9 +110,30 @@ function getSlaInfo(ticket: TicketItem, now: number) {
   }
 
   if (ticket.type === "EARLY_TERMINATION") {
+    let isTodayOrPast = true
+    if (ticket.desiredDate) {
+      try {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const parts = ticket.desiredDate.split(/[-T ]/)
+        if (parts.length >= 3) {
+          const year = parseInt(parts[0], 10)
+          const month = parseInt(parts[1], 10) - 1
+          const day = parseInt(parts[2], 10)
+          const d = new Date(year, month, day)
+          isTodayOrPast = today.getTime() >= d.getTime()
+        }
+      } catch {}
+    }
     return {
-      text: ticket.desiredDate ? `Hẹn: ${ticket.desiredDate}` : "Hẹn Hôm Nay",
-      className: "text-muted",
+      text: ticket.desiredDate
+        ? isTodayOrPast
+          ? `Đã đến hẹn: ${ticket.desiredDate}`
+          : `Hẹn ngày: ${ticket.desiredDate}`
+        : "Hẹn Hôm Nay",
+      className: isTodayOrPast
+        ? "border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+        : "border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300",
       isBreached: false,
     }
   }
@@ -253,6 +274,8 @@ function StaffTicketPanel() {
   function handleOpenInspection(ticket: TicketItem) {
     setInspectionTicketId(ticket.id)
     setInspectionTarget({
+      contractId: ticket.contractId,
+      ticketId: typeof ticket.id === "number" ? ticket.id : undefined,
       contractCode:
         ticket.contractCode ||
         (ticket.contractId
@@ -415,6 +438,25 @@ function StaffTicketPanel() {
                       ticket.title.toLowerCase().includes("khóa") ||
                       ticket.description?.toLowerCase().includes("chìa"))
                   const isEarlyTerm = ticket.type === "EARLY_TERMINATION"
+                  const isReturnDue =
+                    !ticket.desiredDate ||
+                    (() => {
+                      try {
+                        const today = new Date()
+                        today.setHours(0, 0, 0, 0)
+                        const parts = ticket.desiredDate.split(/[-T ]/)
+                        if (parts.length >= 3) {
+                          const year = parseInt(parts[0], 10)
+                          const month = parseInt(parts[1], 10) - 1
+                          const day = parseInt(parts[2], 10)
+                          const d = new Date(year, month, day)
+                          return today.getTime() >= d.getTime()
+                        }
+                        return true
+                      } catch {
+                        return true
+                      }
+                    })()
                   const typeColor = isUnlock
                     ? "text-amber-600 dark:text-amber-400"
                     : isEarlyTerm
@@ -535,14 +577,44 @@ function StaffTicketPanel() {
                         )}
 
                         {ticket.status === "IN_PROGRESS" && isEarlyTerm && (
-                          <button
-                            type="button"
-                            onClick={() => handleOpenInspection(ticket)}
-                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-xs transition hover:bg-blue-700"
-                          >
-                            <ClipboardCheckIcon className="size-3.5" />
-                            <span>Nghiệm Thu</span>
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            {isReturnDue ? (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenInspection(ticket)}
+                                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-xs transition hover:bg-emerald-700"
+                                  title="Nghiệm thu ô kho & thanh lý cọc"
+                                >
+                                  <ClipboardCheckIcon className="size-3.5" />
+                                  <span>Xác nhận trả kho</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleResolveGeneral(ticket)}
+                                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 shadow-xs transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                                  title="Đóng ticket hoàn tất"
+                                >
+                                  <CircleCheckIcon className="size-3.5" />
+                                  <span>Đóng ticket</span>
+                                </button>
+                              </>
+                            ) : (
+                              <div className="flex flex-col items-end gap-1">
+                                <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                                  Chờ đến hẹn ({ticket.desiredDate})
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenInspection(ticket)}
+                                  className="cursor-pointer text-[10px] text-blue-600 underline hover:text-blue-700 dark:text-blue-400"
+                                  title="Khách đến sớm hơn lịch hẹn"
+                                >
+                                  Khách đến sớm? Xác nhận
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         )}
 
                         {ticket.status === "IN_PROGRESS" &&
@@ -578,6 +650,7 @@ function StaffTicketPanel() {
       <StaffInspectionModal
         target={inspectionTarget}
         onClose={handleCloseInspection}
+        onConfirmed={handleCloseInspection}
       />
 
       {/* UNLOCK MODAL */}

@@ -3,7 +3,7 @@
 
 import { addDays, todayInVietnam } from "@/lib/format"
 
-/** Khách chỉ được chọn ngày Check-in từ Hôm nay + 1 đến Hôm nay + 7 */
+/** Khách hàng chỉ được chọn ngày Check-in từ tối thiểu 1 ngày đến tối đa 7 ngày kể từ ngày đặt (BR-08) */
 export const CHECKIN_MIN_OFFSET_DAYS = 1
 export const CHECKIN_MAX_OFFSET_DAYS = 7
 

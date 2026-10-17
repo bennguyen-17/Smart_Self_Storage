@@ -2,6 +2,10 @@ package com.swp391.backend.controller;
 
 import com.swp391.backend.dto.CancelReservationRequest;
 import com.swp391.backend.dto.ChangeUnitRequest;
+import com.swp391.backend.dto.CollectPenaltyRequest;
+import com.swp391.backend.dto.CollectPenaltyResponse;
+import com.swp391.backend.dto.RenewAtCounterRequest;
+import com.swp391.backend.dto.RenewAtCounterResponse;
 import com.swp391.backend.dto.StaffCancelReservationResponse;
 import com.swp391.backend.dto.StaffChangeUnitResponse;
 import com.swp391.backend.dto.StaffCheckInRequest;
@@ -75,6 +79,26 @@ public class StaffReservationController {
             @PathVariable Integer reservationId,
             @RequestBody CancelReservationRequest request) {
         StaffCancelReservationResponse response = staffReservationService.cancelReservation(reservationId);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
+    }
+
+    @PostMapping("/{reservationId}/collect-penalty")
+    public ResponseEntity<CollectPenaltyResponse> collectPenalty(
+            @PathVariable Integer reservationId,
+            @RequestBody(required = false) CollectPenaltyRequest request) {
+        CollectPenaltyResponse response = staffReservationService.collectPenalty(reservationId, request);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
+    }
+
+    @PostMapping("/{reservationId}/renew-at-counter")
+    public ResponseEntity<RenewAtCounterResponse> renewAtCounter(
+            @PathVariable Integer reservationId,
+            @RequestBody(required = false) RenewAtCounterRequest request) {
+        RenewAtCounterResponse response = staffReservationService.renewAtCounter(reservationId, request);
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);

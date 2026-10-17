@@ -24,6 +24,14 @@ import com.swp391.backend.repository.FloorRepository;
 import com.swp391.backend.repository.PaymentRepository;
 import com.swp391.backend.repository.ReservationRepository;
 import com.swp391.backend.repository.StorageUnitRepository;
+import com.swp391.backend.repository.SupportTicketRepository;
+import com.swp391.backend.dto.CollectPenaltyRequest;
+import com.swp391.backend.dto.CollectPenaltyResponse;
+import com.swp391.backend.dto.GatePinResult;
+import com.swp391.backend.dto.RenewAtCounterRequest;
+import com.swp391.backend.dto.RenewAtCounterResponse;
+import com.swp391.backend.entity.Price;
+import com.swp391.backend.repository.PriceRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -39,6 +47,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -48,6 +57,7 @@ public class StaffReservationService {
     private static final String CONTRACT_ACTIVE = "ACTIVE";
     private static final String RESERVATION_PENDING = "PENDING";
     private static final String RESERVATION_CONFIRMED = "CONFIRMED";
+    private static final BigDecimal DAILY_OVERDUE_FEE = new BigDecimal("50000.00");
 
     private final ReservationRepository reservationRepository;
     private final AccountRepository accountRepository;
@@ -59,6 +69,9 @@ public class StaffReservationService {
     private final FloorRepository floorRepository;
     private final ActivityLogRepository activityLogRepository;
     private final StorageService storageService;
+    private final SupportTicketRepository supportTicketRepository;
+    private final PriceRepository priceRepository;
+    private final GatePinService gatePinService;
 
     public StaffReservationService(
             ReservationRepository reservationRepository,
@@ -70,7 +83,10 @@ public class StaffReservationService {
             CustomerProfileRepository customerProfileRepository,
             FloorRepository floorRepository,
             ActivityLogRepository activityLogRepository,
-            StorageService storageService) {
+            StorageService storageService,
+            SupportTicketRepository supportTicketRepository,
+            PriceRepository priceRepository,
+            GatePinService gatePinService) {
         this.reservationRepository = reservationRepository;
         this.accountRepository = accountRepository;
         this.contractRepository = contractRepository;
@@ -81,6 +97,9 @@ public class StaffReservationService {
         this.floorRepository = floorRepository;
         this.activityLogRepository = activityLogRepository;
         this.storageService = storageService;
+        this.supportTicketRepository = supportTicketRepository;
+        this.priceRepository = priceRepository;
+        this.gatePinService = gatePinService;
     }
 
     public StaffReservationListResponse listReservations() {
@@ -457,7 +476,13 @@ public class StaffReservationService {
         item.setDepRemainingAmount(defRent);
 
         contractRepository.findByReservationId(reservation.getReservationId()).ifPresent(contract -> {
+            item.setContractId(contract.getContractId());
             item.setContractStatus(contract.getStatus());
+            item.setCancelReason(contract.getCancelReason());
+            boolean isReturnReq = "EARLY_TERMINATION".equalsIgnoreCase(contract.getCancelReason())
+                    || supportTicketRepository.findByContractId(contract.getContractId()).stream()
+                            .anyMatch(t -> "EARLY_TERMINATION".equalsIgnoreCase(t.getType()) && !"RESOLVED".equalsIgnoreCase(t.getStatus()));
+            item.setReturnRequested(isReturnReq);
             paymentRepository.findByContractId(contract.getContractId()).stream()
                     .filter(payment -> "DEP".equalsIgnoreCase(payment.getInvoiceType())
                             || "INITIAL_RENTAL".equalsIgnoreCase(payment.getInvoiceType()))
@@ -491,6 +516,54 @@ public class StaffReservationService {
                         item.setDepRemainingAmount(remaining);
                     });
         });
+
+        // 1. Tính giá thuê tháng (monthlyPrice) cho ô kho
+        BigDecimal monthlyPrice = BigDecimal.ZERO;
+        if (reservation.getUnitCode() != null) {
+            Optional<StorageUnit> uOpt = storageUnitRepository.findById(reservation.getUnitCode());
+            if (uOpt.isPresent()) {
+                Optional<Price> pOpt = priceRepository.findByUnitTypeIdAndStatus(uOpt.get().getUnitTypeId(), "ACTIVE");
+                if (pOpt.isPresent() && pOpt.get().getMonthlyPrice() != null) {
+                    monthlyPrice = pOpt.get().getMonthlyPrice();
+                }
+            }
+        }
+        if (monthlyPrice.compareTo(BigDecimal.ZERO) == 0 && reservation.getRentalAmount() != null) {
+            monthlyPrice = reservation.getRentalAmount();
+        }
+        item.setMonthlyPrice(monthlyPrice);
+
+        // 2. Tính số ngày quá hạn (overdueDays)
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = reservation.getEndDate();
+        int overdueDays = 0;
+        if (endDate != null && endDate.isBefore(today)) {
+            overdueDays = (int) ChronoUnit.DAYS.between(endDate, today);
+        }
+        item.setOverdueDays(overdueDays);
+
+        // 3. Tính tiền phạt quá hạn: Chuẩn 50.000 VNĐ / ngày quá hạn
+        BigDecimal expectedPenalty = DAILY_OVERDUE_FEE.multiply(BigDecimal.valueOf(overdueDays));
+        BigDecimal paidPenalty = BigDecimal.ZERO;
+
+        if (item.getContractId() != null) {
+            List<Payment> penPayments = paymentRepository.findByContractId(item.getContractId()).stream()
+                    .filter(p -> "OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType())
+                            || (p.getInvoiceNumber() != null && (p.getInvoiceNumber().startsWith("PEN-") || p.getInvoiceNumber().startsWith("OVD-"))))
+                    .toList();
+            for (Payment p : penPayments) {
+                if ("PAID".equalsIgnoreCase(p.getStatus()) && "SUCCESS".equalsIgnoreCase(p.getPaymentStatus())) {
+                    BigDecimal paid = p.getPaidAmount() != null ? p.getPaidAmount() : (p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
+                    paidPenalty = paidPenalty.add(paid);
+                }
+            }
+        }
+        BigDecimal unpaidPenalty = expectedPenalty.subtract(paidPenalty);
+        if (unpaidPenalty.compareTo(BigDecimal.ZERO) < 0) {
+            unpaidPenalty = BigDecimal.ZERO;
+        }
+        item.setUnpaidPenaltyAmount(unpaidPenalty);
+
         return item;
     }
 
@@ -517,6 +590,9 @@ public class StaffReservationService {
         target.setDepAmount(source.getDepAmount());
         target.setDepPaidAmount(source.getDepPaidAmount());
         target.setDepRemainingAmount(source.getDepRemainingAmount());
+        target.setOverdueDays(source.getOverdueDays());
+        target.setUnpaidPenaltyAmount(source.getUnpaidPenaltyAmount());
+        target.setMonthlyPrice(source.getMonthlyPrice());
     }
 
     private Integer getAuthenticatedAccountId() {
@@ -562,5 +638,258 @@ public class StaffReservationService {
         }
 
         return months + " tháng " + days + " ngày";
+    }
+
+    @Transactional
+    public CollectPenaltyResponse collectPenalty(Integer reservationId, CollectPenaltyRequest request) {
+        Integer staffAccountId = getAuthenticatedAccountId();
+        if (staffAccountId == null) {
+            return new CollectPenaltyResponse(false, "Không tìm thấy tài khoản nhân viên đã xác thực.");
+        }
+        Optional<EmployeeProfile> employee = employeeProfileRepository.findByAccountId(staffAccountId);
+        if (employee.isEmpty()) {
+            return new CollectPenaltyResponse(false, "Không tìm thấy hồ sơ nhân viên.");
+        }
+
+        Optional<Reservation> resOpt = reservationRepository.findById(reservationId);
+        if (resOpt.isEmpty()) {
+            return new CollectPenaltyResponse(false, "Không tìm thấy đơn đặt chỗ.");
+        }
+        Reservation reservation = resOpt.get();
+
+        Optional<StorageUnit> unitOpt = storageUnitRepository.findById(reservation.getUnitCode());
+        if (unitOpt.isEmpty() || !belongsToFacility(unitOpt.get(), employee.get().getFacilityId())) {
+            return new CollectPenaltyResponse(false, "Đặt chỗ không thuộc cơ sở của nhân viên.");
+        }
+
+        Optional<Contract> contractOpt = contractRepository.findByReservationId(reservationId);
+        if (contractOpt.isEmpty()) {
+            return new CollectPenaltyResponse(false, "Không tìm thấy hợp đồng của đặt chỗ này.");
+        }
+        Contract contract = contractOpt.get();
+
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = reservation.getEndDate();
+        int overdueDays = (endDate != null && endDate.isBefore(today))
+                ? (int) ChronoUnit.DAYS.between(endDate, today)
+                : 0;
+
+        BigDecimal totalExpected = DAILY_OVERDUE_FEE.multiply(BigDecimal.valueOf(overdueDays));
+        BigDecimal paidAlready = BigDecimal.ZERO;
+
+        List<Payment> penPayments = paymentRepository.findByContractId(contract.getContractId()).stream()
+                .filter(p -> "OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType())
+                        || (p.getInvoiceNumber() != null && (p.getInvoiceNumber().startsWith("PEN-") || p.getInvoiceNumber().startsWith("OVD-"))))
+                .toList();
+
+        for (Payment p : penPayments) {
+            if ("PAID".equalsIgnoreCase(p.getStatus()) && "SUCCESS".equalsIgnoreCase(p.getPaymentStatus())) {
+                BigDecimal paid = p.getPaidAmount() != null ? p.getPaidAmount() : (p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
+                paidAlready = paidAlready.add(paid);
+            }
+        }
+
+        BigDecimal collectedAmount = totalExpected.subtract(paidAlready).max(BigDecimal.ZERO);
+        String invoiceNumber = "PEN-" + (reservation.getReservationCode() != null ? reservation.getReservationCode() : ("CTR-" + contract.getContractId()));
+
+        LocalDateTime now = LocalDateTime.now();
+        String paymentMethod = (request != null && request.getPaymentMethod() != null && !request.getPaymentMethod().isBlank())
+                ? request.getPaymentMethod().trim()
+                : "CASH";
+
+        if (!penPayments.isEmpty()) {
+            for (Payment p : penPayments) {
+                p.setStatus("PAID");
+                p.setPaymentStatus("SUCCESS");
+                p.setPaymentMethod(paymentMethod);
+                p.setPaidAmount(p.getAmount() != null ? p.getAmount() : collectedAmount);
+                p.setRemainingAmount(BigDecimal.ZERO);
+                p.setPaidAt(now);
+                paymentRepository.save(p);
+                invoiceNumber = p.getInvoiceNumber();
+            }
+        } else if (collectedAmount.compareTo(BigDecimal.ZERO) > 0) {
+            Payment p = new Payment();
+            p.setContractId(contract.getContractId());
+            p.setInvoiceNumber(invoiceNumber);
+            p.setInvoiceType("OVERDUE_FEE");
+            p.setAmount(collectedAmount);
+            p.setPaidAmount(collectedAmount);
+            p.setRemainingAmount(BigDecimal.ZERO);
+            p.setIssuedAt(now);
+            p.setDueAt(now.plusDays(1));
+            p.setStatus("PAID");
+            p.setPaymentMethod(paymentMethod);
+            p.setPaymentStatus("SUCCESS");
+            p.setPaidAt(now);
+            paymentRepository.save(p);
+        }
+
+        writeActivityLog(staffAccountId, "COLLECT_PENALTY_AT_COUNTER",
+                "Thu phạt quá hạn tại quầy bằng " + paymentMethod + " cho hợp đồng " + (reservation.getReservationCode() != null ? reservation.getReservationCode() : contract.getContractId()) + ", số tiền: " + collectedAmount + " VND (" + overdueDays + " ngày quá hạn, đơn giá 50.000đ/ngày)");
+
+        CollectPenaltyResponse resp = new CollectPenaltyResponse();
+        resp.setSuccess(true);
+        resp.setMessage("Đã thu phạt quá hạn tại quầy thành công.");
+        resp.setReservationId(reservation.getReservationId());
+        resp.setReservationCode(reservation.getReservationCode());
+        resp.setContractStatus(contract.getStatus());
+        resp.setUnitStatus(unitOpt.map(StorageUnit::getStatus).orElse(null));
+        resp.setInvoiceNumber(invoiceNumber);
+        resp.setCollectedAmount(collectedAmount);
+        resp.setOverdueDays(overdueDays);
+        return resp;
+    }
+
+    @Transactional
+    public RenewAtCounterResponse renewAtCounter(Integer reservationId, RenewAtCounterRequest request) {
+        Integer staffAccountId = getAuthenticatedAccountId();
+        if (staffAccountId == null) {
+            return new RenewAtCounterResponse(false, "Không tìm thấy tài khoản nhân viên đã xác thực.");
+        }
+        Optional<EmployeeProfile> employee = employeeProfileRepository.findByAccountId(staffAccountId);
+        if (employee.isEmpty()) {
+            return new RenewAtCounterResponse(false, "Không tìm thấy hồ sơ nhân viên.");
+        }
+
+        Optional<Reservation> resOpt = reservationRepository.findById(reservationId);
+        if (resOpt.isEmpty()) {
+            return new RenewAtCounterResponse(false, "Không tìm thấy đơn đặt chỗ.");
+        }
+        Reservation reservation = resOpt.get();
+
+        Optional<StorageUnit> unitOpt = storageUnitRepository.findById(reservation.getUnitCode());
+        if (unitOpt.isEmpty() || !belongsToFacility(unitOpt.get(), employee.get().getFacilityId())) {
+            return new RenewAtCounterResponse(false, "Đặt chỗ không thuộc cơ sở của nhân viên.");
+        }
+
+        Optional<Contract> contractOpt = contractRepository.findByReservationId(reservationId);
+        if (contractOpt.isEmpty()) {
+            return new RenewAtCounterResponse(false, "Không tìm thấy hợp đồng của đặt chỗ này.");
+        }
+        Contract contract = contractOpt.get();
+
+        // 1. Kiểm tra phạt quá hạn chưa nộp (tính chuẩn 50.000đ/ngày quá hạn)
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = reservation.getEndDate();
+        int overdueDays = (endDate != null && endDate.isBefore(today))
+                ? (int) ChronoUnit.DAYS.between(endDate, today)
+                : 0;
+        BigDecimal expectedPenalty = DAILY_OVERDUE_FEE.multiply(BigDecimal.valueOf(overdueDays));
+
+        List<Payment> penPayments = paymentRepository.findByContractId(contract.getContractId()).stream()
+                .filter(p -> "OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType())
+                        || (p.getInvoiceNumber() != null && (p.getInvoiceNumber().startsWith("PEN-") || p.getInvoiceNumber().startsWith("OVD-"))))
+                .toList();
+
+        BigDecimal paidPenalty = BigDecimal.ZERO;
+        for (Payment p : penPayments) {
+            if ("PAID".equalsIgnoreCase(p.getStatus()) && "SUCCESS".equalsIgnoreCase(p.getPaymentStatus())) {
+                BigDecimal paid = p.getPaidAmount() != null ? p.getPaidAmount() : (p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
+                paidPenalty = paidPenalty.add(paid);
+            }
+        }
+
+        BigDecimal unpaidPenalty = expectedPenalty.subtract(paidPenalty).max(BigDecimal.ZERO);
+        if (unpaidPenalty.compareTo(BigDecimal.ZERO) > 0) {
+            return new RenewAtCounterResponse(false, "Còn tiền phạt quá hạn chưa nộp (50.000đ/ngày). Vui lòng thu phạt trước khi gia hạn.");
+        }
+
+        // 2. Lấy giá thuê tháng (monthlyPrice)
+        BigDecimal monthlyPrice = BigDecimal.ZERO;
+        if (unitOpt.isPresent()) {
+            Optional<Price> pOpt = priceRepository.findByUnitTypeIdAndStatus(unitOpt.get().getUnitTypeId(), "ACTIVE");
+            if (pOpt.isPresent() && pOpt.get().getMonthlyPrice() != null) {
+                monthlyPrice = pOpt.get().getMonthlyPrice();
+            }
+        }
+        if (monthlyPrice.compareTo(BigDecimal.ZERO) == 0 && reservation.getRentalAmount() != null) {
+            monthlyPrice = reservation.getRentalAmount();
+        }
+
+        // 3. Thời gian gia hạn: Hỗ trợ cả gói tháng và số ngày tùy chọn
+        boolean isCustomDays = (request != null && request.getDays() != null && request.getDays() > 0);
+        int addedDays;
+        int discountPercent = 0;
+        BigDecimal finalAmount;
+        int months = (request != null && request.getMonths() != null && request.getMonths() > 0)
+                ? request.getMonths()
+                : 1;
+
+        if (isCustomDays) {
+            addedDays = request.getDays();
+            // Đơn giá ngày = monthlyPrice / 30
+            BigDecimal dailyPrice = monthlyPrice.divide(BigDecimal.valueOf(30), 2, java.math.RoundingMode.HALF_UP);
+            finalAmount = dailyPrice.multiply(BigDecimal.valueOf(addedDays)).setScale(0, java.math.RoundingMode.HALF_UP);
+        } else {
+            addedDays = months * 30;
+            // Chiết khấu: 12 tháng -> 15%, 6 tháng -> 10%, 3 tháng -> 5%, khác -> 0%
+            if (months >= 12) discountPercent = 15;
+            else if (months >= 6) discountPercent = 10;
+            else if (months >= 3) discountPercent = 5;
+
+            BigDecimal rawTotal = monthlyPrice.multiply(BigDecimal.valueOf(months));
+            BigDecimal discountFactor = BigDecimal.valueOf(100 - discountPercent).divide(BigDecimal.valueOf(100));
+            finalAmount = rawTotal.multiply(discountFactor).setScale(0, java.math.RoundingMode.HALF_UP);
+        }
+
+        // 4. Cập nhật ngày kết thúc của Reservation
+        LocalDate currentExpiry = reservation.getEndDate() != null ? reservation.getEndDate() : LocalDate.now();
+        if (currentExpiry.isBefore(LocalDate.now())) {
+            currentExpiry = LocalDate.now();
+        }
+        LocalDate newExpiry = currentExpiry.plusDays(addedDays);
+        reservation.setEndDate(newExpiry);
+        reservationRepository.save(reservation);
+
+        // 6. Cập nhật trạng thái hợp đồng về ACTIVE
+        contract.setStatus("ACTIVE");
+        contractRepository.save(contract);
+
+        // 7. Tạo hóa đơn gia hạn EXT-... thanh toán bằng tiền mặt (CASH)
+        LocalDateTime now = LocalDateTime.now();
+        String dateStr = now.format(java.time.format.DateTimeFormatter.ofPattern("ddMMyy"));
+        String invoiceNumber = "EXT-" + (reservation.getReservationCode() != null ? reservation.getReservationCode() : ("CTR-" + contract.getContractId()))
+                + "-" + dateStr + "-" + String.format("%04d", new Random().nextInt(10000));
+
+        Payment extPayment = new Payment();
+        extPayment.setContractId(contract.getContractId());
+        extPayment.setInvoiceNumber(invoiceNumber);
+        extPayment.setInvoiceType("MONTHLY_RENEWAL");
+        extPayment.setAmount(finalAmount);
+        extPayment.setPaidAmount(finalAmount);
+        extPayment.setRemainingAmount(BigDecimal.ZERO);
+        extPayment.setIssuedAt(now);
+        extPayment.setDueAt(now.plusDays(1));
+        extPayment.setStatus("PAID");
+        extPayment.setPaymentMethod("CASH"); // Bắt buộc Tiền mặt tại quầy
+        extPayment.setPaymentStatus("SUCCESS");
+        extPayment.setTransactionCode("CASH_EXT_" + System.currentTimeMillis());
+        extPayment.setPaidAt(now);
+        paymentRepository.save(extPayment);
+
+        // 8. Cấp/khôi phục Gate PIN cho khách
+        String gatePinCode = null;
+        try {
+            GatePinResult pinResult = gatePinService.generatePin(contract);
+            gatePinCode = pinResult.getPin();
+        } catch (Exception ignored) {}
+
+        writeActivityLog(staffAccountId, "RENEW_AT_COUNTER",
+                "Gia hạn hợp đồng tại quầy bằng tiền mặt (CASH) cho đơn " + reservation.getReservationCode() + ", thời hạn " + (isCustomDays ? (addedDays + " ngày") : (months + " tháng")) + ", số tiền: " + finalAmount + " VND, hạn mới: " + newExpiry);
+
+        RenewAtCounterResponse resp = new RenewAtCounterResponse();
+        resp.setSuccess(true);
+        resp.setMessage("Gia hạn tại quầy thành công.");
+        resp.setReservationId(reservation.getReservationId());
+        resp.setReservationCode(reservation.getReservationCode());
+        resp.setContractStatus("ACTIVE");
+        resp.setUnitStatus(unitOpt.map(StorageUnit::getStatus).orElse("OCCUPIED"));
+        resp.setInvoiceNumber(invoiceNumber);
+        resp.setAmount(finalAmount);
+        resp.setDiscountPercent(discountPercent);
+        resp.setNewExpiryDate(newExpiry.toString());
+        resp.setGatePin(gatePinCode);
+        return resp;
     }
 }
