@@ -21,13 +21,16 @@ public class AuthService {
     private final AccountRepository accountRepository;
     private final CustomerProfileRepository customerProfileRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public AuthService(AccountRepository accountRepository, 
                        CustomerProfileRepository customerProfileRepository,
-                       PasswordEncoder passwordEncoder) {
+                       PasswordEncoder passwordEncoder,
+                       EmailService emailService) {
         this.accountRepository = accountRepository;
         this.customerProfileRepository = customerProfileRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     // --- US-01: Đăng ký & OTP ---
@@ -81,12 +84,12 @@ public class AuthService {
             customerProfileRepository.save(profile);
         }
 
-        // In mã OTP ra Console để dễ test
-        System.out.println("==========================================");
-        System.out.println(">>> MÃ OTP MỚI DÀNH CHO " + request.getPhone() + " LÀ: " + otpCode + " <<<");
-        System.out.println("==========================================");
+        // Gửi mã OTP xác thực qua Email
+        if (savedAccount.getEmail() != null && !savedAccount.getEmail().isBlank()) {
+            emailService.sendOtpEmail(savedAccount.getEmail(), savedAccount.getFullName(), otpCode, "Đăng ký tài khoản");
+        }
 
-        return new ApiResponse(true, "Đã gửi mã OTP mới! Vui lòng kiểm tra và xác thực.");
+        return new ApiResponse(true, "Mã xác thực OTP đã được gửi đến email đăng ký của bạn. Vui lòng kiểm tra hộp thư!");
     }
 
     // --- US-01: Xác thực mã OTP ---
@@ -142,11 +145,11 @@ public class AuthService {
         account.setOtpExpiryTime(LocalDateTime.now().plusMinutes(5));
         accountRepository.save(account);
 
-        // In mã OTP ra Console để test dev
-        System.out.println("==========================================");
-        System.out.println(">>> MÃ OTP GỬI LẠI CHO " + request.getPhone() + " LÀ: " + otpCode + " (Hạn 5 phút) <<<");
-        System.out.println("==========================================");
+        // Gửi mã OTP mới qua Email
+        if (account.getEmail() != null && !account.getEmail().isBlank()) {
+            emailService.sendOtpEmail(account.getEmail(), account.getFullName(), otpCode, "Gửi lại mã xác thực");
+        }
 
-        return new ApiResponse(true, "Mã OTP mới đã được gửi lại thành công! Vui lòng kiểm tra.");
+        return new ApiResponse(true, "Mã OTP mới đã được gửi lại vào email của bạn. Vui lòng kiểm tra hộp thư!");
     }
 }
