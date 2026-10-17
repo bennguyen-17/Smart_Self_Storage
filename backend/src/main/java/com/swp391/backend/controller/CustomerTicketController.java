@@ -44,10 +44,17 @@ public class CustomerTicketController {
             String type = body.get("type") != null ? body.get("type").toString() : "UNLOCK";
             String unitCode = body.get("unitCode") != null ? body.get("unitCode").toString() : "";
             String description = body.get("description") != null ? body.get("description").toString() : "";
+            String desiredDateStr = body.get("desiredDate") != null ? body.get("desiredDate").toString() : null;
+            java.time.LocalDate desiredDate = null;
+            if (desiredDateStr != null && !desiredDateStr.trim().isEmpty()) {
+                try {
+                    desiredDate = java.time.LocalDate.parse(desiredDateStr.trim());
+                } catch (Exception ignored) {}
+            }
 
             SupportTicket ticket;
             if (unitCode != null && !unitCode.trim().isEmpty() && !"GATE".equalsIgnoreCase(unitCode)) {
-                ticket = supportTicketService.createSupportFormTicket(accountId, type, unitCode, description);
+                ticket = supportTicketService.createSupportFormTicket(accountId, type, unitCode, description, desiredDate);
             } else {
                 String title = body.get("title") != null ? body.get("title").toString() : "Yêu cầu hỗ trợ: " + type;
                 ticket = supportTicketService.createTicketGeneric(type, unitCode, title, description, accountId);

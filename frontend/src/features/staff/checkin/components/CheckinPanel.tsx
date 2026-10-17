@@ -35,6 +35,8 @@ const TAB_COLORS: Record<CheckinTabKey, string> = {
     "bg-emerald-100 text-emerald-900 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-300",
   overdue:
     "bg-rose-100 text-rose-900 hover:bg-rose-200 dark:bg-rose-950 dark:text-rose-300",
+  terminated:
+    "bg-blue-100 text-blue-900 hover:bg-blue-200 dark:bg-blue-950 dark:text-blue-300",
   canceled:
     "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300",
 }
@@ -43,6 +45,7 @@ const STATUS_LABEL: Record<string, string> = {
   PENDING_CHECKIN: "CHỜ CHECK-IN",
   ACTIVE: "ĐANG THUÊ",
   OVERDUE: "QUÁ HẠN",
+  TERMINATED: "ĐÃ TRẢ KHO",
   CANCELED: "ĐÃ HỦY",
 }
 
@@ -222,6 +225,8 @@ function CheckinPanel() {
         onCheckin={setCheckinContract}
         onCheckout={(item) =>
           setInspection({
+            contractId: item.contractId,
+            reservationId: item.reservationId,
             contractCode: item.reservationCode,
             customerName: item.customerName ?? "—",
             unitCode: item.unitCode ?? "—",
@@ -268,6 +273,10 @@ function CheckinPanel() {
       <StaffInspectionModal
         target={inspection}
         onClose={() => setInspection(null)}
+        onConfirmed={() => {
+          setInspection(null)
+          refresh()
+        }}
       />
 
       <CollectPenaltyDialog
@@ -281,11 +290,15 @@ function CheckinPanel() {
 
       <RenewAtCounterDialog
         contract={renewContract}
-        onClose={() => setRenewContract(null)}
+        onClose={() => {
+          setRenewContract(null)
+          refresh()
+        }}
         onRenewed={() => {
           setRenewContract(null)
           refresh()
         }}
+        onPenaltyCollected={refresh}
       />
     </section>
   )

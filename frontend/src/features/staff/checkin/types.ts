@@ -3,10 +3,11 @@
 
 /** Trạng thái hợp đồng (Contract.status) */
 export type ContractStatus =
-  "PENDING_CHECKIN" | "ACTIVE" | "OVERDUE" | "CANCELED"
+  "PENDING_CHECKIN" | "ACTIVE" | "OVERDUE" | "CANCELED" | "TERMINATED"
 
 /** Dòng danh sách trả về từ BE (StaffReservationListItemResponse). */
 export interface StaffReservationItem {
+  contractId?: number | null
   reservationId: number
   reservationCode: string
   customerName: string | null
@@ -35,6 +36,8 @@ export interface StaffReservationItem {
   overdueDays: number | null
   unpaidPenaltyAmount: number | null
   monthlyPrice: number | null
+  returnRequested?: boolean | null
+  cancelReason?: string | null
 }
 
 /** Kết quả tra cứu (StaffReservationLookupResponse = item + unitStatus + contractPdfUrl). */
@@ -107,7 +110,8 @@ export interface CollectPenaltyResponse {
 
 // --- US-20: Gia hạn tại quầy ---
 export interface RenewAtCounterRequest {
-  months: number // 1 | 2 | 3 | 6 | 12
+  months?: number // 1 | 2 | 3 | 6 | 12
+  days?: number
   paymentMethod: string // CASH | BANK_TRANSFER
 }
 

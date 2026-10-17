@@ -57,6 +57,12 @@ public class SupportTicket {
 
     private LocalDateTime resolvedAt;
 
+    @Transient
+    private String customerName;
+
+    @Transient
+    private String customerPhone;
+
     public SupportTicket() {
     }
 
@@ -202,5 +208,21 @@ public class SupportTicket {
 
     public void setResolvedAt(LocalDateTime resolvedAt) {
         this.resolvedAt = resolvedAt;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public String getCustomerPhone() {
+        return customerPhone;
+    }
+
+    public void setCustomerPhone(String customerPhone) {
+        this.customerPhone = customerPhone;
     }
 }

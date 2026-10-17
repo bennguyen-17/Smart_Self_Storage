@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import CustomerLayout from '@/components/layouts/CustomerLayout';
-import { getMyContracts, cancelDepositContract } from './storageApi';
+import { getMyContracts, cancelDepositContract, requestCheckoutContract } from './storageApi';
 import StorageTable from './components/StorageTable';
 import StorageCardList from './components/StorageCardList';
 import StoragePagination from './components/StoragePagination';
@@ -9,6 +9,7 @@ import CancelDepositModal from './modals/CancelDepositModal';
 import ContractDetailModal from './modals/ContractDetailModal';
 import ExtendContractModal from './modals/ExtendContractModal';
 import ExtendPaymentFlow from './modals/ExtendPaymentFlow';
+import ReturnStorageModal from './modals/ReturnStorageModal';
 
 export default function StoragePage() {
   const [contracts, setContracts] = useState<any[]>([]);
@@ -36,6 +37,10 @@ export default function StoragePage() {
   const [viewContract, setViewContract] = useState<any>(null);
   const [cancelModalContract, setCancelModalContract] = useState<any>(null);
   const [isCancelling, setIsCancelling] = useState(false);
+
+  // Modal Trả kho
+  const [returnModalContract, setReturnModalContract] = useState<any>(null);
+  const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
 
   // Modal Gia hạn
   const [showExtendModal, setShowExtendModal] = useState(false);
@@ -94,10 +99,10 @@ export default function StoragePage() {
     setIsCancelling(true);
     try {
       await cancelDepositContract(cancelModalContract, bankInfo);
-      setCancelModalContract(null);
       await fetchContracts();
     } catch (err) {
       console.error('Lỗi khi hủy cọc:', err);
+      throw err;
     } finally {
       setIsCancelling(false);
     }
@@ -140,6 +145,24 @@ export default function StoragePage() {
     setShowExtendPaymentFlow(true);
   };
 
+  const handleConfirmReturn = async (data: { reason: string; desiredDate: string }) => {
+    if (!returnModalContract) return;
+    try {
+      setIsSubmittingReturn(true);
+      const res = await requestCheckoutContract(returnModalContract, data);
+      if (res.success) {
+        setReturnModalContract(null);
+        await fetchContracts(false);
+      } else {
+        alert(res.message || 'Không thể gửi yêu cầu trả kho');
+      }
+    } catch (e: any) {
+      alert(e.message || 'Lỗi gửi yêu cầu trả kho');
+    } finally {
+      setIsSubmittingReturn(false);
+    }
+  };
+
   return (
     <CustomerLayout activeNav="my-storage">
       <motion.div
@@ -169,6 +192,7 @@ export default function StoragePage() {
                   onViewContract={setViewContract}
                   onCancelDeposit={setCancelModalContract}
                   onExtend={handleOpenExtend}
+                  onRequestReturn={setReturnModalContract}
                   getCancelReasonLabel={getCancelReasonLabel}
                 />
 
@@ -178,6 +202,7 @@ export default function StoragePage() {
                   onViewContract={setViewContract}
                   onCancelDeposit={setCancelModalContract}
                   onExtend={handleOpenExtend}
+                  onRequestReturn={setReturnModalContract}
                   getCancelReasonLabel={getCancelReasonLabel}
                 />
 
@@ -213,6 +238,16 @@ export default function StoragePage() {
           <ContractDetailModal
             contract={viewContract}
             onClose={() => setViewContract(null)}
+          />
+        )}
+
+        {/* Modal Yêu cầu Trả kho */}
+        {returnModalContract && (
+          <ReturnStorageModal
+            contract={returnModalContract}
+            onClose={() => setReturnModalContract(null)}
+            onConfirm={handleConfirmReturn}
+            isSubmitting={isSubmittingReturn}
           />
         )}
 
