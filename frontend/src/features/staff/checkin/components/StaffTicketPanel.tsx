@@ -274,6 +274,8 @@ function StaffTicketPanel() {
   function handleOpenInspection(ticket: TicketItem) {
     setInspectionTicketId(ticket.id)
     setInspectionTarget({
+      contractId: ticket.contractId,
+      ticketId: typeof ticket.id === "number" ? ticket.id : undefined,
       contractCode:
         ticket.contractCode ||
         (ticket.contractId
@@ -648,6 +650,7 @@ function StaffTicketPanel() {
       <StaffInspectionModal
         target={inspectionTarget}
         onClose={handleCloseInspection}
+        onConfirmed={handleCloseInspection}
       />
 
       {/* UNLOCK MODAL */}

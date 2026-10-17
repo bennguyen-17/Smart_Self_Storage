@@ -28,8 +28,15 @@ public class StaffReservationListItemResponse {
     private BigDecimal rentalAmount;
     private Boolean returnRequested;
     private String cancelReason;
+    private Integer contractId;
+    private Integer overdueDays;
+    private BigDecimal unpaidPenaltyAmount;
+    private BigDecimal monthlyPrice;
 
     public StaffReservationListItemResponse() {}
+
+    public Integer getContractId() { return contractId; }
+    public void setContractId(Integer contractId) { this.contractId = contractId; }
 
     public Integer getReservationId() { return reservationId; }
     public void setReservationId(Integer reservationId) { this.reservationId = reservationId; }
@@ -130,5 +137,29 @@ public class StaffReservationListItemResponse {
 
     public void setCancelReason(String cancelReason) {
         this.cancelReason = cancelReason;
+    }
+
+    public Integer getOverdueDays() {
+        return overdueDays;
+    }
+
+    public void setOverdueDays(Integer overdueDays) {
+        this.overdueDays = overdueDays;
+    }
+
+    public BigDecimal getUnpaidPenaltyAmount() {
+        return unpaidPenaltyAmount;
+    }
+
+    public void setUnpaidPenaltyAmount(BigDecimal unpaidPenaltyAmount) {
+        this.unpaidPenaltyAmount = unpaidPenaltyAmount;
+    }
+
+    public BigDecimal getMonthlyPrice() {
+        return monthlyPrice;
+    }
+
+    public void setMonthlyPrice(BigDecimal monthlyPrice) {
+        this.monthlyPrice = monthlyPrice;
     }
 }

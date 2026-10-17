@@ -15,8 +15,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class CheckoutSettlementService {
@@ -62,6 +61,9 @@ public class CheckoutSettlementService {
      */
     public CheckoutPreviewResponse calculateCheckoutPreview(Integer contractId) {
         Optional<Contract> contractOpt = contractRepository.findById(contractId);
+        if (contractOpt.isEmpty()) {
+            contractOpt = contractRepository.findByReservationId(contractId);
+        }
         if (contractOpt.isEmpty()) {
             return CheckoutPreviewResponse.error("Không tìm thấy hợp đồng #" + contractId);
         }
@@ -177,6 +179,9 @@ public class CheckoutSettlementService {
         }
 
         Optional<Contract> contractOpt = contractRepository.findById(contractId);
+        if (contractOpt.isEmpty()) {
+            contractOpt = contractRepository.findByReservationId(contractId);
+        }
         if (contractOpt.isEmpty()) {
             return CheckoutConfirmResponse.error("Không tìm thấy hợp đồng #" + contractId);
         }
@@ -337,9 +342,9 @@ public class CheckoutSettlementService {
             }
         }
         try {
-            List<SupportTicket> openTickets = supportTicketRepository.findByContractId(contract.getContractId());
-            for (SupportTicket t : openTickets) {
-                if ("EARLY_TERMINATION".equalsIgnoreCase(t.getType()) && !"RESOLVED".equalsIgnoreCase(t.getStatus())) {
+            Set<Long> processedTicketIds = new HashSet<>();
+            if (request.getTicketId() != null) {
+                supportTicketRepository.findById(request.getTicketId().longValue()).ifPresent(t -> {
                     t.setStatus("RESOLVED");
                     t.setResolvedAt(LocalDateTime.now());
                     t.setResolutionNote("Nhân viên đã hoàn tất nghiệm thu và nhận bàn giao ô kho lúc " + LocalDateTime.now());
@@ -347,6 +352,35 @@ public class CheckoutSettlementService {
                         t.setAssignedStaffId(staffAccountId);
                     }
                     supportTicketRepository.save(t);
+                    processedTicketIds.add(t.getId());
+                });
+            }
+            List<SupportTicket> openTickets = supportTicketRepository.findByContractId(contract.getContractId());
+            for (SupportTicket t : openTickets) {
+                if (!processedTicketIds.contains(t.getId()) && "EARLY_TERMINATION".equalsIgnoreCase(t.getType()) && !"RESOLVED".equalsIgnoreCase(t.getStatus())) {
+                    t.setStatus("RESOLVED");
+                    t.setResolvedAt(LocalDateTime.now());
+                    t.setResolutionNote("Nhân viên đã hoàn tất nghiệm thu và nhận bàn giao ô kho lúc " + LocalDateTime.now());
+                    if (staffAccountId != null) {
+                        t.setAssignedStaffId(staffAccountId);
+                    }
+                    supportTicketRepository.save(t);
+                    processedTicketIds.add(t.getId());
+                }
+            }
+            if (res.getUnitCode() != null) {
+                List<SupportTicket> unitTickets = supportTicketRepository.findByUnitCode(res.getUnitCode());
+                for (SupportTicket t : unitTickets) {
+                    if (!processedTicketIds.contains(t.getId()) && "EARLY_TERMINATION".equalsIgnoreCase(t.getType()) && !"RESOLVED".equalsIgnoreCase(t.getStatus())) {
+                        t.setStatus("RESOLVED");
+                        t.setResolvedAt(LocalDateTime.now());
+                        t.setResolutionNote("Nhân viên đã hoàn tất nghiệm thu và nhận bàn giao ô kho lúc " + LocalDateTime.now());
+                        if (staffAccountId != null) {
+                            t.setAssignedStaffId(staffAccountId);
+                        }
+                        supportTicketRepository.save(t);
+                        processedTicketIds.add(t.getId());
+                    }
                 }
             }
         } catch (Exception ignored) {}

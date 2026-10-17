@@ -37,8 +37,9 @@ export default function StorageTable({
           {contracts.map((item) => {
             const isPending = item.status === 'PENDING_CHECKIN';
             const isActive = item.status === 'ACTIVE';
+            const isTerminated = item.status === 'TERMINATED';
             const isCanceled = item.status === 'CANCELED';
-            const isReturnRequested = Boolean(item.returnRequested || item.cancelReason === 'EARLY_TERMINATION');
+            const isReturnRequested = isActive && Boolean(item.returnRequested || item.cancelReason === 'EARLY_TERMINATION');
 
             return (
               <tr key={item.contractId} className="hover:bg-slate-50/90 dark:hover:bg-slate-800/60 transition-colors group">
@@ -74,15 +75,27 @@ export default function StorageTable({
                       ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                       : isPending
                       ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                      : isTerminated
+                      ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
                   }`}>
                     <span className={`w-2 h-2 rounded-full mr-2 ${
-                      isReturnRequested ? 'bg-amber-500 animate-pulse' : isActive ? 'bg-emerald-500' : isPending ? 'bg-amber-500' : 'bg-slate-400'
+                      isReturnRequested
+                        ? 'bg-amber-500 animate-pulse'
+                        : isActive
+                        ? 'bg-emerald-500'
+                        : isPending
+                        ? 'bg-amber-500'
+                        : isTerminated
+                        ? 'bg-slate-500'
+                        : 'bg-slate-400'
                     }`}></span>
                     {isReturnRequested
                       ? 'CHỜ NGHIỆM THU TRẢ KHO'
                       : isPending
                       ? 'CHỜ CHECK-IN'
+                      : isTerminated
+                      ? 'ĐÃ THANH LÝ'
                       : (item.statusLabel || item.status)}
                   </span>
                 </td>
@@ -112,6 +125,12 @@ export default function StorageTable({
                       </button>
                     )}
 
+                    {isTerminated && (
+                      <span className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">
+                        Đã thanh lý &amp; hoàn cọc
+                      </span>
+                    )}
+
                     {isCanceled && (
                       <span className="text-sm text-rose-500/90 dark:text-rose-400 font-medium italic" title={getCancelReasonLabel(item.cancelReason)}>
                         {getCancelReasonLabel(item.cancelReason)}
@@ -133,7 +152,7 @@ export default function StorageTable({
                           className="text-xs leading-tight font-semibold text-amber-700 dark:text-amber-300 whitespace-nowrap"
                         >
                           <i className="fa-solid fa-store text-xs mr-1" aria-hidden="true"></i>
-                          <span>Gia hạn tại quầy</span>
+                          <span>Gia hạn tại quầy (Tiền mặt)</span>
                         </span>
                       </div>
                     )}

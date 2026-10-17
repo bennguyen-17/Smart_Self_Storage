@@ -173,6 +173,7 @@ public class SupportTicketService {
         ticket.setCustomerId(customerProfileId);
         ticket.setFacilityId(facilityId);
         ticket.setUnitCode(unitCode);
+        ticket.setContractId(activeContract.getContractId());
         if ("EARLY_TERMINATION".equalsIgnoreCase(type)) {
             ticket.setTitle("Yêu cầu trả kho sớm - Ô kho " + unitCode);
             ticket.setDesiredDate(desiredDate != null ? desiredDate : LocalDate.now());

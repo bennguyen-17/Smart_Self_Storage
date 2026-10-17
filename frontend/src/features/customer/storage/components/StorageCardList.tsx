@@ -24,8 +24,9 @@ export default function StorageCardList({
       {contracts.map((item) => {
         const isPending = item.status === 'PENDING_CHECKIN';
         const isActive = item.status === 'ACTIVE';
+        const isTerminated = item.status === 'TERMINATED';
         const isCanceled = item.status === 'CANCELED';
-        const isReturnRequested = Boolean(item.returnRequested || item.cancelReason === 'EARLY_TERMINATION');
+        const isReturnRequested = isActive && Boolean(item.returnRequested || item.cancelReason === 'EARLY_TERMINATION');
 
         return (
           <div key={item.contractId} className="p-4 sm:p-5 space-y-3 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
@@ -51,15 +52,27 @@ export default function StorageCardList({
                   ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                   : isPending
                   ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                  : isTerminated
+                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
               }`}>
                 <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                  isReturnRequested ? 'bg-amber-500 animate-pulse' : isActive ? 'bg-emerald-500' : isPending ? 'bg-amber-500' : 'bg-slate-400'
+                  isReturnRequested
+                    ? 'bg-amber-500 animate-pulse'
+                    : isActive
+                    ? 'bg-emerald-500'
+                    : isPending
+                    ? 'bg-amber-500'
+                    : isTerminated
+                    ? 'bg-slate-500'
+                    : 'bg-slate-400'
                 }`}></span>
                 {isReturnRequested
                   ? 'CHỜ TRẢ KHO'
                   : isPending
                   ? 'CHỜ CHECK-IN'
+                  : isTerminated
+                  ? 'ĐÃ THANH LÝ'
                   : (item.statusLabel || item.status)}
               </span>
             </div>
@@ -108,6 +121,12 @@ export default function StorageCardList({
                 >
                   <i className="fa-solid fa-arrows-rotate text-xs"></i> Gia Hạn
                 </button>
+              )}
+
+              {isTerminated && (
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium italic">
+                  Đã thanh lý &amp; hoàn cọc
+                </span>
               )}
 
               {isCanceled && (

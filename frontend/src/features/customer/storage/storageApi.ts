@@ -44,6 +44,7 @@ export const getMyContracts = async () => {
           if (c.status === 'PENDING_CHECKIN') statusLabel = 'CHỜ CHECK-IN';
           else if (c.status === 'ACTIVE') statusLabel = 'HIỆU LỰC';
           else if (c.status === 'CANCELED') statusLabel = 'ĐÃ HỦY CỌC';
+          else if (c.status === 'TERMINATED') statusLabel = 'ĐÃ THANH LÝ';
 
           const resCode = c.reservationCode || c.bookingCode;
           const displayId = (resCode && !resCode.startsWith('#HD-'))

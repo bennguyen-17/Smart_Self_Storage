@@ -7,11 +7,15 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import apiClient from "@/lib/apiClient"
 import { formatVnd } from "@/lib/format"
 
 import ProtoModal from "./ProtoModal"
 
 export interface InspectionTarget {
+  contractId?: number | null
+  reservationId?: number | null
+  ticketId?: number | null
   contractCode: string
   customerName: string
   unitCode: string
@@ -21,6 +25,7 @@ export interface InspectionTarget {
 interface StaffInspectionModalProps {
   target: InspectionTarget | null
   onClose: () => void
+  onConfirmed?: () => void
 }
 
 /** Bảng giá hư hại niêm yết */
@@ -34,7 +39,7 @@ const DAMAGE_ITEMS = [
 ]
 
 /** Modal Nghiệm thu hiện trạng trả kho & Quyết toán cọc — bám prototype staff_portal.html */
-function StaffInspectionModal({ target, onClose }: StaffInspectionModalProps) {
+function StaffInspectionModal({ target, onClose, onConfirmed }: StaffInspectionModalProps) {
   return (
     <ProtoModal
       open={target !== null}
@@ -45,7 +50,12 @@ function StaffInspectionModal({ target, onClose }: StaffInspectionModalProps) {
       icon={<ClipboardCheckIcon className="size-5" />}
     >
       {target && (
-        <Body key={target.contractCode} target={target} onClose={onClose} />
+        <Body
+          key={target.contractCode}
+          target={target}
+          onClose={onClose}
+          onConfirmed={onConfirmed}
+        />
       )}
     </ProtoModal>
   )
@@ -54,9 +64,11 @@ function StaffInspectionModal({ target, onClose }: StaffInspectionModalProps) {
 function Body({
   target,
   onClose,
+  onConfirmed,
 }: {
   target: InspectionTarget
   onClose: () => void
+  onConfirmed?: () => void
 }) {
   const [damages, setDamages] = useState<string[]>([])
   const [photo, setPhoto] = useState<string | null>(null)
@@ -65,6 +77,7 @@ function Body({
   const totalDamage = DAMAGE_ITEMS.filter((item) =>
     damages.includes(item.id)
   ).reduce((sum, item) => sum + item.fee, 0)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const balance = deposit - totalDamage
 
   function toggle(id: string) {
@@ -78,17 +91,53 @@ function Body({
     if (file) setPhoto(URL.createObjectURL(file))
   }
 
-  function submit() {
-    if (balance < 0) {
-      toast.warning(
-        `Cọc âm: thu thêm ${formatVnd(Math.abs(balance))} tại quầy trước khi mang đồ ra.`
+  async function submit() {
+    setIsSubmitting(true)
+    try {
+      const damageFee = DAMAGE_ITEMS.filter(
+        (item) => item.id !== "cleaning" && damages.includes(item.id)
+      ).reduce((sum, item) => sum + item.fee, 0)
+      const cleaningFee = damages.includes("cleaning") ? 150_000 : 0
+      const targetId = target.contractId || target.reservationId
+
+      if (targetId) {
+        await apiClient.post(`/staff/checkout/${targetId}/confirm`, {
+          confirmInspection: true,
+          damageFee,
+          cleaningFee,
+          inspectionNotes:
+            damages.length > 0
+              ? `Hư hại/vệ sinh: ${damages.join(", ")}`
+              : "Ô kho sạch sẽ nguyên vẹn 100%",
+          ticketId: target.ticketId || undefined,
+          refundPaymentMethod: "VIETQR",
+        })
+      }
+
+      if (balance < 0) {
+        toast.warning(
+          `Cọc âm: thu thêm ${formatVnd(Math.abs(balance))} tại quầy trước khi mang đồ ra.`
+        )
+      } else {
+        toast.success(
+          `Đã chốt biên bản nghiệm thu — hoàn cọc ${formatVnd(balance)}.`
+        )
+      }
+
+      if (onConfirmed) {
+        onConfirmed()
+      } else {
+        onClose()
+      }
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Lỗi khi chốt biên bản nghiệm thu!"
       )
-    } else {
-      toast.success(
-        `Đã chốt biên bản nghiệm thu — hoàn cọc ${formatVnd(balance)}.`
-      )
+    } finally {
+      setIsSubmitting(false)
     }
-    onClose()
   }
 
   return (
@@ -258,11 +307,12 @@ function Body({
         </button>
         <button
           type="button"
+          disabled={isSubmitting}
           onClick={submit}
-          className="flex flex-1 cursor-pointer items-center justify-center space-x-2 rounded-xl bg-emerald-600 py-3 text-xs font-black text-white shadow-lg transition hover:bg-emerald-500"
+          className="flex flex-1 cursor-pointer items-center justify-center space-x-2 rounded-xl bg-emerald-600 py-3 text-xs font-black text-white shadow-lg transition hover:bg-emerald-500 disabled:opacity-50"
         >
           <ClipboardCheckIcon className="size-4" />
-          <span>CHỐT BIÊN BẢN &amp; THANH LÝ HỢP ĐỒNG</span>
+          <span>{isSubmitting ? "Đang xử lý..." : "CHỐT BIÊN BẢN & THANH LÝ HỢP ĐỒNG"}</span>
         </button>
       </div>
     </>
