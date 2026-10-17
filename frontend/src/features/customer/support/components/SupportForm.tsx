@@ -128,8 +128,9 @@ export default function SupportForm() {
       alert("Vui lòng chọn ô kho có hợp đồng đang có hiệu lực (ACTIVE)!");
       return;
     }
-    if (!description.trim()) {
-      alert("Vui lòng nhập mô tả chi tiết yêu cầu hỗ trợ!");
+    const finalDescription = description.trim() || (ticketType === 'EARLY_TERMINATION' ? 'Yêu cầu trả kho sớm' : '');
+    if (!finalDescription) {
+      alert("Vui lòng nhập mô tả chi tiết sự cố!");
       return;
     }
     try {
@@ -137,7 +138,7 @@ export default function SupportForm() {
       const res = await submitSupportTicket({
         type: ticketType,
         unitCode: unitSelect,
-        description,
+        description: finalDescription,
         desiredDate: ticketType === 'EARLY_TERMINATION' ? desiredDate : undefined
       });
       if (res.success) {
@@ -398,10 +399,10 @@ export default function SupportForm() {
                   </div>
                 )}
 
-                {/* Nội dung mô tả - Tự động giãn đều chiều cao theo thẻ */}
+                {/* Nội dung mô tả / Ghi chú - Tự động giãn đều chiều cao theo thẻ */}
                 <div className="space-y-1.5 flex-1 flex flex-col min-h-[130px]">
                   <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                    {ticketType === 'EARLY_TERMINATION' ? 'Lý do trả kho sớm (hoặc ghi chú):' : 'Mô tả chi tiết sự cố:'}
+                    {ticketType === 'EARLY_TERMINATION' ? 'Ghi chú:' : 'Mô tả chi tiết sự cố:'}
                   </label>
                   <textarea
                     disabled={!hasActiveContracts}
@@ -411,7 +412,7 @@ export default function SupportForm() {
                       !hasActiveContracts
                         ? "Chức năng gửi ticket bị khóa do tài khoản chưa có hợp đồng ACTIVE..."
                         : ticketType === 'EARLY_TERMINATION'
-                        ? "Nhập lý do trả kho sớm (VD: Đã hết nhu cầu lưu trữ hàng hóa, chuyển về địa điểm mới...)"
+                        ? "Nhập ghi chú cho yêu cầu trả kho sớm (nếu có)..."
                         : "Ví dụ: Cửa cuốn ô kho A-102 kẹt không mở được, hoặc quên mã bảo mật, cần mở khóa từ xa..."
                     }
                     className={`w-full flex-1 min-h-[120px] p-3.5 rounded-xl border border-slate-200 dark:border-cyan-500/30 bg-slate-50 dark:bg-slate-900/90 text-slate-900 dark:text-white text-xs sm:text-sm focus:border-blue-500 dark:focus:border-cyan-400 focus:outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none ${
