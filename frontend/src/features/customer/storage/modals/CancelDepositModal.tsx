@@ -17,6 +17,7 @@ export default function CancelDepositModal({
   const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
   const [error, setError] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
 
   // Tự điền tên tài khoản từ profile
   useEffect(() => {
@@ -41,6 +42,8 @@ export default function CancelDepositModal({
   })();
 
   const isRefundEligible = daysUntilStart >= 4;
+  const depositVal = contract?.depositAmount ?? contract?.depositFee ?? 500000;
+  const refundAmount = isRefundEligible ? depositVal : Math.round(depositVal * 0.5);
 
   const handleSubmit = async () => {
     if (!accountNumber.trim()) {
@@ -52,12 +55,81 @@ export default function CancelDepositModal({
       return;
     }
     setError('');
-    await onConfirm({
-      bankName,
-      bankAccountNumber: accountNumber.trim(),
-      bankAccountName: accountName.trim().toUpperCase()
-    });
+    try {
+      await onConfirm({
+        bankName,
+        bankAccountNumber: accountNumber.trim(),
+        bankAccountName: accountName.trim().toUpperCase()
+      });
+      setIsSuccess(true);
+    } catch (err: any) {
+      setError(err?.message || 'Có lỗi xảy ra khi hủy cọc.');
+    }
   };
+
+  if (isSuccess) {
+    return (
+      <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-3xl shadow-2xl p-6 text-center space-y-4 modal-animate-pop">
+          {/* Icon success */}
+          <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-3xl mx-auto flex items-center justify-center shadow-lg">
+            <i className="fa-solid fa-circle-check text-3xl"></i>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              ĐÃ HỦY ĐẶT CỌC THÀNH CÔNG
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Hợp đồng <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{contract.contractId || contract.reservationCode}</span> đã được hủy bỏ thành công.
+            </p>
+          </div>
+
+          {/* KHUNG THÔNG BÁO: CHỜ MANAGER HOÀN CỌC TRONG 24-48H */}
+          <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 text-left space-y-2.5">
+            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-extrabold text-xs uppercase tracking-wide">
+              <i className="fa-solid fa-clock-rotate-left text-sm"></i>
+              <span>Chờ Quản lý (Manager) hoàn tiền cọc</span>
+            </div>
+            
+            <p className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed font-medium">
+              Yêu cầu hủy cọc của bạn đã được ghi nhận. <strong>Quản lý cơ sở (Manager)</strong> sẽ kiểm tra và thực hiện thanh toán hoàn cọc về tài khoản của bạn trong vòng <strong>24 – 48 giờ tới</strong>.
+            </p>
+
+            <div className="pt-2 border-t border-amber-200/80 dark:border-amber-800/80 text-xs space-y-1.5 text-slate-700 dark:text-slate-300">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 dark:text-slate-400">Tiền cọc hoàn dự kiến:</span>
+                <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                  {refundAmount.toLocaleString('vi-VN')} đ ({isRefundEligible ? 'Hoàn 100%' : 'Hoàn 50%'})
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 dark:text-slate-400">Ngân hàng nhận:</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{bankName}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 dark:text-slate-400">Số tài khoản:</span>
+                <span className="font-mono font-bold text-slate-900 dark:text-white">{accountNumber}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 dark:text-slate-400">Chủ tài khoản:</span>
+                <span className="font-bold text-slate-900 dark:text-white uppercase">{accountName}</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-3.5 rounded-xl text-xs font-black text-white bg-blue-600 hover:bg-blue-700 shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <i className="fa-solid fa-check"></i>
+            <span>ĐÃ HIỂU &amp; ĐÓNG</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">

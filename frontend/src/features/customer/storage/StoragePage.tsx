@@ -99,10 +99,10 @@ export default function StoragePage() {
     setIsCancelling(true);
     try {
       await cancelDepositContract(cancelModalContract, bankInfo);
-      setCancelModalContract(null);
       await fetchContracts();
     } catch (err) {
       console.error('Lỗi khi hủy cọc:', err);
+      throw err;
     } finally {
       setIsCancelling(false);
     }
