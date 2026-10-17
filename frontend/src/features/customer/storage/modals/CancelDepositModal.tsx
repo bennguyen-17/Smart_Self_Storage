@@ -89,11 +89,11 @@ export default function CancelDepositModal({
           <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 text-left space-y-2.5">
             <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-extrabold text-xs uppercase tracking-wide">
               <i className="fa-solid fa-clock-rotate-left text-sm"></i>
-              <span>Chờ Quản lý (Manager) hoàn tiền cọc</span>
+              <span>Chờ Quản lý hoàn tiền cọc</span>
             </div>
             
             <p className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed font-medium">
-              Yêu cầu hủy cọc của bạn đã được ghi nhận. <strong>Quản lý cơ sở (Manager)</strong> sẽ kiểm tra và thực hiện thanh toán hoàn cọc về tài khoản của bạn trong vòng <strong>24 – 48 giờ tới</strong>.
+              Yêu cầu hủy cọc của bạn đã được ghi nhận. <strong>Quản lý cơ sở</strong> sẽ kiểm tra và thực hiện thanh toán hoàn cọc về tài khoản của bạn trong vòng <strong>24 – 48 giờ tới</strong>.
             </p>
 
             <div className="pt-2 border-t border-amber-200/80 dark:border-amber-800/80 text-xs space-y-1.5 text-slate-700 dark:text-slate-300">
