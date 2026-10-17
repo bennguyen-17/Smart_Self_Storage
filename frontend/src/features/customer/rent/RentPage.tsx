@@ -496,7 +496,7 @@ export default function RentStoragePage() {
                     <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
                       Ngày nhận kho (Check-in):
                     </label>
-                    <span className="text-[11px] font-bold text-blue-600 dark:text-cyan-400">Từ ngày mai, tối đa 7 ngày</span>
+                    <span className="text-[11px] font-bold text-blue-600 dark:text-cyan-400">Từ hôm nay, tối đa 7 ngày</span>
                   </div>
                   <select
                     value={startDate}

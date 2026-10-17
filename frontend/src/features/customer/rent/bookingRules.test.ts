@@ -2,24 +2,24 @@ import { describe, expect, test } from "vitest"
 
 import { calcRentalTotal, clampRentalDays, getCheckInDates } from "./bookingRules"
 
-describe("getCheckInDates: ngày Check-in chỉ từ Hôm nay+1 đến Hôm nay+7, giờ Việt Nam", () => {
+describe("getCheckInDates: ngày Check-in từ Hôm nay đến Hôm nay+7, giờ Việt Nam", () => {
   test.each([
-    { now: "2026-10-07T03:00:00Z", vn: "10:00 07/10", first: "2026-10-08", last: "2026-10-14" },
-    // 06:30 sáng giờ VN vẫn là ngày 06/10 theo UTC → lỗi cũ dùng toISOString() lệch 1 ngày ở đây
-    { now: "2026-10-06T23:30:00Z", vn: "06:30 07/10", first: "2026-10-08", last: "2026-10-14" },
-    { now: "2026-10-07T16:59:00Z", vn: "23:59 07/10", first: "2026-10-08", last: "2026-10-14" },
-    { now: "2026-10-07T17:00:00Z", vn: "00:00 08/10", first: "2026-10-09", last: "2026-10-15" },
-    { now: "2026-12-28T03:00:00Z", vn: "qua năm mới", first: "2026-12-29", last: "2027-01-04" },
+    { now: "2026-10-07T03:00:00Z", vn: "10:00 07/10", first: "2026-10-07", last: "2026-10-14" },
+    // 06:30 sáng giờ VN vẫn là ngày 06/10 theo UTC → kiểm tra tính đúng theo giờ VN
+    { now: "2026-10-06T23:30:00Z", vn: "06:30 07/10", first: "2026-10-07", last: "2026-10-14" },
+    { now: "2026-10-07T16:59:00Z", vn: "23:59 07/10", first: "2026-10-07", last: "2026-10-14" },
+    { now: "2026-10-07T17:00:00Z", vn: "00:00 08/10", first: "2026-10-08", last: "2026-10-15" },
+    { now: "2026-12-28T03:00:00Z", vn: "qua năm mới", first: "2026-12-28", last: "2027-01-04" },
   ])("$vn → $first … $last", ({ now, first, last }) => {
     const dates = getCheckInDates(new Date(now))
-    expect(dates).toHaveLength(7)
+    expect(dates).toHaveLength(8)
     expect(dates[0]).toBe(first)
-    expect(dates[6]).toBe(last)
+    expect(dates[7]).toBe(last)
   })
 
-  test("không bao giờ chứa ngày hôm nay", () => {
+  test("chứa ngày hôm nay", () => {
     const now = new Date("2026-10-07T03:00:00Z")
-    expect(getCheckInDates(now)).not.toContain("2026-10-07")
+    expect(getCheckInDates(now)).toContain("2026-10-07")
   })
 })
 
