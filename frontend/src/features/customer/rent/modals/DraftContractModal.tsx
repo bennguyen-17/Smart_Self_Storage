@@ -53,7 +53,7 @@ export default function DraftContractModal({ bookingData, onProceedToPayment, on
                 <span className="text-slate-500 dark:text-slate-400">
                   Chi nhánh: <strong className="text-slate-900 dark:text-white">{bookingData.facilityName}</strong>
                 </span>
-                <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${bookingData.isClimate ? 'bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800' : 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200'}`}>
+                <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${bookingData.isClimate ? 'bg-cyan-100 dark:bg-blue-950/60 text-cyan-700 dark:text-blue-300 border border-cyan-300 dark:border-blue-800' : 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200'}`}>
                   {bookingData.isClimate ? '❄️ Kho Mát (22-25°C)' : '📦 Kho Tiêu Chuẩn'}
                 </span>
               </div>

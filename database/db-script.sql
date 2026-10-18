@@ -23,7 +23,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS Role;
 CREATE TABLE Role (
     roleId INT AUTO_INCREMENT PRIMARY KEY,
-    roleName VARCHAR(50) NOT NULL UNIQUE
+    roleName VARCHAR(50) NOT NULL UNIQUE,
+    roleTitle VARCHAR(100) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
@@ -379,12 +380,12 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- ============================================================================
 
 -- 1. Phân quyền (Roles)
-INSERT INTO Role (roleId, roleName) VALUES
-(1, 'ADMIN'),
-(2, 'BOM'),
-(3, 'MANAGER'),
-(4, 'STAFF'),
-(5, 'CUSTOMER');
+INSERT INTO Role (roleId, roleName, roleTitle) VALUES
+(1, 'ADMIN', 'Quản trị viên Hệ thống'),
+(2, 'BOM', 'Ban Giám Đốc'),
+(3, 'MANAGER', 'Quản lý cơ sở'),
+(4, 'STAFF', 'Nhân viên cơ sở'),
+(5, 'CUSTOMER', 'Khách hàng');
 
 -- 2. 7 Cơ sở kho toàn quốc (Khớp 100% tài liệu Take note.txt)
 INSERT INTO Facility (facilityId, facilityName, facilityCode, layoutType, address, phone, status) VALUES

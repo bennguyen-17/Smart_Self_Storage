@@ -192,7 +192,7 @@ function Body({
             Chọn thời hạn gia hạn
           </div>
           {isCustomDays && (
-            <span className="text-[10px] font-bold text-blue-600 dark:text-cyan-400">
+            <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
               (Tùy chọn từ 1 – 720 ngày)
             </span>
           )}

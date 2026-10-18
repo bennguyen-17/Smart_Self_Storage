@@ -16,20 +16,9 @@ export default function Header({ isDarkMode, onToggleTheme, onOpenProfileModal, 
   const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
   let userName = 'Nguyễn Văn Khách';
   let userInitials = 'NK';
-  let isVerified = true;
-  let statusText = 'Tài khoản Đã xác minh ✓';
-
   if (userStr) {
     try {
       const u = JSON.parse(userStr);
-      if (u.status === 'UNVERIFIED' || u.isVerified === false) {
-        isVerified = false;
-        statusText = 'Chưa xác minh tài khoản';
-      } else {
-        isVerified = true;
-        statusText = 'Tài khoản Đã xác minh ✓';
-      }
-
       if (u.fullName) {
         userName = u.fullName;
         const words = u.fullName.trim().split(' ');
@@ -89,14 +78,9 @@ export default function Header({ isDarkMode, onToggleTheme, onOpenProfileModal, 
             <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
               {userInitials}
             </div>
-            <div className="text-left hidden md:block">
-              <div className="text-xs font-extrabold text-slate-900 dark:text-white leading-tight flex items-center space-x-1">
-                <span>{userName}</span>
-                <i className="fa-solid fa-chevron-down text-[9px] text-slate-400 group-hover:text-blue-600 transition-colors ml-0.5"></i>
-              </div>
-              <div className={`text-[10px] font-semibold ${isVerified ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
-                {statusText}
-              </div>
+            <div className="text-left hidden md:flex items-center space-x-1">
+              <span className="text-xs font-extrabold text-slate-900 dark:text-white leading-tight">{userName}</span>
+              <i className="fa-solid fa-chevron-down text-[9px] text-slate-400 group-hover:text-blue-600 transition-colors ml-0.5"></i>
             </div>
           </button>
         )}

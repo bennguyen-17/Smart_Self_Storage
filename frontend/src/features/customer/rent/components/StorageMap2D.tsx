@@ -233,7 +233,7 @@ export default function StorageMap2D({
       >
         <div className="flex justify-between items-center w-full">
           <span className="font-black text-xs sm:text-sm font-mono tracking-tight group-hover:text-blue-600 transition-colors flex items-center gap-1">
-            {u.isClimate ? <span className="text-[10px] text-cyan-600 dark:text-cyan-400" title="Kho mát điều hòa 22-25°C">❄️</span> : null}
+            {u.isClimate ? <span className="text-[10px] text-cyan-600 dark:text-blue-400" title="Kho mát điều hòa 22-25°C">❄️</span> : null}
             {shortId}
           </span>
           <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-200 shadow-xs border border-slate-200 dark:border-slate-700">{u.size}</span>
@@ -243,7 +243,7 @@ export default function StorageMap2D({
             {statusDot}
             <span>{badgeText}</span>
           </div>
-          <span className={`text-[8px] sm:text-[9px] font-extrabold ${u.isClimate ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-500 dark:text-slate-400'}`}>
+          <span className={`text-[8px] sm:text-[9px] font-extrabold ${u.isClimate ? 'text-cyan-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'}`}>
             {u.isClimate ? '❄️ 22-25°C' : '📦 Chuẩn'}
           </span>
         </div>
@@ -259,8 +259,8 @@ export default function StorageMap2D({
         {/* 1. CƠ SỞ KHO: 7 CƠ SỞ CÓ ẢNH RIÊNG */}
         <div className="space-y-3 pb-4 border-b border-slate-100 dark:border-slate-800/80">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide flex items-center gap-1.5">
-              <MapPin className="size-4 text-blue-600 dark:text-cyan-400 shrink-0" />
+            <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide flex items-center gap-1.5">
+              <MapPin className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
               <span>1. Chọn cơ sở kho:</span>
             </span>
           </div>
@@ -268,7 +268,7 @@ export default function StorageMap2D({
           {/* BỘ LỌC ĐỊA ĐIỂM (TỈNH / THÀNH PHỐ) */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 scrollbar-none">
             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0 mr-1">
-              <Filter className="size-3.5 text-blue-600 dark:text-cyan-400" />
+              <Filter className="size-3.5 text-blue-600 dark:text-blue-400" />
               <span>Khu vực:</span>
             </div>
             {[
@@ -309,7 +309,7 @@ export default function StorageMap2D({
                   onClick={() => onFacilityChange(fKey)}
                   className={`group relative shrink-0 w-64 sm:w-72 text-left rounded-2xl overflow-hidden border-2 transition-all duration-200 cursor-pointer flex flex-col ${
                     isSelected
-                      ? 'border-blue-600 dark:border-cyan-400 ring-4 ring-blue-500/20 shadow-xl bg-blue-50/20 dark:bg-blue-950/20 scale-[1.02]'
+                      ? 'border-blue-600 dark:border-blue-500 ring-4 ring-blue-500/20 shadow-xl bg-blue-50/20 dark:bg-blue-950/20 scale-[1.02]'
                       : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-blue-300 dark:hover:border-slate-700 opacity-85 hover:opacity-100 hover:shadow-md'
                   }`}
                 >
@@ -345,7 +345,7 @@ export default function StorageMap2D({
 
                   {/* Địa chỉ cơ sở: hiển thị đầy đủ, không bị cắt xén */}
                   <div className="p-3 bg-white dark:bg-slate-900 flex-1 min-h-[58px] flex items-start gap-1.5 border-t border-slate-100 dark:border-slate-800/80">
-                    <MapPin className="size-3.5 text-blue-500 dark:text-cyan-400 shrink-0 mt-0.5" />
+                    <MapPin className="size-3.5 text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
                     <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium leading-snug">
                       {fData.address}
                     </p>
@@ -369,8 +369,8 @@ export default function StorageMap2D({
             className="p-4 sm:p-5 rounded-3xl border shadow-sm w-full bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 space-y-3.5 text-slate-900 dark:text-white"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide flex items-center gap-1.5">
-                <Snowflake className="size-4 text-blue-600 dark:text-cyan-400 shrink-0" />
+              <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide flex items-center gap-1.5">
+                <Snowflake className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
                 <span>2. Chọn loại kho lưu trữ:</span>
               </span>
             </div>
@@ -388,7 +388,7 @@ export default function StorageMap2D({
                     }}
                     className={`group relative text-left rounded-2xl overflow-hidden border-2 transition-all duration-200 cursor-pointer flex flex-col ${
                       isSelected
-                        ? 'border-blue-600 dark:border-cyan-400 ring-4 ring-blue-500/20 shadow-lg bg-blue-50/30 dark:bg-blue-950/20 scale-[1.01]'
+                        ? 'border-blue-600 dark:border-blue-500 ring-4 ring-blue-500/20 shadow-lg bg-blue-50/30 dark:bg-blue-950/20 scale-[1.01]'
                         : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-blue-300 dark:hover:border-slate-700 opacity-80 hover:opacity-100 hover:shadow-xs'
                     }`}
                   >
@@ -411,7 +411,7 @@ export default function StorageMap2D({
 
                     {/* Thông tin loại kho */}
                     <div className="p-3 flex-1 flex flex-col justify-center text-center">
-                      <p className={`text-sm font-black ${isSelected ? 'text-blue-600 dark:text-cyan-400' : 'text-slate-900 dark:text-white'}`}>
+                      <p className={`text-sm font-black ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-900 dark:text-white'}`}>
                         {t.name}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 font-medium mt-1">
@@ -440,8 +440,8 @@ export default function StorageMap2D({
             {/* 3. TẦNG */}
             <div className="p-4 sm:p-5 rounded-3xl border shadow-sm bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-slate-900 dark:text-white">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide flex items-center shrink-0 min-w-[90px] gap-1.5">
-                  <Layers className="size-4 text-blue-600 dark:text-cyan-400 shrink-0" />
+                <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide flex items-center shrink-0 min-w-[90px] gap-1.5">
+                  <Layers className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
                   <span>3. Chọn tầng:</span>
                 </span>
                 <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 gap-1.5 shrink-0">
@@ -449,7 +449,7 @@ export default function StorageMap2D({
                     type="button"
                     onClick={() => onSelectFloor(1)}
                     className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                      currentFloor === 1 ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
+                      currentFloor === 1 ? 'bg-blue-600 dark:bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
                     }`}
                   >
                     Tầng Trệt
@@ -458,7 +458,7 @@ export default function StorageMap2D({
                     type="button"
                     onClick={() => onSelectFloor(2)}
                     className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                      currentFloor === 2 ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
+                      currentFloor === 2 ? 'bg-blue-600 dark:bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
                     }`}
                   >
                     Tầng 1
@@ -468,7 +468,7 @@ export default function StorageMap2D({
                       type="button"
                       onClick={() => onSelectFloor(3)}
                       className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                        currentFloor === 3 ? 'bg-blue-600 dark:bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
+                        currentFloor === 3 ? 'bg-blue-600 dark:bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
                       }`}
                     >
                       Tầng 2
@@ -489,8 +489,8 @@ export default function StorageMap2D({
       {/* SƠ ĐỒ MẶT BẰNG 2D BLUEPRINT */}
       <div className="p-3 sm:p-3.5 rounded-2xl border shadow-xs space-y-2.5 bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
         <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2 gap-2">
-          <div className="flex items-center space-x-2 text-xs font-black text-blue-600 dark:text-cyan-400 uppercase tracking-wide">
-            <i className="fa-solid fa-map text-blue-600 dark:text-cyan-400 text-sm"></i>
+          <div className="flex items-center space-x-2 text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+            <i className="fa-solid fa-map text-blue-600 dark:text-blue-400 text-sm"></i>
             <span>SƠ ĐỒ MẶT BẰNG Ô KHO • {currentFloor === 1 ? 'TẦNG TRỆT' : `TẦNG ${currentFloor - 1}`}</span>
           </div>
           <div className="flex items-center gap-2">

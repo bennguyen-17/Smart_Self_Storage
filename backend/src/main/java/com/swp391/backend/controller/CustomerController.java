@@ -5,14 +5,17 @@ import com.swp391.backend.entity.Account;
 import com.swp391.backend.entity.CustomerProfile;
 import com.swp391.backend.repository.AccountRepository;
 import com.swp391.backend.repository.CustomerProfileRepository;
+import com.swp391.backend.service.EmailService;
 import com.swp391.backend.service.JwtService;
 import io.jsonwebtoken.Claims;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 
 @RestController
 @RequestMapping("/api/customers")
@@ -21,20 +24,19 @@ public class CustomerController {
     private final AccountRepository accountRepository;
     private final CustomerProfileRepository customerProfileRepository;
     private final JwtService jwtService;
+    private final EmailService emailService;
 
     public CustomerController(AccountRepository accountRepository, 
                               CustomerProfileRepository customerProfileRepository, 
-                              JwtService jwtService) {
+                              JwtService jwtService,
+                              EmailService emailService) {
         this.accountRepository = accountRepository;
         this.customerProfileRepository = customerProfileRepository;
         this.jwtService = jwtService;
+        this.emailService = emailService;
     }
 
-    @GetMapping("/profile")
-    public ResponseEntity<?> getProfile(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestParam(required = false) Long accountId) {
-        
+    private Account resolveAccount(String authHeader, Long accountId) {
         Long targetId = accountId;
 
         if (targetId == null && authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -52,18 +54,23 @@ public class CustomerController {
             }
         }
 
-        Account account = null;
         if (targetId != null) {
-            account = accountRepository.findById(targetId).orElse(null);
+            Account account = accountRepository.findById(targetId).orElse(null);
+            if (account != null) return account;
         }
 
-        if (account == null) {
-            // Find first active customer account if not specified
-            account = accountRepository.findAll().stream()
-                    .filter(a -> a.getRoleId() != null && a.getRoleId() == 5L)
-                    .findFirst()
-                    .orElse(null);
-        }
+        return accountRepository.findAll().stream()
+                .filter(a -> a.getRoleId() != null && a.getRoleId() == 5L)
+                .findFirst()
+                .orElse(null);
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<?> getProfile(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestParam(required = false) Long accountId) {
+        
+        Account account = resolveAccount(authHeader, accountId);
 
         if (account == null) {
             return ResponseEntity.notFound().build();
@@ -92,46 +99,135 @@ public class CustomerController {
         return ResponseEntity.ok(data);
     }
 
+    @PostMapping("/profile/send-email-otp")
+    public ResponseEntity<ApiResponse> sendEmailOtp(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody Map<String, Object> request) {
+        
+        Long accountId = request.containsKey("accountId") && request.get("accountId") != null 
+                ? Long.parseLong(request.get("accountId").toString()) : null;
+        Account account = resolveAccount(authHeader, accountId);
+        if (account == null) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, "Không tìm thấy thông tin tài khoản."));
+        }
+
+        String newEmail = request.get("newEmail") != null ? request.get("newEmail").toString().trim().toLowerCase() : null;
+        if (newEmail == null || !newEmail.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, "Địa chỉ email mới không hợp lệ."));
+        }
+
+        // Check if email already used by another account
+        Optional<Account> existing = accountRepository.findByEmail(newEmail);
+        if (existing.isPresent() && !existing.get().getAccountId().equals(account.getAccountId())) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, "Email này đã được sử dụng bởi một tài khoản khác."));
+        }
+
+        // Sinh mã OTP 6 số
+        String otpCode = String.format("%06d", new Random().nextInt(1_000_000));
+        account.setOtpCode(otpCode);
+        account.setOtpExpiryTime(LocalDateTime.now().plusMinutes(5));
+        accountRepository.save(account);
+
+        // Gửi email OTP tới Email MỚI
+        boolean emailSent = emailService.sendOtpEmail(newEmail, account.getFullName(), otpCode, "Cập nhật Email mới");
+        String message = emailSent 
+                ? "Mã OTP đã được gửi đến email " + newEmail + ". Vui lòng kiểm tra hộp thư!"
+                : "Mã OTP đã được tạo (Mã thử nghiệm: " + otpCode + "). Vui lòng nhập để xác nhận!";
+
+        return ResponseEntity.ok(new ApiResponse(true, message));
+    }
+
     @PutMapping("/profile")
-    public ResponseEntity<ApiResponse> updateProfile(
+    public ResponseEntity<?> updateProfile(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, Object> updateData) {
         
-        Long targetId = null;
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            try {
-                String token = authHeader.substring(7);
-                Claims claims = jwtService.validateTokenAndGetClaims(token);
-                Object userIdObj = claims.get("userId");
-                if (userIdObj instanceof Number) {
-                    targetId = ((Number) userIdObj).longValue();
-                } else if (userIdObj != null) {
-                    targetId = Long.parseLong(userIdObj.toString());
-                }
-            } catch (Exception e) {}
+        Long accountId = updateData.containsKey("accountId") && updateData.get("accountId") != null 
+                ? Long.parseLong(updateData.get("accountId").toString()) : null;
+        Account account = resolveAccount(authHeader, accountId);
+        if (account == null) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, "Không tìm thấy tài khoản."));
         }
 
-        if (targetId != null) {
-            Account account = accountRepository.findById(targetId).orElse(null);
-            if (account != null) {
-                if (updateData.containsKey("fullName") && updateData.get("fullName") != null) {
-                    account.setFullName(updateData.get("fullName").toString());
-                }
-                if (updateData.containsKey("email") && updateData.get("email") != null) {
-                    account.setEmail(updateData.get("email").toString());
-                }
-                accountRepository.save(account);
-
-                if (updateData.containsKey("identityNumber") && updateData.get("identityNumber") != null) {
-                    String cccd = updateData.get("identityNumber").toString();
-                    CustomerProfile cp = customerProfileRepository.findByAccountId(account.getAccountId())
-                            .orElseGet(() -> new CustomerProfile(account.getAccountId(), cccd));
-                    cp.setIdentityNumber(cccd);
-                    customerProfileRepository.save(cp);
-                }
+        // 1. Họ và tên
+        if (updateData.containsKey("fullName") && updateData.get("fullName") != null) {
+            String fullName = updateData.get("fullName").toString().trim();
+            if (!fullName.isEmpty()) {
+                account.setFullName(fullName);
             }
         }
 
-        return ResponseEntity.ok(new ApiResponse(true, "Cập nhật hồ sơ thành công!"));
+        // 2. Số điện thoại (Kiểm tra định dạng và trùng lặp)
+        if (updateData.containsKey("phone") && updateData.get("phone") != null) {
+            String newPhone = updateData.get("phone").toString().trim();
+            if (!newPhone.matches("^0[0-9]{9}$")) {
+                return ResponseEntity.badRequest().body(new ApiResponse(false, "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0."));
+            }
+            if (!newPhone.equals(account.getPhone())) {
+                Optional<Account> phoneOwner = accountRepository.findByPhone(newPhone);
+                if (phoneOwner.isPresent() && !phoneOwner.get().getAccountId().equals(account.getAccountId())) {
+                    return ResponseEntity.badRequest().body(new ApiResponse(false, "Số điện thoại này đã được sử dụng bởi tài khoản khác."));
+                }
+                account.setPhone(newPhone);
+            }
+        }
+
+        // 3. Email (Nếu có thay đổi, bắt buộc phải có OTP hợp lệ)
+        if (updateData.containsKey("email") && updateData.get("email") != null) {
+            String newEmail = updateData.get("email").toString().trim().toLowerCase();
+            String currentEmail = account.getEmail() != null ? account.getEmail().trim().toLowerCase() : "";
+
+            if (!newEmail.equals(currentEmail)) {
+                if (!newEmail.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                    return ResponseEntity.badRequest().body(new ApiResponse(false, "Địa chỉ email mới không hợp lệ."));
+                }
+                Optional<Account> emailOwner = accountRepository.findByEmail(newEmail);
+                if (emailOwner.isPresent() && !emailOwner.get().getAccountId().equals(account.getAccountId())) {
+                    return ResponseEntity.badRequest().body(new ApiResponse(false, "Email này đã được sử dụng bởi tài khoản khác."));
+                }
+
+                String otpCode = updateData.containsKey("otpCode") && updateData.get("otpCode") != null 
+                        ? updateData.get("otpCode").toString().trim() : "";
+                
+                if (otpCode.isEmpty()) {
+                    return ResponseEntity.badRequest().body(new ApiResponse(false, "Vui lòng nhập mã OTP xác thực email gửi đến hòm thư mới."));
+                }
+
+                if (account.getOtpCode() == null || !account.getOtpCode().equals(otpCode)) {
+                    return ResponseEntity.badRequest().body(new ApiResponse(false, "Mã OTP xác thực không chính xác."));
+                }
+                if (account.getOtpExpiryTime() != null && account.getOtpExpiryTime().isBefore(LocalDateTime.now())) {
+                    return ResponseEntity.badRequest().body(new ApiResponse(false, "Mã OTP đã hết hạn (hiệu lực 5 phút). Vui lòng yêu cầu mã mới."));
+                }
+
+                account.setEmail(newEmail);
+                account.setOtpCode(null);
+                account.setOtpExpiryTime(null);
+            }
+        }
+
+        accountRepository.save(account);
+
+        // Fetch CustomerProfile from Database
+        Optional<CustomerProfile> profileOpt = customerProfileRepository.findByAccountId(account.getAccountId());
+        String identityNumber = profileOpt.map(CustomerProfile::getIdentityNumber).orElse("Chưa cập nhật");
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("customerId", account.getAccountId());
+        data.put("accountId", account.getAccountId());
+        data.put("fullName", account.getFullName());
+        data.put("phone", account.getPhone());
+        data.put("email", account.getEmail());
+        data.put("status", account.getStatus());
+        data.put("identityNumber", identityNumber);
+        data.put("isVerified", "ACTIVE".equalsIgnoreCase(account.getStatus()));
+        data.put("verificationBadge", "ACTIVE".equalsIgnoreCase(account.getStatus()) ? "ĐÃ XÁC THỰC THÔNG TIN" : "CHƯA XÁC THỰC THÔNG TIN");
+
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("success", true);
+        resp.put("message", "Cập nhật hồ sơ thành công!");
+        resp.put("data", data);
+
+        return ResponseEntity.ok(resp);
     }
 }

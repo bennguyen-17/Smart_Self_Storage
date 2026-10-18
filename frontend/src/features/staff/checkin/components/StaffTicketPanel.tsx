@@ -22,6 +22,7 @@ import StaffInspectionModal, {
   type InspectionTarget,
 } from "./StaffInspectionModal"
 import StaffUnlockModal, { type UnlockTicketInfo } from "./StaffUnlockModal"
+import StaffShiftBadge from "./StaffShiftBadge"
 
 type TicketStatus = "SUBMITTED" | "IN_PROGRESS" | "RESOLVED"
 
@@ -441,12 +442,7 @@ function StaffTicketPanel() {
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-100/80 px-3 py-1 text-xs font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-              <span className="size-2 animate-pulse rounded-full bg-emerald-500" />
-              Ca Trực Hoạt Động (08:00 - 20:00)
-            </span>
-          </div>
+          <StaffShiftBadge />
         </div>
 
         {/* Cụm Filter Chips theo trạng thái - Nằm trực tiếp trên nền như CheckinPanel */}

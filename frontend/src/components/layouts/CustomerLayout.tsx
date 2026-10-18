@@ -83,7 +83,7 @@ export default function CustomerLayout({ children, activeNav = 'home' }: Custome
                 type="button"
                 onClick={() => navigate('/portal')}
                 title="Về Trang Chủ"
-                className="p-1.5 sm:p-2 rounded-xl transition cursor-pointer shrink-0 text-slate-500 hover:text-blue-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700"
+                className="p-1.5 sm:p-2 rounded-xl transition cursor-pointer shrink-0 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white dark:hover:bg-slate-700"
               >
                 <Home className="size-4 sm:size-4.5" />
               </button>
@@ -99,13 +99,13 @@ export default function CustomerLayout({ children, activeNav = 'home' }: Custome
                     onClick={() => navigate(item.path)}
                     className={`px-3 sm:px-3.5 py-1.5 rounded-xl font-bold text-xs sm:text-sm tracking-wide flex items-center gap-1.5 whitespace-nowrap transition-all duration-200 cursor-pointer ${
                       isActive
-                        ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30 dark:bg-cyan-500 dark:text-slate-950 dark:shadow-cyan-400/30'
+                        ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30 dark:bg-blue-600 dark:text-white dark:shadow-blue-500/30'
                         : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-700/70'
                     }`}
                   >
                     <Icon
                       className={`size-4 shrink-0 ${
-                        isActive ? 'text-white dark:text-slate-950' : 'text-slate-500 dark:text-slate-400'
+                        isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'
                       }`}
                     />
                     <span>{item.label}</span>
