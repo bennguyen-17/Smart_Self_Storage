@@ -211,7 +211,6 @@ function GateLogPanel() {
                   <th scope="col" className="px-4 py-3 font-bold">Vị trí cổng</th>
                   <th scope="col" className="px-4 py-3 font-bold">Phương thức</th>
                   <th scope="col" className="px-4 py-3 font-bold">Trạng thái</th>
-                  <th scope="col" className="px-4 py-3 font-bold">Nhân viên hỗ trợ</th>
                   <th scope="col" className="px-4 py-3 font-bold">Ghi chú / Lý do</th>
                 </tr>
               </thead>
@@ -219,7 +218,7 @@ function GateLogPanel() {
                 {isLoading &&
                   Array.from({ length: 5 }, (_, i) => (
                     <tr key={i} className="border-b last:border-0">
-                      <td colSpan={7} className="px-4 py-3">
+                      <td colSpan={6} className="px-4 py-3">
                         <div className="h-5 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
                       </td>
                     </tr>
@@ -227,7 +226,7 @@ function GateLogPanel() {
 
                 {!isLoading && rows.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center">
+                    <td colSpan={6} className="px-4 py-12 text-center">
                       <InboxIcon aria-hidden="true" className="text-muted mx-auto mb-2 size-8 text-slate-400" />
                       <p className="text-title font-semibold text-sm">
                         {all.length === 0 ? "Chưa có lượt ra vào cổng nào" : "Không tìm thấy nhật ký phù hợp bộ lọc"}
@@ -294,10 +293,17 @@ function GateLogPanel() {
                         {/* Phương thức */}
                         <td className="px-4 py-3 whitespace-nowrap">
                           {isManual ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-800">
-                              <KeyRoundIcon className="size-3" />
-                              Thẻ Master
-                            </span>
+                            <div className="flex flex-col gap-0.5">
+                              <span className="inline-flex w-fit items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-800">
+                                <KeyRoundIcon className="size-3" />
+                                Thẻ Master
+                              </span>
+                              {log.staffName && (
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                                  Bởi: {log.staffName}
+                                </span>
+                              )}
+                            </div>
                           ) : (
                             <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:ring-indigo-800">
                               <SmartphoneIcon className="size-3" />
@@ -312,22 +318,6 @@ function GateLogPanel() {
                             <CheckCircle2Icon className="size-3.5" />
                             Hợp lệ
                           </span>
-                        </td>
-
-                        {/* Nhân viên hỗ trợ */}
-                        <td className="text-title px-4 py-3 whitespace-nowrap">
-                          {isManual ? (
-                            <div className="flex flex-col">
-                              <span className="font-medium text-slate-800 dark:text-slate-200">
-                                {log.staffName || `Nhân viên #${log.accountId || "NV"}`}
-                              </span>
-                              {log.accountId && (
-                                <span className="font-mono text-[10px] text-slate-400">ID: #{log.accountId}</span>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-muted text-[11px] italic">Tự động (IoT)</span>
-                          )}
                         </td>
 
                         {/* Lý do / Ghi chú */}
