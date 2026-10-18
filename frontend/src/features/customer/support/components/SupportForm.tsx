@@ -178,7 +178,7 @@ export default function SupportForm() {
       case 'UNLOCK':
         return { label: 'Mở khóa khẩn cấp', icon: KeyRound, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' };
       case 'MAINTENANCE':
-        return { label: 'Bảo trì / Sửa chữa', icon: Wrench, color: 'text-blue-600 dark:text-cyan-400', bg: 'bg-blue-500/10 border-blue-500/20' };
+        return { label: 'Bảo trì / Sửa chữa', icon: Wrench, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' };
       case 'INCIDENT':
         return { label: 'Báo sự cố an ninh', icon: AlertCircle, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-500/10 border-rose-500/20' };
       case 'EARLY_TERMINATION':
@@ -215,8 +215,8 @@ export default function SupportForm() {
         );
       case 'IN_PROGRESS':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-700 border border-blue-500/30 dark:bg-cyan-500/15 dark:text-cyan-300">
-            <span className="size-1.5 rounded-full bg-blue-500 dark:bg-cyan-400 animate-spin"></span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-700 border border-blue-500/30 dark:bg-blue-600/15 dark:text-blue-300">
+            <span className="size-1.5 rounded-full bg-blue-500 dark:bg-blue-400 animate-spin"></span>
             <span>Đang xử lý</span>
           </span>
         );
@@ -240,7 +240,7 @@ export default function SupportForm() {
     <div className="w-full max-w-5xl mx-auto space-y-6">
       {/* Banner Tiêu Đề - Chỉ hiển thị bên trang Gửi yêu cầu mới */}
       {activeSubTab === 'create' && (
-        <div className="bg-white dark:bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-cyan-500/30 p-5 sm:p-6 shadow-md shadow-slate-300/40 dark:shadow-[0_0_25px_rgba(34,211,238,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="bg-white dark:bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-blue-500/30 p-5 sm:p-6 shadow-md shadow-slate-300/40 dark:shadow-[0_0_25px_rgba(59,130,246,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-3.5">
             <div className="p-3 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-400/30 shadow-xs dark:shadow-[0_0_15px_rgba(245,158,11,0.25)]">
               <Headset className="size-6 text-amber-500 dark:text-amber-300" />
@@ -261,10 +261,10 @@ export default function SupportForm() {
       {activeSubTab === 'create' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* CỘT TRÁI: FORM GỬI YÊU CẦU HỖ TRỢ */}
-          <div className="lg:col-span-7 flex flex-col bg-white dark:bg-slate-950/85 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-cyan-500/30 p-6 sm:p-7 shadow-md shadow-slate-300/40 dark:shadow-xl">
+          <div className="lg:col-span-7 flex flex-col bg-white dark:bg-slate-950/85 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-blue-500/30 p-6 sm:p-7 shadow-md shadow-slate-300/40 dark:shadow-xl">
             {/* Header đồng bộ với cột phải */}
             <div className="flex items-center space-x-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-cyan-400">
+              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
                 <MessageSquare className="size-5" />
               </div>
               <div>
@@ -338,7 +338,7 @@ export default function SupportForm() {
                       Tài khoản của bạn hiện chưa có hợp đồng thuê kho nào ở trạng thái <strong className="text-emerald-600 dark:text-emerald-400">đang có hiệu lực</strong> . Chức năng gửi ticket hỗ trợ kỹ thuật và mở khóa khẩn cấp chỉ áp dụng cho khách hàng đang có hợp đồng hoạt động tại cơ sở.
                     </p>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-1">
-                      Nếu hợp đồng của bạn đang chờ check-in nhận kho hoặc cần tư vấn, vui lòng gặp nhân viên tại sảnh cơ sở trong khung giờ trực <strong className="text-blue-600 dark:text-cyan-300">(08:00 - 20:00)</strong> hoặc kiểm tra thông tin hợp đồng tại mục Kho của tôi.
+                      Nếu hợp đồng của bạn đang chờ check-in nhận kho hoặc cần tư vấn, vui lòng gặp nhân viên tại sảnh cơ sở trong khung giờ trực <strong className="text-blue-600 dark:text-blue-300">(08:00 - 20:00)</strong> hoặc kiểm tra thông tin hợp đồng tại mục Kho của tôi.
                     </p>
                   </div>
                 )}
@@ -376,8 +376,8 @@ export default function SupportForm() {
                         className={`p-3 rounded-xl border text-xs font-bold flex items-center space-x-2 transition-all text-left ${!hasActiveContracts
                             ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-900/50 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-800'
                             : ticketType === cat.id
-                              ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20 dark:bg-cyan-500/20 dark:text-cyan-300 dark:border-cyan-400/50 dark:shadow-cyan-500/20 font-black cursor-pointer'
-                              : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/80 dark:text-slate-300 dark:border-slate-800 dark:hover:border-cyan-500/40 dark:hover:text-white cursor-pointer'
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20 dark:bg-blue-600/20 dark:text-blue-300 dark:border-blue-500/50 dark:shadow-blue-500/20 font-black cursor-pointer'
+                              : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/80 dark:text-slate-300 dark:border-slate-800 dark:hover:border-blue-500/40 dark:hover:text-white cursor-pointer'
                           }`}
                       >
                         <cat.icon className="size-4 shrink-0" />
@@ -396,7 +396,7 @@ export default function SupportForm() {
                     disabled={!hasActiveContracts}
                     value={unitSelect}
                     onChange={(e) => setUnitSelect(e.target.value)}
-                    className={`w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-cyan-500/30 bg-slate-50 dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold text-xs sm:text-sm focus:border-blue-500 dark:focus:border-cyan-400 focus:outline-none ${!hasActiveContracts ? 'opacity-50 cursor-not-allowed text-slate-400 dark:text-slate-500' : 'cursor-pointer'
+                    className={`w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-blue-500/30 bg-slate-50 dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold text-xs sm:text-sm focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none ${!hasActiveContracts ? 'opacity-50 cursor-not-allowed text-slate-400 dark:text-slate-500' : 'cursor-pointer'
                       }`}
                   >
                     {!hasActiveContracts ? (
@@ -456,7 +456,7 @@ export default function SupportForm() {
                           ? "Nhập ghi chú cho yêu cầu trả kho sớm (nếu có)..."
                           : "Ví dụ: Cửa cuốn ô kho A-102 kẹt không mở được, hoặc quên mã bảo mật, cần mở khóa từ xa..."
                     }
-                    className={`w-full flex-1 min-h-[120px] p-3.5 rounded-xl border border-slate-200 dark:border-cyan-500/30 bg-slate-50 dark:bg-slate-900/90 text-slate-900 dark:text-white text-xs sm:text-sm focus:border-blue-500 dark:focus:border-cyan-400 focus:outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none ${!hasActiveContracts ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-900/50' : ''
+                    className={`w-full flex-1 min-h-[120px] p-3.5 rounded-xl border border-slate-200 dark:border-blue-500/30 bg-slate-50 dark:bg-slate-900/90 text-slate-900 dark:text-white text-xs sm:text-sm focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none ${!hasActiveContracts ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-900/50' : ''
                       }`}
                   />
                 </div>
@@ -468,7 +468,7 @@ export default function SupportForm() {
                   type="submit"
                   disabled={!hasActiveContracts || submitting}
                   className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 transition-all ${hasActiveContracts
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white font-bold cursor-pointer shadow-md shadow-blue-500/20 dark:bg-cyan-500 dark:hover:bg-cyan-400 dark:text-slate-950 dark:font-black'
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white font-bold cursor-pointer shadow-md shadow-blue-500/20 dark:bg-blue-600 dark:hover:bg-blue-500 dark:text-white dark:font-bold'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700/60 cursor-not-allowed opacity-75'
                     } disabled:opacity-50`}
                 >
@@ -486,9 +486,9 @@ export default function SupportForm() {
           </div>
 
           {/* CỘT PHẢI: QUY TRÌNH HỖ TRỢ & TIÊU CHUẨN DỊCH VỤ */}
-          <div className="lg:col-span-5 h-fit flex flex-col space-y-4 bg-white dark:bg-slate-950/75 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-cyan-500/20 p-6 sm:p-7 shadow-md shadow-slate-300/40 dark:shadow-xl">
+          <div className="lg:col-span-5 h-fit flex flex-col space-y-4 bg-white dark:bg-slate-950/75 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-blue-500/20 p-6 sm:p-7 shadow-md shadow-slate-300/40 dark:shadow-xl">
             <div className="flex items-center space-x-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-cyan-400">
+              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
                 <ShieldCheck className="size-5" />
               </div>
               <div>
@@ -505,8 +505,8 @@ export default function SupportForm() {
               {/* 1. KHUNG GIỜ LÀM VIỆC CỦA NHÂN VIÊN */}
               <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-blue-700 dark:text-cyan-300 uppercase font-bold tracking-wider flex items-center gap-1.5">
-                    <Clock className="size-3.5 text-blue-600 dark:text-cyan-400" />
+                  <span className="text-[11px] text-blue-700 dark:text-blue-300 uppercase font-bold tracking-wider flex items-center gap-1.5">
+                    <Clock className="size-3.5 text-blue-600 dark:text-blue-400" />
                     <span>Giờ trực tại cơ sở</span>
                   </span>
                   <span className="font-mono font-bold text-xs text-slate-900 dark:text-white">
@@ -535,10 +535,10 @@ export default function SupportForm() {
               </div>
 
               {/* 3. XÁC THỰC DANH TÍNH MỞ KHÓA */}
-              <div className="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-cyan-950/20 border border-blue-200 dark:border-cyan-500/30 space-y-1">
+              <div className="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-500/30 space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-blue-700 dark:text-cyan-300 uppercase font-bold tracking-wider flex items-center gap-1.5">
-                    <KeyRound className="size-3.5 text-blue-600 dark:text-cyan-400" />
+                  <span className="text-[11px] text-blue-700 dark:text-blue-300 uppercase font-bold tracking-wider flex items-center gap-1.5">
+                    <KeyRound className="size-3.5 text-blue-600 dark:text-blue-400" />
                     <span>Xác thực khi hỗ trợ mở khóa</span>
                   </span>
                 </div>
@@ -568,10 +568,10 @@ export default function SupportForm() {
             {activeSubTab === 'history' && (
               <div className="space-y-6">
                 {/* Banner Tiêu Đề của Danh sách yêu cầu - Đồng bộ phong cách với trang Gửi hỗ trợ */}
-                <div className="bg-white dark:bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-cyan-500/30 p-5 sm:p-6 shadow-md shadow-slate-300/40 dark:shadow-[0_0_25px_rgba(34,211,238,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="bg-white dark:bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-blue-500/30 p-5 sm:p-6 shadow-md shadow-slate-300/40 dark:shadow-[0_0_25px_rgba(59,130,246,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex items-center space-x-3.5">
-                    <div className="p-3 rounded-2xl bg-blue-500/15 text-blue-600 dark:text-cyan-300 border border-blue-400/30 shadow-xs dark:shadow-[0_0_15px_rgba(6,182,212,0.25)]">
-                      <ClipboardList className="size-6 text-blue-600 dark:text-cyan-300" />
+                    <div className="p-3 rounded-2xl bg-blue-500/15 text-blue-600 dark:text-blue-300 border border-blue-400/30 shadow-xs dark:shadow-[0_0_15px_rgba(37,99,235,0.25)]">
+                      <ClipboardList className="size-6 text-blue-600 dark:text-blue-300" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2.5">
@@ -579,7 +579,7 @@ export default function SupportForm() {
                           DANH SÁCH YÊU CẦU CỦA TÔI
                         </h2>
                         {myTickets.length > 0 && (
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-100 text-blue-800 dark:bg-cyan-500/20 dark:text-cyan-300 border border-blue-200 dark:border-cyan-500/30">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-100 text-blue-800 dark:bg-blue-600/20 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
                             {myTickets.length} yêu cầu
                           </span>
                         )}
@@ -596,7 +596,7 @@ export default function SupportForm() {
                     onClick={fetchTickets}
                     className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition cursor-pointer self-start sm:self-auto shrink-0 shadow-xs"
                   >
-                    <RefreshCw className={`size-4 ${loadingTickets ? 'animate-spin text-blue-600 dark:text-cyan-400' : ''}`} />
+                    <RefreshCw className={`size-4 ${loadingTickets ? 'animate-spin text-blue-600 dark:text-blue-400' : ''}`} />
                     <span>Cập nhật trạng thái</span>
                   </button>
                 </div>
@@ -615,7 +615,7 @@ export default function SupportForm() {
                         type="button"
                         onClick={() => setTicketStatusFilter(tab.key as any)}
                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${ticketStatusFilter === tab.key
-                            ? 'bg-blue-600 text-white shadow-xs dark:bg-cyan-500 dark:text-slate-950 font-black'
+                            ? 'bg-blue-600 text-white shadow-xs dark:bg-blue-600 dark:text-slate-950 font-black'
                             : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/80'
                           }`}
                       >
@@ -670,7 +670,7 @@ export default function SupportForm() {
                           <div
                             key={ticketKey}
                             className={`rounded-2xl bg-white dark:bg-slate-900/90 border transition-all ${isExpanded
-                                ? 'border-blue-300 dark:border-cyan-500/40 shadow-xs'
+                                ? 'border-blue-300 dark:border-blue-500/40 shadow-xs'
                                 : 'border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs'
                               }`}
                           >
@@ -697,7 +697,7 @@ export default function SupportForm() {
                                     {meta.label}
                                   </h4>
                                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                    <span className="font-mono text-[11px] font-bold text-blue-600 dark:text-cyan-400">
+                                    <span className="font-mono text-[11px] font-bold text-blue-600 dark:text-blue-400">
                                       #{ticket.ticketCode}
                                     </span>
                                     <span className="text-slate-300 dark:text-slate-700">•</span>
@@ -715,7 +715,7 @@ export default function SupportForm() {
                               <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
                                 {getStatusBadge(ticket.status)}
                                 <div
-                                  className={`p-1.5 rounded-lg text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-blue-600 dark:text-cyan-400' : ''
+                                  className={`p-1.5 rounded-lg text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-blue-600 dark:text-blue-400' : ''
                                     }`}
                                 >
                                   <ChevronDown className="size-4" />
@@ -750,10 +750,10 @@ export default function SupportForm() {
                                 )}
 
                                 {ticket.status === 'IN_PROGRESS' && (
-                                  <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-800 dark:text-cyan-300 flex items-start gap-2.5">
-                                    <RefreshCw className="size-4 shrink-0 text-blue-600 dark:text-cyan-400 mt-0.5 animate-spin" />
+                                  <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-800 dark:text-blue-300 flex items-start gap-2.5">
+                                    <RefreshCw className="size-4 shrink-0 text-blue-600 dark:text-blue-400 mt-0.5 animate-spin" />
                                     <div className="space-y-0.5">
-                                      <p className="font-bold text-blue-900 dark:text-cyan-200">Nhân viên đang tiến hành xử lý</p>
+                                      <p className="font-bold text-blue-900 dark:text-blue-200">Nhân viên đang tiến hành xử lý</p>
                                       <p className="text-[11px] text-slate-600 dark:text-slate-400">
                                         Nhân viên trực ca đã tiếp nhận và đang trực tiếp có mặt tại ô kho để hỗ trợ giải quyết sự cố.
                                       </p>

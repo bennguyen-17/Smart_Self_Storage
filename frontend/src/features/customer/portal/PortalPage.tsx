@@ -32,12 +32,12 @@ const CUSTOMER_NAV_ITEMS: CustNavItem[] = [
     icon: Warehouse,
     theme: {
       cardBg: 'bg-white/90 hover:bg-white dark:bg-slate-900/80 dark:hover:bg-slate-800/90',
-      border: 'border border-blue-100 hover:border-blue-400/70 dark:border-slate-800 dark:hover:border-cyan-500/60 hover:ring-2 hover:ring-blue-400/15 dark:hover:ring-cyan-500/15',
-      shadow: 'shadow-lg shadow-blue-500/5 hover:shadow-xl hover:shadow-blue-500/15 dark:shadow-[0_10px_25px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_15px_30px_rgba(6,182,212,0.15)]',
+      border: 'border border-blue-100 hover:border-blue-400/70 dark:border-slate-800 dark:hover:border-blue-500/60 hover:ring-2 hover:ring-blue-400/15 dark:hover:ring-blue-500/15',
+      shadow: 'shadow-lg shadow-blue-500/5 hover:shadow-xl hover:shadow-blue-500/15 dark:shadow-[0_10px_25px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_15px_30px_rgba(37,99,235,0.15)]',
       iconBg: 'bg-gradient-to-tr from-blue-600 to-sky-500 text-white shadow-md shadow-blue-600/25',
       labelColor: 'text-slate-900 dark:text-white',
-      textHover: 'group-hover:text-blue-600 dark:group-hover:text-cyan-400',
-      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/70 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30',
+      textHover: 'group-hover:text-blue-600 dark:group-hover:text-blue-400',
+      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/70 dark:bg-blue-600/15 dark:text-blue-300 dark:border-blue-500/30',
     },
   },
   {
@@ -48,12 +48,12 @@ const CUSTOMER_NAV_ITEMS: CustNavItem[] = [
     icon: Boxes,
     theme: {
       cardBg: 'bg-white/90 hover:bg-white dark:bg-slate-900/80 dark:hover:bg-slate-800/90',
-      border: 'border border-blue-100 hover:border-blue-400/70 dark:border-slate-800 dark:hover:border-cyan-500/60 hover:ring-2 hover:ring-blue-400/15 dark:hover:ring-cyan-500/15',
-      shadow: 'shadow-lg shadow-blue-500/5 hover:shadow-xl hover:shadow-blue-500/15 dark:shadow-[0_10px_25px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_15px_30px_rgba(6,182,212,0.15)]',
+      border: 'border border-blue-100 hover:border-blue-400/70 dark:border-slate-800 dark:hover:border-blue-500/60 hover:ring-2 hover:ring-blue-400/15 dark:hover:ring-blue-500/15',
+      shadow: 'shadow-lg shadow-blue-500/5 hover:shadow-xl hover:shadow-blue-500/15 dark:shadow-[0_10px_25px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_15px_30px_rgba(37,99,235,0.15)]',
       iconBg: 'bg-gradient-to-tr from-blue-600 to-sky-500 text-white shadow-md shadow-blue-600/25',
       labelColor: 'text-slate-900 dark:text-white',
-      textHover: 'group-hover:text-blue-600 dark:group-hover:text-cyan-400',
-      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/70 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30',
+      textHover: 'group-hover:text-blue-600 dark:group-hover:text-blue-400',
+      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/70 dark:bg-blue-600/15 dark:text-blue-300 dark:border-blue-500/30',
     },
   },
   {
@@ -64,12 +64,12 @@ const CUSTOMER_NAV_ITEMS: CustNavItem[] = [
     icon: KeyRound,
     theme: {
       cardBg: 'bg-white/90 hover:bg-white dark:bg-slate-900/80 dark:hover:bg-slate-800/90',
-      border: 'border border-blue-100 hover:border-blue-400/70 dark:border-slate-800 dark:hover:border-cyan-500/60 hover:ring-2 hover:ring-blue-400/15 dark:hover:ring-cyan-500/15',
-      shadow: 'shadow-lg shadow-blue-500/5 hover:shadow-xl hover:shadow-blue-500/15 dark:shadow-[0_10px_25px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_15px_30px_rgba(6,182,212,0.15)]',
+      border: 'border border-blue-100 hover:border-blue-400/70 dark:border-slate-800 dark:hover:border-blue-500/60 hover:ring-2 hover:ring-blue-400/15 dark:hover:ring-blue-500/15',
+      shadow: 'shadow-lg shadow-blue-500/5 hover:shadow-xl hover:shadow-blue-500/15 dark:shadow-[0_10px_25px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_15px_30px_rgba(37,99,235,0.15)]',
       iconBg: 'bg-gradient-to-tr from-blue-600 to-sky-500 text-white shadow-md shadow-blue-600/25',
       labelColor: 'text-slate-900 dark:text-white',
-      textHover: 'group-hover:text-blue-600 dark:group-hover:text-cyan-400',
-      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/70 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30',
+      textHover: 'group-hover:text-blue-600 dark:group-hover:text-blue-400',
+      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/70 dark:bg-blue-600/15 dark:text-blue-300 dark:border-blue-500/30',
     },
   },
   {
@@ -80,12 +80,12 @@ const CUSTOMER_NAV_ITEMS: CustNavItem[] = [
     icon: Headset,
     theme: {
       cardBg: 'bg-white/90 hover:bg-white dark:bg-slate-900/80 dark:hover:bg-slate-800/90',
-      border: 'border border-blue-100 hover:border-blue-400/70 dark:border-slate-800 dark:hover:border-cyan-500/60 hover:ring-2 hover:ring-blue-400/15 dark:hover:ring-cyan-500/15',
-      shadow: 'shadow-lg shadow-blue-500/5 hover:shadow-xl hover:shadow-blue-500/15 dark:shadow-[0_10px_25px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_15px_30px_rgba(6,182,212,0.15)]',
+      border: 'border border-blue-100 hover:border-blue-400/70 dark:border-slate-800 dark:hover:border-blue-500/60 hover:ring-2 hover:ring-blue-400/15 dark:hover:ring-blue-500/15',
+      shadow: 'shadow-lg shadow-blue-500/5 hover:shadow-xl hover:shadow-blue-500/15 dark:shadow-[0_10px_25px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_15px_30px_rgba(37,99,235,0.15)]',
       iconBg: 'bg-gradient-to-tr from-blue-600 to-sky-500 text-white shadow-md shadow-blue-600/25',
       labelColor: 'text-slate-900 dark:text-white',
-      textHover: 'group-hover:text-blue-600 dark:group-hover:text-cyan-400',
-      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/70 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30',
+      textHover: 'group-hover:text-blue-600 dark:group-hover:text-blue-400',
+      badge: 'bg-blue-500/10 text-blue-700 border border-blue-200/70 dark:bg-blue-600/15 dark:text-blue-300 dark:border-blue-500/30',
     },
   },
 ];
@@ -141,7 +141,7 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
       >
         <div className="relative flex flex-col items-center select-none w-full max-w-5xl">
           {/* Ambient glow */}
-          <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-full max-w-3xl h-40 bg-gradient-to-r from-blue-500/20 via-cyan-400/25 to-indigo-500/20 blur-3xl rounded-full pointer-events-none -z-10" />
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-full max-w-3xl h-40 bg-gradient-to-r from-blue-500/20 via-blue-400/25 to-indigo-500/20 blur-3xl rounded-full pointer-events-none -z-10" />
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight uppercase text-center leading-[1.15]">
             <span className="text-slate-900 dark:text-white drop-shadow-xs">
@@ -151,7 +151,7 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
             <span className="text-slate-900 dark:text-white drop-shadow-xs">
               THÔNG MINH{' '}
             </span>
-            <span className="text-blue-600 dark:text-cyan-400 drop-shadow-[0_4px_16px_rgba(37,99,235,0.35)] dark:drop-shadow-[0_4px_20px_rgba(6,182,212,0.6)]">
+            <span className="text-blue-600 dark:text-blue-400 drop-shadow-[0_4px_16px_rgba(37,99,235,0.35)] dark:drop-shadow-[0_4px_20px_rgba(37,99,235,0.6)]">
               24/7
             </span>
           </h1>
@@ -159,12 +159,12 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
 
         {/* Customer Greeting */}
         <div className="flex items-center justify-center mt-6 sm:mt-8">
-          <div className="inline-flex items-center gap-3 px-6 py-2.5 sm:px-7 sm:py-3 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-blue-200/90 dark:border-cyan-400/70 shadow-lg shadow-blue-500/10 text-sm sm:text-base font-bold text-slate-700 dark:text-slate-200">
+          <div className="inline-flex items-center gap-3 px-6 py-2.5 sm:px-7 sm:py-3 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-blue-200/90 dark:border-blue-500/70 shadow-lg shadow-blue-500/10 text-sm sm:text-base font-bold text-slate-700 dark:text-slate-200">
             <span className="flex h-3 w-3 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
             </span>
-            <span className="text-slate-700 dark:text-cyan-400 font-medium text-base sm:text-lg tracking-wide">
+            <span className="text-slate-700 dark:text-blue-400 font-medium text-base sm:text-lg tracking-wide">
               Xin chào <span className="font-black">{customerName} !</span>
             </span>
           </div>

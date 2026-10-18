@@ -108,10 +108,10 @@ export default function RentStoragePage() {
 
   const rental = selectedUnit
     ? calcRentalTotal({
-        dailyPrice: selectedUnit.price,
-        monthlyPrice: selectedUnit.monthlyPrice || selectedUnit.price * 20,
-        days: effectiveDays,
-      })
+      dailyPrice: selectedUnit.price,
+      monthlyPrice: selectedUnit.monthlyPrice || selectedUnit.price * 20,
+      days: effectiveDays,
+    })
     : { total: 0, discountRate: 0 };
 
   const currentBranch = branches.find((b) => b.code === facility || b.id === facility);
@@ -269,8 +269,8 @@ export default function RentStoragePage() {
                   const canClick =
                     !isPaymentCompleted &&
                     ((s.id === 1) ||
-                     (s.id === 2 && !!selectedUnit) ||
-                     (s.id === 3 && !!selectedUnit && step >= 2));
+                      (s.id === 2 && !!selectedUnit) ||
+                      (s.id === 3 && !!selectedUnit && step >= 2));
 
                   return (
                     <div key={s.id} className="flex flex-col items-center">
@@ -280,13 +280,12 @@ export default function RentStoragePage() {
                         onClick={() => {
                           if (canClick) setStep(s.id as 1 | 2 | 3 | 4);
                         }}
-                        className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-black text-xs sm:text-sm transition-all duration-200 ${
-                          isPassed
+                        className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-black text-xs sm:text-sm transition-all duration-200 ${isPassed
                             ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 hover:bg-blue-700 cursor-pointer'
                             : isCurrent
-                            ? 'bg-blue-600 text-white ring-4 ring-blue-100 dark:ring-blue-900/60 shadow-lg shadow-blue-500/35 scale-110'
-                            : 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 border-2 border-slate-300 dark:border-slate-700'
-                        } ${canClick && !isCurrent ? 'cursor-pointer hover:scale-105' : !canClick && !isCurrent ? 'cursor-not-allowed opacity-60' : ''}`}
+                              ? 'bg-blue-600 text-white ring-4 ring-blue-100 dark:ring-blue-900/60 shadow-lg shadow-blue-500/35 scale-110'
+                              : 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 border-2 border-slate-300 dark:border-slate-700'
+                          } ${canClick && !isCurrent ? 'cursor-pointer hover:scale-105' : !canClick && !isCurrent ? 'cursor-not-allowed opacity-60' : ''}`}
                       >
                         {isPassed ? (
                           <Check className="size-4.5 stroke-[3]" />
@@ -297,13 +296,12 @@ export default function RentStoragePage() {
 
                       <div className="mt-2 text-center">
                         <p
-                          className={`text-[11px] sm:text-xs font-bold transition-colors ${
-                            isCurrent
+                          className={`text-[11px] sm:text-xs font-bold transition-colors ${isCurrent
                               ? 'text-blue-600 dark:text-blue-400 font-black'
                               : isPassed
-                              ? 'text-slate-700 dark:text-slate-200 font-semibold'
-                              : 'text-slate-400 dark:text-slate-500 font-medium'
-                          }`}
+                                ? 'text-slate-700 dark:text-slate-200 font-semibold'
+                                : 'text-slate-400 dark:text-slate-500 font-medium'
+                            }`}
                         >
                           <span className="hidden sm:inline">{s.title}</span>
                           <span className="sm:hidden">{s.shortTitle}</span>
@@ -357,11 +355,10 @@ export default function RentStoragePage() {
                   type="button"
                   disabled={!selectedUnit}
                   onClick={handleProceedToStep2}
-                  className={`px-8 py-3.5 rounded-2xl font-black text-sm tracking-wide flex items-center justify-center gap-2 transition-all shadow-md ${
-                    selectedUnit
+                  className={`px-8 py-3.5 rounded-2xl font-black text-sm tracking-wide flex items-center justify-center gap-2 transition-all shadow-md ${selectedUnit
                       ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/30 hover:shadow-lg hover:scale-[1.02] cursor-pointer'
                       : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-60'
-                  }`}
+                    }`}
                 >
                   <span>Tiếp theo</span>
                   <ArrowRight className="size-4.5" />
@@ -391,7 +388,7 @@ export default function RentStoragePage() {
                   <ArrowLeft className="size-4" />
                   <span>Quay lại chọn ô kho khác</span>
                 </button>
-                <span className="text-xs font-bold text-blue-600 dark:text-cyan-400 bg-blue-50 dark:bg-cyan-950/60 border border-blue-200 dark:border-cyan-800 px-3 py-1 rounded-full">
+                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 px-3 py-1 rounded-full">
                   Bước 2 / 4: Bảng giá & Hạn
                 </span>
               </div>
@@ -403,7 +400,7 @@ export default function RentStoragePage() {
                     <Boxes className="size-4 text-blue-600 mr-2" />
                     THÔNG TIN ĐẶT THUÊ KHO
                   </h3>
-                  <span className="text-lg font-mono font-black text-blue-600 dark:text-cyan-400">
+                  <span className="text-lg font-mono font-black text-blue-600 dark:text-blue-400">
                     {selectedUnit.id}
                   </span>
                 </div>
@@ -450,11 +447,10 @@ export default function RentStoragePage() {
                           setIsCustomDays(false);
                           setSelectedPkgDays(pkg.days);
                         }}
-                        className={`py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border ${
-                          !isCustomDays && selectedPkgDays === pkg.days
+                        className={`py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border ${!isCustomDays && selectedPkgDays === pkg.days
                             ? 'border-2 border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 shadow-xs'
                             : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-blue-400'
-                        }`}
+                          }`}
                       >
                         <div>{pkg.label}</div>
                         {pkg.discount && (
@@ -468,11 +464,10 @@ export default function RentStoragePage() {
                         setIsCustomDays(true);
                         if (!customDaysVal) setCustomDaysVal('7');
                       }}
-                      className={`py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border ${
-                        isCustomDays
+                      className={`py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border ${isCustomDays
                           ? 'border-2 border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 shadow-xs'
                           : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-blue-400'
-                      }`}
+                        }`}
                     >
                       Tùy chọn
                     </button>
@@ -549,7 +544,7 @@ export default function RentStoragePage() {
                     <strong className="text-slate-900 dark:text-white">{rental.total.toLocaleString('vi-VN')} đ</strong>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t border-blue-200 dark:border-blue-800 text-sm">
-                    <span className="font-bold text-slate-900 dark:text-white">Tiền cọc giữ chỗ thanh toán đợt 1:</span>
+                    <span className="font-bold text-slate-900 dark:text-white">Tiền cọc giữ chỗ:</span>
                     <span className="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono">
                       {selectedUnit.deposit.toLocaleString('vi-VN')} VNĐ
                     </span>
@@ -590,7 +585,7 @@ export default function RentStoragePage() {
                   <ArrowLeft className="size-4" />
                   <span>Quay lại Bảng giá</span>
                 </button>
-                <span className="text-xs font-bold text-blue-600 dark:text-cyan-400 bg-blue-50 dark:bg-cyan-950/60 border border-blue-200 dark:border-cyan-800 px-3 py-1 rounded-full">
+                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 px-3 py-1 rounded-full">
                   Bước 3 / 4: Thỏa thuận cọc
                 </span>
               </div>
@@ -617,28 +612,28 @@ export default function RentStoragePage() {
                       <span className="text-slate-500 dark:text-slate-400">
                         Chi nhánh: <strong className="text-slate-900 dark:text-white">{facilityDisplayName}</strong>
                       </span>
-                      <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${selectedUnit.isClimate ? 'bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200'}`}>
+                      <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${selectedUnit.isClimate ? 'bg-cyan-100 dark:bg-blue-950/60 text-cyan-700 dark:text-blue-300 border border-cyan-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200'}`}>
                         {selectedUnit.isClimate ? '❄️ Kho Mát (22-25°C)' : '📦 Kho Tiêu Chuẩn'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-                    <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                      <span className="text-slate-500 text-[11px] block">Mã kho</span>
-                      <span className="font-mono font-bold text-amber-500 text-sm block mt-0.5">{selectedUnit.id}</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                    <div className="bg-white dark:bg-slate-800 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-xs">
+                      <span className="text-slate-500 dark:text-slate-400 text-xs font-medium whitespace-nowrap">Mã kho</span>
+                      <span className="font-mono font-bold text-amber-500 text-sm whitespace-nowrap">{selectedUnit.id}</span>
                     </div>
-                    <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                      <span className="text-slate-500 text-[11px] block">Ngày nhận (Check-in)</span>
-                      <span className="font-semibold text-blue-600 dark:text-blue-400 block mt-0.5">{startDate.split('-').reverse().join('/')}</span>
+                    <div className="bg-white dark:bg-slate-800 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-xs">
+                      <span className="text-slate-500 dark:text-slate-400 text-xs font-medium whitespace-nowrap">Ước tính tiền thuê</span>
+                      <span className="font-semibold text-slate-900 dark:text-white text-sm whitespace-nowrap">{rental.total.toLocaleString('vi-VN')} đ</span>
                     </div>
-                    <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                      <span className="text-slate-500 text-[11px] block">Hạn trả (Check-out)</span>
-                      <span className="font-semibold text-indigo-600 dark:text-indigo-400 block mt-0.5">{calculateCheckOutDate()}</span>
+                    <div className="bg-white dark:bg-slate-800 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-xs">
+                      <span className="text-slate-500 dark:text-slate-400 text-xs font-medium whitespace-nowrap">Ngày nhận (Check-in)</span>
+                      <span className="font-semibold text-blue-600 dark:text-blue-400 text-sm whitespace-nowrap">{startDate.split('-').reverse().join('/')}</span>
                     </div>
-                    <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                      <span className="text-slate-500 text-[11px] block">Ước tính tiền thuê</span>
-                      <span className="font-semibold text-slate-900 dark:text-white block mt-0.5">{rental.total.toLocaleString('vi-VN')} đ</span>
+                    <div className="bg-white dark:bg-slate-800 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-xs">
+                      <span className="text-slate-500 dark:text-slate-400 text-xs font-medium whitespace-nowrap">Hạn trả (Check-out)</span>
+                      <span className="font-semibold text-indigo-600 dark:text-indigo-400 text-sm whitespace-nowrap">{calculateCheckOutDate()}</span>
                     </div>
                   </div>
 
@@ -657,10 +652,6 @@ export default function RentStoragePage() {
                   </label>
                   <div className="h-44 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-slate-50 dark:bg-slate-950/50 text-slate-600 dark:text-slate-300 text-xs overflow-y-auto space-y-3 leading-relaxed">
                     <div className="space-y-1">
-                      <p className="font-bold text-slate-900 dark:text-white">Các điều khoản chính khi đặt giữ chỗ kho</p>
-                      <p className="text-[11px] text-slate-500">Hợp đồng điện tử ký kết theo phương thức Clickwrap Agreement</p>
-                    </div>
-                    <div className="space-y-1">
                       <p className="font-semibold text-slate-800 dark:text-slate-200">1. Mục đích cọc giữ chỗ:</p>
                       <p>
                         Khoản tiền cọc dùng để bảo lưu ô kho <strong>{selectedUnit.id}</strong> tại chi nhánh {facilityDisplayName} cho bạn kể từ ngày nhận kho {startDate.split('-').reverse().join('/')}.
@@ -671,7 +662,7 @@ export default function RentStoragePage() {
                       <ul className="list-disc pl-4 space-y-0.5">
                         <li>Hủy trước ngày nhận kho từ 4 ngày trở lên: Bạn được hoàn lại 100% tiền cọc.</li>
                         <li>Hủy trước ngày nhận kho dưới 4 ngày: Bạn bị tính phí phạt 50% tiền cọc và nhận lại 50% còn lại.</li>
-                        <li>Đến 20:00 ngày hẹn nhận kho nếu bạn không đến check-in (No-Show) và không thông báo gia hạn: Hệ thống sẽ tự động hủy đơn và tịch thu 100% tiền cọc.</li>
+                        <li>Đến hết ngày hẹn nhận kho nếu bạn không đến check-in. Hệ thống sẽ tự động hủy đơn và tịch thu 100% tiền cọc.</li>
                       </ul>
                     </div>
                   </div>
@@ -709,11 +700,10 @@ export default function RentStoragePage() {
                   type="button"
                   disabled={!noProhibitedGoods || !agreedTerms}
                   onClick={handleProceedToStep4}
-                  className={`w-full py-3.5 rounded-2xl font-black text-sm text-white transition-all flex items-center justify-center gap-2 shadow-md ${
-                    noProhibitedGoods && agreedTerms
+                  className={`w-full py-3.5 rounded-2xl font-black text-sm text-white transition-all flex items-center justify-center gap-2 shadow-md ${noProhibitedGoods && agreedTerms
                       ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/30 hover:scale-[1.01] cursor-pointer'
                       : 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-500 cursor-not-allowed opacity-60'
-                  }`}
+                    }`}
                 >
                   <span>Xác nhận & Sang thanh toán cọc</span>
                   <ArrowRight className="size-4" />
@@ -754,7 +744,6 @@ export default function RentStoragePage() {
                     {/* Header */}
                     <div className="text-center pb-3 border-b border-slate-100 dark:border-slate-800 space-y-1.5">
                       <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-xs font-bold">
-                        <Lock className="size-3.5" />
                         <span>Thanh toán trực tuyến bảo mật</span>
                       </div>
                       <h3 className="font-black text-base uppercase text-slate-900 dark:text-white tracking-tight">
@@ -801,27 +790,16 @@ export default function RentStoragePage() {
                       </div>
                     </div>
 
-                    {/* Huy hiệu bảo mật */}
-                    <div className="flex items-center justify-center gap-4 text-[11px] text-slate-500 dark:text-slate-400">
-                      <span className="flex items-center gap-1">
-                        <ShieldCheck className="size-3.5 text-emerald-500" />
-                        <span>Mã hóa SSL 256-bit</span>
-                      </span>
-                      <span>•</span>
-                      <span>Chữ ký số SHA-512</span>
-                    </div>
-
                     {/* Nút Mở Cổng VNPay */}
                     <div className="space-y-2 pt-1">
                       <button
                         type="button"
                         disabled={isRedirectingVNPay}
                         onClick={handleOpenVNPay}
-                        className={`w-full py-3.5 rounded-2xl font-black text-xs uppercase shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 ${
-                          isRedirectingVNPay
+                        className={`w-full py-3.5 rounded-2xl font-black text-xs uppercase shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 ${isRedirectingVNPay
                             ? 'bg-blue-800 opacity-80 cursor-wait text-white'
                             : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/30 hover:shadow-blue-600/50 hover:scale-[1.01]'
-                        }`}
+                          }`}
                       >
                         {isRedirectingVNPay ? (
                           <>
@@ -837,7 +815,7 @@ export default function RentStoragePage() {
                         )}
                       </button>
                       <p className="text-[11px] text-center text-slate-500 dark:text-slate-400">
-                        Bạn sẽ được chuyển hướng an toàn đến Cổng VNPay để hoàn tất giao dịch.
+                        Bạn được chuyển hướng an toàn đến Cổng VNPay để hoàn tất giao dịch.
                       </p>
                     </div>
                   </div>
@@ -854,13 +832,13 @@ export default function RentStoragePage() {
                       ĐẶT CỌC GIỮ CHỖ THÀNH CÔNG!
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      Ô kho <strong className="text-blue-600 dark:text-cyan-400">{selectedUnit.id}</strong> đã được chuyển sang trạng thái <strong>CHỜ CHECK-IN</strong>.
+                      Ô kho <strong className="text-blue-600 dark:text-blue-400">{selectedUnit.id}</strong> đã được chuyển sang trạng thái <strong>CHỜ CHECK-IN</strong>.
                     </p>
                   </div>
 
                   <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-left space-y-2 font-medium">
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500">Mã Hợp Đồng (Mã CTR):</span>
+                      <span className="text-slate-500">Mã Hợp Đồng:</span>
                       <strong className="font-mono text-amber-600 dark:text-amber-400 font-black text-sm">{bookingCode}</strong>
                     </div>
                     <div className="flex justify-between">

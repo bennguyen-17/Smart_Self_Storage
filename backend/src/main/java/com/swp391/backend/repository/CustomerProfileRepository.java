@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface CustomerProfileRepository extends JpaRepository<CustomerProfile, Integer> {
     Optional<CustomerProfile> findByAccountId(Integer accountId);
+    Optional<CustomerProfile> findByIdentityNumber(String identityNumber);
 }

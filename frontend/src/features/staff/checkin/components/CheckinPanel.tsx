@@ -26,6 +26,7 @@ import StaffCustomerDetailModal, {
 import StaffInspectionModal, {
   type InspectionTarget,
 } from "./StaffInspectionModal"
+import StaffShiftBadge from "./StaffShiftBadge"
 
 const TAB_COLORS: Record<CheckinTabKey, string> = {
   all: "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300",
@@ -176,7 +177,7 @@ function CheckinPanel() {
         </h1>
       </div>
 
-      {/* Cụm Tìm kiếm - Thẻ card kính mờ độc lập */}
+      {/* Cụm Tìm kiếm & Trạng thái Ca trực */}
       <div className="card-box flex flex-col justify-between gap-3 rounded-2xl border p-4 shadow-sm md:flex-row md:items-center">
         <div className="flex max-w-xl flex-1 space-x-2">
           <div className="relative flex-1">
@@ -200,6 +201,8 @@ function CheckinPanel() {
             {isLookingUp ? "Đang tìm..." : "Tra cứu"}
           </button>
         </div>
+
+        <StaffShiftBadge />
       </div>
 
       {lookupError && (

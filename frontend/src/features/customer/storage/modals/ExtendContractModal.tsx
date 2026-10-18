@@ -160,7 +160,7 @@ export default function ExtendContractModal({
         <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 space-y-2.5 text-xs">
           <div className="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-2">
-              <Boxes className="size-4 text-blue-600 dark:text-cyan-400" />
+              <Boxes className="size-4 text-blue-600 dark:text-blue-400" />
               <span className="font-extrabold text-slate-900 dark:text-white text-sm font-mono">
                 {unitCode || name}
               </span>
@@ -168,7 +168,7 @@ export default function ExtendContractModal({
                 Size {size}
               </span>
             </div>
-            <span className="text-xs font-bold text-blue-600 dark:text-cyan-400">
+            <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
               Cơ sở {branch}
             </span>
           </div>
@@ -193,7 +193,7 @@ export default function ExtendContractModal({
               Chọn Gói Gia Hạn Thêm:
             </label>
             {isCustomDays && (
-              <span className="text-[10px] text-blue-600 dark:text-cyan-400 font-extrabold bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
+              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-extrabold bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
                 (Tối thiểu 7 ngày)
               </span>
             )}

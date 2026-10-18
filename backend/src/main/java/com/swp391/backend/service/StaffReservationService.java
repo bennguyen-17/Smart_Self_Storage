@@ -1,5 +1,6 @@
 package com.swp391.backend.service;
 
+import com.swp391.backend.dto.ApiResponse;
 import com.swp391.backend.dto.CalculatePriceRequest;
 import com.swp391.backend.dto.CalculatePriceResponse;
 import com.swp391.backend.dto.StaffCancelReservationResponse;
@@ -1005,5 +1006,53 @@ public class StaffReservationService {
                 facilityCode,
                 "Lấy mã PIN mở cổng thành công."
         );
+    }
+
+    @Transactional
+    public ApiResponse updateCustomerCccd(Integer reservationId, String newCccd) {
+        Integer staffAccountId = getAuthenticatedAccountId();
+        if (staffAccountId == null) {
+            return new ApiResponse(false, "Không tìm thấy tài khoản nhân viên đã xác thực.");
+        }
+
+        if (newCccd == null || !newCccd.trim().matches("^[0-9]{12}$")) {
+            return new ApiResponse(false, "Số CCCD phải gồm đúng 12 chữ số.");
+        }
+        String formattedCccd = newCccd.trim();
+
+        Optional<Reservation> reservationOpt = reservationRepository.findByReservationIdForUpdate(reservationId);
+        if (reservationOpt.isEmpty()) {
+            return new ApiResponse(false, "Không tìm thấy đơn đặt chỗ.");
+        }
+        Reservation reservation = reservationOpt.get();
+        Integer customerAccountId = reservation.getAccountId();
+
+        // Check if CCCD belongs to another customer
+        Optional<CustomerProfile> existingCccd = customerProfileRepository.findByIdentityNumber(formattedCccd);
+        if (existingCccd.isPresent() && !existingCccd.get().getAccountId().equals(customerAccountId)) {
+            return new ApiResponse(false, "Số CCCD này đã thuộc về một khách hàng khác trên hệ thống.");
+        }
+
+        CustomerProfile profile = customerProfileRepository.findByAccountId(customerAccountId)
+                .orElseGet(() -> new CustomerProfile(customerAccountId, formattedCccd));
+        
+        String oldCccd = profile.getIdentityNumber() != null ? profile.getIdentityNumber() : "Chưa có";
+        profile.setIdentityNumber(formattedCccd);
+        customerProfileRepository.save(profile);
+
+        // Ghi nhận ActivityLog
+        try {
+            Account staffAccount = accountRepository.findById(staffAccountId.longValue()).orElse(null);
+            String staffName = staffAccount != null ? staffAccount.getFullName() : "Staff #" + staffAccountId;
+            ActivityLog log = new ActivityLog();
+            log.setAccountId(staffAccountId);
+            log.setAction("UPDATE_CUSTOMER_CCCD");
+            log.setDescription("Nhân viên " + staffName + " đã hiệu chỉnh CCCD của khách (Mã đơn: " 
+                    + reservation.getReservationCode() + ") từ " + oldCccd + " sang " + formattedCccd + " khi đối chiếu thẻ gốc tại quầy.");
+            log.setCreatedAt(LocalDateTime.now());
+            activityLogRepository.save(log);
+        } catch (Exception e) {}
+
+        return new ApiResponse(true, "Hiệu chỉnh số CCCD thành công!");
     }
 }
