@@ -7,6 +7,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.format.DateTimeFormatter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -72,6 +73,17 @@ public class SupportTicketService {
         return faqs;
     }
 
+    public synchronized String generateTicketCode() {
+        String yearMonth = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
+        long nextIndex = supportTicketRepository.count() + 1;
+        String candidate = String.format("TCK-%s-%03d", yearMonth, nextIndex);
+        while (supportTicketRepository.findByTicketCode(candidate).isPresent()) {
+            nextIndex++;
+            candidate = String.format("TCK-%s-%03d", yearMonth, nextIndex);
+        }
+        return candidate;
+    }
+
     // --- US-21: 2. Khách tạo Ticket Sự cố (INCIDENT) - Chặn ngoài giờ 08:00 - 20:00 ---
     @Transactional
     public SupportTicket createIncidentTicket(CreateIncidentRequest req, Integer customerId) {
@@ -82,7 +94,7 @@ public class SupportTicketService {
         }
 
         SupportTicket ticket = new SupportTicket();
-        ticket.setTicketCode("TCK-INC-" + System.currentTimeMillis() % 1000000);
+        ticket.setTicketCode(generateTicketCode());
         ticket.setType("INCIDENT");
         ticket.setStatus("SUBMITTED");
         Integer targetCustomerId = customerId;
@@ -109,9 +121,7 @@ public class SupportTicketService {
     @Transactional
     public SupportTicket createTicketGeneric(String type, String unitCode, String title, String description, Integer customerId) {
         SupportTicket ticket = new SupportTicket();
-        String prefix = type != null ? type.toUpperCase() : "INC";
-        if (prefix.length() > 5) prefix = prefix.substring(0, 5);
-        ticket.setTicketCode("TCK-" + prefix + "-" + (System.currentTimeMillis() % 1000000));
+        ticket.setTicketCode(generateTicketCode());
         ticket.setType(type != null ? type.toUpperCase() : "INCIDENT");
         ticket.setStatus("SUBMITTED");
 
@@ -170,7 +180,7 @@ public class SupportTicketService {
         Integer facilityId = getFacilityIdByUnit(unitCode);
 
         SupportTicket ticket = new SupportTicket();
-        ticket.setTicketCode("TCK-" + (System.currentTimeMillis() % 1000000));
+        ticket.setTicketCode(generateTicketCode());
         ticket.setType(type != null ? type : "UNLOCK");
         ticket.setStatus("SUBMITTED");
         ticket.setCustomerId(customerProfileId);
@@ -178,16 +188,29 @@ public class SupportTicketService {
         ticket.setUnitCode(unitCode);
         ticket.setContractId(activeContract.getContractId());
         if ("EARLY_TERMINATION".equalsIgnoreCase(type)) {
-            ticket.setTitle("Yêu cầu trả kho sớm - Ô kho " + unitCode);
-            ticket.setDesiredDate(desiredDate != null ? desiredDate : LocalDate.now());
+            LocalDate minDate = LocalDate.now().plusDays(1);
+            if (desiredDate != null && desiredDate.isBefore(minDate)) {
+                throw new IllegalArgumentException("Ngày hẹn trả kho sớm phải báo trước ít nhất 1 ngày (sớm nhất là từ ngày mai " + minDate + ").");
+            }
+            ticket.setTitle("Yêu cầu trả kho sớm");
+            ticket.setDesiredDate(desiredDate != null ? desiredDate : minDate);
+            ticket.setSlaDeadline(null);
             activeContract.setCancelReason("EARLY_TERMINATION");
             contractRepository.save(activeContract);
         } else {
-            ticket.setTitle("Yêu cầu hỗ trợ: " + (type != null ? type : "UNLOCK") + " - Ô kho " + unitCode);
+            String typeLabel = "Yêu cầu hỗ trợ";
+            if ("UNLOCK".equalsIgnoreCase(type)) {
+                typeLabel = "Mở khóa khẩn cấp";
+            } else if ("MAINTENANCE".equalsIgnoreCase(type)) {
+                typeLabel = "Bảo trì / Sửa chữa";
+            } else if ("INCIDENT".equalsIgnoreCase(type)) {
+                typeLabel = "Báo sự cố an ninh & kỹ thuật";
+            }
+            ticket.setTitle(typeLabel);
+            ticket.setSlaDeadline(LocalDateTime.now().plusMinutes(15));
         }
         ticket.setDescription(description != null ? description : "");
         ticket.setCreatedAt(LocalDateTime.now());
-        ticket.setSlaDeadline(LocalDateTime.now().plusMinutes(15));
         ticket.setIsSlaBreached(false);
         ticket.setIdentityVerified(false);
 
@@ -288,7 +311,7 @@ public class SupportTicketService {
         }
 
         SupportTicket ticket = new SupportTicket();
-        ticket.setTicketCode("TCK-TRM-" + System.currentTimeMillis() % 1000000);
+        ticket.setTicketCode(generateTicketCode());
         ticket.setType("EARLY_TERMINATION");
         ticket.setStatus("SUBMITTED");
         ticket.setCustomerId(targetCustomerId != null ? targetCustomerId : 1);

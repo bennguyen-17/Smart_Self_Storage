@@ -37,6 +37,7 @@ export interface StaffReservationItem {
   unpaidPenaltyAmount: number | null
   monthlyPrice: number | null
   returnRequested?: boolean | null
+  desiredReturnDate?: string | null
   cancelReason?: string | null
 }
 

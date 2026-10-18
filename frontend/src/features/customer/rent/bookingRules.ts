@@ -3,8 +3,11 @@
 
 import { addDays, todayInVietnam } from "@/lib/format"
 
-/** Khách hàng chỉ được chọn ngày Check-in từ tối thiểu 1 ngày đến tối đa 7 ngày kể từ ngày đặt (BR-08) */
-export const CHECKIN_MIN_OFFSET_DAYS = 1
+/** Giờ làm việc của nhân viên tại quầy cơ sở (08:00 - 20:00 hàng ngày) */
+export const COUNTER_OPEN_HOUR = 8
+export const COUNTER_CLOSE_HOUR = 20
+
+/** Tối đa 7 ngày kể từ ngày đặt (BR-08) */
 export const CHECKIN_MAX_OFFSET_DAYS = 7
 
 /** Thuê theo ngày tùy chọn từ 7 đến 29 ngày; từ 30 ngày trở lên dùng gói tháng */
@@ -20,17 +23,42 @@ const PACKAGE_DISCOUNT: Record<number, number> = {
   360: 0.15,
 }
 
+/** Lấy giờ hiện tại theo múi giờ Việt Nam (0 - 23) */
+export function getVietnamHour(now: Date = new Date()): number {
+  const hourStr = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    hour: "numeric",
+    hourCycle: "h23",
+  }).format(now)
+  return Number.parseInt(hourStr, 10)
+}
+
 /**
  * Các ngày Check-in hợp lệ (YYYY-MM-DD), tính theo giờ Việt Nam.
- * Nhận `now` làm tham số thay vì tự gọi `new Date()` để test được mọi thời điểm (ví dụ 06:30 sáng).
+ * - Nếu thời gian hiện tại < 20:00: Khách được chọn từ Hôm nay (+0) đến 7 ngày tới (+7).
+ * - Nếu thời gian hiện tại >= 20:00 (hết ca trực tại quầy): Ngày Check-in sớm nhất là Ngày mai (+1).
  */
-export function getCheckInDates(now: Date): string[] {
+export function getCheckInDates(now: Date = new Date()): string[] {
   const today = todayInVietnam(now)
+  const hour = getVietnamHour(now)
+  const startOffset = hour >= COUNTER_CLOSE_HOUR ? 1 : 0
+
   const dates: string[] = []
-  for (let i = CHECKIN_MIN_OFFSET_DAYS; i <= CHECKIN_MAX_OFFSET_DAYS; i++) {
+  for (let i = startOffset; i <= CHECKIN_MAX_OFFSET_DAYS; i++) {
     dates.push(addDays(today, i))
   }
   return dates
+}
+
+/** Kiểm tra ngày được chọn có phải là ngày hôm nay theo giờ VN hay không */
+export function isSameDayCheckIn(dateStr: string, now: Date = new Date()): boolean {
+  return dateStr === todayInVietnam(now)
+}
+
+/** Kiểm tra quầy hiện tại có đang trong khung giờ phục vụ (08:00 - 20:00) hay không */
+export function isCounterOpenNow(now: Date = new Date()): boolean {
+  const hour = getVietnamHour(now)
+  return hour >= COUNTER_OPEN_HOUR && hour < COUNTER_CLOSE_HOUR
 }
 
 /** Số ngày thuê tùy chọn hợp lệ: ép về khoảng 7–29; nhập rỗng, chữ hoặc số âm thì về 7 */

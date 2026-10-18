@@ -73,16 +73,17 @@ public class DepositService {
             return DepositInitiateResponse.error("Ô kho này hiện không ở trạng thái trống (có thể đã được người khác giữ chỗ hoặc đang bảo trì)!");
         }
 
-        // Tính toán tiền thuê & tiền cọc
-        int duration = 1;
+        // Tính toán tiền thuê & tiền cọc chuẩn BR: <30 ngày là DAILY, >=30 ngày là MONTHLY
+        long days = 30;
         if (request.getStartDate() != null && request.getEndDate() != null) {
-            long days = java.time.temporal.ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate());
-            duration = (int) Math.max(days, 1);
+            days = Math.max(1, java.time.temporal.ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()));
         }
+        String rentalType = (days < 30) ? "DAILY" : "MONTHLY";
+        int duration = (int) (days < 30 ? days : Math.max(1, Math.round((double) days / 30.0)));
 
         CalculatePriceRequest priceReq = new CalculatePriceRequest(
                 unit.getUnitTypeId(),
-                request.getRentalType() != null ? request.getRentalType() : "MONTHLY",
+                rentalType,
                 duration
         );
         CalculatePriceResponse priceRes = storageService.calculateRentalPrice(priceReq);

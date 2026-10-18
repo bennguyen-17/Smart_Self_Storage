@@ -14,6 +14,7 @@ import {
   SIZE_AREA_M2,
   unitSizeFromCode,
 } from "@/features/floorplan/unitDisplay"
+import { formatDate } from "@/lib/format"
 
 import type { StaffReservationItem } from "../types"
 
@@ -38,7 +39,8 @@ function codeSubtitle(item: StaffReservationItem): string | null {
   if (item.contractStatus === "TERMINATED") return "Hợp đồng đã thanh lý"
   if (item.contractStatus === "CANCELED") return "Đã hoàn tiền cọc"
   if (item.contractStatus === "ACTIVE" && (item.returnRequested || item.cancelReason === "EARLY_TERMINATION")) {
-    return "Khách yêu cầu trả kho"
+    const returnDateStr = item.desiredReturnDate ? formatDate(item.desiredReturnDate) : null
+    return returnDateStr ? `Khách hẹn trả: ${returnDateStr}` : "Khách hẹn trả kho"
   }
   return null
 }
@@ -206,16 +208,21 @@ function StatusAction({
       item.returnRequested || item.cancelReason === "EARLY_TERMINATION"
     )
     if (isReturnRequested) {
+      const returnDateStr = item.desiredReturnDate
+        ? formatDate(item.desiredReturnDate)
+        : null
       return (
-        <button
-          type="button"
-          onClick={() => onCheckout(item)}
-          className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-bold whitespace-nowrap text-emerald-700 transition hover:bg-emerald-100 shadow-xs ring-2 ring-emerald-500/20 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/50 animate-pulse"
-          title="Khách hàng đã gửi yêu cầu trả kho. Bấm để lập biên bản nghiệm thu & quyết toán cọc."
+        <span
+          className="inline-flex items-center justify-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+          title="Khách hàng đã gửi yêu cầu trả kho. Xử lý nghiệm thu tại tab Hỗ trợ xử lý Ticket."
         >
-          <PackageOpenIcon className="size-3.5" />
-          <span>Xác nhận trả kho</span>
-        </button>
+          <span className="size-2 rounded-full bg-emerald-500" />
+          <span>
+            {returnDateStr
+              ? `Đang thuê (Hẹn trả: ${returnDateStr})`
+              : "Đang thuê (Hẹn trả)"}
+          </span>
+        </span>
       )
     }
 

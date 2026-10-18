@@ -32,8 +32,12 @@ public class StaffReservationListItemResponse {
     private Integer overdueDays;
     private BigDecimal unpaidPenaltyAmount;
     private BigDecimal monthlyPrice;
+    private LocalDate desiredReturnDate;
 
     public StaffReservationListItemResponse() {}
+
+    public LocalDate getDesiredReturnDate() { return desiredReturnDate; }
+    public void setDesiredReturnDate(LocalDate desiredReturnDate) { this.desiredReturnDate = desiredReturnDate; }
 
     public Integer getContractId() { return contractId; }
     public void setContractId(Integer contractId) { this.contractId = contractId; }

@@ -37,6 +37,8 @@ public class LoginResponse {
         private String identityNumber;
         private String status;
         private Integer facilityId;
+        private String facilityName;
+        private String facilityCode;
 
         public UserInfo() {
         }
@@ -48,10 +50,14 @@ public class LoginResponse {
         }
 
         public UserInfo(Integer id, String fullName, String role, String phone, String email, String identityNumber, String status) {
-            this(id, fullName, role, phone, email, identityNumber, status, null);
+            this(id, fullName, role, phone, email, identityNumber, status, null, null, null);
         }
 
         public UserInfo(Integer id, String fullName, String role, String phone, String email, String identityNumber, String status, Integer facilityId) {
+            this(id, fullName, role, phone, email, identityNumber, status, facilityId, null, null);
+        }
+
+        public UserInfo(Integer id, String fullName, String role, String phone, String email, String identityNumber, String status, Integer facilityId, String facilityName, String facilityCode) {
             this.id = id;
             this.fullName = fullName;
             this.role = role;
@@ -60,6 +66,8 @@ public class LoginResponse {
             this.identityNumber = identityNumber;
             this.status = status;
             this.facilityId = facilityId;
+            this.facilityName = facilityName;
+            this.facilityCode = facilityCode;
         }
 
         public Integer getId() {
@@ -124,6 +132,22 @@ public class LoginResponse {
 
         public void setFacilityId(Integer facilityId) {
             this.facilityId = facilityId;
+        }
+
+        public String getFacilityName() {
+            return facilityName;
+        }
+
+        public void setFacilityName(String facilityName) {
+            this.facilityName = facilityName;
+        }
+
+        public String getFacilityCode() {
+            return facilityCode;
+        }
+
+        public void setFacilityCode(String facilityCode) {
+            this.facilityCode = facilityCode;
         }
     }
 }

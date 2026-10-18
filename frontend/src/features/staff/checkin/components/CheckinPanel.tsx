@@ -35,10 +35,6 @@ const TAB_COLORS: Record<CheckinTabKey, string> = {
     "bg-emerald-100 text-emerald-900 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-300",
   overdue:
     "bg-rose-100 text-rose-900 hover:bg-rose-200 dark:bg-rose-950 dark:text-rose-300",
-  terminated:
-    "bg-blue-100 text-blue-900 hover:bg-blue-200 dark:bg-blue-950 dark:text-blue-300",
-  canceled:
-    "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300",
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -108,7 +104,27 @@ function CheckinPanel() {
     return map
   }, [units])
 
-  const all = data ?? []
+  const all = useMemo(() => {
+    const getStatusPriority = (status?: string): number => {
+      if (status === "PENDING_CHECKIN") return 0
+      if (status === "ACTIVE") return 1
+      if (status === "OVERDUE") return 2
+      return 3
+    }
+
+    return (data ?? [])
+      .filter((item) =>
+        ["PENDING_CHECKIN", "ACTIVE", "OVERDUE"].includes(
+          item.contractStatus ?? ""
+        )
+      )
+      .sort((a, b) => {
+        const pA = getStatusPriority(a.contractStatus)
+        const pB = getStatusPriority(b.contractStatus)
+        if (pA !== pB) return pA - pB
+        return (a.checkInDate ?? "").localeCompare(b.checkInDate ?? "")
+      })
+  }, [data])
   const keyword = query.trim().toLowerCase()
   const rows = all
     .filter(

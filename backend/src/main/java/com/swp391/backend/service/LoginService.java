@@ -27,6 +27,7 @@ public class LoginService {
     private final AccountRepository accountRepository;
     private final com.swp391.backend.repository.CustomerProfileRepository customerProfileRepository;
     private final com.swp391.backend.repository.EmployeeProfileRepository employeeProfileRepository;
+    private final com.swp391.backend.repository.FacilityRepository facilityRepository;
     private final JwtService jwtService;
     private final ActivityLogRepository activityLogRepository;
     private final PasswordEncoder passwordEncoder;
@@ -36,6 +37,7 @@ public class LoginService {
             AccountRepository accountRepository,
             com.swp391.backend.repository.CustomerProfileRepository customerProfileRepository,
             com.swp391.backend.repository.EmployeeProfileRepository employeeProfileRepository,
+            com.swp391.backend.repository.FacilityRepository facilityRepository,
             JwtService jwtService,
             ActivityLogRepository activityLogRepository,
             PasswordEncoder passwordEncoder,
@@ -44,6 +46,7 @@ public class LoginService {
         this.accountRepository = accountRepository;
         this.customerProfileRepository = customerProfileRepository;
         this.employeeProfileRepository = employeeProfileRepository;
+        this.facilityRepository = facilityRepository;
         this.jwtService = jwtService;
         this.activityLogRepository = activityLogRepository;
         this.passwordEncoder = passwordEncoder;
@@ -183,6 +186,16 @@ public class LoginService {
                 .map(com.swp391.backend.entity.EmployeeProfile::getFacilityId)
                 .orElse(null);
 
+        String facilityName = null;
+        String facilityCode = null;
+        if (facilityId != null) {
+            com.swp391.backend.entity.Facility facility = facilityRepository.findById(facilityId).orElse(null);
+            if (facility != null) {
+                facilityName = facility.getFacilityName();
+                facilityCode = facility.getFacilityCode();
+            }
+        }
+
         String roleName = resolveRoleName(account.getRoleId());
 
         return LoginResult.success(
@@ -196,7 +209,9 @@ public class LoginService {
                                 account.getEmail(),
                                 identityNumber,
                                 account.getStatus(),
-                                facilityId)));
+                                facilityId,
+                                facilityName,
+                                facilityCode)));
     }
 
     private String resolveRoleName(Long roleId) {

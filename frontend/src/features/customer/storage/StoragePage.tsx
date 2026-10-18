@@ -222,60 +222,60 @@ export default function StoragePage() {
             )}
           </div>
         </div>
-
-        {/* Modal Hủy cọc */}
-        {cancelModalContract && (
-          <CancelDepositModal
-            contract={cancelModalContract}
-            onClose={() => setCancelModalContract(null)}
-            onConfirm={handleConfirmCancelDeposit}
-            isCancelling={isCancelling}
-          />
-        )}
-
-        {/* Modal Xem chi tiết hợp đồng */}
-        {viewContract && (
-          <ContractDetailModal
-            contract={viewContract}
-            onClose={() => setViewContract(null)}
-          />
-        )}
-
-        {/* Modal Yêu cầu Trả kho */}
-        {returnModalContract && (
-          <ReturnStorageModal
-            contract={returnModalContract}
-            onClose={() => setReturnModalContract(null)}
-            onConfirm={handleConfirmReturn}
-            isSubmitting={isSubmittingReturn}
-          />
-        )}
-
-        {/* Modal Gia hạn */}
-        {showExtendModal && (
-          <ExtendContractModal
-            unitContext={extendUnitContext}
-            onClose={() => setShowExtendModal(false)}
-            onConfirmPayment={handleConfirmExtendPayment}
-          />
-        )}
-
-        {/* Flow Thanh toán Gia hạn */}
-        {showExtendPaymentFlow && extendPaymentData && (
-          <ExtendPaymentFlow
-            initialBookingData={extendPaymentData}
-            onClose={() => {
-              setShowExtendPaymentFlow(false);
-              setExtendPaymentData(null);
-            }}
-            onFinish={() => {
-              setShowExtendPaymentFlow(false);
-              setExtendPaymentData(null);
-              fetchContracts();
-            }}
-          />
-        )}
       </motion.div>
+
+      {/* Modal Hủy cọc */}
+      {cancelModalContract && (
+        <CancelDepositModal
+          contract={cancelModalContract}
+          onClose={() => setCancelModalContract(null)}
+          onConfirm={handleConfirmCancelDeposit}
+          isCancelling={isCancelling}
+        />
+      )}
+
+      {/* Modal Xem chi tiết hợp đồng */}
+      {viewContract && (
+        <ContractDetailModal
+          contract={viewContract}
+          onClose={() => setViewContract(null)}
+        />
+      )}
+
+      {/* Modal Yêu cầu Trả kho */}
+      {returnModalContract && (
+        <ReturnStorageModal
+          contract={returnModalContract}
+          onClose={() => setReturnModalContract(null)}
+          onConfirm={handleConfirmReturn}
+          isSubmitting={isSubmittingReturn}
+        />
+      )}
+
+      {/* Modal Gia hạn */}
+      {showExtendModal && (
+        <ExtendContractModal
+          unitContext={extendUnitContext}
+          onClose={() => setShowExtendModal(false)}
+          onConfirmPayment={handleConfirmExtendPayment}
+        />
+      )}
+
+      {/* Flow Thanh toán Gia hạn */}
+      {showExtendPaymentFlow && extendPaymentData && (
+        <ExtendPaymentFlow
+          initialBookingData={extendPaymentData}
+          onClose={() => {
+            setShowExtendPaymentFlow(false);
+            setExtendPaymentData(null);
+          }}
+          onFinish={() => {
+            setShowExtendPaymentFlow(false);
+            setExtendPaymentData(null);
+            fetchContracts();
+          }}
+        />
+      )}
     </CustomerLayout>
   );
 }
