@@ -98,12 +98,12 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
   {
     key: "gate-logs",
     label: "Nhật ký cổng",
-    title: "Nhật ký mở cổng thủ công",
-    hint: "Mở bằng Thẻ Master",
+    title: "Nhật ký kiểm soát ra vào cổng",
+    hint: "Khách & nhân viên qua cổng",
     icon: DoorOpenIcon,
     stories: "US-18",
     owner: "Vỹ",
-    description: "Xem và lọc nhật ký mở cổng thủ công bằng Thẻ Master của cơ sở (chỉ đọc).",
+    description: "Xem và lọc lịch sử người ra vào cổng bằng Mã PIN động IoT 24/7 và Thẻ Master thủ công của cơ sở.",
     component: GateLogPanel,
   },
   {

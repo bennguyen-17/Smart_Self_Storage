@@ -32,6 +32,30 @@ public class AuditLog {
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Transient
+    private String personName;
+
+    @Transient
+    private String personPhone;
+
+    @Transient
+    private String personRole;
+
+    @Transient
+    private String identityNumber;
+
+    @Transient
+    private String facilityName;
+
+    @Transient
+    private String gateName;
+
+    @Transient
+    private String accessMethod;
+
+    @Transient
+    private String staffName;
+
     public AuditLog() {
     }
 
@@ -109,6 +133,70 @@ public class AuditLog {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getPersonName() {
+        return personName;
+    }
+
+    public void setPersonName(String personName) {
+        this.personName = personName;
+    }
+
+    public String getPersonPhone() {
+        return personPhone;
+    }
+
+    public void setPersonPhone(String personPhone) {
+        this.personPhone = personPhone;
+    }
+
+    public String getPersonRole() {
+        return personRole;
+    }
+
+    public void setPersonRole(String personRole) {
+        this.personRole = personRole;
+    }
+
+    public String getIdentityNumber() {
+        return identityNumber;
+    }
+
+    public void setIdentityNumber(String identityNumber) {
+        this.identityNumber = identityNumber;
+    }
+
+    public String getFacilityName() {
+        return facilityName;
+    }
+
+    public void setFacilityName(String facilityName) {
+        this.facilityName = facilityName;
+    }
+
+    public String getGateName() {
+        return gateName;
+    }
+
+    public void setGateName(String gateName) {
+        this.gateName = gateName;
+    }
+
+    public String getAccessMethod() {
+        return accessMethod;
+    }
+
+    public void setAccessMethod(String accessMethod) {
+        this.accessMethod = accessMethod;
+    }
+
+    public String getStaffName() {
+        return staffName;
+    }
+
+    public void setStaffName(String staffName) {
+        this.staffName = staffName;
     }
 }
 

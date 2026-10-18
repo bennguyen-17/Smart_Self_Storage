@@ -1,26 +1,31 @@
-// US-18: nhật ký mở cổng thủ công (bằng Thẻ Master / chìa cơ) của cơ sở.
+// Nhật ký kiểm soát ra vào cổng cơ sở (Mã PIN động IoT 24/7 và Thẻ Master thủ công)
 
-/**
- * Khớp entity AuditLog của BE (action = MANUAL_GATE_OPEN).
- * Thời gian là LocalDateTime giờ Việt Nam, không có hậu tố múi giờ, ví dụ "2026-10-12T14:30:00".
- */
 export interface GateLog {
   auditLogId: number
-  /** Nhân viên đã mở cổng */
   accountId: number | null
   facilityId: number | null
-  /** Mã khách hàng được mở cổng hộ */
   customerId: number | null
   action: string
   openedAt: string
   reason: string | null
-  /** Thời điểm ghi nhật ký */
   createdAt: string
+  
+  // Thông tin người ra vào cổng:
+  personName?: string
+  personPhone?: string
+  personRole?: string
+  identityNumber?: string
+  facilityName?: string
+  gateName?: string
+  accessMethod?: string
+  staffName?: string
 }
 
 export interface GateLogFilter {
-  /** Tìm theo mã khách hàng, mã nhân viên hoặc lý do */
+  /** Tìm theo tên khách, SĐT, CCCD, mã khách, nhân viên hoặc vị trí cổng */
   query: string
+  /** Lọc theo phương thức: ALL | PIN | MANUAL */
+  method: "ALL" | "PIN" | "MANUAL"
   /** YYYY-MM-DD, tính theo ngày mở cổng, gồm cả 2 đầu; "" là không giới hạn */
   from: string
   to: string
