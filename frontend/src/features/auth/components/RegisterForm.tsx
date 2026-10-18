@@ -169,6 +169,11 @@ function RegisterForm() {
   const { isSubmitting } = form.formState
   const password = useWatch({ control: form.control, name: "password" }) ?? ""
   const phone = useWatch({ control: form.control, name: "phone" }) ?? ""
+  const email = useWatch({ control: form.control, name: "email" }) ?? ""
+  const [registeredContact, setRegisteredContact] = useState<{ phone: string; email: string }>({
+    phone: "",
+    email: "",
+  })
 
   const onSubmit = async (values: RegisterFormValues) => {
     setServerError("")
@@ -189,6 +194,7 @@ function RegisterForm() {
         password: values.password,
       })
 
+      setRegisteredContact({ phone: values.phone, email: values.email })
       setShowOtp(true)
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -391,8 +397,8 @@ function RegisterForm() {
 
       {showOtp && (
         <OtpModal
-          phone={phone || "0912345678"}
-          email={email}
+          phone={registeredContact.phone || phone || "0912345678"}
+          email={registeredContact.email || email}
           onClose={() => setShowOtp(false)}
         />
       )}

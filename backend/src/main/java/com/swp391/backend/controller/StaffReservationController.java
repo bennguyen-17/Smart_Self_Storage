@@ -10,6 +10,7 @@ import com.swp391.backend.dto.StaffCancelReservationResponse;
 import com.swp391.backend.dto.StaffChangeUnitResponse;
 import com.swp391.backend.dto.StaffCheckInRequest;
 import com.swp391.backend.dto.StaffCheckInResponse;
+import com.swp391.backend.dto.StaffGatePinResponse;
 import com.swp391.backend.dto.StaffReservationListResponse;
 import com.swp391.backend.dto.StaffReservationLookupResponse;
 import com.swp391.backend.service.StaffReservationService;
@@ -102,6 +103,12 @@ public class StaffReservationController {
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
+    }
+
+    @GetMapping("/gate-pin")
+    public ResponseEntity<StaffGatePinResponse> getStaffGatePin() {
+        StaffGatePinResponse response = staffReservationService.getStaffLiveGatePin();
+        return ResponseEntity.ok(response);
     }
 
     private HttpStatus resolveErrorStatus(String message) {

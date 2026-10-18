@@ -232,9 +232,15 @@ export function mockListReservations(): Promise<StaffReservationItem[]> {
     .filter((s) => s.facilityCode === MOCK_STAFF_FACILITY)
     .map(toItem)
     .sort((a, b) => {
-      const aPending = a.contractStatus === "PENDING_CHECKIN" ? 0 : 1
-      const bPending = b.contractStatus === "PENDING_CHECKIN" ? 0 : 1
-      if (aPending !== bPending) return aPending - bPending
+      const getPriority = (status?: string): number => {
+        if (status === "PENDING_CHECKIN") return 0
+        if (status === "ACTIVE") return 1
+        if (status === "OVERDUE") return 2
+        return 3
+      }
+      const pA = getPriority(a.contractStatus)
+      const pB = getPriority(b.contractStatus)
+      if (pA !== pB) return pA - pB
       return (a.checkInDate ?? "").localeCompare(b.checkInDate ?? "")
     })
   return delay(items)

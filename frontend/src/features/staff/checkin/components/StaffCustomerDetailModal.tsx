@@ -125,10 +125,7 @@ function Body({
           <div className="text-title space-y-1.5">
             <div className="flex items-center justify-between">
               <span>Vị trí Ô kho:</span>
-              <b className="text-title">
-                Kho {contract.unitCode ?? "—"}
-                {contract.floorName ? ` (${contract.floorName})` : ""}
-              </b>
+              <b className="text-title">Kho {contract.unitCode ?? "—"}</b>
             </div>
             <div className="flex items-center justify-between">
               <span>Thời gian thuê:</span>

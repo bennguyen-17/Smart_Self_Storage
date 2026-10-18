@@ -131,3 +131,20 @@ export function checkinErrorMessage(error: unknown): string {
   }
   return getErrorMessage(error)
 }
+
+export interface StaffGatePinData {
+  success: boolean
+  pin: string
+  rawPin: string
+  ttlSeconds: number
+  facilityId: number
+  facilityName: string
+  facilityCode: string
+  message: string
+}
+
+/** GET /api/staff/reservations/gate-pin — Mã PIN động 15s mở cổng cơ sở 24/7 của Staff */
+export async function fetchStaffGatePin(): Promise<StaffGatePinData> {
+  const body = await apiClient.get("/staff/reservations/gate-pin")
+  return unwrapApiData<StaffGatePinData>(body)
+}

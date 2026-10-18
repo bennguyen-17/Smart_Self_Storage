@@ -34,7 +34,7 @@ function StaffProfileModal({ open, onClose }: StaffProfileModalProps) {
     ? `ST-${String(user.id).padStart(4, "0")}`
     : "ST-391-8899"
   const branchName =
-    (user as { facilityName?: string })?.facilityName || "Quận 9 (Khu FPT)"
+    (user as { facilityName?: string })?.facilityName || "Cơ sở Cầu Giấy (Hà Nội)"
   const roleName =
     user?.role === "STAFF"
       ? "Chuyên viên Vận hành Kho"

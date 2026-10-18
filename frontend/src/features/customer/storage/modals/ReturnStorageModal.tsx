@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { CalendarDays } from 'lucide-react';
+import { formatDate, todayInVietnam, addDays } from '@/lib/format';
 
 interface ReturnStorageModalProps {
   contract: any;
@@ -14,9 +16,8 @@ export default function ReturnStorageModal({
   isSubmitting,
 }: ReturnStorageModalProps) {
   const [reason, setReason] = useState('Đã hết nhu cầu sử dụng kho');
-  const [desiredDate, setDesiredDate] = useState(() => {
-    return new Date().toISOString().split('T')[0];
-  });
+  const minReturnDate = addDays(todayInVietnam(), 1);
+  const [desiredDate, setDesiredDate] = useState(() => addDays(todayInVietnam(), 1));
   const [error, setError] = useState('');
 
   const depositAmount = contract?.depositAmount ?? contract?.depositFee ?? 1000000;
@@ -25,6 +26,10 @@ export default function ReturnStorageModal({
     e.preventDefault();
     if (!reason.trim()) {
       setError('Vui lòng nhập lý do trả kho.');
+      return;
+    }
+    if (!desiredDate || desiredDate < minReturnDate) {
+      setError('Ngày hẹn bàn giao trả kho phải báo trước ít nhất 1 ngày (sớm nhất là ngày mai).');
       return;
     }
     setError('');
@@ -102,13 +107,25 @@ export default function ReturnStorageModal({
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
               Ngày mong muốn bàn giao trả kho:
             </label>
-            <input
-              type="date"
-              value={desiredDate}
-              onChange={(e) => setDesiredDate(e.target.value)}
-              min={new Date().toISOString().split('T')[0]}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-semibold text-sm focus:border-amber-500 focus:outline-none"
-            />
+            <div className="relative rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-amber-400 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all">
+              <div className="w-full px-4 py-2.5 flex items-center justify-between pointer-events-none">
+                <span className="font-mono font-bold text-xs sm:text-sm tracking-wide text-slate-800 dark:text-slate-200">
+                  {formatDate(desiredDate)}
+                </span>
+                <CalendarDays className="size-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              </div>
+              <input
+                type="date"
+                value={desiredDate}
+                onChange={(e) => setDesiredDate(e.target.value)}
+                min={minReturnDate}
+                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                title="Chọn ngày mong muốn bàn giao trả kho (sớm nhất là ngày mai)"
+              />
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+              Lưu ý: Quý khách cần báo trước tối thiểu 1 ngày (từ ngày mai trở đi) để nhân viên cơ sở chuẩn bị biên bản nghiệm thu.
+            </p>
           </div>
 
           {/* Lý do trả kho */}

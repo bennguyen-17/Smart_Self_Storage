@@ -217,7 +217,14 @@ public class ContractController {
         try {
             Reservation reservation = reservationRepository.findById(contract.getReservationId()).orElse(null);
             SupportTicket ticket = new SupportTicket();
-            ticket.setTicketCode("TCK-TRM-" + (System.currentTimeMillis() % 1000000));
+            String yearMonth = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMM"));
+            long nextIndex = supportTicketRepository.count() + 1;
+            String ticketCode = String.format("TCK-%s-%03d", yearMonth, nextIndex);
+            while (supportTicketRepository.findByTicketCode(ticketCode).isPresent()) {
+                nextIndex++;
+                ticketCode = String.format("TCK-%s-%03d", yearMonth, nextIndex);
+            }
+            ticket.setTicketCode(ticketCode);
             ticket.setType("EARLY_TERMINATION");
             ticket.setStatus("SUBMITTED");
             ticket.setCustomerId(reservation != null ? reservation.getAccountId() : 1);
