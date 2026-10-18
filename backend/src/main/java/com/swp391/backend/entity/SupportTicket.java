@@ -63,6 +63,12 @@ public class SupportTicket {
     @Transient
     private String customerPhone;
 
+    @Transient
+    private String assignedStaffName;
+
+    @Transient
+    private String facilityName;
+
     public SupportTicket() {
     }
 
@@ -224,5 +230,21 @@ public class SupportTicket {
 
     public void setCustomerPhone(String customerPhone) {
         this.customerPhone = customerPhone;
+    }
+
+    public String getAssignedStaffName() {
+        return assignedStaffName;
+    }
+
+    public void setAssignedStaffName(String assignedStaffName) {
+        this.assignedStaffName = assignedStaffName;
+    }
+
+    public String getFacilityName() {
+        return facilityName;
+    }
+
+    public void setFacilityName(String facilityName) {
+        this.facilityName = facilityName;
     }
 }

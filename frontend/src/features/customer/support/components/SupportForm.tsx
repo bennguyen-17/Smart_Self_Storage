@@ -206,6 +206,13 @@ export default function SupportForm() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'ESCALATED':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-700 border border-rose-500/30 dark:bg-rose-500/15 dark:text-rose-300">
+            <span className="size-1.5 rounded-full bg-rose-500 animate-ping"></span>
+            <span>Đã chuyển Quản lý</span>
+          </span>
+        );
       case 'SUBMITTED':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 border border-amber-500/30 dark:bg-amber-500/15 dark:text-amber-300">
@@ -606,6 +613,7 @@ export default function SupportForm() {
                   <div className="flex flex-wrap items-center gap-2">
                     {[
                       { key: 'ALL', label: 'Tất cả', count: myTickets.length },
+                      { key: 'ESCALATED', label: 'Chuyển Quản lý', count: myTickets.filter(t => t.status === 'ESCALATED').length },
                       { key: 'SUBMITTED', label: 'Chờ tiếp nhận', count: myTickets.filter(t => t.status === 'SUBMITTED').length },
                       { key: 'IN_PROGRESS', label: 'Đang xử lý', count: myTickets.filter(t => t.status === 'IN_PROGRESS').length },
                       { key: 'RESOLVED', label: 'Đã hoàn tất', count: myTickets.filter(t => t.status === 'RESOLVED').length },
@@ -736,7 +744,19 @@ export default function SupportForm() {
                                   </p>
                                 </div>
 
-                                {/* Phản hồi & Kết quả xử lý từ nhân viên */}
+                                {/* Phản hồi & Kết quả xử lý từ nhân viên / quản lý */}
+                                {ticket.status === 'ESCALATED' && (
+                                  <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-xs text-rose-800 dark:text-rose-300 flex items-start gap-2.5">
+                                    <AlertTriangle className="size-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5 animate-pulse" />
+                                    <div className="space-y-0.5">
+                                      <p className="font-bold text-rose-900 dark:text-rose-200">Đã chuyển tiếp Quản lý cơ sở xử lý trực tiếp</p>
+                                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                                        Yêu cầu đã quá 15 phút chưa có nhân viên nhận. Hệ thống đã tự động chuyển tiếp lên Quản lý chi nhánh để giải quyết khẩn cấp cho bạn.
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+
                                 {ticket.status === 'SUBMITTED' && (
                                   <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
                                     <Clock className="size-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5 animate-pulse" />

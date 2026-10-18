@@ -36,11 +36,18 @@ public class AuditLogController {
                 .body(auditLog);
     }
 
-    @GetMapping("/manager/audit-logs/manual-gate-open")
+    @GetMapping({"/manager/audit-logs/manual-gate-open", "/manager/audit-logs/gate-logs"})
     public ResponseEntity<List<AuditLog>> getManualGateOpenLogs(
-            @AuthenticationPrincipal Integer accountId) {
+            @AuthenticationPrincipal Integer authAccountId,
+            @RequestHeader(value = "X-Account-Id", required = false) Integer headerAccountId,
+            @RequestHeader(value = "X-Facility-Id", required = false) Integer headerFacilityId,
+            @RequestParam(value = "facilityId", required = false) Integer queryFacilityId,
+            @RequestParam(value = "method", required = false) String method) {
 
-        List<AuditLog> logs = auditLogService.getManualGateOpenLogs(accountId);
+        Integer effectiveAccountId = (authAccountId != null) ? authAccountId : headerAccountId;
+        Integer effectiveFacilityId = (headerFacilityId != null) ? headerFacilityId : queryFacilityId;
+
+        List<AuditLog> logs = auditLogService.getGateLogs(effectiveAccountId, effectiveFacilityId, method);
 
         return ResponseEntity.ok(logs);
     }

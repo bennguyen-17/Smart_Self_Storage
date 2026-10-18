@@ -25,6 +25,7 @@ public class SupportTicketService {
     private final ActivityLogRepository activityLogRepository;
     private final StorageUnitRepository storageUnitRepository;
     private final FloorRepository floorRepository;
+    private final FacilityRepository facilityRepository;
     private final EmailService emailService;
 
     public SupportTicketService(SupportTicketRepository supportTicketRepository,
@@ -35,6 +36,7 @@ public class SupportTicketService {
                                 ActivityLogRepository activityLogRepository,
                                 StorageUnitRepository storageUnitRepository,
                                 FloorRepository floorRepository,
+                                FacilityRepository facilityRepository,
                                 EmailService emailService) {
         this.supportTicketRepository = supportTicketRepository;
         this.contractRepository = contractRepository;
@@ -44,6 +46,7 @@ public class SupportTicketService {
         this.activityLogRepository = activityLogRepository;
         this.storageUnitRepository = storageUnitRepository;
         this.floorRepository = floorRepository;
+        this.facilityRepository = facilityRepository;
         this.emailService = emailService;
     }
 
@@ -364,7 +367,85 @@ public class SupportTicketService {
             return b.getCreatedAt().compareTo(a.getCreatedAt());
         });
 
+        checkAndEscalateTickets(results);
         return results;
+    }
+
+    public void populateTicketExtraInfo(SupportTicket t) {
+        if (t == null) return;
+        if (t.getCustomerId() != null) {
+            try {
+                customerProfileRepository.findById(t.getCustomerId()).ifPresent(cp -> {
+                    if (cp.getAccountId() != null) {
+                        accountRepository.findById(Long.valueOf(cp.getAccountId())).ifPresent(acc -> {
+                            t.setCustomerName(acc.getFullName());
+                            t.setCustomerPhone(acc.getPhone());
+                        });
+                    }
+                });
+                if (t.getCustomerName() == null) {
+                    accountRepository.findById(Long.valueOf(t.getCustomerId())).ifPresent(acc -> {
+                        t.setCustomerName(acc.getFullName());
+                        t.setCustomerPhone(acc.getPhone());
+                    });
+                }
+            } catch (Exception ignored) {}
+        }
+        if (t.getAssignedStaffId() != null) {
+            try {
+                accountRepository.findById(Long.valueOf(t.getAssignedStaffId())).ifPresent(acc -> {
+                    t.setAssignedStaffName(acc.getFullName());
+                });
+            } catch (Exception ignored) {}
+        }
+        if (t.getFacilityId() != null && facilityRepository != null) {
+            try {
+                facilityRepository.findById(t.getFacilityId()).ifPresent(f -> {
+                    t.setFacilityName(f.getFacilityName());
+                });
+            } catch (Exception ignored) {}
+        }
+    }
+
+    public void checkAndEscalateTickets(List<SupportTicket> tickets) {
+        if (tickets == null) return;
+        LocalDateTime now = LocalDateTime.now();
+        for (SupportTicket t : tickets) {
+            populateTicketExtraInfo(t);
+            if ("SUBMITTED".equalsIgnoreCase(t.getStatus())
+                    && t.getSlaDeadline() != null
+                    && now.isAfter(t.getSlaDeadline())) {
+                t.setStatus("ESCALATED");
+                t.setIsSlaBreached(true);
+                supportTicketRepository.save(t);
+            }
+        }
+    }
+
+    // Quét định kỳ mỗi 30s: Tự động chuyển tiếp ticket sang ESCALATED (Quản lý) nếu quá 15 phút chưa ai nhận
+    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 30000)
+    @Transactional
+    public void autoEscalateBreachedTickets() {
+        LocalDateTime now = LocalDateTime.now();
+        List<SupportTicket> submitted = supportTicketRepository.findAll().stream()
+                .filter(t -> "SUBMITTED".equalsIgnoreCase(t.getStatus()) && t.getSlaDeadline() != null && now.isAfter(t.getSlaDeadline()))
+                .collect(Collectors.toList());
+
+        for (SupportTicket t : submitted) {
+            t.setStatus("ESCALATED");
+            t.setIsSlaBreached(true);
+            supportTicketRepository.save(t);
+
+            if (activityLogRepository != null) {
+                ActivityLog log = new ActivityLog();
+                log.setAccountId(1);
+                log.setAction("AUTO_ESCALATE_TICKET");
+                log.setDescription(String.format("Ticket %s quá hạn 15 phút chưa được nhân viên tiếp nhận -> Hệ thống tự động chuyển tiếp lên Quản lý chi nhánh (Cơ sở #%s, Vị trí %s)",
+                        t.getTicketCode(), String.valueOf(t.getFacilityId()), t.getUnitCode() != null ? t.getUnitCode() : "N/A"));
+                log.setCreatedAt(LocalDateTime.now());
+                activityLogRepository.save(log);
+            }
+        }
     }
 
     // --- US-22: 1. Staff xem hàng đợi Ticket của cơ sở kèm đếm lùi SLA 15 phút ---
@@ -380,39 +461,15 @@ public class SupportTicketService {
             }
         }
 
-        LocalDateTime now = LocalDateTime.now();
-        // Kiểm tra & cập nhật cờ vi phạm SLA 15 phút, đồng thời nạp tên & SĐT khách
-        for (SupportTicket t : tickets) {
-            if (t.getCustomerId() != null) {
-                try {
-                    customerProfileRepository.findById(t.getCustomerId()).ifPresent(cp -> {
-                        if (cp.getAccountId() != null) {
-                            accountRepository.findById(Long.valueOf(cp.getAccountId())).ifPresent(acc -> {
-                                t.setCustomerName(acc.getFullName());
-                                t.setCustomerPhone(acc.getPhone());
-                            });
-                        }
-                    });
-                } catch (Exception ignored) {}
-            }
-            if ("INCIDENT".equalsIgnoreCase(t.getType())
-                    && "SUBMITTED".equalsIgnoreCase(t.getStatus())
-                    && t.getSlaDeadline() != null
-                    && now.isAfter(t.getSlaDeadline())) {
-                if (!Boolean.TRUE.equals(t.getIsSlaBreached())) {
-                    t.setIsSlaBreached(true);
-                    supportTicketRepository.save(t);
-                }
-            }
-        }
+        checkAndEscalateTickets(tickets);
 
         return tickets.stream()
-                .filter(t -> status == null || status.trim().isEmpty() || t.getStatus().equalsIgnoreCase(status))
-                .filter(t -> type == null || type.trim().isEmpty() || t.getType().equalsIgnoreCase(type))
+                .filter(t -> status == null || status.trim().isEmpty() || "ALL".equalsIgnoreCase(status) || t.getStatus().equalsIgnoreCase(status))
+                .filter(t -> type == null || type.trim().isEmpty() || "ALL".equalsIgnoreCase(type) || t.getType().equalsIgnoreCase(type))
                 .collect(Collectors.toList());
     }
 
-    // --- US-22: 2. Staff bấm Tiếp nhận Ticket (SUBMITTED -> IN_PROGRESS) ---
+    // --- US-22: 2. Staff bấm Tiếp nhận Ticket (SUBMITTED / ESCALATED -> IN_PROGRESS) ---
     @Transactional
     public SupportTicket acceptTicket(Long ticketId, Integer staffId, Integer facilityId) {
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
@@ -422,13 +479,15 @@ public class SupportTicketService {
             throw new AccessDeniedException("Bạn không có quyền tiếp nhận ticket của cơ sở khác!");
         }
 
-        if (!"SUBMITTED".equalsIgnoreCase(ticket.getStatus())) {
+        if (!"SUBMITTED".equalsIgnoreCase(ticket.getStatus()) && !"ESCALATED".equalsIgnoreCase(ticket.getStatus())) {
             throw new IllegalArgumentException("Ticket này đã được tiếp nhận hoặc đã xử lý xong!");
         }
 
         ticket.setStatus("IN_PROGRESS");
         ticket.setAssignedStaffId(staffId);
-        return supportTicketRepository.save(ticket);
+        SupportTicket saved = supportTicketRepository.save(ticket);
+        populateTicketExtraInfo(saved);
+        return saved;
     }
 
     // --- US-23: 1. Lấy thông tin đối chiếu CCCD cho màn hình Mở khóa hộ ---
@@ -529,6 +588,112 @@ public class SupportTicketService {
             log.setAction("RESOLVE_TICKET");
             log.setDescription(String.format("Nhân viên #%d đã xử lý hoàn tất ticket %s: %s",
                     staffId, ticket.getTicketCode(), ticket.getResolutionNote()));
+            log.setCreatedAt(LocalDateTime.now());
+            activityLogRepository.save(log);
+        }
+
+        populateTicketExtraInfo(saved);
+        return saved;
+    }
+
+    // --- CÁCH 2: Quản lý chi nhánh xem danh sách ticket cơ sở (Ưu tiên ESCALATED quá hạn 15p) ---
+    @Transactional
+    public List<SupportTicket> getManagerTickets(Integer facilityId, String status, String type) {
+        List<SupportTicket> tickets;
+        if (facilityId == null || facilityId <= 0) {
+            tickets = supportTicketRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+        } else {
+            tickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
+            if (tickets.isEmpty()) {
+                tickets = supportTicketRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+            }
+        }
+
+        checkAndEscalateTickets(tickets);
+
+        return tickets.stream()
+                .filter(t -> status == null || status.trim().isEmpty() || "ALL".equalsIgnoreCase(status) || t.getStatus().equalsIgnoreCase(status))
+                .filter(t -> type == null || type.trim().isEmpty() || "ALL".equalsIgnoreCase(type) || t.getType().equalsIgnoreCase(type))
+                .sorted((a, b) -> {
+                    int pA = getStatusPriority(a.getStatus());
+                    int pB = getStatusPriority(b.getStatus());
+                    if (pA != pB) {
+                        return Integer.compare(pA, pB);
+                    }
+                    if (a.getCreatedAt() == null || b.getCreatedAt() == null) return 0;
+                    return b.getCreatedAt().compareTo(a.getCreatedAt());
+                })
+                .collect(Collectors.toList());
+    }
+
+    private int getStatusPriority(String status) {
+        if ("ESCALATED".equalsIgnoreCase(status)) return 1;
+        if ("SUBMITTED".equalsIgnoreCase(status)) return 2;
+        if ("IN_PROGRESS".equalsIgnoreCase(status)) return 3;
+        if ("RESOLVED".equalsIgnoreCase(status)) return 4;
+        return 5;
+    }
+
+    // --- CÁCH 2: Quản lý trực tiếp Tiếp nhận ticket (ESCALATED / SUBMITTED -> IN_PROGRESS) ---
+    @Transactional
+    public SupportTicket managerAcceptTicket(Long ticketId, Integer managerAccountId, Integer facilityId) {
+        SupportTicket ticket = supportTicketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy ticket # " + ticketId));
+
+        if (facilityId != null && ticket.getFacilityId() != null && !ticket.getFacilityId().equals(facilityId)) {
+            throw new AccessDeniedException("Bạn không có quyền tiếp nhận ticket của cơ sở khác!");
+        }
+
+        if ("RESOLVED".equalsIgnoreCase(ticket.getStatus())) {
+            throw new IllegalArgumentException("Ticket này đã được giải quyết hoàn tất trước đó!");
+        }
+
+        ticket.setStatus("IN_PROGRESS");
+        ticket.setAssignedStaffId(managerAccountId);
+        SupportTicket saved = supportTicketRepository.save(ticket);
+        populateTicketExtraInfo(saved);
+
+        if (activityLogRepository != null && managerAccountId != null) {
+            ActivityLog log = new ActivityLog();
+            log.setAccountId(managerAccountId);
+            log.setAction("MANAGER_ACCEPT_TICKET");
+            log.setDescription(String.format("Quản lý cơ sở #%d trực tiếp tiếp nhận giải quyết ticket %s (Vị trí: %s)",
+                    managerAccountId, ticket.getTicketCode(), ticket.getUnitCode() != null ? ticket.getUnitCode() : "N/A"));
+            log.setCreatedAt(LocalDateTime.now());
+            activityLogRepository.save(log);
+        }
+
+        return saved;
+    }
+
+    // --- CÁCH 2: Quản lý trực tiếp Đóng/Giải quyết ticket cho khách hàng ---
+    @Transactional
+    public SupportTicket managerResolveTicket(Long ticketId, String note, Integer managerAccountId, Integer facilityId) {
+        SupportTicket ticket = supportTicketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy ticket # " + ticketId));
+
+        if (facilityId != null && ticket.getFacilityId() != null && !ticket.getFacilityId().equals(facilityId)) {
+            throw new AccessDeniedException("Bạn không có quyền xử lý ticket của cơ sở khác!");
+        }
+
+        if ("RESOLVED".equalsIgnoreCase(ticket.getStatus())) {
+            throw new IllegalArgumentException("Ticket này đã hoàn tất giải quyết trước đó!");
+        }
+
+        ticket.setStatus("RESOLVED");
+        ticket.setResolutionNote(note != null && !note.trim().isEmpty() ? note : "Quản lý cơ sở đã trực tiếp giải quyết và đóng ticket cho khách hàng");
+        ticket.setAssignedStaffId(managerAccountId);
+        ticket.setResolvedAt(LocalDateTime.now());
+
+        SupportTicket saved = supportTicketRepository.save(ticket);
+        populateTicketExtraInfo(saved);
+
+        if (activityLogRepository != null && managerAccountId != null) {
+            ActivityLog log = new ActivityLog();
+            log.setAccountId(managerAccountId);
+            log.setAction("MANAGER_RESOLVE_TICKET");
+            log.setDescription(String.format("Quản lý cơ sở #%d trực tiếp hoàn tất và đóng ticket %s: %s",
+                    managerAccountId, ticket.getTicketCode(), ticket.getResolutionNote()));
             log.setCreatedAt(LocalDateTime.now());
             activityLogRepository.save(log);
         }

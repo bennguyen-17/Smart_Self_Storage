@@ -53,10 +53,6 @@ public class SecurityConfig {
                         .hasRole("STAFF")
 
                         .requestMatchers(
-                                "/api/manager/audit-logs/manual-gate-open")
-                        .hasRole("MANAGER")
-
-                        .requestMatchers(
                                 "/api/admin/**",
                                 "/api/manager/**")
                         .permitAll()
