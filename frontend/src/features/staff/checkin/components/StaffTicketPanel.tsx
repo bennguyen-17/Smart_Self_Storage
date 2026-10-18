@@ -23,7 +23,7 @@ import StaffInspectionModal, {
 } from "./StaffInspectionModal"
 import StaffUnlockModal, { type UnlockTicketInfo } from "./StaffUnlockModal"
 
-type TicketStatus = "SUBMITTED" | "IN_PROGRESS" | "RESOLVED"
+type TicketStatus = "SUBMITTED" | "ESCALATED" | "IN_PROGRESS" | "RESOLVED"
 
 export interface TicketItem {
   id: string | number
@@ -34,6 +34,8 @@ export interface TicketItem {
   customerId?: number
   customerName?: string
   customerPhone?: string
+  assignedStaffId?: number
+  assignedStaffName?: string
   identityNumber?: string
   unitCode?: string
   contractId?: number
@@ -99,6 +101,7 @@ const INITIAL_FALLBACK_TICKETS: TicketItem[] = [
 
 const FILTERS: { key: "ALL" | TicketStatus; label: string }[] = [
   { key: "ALL", label: "Tất Cả" },
+  { key: "ESCALATED", label: "🚨 Chuyển Quản Lý" },
   { key: "SUBMITTED", label: "Chờ Tiếp Nhận" },
   { key: "IN_PROGRESS", label: "Đang Xử Lý" },
   { key: "RESOLVED", label: "Đã Hoàn Tất" },
@@ -107,6 +110,14 @@ const FILTERS: { key: "ALL" | TicketStatus; label: string }[] = [
 function getSlaInfo(ticket: TicketItem, now: number) {
   if (ticket.status === "RESOLVED") {
     return { text: "Đã Hoàn Tất", className: "text-muted", isBreached: false }
+  }
+
+  if (ticket.status === "ESCALATED" || ticket.isSlaBreached) {
+    return {
+      text: "Quá Hạn 15p - Chuyển Quản Lý",
+      className: "border border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/60 dark:text-rose-300 font-black animate-pulse",
+      isBreached: true,
+    }
   }
 
   if (ticket.type === "EARLY_TERMINATION") {
@@ -148,7 +159,7 @@ function getSlaInfo(ticket: TicketItem, now: number) {
   if (diffSec <= 0) {
     return {
       text: "SLA Quá Hạn",
-      className: "text-rose-600 dark:text-rose-400",
+      className: "text-rose-600 dark:text-rose-400 font-bold",
       isBreached: true,
     }
   }
@@ -159,7 +170,7 @@ function getSlaInfo(ticket: TicketItem, now: number) {
 
   return {
     text: timeStr,
-    className: m < 5 ? "text-rose-600 dark:text-rose-400" : "text-muted",
+    className: m < 5 ? "text-rose-600 dark:text-rose-400 font-semibold" : "text-muted",
     isBreached: false,
   }
 }
@@ -279,6 +290,8 @@ function StaffTicketPanel() {
             desiredDate: t.desiredDate ? String(t.desiredDate) : undefined,
             slaDeadline: t.slaDeadline ? String(t.slaDeadline) : undefined,
             isSlaBreached: t.isSlaBreached,
+            assignedStaffId: t.assignedStaffId,
+            assignedStaffName: t.assignedStaffName,
             createdAt: t.createdAt,
           }))
           setTickets(mapped)
@@ -591,32 +604,46 @@ function StaffTicketPanel() {
 
                       {/* Cột 6: Trạng thái */}
                       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
-                        <span
-                          className={cn(
-                            "rounded-md border px-2 py-0.5 text-[10px] font-extrabold whitespace-nowrap",
-                            ticket.status === "SUBMITTED"
-                              ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
-                              : ticket.status === "IN_PROGRESS"
-                                ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300"
-                                : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                        <div className="flex flex-col items-center">
+                          <span
+                            className={cn(
+                              "rounded-md border px-2 py-0.5 text-[10px] font-extrabold whitespace-nowrap",
+                              ticket.status === "ESCALATED"
+                                ? "border-rose-300 bg-rose-100 text-rose-800 dark:border-rose-800 dark:bg-rose-950/60 dark:text-rose-300"
+                                : ticket.status === "SUBMITTED"
+                                  ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+                                  : ticket.status === "IN_PROGRESS"
+                                    ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300"
+                                    : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                            )}
+                          >
+                            {ticket.status === "ESCALATED"
+                              ? "🚨 ĐÃ CHUYỂN QUẢN LÝ"
+                              : ticket.status === "SUBMITTED"
+                                ? "⌛ Chờ Tiếp Nhận"
+                                : ticket.status === "IN_PROGRESS"
+                                  ? "⚙ Đang Xử Lý"
+                                  : "✓ Đã Hoàn Tất"}
+                          </span>
+                          {ticket.assignedStaffName && ticket.status !== "SUBMITTED" && ticket.status !== "ESCALATED" && (
+                            <span className="text-[10px] text-slate-500 mt-0.5">
+                              ({ticket.assignedStaffName})
+                            </span>
                           )}
-                        >
-                          {ticket.status === "SUBMITTED"
-                            ? "⌛ Chờ Tiếp Nhận"
-                            : ticket.status === "IN_PROGRESS"
-                              ? "⚙ Đang Xử Lý"
-                              : "✓ Đã Hoàn Tất"}
-                        </span>
+                        </div>
                       </td>
 
                       {/* Cột 7: Thao tác */}
                       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
-                          {ticket.status === "SUBMITTED" && (
+                          {(ticket.status === "SUBMITTED" || ticket.status === "ESCALATED") && (
                             <button
                               type="button"
                               onClick={() => handleClaim(ticket)}
-                              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-bold whitespace-nowrap text-white shadow-xs transition hover:bg-blue-700"
+                              className={cn(
+                                "inline-flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap text-white shadow-xs transition hover:opacity-90",
+                                ticket.status === "ESCALATED" ? "bg-rose-600 hover:bg-rose-700" : "bg-blue-600 hover:bg-blue-700"
+                              )}
                             >
                               <UserCheckIcon className="size-3.5" />
                               <span>Tiếp Nhận</span>
