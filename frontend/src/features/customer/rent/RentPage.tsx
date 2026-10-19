@@ -495,7 +495,7 @@ export default function RentStoragePage() {
                       Ngày nhận kho (Check-in):
                     </label>
                     <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                      Hôm nay hoặc tối đa 7 ngày
+                      Hôm nay hoặc một trong 7 ngày tới 
                     </span>
                   </div>
                   <select
@@ -508,7 +508,7 @@ export default function RentStoragePage() {
                       const formatted = d.split('-').reverse().join('/');
                       return (
                         <option key={d} value={d}>
-                          {isToday ? `⭐ Hôm nay - ${formatted} (Nhận kho ngay)` : formatted}
+                          {isToday ? `${formatted} (Nhận kho hôm nay)` : formatted}
                         </option>
                       );
                     })}

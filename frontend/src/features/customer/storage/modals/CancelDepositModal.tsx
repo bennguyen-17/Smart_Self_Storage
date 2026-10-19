@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface CancelDepositModalProps {
   contract: any;
@@ -14,6 +15,7 @@ export default function CancelDepositModal({
   isCancelling
 }: CancelDepositModalProps) {
   const [bankName, setBankName] = useState('Vietcombank');
+  const [customBankName, setCustomBankName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
   const [error, setError] = useState('');
@@ -27,7 +29,7 @@ export default function CancelDepositModal({
         const u = JSON.parse(userStr);
         if (u.fullName) setAccountName(u.fullName.toUpperCase());
       }
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
   // Tính số ngày còn lại đến ngày nhận kho
@@ -46,6 +48,11 @@ export default function CancelDepositModal({
   const refundAmount = isRefundEligible ? depositVal : Math.round(depositVal * 0.5);
 
   const handleSubmit = async () => {
+    const finalBankName = bankName === 'Khác' ? customBankName.trim() : bankName;
+    if (bankName === 'Khác' && !finalBankName) {
+      setError('Vui lòng nhập tên ngân hàng của bạn.');
+      return;
+    }
     if (!accountNumber.trim()) {
       setError('Vui lòng nhập số tài khoản ngân hàng để nhận tiền cọc.');
       return;
@@ -57,7 +64,7 @@ export default function CancelDepositModal({
     setError('');
     try {
       await onConfirm({
-        bankName,
+        bankName: finalBankName,
         bankAccountNumber: accountNumber.trim(),
         bankAccountName: accountName.trim().toUpperCase()
       });
@@ -67,9 +74,11 @@ export default function CancelDepositModal({
     }
   };
 
+  if (typeof document === 'undefined') return null;
+
   if (isSuccess) {
-    return (
-      <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    return createPortal(
+      <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-3xl shadow-2xl p-6 text-center space-y-4 modal-animate-pop">
           {/* Icon success */}
           <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-3xl mx-auto flex items-center justify-center shadow-lg">
@@ -91,7 +100,7 @@ export default function CancelDepositModal({
               <i className="fa-solid fa-clock-rotate-left text-sm"></i>
               <span>Chờ Quản lý hoàn tiền cọc</span>
             </div>
-            
+
             <p className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed font-medium">
               Yêu cầu hủy cọc của bạn đã được ghi nhận. <strong>Quản lý cơ sở</strong> sẽ kiểm tra và thực hiện thanh toán hoàn cọc về tài khoản của bạn trong vòng <strong>24 – 48 giờ tới</strong>.
             </p>
@@ -127,24 +136,30 @@ export default function CancelDepositModal({
             <span>ĐÃ HIỂU &amp; ĐÓNG</span>
           </button>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
-  return (
-    <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-3xl shadow-2xl p-6 space-y-4 modal-animate-pop">
-        <div className="flex items-center space-x-3 text-rose-600 dark:text-rose-400">
-          <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center text-lg font-bold">
+  return createPortal(
+    <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md max-h-[92vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden modal-animate-pop my-auto">
+        {/* Header - Fixed */}
+        <div className="p-5 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center space-x-3 text-rose-600 dark:text-rose-400 shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center text-base font-bold shrink-0">
             <i className="fa-solid fa-triangle-exclamation"></i>
           </div>
-          <div>
-            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase">XÁC NHẬN HỦY ĐẶT CỌC</h3>
-            <p className="text-[11px] text-slate-500">Chính sách hoàn tiền đặt cọc</p>
+          <div className="min-w-0">
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase truncate">XÁC NHẬN HỦY ĐẶT CỌC</h3>
+            <p className="text-[11px] text-slate-500">Vui lòng đọc kĩ chính sách hoàn tiền đặt cọc</p>
           </div>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-xs space-y-2 text-slate-700 dark:text-slate-300">
+        {/* Scrollable Body */}
+        <div className="p-5 space-y-3.5 overflow-y-auto flex-1 text-xs">
+
+        {/* THÔNG TIN HỢP ĐỒNG */}
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-xs space-y-2 text-slate-700 dark:text-slate-300">
           <div className="flex justify-between">
             <span className="text-slate-500 dark:text-slate-400">Hợp đồng:</span>
             <span className="font-mono font-bold text-slate-900 dark:text-white">{contract.contractId}</span>
@@ -159,43 +174,45 @@ export default function CancelDepositModal({
           </div>
         </div>
 
-        {/* BẢNG ĐIỀU KIỆN & CHÍNH SÁCH HOÀN TIỀN (BR-17) */}
-        <div className={`p-3.5 rounded-2xl border text-xs space-y-2 ${
-          isRefundEligible
-            ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
-            : 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200'
-        }`}>
-          <div className="flex items-center justify-between font-bold text-xs">
-            <span className="flex items-center gap-1.5">
-              <i className={`fa-solid ${isRefundEligible ? 'fa-circle-check text-emerald-600 dark:text-emerald-400' : 'fa-circle-exclamation text-amber-600 dark:text-amber-400'}`}></i>
-              {isRefundEligible ? 'Đủ điều kiện hoàn 100% tiền cọc' : 'Hủy cận ngày: Hoàn 50% tiền cọc'}
-            </span>
-            <span className="font-mono text-[10.5px] px-2 py-0.5 rounded-full bg-white/80 dark:bg-slate-900/80 border border-current font-bold">
-              Còn {daysUntilStart > 0 ? `${daysUntilStart} ngày` : 'trong ngày'} đến ngày nhận kho
-            </span>
+        {/* CHÍNH SÁCH HOÀN TIỀN (Bố cục cái cũ nhưng màu dịu, sạch) */}
+        <div className={`p-3.5 rounded-xl border text-xs space-y-2.5 ${isRefundEligible
+            ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60'
+            : 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60'
+          }`}>
+          <div className="flex items-start gap-2.5">
+            <div className={`mt-0.5 size-5 shrink-0 flex items-center justify-center rounded-full text-[11px] ${isRefundEligible
+                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300'
+                : 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300'
+              }`}>
+              <i className={`fa-solid ${isRefundEligible ? 'fa-check' : 'fa-exclamation'}`}></i>
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-slate-900 dark:text-white text-xs">
+                {isRefundEligible ? 'Đủ điều kiện hoàn 100% tiền cọc' : 'Hủy cận ngày: Hoàn 50% tiền cọc'}
+              </div>
+              <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {daysUntilStart > 0 ? `Còn ${daysUntilStart} ngày đến ngày nhận kho` : 'Hôm nay là ngày nhận kho'}
+              </div>
+            </div>
           </div>
-          <p className="text-[11px] leading-relaxed">
+
+          <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
             {isRefundEligible
-              ? `Chính sách hoàn cọc: Do bạn hủy trước ngày nhận kho từ 4 ngày trở lên, toàn bộ 100% số tiền cọc (${(contract.depositFee || 500000).toLocaleString('vi-VN')} đ) sẽ được bộ phận Kế toán chuyển khoản hoàn lại cho bạn trong 24 - 48 giờ làm việc.`
-              : `Chính sách hoàn cọc: Do hủy trước ngày nhận kho dưới 4 ngày, bạn sẽ bị khấu trừ 50% tiền cọc (${((contract.depositFee || 500000) * 0.5).toLocaleString('vi-VN')} đ) làm chi phí giữ chỗ, và được hoàn lại 50% tiền cọc (${((contract.depositFee || 500000) * 0.5).toLocaleString('vi-VN')} đ) về tài khoản ngân hàng.`}
-          </p>
+              ? `Do hủy trước ngày nhận kho từ 4 ngày trở lên, toàn bộ 100% tiền cọc sẽ được hoàn lại cho bạn.`
+              : `Do hủy trước ngày nhận kho dưới 4 ngày, bạn sẽ bị khấu trừ 50% tiền cọc làm phí phạt, và được hoàn lại 50%.`}
+          </div>
         </div>
 
         {/* FORM THÔNG TIN NGÂN HÀNG */}
-        <div className="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/80 space-y-3">
-          <div className="flex items-center justify-between text-xs font-bold text-blue-900 dark:text-blue-300">
-            <div className="flex items-center gap-2">
-              <i className="fa-solid fa-building-columns text-blue-600 dark:text-blue-400"></i>
-              <span>Thông tin tài khoản nhận tiền hoàn cọc</span>
-            </div>
-            <span className="text-[10.5px] font-mono font-bold text-blue-600 dark:text-blue-400">
-              {isRefundEligible ? 'Hoàn 100%' : 'Hoàn 50%'}
-            </span>
+        <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
+          <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+            Thông tin tài khoản nhận tiền hoàn cọc
           </div>
-          
+
           <div className="space-y-2 text-xs">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
                 Ngân hàng thụ hưởng:
               </label>
               <select
@@ -214,11 +231,26 @@ export default function CancelDepositModal({
                 <option value="VietinBank">VietinBank</option>
                 <option value="Khác">Ngân hàng khác</option>
               </select>
+
+              {bankName === 'Khác' && (
+                <div className="mt-2">
+                  <input
+                    type="text"
+                    placeholder="Nhập tên ngân hàng của bạn (VD: OCB, VIB, Sacombank...)"
+                    value={customBankName}
+                    onChange={(e) => {
+                      setCustomBankName(e.target.value);
+                      setError('');
+                    }}
+                    className="w-full px-3 py-2 rounded-xl border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:border-blue-500 focus:outline-none placeholder:text-slate-400"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
                   Số tài khoản (STK): <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -233,7 +265,7 @@ export default function CancelDepositModal({
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
                   Tên chủ tài khoản: <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -244,7 +276,7 @@ export default function CancelDepositModal({
                     setAccountName(e.target.value.toUpperCase());
                     setError('');
                   }}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs uppercase focus:border-blue-500 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-semibold text-xs uppercase focus:border-blue-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -257,12 +289,15 @@ export default function CancelDepositModal({
           </div>
         </div>
 
-        <div className="pt-2 flex items-center justify-end space-x-2.5">
+        </div>
+
+        {/* Footer - Fixed */}
+        <div className="p-4 px-5 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-end space-x-2.5 shrink-0">
           <button
             type="button"
             disabled={isCancelling}
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
           >
             Giữ lại
           </button>
@@ -270,13 +305,14 @@ export default function CancelDepositModal({
             type="button"
             disabled={isCancelling}
             onClick={handleSubmit}
-            className="px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md transition flex items-center space-x-2 cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md transition flex items-center space-x-2 cursor-pointer"
           >
             {isCancelling ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-ban"></i>}
             <span>{isCancelling ? 'Đang xử lý...' : 'Xác nhận hủy cọc'}</span>
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

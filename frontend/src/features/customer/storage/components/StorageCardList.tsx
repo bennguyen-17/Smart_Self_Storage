@@ -36,8 +36,8 @@ export default function StorageCardList({
                 <button
                   type="button"
                   onClick={() => onViewContract(item)}
-                  title="Xem chi tiết hợp đồng"
-                  className="font-bold text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 text-sm transition-colors cursor-pointer"
+                  title="Bấm để xem chi tiết hợp đồng"
+                  className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-600 font-mono font-semibold text-xs transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer"
                 >
                   {item.reservationCode || item.bookingCode || item.contractId}
                 </button>
@@ -68,11 +68,11 @@ export default function StorageCardList({
                     : 'bg-slate-400'
                 }`}></span>
                 {isReturnRequested
-                  ? 'CHỜ TRẢ KHO'
+                  ? 'Chờ trả kho'
                   : isPending
-                  ? 'CHỜ CHECK-IN'
+                  ? 'Chờ check-in'
                   : isTerminated
-                  ? 'ĐÃ THANH LÝ'
+                  ? 'Đã thanh lý'
                   : (item.statusLabel || item.status)}
               </span>
             </div>
@@ -80,19 +80,19 @@ export default function StorageCardList({
             {/* Middle Grid: Cơ sở, Kích cỡ, Ngày trả kho */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800">
               <div className="col-span-2 sm:col-span-1">
-                <span className="text-slate-400 dark:text-slate-400 block text-[10px] uppercase font-bold">Cơ Sở</span>
+                <span className="text-slate-400 dark:text-slate-400 block text-xs font-medium">Cơ sở</span>
                 <span className="font-normal text-slate-800 dark:text-slate-200 block mt-0.5 truncate" title={item.branchName}>
                   <span className="truncate">{item.branchName ? item.branchName.replace(/\s*\([A-Z0-9-]+\)/g, '') : ''}</span>
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 dark:text-slate-400 block text-[10px] uppercase font-bold">Ngày nhận kho</span>
+                <span className="text-slate-400 dark:text-slate-400 block text-xs font-medium">Ngày nhận kho</span>
                 <span className="font-normal text-slate-800 dark:text-slate-200 block mt-0.5">
                   {formatDate(item.startDate)}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 dark:text-slate-400 block text-[10px] uppercase font-bold">Ngày trả kho</span>
+                <span className="text-slate-400 dark:text-slate-400 block text-xs font-medium">Ngày trả kho</span>
                 <span className="font-normal text-slate-800 dark:text-slate-200 block mt-0.5">
                   {formatDate(item.expiryDate || item.endDate)}
                 </span>

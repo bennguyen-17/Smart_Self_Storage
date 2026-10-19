@@ -49,17 +49,12 @@ export default function CustomerLayout({ children, activeNav = 'home' }: Custome
   };
 
   return (
-    <div className={`relative min-h-screen flex flex-col transition-colors ${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-[#eef5fc] text-slate-900'}`}>
-      {/* Nền xanh nhạt ambient background */}
+    <div className={`relative min-h-screen flex flex-col transition-colors ${isDarkMode ? 'dark bg-[#0b1120] text-slate-100' : 'bg-[#eef5fc] text-slate-900'} antialiased`}>
+      {/* Vầng sáng xanh mờ phía trên vùng nội dung, đồng bộ chuẩn 100% với Staff và Manager */}
       <div
-        className={`fixed inset-0 pointer-events-none z-0 transition-colors ${
-          isDarkMode
-            ? 'bg-gradient-to-b from-slate-950 via-[#0a1628] to-slate-950'
-            : 'bg-gradient-to-b from-[#eaf4fe] via-[#f1f7ff] to-[#e4effb]'
-        }`}
-      >
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-full max-w-6xl h-[500px] bg-gradient-to-b from-sky-200/50 via-blue-100/30 to-transparent blur-3xl pointer-events-none rounded-full" />
-      </div>
+        aria-hidden="true"
+        className="pointer-events-none fixed top-0 left-1/2 -z-0 h-64 w-full max-w-4xl -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-500/20 via-cyan-400/25 to-indigo-500/20 blur-3xl dark:from-blue-500/10 dark:via-cyan-400/10 dark:to-indigo-500/10"
+      />
 
       {/* Header với thanh chuyển Tab tích hợp */}
       <Header

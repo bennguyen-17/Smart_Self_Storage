@@ -43,12 +43,12 @@ export default function StorageTable({
 
             return (
               <tr key={item.contractId} className="hover:bg-slate-50/90 dark:hover:bg-slate-800/60 transition-colors group">
-                <td className="py-3 px-4 whitespace-nowrap align-middle text-left">
+                <td className="py-3 px-4 whitespace-nowrap align-middle text-center">
                   <button
                     type="button"
                     onClick={() => onViewContract(item)}
-                    title="Xem chi tiết hợp đồng"
-                    className="font-bold text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 text-sm transition-colors cursor-pointer text-left"
+                    title="Bấm để xem chi tiết hợp đồng"
+                    className="inline-block px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-600 font-mono font-semibold text-xs transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer text-center"
                   >
                     {item.reservationCode || item.bookingCode || item.contractId}
                   </button>
@@ -68,7 +68,7 @@ export default function StorageTable({
                   <span className="text-slate-800 dark:text-slate-200 text-sm font-normal">{formatDate(item.expiryDate || item.endDate)}</span>
                 </td>
                 <td className="py-3 px-3 whitespace-nowrap align-middle text-center">
-                  <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-semibold border ${
+                  <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium border ${
                     isReturnRequested
                       ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700'
                       : isActive
@@ -79,7 +79,7 @@ export default function StorageTable({
                       ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
                   }`}>
-                    <span className={`w-2 h-2 rounded-full mr-2 ${
+                    <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
                       isReturnRequested
                         ? 'bg-amber-500 animate-pulse'
                         : isActive
@@ -91,11 +91,11 @@ export default function StorageTable({
                         : 'bg-slate-400'
                     }`}></span>
                     {isReturnRequested
-                      ? 'CHỜ TRẢ KHO'
+                      ? 'Chờ trả kho'
                       : isPending
-                      ? 'CHỜ CHECK-IN'
+                      ? 'Chờ check-in'
                       : isTerminated
-                      ? 'ĐÃ THANH LÝ'
+                      ? 'Đã thanh lý'
                       : (item.statusLabel || item.status)}
                   </span>
                 </td>
@@ -107,10 +107,10 @@ export default function StorageTable({
                       <button
                         type="button"
                         onClick={() => onCancelDeposit(item)}
-                        className="px-3.5 py-1.5 rounded-xl text-sm font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-600 hover:text-white border border-rose-200 dark:border-rose-800 transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap active:scale-95"
+                        className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-600 hover:text-white border border-rose-200 dark:border-rose-800 transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap active:scale-95"
                         title="Hủy đặt cọc ô kho"
                       >
-                        <i className="fa-solid fa-ban text-sm"></i> Hủy cọc
+                        <i className="fa-solid fa-ban text-xs"></i> Hủy cọc
                       </button>
                     )}
 
@@ -119,9 +119,9 @@ export default function StorageTable({
                       <button
                         type="button"
                         onClick={() => onExtend(item)}
-                        className="px-3.5 py-1.5 rounded-xl text-sm font-bold bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-600 hover:text-white border border-blue-200 dark:border-blue-700 transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap active:scale-95"
+                        className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-600 hover:text-white border border-blue-200 dark:border-blue-700 transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap active:scale-95"
                       >
-                        <i className="fa-solid fa-arrows-rotate text-sm"></i> Gia Hạn
+                        <i className="fa-solid fa-arrows-rotate text-xs"></i> Gia Hạn
                       </button>
                     )}
 

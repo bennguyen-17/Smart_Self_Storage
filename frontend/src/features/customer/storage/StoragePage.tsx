@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+  import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import CustomerLayout from '@/components/layouts/CustomerLayout';
 import { getMyContracts, cancelDepositContract, requestCheckoutContract } from './storageApi';

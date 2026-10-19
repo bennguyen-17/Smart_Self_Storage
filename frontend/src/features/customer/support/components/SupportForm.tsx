@@ -247,16 +247,16 @@ export default function SupportForm() {
     <div className="w-full max-w-5xl mx-auto space-y-6">
       {/* Banner Tiêu Đề - Chỉ hiển thị bên trang Gửi yêu cầu mới */}
       {activeSubTab === 'create' && (
-        <div className="bg-white dark:bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-blue-500/30 p-5 sm:p-6 shadow-md shadow-slate-300/40 dark:shadow-[0_0_25px_rgba(59,130,246,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-3.5">
-            <div className="p-3 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-400/30 shadow-xs dark:shadow-[0_0_15px_rgba(245,158,11,0.25)]">
+            <div className="p-3 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-400/30">
               <Headset className="size-6 text-amber-500 dark:text-amber-300" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase">
                 TRUNG TÂM HỖ TRỢ KỸ THUẬT
               </h2>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                 Tiếp nhận và xử lý yêu cầu hỗ trợ từ khách hàng
               </p>
             </div>
@@ -268,17 +268,17 @@ export default function SupportForm() {
       {activeSubTab === 'create' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* CỘT TRÁI: FORM GỬI YÊU CẦU HỖ TRỢ */}
-          <div className="lg:col-span-7 flex flex-col bg-white dark:bg-slate-950/85 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-blue-500/30 p-6 sm:p-7 shadow-md shadow-slate-300/40 dark:shadow-xl">
+          <div className="lg:col-span-7 flex flex-col bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm">
             {/* Header đồng bộ với cột phải */}
             <div className="flex items-center space-x-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
                 <MessageSquare className="size-5" />
               </div>
               <div>
-                <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white tracking-wide">
+                <h3 className="font-bold text-sm uppercase text-slate-900 dark:text-white tracking-wide">
                   GỬI YÊU CẦU TIẾP NHẬN XỬ LÝ
                 </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Điền thông tin chi tiết sự cố để nhân viên tiếp nhận và xử lý kịp thời
                 </p>
               </div>
@@ -493,16 +493,16 @@ export default function SupportForm() {
           </div>
 
           {/* CỘT PHẢI: QUY TRÌNH HỖ TRỢ & TIÊU CHUẨN DỊCH VỤ */}
-          <div className="lg:col-span-5 h-fit flex flex-col space-y-4 bg-white dark:bg-slate-950/75 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-blue-500/20 p-6 sm:p-7 shadow-md shadow-slate-300/40 dark:shadow-xl">
+          <div className="lg:col-span-5 h-fit flex flex-col space-y-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm">
             <div className="flex items-center space-x-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
                 <ShieldCheck className="size-5" />
               </div>
               <div>
-                <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white tracking-wide">
+                <h3 className="font-bold text-sm uppercase text-slate-900 dark:text-white tracking-wide">
                   QUY TRÌNH HỖ TRỢ
                 </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Quy chuẩn tiếp nhận và giải quyết sự cố
                 </p>
               </div>
@@ -510,9 +510,9 @@ export default function SupportForm() {
 
             <div className="space-y-3">
               {/* 1. KHUNG GIỜ LÀM VIỆC CỦA NHÂN VIÊN */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-blue-700 dark:text-blue-300 uppercase font-bold tracking-wider flex items-center gap-1.5">
+                  <span className="text-xs text-blue-700 dark:text-blue-400 uppercase font-semibold tracking-wider flex items-center gap-1.5">
                     <Clock className="size-3.5 text-blue-600 dark:text-blue-400" />
                     <span>Giờ trực tại cơ sở</span>
                   </span>
@@ -520,15 +520,15 @@ export default function SupportForm() {
                     08:00 – 20:00
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                   Nhân viên có mặt hỗ trợ trực tiếp. Ngoài giờ trực, khách hàng vẫn ra vào kho tự động 24/7 bằng mã PIN; các yêu cầu gửi sau 20:00 sẽ được xử lý vào 08:00 sáng hôm sau.
                 </p>
               </div>
 
               {/* 2. CAM KẾT PHẢN HỒI SỰ CỐ SLA 15 PHÚT */}
-              <div className="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-500/30 space-y-1">
+              <div className="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-amber-700 dark:text-amber-300 uppercase font-bold tracking-wider flex items-center gap-1.5">
+                  <span className="text-xs text-amber-700 dark:text-amber-300 uppercase font-semibold tracking-wider flex items-center gap-1.5">
                     <AlertCircle className="size-3.5 text-amber-600 dark:text-amber-400" />
                     <span>Cam kết phản hồi</span>
                   </span>
@@ -536,20 +536,20 @@ export default function SupportForm() {
                     Tối đa 15 phút
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   Áp dụng cho các sự cố khẩn cấp (kẹt khóa, an ninh) trong ca trực. Nếu quá 15 phút chưa tiếp nhận, hệ thống tự động bắn cảnh báo lên Quản lý cơ sở.
                 </p>
               </div>
 
               {/* 3. XÁC THỰC DANH TÍNH MỞ KHÓA */}
-              <div className="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-500/30 space-y-1">
+              <div className="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/50 space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-blue-700 dark:text-blue-300 uppercase font-bold tracking-wider flex items-center gap-1.5">
+                  <span className="text-xs text-blue-700 dark:text-blue-400 uppercase font-semibold tracking-wider flex items-center gap-1.5">
                     <KeyRound className="size-3.5 text-blue-600 dark:text-blue-400" />
                     <span>Xác thực khi hỗ trợ mở khóa</span>
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   Trường hợp quên chìa cơ hoặc cần mở khẩn cấp, khách hàng bắt buộc xuất trình <strong>CCCD gốc hoặc ứng dụng VNeID</strong> trùng khớp với hợp đồng để nhân viên đối chiếu trước khi hỗ trợ mở khóa.
                 </p>
               </div>
@@ -560,7 +560,7 @@ export default function SupportForm() {
                   <HelpCircle className="size-4 text-emerald-600 dark:text-emerald-400" />
                   <span>Quy định trả kho trước hạn:</span>
                 </p>
-                <ul className="text-[11px] text-emerald-800/90 dark:text-emerald-300/90 leading-relaxed space-y-1">
+                <ul className="text-xs text-emerald-800/90 dark:text-emerald-300/90 leading-relaxed space-y-1">
                   <li>- Báo trước tối thiểu 1 ngày (chọn ngày hẹn từ ngày mai trở đi).</li>
                   <li>- Đến cơ sở trong khung giờ trực (<strong>08:00 – 20:00</strong>) ngày đã hẹn để cùng nhân viên nghiệm thu ô kho.</li>
                   <li>- Hệ thống hoàn lại <strong>100% tiền cọc gốc + 50% tiền thuê chưa sử dụng</strong> (sau khi cấn trừ hư hại nếu có).</li>
@@ -575,23 +575,23 @@ export default function SupportForm() {
             {activeSubTab === 'history' && (
               <div className="space-y-6">
                 {/* Banner Tiêu Đề của Danh sách yêu cầu - Đồng bộ phong cách với trang Gửi hỗ trợ */}
-                <div className="bg-white dark:bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-blue-500/30 p-5 sm:p-6 shadow-md shadow-slate-300/40 dark:shadow-[0_0_25px_rgba(59,130,246,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex items-center space-x-3.5">
-                    <div className="p-3 rounded-2xl bg-blue-500/15 text-blue-600 dark:text-blue-300 border border-blue-400/30 shadow-xs dark:shadow-[0_0_15px_rgba(37,99,235,0.25)]">
+                    <div className="p-3 rounded-2xl bg-blue-500/15 text-blue-600 dark:text-blue-300 border border-blue-400/30">
                       <ClipboardList className="size-6 text-blue-600 dark:text-blue-300" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2.5">
-                        <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
+                        <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase">
                           DANH SÁCH YÊU CẦU CỦA TÔI
                         </h2>
                         {myTickets.length > 0 && (
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-100 text-blue-800 dark:bg-blue-600/20 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-slate-800 dark:text-blue-300 border border-blue-200 dark:border-slate-700">
                             {myTickets.length} yêu cầu
                           </span>
                         )}
                       </div>
-                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                         Theo dõi tiến độ tiếp nhận và kết quả giải quyết sự cố từ nhân viên trực ca
                       </p>
                     </div>
