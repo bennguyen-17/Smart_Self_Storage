@@ -188,16 +188,16 @@ export default function CancelDepositModal({
             </div>
 
             <div className="flex-1 min-w-0">
-              <div className="font-bold text-slate-900 dark:text-white text-xs">
+              <div className="font-semibold text-slate-900 dark:text-white text-xs">
                 {isRefundEligible ? 'Đủ điều kiện hoàn 100% tiền cọc' : 'Hủy cận ngày: Hoàn 50% tiền cọc'}
               </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 {daysUntilStart > 0 ? `Còn ${daysUntilStart} ngày đến ngày nhận kho` : 'Hôm nay là ngày nhận kho'}
               </div>
             </div>
           </div>
 
-          <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+          <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
             {isRefundEligible
               ? `Do hủy trước ngày nhận kho từ 4 ngày trở lên, toàn bộ 100% tiền cọc sẽ được hoàn lại cho bạn.`
               : `Do hủy trước ngày nhận kho dưới 4 ngày, bạn sẽ bị khấu trừ 50% tiền cọc làm phí phạt, và được hoàn lại 50%.`}
@@ -206,13 +206,13 @@ export default function CancelDepositModal({
 
         {/* FORM THÔNG TIN NGÂN HÀNG */}
         <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
-          <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+          <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
             Thông tin tài khoản nhận tiền hoàn cọc
           </div>
 
           <div className="space-y-2 text-xs">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
                 Ngân hàng thụ hưởng:
               </label>
               <select
@@ -250,7 +250,7 @@ export default function CancelDepositModal({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
                   Số tài khoản (STK): <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -265,7 +265,7 @@ export default function CancelDepositModal({
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
                   Tên chủ tài khoản: <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -276,7 +276,7 @@ export default function CancelDepositModal({
                     setAccountName(e.target.value.toUpperCase());
                     setError('');
                   }}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs uppercase focus:border-blue-500 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-semibold text-xs uppercase focus:border-blue-500 focus:outline-none"
                 />
               </div>
             </div>
