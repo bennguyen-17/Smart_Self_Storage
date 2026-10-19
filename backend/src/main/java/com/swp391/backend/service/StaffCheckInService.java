@@ -125,7 +125,7 @@ public class StaffCheckInService {
             return checkInFailure("Đơn đặt chỗ không ở trạng thái hợp lệ để làm thủ tục check-in.");
         }
 
-        if (LocalDate.now().isBefore(reservation.getStartDate())) {
+        if (LocalDate.now().equals(reservation.getStartDate())) {
             return checkInFailure("Chưa đến thời hạn check-in");
         }
 
