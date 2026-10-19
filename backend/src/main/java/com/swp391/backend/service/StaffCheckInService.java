@@ -121,12 +121,13 @@ public class StaffCheckInService {
         }
         Reservation reservation = reservationOpt.get();
         // Hợp đồng đã chuyển sang trang staff (PENDING_CHECKIN) thì 100% đã cọc đủ
-        if (!"CONFIRMED".equalsIgnoreCase(reservation.getStatus()) && !"PENDING".equalsIgnoreCase(reservation.getStatus())) {
+        if (!"CONFIRMED".equalsIgnoreCase(reservation.getStatus())
+                && !"PENDING".equalsIgnoreCase(reservation.getStatus())) {
             return checkInFailure("Đơn đặt chỗ không ở trạng thái hợp lệ để làm thủ tục check-in.");
         }
 
-        if (LocalDate.now().equals(reservation.getStartDate())) {
-            return checkInFailure("Chưa đến thời hạn check-in");
+        if (!LocalDate.now().equals(reservation.getStartDate())) {
+            return checkInFailure("Chỉ được check-in vào ngày bắt đầu thuê.");
         }
 
         Optional<Contract> contractOpt = contractRepository.findByReservationIdForUpdate(reservationId);
@@ -147,7 +148,8 @@ public class StaffCheckInService {
         if (!belongsToFacility(unit, employee.get().getFacilityId())) {
             return checkInFailure("Ô kho không thuộc cơ sở do nhân viên quản lý.");
         }
-        if (!"RESERVED".equalsIgnoreCase(unit.getStatus()) && !"HOLD".equalsIgnoreCase(unit.getStatus()) && !"AVAILABLE".equalsIgnoreCase(unit.getStatus())) {
+        if (!"RESERVED".equalsIgnoreCase(unit.getStatus()) && !"HOLD".equalsIgnoreCase(unit.getStatus())
+                && !"AVAILABLE".equalsIgnoreCase(unit.getStatus())) {
             return checkInFailure("Ô kho không ở trạng thái sẵn sàng để làm thủ tục bàn giao.");
         }
 
@@ -157,8 +159,10 @@ public class StaffCheckInService {
         BigDecimal totalAmount = deposit != null && deposit.getAmount() != null
                 ? deposit.getAmount()
                 : (reservation.getRentalAmount() != null ? reservation.getRentalAmount() : BigDecimal.ZERO);
-        BigDecimal depAmount = reservation.getDepositAmount() != null ? reservation.getDepositAmount() : BigDecimal.ZERO;
-        BigDecimal paidSoFar = deposit != null && deposit.getPaidAmount() != null ? deposit.getPaidAmount() : BigDecimal.ZERO;
+        BigDecimal depAmount = reservation.getDepositAmount() != null ? reservation.getDepositAmount()
+                : BigDecimal.ZERO;
+        BigDecimal paidSoFar = deposit != null && deposit.getPaidAmount() != null ? deposit.getPaidAmount()
+                : BigDecimal.ZERO;
 
         if (paidSoFar.compareTo(depAmount) < 0) {
             paidSoFar = depAmount;
@@ -173,7 +177,8 @@ public class StaffCheckInService {
                 ? BigDecimal.ZERO
                 : request.getCollectedAmount();
 
-        // Kiểm tra số tiền thu tại quầy: chấp nhận số tiền còn lại (tiền thuê) hoặc tổng tiền
+        // Kiểm tra số tiền thu tại quầy: chấp nhận số tiền còn lại (tiền thuê) hoặc
+        // tổng tiền
         if (remainingAmount.signum() > 0) {
             if (collectedAmount.compareTo(remainingAmount) != 0 && collectedAmount.compareTo(totalAmount) != 0) {
                 return checkInFailure("Số tiền thu tại quầy (" + collectedAmount
@@ -284,19 +289,26 @@ public class StaffCheckInService {
 
             // Format ngày tháng & số tiền
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            String startStr = reservation.getStartDate() != null ? reservation.getStartDate().format(dtf) : "Từ ngày nhận kho";
-            String endStr = reservation.getEndDate() != null ? reservation.getEndDate().format(dtf) : "Theo thời hạn đăng ký";
+            String startStr = reservation.getStartDate() != null ? reservation.getStartDate().format(dtf)
+                    : "Từ ngày nhận kho";
+            String endStr = reservation.getEndDate() != null ? reservation.getEndDate().format(dtf)
+                    : "Theo thời hạn đăng ký";
 
             NumberFormat nf = NumberFormat.getInstance(new Locale("vi", "VN"));
-            String depositStr = reservation.getDepositAmount() != null ? nf.format(reservation.getDepositAmount()) + " VNĐ" : "0 VNĐ";
-            String rentalStr = reservation.getRentalAmount() != null ? nf.format(reservation.getRentalAmount()) + " VNĐ" : "0 VNĐ";
-            BigDecimal total = (reservation.getDepositAmount() != null ? reservation.getDepositAmount() : BigDecimal.ZERO)
+            String depositStr = reservation.getDepositAmount() != null
+                    ? nf.format(reservation.getDepositAmount()) + " VNĐ"
+                    : "0 VNĐ";
+            String rentalStr = reservation.getRentalAmount() != null ? nf.format(reservation.getRentalAmount()) + " VNĐ"
+                    : "0 VNĐ";
+            BigDecimal total = (reservation.getDepositAmount() != null ? reservation.getDepositAmount()
+                    : BigDecimal.ZERO)
                     .add(reservation.getRentalAmount() != null ? reservation.getRentalAmount() : BigDecimal.ZERO);
             String totalStr = nf.format(total) + " VNĐ";
 
-            String contractCode = (reservation.getReservationCode() != null && !reservation.getReservationCode().isBlank())
-                    ? reservation.getReservationCode()
-                    : ("CTR-" + contract.getContractId());
+            String contractCode = (reservation.getReservationCode() != null
+                    && !reservation.getReservationCode().isBlank())
+                            ? reservation.getReservationCode()
+                            : ("CTR-" + contract.getContractId());
 
             emailService.sendCheckInContractEmail(
                     account.getEmail(),
@@ -316,8 +328,7 @@ public class StaffCheckInService {
                     rentalStr,
                     totalStr,
                     contract.getStatus(),
-                    gatePin
-            );
+                    gatePin);
         } catch (Exception exception) {
             log.warn("Check-in completed but confirmation contract email could not be sent to {}: {}",
                     account.getEmail(), exception.getMessage());
