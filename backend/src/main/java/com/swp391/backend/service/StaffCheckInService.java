@@ -37,6 +37,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -122,6 +123,10 @@ public class StaffCheckInService {
         // Hợp đồng đã chuyển sang trang staff (PENDING_CHECKIN) thì 100% đã cọc đủ
         if (!"CONFIRMED".equalsIgnoreCase(reservation.getStatus()) && !"PENDING".equalsIgnoreCase(reservation.getStatus())) {
             return checkInFailure("Đơn đặt chỗ không ở trạng thái hợp lệ để làm thủ tục check-in.");
+        }
+
+        if (LocalDate.now().isBefore(reservation.getStartDate())) {
+            return checkInFailure("Chưa đến thời hạn check-in");
         }
 
         Optional<Contract> contractOpt = contractRepository.findByReservationIdForUpdate(reservationId);
