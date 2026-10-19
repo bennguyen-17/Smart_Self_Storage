@@ -6,6 +6,7 @@ import {
   ChartColumnIcon,
   ClipboardListIcon,
   DoorOpenIcon,
+  HeadphonesIcon,
   UserCheckIcon,
   UsersRoundIcon,
   WarehouseIcon,
@@ -18,8 +19,9 @@ import FacilityReportPanel from "@/features/manager/facility-report/components/F
 import GateLogPanel from "@/features/manager/gate-logs/components/GateLogPanel"
 import ShiftsPanel from "@/features/manager/staff-shifts/components/ShiftsPanel"
 import UnitManagementPanel from "@/features/manager/unit-management/components/UnitManagementPanel"
+import ManagerTicketPanel from "@/features/manager/ticket-escalation/components/ManagerTicketPanel"
 
-export type ManagerTabKey = "units" | "reports" | "customers" | "workflow" | "staff" | "gate-logs"
+export type ManagerTabKey = "units" | "reports" | "customers" | "workflow" | "staff" | "gate-logs" | "tickets"
 
 export interface ManagerTab {
   key: ManagerTabKey
@@ -96,13 +98,24 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
   {
     key: "gate-logs",
     label: "Nhật ký cổng",
-    title: "Nhật ký mở cổng thủ công",
-    hint: "Mở bằng Thẻ Master",
+    title: "Nhật ký kiểm soát ra vào cổng",
+    hint: "Khách & nhân viên qua cổng",
     icon: DoorOpenIcon,
     stories: "US-18",
     owner: "Vỹ",
-    description: "Xem và lọc nhật ký mở cổng thủ công bằng Thẻ Master của cơ sở (chỉ đọc).",
+    description: "Xem và lọc lịch sử người ra vào cổng bằng Mã PIN động IoT 24/7 và Thẻ Master thủ công của cơ sở.",
     component: GateLogPanel,
+  },
+  {
+    key: "tickets",
+    label: "Sự cố & Escalation",
+    title: "Xử lý sự cố & Ticket quá hạn (Escalation)",
+    hint: "Tiếp nhận & xử lý SLA quá hạn",
+    icon: HeadphonesIcon,
+    stories: "US-22, US-33",
+    owner: "Tâm",
+    description: "Tiếp nhận và giải quyết trực tiếp các ticket hỗ trợ / sự cố quá hạn 15 phút chưa có nhân viên nhận.",
+    component: ManagerTicketPanel,
   },
 ]
 

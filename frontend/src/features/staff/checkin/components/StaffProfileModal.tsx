@@ -1,14 +1,25 @@
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import {
+  Building2Icon,
+  CheckCircle2Icon,
   KeyRoundIcon,
   LogOutIcon,
+  MailIcon,
+  MapPinIcon,
+  PhoneIcon,
   ShieldCheckIcon,
+  UserCheckIcon,
   UserShieldIcon,
 } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAuth } from "@/context/AuthContext"
 import ProtoModal from "./ProtoModal"
+import {
+  getStaffProfile,
+  type StaffProfileData,
+} from "../services/staffProfileService"
 
 interface StaffProfileModalProps {
   open: boolean
@@ -22,31 +33,64 @@ function getInitials(name?: string | null): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
-/** Hồ sơ Nhân viên Vận hành — bám prototype staff_portal.html */
-function StaffProfileModal({ open, onClose }: StaffProfileModalProps) {
+export default function StaffProfileModal({
+  open,
+  onClose,
+}: StaffProfileModalProps) {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
 
-  const staffName = user?.fullName || "Nguyễn Văn Staff"
-  const staffEmail = user?.email || "staff.nguyen@swp391.vn"
-  const staffPhone = (user as { phone?: string })?.phone || "0909 888 999"
-  const staffCode = user?.id
-    ? `ST-${String(user.id).padStart(4, "0")}`
-    : "ST-391-8899"
+  const [loading, setLoading] = useState(false)
+  const [profile, setProfile] = useState<StaffProfileData | null>(null)
+
+  // Tải dữ liệu thật từ máy chủ
+  useEffect(() => {
+    if (!open) return
+
+    let isMounted = true
+    setLoading(true)
+
+    getStaffProfile()
+      .then((data) => {
+        if (isMounted && data && data.success) {
+          setProfile(data)
+        }
+      })
+      .catch((err) => {
+        console.error("Lỗi tải thông tin hồ sơ nhân viên:", err)
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [open])
+
+  // Dữ liệu hiển thị (Ưu tiên từ API -> fallback dữ liệu phiên đăng nhập hiện tại)
+  const staffName = profile?.fullName || user?.fullName || "Nguyễn Văn Hùng"
+  const staffEmail = profile?.email || user?.email || "staff.hn01.1@smartstorage.vn"
+  const staffPhone = profile?.phone || user?.phone || "0901000001"
+  const staffCode =
+    profile?.staffCode ||
+    (user?.id ? `NV-${String(user.id).padStart(4, "0")}` : "NV-0008")
+  const facilityCode =
+    profile?.facilityCode ||
+    user?.facilityCode ||
+    "HN-01"
   const branchName =
-    (user as { facilityName?: string })?.facilityName || "Cơ sở Cầu Giấy (Hà Nội)"
+    profile?.facilityName || user?.facilityName || "SmartStorage Cầu Giấy"
+  const branchAddress =
+    profile?.facilityAddress || "Số 391 Cầu Giấy, Q. Cầu Giấy, Hà Nội"
   const roleName =
-    user?.role === "STAFF"
-      ? "Chuyên viên Vận hành Kho"
-      : user?.role === "MANAGER"
-        ? "Quản lý Cơ sở Kho"
-        : user?.role || "Chuyên viên Vận hành"
+    profile?.roleTitle || (user?.role === "MANAGER" ? "Quản lý cơ sở" : "Nhân viên cơ sở")
   const initials = getInitials(staffName)
 
   function handleLogout() {
     onClose()
     signOut()
-    toast.success("Đã đăng xuất tài khoản nhân viên vận hành.")
+    toast.success("Đã đăng xuất tài khoản thành công.")
     navigate("/internal_login")
   }
 
@@ -54,100 +98,81 @@ function StaffProfileModal({ open, onClose }: StaffProfileModalProps) {
     <ProtoModal
       open={open}
       onClose={onClose}
-      title="Hồ sơ Nhân viên Vận hành"
-      subtitle="Self-Storage Operations Specialist Profile"
+      title="Hồ sơ Nhân viên Cơ sở"
+      subtitle="Thông tin cá nhân & Đơn vị trực thuộc"
       icon={<UserShieldIcon className="size-5" />}
     >
-      {/* PROFILE BANNER */}
+      {/* THẺ ĐẠI DIỆN NHÂN VIÊN */}
       <div className="flex items-center space-x-4 rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 p-4 text-white shadow-inner">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-blue-300 bg-gradient-to-tr from-blue-500 to-indigo-400 text-xl font-black text-white shadow-lg">
           {initials}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <h2 className="truncate text-lg font-black text-white">
               {staffName}
             </h2>
-            <span className="ml-2 inline-flex shrink-0 items-center rounded-full bg-emerald-500 px-2.5 py-0.5 text-[9.5px] font-black text-slate-950 shadow-sm">
-              <span className="mr-1.5 size-1.5 animate-pulse rounded-full bg-slate-950" />
-              ĐANG TRONG CA TRỰC
-            </span>
           </div>
+
+          {/* Đổi thành: Nhân viên cơ sở */}
           <p className="mt-0.5 text-xs font-semibold text-blue-200">
-            {roleName} &amp; Quản lý Thẻ từ / PIN Smart Lock
+            {roleName}
           </p>
-          <div className="mt-1 flex items-center space-x-3 font-mono text-[10px] text-slate-300">
-            <span>
-              Mã NV: <b className="text-white">{staffCode}</b>
-            </span>
-            <span>•</span>
-            <span>
-              Chi nhánh: <b className="text-white">{branchName}</b>
-            </span>
+
+          {/* Mã nhân viên 1 dòng, xuống dòng là mã cơ sở */}
+          <div className="mt-2 space-y-0.5 text-xs text-slate-300">
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 font-medium">Mã nhân viên:</span>
+              <b className="text-white font-mono font-bold tracking-wide">{staffCode}</b>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 font-medium">Chi nhánh:</span>
+              <b className="text-white font-mono font-bold tracking-wide">{branchName} - {facilityCode}</b>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* SECTION 1 */}
-      <div className="inner-box space-y-2 rounded-2xl border p-3.5">
-        <div className="flex items-center justify-between border-b pb-1">
-          <span className="text-[10px] font-bold tracking-wider text-muted uppercase">
-            1. Thông tin Định danh & Công tác
-          </span>
-          <span className="text-[10px] font-bold text-blue-600">
-            Tài khoản Nội bộ Staff
+      {/* THÔNG TIN LIÊN HỆ: GỌN GÀNG, KHÔNG LỒNG HỘP, KHÔNG TIÊU ĐỀ THỪA */}
+      <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-3.5 space-y-2.5 dark:border-slate-800 dark:bg-slate-900/50">
+        {/* SỐ ĐIỆN THOẠI */}
+        <div className="flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-950/60 dark:text-blue-400 dark:border-blue-900/50">
+              <PhoneIcon className="size-3.5" />
+            </div>
+            <span className="font-medium">Số điện thoại liên hệ</span>
+          </div>
+          <span className="font-bold text-slate-900 dark:text-white text-sm">
+            {staffPhone}
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          <Field label="Họ và Tên" value={staffName} />
-          <Field
-            label="Mã Nhân Viên"
-            value={staffCode}
-            className="font-mono text-blue-600 dark:text-blue-400"
-          />
-          <Field label="Số Điện Thoại Ca Trực" value={staffPhone} />
-          <Field label="Email Công Việc" value={staffEmail} />
+
+        <div className="border-t border-slate-200/60 dark:border-slate-800/60" />
+
+        {/* EMAIL */}
+        <div className="flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-950/60 dark:text-blue-400 dark:border-blue-900/50">
+              <MailIcon className="size-3.5" />
+            </div>
+            <span className="font-medium">Email</span>
+          </div>
+          <span className="font-bold text-slate-900 dark:text-white text-sm truncate max-w-[210px] text-right">
+            {staffEmail}
+          </span>
         </div>
       </div>
 
-      {/* SECTION 2 */}
-      <div className="inner-box space-y-2 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-3.5">
-        <div className="flex items-center justify-between border-b border-blue-200 pb-1 dark:border-blue-800/40">
-          <span className="text-[10px] font-bold tracking-wider text-blue-700 uppercase dark:text-blue-400">
-            2. Quyền hạn Vận hành & Phân công
-          </span>
-          <span className="rounded-md bg-blue-600 px-2 py-0.5 text-[9px] font-extrabold text-white">
-            CA TRỰC: 08:00 - 20:00
-          </span>
-        </div>
-        <div className="space-y-1.5 text-xs">
-          <Row label="Cơ sở trực ban" value={branchName} />
-          <Row label="Tầng & Ô kho quản lý" value="Tất cả các tầng tại cơ sở" />
-          <Row
-            label="Quyền hạn Cấp PIN Cổng"
-            value="Cấp PIN Khẩn cấp (Staff Gate PIN 24/7)"
-            valueClass="text-emerald-600 dark:text-emerald-400"
-          />
-          <Row
-            label="Quyền Duyệt Vận hành"
-            value="✓ Check-in quầy, Đổi ô, Trả kho, Khóa/Mở khẩn cấp"
-            valueClass="text-blue-600 dark:text-blue-400"
-          />
-        </div>
-      </div>
-      {/* FOOTER */}
-      <div className="flex items-center space-x-2 pt-2">
+      {/* NÚT THAO TÁC DƯỚI CÙNG: ĐÓNG (TRÁI) & ĐĂNG XUẤT (PHẢI) */}
+      <div className="flex items-center space-x-3 pt-2">
         <button
           type="button"
-          onClick={() =>
-            toast.info(
-              "Vui lòng liên hệ Quản trị viên IT để thay đổi mật khẩu hệ thống."
-            )
-          }
-          className="flex flex-1 cursor-pointer items-center justify-center space-x-1.5 rounded-xl bg-slate-200 py-2.5 text-xs font-extrabold text-slate-800 transition hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          onClick={onClose}
+          className="flex flex-1 cursor-pointer items-center justify-center space-x-1.5 rounded-xl bg-slate-100 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
         >
-          <KeyRoundIcon className="size-3.5" />
-          <span>Đổi Mật Khẩu</span>
+          <ShieldCheckIcon className="size-3.5" />
+          <span>Đóng</span>
         </button>
 
         <button
@@ -158,54 +183,7 @@ function StaffProfileModal({ open, onClose }: StaffProfileModalProps) {
           <LogOutIcon className="size-3.5" />
           <span>Đăng Xuất</span>
         </button>
-
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex flex-1 cursor-pointer items-center justify-center space-x-1.5 rounded-xl bg-blue-600 py-2.5 text-xs font-extrabold text-white shadow-md transition hover:bg-blue-700"
-        >
-          <ShieldCheckIcon className="size-3.5" />
-          <span>Đóng</span>
-        </button>
       </div>
     </ProtoModal>
   )
 }
-
-function Field({
-  label,
-  value,
-  className,
-}: {
-  label: string
-  value: string
-  className?: string
-}) {
-  return (
-    <div>
-      <span className="block text-[10px] text-muted">{label}:</span>
-      <span className={`text-title text-sm font-bold ${className ?? ""}`}>
-        {value}
-      </span>
-    </div>
-  )
-}
-
-function Row({
-  label,
-  value,
-  valueClass,
-}: {
-  label: string
-  value: string
-  valueClass?: string
-}) {
-  return (
-    <div className="flex items-center justify-between border-t border-slate-200 pt-1.5 first:border-t-0 first:pt-0 dark:border-slate-800">
-      <span className="text-muted">{label}:</span>
-      <span className={`font-bold ${valueClass ?? "text-title"}`}>{value}</span>
-    </div>
-  )
-}
-
-export default StaffProfileModal

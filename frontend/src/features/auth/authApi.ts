@@ -15,6 +15,13 @@ export interface AuthUser {
   fullName: string;
   email: string;
   role: string;
+  phone?: string;
+  identityNumber?: string;
+  status?: string;
+  employeeId?: number;
+  facilityId?: number;
+  facilityName?: string;
+  facilityCode?: string;
 }
 
 export interface LoginResponse {

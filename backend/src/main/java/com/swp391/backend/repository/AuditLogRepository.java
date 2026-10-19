@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
+@org.springframework.stereotype.Repository
 public interface AuditLogRepository
         extends JpaRepository<AuditLog, Integer> {
 
@@ -12,5 +13,13 @@ public interface AuditLogRepository
             Integer facilityId,
             String action
     );
+
+    List<AuditLog> findByFacilityIdOrderByOpenedAtDesc(Integer facilityId);
+
+    List<AuditLog> findByFacilityIdOrderByCreatedAtDesc(Integer facilityId);
+
+    List<AuditLog> findAllByOrderByOpenedAtDesc();
+
+    List<AuditLog> findAllByOrderByCreatedAtDesc();
 }
 

@@ -78,7 +78,7 @@ export default function ReturnStorageModal({
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-500 dark:text-slate-400 font-medium">Mã ô kho:</span>
-              <span className="font-mono font-black text-blue-600 dark:text-cyan-400 text-sm">
+              <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-sm">
                 {contract?.unitCode || '—'}
               </span>
             </div>

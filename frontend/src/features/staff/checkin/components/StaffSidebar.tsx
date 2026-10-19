@@ -24,19 +24,19 @@ import StaffProfileModal from "./StaffProfileModal"
 const NAV_ITEMS = [
   {
     label: "Dịch vụ khách hàng",
-    hint: "Check-in, hợp đồng, hủy ô",
+    hint: "Quản lý hợp đồng khách hàng",
     to: "/staff/checkin",
     icon: IdCardIcon,
   },
   {
     label: "Hỗ trợ & xử lý ticket",
-    hint: "Tiếp nhận & xử lý SLA",
+    hint: "Tiếp nhận & xử lý yêu cầu",
     to: "/staff/support",
     icon: WrenchIcon,
   },
   {
     label: "Lấy mã PIN",
-    hint: "Cấp lại PIN mở cửa cho khách",
+    hint: "Mã pin mở cửa chi nhánh",
     to: "/staff/pin",
     icon: KeyIcon,
   },
@@ -62,10 +62,10 @@ function StaffSidebar({ isDark, onToggleTheme }: StaffSidebarProps) {
   const staffName = user?.fullName || "Nguyễn Văn Staff"
   const staffRole =
     user?.role === "STAFF"
-      ? "Chuyên viên Vận hành"
+      ? "Nhân viên cơ sở"
       : user?.role === "MANAGER"
-        ? "Quản lý Cơ sở"
-        : user?.role || "Chuyên viên Vận hành"
+        ? "Quản lý cơ sở"
+        : user?.role || "Nhân viên cơ sở"
   const initials = getInitials(staffName)
 
   return (

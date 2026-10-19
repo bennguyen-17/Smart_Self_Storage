@@ -91,6 +91,15 @@ export const getCurrentCustomerProfile = async () => {
  * Cập nhật thông tin hồ sơ khách hàng xuống Database
  * SWAGGER ENDPOINT: PUT /api/v1/customers/profile
  */
+export const sendEmailOtp = async (newEmail: string, accountId?: number) => {
+  if (isMockMode()) {
+    return { success: true, message: 'Mã OTP thử nghiệm là 123456' };
+  }
+
+  const res = await apiClient.post('/customers/profile/send-email-otp', { newEmail, accountId });
+  return res.data || res;
+};
+
 export const updateCustomerProfile = async (updateData: any) => {
   if (isMockMode()) {
     return { success: true, data: updateData, message: 'Cập nhật thành công!' };
