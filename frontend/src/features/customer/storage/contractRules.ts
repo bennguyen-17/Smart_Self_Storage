@@ -23,4 +23,4 @@ export function extendModeOf(status: string): ExtendMode {
   return "NONE"
 }
 
-export const AT_COUNTER_NOTE = "Quá hạn: Vui lòng đến tận quầy thanh toán tiền mặt để gia hạn"
+export const AT_COUNTER_NOTE = "Quá hạn: Vui lòng đến gặp nhân viên trực tiếp để thanh toán nợ"

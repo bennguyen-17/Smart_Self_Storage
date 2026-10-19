@@ -43,12 +43,12 @@ export default function StorageTable({
 
             return (
               <tr key={item.contractId} className="hover:bg-slate-50/90 dark:hover:bg-slate-800/60 transition-colors group">
-                <td className="py-3 px-4 whitespace-nowrap align-middle text-left">
+                <td className="py-3 px-4 whitespace-nowrap align-middle text-center">
                   <button
                     type="button"
                     onClick={() => onViewContract(item)}
-                    title="Xem chi tiết hợp đồng"
-                    className="font-bold text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 text-sm transition-colors cursor-pointer text-left"
+                    title="Bấm để xem chi tiết hợp đồng"
+                    className="inline-block px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-600 font-mono font-semibold text-xs transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer text-center"
                   >
                     {item.reservationCode || item.bookingCode || item.contractId}
                   </button>
