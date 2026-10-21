@@ -46,11 +46,11 @@ beforeEach(() => {
 })
 
 describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
-  test("/manager → chuyển tới trang mặc định /manager/units, navbar đủ 7 trang", async () => {
+  test("/manager → chuyển tới trang mặc định /manager/units, navbar đủ 8 trang", async () => {
     renderAt("/manager")
     expect(screen.getByTestId("location")).toHaveTextContent("/manager/units")
     expect(screen.getByRole("heading", { level: 1, name: "Quản lý ô kho" })).toBeInTheDocument()
-    expect(within(desktopNav()).getAllByRole("link")).toHaveLength(7)
+    expect(within(desktopNav()).getAllByRole("link")).toHaveLength(8)
     // Trang thứ 7 do Bảo thêm: tiếp nhận ticket quá hạn SLA
     expect(within(desktopNav()).getByRole("link", { name: /^Sự cố & Escalation/ })).toHaveAttribute("href", "/manager/tickets")
     expect(within(desktopNav()).getByRole("link", { name: /^Ô kho/ })).toHaveAttribute("aria-current", "page")
@@ -67,6 +67,7 @@ describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
     { link: "Báo cáo", path: "/manager/reports", title: "Báo cáo cơ sở & KPI" },
     { link: "Khách & hợp đồng", path: "/manager/customers", title: "Khách hàng & hợp đồng" },
     { link: "Trả kho & công nợ", path: "/manager/workflow", title: "Trả kho & công nợ" },
+    { link: "Hoàn tiền", path: "/manager/refunds", title: "Hoàn tiền cho khách hàng" },
     { link: "Phân công", path: "/manager/staff", title: "Phân công nhân viên" },
   ])("bấm '$link' → $path, trang đã có chức năng (không còn ô giữ chỗ)", async ({ link, path, title }) => {
     const user = renderAt("/manager/units")

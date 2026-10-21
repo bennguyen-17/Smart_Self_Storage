@@ -8,7 +8,7 @@ import { getErrorMessage } from "@/lib/api"
 import { isMockMode } from "@/lib/apiClient"
 import { formatVnd } from "@/lib/format"
 
-import { confirmRefundPayment } from "../api/refundApi"
+import { confirmRefundPayment, type ConfirmRefundPayload } from "../api/refundApi"
 import { EVIDENCE_URL_MAX, getRefundBlockers, REFUND_BLOCKER_LABEL } from "../refundRules"
 
 /** Ảnh biên lai mẫu, CHỈ dùng khi demo ở chế độ mock */
@@ -22,6 +22,8 @@ export interface RefundConfirmFormProps {
   /** "STK (Ngân hàng) - Chủ TK" lấy từ BE; null nghĩa là khách chưa cung cấp */
   bankAccount: string | null | undefined
   onConfirmed: () => void
+  /** Hàm gửi xác nhận; mặc định là API của Staff. Cổng Manager truyền hàm của mình */
+  submit?: (paymentId: number, payload: ConfirmRefundPayload) => Promise<void>
 }
 
 /**
@@ -30,7 +32,13 @@ export interface RefundConfirmFormProps {
  * và khóa nút xác nhận, không bao giờ tự điền giá trị mẫu.
  * Khi chạy thật, biên lai là LINK (BE chưa có API tải ảnh và chỉ lưu 255 ký tự); chọn file ảnh chỉ có khi demo.
  */
-function RefundConfirmForm({ paymentId, refundAmount, bankAccount, onConfirmed }: RefundConfirmFormProps) {
+function RefundConfirmForm({
+  paymentId,
+  refundAmount,
+  bankAccount,
+  onConfirmed,
+  submit = confirmRefundPayment,
+}: RefundConfirmFormProps) {
   const demo = isMockMode()
   const [evidenceUrl, setEvidenceUrl] = useState("")
   const [transactionRef, setTransactionRef] = useState("")
@@ -72,7 +80,7 @@ function RefundConfirmForm({ paymentId, refundAmount, bankAccount, onConfirmed }
     setErrorMsg(null)
     try {
       // Mã giao dịch là tùy chọn: lớp API chỉ gửi khi nhân viên có nhập
-      await confirmRefundPayment(paymentId, { evidenceUrl, transactionRef })
+      await submit(paymentId, { evidenceUrl, transactionRef })
       onConfirmed()
     } catch (err) {
       setErrorMsg(getErrorMessage(err))
