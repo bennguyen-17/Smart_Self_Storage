@@ -16,6 +16,8 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Pagination } from "@/components/internal/components/PanelKit"
+import { usePagedRows } from "@/components/internal/usePagedRows"
 import { useAsyncData } from "@/hooks/useAsyncData"
 import { formatDateTime } from "@/lib/format"
 
@@ -42,6 +44,7 @@ function GateLogPanel() {
 
   const all = data ?? []
   const rows = filterGateLogs(all, filter)
+  const { slice, pagination } = usePagedRows(rows, JSON.stringify(filter))
   const rangeOk = isDateRangeValid(filter.from, filter.to)
   const filtered =
     filter.query.trim() !== "" ||
@@ -239,7 +242,7 @@ function GateLogPanel() {
                 )}
 
                 {!isLoading &&
-                  rows.map((log) => {
+                  slice.rows.map((log) => {
                     const isManual =
                       (log.action && log.action.toUpperCase().includes("MANUAL")) ||
                       (log.accessMethod && log.accessMethod.includes("Thẻ Master")) ||
@@ -330,6 +333,8 @@ function GateLogPanel() {
               </tbody>
             </table>
           </div>
+
+          {!isLoading && <Pagination {...pagination} unit="lượt ra vào" />}
         </>
       )}
     </section>

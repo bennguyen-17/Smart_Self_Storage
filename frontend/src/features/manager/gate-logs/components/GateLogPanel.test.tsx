@@ -118,3 +118,21 @@ describe("GateLogPanel: Manager xem nhật ký ra vào cổng của cơ sở (US
     expect(screen.getByRole("button", { name: /thử lại/i })).toBeInTheDocument()
   })
 })
+
+describe("GateLogPanel: phân trang khi nhiều lượt ra vào", () => {
+  test("12 lượt → trang 1 có 10 dòng, trang 2 có 2 dòng cũ nhất", async () => {
+    const many = Array.from({ length: 12 }, (_, i) =>
+      log(100 + i, `2026-10-${String(10 + i).padStart(2, "0")}T08:00:00`, { personName: `Khách số ${i + 1}`, customerId: 300 + i })
+    )
+    listManualGateOpenLogs.mockResolvedValue(many)
+    const user = userEvent.setup()
+    render(<GateLogPanel />)
+    await screen.findByText("Khách số 12")
+    expect(bodyRows()).toHaveLength(10)
+    const nav = screen.getByRole("navigation", { name: "Phân trang" })
+    expect(nav).toHaveTextContent("Hiển thị 1 – 10 trong tổng số 12 lượt ra vào")
+    await user.click(within(nav).getByRole("button", { name: "Trang 2" }))
+    expect(bodyRows()).toHaveLength(2)
+    expect(screen.getByText("Khách số 1")).toBeInTheDocument()
+  })
+})
