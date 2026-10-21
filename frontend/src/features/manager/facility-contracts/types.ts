@@ -1,7 +1,19 @@
 // Hợp đồng của một cơ sở, nhìn từ phía Facility Manager (US-24, US-25, US-26, US-31).
 // BE CHƯA có API liệt kê: kiểu dưới đây là contract FE đề xuất (GET /api/manager/contracts, xem qa-log).
 
-export type ContractStatus = "PENDING_CHECKIN" | "ACTIVE" | "OVERDUE" | "TERMINATED"
+/**
+ * TERMINATED = đã bàn giao trả kho, chờ tất toán (hoàn tiền); COMPLETED = đã tất toán xong;
+ * FORFEITED = quá hạn > 30 ngày, tịch thu cọc và thanh lý tài sản; CANCELED = hủy trước khi nhận kho.
+ * BE hiện chỉ trả 4 trạng thái đầu; 3 trạng thái sau đã đề xuất (B2, K1 trong plans/261022-manager-admin-sprint3).
+ */
+export type ContractStatus =
+  | "PENDING_CHECKIN"
+  | "ACTIVE"
+  | "OVERDUE"
+  | "TERMINATED"
+  | "COMPLETED"
+  | "FORFEITED"
+  | "CANCELED"
 
 /** Tiến độ trả kho: chưa trả → đã lập biên bản nghiệm thu (US-24) → đã bàn giao, thu chìa (US-25) */
 export type CheckoutStage = "NONE" | "INSPECTED" | "HANDED_OVER"

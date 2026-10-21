@@ -4,7 +4,10 @@ import {
   daysRemaining,
   discountValue,
   filterContracts,
+  isClosedContract,
   needsFollowUp,
+  needsForfeitHandling,
+  overdueDays,
   toDiscountRequest,
   unpaidTotal,
   validateDiscount,
@@ -117,5 +120,40 @@ describe("Miễn / giảm phí (US-31)", () => {
     { draft: d("AMOUNT", "150.000", `  ${REASON}  `), expected: { discountAmount: 150_000, reason: REASON } },
   ])("toDiscountRequest($draft.mode) → body gửi BE", ({ draft, expected }) => {
     expect(toDiscountRequest(draft, 500_000)).toEqual(expected)
+  })
+})
+
+describe("Trạng thái đã đóng và quá hạn trên 30 ngày (thanh lý tài sản)", () => {
+  test.each([
+    { status: "PENDING_CHECKIN", closed: false },
+    { status: "ACTIVE", closed: false },
+    { status: "OVERDUE", closed: false },
+    { status: "TERMINATED", closed: true },
+    { status: "COMPLETED", closed: true },
+    { status: "FORFEITED", closed: true },
+    { status: "CANCELED", closed: true },
+  ] as const)("isClosedContract($status) → $closed", ({ status, closed }) => {
+    expect(isClosedContract(status)).toBe(closed)
+  })
+
+  const TODAY = "2026-10-22"
+  test.each([
+    { name: "đang hiệu lực dù đã qua ngày", status: "ACTIVE", endDate: "2026-09-01", days: 0, forfeit: false },
+    { name: "quá hạn 12 ngày", status: "OVERDUE", endDate: "2026-10-10", days: 12, forfeit: false },
+    { name: "quá hạn đúng 30 ngày: chưa thanh lý", status: "OVERDUE", endDate: "2026-09-22", days: 30, forfeit: false },
+    { name: "quá hạn 31 ngày: cần thanh lý", status: "OVERDUE", endDate: "2026-09-21", days: 31, forfeit: true },
+    { name: "BE đã chuyển FORFEITED", status: "FORFEITED", endDate: "2026-08-01", days: 0, forfeit: true },
+    { name: "đã hoàn tất", status: "COMPLETED", endDate: "2026-08-01", days: 0, forfeit: false },
+  ] as const)("$name → quá $days ngày, cần thanh lý: $forfeit", ({ status, endDate, days, forfeit }) => {
+    expect(overdueDays({ status, endDate }, TODAY)).toBe(days)
+    expect(needsForfeitHandling({ status, endDate }, TODAY)).toBe(forfeit)
+  })
+
+  test.each([
+    { name: "FORFEITED luôn cần theo dõi", patch: { status: "FORFEITED" as const }, expected: true },
+    { name: "COMPLETED hết nợ thì không", patch: { status: "COMPLETED" as const, checkoutStage: "HANDED_OVER" as const }, expected: false },
+    { name: "CANCELED hết nợ thì không", patch: { status: "CANCELED" as const }, expected: false },
+  ])("needsFollowUp: $name", ({ patch, expected }) => {
+    expect(needsFollowUp(contract(9, patch))).toBe(expected)
   })
 })
