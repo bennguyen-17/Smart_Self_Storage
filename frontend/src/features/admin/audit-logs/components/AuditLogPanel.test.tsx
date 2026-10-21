@@ -42,9 +42,46 @@ const MANY: ActivityLogEntry[] = Array.from({ length: 45 }, (_, i) => ({
 const bodyRows = () =>
   within(screen.getByRole("table")).getAllByRole("row").slice(1)
 
+/** Phần lớn dữ liệu mẫu là thao tác nội bộ (Manager, Staff, hệ thống) → mở tab Nội bộ */
+async function renderOnInternalTab() {
+  const user = userEvent.setup()
+  render(<AuditLogPanel />)
+  await user.click(screen.getByRole("tab", { name: /nội bộ/i }))
+}
+
+describe("AuditLogPanel: chia 2 tab Khách hàng / Nội bộ", () => {
+  test("mặc định tab Khách hàng: chỉ có thao tác của khách; mỗi tab ghi số bản ghi", async () => {
+    render(<AuditLogPanel />)
+    expect(await screen.findByRole("tab", { name: "Khách hàng 2" })).toHaveAttribute("aria-selected", "true")
+    expect(screen.getByRole("tab", { name: "Nội bộ 10" })).toHaveAttribute("aria-selected", "false")
+    const rows = within(screen.getByRole("table")).getAllByRole("row").slice(1)
+    expect(rows).toHaveLength(2)
+    for (const r of rows) expect(within(r).getByText("CUSTOMER")).toBeInTheDocument()
+  })
+
+  test("tab Nội bộ: có Manager, Staff và tác vụ tự động của hệ thống, không có khách", async () => {
+    await renderOnInternalTab()
+    await screen.findByText("Nhắc hạn hợp đồng (còn 7 ngày)")
+    const table = screen.getByRole("table")
+    expect(within(table).getAllByText("MANAGER").length).toBeGreaterThan(0)
+    expect(within(table).getAllByText("STAFF").length).toBeGreaterThan(0)
+    expect(within(table).queryByText("CUSTOMER")).not.toBeInTheDocument()
+  })
+
+  test("Xuất CSV theo tab đang xem, tên file ghi rõ loại nhật ký", async () => {
+    const user = userEvent.setup()
+    render(<AuditLogPanel />)
+    await screen.findByRole("tab", { name: "Khách hàng 2" })
+    await user.click(screen.getByRole("button", { name: /xuất csv/i }))
+    const [filename, csv] = vi.mocked(downloadCsv).mock.calls[0]
+    expect(filename).toMatch(/^nhat-ky-khach-hang-/)
+    expect(csv.split("\r\n")).toHaveLength(3)
+  })
+})
+
 describe("AuditLogPanel: nhật ký hoạt động khớp bảng ActivityLog (US-30)", () => {
   test("cột Thời gian, Người thực hiện, Hành động, Mô tả, IP; tác vụ tự động ghi là Hệ thống", async () => {
-    render(<AuditLogPanel />)
+    await renderOnInternalTab()
     await screen.findByText("Nhắc hạn hợp đồng (còn 7 ngày)")
     const headers = within(screen.getByRole("table"))
       .getAllByRole("columnheader")
@@ -63,7 +100,7 @@ describe("AuditLogPanel: nhật ký hoạt động khớp bảng ActivityLog (US
   })
 
   test("chỉ xem: trong bảng không có nút sửa / xóa", async () => {
-    render(<AuditLogPanel />)
+    await renderOnInternalTab()
     await screen.findByText("Nhắc hạn hợp đồng (còn 7 ngày)")
     expect(
       within(screen.getByRole("table")).queryByRole("button")
@@ -72,7 +109,7 @@ describe("AuditLogPanel: nhật ký hoạt động khớp bảng ActivityLog (US
 
   test("lọc theo người và theo loại hành động", async () => {
     const user = userEvent.setup()
-    render(<AuditLogPanel />)
+    await renderOnInternalTab()
     await screen.findByText("Nhắc hạn hợp đồng (còn 7 ngày)")
     await user.type(screen.getByRole("searchbox"), "tran van quan ly")
     for (const r of bodyRows())
@@ -86,7 +123,7 @@ describe("AuditLogPanel: nhật ký hoạt động khớp bảng ActivityLog (US
   })
 
   test("khoảng ngày ngược → báo lỗi, bảng rỗng, không xuất được", async () => {
-    render(<AuditLogPanel />)
+    await renderOnInternalTab()
     await screen.findByText("Nhắc hạn hợp đồng (còn 7 ngày)")
     fireEvent.change(screen.getByLabelText("Từ ngày"), {
       target: { value: "2099-01-02" },
@@ -102,7 +139,7 @@ describe("AuditLogPanel: nhật ký hoạt động khớp bảng ActivityLog (US
 
   test("Xuất CSV xuất đúng các dòng đang lọc", async () => {
     const user = userEvent.setup()
-    render(<AuditLogPanel />)
+    await renderOnInternalTab()
     await screen.findByText("Nhắc hạn hợp đồng (còn 7 ngày)")
     await user.selectOptions(
       screen.getByRole("combobox", { name: /hành động/i }),
@@ -119,7 +156,7 @@ describe("AuditLogPanel: phân trang khi có nhiều log", () => {
   async function renderMany() {
     vi.mocked(listActivityLogs).mockResolvedValue(MANY)
     const user = userEvent.setup()
-    render(<AuditLogPanel />)
+    await renderOnInternalTab()
     await screen.findByText("Người dùng 45")
     return user
   }
