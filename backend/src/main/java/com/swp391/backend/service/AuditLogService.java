@@ -193,9 +193,6 @@ public class AuditLogService {
         List<AuditLog> logs;
         if (targetFacilityId != null && targetFacilityId > 0) {
             logs = auditLogRepository.findByFacilityIdOrderByOpenedAtDesc(targetFacilityId);
-            if (logs.isEmpty()) {
-                logs = auditLogRepository.findAllByOrderByOpenedAtDesc();
-            }
         } else {
             logs = auditLogRepository.findAllByOrderByOpenedAtDesc();
         }

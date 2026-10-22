@@ -50,12 +50,12 @@ function renderTable(item: StaffReservationItem) {
 }
 
 describe("CheckinContractTable: hành động cho hợp đồng quá hạn", () => {
-  test("hiển thị nút Thu phạt & Gia hạn", () => {
+  test("còn nợ phạt → chỉ hiển thị nút Thu phạt", () => {
     renderTable(overdueItem)
     expect(
       screen.getByRole("button", { name: /thu phạt/i })
     ).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: /gia hạn/i })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /gia hạn/i })).not.toBeInTheDocument()
   })
 
   test("bấm Thu phạt → gọi onCollectPenalty kèm đúng HĐ", async () => {
@@ -65,10 +65,18 @@ describe("CheckinContractTable: hành động cho hợp đồng quá hạn", () 
     expect(onCollectPenalty).toHaveBeenCalledWith(overdueItem)
   })
 
-  test("bấm Gia hạn → gọi onRenew kèm đúng HĐ", async () => {
-    const { user, onRenew } = renderTable(overdueItem)
-    await user.click(screen.getByRole("button", { name: /gia hạn/i }))
+  test("đã trả hết phạt → hiển thị nút Gia hạn và Trả kho, bấm Gia hạn gọi onRenew", async () => {
+    const paidPenaltyItem: StaffReservationItem = {
+      ...overdueItem,
+      unpaidPenaltyAmount: 0,
+    }
+    const { user, onRenew } = renderTable(paidPenaltyItem)
+    expect(screen.queryByRole("button", { name: /thu phạt/i })).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /trả kho/i })).toBeInTheDocument()
+    const renewBtn = screen.getByRole("button", { name: /gia hạn/i })
+    expect(renewBtn).toBeInTheDocument()
+    await user.click(renewBtn)
     expect(onRenew).toHaveBeenCalledTimes(1)
-    expect(onRenew).toHaveBeenCalledWith(overdueItem)
+    expect(onRenew).toHaveBeenCalledWith(paidPenaltyItem)
   })
 })

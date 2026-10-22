@@ -22,7 +22,9 @@ public class DashboardController {
     @GetMapping("/manager/dashboard/overview")
     public ResponseEntity<?> getManagerDashboardOverview(
             @RequestHeader(value = "X-Facility-Id", required = false) Integer managerFacilityId,
-            @RequestParam(required = false) Integer facilityId) {
+            @RequestParam(required = false) Integer facilityId,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to) {
 
         Integer targetFacilityId = managerFacilityId != null ? managerFacilityId : facilityId;
         if (targetFacilityId == null) {
@@ -30,7 +32,7 @@ public class DashboardController {
         }
 
         try {
-            ManagerDashboardResponse response = dashboardService.getManagerDashboard(targetFacilityId);
+            ManagerDashboardResponse response = dashboardService.getManagerDashboard(targetFacilityId, from, to);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));

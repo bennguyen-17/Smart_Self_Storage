@@ -5,12 +5,7 @@ import "@/features/landing/landing.css"
 import { type CityId } from "@/features/landing/content/facilities"
 import { enabledSections, type SectionId } from "@/features/landing/content/sections"
 import { SITE } from "@/features/landing/content/site"
-import { recommendUnit } from "@/features/landing/lib/estimate"
 import { EASE_OUT_QUART, MOTION_ENABLED } from "@/features/landing/motion/presets"
-import {
-  EstimatorSection,
-  type EstimatorState,
-} from "@/features/landing/components/EstimatorSection"
 import { FacilitiesSection } from "@/features/landing/components/FacilitiesSection"
 import { FaqSection } from "@/features/landing/components/FaqSection"
 import { FinalCtaSection } from "@/features/landing/components/FinalCtaSection"
@@ -23,27 +18,16 @@ import { ProcessSection } from "@/features/landing/components/ProcessSection"
 import { TestimonialsSection } from "@/features/landing/components/TestimonialsSection"
 import { UseCasesSection } from "@/features/landing/components/UseCasesSection"
 
-const INITIAL_ESTIMATE: EstimatorState = {
-  volume: 0,
-  climate: false,
-  presetId: null,
-}
-
 export default function LandingPage() {
-  const [estimate, setEstimate] = useState<EstimatorState>(INITIAL_ESTIMATE)
   const [selectedCity, setSelectedCity] = useState<CityId>("HN")
-  const rec = recommendUnit(estimate.volume)
-  const suggested = rec.kind === "fit" ? rec.unit.size : null
 
   // Thứ tự và bật/tắt section lấy từ content/sections.ts.
   const renderSection = (id: SectionId): ReactNode => {
     switch (id) {
       case "use-cases":
         return <UseCasesSection />
-      case "estimator":
-        return <EstimatorSection state={estimate} onChange={setEstimate} />
       case "pricing":
-        return <PricingSection suggested={suggested} />
+        return <PricingSection />
       case "facilities":
         return (
           <FacilitiesSection

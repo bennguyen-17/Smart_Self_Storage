@@ -31,6 +31,7 @@ export default function ContractDetailModal({
 
   const isPending = contract.status === 'PENDING_CHECKIN';
   const isActive = contract.status === 'ACTIVE';
+  const isCompleted = contract.status === 'COMPLETED';
   const isTerminated = contract.status === 'TERMINATED';
   const isOverdue = contract.status === 'OVERDUE';
   const isCanceled = contract.status === 'CANCELED';
@@ -121,6 +122,19 @@ export default function ContractDetailModal({
             </div>
           )}
 
+          {isCompleted && (
+            <div className="bg-emerald-50 dark:bg-emerald-950/40 p-3.5 sm:p-4 rounded-2xl border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 flex items-start gap-3 shadow-xs">
+              <i className="fa-solid fa-circle-check text-xl text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0"></i>
+              <div>
+                <span className="font-bold text-sm block text-emerald-900 dark:text-emerald-100">
+                  Hợp đồng đã hoàn tất
+                </span>
+                <span className="text-[12px] leading-relaxed mt-0.5 block text-emerald-800 dark:text-emerald-300">
+                  Hợp đồng này đã hoàn tất toàn bộ chu kỳ thuê, bàn giao nghiệm thu kho và quyết toán hoàn cọc thành công.
+                </span>
+              </div>
+            </div>
+          )}
           {isTerminated && (
             <div className="bg-slate-100 dark:bg-slate-800/80 p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 flex items-start gap-3 shadow-xs">
               <i className="fa-solid fa-file-circle-check text-xl text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0"></i>
@@ -208,6 +222,11 @@ export default function ContractDetailModal({
                 {isPending ? (
                   <span className="font-bold text-amber-600 dark:text-amber-400">
                     Đã cọc online {Number(depositFee).toLocaleString('vi-VN')} đ · Cần nộp tại quầy {Number(rentalFee).toLocaleString('vi-VN')} đ
+                  </span>
+                ) : isCompleted ? (
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                    <i className="fa-solid fa-circle-check text-xs"></i>
+                    <span>Đã thanh toán đủ 100% (Đã hoàn tất hợp đồng)</span>
                   </span>
                 ) : isTerminated ? (
                   <span className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">

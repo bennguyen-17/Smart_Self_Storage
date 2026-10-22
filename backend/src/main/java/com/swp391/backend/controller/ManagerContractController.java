@@ -89,23 +89,14 @@ public class ManagerContractController {
             }
 
             // Chuẩn hóa trạng thái
+            // Trả đúng trạng thái thật: PENDING_CHECKIN | ACTIVE | OVERDUE | TERMINATED | COMPLETED | FORFEITED | CANCELED
             String rawStatus = c.getStatus() != null ? c.getStatus().toUpperCase() : "ACTIVE";
-            String status = "ACTIVE";
-            if ("PENDING_CHECKIN".equals(rawStatus)) {
-                status = "PENDING_CHECKIN";
-            } else if ("OVERDUE".equals(rawStatus)) {
-                status = "OVERDUE";
-            } else if ("TERMINATED".equals(rawStatus) || "CANCELED".equals(rawStatus) || "CLOSED".equals(rawStatus)) {
-                status = "TERMINATED";
-            }
+            String status = rawStatus;
 
             String checkoutStage = "NONE";
-            if ("TERMINATED".equals(status)) {
+            if ("TERMINATED".equals(status) || "COMPLETED".equals(status)) {
                 checkoutStage = "HANDED_OVER";
-            } else if ("OVERDUE".equals(status)) {
-                checkoutStage = "INSPECTED";
             }
-
             Double deposit = (res.getDepositAmount() != null) ? res.getDepositAmount().doubleValue() : 1000000.0;
             String startDate = (res.getStartDate() != null) ? res.getStartDate().toString() : LocalDate.now().minusDays(30).toString();
             String endDate = (res.getEndDate() != null) ? res.getEndDate().toString() : LocalDate.now().plusDays(30).toString();
@@ -161,41 +152,6 @@ public class ManagerContractController {
                     deposit,
                     checkoutStage,
                     fees
-            ));
-        }
-
-        // Nếu cơ sở hiện tại chưa có hợp đồng nào trong DB, bổ sung dữ liệu mẫu chuẩn để Manager giao diện không bị trống
-        if (result.isEmpty()) {
-            LocalDate today = LocalDate.now();
-            result.add(new FacilityContractResponse(
-                    101, "CTR-HN01-0101", "Nguyễn Văn An", "0912345678", "HN01-G-XL02",
-                    today.minusDays(60).toString(), today.plusDays(30).toString(), "ACTIVE", 3000000.0, "NONE", new ArrayList<>()
-            ));
-            result.add(new FacilityContractResponse(
-                    102, "CTR-HN01-0102", "Trần Thị Bích", "0987654321", "HN01-F1-S03",
-                    today.minusDays(90).toString(), today.plusDays(5).toString(), "ACTIVE", 500000.0, "NONE", new ArrayList<>()
-            ));
-            List<FeeInvoiceResponse> overdueFees = new ArrayList<>();
-            overdueFees.add(new FeeInvoiceResponse(7001, "PEN-7001", "PEN", 600000.0, "UNPAID", today.minusDays(5).toString() + "T09:00:00"));
-            result.add(new FacilityContractResponse(
-                    103, "CTR-HN01-0103", "Đỗ Thị Thu", "0918777888", "HN01-F1-M02",
-                    today.minusDays(120).toString(), today.minusDays(12).toString(), "OVERDUE", 1000000.0, "NONE", overdueFees
-            ));
-            List<FeeInvoiceResponse> cmpFees = new ArrayList<>();
-            cmpFees.add(new FeeInvoiceResponse(7002, "CMP-7002", "CMP", 450000.0, "UNPAID", today.minusDays(1).toString() + "T09:00:00"));
-            result.add(new FacilityContractResponse(
-                    104, "CTR-HN01-0104", "Lê Hoàng Nam", "0977445566", "HN01-F1-L01",
-                    today.minusDays(180).toString(), today.minusDays(1).toString(), "ACTIVE", 2000000.0, "INSPECTED", cmpFees
-            ));
-            result.add(new FacilityContractResponse(
-                    105, "CTR-HN01-0105", "Phạm Quốc Hùng", "0988123456", "HN01-G-XL03",
-                    today.plusDays(2).toString(), today.plusDays(92).toString(), "PENDING_CHECKIN", 3000000.0, "NONE", new ArrayList<>()
-            ));
-            List<FeeInvoiceResponse> paidFees = new ArrayList<>();
-            paidFees.add(new FeeInvoiceResponse(7003, "CMP-7003", "CMP", 150000.0, "PAID", today.minusDays(21).toString() + "T09:00:00"));
-            result.add(new FacilityContractResponse(
-                    106, "CTR-HN01-0106", "Vũ Thị Hương", "0945666777", "HN01-F1-S01",
-                    today.minusDays(200).toString(), today.minusDays(20).toString(), "TERMINATED", 500000.0, "HANDED_OVER", paidFees
             ));
         }
 
