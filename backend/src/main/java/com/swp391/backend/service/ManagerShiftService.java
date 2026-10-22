@@ -49,6 +49,10 @@ public class ManagerShiftService {
             Optional<Account> accOpt = accountRepository.findById(Long.valueOf(emp.getAccountId()));
             if (accOpt.isPresent()) {
                 Account acc = accOpt.get();
+                // B6: Chỉ trả nhân viên vai trò STAFF (roleId = 4), không trả Manager
+                if (!Long.valueOf(4L).equals(acc.getRoleId())) {
+                    continue;
+                }
                 result.add(new ManagerStaffResponse(
                         emp.getEmployeeId(),
                         acc.getFullName(),

@@ -1,19 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef } from "react"
 
 import personalStorageBoxesImg from "@/assets/landing/personal-storage-boxes.jpg"
 import qrScanStorageImg from "@/assets/landing/qr-scan-storage.jpg"
-import {
-  USE_CASES_SECTION,
-} from "../content/copy"
+import { USE_CASES_SECTION } from "../content/copy"
 import { SectionHeading } from "./SectionHeading"
 
 export function UseCasesSection() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
-  const [isHovered, setIsHovered] = useState(false)
   const isDragging = useRef(false)
   const startX = useRef(0)
   const scrollLeftStart = useRef(0)
+  const scrollPosRef = useRef(0)
 
   // Danh sách các thẻ kho bãi & công nghệ thông minh (Mã QR, Kho tự quản, Thùng đồ, Pallet...)
   const baseCards = [
@@ -54,17 +52,17 @@ export function UseCasesSection() {
   // Nhân bản danh sách 3 lần để tạo hiệu ứng cuộn vô tận mượt mà tuyệt đối
   const loopCards = [...baseCards, ...baseCards, ...baseCards]
 
-  // Tính toán phối cảnh vòm cong 3D chuẩn xác theo đúng sơ đồ đối xứng:
-  // - Thẻ giữa (Green): To nhất, thẳng đứng trực diện 0 độ, đỉnh và đáy cao/thấp nhất
-  // - Thẻ bên trong (Blue): Nhỏ hơn, xoay nghiêng vòm cánh cung, cạnh giáp tâm cao hơn cạnh ngoài
-  // - Thẻ bên ngoài (Pink): Nhỏ nhất, góc nghiêng sâu hơn, cạnh giáp tâm cao hơn cạnh ngoài
+  // Tính toán phối cảnh 3 mặt cắt liền khối theo dạng bình phong vòm cong:
+  // - Mặt cắt chính giữa: Ảnh nằm ngay ngắn 0 độ, to nhất, rõ nét nhất
+  // - Mặt cắt bên phải: Xoay nghiêng dương (+Y) để mép ngoài lùi về sau, hướng vào tâm
+  // - Mặt cắt bên trái: Xoay nghiêng âm (-Y) để mép ngoài lùi về sau, hướng vào tâm
   const updateCardCurves = useCallback(() => {
     const container = scrollRef.current
     if (!container) return
 
     const containerCenter = container.scrollLeft + container.clientWidth / 2
-    // Khoảng cách chuẩn giữa các thẻ để tính chính xác tâm, cạnh 1 (blue) và cạnh 2 (pink)
-    const stepDist = Math.max(container.clientWidth * 0.32, 280)
+    // Khoảng cách chuẩn giữa các thẻ để tính chính xác tâm và 2 bên
+    const stepDist = Math.max(container.clientWidth * 0.28, 280)
 
     cardRefs.current.forEach((el) => {
       if (!el) return
@@ -74,12 +72,14 @@ export function UseCasesSection() {
       const absOffset = Math.abs(offset)
       const clampedAbs = Math.min(absOffset, 2.2)
 
-      // Hệ số thu nhỏ tỉ lệ theo hình vòm elip (Tâm to, hai bên nhỏ dần)
-      const scale = Math.max(0.62, 1.05 - clampedAbs * 0.22)
-      // Góc xoay phối cảnh 3D cánh cung: thẻ bên trái xoay dương (+Y), thẻ bên phải xoay âm (-Y)
-      const rotateY = -Math.sign(offset) * Math.min(Math.abs(offset) * 23, 34)
+      // Hệ số thu nhỏ tỉ lệ theo hình vòm: Tâm to nhất (1.02), hai bên nhỏ dần
+      const scale = Math.max(0.72, 1.02 - clampedAbs * 0.16)
+      // Góc xoay phối cảnh 3D cánh cung chuẩn xác:
+      // Thẻ bên phải (offset > 0) xoay dương (+Y) để mép ngoài nghiêng lùi về sau
+      // Thẻ bên trái (offset < 0) xoay âm (-Y) để mép ngoài nghiêng lùi về sau
+      const rotateY = Math.sign(offset) * Math.min(Math.abs(offset) * 20, 30)
       // Độ trong suốt nhẹ nhàng tạo chiều sâu
-      const opacity = Math.max(0.45, 1 - clampedAbs * 0.26)
+      const opacity = Math.max(0.48, 1 - clampedAbs * 0.24)
       // Thứ tự zIndex: Thẻ giữa luôn nổi trên các thẻ bên cạnh
       const zIndex = Math.round((3 - clampedAbs) * 10)
 
@@ -93,12 +93,14 @@ export function UseCasesSection() {
   useEffect(() => {
     const container = scrollRef.current
     if (container) {
-      container.scrollLeft = container.scrollWidth / 3
+      const initialScroll = container.scrollWidth / 3
+      container.scrollLeft = initialScroll
+      scrollPosRef.current = initialScroll
       updateCardCurves()
     }
   }, [updateCardCurves])
 
-  // Tự động cuộn liên tục qua các ảnh với tốc độ êm ái
+  // Tự động cuộn liên tục qua các ảnh với tốc độ êm ái dùng biến float accumulator (không dừng khi hover chuột)
   useEffect(() => {
     const container = scrollRef.current
     if (!container) return
@@ -106,15 +108,17 @@ export function UseCasesSection() {
     let animationFrameId: number
 
     const step = () => {
-      if (!isHovered && !isDragging.current && container) {
-        container.scrollLeft += 0.38 // Tốc độ trôi êm ái, liên tục
+      if (!isDragging.current && container) {
+        // Cộng dồn vào biến float để tránh lỗi trình duyệt làm tròn số nguyên của scrollLeft
+        scrollPosRef.current += 0.65
 
         const oneThird = container.scrollWidth / 3
-        if (container.scrollLeft >= oneThird * 2) {
-          container.scrollLeft -= oneThird
-        } else if (container.scrollLeft <= 0) {
-          container.scrollLeft += oneThird
+        if (scrollPosRef.current >= oneThird * 2) {
+          scrollPosRef.current -= oneThird
+        } else if (scrollPosRef.current <= 0) {
+          scrollPosRef.current += oneThird
         }
+        container.scrollLeft = scrollPosRef.current
       }
       updateCardCurves()
       animationFrameId = requestAnimationFrame(step)
@@ -122,30 +126,35 @@ export function UseCasesSection() {
 
     animationFrameId = requestAnimationFrame(step)
     return () => cancelAnimationFrame(animationFrameId)
-  }, [isHovered, updateCardCurves])
+  }, [updateCardCurves])
 
-  // Kéo chuột sang ngang (Drag-to-scroll)
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Kéo chuột hoặc chạm vuốt sang ngang (Drag / Swipe to scroll)
+  const handleStart = (pageX: number) => {
     const container = scrollRef.current
     if (!container) return
     isDragging.current = true
-    startX.current = e.pageX - container.offsetLeft
+    startX.current = pageX - container.offsetLeft
     scrollLeftStart.current = container.scrollLeft
+    scrollPosRef.current = container.scrollLeft
   }
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMove = (pageX: number) => {
     if (!isDragging.current) return
-    e.preventDefault()
     const container = scrollRef.current
     if (!container) return
-    const x = e.pageX - container.offsetLeft
-    const walk = (x - startX.current) * 1.5
-    container.scrollLeft = scrollLeftStart.current - walk
+    const x = pageX - container.offsetLeft
+    const walk = (x - startX.current) * 1.4
+    const nextScroll = scrollLeftStart.current - walk
+    container.scrollLeft = nextScroll
+    scrollPosRef.current = nextScroll
     updateCardCurves()
   }
 
-  const handleMouseUpOrLeave = () => {
+  const handleEnd = () => {
     isDragging.current = false
+    if (scrollRef.current) {
+      scrollPosRef.current = scrollRef.current.scrollLeft
+    }
   }
 
   return (
@@ -169,19 +178,18 @@ export function UseCasesSection() {
           lead={USE_CASES_SECTION.lead}
         />
 
-        {/* DÃY CUỘN 3D VÒM CONG ĐỐI XỨNG THEO BẢN VẼ */}
+        {/* DÃY CUỘN 3D VÒM CONG 3 MẶT CẮT LIÊN KẾT (TỰ CUỘN LIÊN TỤC KHÔNG BỊ DỪNG KHI DÍ CHUỘT) */}
         <div
           ref={scrollRef}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => {
-            setIsHovered(false)
-            handleMouseUpOrLeave()
-          }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUpOrLeave}
+          onMouseLeave={handleEnd}
+          onMouseDown={(e) => handleStart(e.pageX)}
+          onMouseMove={(e) => handleMove(e.pageX)}
+          onMouseUp={handleEnd}
+          onTouchStart={(e) => handleStart(e.touches[0].pageX)}
+          onTouchMove={(e) => handleMove(e.touches[0].pageX)}
+          onTouchEnd={handleEnd}
           onScroll={updateCardCurves}
-          className="relative flex w-full select-none items-center gap-4 sm:gap-6 overflow-x-auto pt-10 pb-16 cursor-grab active:cursor-grabbing [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden [perspective:1200px]"
+          className="relative flex w-full select-none items-center gap-4 sm:gap-6 overflow-x-auto pt-10 pb-16 cursor-grab active:cursor-grabbing [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
           {loopCards.map((card, index) => (
             <div
@@ -220,5 +228,3 @@ export function UseCasesSection() {
     </section>
   )
 }
-
-

@@ -139,6 +139,8 @@ public class ContractController {
                 statusLabel = "QUÁ HẠN";
             } else if ("TERMINATED".equalsIgnoreCase(c.getStatus())) {
                 statusLabel = "ĐÃ THANH LÝ";
+            } else if ("COMPLETED".equalsIgnoreCase(c.getStatus())) {
+                statusLabel = "ĐÃ HOÀN TẤT";
             } else if ("CANCELED".equalsIgnoreCase(c.getStatus())) {
                 statusLabel = "ĐÃ HỦY CỌC";
             } else if ("FORFEITED".equalsIgnoreCase(c.getStatus())) {

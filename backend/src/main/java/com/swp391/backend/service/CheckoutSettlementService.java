@@ -31,6 +31,8 @@ public class CheckoutSettlementService {
     private final ActivityLogRepository activityLogRepository;
     private final StorageService storageService;
     private final AccountRepository accountRepository;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private EmailService emailService;
 
     public CheckoutSettlementService(ContractRepository contractRepository,
                                    ReservationRepository reservationRepository,
@@ -289,8 +291,12 @@ public class CheckoutSettlementService {
             return resp;
         }
 
-        // Tiền cọc đủ bù -> Hoàn tất chuyển TERMINATED hợp đồng
-        contract.setStatus("TERMINATED");
+        // Tiền cọc đủ bù -> Không có tiền hoàn và không nợ thì chuyển thẳng COMPLETED
+        if (netAmount.compareTo(BigDecimal.ZERO) > 0) {
+            contract.setStatus("TERMINATED");
+        } else {
+            contract.setStatus("COMPLETED");
+        }
         if (daysRemaining > 0) {
             contract.setCancelReason("EARLY_TERMINATION");
         }
@@ -315,7 +321,7 @@ public class CheckoutSettlementService {
             Payment refPayment = new Payment();
             refPayment.setContractId(contract.getContractId());
             refPayment.setInvoiceNumber(refInvoice);
-            refPayment.setInvoiceType("INSPECTION_DAMAGE");
+            refPayment.setInvoiceType("REF");
             refPayment.setAmount(netAmount);
             refPayment.setIssuedAt(LocalDateTime.now());
             refPayment.setDueAt(LocalDateTime.now().plusDays(2)); // 24-48h làm việc
@@ -419,11 +425,16 @@ public class CheckoutSettlementService {
      */
     @Transactional
     public boolean confirmRefundExecution(Integer paymentId, Integer staffAccountId, String receiptUrl) {
-        return confirmRefundExecution(paymentId, staffAccountId, receiptUrl, null);
+        return confirmRefundExecution(paymentId, staffAccountId, receiptUrl, null, null);
     }
 
     @Transactional
     public boolean confirmRefundExecution(Integer paymentId, Integer staffAccountId, String receiptUrl, String transactionRef) {
+        return confirmRefundExecution(paymentId, staffAccountId, receiptUrl, transactionRef, null);
+    }
+
+    @Transactional
+    public boolean confirmRefundExecution(Integer paymentId, Integer staffAccountId, String receiptUrl, String transactionRef, Integer facilityId) {
         Optional<Payment> paymentOpt = paymentRepository.findById(paymentId);
         if (paymentOpt.isEmpty()) return false;
 
@@ -432,7 +443,7 @@ public class CheckoutSettlementService {
             return false;
         }
 
-        p.setStatus("PAID");
+        p.setStatus("REFUNDED");
         p.setPaymentStatus("SUCCESS");
         p.setPaidAt(LocalDateTime.now());
         if (receiptUrl != null && !receiptUrl.isBlank()) {
@@ -443,18 +454,53 @@ public class CheckoutSettlementService {
         }
         paymentRepository.save(p);
 
+        // B2: Nếu hợp đồng đã TERMINATED và không còn phiếu REF / CMP nào chưa xong -> hợp đồng sang COMPLETED
+        if (p.getContractId() != null) {
+            Optional<Contract> contractOpt = contractRepository.findById(p.getContractId());
+            if (contractOpt.isPresent()) {
+                Contract contract = contractOpt.get();
+                if ("TERMINATED".equalsIgnoreCase(contract.getStatus())) {
+                    List<Payment> contractPayments = paymentRepository.findByContractId(contract.getContractId());
+                    boolean hasPending = contractPayments.stream().anyMatch(cp -> {
+                        String invType = cp.getInvoiceType() != null ? cp.getInvoiceType().toUpperCase() : "";
+                        String invNum = cp.getInvoiceNumber() != null ? cp.getInvoiceNumber().toUpperCase() : "";
+                        boolean isRef = "REF".equals(invType) || invNum.startsWith("REF-");
+                        boolean isCmp = "CMP".equals(invType) || "INSPECTION_DAMAGE".equals(invType) || invNum.startsWith("CMP-");
+
+                        if (isRef) {
+                            return "PENDING".equalsIgnoreCase(cp.getStatus());
+                        }
+                        if (isCmp) {
+                            return !"PAID".equalsIgnoreCase(cp.getStatus()) && !"CANCELLED".equalsIgnoreCase(cp.getStatus()) && !"CANCELED".equalsIgnoreCase(cp.getStatus());
+                        }
+                        return false;
+                    });
+
+                    if (!hasPending) {
+                        contract.setStatus("COMPLETED");
+                        contractRepository.save(contract);
+                    }
+                }
+            }
+        }
+
         if (activityLogRepository != null) {
             ActivityLog act = new ActivityLog();
             act.setAccountId(staffAccountId != null ? staffAccountId : 1);
             act.setAction("CONFIRM_REFUND_EXECUTED");
-            String desc = "Đã chi tiền hoàn cọc hóa đơn " + p.getInvoiceNumber() + ", số tiền: " + p.getAmount() + " VNĐ";
+            StringBuilder desc = new StringBuilder();
+            if (facilityId != null) {
+                desc.append("[Cơ sở #").append(facilityId).append("] ");
+            }
+            desc.append("Đã chi tiền hoàn cọc hóa đơn ").append(p.getInvoiceNumber())
+                .append(", số tiền: ").append(p.getAmount()).append(" VNĐ");
             if (transactionRef != null && !transactionRef.isBlank()) {
-                desc += " (Mã GD: " + transactionRef.trim() + ")";
+                desc.append(" (Mã GD: ").append(transactionRef.trim()).append(")");
             }
             if (receiptUrl != null && !receiptUrl.isBlank()) {
-                desc += " (Đính kèm biên lai: " + receiptUrl.trim() + ")";
+                desc.append(" (Đính kèm biên lai: ").append(receiptUrl.trim()).append(")");
             }
-            act.setDescription(desc);
+            act.setDescription(desc.toString());
             act.setCreatedAt(LocalDateTime.now());
             activityLogRepository.save(act);
         }
@@ -464,11 +510,16 @@ public class CheckoutSettlementService {
 
     /**
      * US-31: Miễn / Giảm phí (Facility Manager duyệt)
+     * BR-48: Mức giảm tối đa theo chính sách BOM, vượt mức báo lỗi 400. Miễn 100% chuyển CANCELED và gửi email.
      */
     @Transactional
     public Payment applyFeeDiscount(Integer paymentId, FeeDiscountRequest request, Integer managerAccountId, Integer managerFacilityId) {
         if (request == null || request.getReason() == null || request.getReason().trim().isEmpty()) {
             throw new IllegalArgumentException("Bắt buộc phải nhập lý do miễn / giảm phí theo quy định!");
+        }
+
+        if (request.getReason().trim().length() < 10) {
+            throw new IllegalArgumentException("Lý do miễn / giảm phí phải có ít nhất 10 ký tự!");
         }
 
         Optional<Payment> paymentOpt = paymentRepository.findById(paymentId);
@@ -478,20 +529,39 @@ public class CheckoutSettlementService {
 
         Payment p = paymentOpt.get();
         // Chỉ miễn giảm các khoản phí phạt OVERDUE_FEE hoặc phí bồi thường hư hại INSPECTION_DAMAGE
-        if (!"OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) && !"INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())) {
+        if (!"OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) && !"INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())
+                && !"PEN".equalsIgnoreCase(p.getInvoiceType()) && !"CMP".equalsIgnoreCase(p.getInvoiceType())) {
             throw new IllegalArgumentException("Chỉ được miễn giảm các khoản phí phạt trễ hạn hoặc phí hư hại theo chính sách!");
         }
 
         if ("PAID".equalsIgnoreCase(p.getStatus())) {
             throw new IllegalArgumentException("Hóa đơn đã thanh toán xong, không thể miễn giảm!");
         }
+        if ("CANCELLED".equalsIgnoreCase(p.getStatus()) || "CANCELED".equalsIgnoreCase(p.getStatus())) {
+            throw new IllegalArgumentException("Hóa đơn đã được miễn giảm toàn bộ trước đó, không thể miễn giảm thêm!");
+        }
 
-        BigDecimal originalAmount = p.getAmount();
+        BigDecimal originalAmount = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
         BigDecimal newAmount = originalAmount;
 
+        // Kiểm tra vượt mức giảm tối đa theo chính sách (B4 / BR-48)
+        if (request.getDiscountPercent() != null) {
+            if (request.getDiscountPercent() < 1 || request.getDiscountPercent() > 100) {
+                throw new IllegalArgumentException("Phần trăm miễn giảm phải từ 1% đến 100% theo chính sách!");
+            }
+        }
+        if (request.getDiscountAmount() != null) {
+            if (request.getDiscountAmount().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Số tiền miễn giảm phải lớn hơn 0!");
+            }
+            if (request.getDiscountAmount().compareTo(originalAmount) > 0) {
+                throw new IllegalArgumentException("Mức giảm vượt quá số tiền của khoản phí (" + originalAmount + " VNĐ) theo chính sách!");
+            }
+        }
+
         if (request.getDiscountPercent() != null && request.getDiscountPercent() >= 100) {
-            // Miễn 100% -> Khoản phí chuyển sang CANCELLED
-            p.setStatus("CANCELLED");
+            // Miễn 100% -> Khoản phí chuyển sang CANCELED
+            p.setStatus("CANCELED");
             p.setPaymentStatus("FAILED");
             p.setAmount(BigDecimal.ZERO);
         } else if (request.getDiscountPercent() != null && request.getDiscountPercent() > 0) {
@@ -501,7 +571,7 @@ public class CheckoutSettlementService {
         } else if (request.getDiscountAmount() != null && request.getDiscountAmount().compareTo(BigDecimal.ZERO) > 0) {
             newAmount = originalAmount.subtract(request.getDiscountAmount());
             if (newAmount.compareTo(BigDecimal.ZERO) <= 0) {
-                p.setStatus("CANCELLED");
+                p.setStatus("CANCELED");
                 p.setPaymentStatus("FAILED");
                 p.setAmount(BigDecimal.ZERO);
             } else {
@@ -522,24 +592,79 @@ public class CheckoutSettlementService {
             activityLogRepository.save(act);
         }
 
+        // Gửi email thông báo cho khách hàng
+        try {
+            if (emailService != null && p.getContractId() != null) {
+                contractRepository.findById(p.getContractId()).ifPresent(c -> {
+                    if (c.getReservationId() != null) {
+                        reservationRepository.findById(c.getReservationId()).ifPresent(r -> {
+                            if (r.getAccountId() != null) {
+                                accountRepository.findAccountByAccountId(r.getAccountId()).ifPresent(acc -> {
+                                    if (acc.getEmail() != null && !acc.getEmail().isBlank()) {
+                                        String subj = "[Smart Self Storage] Thông báo miễn / giảm phí hóa đơn " + p.getInvoiceNumber();
+                                        String content = String.format("Kính gửi %s,\n\nKhoản phí %s ban đầu %s VNĐ đã được Quản lý duyệt miễn / giảm xuống %s VNĐ.\nLý do: %s\n\nTrân trọng,\nĐội ngũ Smart Self Storage",
+                                                acc.getFullName(), p.getInvoiceNumber(), originalAmount, p.getAmount(), request.getReason().trim());
+                                        emailService.sendTextEmail(acc.getEmail(), subj, content);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        } catch (Exception ignored) {}
+
         return p;
     }
 
     /**
-     * US-26: Lấy danh sách các đơn cọc chờ hoàn tiền (REF) cho Staff (Q-18)
+     * US-26 & B1: Lấy danh sách các đơn cọc chờ hoàn tiền (REF) cho Staff / Manager
+     * Tự động lọc theo X-Facility-Id (cách ly cơ sở theo BR-06), sắp xếp mới nhất lên đầu
      */
     public List<RefundListItemResponse> getRefundList(String status) {
-        List<Payment> refundPayments;
-        if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim())) {
-            refundPayments = paymentRepository.findByInvoiceTypeAndStatus("REF", status.trim().toUpperCase());
-        } else {
-            refundPayments = paymentRepository.findByInvoiceType("REF");
-        }
+        return getRefundList(null, status);
+    }
 
-        List<RefundListItemResponse> result = new java.util.ArrayList<>();
+    public List<RefundListItemResponse> getRefundList(Integer facilityId, String status) {
+        List<Payment> allPayments = paymentRepository.findAll();
+        List<Payment> refundPayments = allPayments.stream()
+                .filter(p -> {
+                    String invType = p.getInvoiceType() != null ? p.getInvoiceType().toUpperCase() : "";
+                    String invNum = p.getInvoiceNumber() != null ? p.getInvoiceNumber().toUpperCase() : "";
+                    return "REF".equals(invType) || invNum.startsWith("REF-");
+                })
+                .filter(p -> {
+                    if (status == null || status.trim().isEmpty() || "ALL".equalsIgnoreCase(status.trim())) {
+                        return true;
+                    }
+                    String filterStatus = status.trim().toUpperCase();
+                    String pStatus = p.getStatus() != null ? p.getStatus().toUpperCase() : "";
+                    if ("REFUNDED".equals(filterStatus)) {
+                        return "REFUNDED".equals(pStatus) || "PAID".equals(pStatus);
+                    }
+                    return filterStatus.equals(pStatus);
+                })
+                .sorted((a, b) -> {
+                    LocalDateTime t1 = a.getIssuedAt() != null ? a.getIssuedAt() : LocalDateTime.MIN;
+                    LocalDateTime t2 = b.getIssuedAt() != null ? b.getIssuedAt() : LocalDateTime.MIN;
+                    return t2.compareTo(t1);
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        List<RefundListItemResponse> result = new ArrayList<>();
         for (Payment p : refundPayments) {
-            Contract c = contractRepository.findById(p.getContractId()).orElse(null);
-            Reservation r = (c != null) ? reservationRepository.findById(c.getReservationId()).orElse(null) : null;
+            Contract c = (p.getContractId() != null) ? contractRepository.findById(p.getContractId()).orElse(null) : null;
+            Reservation r = (c != null && c.getReservationId() != null) ? reservationRepository.findById(c.getReservationId()).orElse(null) : null;
+
+            // Kiểm tra lọc theo cơ sở nếu có facilityId (BR-06)
+            if (facilityId != null && facilityId > 0 && r != null) {
+                StorageUnit unit = (r.getUnitCode() != null) ? storageUnitRepository.findById(r.getUnitCode()).orElse(null) : null;
+                Floor floor = (unit != null && unit.getFloorId() != null) ? floorRepository.findById(unit.getFloorId()).orElse(null) : null;
+                if (floor == null || !facilityId.equals(floor.getFacilityId())) {
+                    continue;
+                }
+            }
+
             Account acc = (r != null && r.getAccountId() != null) ? accountRepository.findAccountByAccountId(r.getAccountId()).orElse(null) : null;
 
             String reservationCode = (r != null) ? r.getReservationCode() : ("CTR-" + p.getContractId());
@@ -551,7 +676,23 @@ public class CheckoutSettlementService {
             String accName = (c != null) ? c.getRefundAccountName() : null;
             String cancelReason = (c != null) ? c.getCancelReason() : null;
 
-            result.add(new RefundListItemResponse(
+            String refundType = "CHECKOUT_SETTLEMENT";
+            if (c != null && "EARLY_TERMINATION".equalsIgnoreCase(c.getCancelReason())) {
+                refundType = "EARLY_TERMINATION";
+            } else if (c != null && "COUNTER_CANCEL".equalsIgnoreCase(c.getCancelReason())) {
+                refundType = "COUNTER_CANCEL";
+            } else if (c != null && ("CUSTOMER_REQUEST".equalsIgnoreCase(c.getCancelReason()) || "NO_SHOW".equalsIgnoreCase(c.getCancelReason()))) {
+                refundType = "CANCEL_DEPOSIT";
+            } else if (c != null && "CANCELED".equalsIgnoreCase(c.getStatus())) {
+                refundType = "CANCEL_DEPOSIT";
+            }
+
+            String normStatus = p.getStatus() != null ? p.getStatus().toUpperCase() : "PENDING";
+            if ("PAID".equals(normStatus)) {
+                normStatus = "REFUNDED";
+            }
+
+            RefundListItemResponse item = new RefundListItemResponse(
                     p.getPaymentId(),
                     p.getInvoiceNumber(),
                     p.getContractId(),
@@ -564,9 +705,16 @@ public class CheckoutSettlementService {
                     accNumber,
                     accName,
                     cancelReason,
-                    p.getStatus(),
+                    normStatus,
                     p.getIssuedAt()
-            ));
+            );
+            item.setContractCode(reservationCode);
+            item.setRefundType(refundType);
+            item.setRefundedAt(p.getPaidAt());
+            item.setTransactionCode(p.getTransactionCode());
+            item.setEvidenceUrl(p.getPdfUrl());
+
+            result.add(item);
         }
         return result;
     }

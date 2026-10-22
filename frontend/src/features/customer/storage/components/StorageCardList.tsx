@@ -24,6 +24,7 @@ export default function StorageCardList({
       {contracts.map((item) => {
         const isPending = item.status === 'PENDING_CHECKIN';
         const isActive = item.status === 'ACTIVE';
+        const isCompleted = item.status === 'COMPLETED';
         const isTerminated = item.status === 'TERMINATED';
         const isCanceled = item.status === 'CANCELED';
         const isReturnRequested = isActive && Boolean(item.returnRequested || item.cancelReason === 'EARLY_TERMINATION');
@@ -52,6 +53,8 @@ export default function StorageCardList({
                   ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                   : isPending
                   ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                  : isCompleted
+                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
                   : isTerminated
                   ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
@@ -63,6 +66,8 @@ export default function StorageCardList({
                     ? 'bg-emerald-500'
                     : isPending
                     ? 'bg-amber-500'
+                    : isCompleted
+                    ? 'bg-emerald-500'
                     : isTerminated
                     ? 'bg-slate-500'
                     : 'bg-slate-400'
@@ -71,6 +76,8 @@ export default function StorageCardList({
                   ? 'Chờ trả kho'
                   : isPending
                   ? 'Chờ check-in'
+                  : isCompleted
+                  ? 'Đã hoàn tất'
                   : isTerminated
                   ? 'Đã thanh lý'
                   : (item.statusLabel || item.status)}
@@ -121,6 +128,12 @@ export default function StorageCardList({
                 >
                   <i className="fa-solid fa-arrows-rotate text-xs"></i> Gia Hạn
                 </button>
+              )}
+
+              {isCompleted && (
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium italic">
+                  Đã hoàn tất
+                </span>
               )}
 
               {isTerminated && (

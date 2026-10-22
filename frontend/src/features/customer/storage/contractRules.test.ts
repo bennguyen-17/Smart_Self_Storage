@@ -6,6 +6,7 @@ describe("extendModeOf: hiện nút Gia hạn theo trạng thái hợp đồng",
     { status: "ACTIVE", expected: "ONLINE" },
     { status: "OVERDUE", expected: "AT_COUNTER" }, // nút khóa + thông báo đến quầy
     { status: "TERMINATED", expected: "NONE" }, // ẩn hẳn nút
+    { status: "COMPLETED", expected: "NONE" },
     { status: "FORFEITED", expected: "NONE" },
     { status: "CANCELED", expected: "NONE" },
     { status: "PENDING_CHECKIN", expected: "NONE" },
@@ -23,6 +24,7 @@ describe("canExtendOnline: chỉ hợp đồng ACTIVE mới được gia hạn o
     { status: "OVERDUE", expected: false },
     { status: "PENDING_CHECKIN", expected: false },
     { status: "TERMINATED", expected: false },
+    { status: "COMPLETED", expected: false },
     { status: "FORFEITED", expected: false },
     { status: "CANCELED", expected: false },
     { status: "SUSPENDED", expected: false },

@@ -37,6 +37,15 @@ public interface ActivityLogRepository
                         @Param("accountId") Integer accountId,
                         @Param("ipAddress") String ipAddress);
 
+        @Query("""
+                        SELECT MAX(a.createdAt)
+                        FROM ActivityLog a
+                        WHERE a.accountId = :accountId
+                          AND a.action = 'LOGIN_SUCCESS'
+                        """)
+        LocalDateTime findLatestLoginSuccess(
+                        @Param("accountId") Integer accountId);
+
       List<ActivityLog> findByAccountId(Integer accountId);
       List<ActivityLog> findByCreatedAtBetweenOrderByCreatedAtDesc(LocalDateTime from, LocalDateTime to);
       List<ActivityLog> findAllByOrderByCreatedAtDesc();

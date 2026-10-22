@@ -69,7 +69,13 @@ public class AdminAccountController {
             status = "LOCKED";
         }
 
-        String lastLogin = account.getUpdatedAt() != null ? account.getUpdatedAt().toString() : null;
+        LocalDateTime lastLoginLdt = null;
+        if (account.getAccountId() != null && activityLogRepository != null) {
+            try {
+                lastLoginLdt = activityLogRepository.findLatestLoginSuccess(account.getAccountId());
+            } catch (Exception ignored) {}
+        }
+        String lastLogin = lastLoginLdt != null ? lastLoginLdt.toString() : null;
 
         return new InternalAccountResponse(
                 account.getAccountId(),
@@ -97,17 +103,6 @@ public class AdminAccountController {
             if (a.getRoleId() != null && a.getRoleId() >= 1L && a.getRoleId() <= 4L) {
                 responses.add(toResponse(a));
             }
-        }
-
-        // Nếu cơ sở dữ liệu chưa có đủ tài khoản mẫu, sinh dữ liệu mẫu đầy đủ để Admin giao diện không trống
-        if (responses.isEmpty()) {
-            responses.add(new InternalAccountResponse(1, "Quản Trị Viên Hệ Thống", "admin@selfstorage391.vn", "0901888999", "ADMIN", null, "ACTIVE", false, "2026-10-15T08:02:00"));
-            responses.add(new InternalAccountResponse(2, "Ngô Thị Ban Giám Đốc", "bom@selfstorage391.vn", "0912000111", "BOM", null, "ACTIVE", false, "2026-10-14T17:45:00"));
-            responses.add(new InternalAccountResponse(3, "Trần Văn Quản Lý", "manager.hn01@selfstorage391.vn", "0987123456", "MANAGER", 1, "ACTIVE", false, "2026-10-15T07:30:00"));
-            responses.add(new InternalAccountResponse(4, "Lê Thị Quản Lý", "manager.hn02@selfstorage391.vn", "0987123457", "MANAGER", 2, "ACTIVE", false, "2026-10-13T09:10:00"));
-            responses.add(new InternalAccountResponse(5, "Nguyễn Văn Nhân Viên 1", "staff1.hn01@selfstorage391.vn", "0933444555", "STAFF", 1, "ACTIVE", false, "2026-10-15T06:55:00"));
-            responses.add(new InternalAccountResponse(6, "Phạm Thị Nhân Viên 2", "staff2.hn01@selfstorage391.vn", "0933444556", "STAFF", 1, "LOCKED", false, "2026-10-10T18:20:00"));
-            responses.add(new InternalAccountResponse(7, "Đỗ Minh Nhân Viên", "staff1.hcm01@selfstorage391.vn", "0977666555", "STAFF", 5, "ACTIVE", true, null));
         }
 
         return ResponseEntity.ok(responses);

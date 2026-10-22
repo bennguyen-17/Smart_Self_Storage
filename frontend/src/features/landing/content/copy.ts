@@ -1,4 +1,4 @@
-// Toàn bộ chữ hiển thị trên landing. Sửa copy theo feedback ở file này, không sửa trong component.
+// Toàn bộ chữ hiển thị trên landing page. Sửa copy theo feedback ở file này.
 // Quy tắc: không nêu tên đối tác, chứng chỉ, hay số liệu chưa kiểm chứng.
 
 import type { UnitSize } from "./units"
@@ -27,14 +27,13 @@ export interface UseCase {
   title: string
   body: string
   size: UnitSize
-  presetId: EstimatorPresetId
   image?: { src: string; alt: string }
 }
 
 export const USE_CASES_SECTION = {
   title: "Cần bao nhiêu chỗ, có bấy nhiêu kho",
   lead: "Chọn tình huống phù hợp với bạn, hệ thống thông minh sẽ gợi ý kích cỡ kho vừa vặn tức thì.",
-  tryLabel: "Tính thử ngay",
+  tryLabel: "Xem chi tiết kho",
 } as const
 
 export const USE_CASES: readonly UseCase[] = [
@@ -43,7 +42,6 @@ export const USE_CASES: readonly UseCase[] = [
     title: "Hết mùa cất lại, rộng rãi cả năm",
     body: "Chăn đông, quạt mát, đồ trang trí Tết, dụng cụ cắm trại: dùng xong cất gọn, giải phóng tối đa không gian sống.",
     size: "S",
-    presetId: "suitcase",
     image: {
       src: "https://images.unsplash.com/photo-1590247813693-5541d1c609fd?auto=format&fit=crop&w=800&q=80",
       alt: "Dãy tủ kho tự quản mini sạch sẽ và thông thoáng",
@@ -54,7 +52,6 @@ export const USE_CASES: readonly UseCase[] = [
     title: "Về quê nhẹ gánh, tiết kiệm tiền phòng",
     body: "Gửi trọn đồ đạc phòng trọ trong 2–3 tháng hè, không còn nỗi lo gánh nặng chi phí giữ phòng.",
     size: "M",
-    presetId: "room",
     image: {
       src: "/images/personal-storage-boxes.jpg",
       alt: "Thùng carton và đồ dùng cá nhân đóng gói ngăn nắp trong kho",
@@ -65,7 +62,6 @@ export const USE_CASES: readonly UseCase[] = [
     title: "Dọn nhà sửa tổ, gửi đồ liền tay",
     body: "Gửi tạm toàn bộ nội thất và vật dụng từ vài tuần đến vài tháng, xong việc thảnh thơi dọn về tổ ấm mới.",
     size: "L",
-    presetId: "apartment",
     image: {
       src: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
       alt: "Phòng kho chứa đồ đạc gia đình và vật dụng nội thất",
@@ -76,7 +72,6 @@ export const USE_CASES: readonly UseCase[] = [
     title: "Kinh doanh kho bãi, buôn may bán đắt",
     body: "Nệm êm, đồ cồng kềnh, hàng hóa kinh doanh online: lối đi rộng rãi, xe tải đỗ tận nơi bốc dỡ dễ dàng.",
     size: "XL",
-    presetId: "house",
     image: {
       src: "https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=800&q=80",
       alt: "Kho hàng kinh doanh rộng rãi với kệ pallet hiện đại",
@@ -84,41 +79,15 @@ export const USE_CASES: readonly UseCase[] = [
   },
 ]
 
-export type EstimatorPresetId = "suitcase" | "room" | "apartment" | "house"
-
-export interface EstimatorPreset {
-  id: EstimatorPresetId
-  label: string
-  volumeM3: number
-}
-
-export const ESTIMATOR = {
-  title: "Đo đạc nhanh tay, chọn ngay kho chuẩn",
-  lead: "Chọn gần đúng lượng đồ hoặc kéo thanh trượt để tính toán không gian vừa vặn và tối ưu chi phí.",
-  presets: [
-    { id: "suitcase", label: "Vali & Giấy tờ", volumeM3: 2 },
-    { id: "room", label: "Phòng trọ sinh viên", volumeM3: 6 },
-    { id: "apartment", label: "Căn hộ 1–2 phòng ngủ", volumeM3: 12 },
-    { id: "house", label: "Kho doanh nghiệp", volumeM3: 20 },
-  ] satisfies EstimatorPreset[],
-  slider: { min: 0, max: 20, step: 0.5, label: "Lượng đồ ước tính (m³)" },
-  emptyTitle: "Chưa chọn lượng đồ",
-  emptyBody: "Hãy chọn một mục nhanh ở trên hoặc kéo thanh trượt để tìm cỡ kho hoàn hảo cho bạn.",
-  resultPrefix: "Gợi ý tối ưu cho bạn",
-  perMonth: "/ tháng",
-  depositLabel: "Tiền cọc đảm bảo",
-  overflowTitle: "Cần diện tích lớn hơn 10 m² (20 m³)?",
-  overflowBody:
-    "Hệ thống luôn có sẵn các phương án ghép nhiều kho linh hoạt nhằm đáp ứng tối đa nhu cầu của bạn.",
-} as const
-
 export const PRICING_SECTION = {
-  title: "Bảng giá minh bạch, chuẩn sạch không phí ẩn",
-  lead: "Bốn cỡ kho linh hoạt, trần cao 2m tiêu chuẩn. Thuê theo ngày tiện lợi, ưu đãi dài hạn theo tháng.",
+  title: "Kích thước chuẩn & Bảng giá minh bạch",
+  lead: "Bốn cỡ kho linh hoạt, trần cao 2.0m tiêu chuẩn. Dễ dàng chuyển đổi giữa chế độ xem sức chứa đồ đạc thực tế và so sánh bảng giá chi tiết.",
+  capacityTab: "Sức chứa & Đồ đạc tối đa",
+  pricingTab: "Bảng giá & Chiết khấu gói",
   perMonth: "/ tháng",
   perDay: "Theo ngày",
-  deposit: "Cọc",
-  suggested: "Vừa vặn với lượng đồ của bạn",
+  deposit: "Cọc hoàn trả",
+  suggested: "Khuyên dùng ⭐",
 } as const
 
 export const FACILITIES_SECTION = {
@@ -157,7 +126,6 @@ export interface Testimonial {
 export const TESTIMONIALS_SECTION = {
   badge: "Cảm nhận khách hàng",
   title: "Khách gửi trọn niềm tin, vẹn tròn trải nghiệm",
-  /** true = đánh giá minh họa (chưa có dữ liệu thật). Đổi thành false khi thay bằng đánh giá thật. */
   illustrative: true,
   illustrativeNote: "Đánh giá minh họa",
   items: [
