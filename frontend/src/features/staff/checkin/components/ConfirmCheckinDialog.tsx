@@ -9,9 +9,13 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-import { formatVnd } from "@/lib/format"
+import { formatDate, formatVnd } from "@/lib/format"
 import { checkinErrorMessage, confirmCheckin } from "../api/checkinApi"
-import { CHECKIN_HOURS, isWithinCheckinHours } from "../constants"
+import {
+  CHECKIN_HOURS,
+  checkinDateStatus,
+  isWithinCheckinHours,
+} from "../constants"
 import type { StaffCheckInResponse } from "../types"
 import type { CheckinTarget } from "./StaffCustomerDetailModal"
 import ProtoModal from "./ProtoModal"
@@ -95,8 +99,20 @@ function Body({
 
   const collectAmount = contract.depRemainingAmount ?? 0
   const outsideHours = !isWithinCheckinHours()
+  const startDate = contract.reservationStartDate
+  const dateStatus = checkinDateStatus(startDate)
+  const dateBlocker =
+    dateStatus === "before"
+      ? `Chưa đến ngày check-in. Khách hẹn nhận kho vào ${formatDate(startDate)}.`
+      : dateStatus === "after"
+        ? `Đã quá ngày check-in. Ngày nhận kho của khách là ${formatDate(startDate)}.`
+        : null
 
   async function handleConfirm() {
+    if (dateBlocker) {
+      setErrorMsg(dateBlocker)
+      return
+    }
     setIsSubmitting(true)
     setErrorMsg(null)
     try {
@@ -138,6 +154,16 @@ function Body({
           </span>
         </div>
       </div>
+
+      {dateBlocker && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-rose-300 bg-rose-50/80 p-3 text-xs text-rose-800 dark:border-rose-800/70 dark:bg-rose-950/30 dark:text-rose-300">
+          <ClockIcon className="mt-0.5 size-4 shrink-0 text-rose-600 dark:text-rose-400" />
+          <div className="leading-relaxed">
+            <span className="font-bold">Không thể check-in. </span>
+            {dateBlocker}
+          </div>
+        </div>
+      )}
 
       {/* KHỐI THU TIỀN TẠI QUẦY (HERO CARD) */}
       {collectAmount > 0 ? (
@@ -222,7 +248,7 @@ function Body({
         <button
           type="button"
           onClick={handleConfirm}
-          disabled={isSubmitting}
+          disabled={isSubmitting || dateBlocker !== null}
           className="flex-1 cursor-pointer flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-2.5 text-xs font-black text-white shadow-md shadow-blue-500/20 transition hover:bg-blue-700 disabled:opacity-60 whitespace-nowrap"
         >
           {isSubmitting ? (

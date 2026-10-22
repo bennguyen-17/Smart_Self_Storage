@@ -39,6 +39,7 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
@@ -51,6 +52,8 @@ public class StaffCheckInService {
 
     private static final String CONTRACT_PENDING_CHECKIN = "PENDING_CHECKIN";
     private static final String RESERVATION_CONFIRMED = "CONFIRMED";
+    private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+    private static final DateTimeFormatter CHECKIN_DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final ReservationRepository reservationRepository;
     private final ContractRepository contractRepository;
@@ -126,8 +129,15 @@ public class StaffCheckInService {
             return checkInFailure("Đơn đặt chỗ không ở trạng thái hợp lệ để làm thủ tục check-in.");
         }
 
-        if (!LocalDate.now().equals(reservation.getStartDate())) {
-            return checkInFailure("Chỉ được check-in vào ngày bắt đầu thuê.");
+        LocalDate today = LocalDate.now(VIETNAM_ZONE);
+        LocalDate startDate = reservation.getStartDate();
+        if (startDate != null && today.isBefore(startDate)) {
+            return checkInFailure("Chưa đến ngày check-in. Khách hẹn nhận kho vào "
+                    + startDate.format(CHECKIN_DATE_FORMAT) + ".");
+        }
+        if (startDate != null && today.isAfter(startDate)) {
+            return checkInFailure("Đã quá ngày check-in. Ngày nhận kho của khách là "
+                    + startDate.format(CHECKIN_DATE_FORMAT) + ".");
         }
 
         Optional<Contract> contractOpt = contractRepository.findByReservationIdForUpdate(reservationId);

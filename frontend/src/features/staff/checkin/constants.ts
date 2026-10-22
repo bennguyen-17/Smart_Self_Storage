@@ -1,3 +1,5 @@
+import { todayInVietnam } from "@/lib/format"
+
 import type { ContractStatus } from "./types"
 
 export type CheckinTabKey =
@@ -31,6 +33,24 @@ export const CANCEL_POLICY_TEXT = [
   "Hệ thống hoàn lại 50% tiền cọc cho khách và ghi nhận 50% còn lại vào quỹ phạt giữ chỗ.",
   "Hợp đồng chuyển sang CANCELED và ô kho được trả về AVAILABLE ngay lập tức.",
 ]
+
+export type CheckinDateStatus = "before" | "on" | "after"
+
+/**
+ * So sánh ngày hôm nay (giờ Việt Nam) với ngày bắt đầu thuê của đơn.
+ * Trả về null khi đơn không có ngày bắt đầu để tránh chặn nhầm.
+ */
+export function checkinDateStatus(
+  startDate: string | null | undefined,
+  now: Date = new Date()
+): CheckinDateStatus | null {
+  if (!startDate) return null
+  const today = todayInVietnam(now)
+  const target = startDate.slice(0, 10)
+  if (today < target) return "before"
+  if (today > target) return "after"
+  return "on"
+}
 
 /** Kiểm tra thời điểm hiện tại có nằm trong khung giờ check-in không. */
 export function isWithinCheckinHours(now: Date = new Date()): boolean {
