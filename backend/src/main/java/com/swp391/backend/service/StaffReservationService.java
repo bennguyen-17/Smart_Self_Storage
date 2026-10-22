@@ -698,6 +698,24 @@ public class StaffReservationService {
         }
         Contract contract = contractOpt.get();
 
+        if (!CONTRACT_OVERDUE.equalsIgnoreCase(contract.getStatus())) {
+            return new CollectPenaltyResponse(false, "Chỉ thu phạt cho hợp đồng OVERDUE.");
+        }
+
+        String requestedMethod = request != null && request.getPaymentMethod() != null
+                ? request.getPaymentMethod().trim().toUpperCase(java.util.Locale.ROOT)
+                : "";
+        String paymentMethod = switch (requestedMethod) {
+            case "CASH" -> "CASH";
+            case "TRANSFER", "BANK_TRANSFER" -> "BANK_TRANSFER";
+            case "CARD" -> "CARD";
+            default -> null;
+        };
+        if (paymentMethod == null) {
+            return new CollectPenaltyResponse(false,
+                    "Phương thức thanh toán phải là CASH, BANK_TRANSFER hoặc CARD.");
+        }
+
         LocalDate today = LocalDate.now();
         LocalDate endDate = reservation.getEndDate();
         int overdueDays = (endDate != null && endDate.isBefore(today))
@@ -705,55 +723,42 @@ public class StaffReservationService {
                 : 0;
 
         BigDecimal totalExpected = DAILY_OVERDUE_FEE.multiply(BigDecimal.valueOf(overdueDays));
-        BigDecimal paidAlready = BigDecimal.ZERO;
-
         List<Payment> penPayments = paymentRepository.findByContractId(contract.getContractId()).stream()
                 .filter(p -> "OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType())
                         || (p.getInvoiceNumber() != null && (p.getInvoiceNumber().startsWith("PEN-") || p.getInvoiceNumber().startsWith("OVD-"))))
                 .toList();
 
-        for (Payment p : penPayments) {
-            if ("PAID".equalsIgnoreCase(p.getStatus()) && "SUCCESS".equalsIgnoreCase(p.getPaymentStatus())) {
-                BigDecimal paid = p.getPaidAmount() != null ? p.getPaidAmount() : (p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
-                paidAlready = paidAlready.add(paid);
-            }
-        }
-
-        BigDecimal collectedAmount = totalExpected.subtract(paidAlready).max(BigDecimal.ZERO);
         String invoiceNumber = "PEN-" + (reservation.getReservationCode() != null ? reservation.getReservationCode() : ("CTR-" + contract.getContractId()));
+        Payment penaltyInvoice = penPayments.stream()
+                .filter(p -> invoiceNumber.equals(p.getInvoiceNumber()))
+                .findFirst()
+                .orElse(null);
+
+        BigDecimal alreadyPaid = penaltyInvoice == null ? BigDecimal.ZERO : zeroIfNull(penaltyInvoice.getPaidAmount());
+        BigDecimal collectedAmount = totalExpected.subtract(alreadyPaid).max(BigDecimal.ZERO);
+
+        if (collectedAmount.signum() <= 0) {
+            return new CollectPenaltyResponse(false, "Hợp đồng không có khoản phạt chưa thanh toán.");
+        }
 
         LocalDateTime now = LocalDateTime.now();
-        String paymentMethod = (request != null && request.getPaymentMethod() != null && !request.getPaymentMethod().isBlank())
-                ? request.getPaymentMethod().trim()
-                : "CASH";
-
-        if (!penPayments.isEmpty()) {
-            for (Payment p : penPayments) {
-                p.setStatus("PAID");
-                p.setPaymentStatus("SUCCESS");
-                p.setPaymentMethod(paymentMethod);
-                p.setPaidAmount(p.getAmount() != null ? p.getAmount() : collectedAmount);
-                p.setRemainingAmount(BigDecimal.ZERO);
-                p.setPaidAt(now);
-                paymentRepository.save(p);
-                invoiceNumber = p.getInvoiceNumber();
-            }
-        } else if (collectedAmount.compareTo(BigDecimal.ZERO) > 0) {
-            Payment p = new Payment();
-            p.setContractId(contract.getContractId());
-            p.setInvoiceNumber(invoiceNumber);
-            p.setInvoiceType("OVERDUE_FEE");
-            p.setAmount(collectedAmount);
-            p.setPaidAmount(collectedAmount);
-            p.setRemainingAmount(BigDecimal.ZERO);
-            p.setIssuedAt(now);
-            p.setDueAt(now.plusDays(1));
-            p.setStatus("PAID");
-            p.setPaymentMethod(paymentMethod);
-            p.setPaymentStatus("SUCCESS");
-            p.setPaidAt(now);
-            paymentRepository.save(p);
+        if (penaltyInvoice == null) {
+            penaltyInvoice = new Payment();
+            penaltyInvoice.setContractId(contract.getContractId());
+            penaltyInvoice.setInvoiceNumber(invoiceNumber);
+            penaltyInvoice.setInvoiceType("OVERDUE_FEE");
+            penaltyInvoice.setIssuedAt(now);
+            penaltyInvoice.setDueAt(now);
         }
+        penaltyInvoice.setAmount(totalExpected);
+        penaltyInvoice.setPaidAmount(alreadyPaid.add(collectedAmount));
+        penaltyInvoice.setRemainingAmount(BigDecimal.ZERO);
+        penaltyInvoice.setStatus("PAID");
+        penaltyInvoice.setPaymentStatus("SUCCESS");
+        penaltyInvoice.setPaymentMethod(paymentMethod);
+        penaltyInvoice.setTransactionCode("COUNTER_PEN_" + System.currentTimeMillis());
+        penaltyInvoice.setPaidAt(now);
+        paymentRepository.save(penaltyInvoice);
 
         writeActivityLog(staffAccountId, "COLLECT_PENALTY_AT_COUNTER",
                 "Thu phạt quá hạn tại quầy bằng " + paymentMethod + " cho hợp đồng " + (reservation.getReservationCode() != null ? reservation.getReservationCode() : contract.getContractId()) + ", số tiền: " + collectedAmount + " VND (" + overdueDays + " ngày quá hạn, đơn giá 50.000đ/ngày)");
