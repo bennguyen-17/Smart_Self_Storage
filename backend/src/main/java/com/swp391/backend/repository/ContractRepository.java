@@ -21,6 +21,10 @@ public interface ContractRepository extends JpaRepository<Contract, Integer> {
     @Query("select contract from Contract contract where contract.reservationId = :reservationId")
     Optional<Contract> findByReservationIdForUpdate(@Param("reservationId") Integer reservationId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select contract from Contract contract where contract.contractId = :contractId")
+    Optional<Contract> findByIdForUpdate(@Param("contractId") Integer contractId);
+
     List<Contract> findByStatus(String status);
 
     @Query("""

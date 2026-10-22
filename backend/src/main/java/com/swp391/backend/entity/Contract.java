@@ -24,6 +24,9 @@ public class Contract {
     @Column(nullable = false, length = 30)
     private String status = "PENDING_CHECKIN"; // States: INITIATED, PENDING_CHECKIN, ACTIVE, OVERDUE, TERMINATED, COMPLETED, FORFEITED, CANCELED
 
+    @Column(name = "forfeitProcessed", nullable = false)
+    private boolean forfeitProcessed = false;
+
     @Column(length = 50)
     private String cancelReason; // NO_SHOW, CUSTOMER_REQUEST, VIOLATION, EARLY_TERMINATION
 
@@ -94,6 +97,14 @@ public class Contract {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public boolean isForfeitProcessed() {
+        return forfeitProcessed;
+    }
+
+    public void setForfeitProcessed(boolean forfeitProcessed) {
+        this.forfeitProcessed = forfeitProcessed;
     }
 
     public String getCancelReason() {
