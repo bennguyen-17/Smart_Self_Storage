@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react"
-import { ClockIcon } from "lucide-react"
+import { ClockIcon, PlayIcon } from "lucide-react"
+import { toast } from "sonner"
+
+import { getErrorMessage } from "@/lib/api"
+
+import { startCurrentShift } from "../../shifts/api/staffShiftApi"
 import {
   getStaffProfile,
   type StaffProfileData,
@@ -9,6 +14,8 @@ import StaffProfileModal from "./StaffProfileModal"
 export default function StaffShiftBadge() {
   const [profile, setProfile] = useState<StaffProfileData | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [starting, setStarting] = useState(false)
+  const [started, setStarted] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -30,6 +37,24 @@ export default function StaffShiftBadge() {
   const shiftStatus = profile?.shiftStatus || "NO_SHIFT"
   const shifts = profile?.assignedShifts || []
   const currentShift = shifts.find((s) => s.isCurrent) || shifts[0]
+  const attended = started || currentShift?.status === "ATTENDED"
+
+  async function handleStartShift() {
+    setStarting(true)
+    try {
+      await startCurrentShift()
+      setStarted(true)
+      toast.success(
+        currentShift
+          ? `Đã bắt đầu ca ${currentShift.shiftName}`
+          : "Đã bắt đầu ca"
+      )
+    } catch (err) {
+      toast.error(getErrorMessage(err))
+    } finally {
+      setStarting(false)
+    }
+  }
 
   return (
     <>
@@ -43,8 +68,22 @@ export default function StaffShiftBadge() {
           >
             <span className="size-2 animate-pulse rounded-full bg-emerald-500" />
             <span>
-              Ca Trực Hoạt Động ({currentShift.shiftName}: {currentShift.startTime} - {currentShift.endTime})
+              {attended ? "Ca Trực Hoạt Động" : "Trong Ca · Chưa Bắt Đầu"} (
+              {currentShift.shiftName}: {currentShift.startTime} -{" "}
+              {currentShift.endTime})
             </span>
+          </button>
+        )}
+
+        {shiftStatus === "IN_SHIFT" && currentShift && !attended && (
+          <button
+            type="button"
+            onClick={handleStartShift}
+            disabled={starting}
+            className="flex items-center gap-1.5 rounded-full border border-blue-300 bg-blue-600 px-3 py-1 text-xs font-bold text-white shadow-2xs transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
+          >
+            <PlayIcon className="size-3" />
+            <span>{starting ? "Đang bắt đầu…" : "Bắt đầu ca"}</span>
           </button>
         )}
 
