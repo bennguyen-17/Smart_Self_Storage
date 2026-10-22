@@ -1,13 +1,16 @@
 package com.swp391.backend.service;
 
 import com.swp391.backend.dto.StaffCurrentShiftResponse;
+import com.swp391.backend.entity.Account;
 import com.swp391.backend.entity.EmployeeProfile;
 import com.swp391.backend.entity.Shift;
 import com.swp391.backend.entity.StaffShift;
 import com.swp391.backend.repository.EmployeeProfileRepository;
+import com.swp391.backend.repository.AccountRepository;
 import com.swp391.backend.repository.ShiftRepository;
 import com.swp391.backend.repository.StaffShiftRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -28,13 +31,16 @@ public class StaffShiftService {
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
     private final EmployeeProfileRepository employeeProfileRepository;
+    private final AccountRepository accountRepository;
     private final StaffShiftRepository staffShiftRepository;
     private final ShiftRepository shiftRepository;
 
     public StaffShiftService(EmployeeProfileRepository employeeProfileRepository,
+                             AccountRepository accountRepository,
                              StaffShiftRepository staffShiftRepository,
                              ShiftRepository shiftRepository) {
         this.employeeProfileRepository = employeeProfileRepository;
+        this.accountRepository = accountRepository;
         this.staffShiftRepository = staffShiftRepository;
         this.shiftRepository = shiftRepository;
     }
@@ -43,7 +49,7 @@ public class StaffShiftService {
     public StaffCurrentShiftResponse getCurrentShift(Integer accountId) {
         EmployeeProfile employee = getEmployee(accountId);
         LocalDateTime now = LocalDateTime.now(VIETNAM_ZONE);
-        return findCurrentAssignment(employee.getEmployeeId(), now, false)
+        return findCurrentAssignment(employee.getEmployeeId(), employee.getFacilityId(), now, false)
                 .map(assignment -> toResponse(assignment.staffShift(), assignment.shift()))
                 .orElse(null);
     }
@@ -52,7 +58,8 @@ public class StaffShiftService {
     public StaffCurrentShiftResponse startCurrentShift(Integer accountId) {
         EmployeeProfile employee = getEmployee(accountId);
         LocalDateTime now = LocalDateTime.now(VIETNAM_ZONE);
-        CurrentAssignment assignment = findCurrentAssignment(employee.getEmployeeId(), now, true)
+        CurrentAssignment assignment = findCurrentAssignment(
+                employee.getEmployeeId(), employee.getFacilityId(), now, true)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
                         "Không có ca được phân công đang trong giờ để bắt đầu."));
 
@@ -68,6 +75,49 @@ public class StaffShiftService {
         return toResponse(staffShift, assignment.shift());
     }
 
+    @Transactional(readOnly = true)
+    public Integer requireOnDutyFacility(Integer accountId) {
+        if (accountId == null) {
+            throw new AccessDeniedException("Tài khoản Staff chưa được xác thực.");
+        }
+        Account account = accountRepository.findAccountByAccountId(accountId)
+                .orElseThrow(() -> new AccessDeniedException("Không tìm thấy tài khoản Staff."));
+        if (!Long.valueOf(4L).equals(account.getRoleId())) {
+            throw new AccessDeniedException("Chức năng này chỉ dành cho Staff.");
+        }
+        EmployeeProfile employee = employeeProfileRepository.findByAccountId(accountId)
+                .orElseThrow(() -> new AccessDeniedException("Không tìm thấy hồ sơ Staff."));
+        StaffCurrentShiftResponse currentShift = getCurrentShift(accountId);
+        if (currentShift == null || !currentShift.attended()) {
+            throw new AccessDeniedException("Staff phải bắt đầu ca được phân công trước khi xử lý công việc.");
+        }
+        return employee.getFacilityId();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Integer> getOnDutyStaffAccountIds(Integer facilityId) {
+        LocalDateTime now = LocalDateTime.now(VIETNAM_ZONE);
+        List<StaffShift> assignments = combineFacilityAssignments(facilityId, now.toLocalDate());
+        return assignments.stream()
+                .filter(assignment -> "ATTENDED".equalsIgnoreCase(assignment.getStatus()))
+                .filter(assignment -> {
+                    Shift shift = shiftRepository.findById(assignment.getShiftId()).orElse(null);
+                    return shift != null && "ACTIVE".equalsIgnoreCase(shift.getStatus())
+                            && isWithinShift(assignment, shift, now);
+                })
+                .map(StaffShift::getEmployeeId)
+                .distinct()
+                .map(employeeId -> employeeProfileRepository.findById(employeeId).orElse(null))
+                .filter(employee -> employee != null && facilityId.equals(employee.getFacilityId()))
+                .map(EmployeeProfile::getAccountId)
+                .filter(accountId -> accountRepository.findAccountByAccountId(accountId)
+                        .map(account -> Long.valueOf(4L).equals(account.getRoleId())
+                                && "ACTIVE".equalsIgnoreCase(account.getStatus()))
+                        .orElse(false))
+                .sorted()
+                .toList();
+    }
+
     private EmployeeProfile getEmployee(Integer accountId) {
         if (accountId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
@@ -78,7 +128,7 @@ public class StaffShiftService {
     }
 
     private java.util.Optional<CurrentAssignment> findCurrentAssignment(
-            Integer employeeId, LocalDateTime now, boolean lockRows) {
+            Integer employeeId, Integer facilityId, LocalDateTime now, boolean lockRows) {
         LocalDate today = now.toLocalDate();
         List<StaffShift> assignments = lockRows
                 ? staffShiftRepository.findAssignedShiftsForUpdate(employeeId, List.of(today, today.minusDays(1)))
@@ -86,6 +136,9 @@ public class StaffShiftService {
 
         List<CurrentAssignment> currentAssignments = new ArrayList<>();
         for (StaffShift assignment : assignments) {
+            if (!facilityId.equals(assignment.getFacilityId())) {
+                continue;
+            }
             if (!"SCHEDULED".equalsIgnoreCase(assignment.getStatus())
                     && !"ATTENDED".equalsIgnoreCase(assignment.getStatus())) {
                 continue;
@@ -109,6 +162,14 @@ public class StaffShiftService {
                 .findByEmployeeIdAndWorkDateAndStatusNot(employeeId, today, "CANCELLED"));
         assignments.addAll(staffShiftRepository
                 .findByEmployeeIdAndWorkDateAndStatusNot(employeeId, today.minusDays(1), "CANCELLED"));
+        return assignments;
+    }
+
+    private List<StaffShift> combineFacilityAssignments(Integer facilityId, LocalDate today) {
+        List<StaffShift> assignments = new ArrayList<>(staffShiftRepository
+                .findByFacilityIdAndWorkDateAndStatusNot(facilityId, today, "CANCELLED"));
+        assignments.addAll(staffShiftRepository
+                .findByFacilityIdAndWorkDateAndStatusNot(facilityId, today.minusDays(1), "CANCELLED"));
         return assignments;
     }
 

@@ -42,6 +42,7 @@ import com.swp391.backend.repository.PriceRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -82,6 +83,7 @@ public class StaffReservationService {
     private final GatePinService gatePinService;
     private final FacilityRepository facilityRepository;
     private final GatePinRepository gatePinRepository;
+    private final StaffShiftService staffShiftService;
 
     public StaffReservationService(
             ReservationRepository reservationRepository,
@@ -98,7 +100,8 @@ public class StaffReservationService {
             PriceRepository priceRepository,
             GatePinService gatePinService,
             FacilityRepository facilityRepository,
-            GatePinRepository gatePinRepository) {
+            GatePinRepository gatePinRepository,
+            StaffShiftService staffShiftService) {
         this.reservationRepository = reservationRepository;
         this.accountRepository = accountRepository;
         this.contractRepository = contractRepository;
@@ -114,6 +117,7 @@ public class StaffReservationService {
         this.gatePinService = gatePinService;
         this.facilityRepository = facilityRepository;
         this.gatePinRepository = gatePinRepository;
+        this.staffShiftService = staffShiftService;
     }
 
     public StaffReservationListResponse listReservations() {
@@ -125,6 +129,11 @@ public class StaffReservationService {
         Optional<EmployeeProfile> employee = employeeProfileRepository.findByAccountId(accountId);
         if (employee.isEmpty()) {
             return new StaffReservationListResponse(false, "Không tìm thấy hồ sơ nhân viên.", List.of());
+        }
+        try {
+            staffShiftService.requireOnDutyFacility(accountId);
+        } catch (AccessDeniedException ex) {
+            return new StaffReservationListResponse(false, ex.getMessage(), List.of());
         }
 
         List<StaffReservationListItemResponse> reservations = reservationRepository
@@ -163,6 +172,13 @@ public class StaffReservationService {
         if (employee.isEmpty()) {
             response.setSuccess(false);
             response.setMessage("Không tìm thấy hồ sơ nhân viên.");
+            return response;
+        }
+        try {
+            staffShiftService.requireOnDutyFacility(accountId);
+        } catch (AccessDeniedException ex) {
+            response.setSuccess(false);
+            response.setMessage(ex.getMessage());
             return response;
         }
 

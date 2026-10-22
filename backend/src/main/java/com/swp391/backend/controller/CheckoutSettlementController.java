@@ -7,6 +7,8 @@ import com.swp391.backend.dto.checkout.FeeDiscountRequest;
 import com.swp391.backend.entity.Payment;
 import com.swp391.backend.service.CheckoutSettlementService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -23,12 +25,18 @@ public class CheckoutSettlementController {
 
     // --- US-28: Xem dự thảo quyết toán trả kho (Staff) ---
     @GetMapping("/staff/checkout/{contractId}/preview")
-    public ResponseEntity<CheckoutPreviewResponse> getCheckoutPreview(@PathVariable Integer contractId) {
-        CheckoutPreviewResponse response = checkoutSettlementService.calculateCheckoutPreview(contractId);
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
+    public ResponseEntity<CheckoutPreviewResponse> getCheckoutPreview(
+            @PathVariable Integer contractId,
+            @AuthenticationPrincipal Integer staffAccountId) {
+        try {
+            CheckoutPreviewResponse response = checkoutSettlementService.calculateCheckoutPreview(contractId, staffAccountId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.badRequest().body(response);
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(403).body(CheckoutPreviewResponse.error(ex.getMessage()));
         }
-        return ResponseEntity.badRequest().body(response);
     }
 
     // --- US-28 & US-29: Xác nhận bàn giao trả kho & chốt quyết toán hoàn cọc / truy thu (Staff) ---
@@ -36,14 +44,17 @@ public class CheckoutSettlementController {
     public ResponseEntity<CheckoutConfirmResponse> confirmCheckout(
             @PathVariable Integer contractId,
             @RequestBody CheckoutConfirmRequest request,
-            @RequestHeader(value = "X-Account-Id", required = false) Integer staffAccountId,
-            @RequestHeader(value = "X-Facility-Id", required = false) Integer staffFacilityId) {
+            @AuthenticationPrincipal Integer staffAccountId) {
 
-        CheckoutConfirmResponse response = checkoutSettlementService.confirmCheckout(contractId, request, staffAccountId, staffFacilityId);
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
+        try {
+            CheckoutConfirmResponse response = checkoutSettlementService.confirmCheckout(contractId, request, staffAccountId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.badRequest().body(response);
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(403).body(CheckoutConfirmResponse.error(ex.getMessage()));
         }
-        return ResponseEntity.badRequest().body(response);
     }
 
     // --- US-29: Xác nhận đã chi tiền hoàn cọc (REF) cho khách hàng (Staff / Manager) ---

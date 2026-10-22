@@ -31,6 +31,7 @@ public class CheckoutSettlementService {
     private final ActivityLogRepository activityLogRepository;
     private final StorageService storageService;
     private final AccountRepository accountRepository;
+    private final StaffShiftService staffShiftService;
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private EmailService emailService;
 
@@ -44,7 +45,8 @@ public class CheckoutSettlementService {
                                    SupportTicketRepository supportTicketRepository,
                                    ActivityLogRepository activityLogRepository,
                                    StorageService storageService,
-                                   AccountRepository accountRepository) {
+                                   AccountRepository accountRepository,
+                                   StaffShiftService staffShiftService) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -56,12 +58,14 @@ public class CheckoutSettlementService {
         this.activityLogRepository = activityLogRepository;
         this.storageService = storageService;
         this.accountRepository = accountRepository;
+        this.staffShiftService = staffShiftService;
     }
 
     /**
      * US-28 & US-29: Tính toán dự thảo quyết toán trả kho & hoàn cọc
      */
-    public CheckoutPreviewResponse calculateCheckoutPreview(Integer contractId) {
+    public CheckoutPreviewResponse calculateCheckoutPreview(Integer contractId, Integer staffAccountId) {
+        staffShiftService.requireOnDutyFacility(staffAccountId);
         Optional<Contract> contractOpt = contractRepository.findById(contractId);
         if (contractOpt.isEmpty()) {
             contractOpt = contractRepository.findByReservationId(contractId);
@@ -175,7 +179,8 @@ public class CheckoutSettlementService {
      * US-28 & US-29: Xác nhận nhận bàn giao trả kho & chốt quyết toán
      */
     @Transactional
-    public CheckoutConfirmResponse confirmCheckout(Integer contractId, CheckoutConfirmRequest request, Integer staffAccountId, Integer staffFacilityId) {
+    public CheckoutConfirmResponse confirmCheckout(Integer contractId, CheckoutConfirmRequest request, Integer staffAccountId) {
+        Integer staffFacilityId = staffShiftService.requireOnDutyFacility(staffAccountId);
         if (request == null || !request.isConfirmInspection()) {
             return CheckoutConfirmResponse.error("Bắt buộc phải tích xác nhận biên bản kiểm tra thực tế theo quy định trước khi hoàn tất!");
         }

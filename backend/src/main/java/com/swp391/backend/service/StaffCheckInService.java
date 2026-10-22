@@ -29,6 +29,7 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.mail.MailException;
 import org.springframework.stereotype.Service;
@@ -68,6 +69,7 @@ public class StaffCheckInService {
     private final UnitTypeRepository unitTypeRepository;
     private final GatePinService gatePinService;
     private final EmailService emailService;
+    private final StaffShiftService staffShiftService;
 
     public StaffCheckInService(
             ReservationRepository reservationRepository,
@@ -82,7 +84,8 @@ public class StaffCheckInService {
             FacilityRepository facilityRepository,
             UnitTypeRepository unitTypeRepository,
             GatePinService gatePinService,
-            EmailService emailService) {
+            EmailService emailService,
+            StaffShiftService staffShiftService) {
         this.reservationRepository = reservationRepository;
         this.contractRepository = contractRepository;
         this.paymentRepository = paymentRepository;
@@ -96,6 +99,7 @@ public class StaffCheckInService {
         this.unitTypeRepository = unitTypeRepository;
         this.gatePinService = gatePinService;
         this.emailService = emailService;
+        this.staffShiftService = staffShiftService;
     }
 
     @Transactional
@@ -107,6 +111,11 @@ public class StaffCheckInService {
         Optional<EmployeeProfile> employee = employeeProfileRepository.findByAccountId(staffAccountId);
         if (employee.isEmpty()) {
             return checkInFailure("Employee profile was not found.");
+        }
+        try {
+            staffShiftService.requireOnDutyFacility(staffAccountId);
+        } catch (AccessDeniedException ex) {
+            return checkInFailure(ex.getMessage());
         }
         if (request == null) {
             return checkInFailure("Dữ liệu yêu cầu check-in không được để trống.");

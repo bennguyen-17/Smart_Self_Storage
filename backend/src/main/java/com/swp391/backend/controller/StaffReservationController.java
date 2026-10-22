@@ -136,6 +136,10 @@ public class StaffReservationController {
             return HttpStatus.NOT_FOUND;
         }
 
+        if (lower.contains("ca được phân công") || lower.contains("bắt đầu ca")) {
+            return HttpStatus.FORBIDDEN;
+        }
+
         if (lower.contains("pending_checkin")
                 || lower.contains("not in a changeable status")
                 || lower.contains("not in a cancellable status")

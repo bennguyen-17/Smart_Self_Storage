@@ -23,4 +23,6 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     List<SupportTicket> findByContractId(Integer contractId);
 
     List<SupportTicket> findByUnitCode(String unitCode);
+
+    long countByAssignedStaffIdAndStatusIn(Integer assignedStaffId, List<String> statuses);
 }
