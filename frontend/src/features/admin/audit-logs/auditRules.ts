@@ -58,6 +58,18 @@ export function actorLabel(log: ActivityLogEntry): string {
   return log.actorName ?? `Tài khoản #${log.accountId}`
 }
 
+/** Nhật ký chia 2 loại (nhóm chốt 22/10): hoạt động của khách hàng và hoạt động nội bộ (Staff, Manager, Admin, BOM, hệ thống tự động) */
+export type LogAudience = "CUSTOMER" | "INTERNAL"
+
+export const AUDIENCE_LABEL: Record<LogAudience, string> = {
+  CUSTOMER: "Khách hàng",
+  INTERNAL: "Nội bộ",
+}
+
+export function logAudience(log: Pick<ActivityLogEntry, "actorRole">): LogAudience {
+  return log.actorRole?.toUpperCase() === "CUSTOMER" ? "CUSTOMER" : "INTERNAL"
+}
+
 /** Khoảng ngày hợp lệ khi chưa chọn đủ 2 đầu, hoặc ngày bắt đầu không sau ngày kết thúc */
 export function isRangeValid(from: string, to: string): boolean {
   return !from || !to || from <= to

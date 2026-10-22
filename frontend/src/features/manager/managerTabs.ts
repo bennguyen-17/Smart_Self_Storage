@@ -3,6 +3,7 @@
 
 import type { ComponentType } from "react"
 import {
+  BanknoteIcon,
   ChartColumnIcon,
   ClipboardListIcon,
   DoorOpenIcon,
@@ -17,11 +18,20 @@ import CheckoutDebtPanel from "@/features/manager/facility-contracts/components/
 import CustomersContractsPanel from "@/features/manager/facility-contracts/components/CustomersContractsPanel"
 import FacilityReportPanel from "@/features/manager/facility-report/components/FacilityReportPanel"
 import GateLogPanel from "@/features/manager/gate-logs/components/GateLogPanel"
+import RefundsPanel from "@/features/manager/refunds/components/RefundsPanel"
 import ShiftsPanel from "@/features/manager/staff-shifts/components/ShiftsPanel"
 import UnitManagementPanel from "@/features/manager/unit-management/components/UnitManagementPanel"
 import ManagerTicketPanel from "@/features/manager/ticket-escalation/components/ManagerTicketPanel"
 
-export type ManagerTabKey = "units" | "reports" | "customers" | "workflow" | "staff" | "gate-logs" | "tickets"
+export type ManagerTabKey =
+  | "units"
+  | "reports"
+  | "customers"
+  | "workflow"
+  | "refunds"
+  | "staff"
+  | "gate-logs"
+  | "tickets"
 
 export interface ManagerTab {
   key: ManagerTabKey
@@ -83,6 +93,17 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     owner: "Vỹ",
     description: "Nghiệm thu trả kho, quyết toán cọc, truy thu và duyệt miễn/giảm phí.",
     component: CheckoutDebtPanel,
+  },
+  {
+    key: "refunds",
+    label: "Hoàn tiền",
+    title: "Hoàn tiền cho khách hàng",
+    hint: "Chuyển khoản & xác nhận",
+    icon: BanknoteIcon,
+    stories: "US-26",
+    owner: "Vỹ",
+    description: "Phiếu hoàn cọc / hoàn tiền thừa: Manager chuyển khoản, đính kèm biên lai và xác nhận.",
+    component: RefundsPanel,
   },
   {
     key: "staff",

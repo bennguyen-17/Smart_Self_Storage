@@ -1,20 +1,24 @@
 import { StatusBadge, type BadgeTone } from "@/components/internal/components/PanelKit"
 import { formatVnd } from "@/lib/format"
 
-import { CHECKOUT_STAGE_LABEL, CONTRACT_STATUS_LABEL, daysRemaining, unpaidTotal } from "../contractRules"
+import { CHECKOUT_STAGE_LABEL, CONTRACT_STATUS_LABEL, daysRemaining, isClosedContract, unpaidTotal } from "../contractRules"
 import type { CheckoutStage, ContractStatus, FacilityContract } from "../types"
 
 const STATUS_TONE: Record<ContractStatus, BadgeTone> = {
   PENDING_CHECKIN: "amber",
   ACTIVE: "green",
   OVERDUE: "red",
-  TERMINATED: "slate",
+  TERMINATED: "blue",
+  COMPLETED: "slate",
+  FORFEITED: "red",
+  CANCELED: "slate",
 }
 
 const STAGE_TONE: Record<CheckoutStage, BadgeTone> = { NONE: "slate", INSPECTED: "amber", HANDED_OVER: "blue" }
 
 export function ContractStatusBadge({ status }: { status: ContractStatus }) {
-  return <StatusBadge tone={STATUS_TONE[status]}>{CONTRACT_STATUS_LABEL[status]}</StatusBadge>
+  // Trạng thái BE mới thêm mà FE chưa biết: vẫn hiện mã, màu trung tính, không vỡ giao diện
+  return <StatusBadge tone={STATUS_TONE[status] ?? "slate"}>{CONTRACT_STATUS_LABEL[status] ?? status}</StatusBadge>
 }
 
 export function CheckoutStageBadge({ stage }: { stage: CheckoutStage }) {
@@ -23,7 +27,7 @@ export function CheckoutStageBadge({ stage }: { stage: CheckoutStage }) {
 
 /** "Còn 30 ngày" / "Hết hạn hôm nay" / "Quá 4 ngày" với màu theo mức độ gấp */
 export function DaysLeft({ contract, today }: { contract: FacilityContract; today: string }) {
-  if (contract.status === "TERMINATED") return <span className="text-muted">—</span>
+  if (isClosedContract(contract.status)) return <span className="text-muted">—</span>
   const days = daysRemaining(contract.endDate, today)
   if (days < 0) return <span className="font-bold text-rose-600 dark:text-rose-400">Quá {-days} ngày</span>
   if (days === 0) return <span className="font-bold text-amber-700 dark:text-amber-300">Hết hạn hôm nay</span>

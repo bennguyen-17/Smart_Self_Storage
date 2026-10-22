@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { BadgePercentIcon } from "lucide-react"
+import { BadgePercentIcon, TriangleAlertIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -16,19 +16,28 @@ import { usePagedRows } from "@/components/internal/usePagedRows"
 import { matchesQuery } from "@/components/internal/textSearch"
 import { getManagerContext } from "@/features/manager/unit-management/managerContext"
 import { useAsyncData } from "@/hooks/useAsyncData"
-import { formatVnd } from "@/lib/format"
+import { formatVnd, todayInVietnam } from "@/lib/format"
 
 import { listFacilityContracts } from "../api/contractApi"
-import { FEE_TYPE_LABEL, needsFollowUp, unpaidTotal } from "../contractRules"
+import {
+  FEE_TYPE_LABEL,
+  FORFEIT_AFTER_DAYS,
+  isClosedContract,
+  needsFollowUp,
+  needsForfeitHandling,
+  overdueDays,
+  unpaidTotal,
+} from "../contractRules"
 import type { FacilityContract, FeeInvoice } from "../types"
 import { CheckoutStageBadge, ContractStatusBadge } from "./ContractBadges"
 import FeeDiscountSheet from "./FeeDiscountSheet"
 
-type Focus = "ALL" | "OVERDUE" | "CHECKOUT" | "DEBT"
+type Focus = "ALL" | "OVERDUE" | "FORFEIT" | "CHECKOUT" | "DEBT"
 
-function matchesFocus(c: FacilityContract, focus: Focus): boolean {
+function matchesFocus(c: FacilityContract, focus: Focus, today: string): boolean {
   if (focus === "OVERDUE") return c.status === "OVERDUE"
-  if (focus === "CHECKOUT") return c.status !== "TERMINATED" && c.checkoutStage !== "NONE"
+  if (focus === "FORFEIT") return needsForfeitHandling(c, today)
+  if (focus === "CHECKOUT") return !isClosedContract(c.status) && c.checkoutStage !== "NONE"
   if (focus === "DEBT") return unpaidTotal(c) > 0
   return true
 }
@@ -39,6 +48,7 @@ function matchesFocus(c: FacilityContract, focus: Focus): boolean {
  */
 function CheckoutDebtPanel() {
   const ctx = useMemo(() => getManagerContext(), [])
+  const today = todayInVietnam()
   const [reloadCount, setReloadCount] = useState(0)
   const [query, setQuery] = useState("")
   const [focus, setFocus] = useState<Focus>("ALL")
@@ -47,7 +57,7 @@ function CheckoutDebtPanel() {
 
   const followUps = (data ?? []).filter(needsFollowUp)
   const rows = followUps
-    .filter((c) => matchesFocus(c, focus))
+    .filter((c) => matchesFocus(c, focus, today))
     .filter((c) => matchesQuery(query, [c.customerName, c.customerPhone, c.contractCode, c.unitCode]))
     .sort((a, b) => unpaidTotal(b) - unpaidTotal(a))
   const { slice, pagination } = usePagedRows(rows, `${query}|${focus}`)
@@ -67,6 +77,7 @@ function CheckoutDebtPanel() {
           options={[
             { value: "ALL", label: "Tất cả" },
             { value: "OVERDUE", label: "Quá hạn" },
+            { value: "FORFEIT", label: `Quá hạn trên ${FORFEIT_AFTER_DAYS} ngày (cần thanh lý)` },
             { value: "CHECKOUT", label: "Đang trả kho" },
             { value: "DEBT", label: "Còn phí chưa thu" },
           ]}
@@ -100,6 +111,17 @@ function CheckoutDebtPanel() {
               <td className="text-title px-4 py-3 font-mono whitespace-nowrap">{c.unitCode}</td>
               <td className="px-4 py-3">
                 <ContractStatusBadge status={c.status} />
+                {c.status === "OVERDUE" && (
+                  <p className="mt-1 font-semibold whitespace-nowrap text-rose-600 dark:text-rose-400">
+                    Quá hạn {overdueDays(c, today)} ngày
+                  </p>
+                )}
+                {needsForfeitHandling(c, today) && (
+                  <p className="mt-1 flex items-center gap-1 font-semibold text-rose-700 dark:text-rose-300">
+                    <TriangleAlertIcon aria-hidden="true" className="size-3.5 shrink-0" />
+                    Cần lập hồ sơ niêm phong, thanh lý tài sản
+                  </p>
+                )}
               </td>
               <td className="px-4 py-3">
                 <CheckoutStageBadge stage={c.checkoutStage} />
