@@ -29,9 +29,15 @@ const overdueItem: StaffReservationItem = {
   depRemainingAmount: 0,
 }
 
+const overduePaidItem: StaffReservationItem = {
+  ...overdueItem,
+  unpaidPenaltyAmount: 0,
+}
+
 function renderTable(item: StaffReservationItem) {
   const onCollectPenalty = vi.fn()
   const onRenew = vi.fn()
+  const onCheckout = vi.fn()
   const user = userEvent.setup()
   render(
     <CheckinContractTable
@@ -41,21 +47,26 @@ function renderTable(item: StaffReservationItem) {
       onRetry={vi.fn()}
       onOpenDetail={vi.fn()}
       onCheckin={vi.fn()}
-      onCheckout={vi.fn()}
+      onCheckout={onCheckout}
       onCollectPenalty={onCollectPenalty}
       onRenew={onRenew}
     />
   )
-  return { user, onCollectPenalty, onRenew }
+  return { user, onCollectPenalty, onRenew, onCheckout }
 }
 
 describe("CheckinContractTable: hành động cho hợp đồng quá hạn", () => {
-  test("còn nợ phạt → chỉ hiển thị nút Thu phạt", () => {
+  test("còn nợ phạt → chỉ hiện nút Thu phạt", () => {
     renderTable(overdueItem)
     expect(
       screen.getByRole("button", { name: /thu phạt/i })
     ).toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: /gia hạn/i })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: /gia hạn/i })
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: /trả kho/i })
+    ).not.toBeInTheDocument()
   })
 
   test("bấm Thu phạt → gọi onCollectPenalty kèm đúng HĐ", async () => {
@@ -65,18 +76,26 @@ describe("CheckinContractTable: hành động cho hợp đồng quá hạn", () 
     expect(onCollectPenalty).toHaveBeenCalledWith(overdueItem)
   })
 
-  test("đã trả hết phạt → hiển thị nút Gia hạn và Trả kho, bấm Gia hạn gọi onRenew", async () => {
-    const paidPenaltyItem: StaffReservationItem = {
-      ...overdueItem,
-      unpaidPenaltyAmount: 0,
-    }
-    const { user, onRenew } = renderTable(paidPenaltyItem)
-    expect(screen.queryByRole("button", { name: /thu phạt/i })).not.toBeInTheDocument()
+  test("đã trả phạt → hiện nút Gia hạn & Trả kho, không còn Thu phạt", () => {
+    renderTable(overduePaidItem)
+    expect(screen.getByRole("button", { name: /gia hạn/i })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /trả kho/i })).toBeInTheDocument()
-    const renewBtn = screen.getByRole("button", { name: /gia hạn/i })
-    expect(renewBtn).toBeInTheDocument()
-    await user.click(renewBtn)
+    expect(
+      screen.queryByRole("button", { name: /thu phạt/i })
+    ).not.toBeInTheDocument()
+  })
+
+  test("bấm Gia hạn → gọi onRenew kèm đúng HĐ", async () => {
+    const { user, onRenew } = renderTable(overduePaidItem)
+    await user.click(screen.getByRole("button", { name: /gia hạn/i }))
     expect(onRenew).toHaveBeenCalledTimes(1)
-    expect(onRenew).toHaveBeenCalledWith(paidPenaltyItem)
+    expect(onRenew).toHaveBeenCalledWith(overduePaidItem)
+  })
+
+  test("bấm Trả kho → gọi onCheckout kèm đúng HĐ", async () => {
+    const { user, onCheckout } = renderTable(overduePaidItem)
+    await user.click(screen.getByRole("button", { name: /trả kho/i }))
+    expect(onCheckout).toHaveBeenCalledTimes(1)
+    expect(onCheckout).toHaveBeenCalledWith(overduePaidItem)
   })
 })
