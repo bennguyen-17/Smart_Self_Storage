@@ -476,7 +476,7 @@ public class CheckoutSettlementService {
                             return "PENDING".equalsIgnoreCase(cp.getStatus());
                         }
                         if (isCmp) {
-                            return !"PAID".equalsIgnoreCase(cp.getStatus()) && !"CANCELLED".equalsIgnoreCase(cp.getStatus()) && !"CANCELED".equalsIgnoreCase(cp.getStatus());
+                            return !"PAID".equalsIgnoreCase(cp.getStatus()) && !"CANCELLED".equalsIgnoreCase(cp.getStatus());
                         }
                         return false;
                     });
@@ -542,7 +542,7 @@ public class CheckoutSettlementService {
         if ("PAID".equalsIgnoreCase(p.getStatus())) {
             throw new IllegalArgumentException("Hóa đơn đã thanh toán xong, không thể miễn giảm!");
         }
-        if ("CANCELLED".equalsIgnoreCase(p.getStatus()) || "CANCELED".equalsIgnoreCase(p.getStatus())) {
+        if ("CANCELLED".equalsIgnoreCase(p.getStatus())) {
             throw new IllegalArgumentException("Hóa đơn đã được miễn giảm toàn bộ trước đó, không thể miễn giảm thêm!");
         }
 
@@ -566,7 +566,7 @@ public class CheckoutSettlementService {
 
         if (request.getDiscountPercent() != null && request.getDiscountPercent() >= 100) {
             // Miễn 100% -> Khoản phí chuyển sang CANCELED
-            p.setStatus("CANCELED");
+            p.setStatus("CANCELLED");
             p.setPaymentStatus("FAILED");
             p.setAmount(BigDecimal.ZERO);
         } else if (request.getDiscountPercent() != null && request.getDiscountPercent() > 0) {
@@ -576,7 +576,7 @@ public class CheckoutSettlementService {
         } else if (request.getDiscountAmount() != null && request.getDiscountAmount().compareTo(BigDecimal.ZERO) > 0) {
             newAmount = originalAmount.subtract(request.getDiscountAmount());
             if (newAmount.compareTo(BigDecimal.ZERO) <= 0) {
-                p.setStatus("CANCELED");
+                p.setStatus("CANCELLED");
                 p.setPaymentStatus("FAILED");
                 p.setAmount(BigDecimal.ZERO);
             } else {

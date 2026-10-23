@@ -59,14 +59,14 @@ export function FacilitiesSection({
       aria-labelledby="facilities-title"
       className="relative overflow-hidden py-(--l-section-space)"
     >
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
         <SectionHeading
           id="facilities-title"
           title={FACILITIES_SECTION.title}
           lead={FACILITIES_SECTION.lead}
         />
 
-        <Reveal className="flex flex-col gap-6">
+        <Reveal className="flex flex-col gap-5">
           <div
             role="tablist"
             aria-label="Chọn thành phố"
@@ -89,7 +89,7 @@ export function FacilitiesSection({
                   onClick={() => handleCitySelect(c.id)}
                   onKeyDown={(e) => onKeyDown(e, i)}
                   className={cn(
-                    "relative isolate min-h-11 shrink-0 rounded-full px-5 text-[0.9375rem] font-semibold transition-colors duration-200 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                    "relative isolate min-h-9.5 shrink-0 rounded-full px-4 text-sm font-semibold transition-colors duration-200 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                     selected
                       ? "text-white shadow-md shadow-blue-500/30"
                       : "text-foreground hover:text-blue-600 dark:hover:text-blue-400"
@@ -121,7 +121,7 @@ export function FacilitiesSection({
             <AnimatePresence mode="wait" initial={false}>
               <motion.ul
                 key={city}
-                className="grid gap-5 md:grid-cols-2 lg:grid-cols-3"
+                className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
@@ -130,19 +130,18 @@ export function FacilitiesSection({
                 {list.map((f) => (
                   <li
                     key={f.code}
-                    className="flex flex-col gap-3.5 rounded-(--l-radius-card) l-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                    className="flex flex-col gap-3 rounded-(--l-radius-card) l-card p-5.5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                   >
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-xl leading-[1.35] font-bold text-foreground">
+                      <h3 className="text-lg leading-[1.35] font-bold text-foreground">
                         {f.name}
                       </h3>
-
                     </div>
-                    <p className="flex gap-2 text-[0.9375rem] text-muted-foreground">
-                      <MapPin className="mt-1 size-4 shrink-0 text-blue-500" aria-hidden />
+                    <p className="flex gap-2 text-sm text-muted-foreground">
+                      <MapPin className="mt-0.5 size-4 shrink-0 text-blue-500" aria-hidden />
                       <span>{f.address}</span>
                     </p>
-                    <ul className="flex flex-col gap-2 pt-1 text-[0.9375rem] text-foreground/90">
+                    <ul className="flex flex-col gap-1.5 pt-0.5 text-sm text-foreground/90">
                       {f.highlights.map((h) => (
                         <li key={h} className="flex items-center gap-2">
                           <span
