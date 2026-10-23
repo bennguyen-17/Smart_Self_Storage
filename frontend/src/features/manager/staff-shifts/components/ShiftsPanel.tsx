@@ -28,7 +28,8 @@ function ShiftsPanel() {
   const [date, setDate] = useState(today)
   const [reloadCount, setReloadCount] = useState(0)
 
-  const staff = useAsyncData("facility-staff", () => listFacilityStaff(ctx))
+  // Có reloadCount trong key để nút "Thử lại" tải lại cả danh sách nhân viên khi lần đầu bị lỗi
+  const staff = useAsyncData(`facility-staff#${reloadCount}`, () => listFacilityStaff(ctx))
   const schedule = useAsyncData(`shifts:${date}#${reloadCount}`, () =>
     getDaySchedule(ctx, date)
   )

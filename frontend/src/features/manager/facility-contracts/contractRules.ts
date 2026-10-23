@@ -8,8 +8,28 @@ export const CONTRACT_STATUS_LABEL: Record<ContractStatus, string> = {
   PENDING_CHECKIN: "Chờ nhận kho",
   ACTIVE: "Đang hiệu lực",
   OVERDUE: "Quá hạn",
-  TERMINATED: "Đã thanh lý",
+  TERMINATED: "Đã trả kho, chờ tất toán",
+  COMPLETED: "Đã hoàn tất",
+  FORFEITED: "Đã tịch thu, thanh lý tài sản",
+  CANCELED: "Đã hủy",
 }
+
+/**
+ * DB có thể lẫn 2 cách viết "CANCELED" / "CANCELLED" (ENUM nhận cả hai); FE chỉ dùng "CANCELED".
+ * Trạng thái khác giữ nguyên, viết hoa.
+ */
+export function normalizeContractStatus(status: string): ContractStatus {
+  const s = status.trim().toUpperCase()
+  return (s === "CANCELLED" ? "CANCELED" : s) as ContractStatus
+}
+
+/** Hợp đồng đã kết thúc (không còn tính ngày còn lại, không còn trả kho) */
+export function isClosedContract(status: ContractStatus | string): boolean {
+  return status === "TERMINATED" || status === "COMPLETED" || status === "FORFEITED" || status === "CANCELED"
+}
+
+/** Quá hạn đủ số ngày này thì hợp đồng chuyển FORFEITED, cơ sở được niêm phong và thanh lý tài sản (BE chuyển đúng ngày thứ 30) */
+export const FORFEIT_AFTER_DAYS = 30
 
 export const CHECKOUT_STAGE_LABEL: Record<CheckoutStage, string> = {
   NONE: "Chưa trả kho",
@@ -29,6 +49,41 @@ export function daysRemaining(endDate: string, today: string): number {
   return Math.round((Date.parse(`${endDate}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / DAY_MS)
 }
 
+/** Số ngày đã quá hạn của hợp đồng đang OVERDUE (0 nếu không quá hạn) */
+export function overdueDays(contract: Pick<FacilityContract, "status" | "endDate">, today: string): number {
+  if (contract.status !== "OVERDUE") return 0
+  return Math.max(0, -daysRemaining(contract.endDate, today))
+}
+
+/**
+ * Cần Manager lập hồ sơ niêm phong, thanh lý tài sản: BE đã chuyển FORFEITED, hoặc đã quá hạn
+ * đủ 30 ngày mà tác vụ tự động 00:00 của BE chưa kịp chuyển.
+ */
+export function needsForfeitHandling(
+  contract: Pick<FacilityContract, "status" | "endDate" | "forfeitProcessed">,
+  today: string
+): boolean {
+  if (contract.status === "FORFEITED") return !contract.forfeitProcessed
+  return overdueDays(contract, today) >= FORFEIT_AFTER_DAYS
+}
+
+/** Chỉ hợp đồng BE đã chuyển FORFEITED mới được xác nhận (BE trả 409 với trạng thái khác) */
+export function canConfirmForfeitProcessed(contract: Pick<FacilityContract, "status" | "forfeitProcessed">): boolean {
+  return contract.status === "FORFEITED" && !contract.forfeitProcessed
+}
+
+export const FORFEIT_NOTE_MIN = 10
+export const FORFEIT_NOTE_MAX = 500
+
+/** Ghi chú xử lý tài sản: bắt buộc, đủ chi tiết để đối soát (cắt khóa, niêm phong, xử lý tài sản thế nào) */
+export function forfeitNoteError(note: string): string | null {
+  const n = note.trim().length
+  if (n === 0) return "Nhập ghi chú xử lý tài sản"
+  if (n < FORFEIT_NOTE_MIN) return `Ghi chú ít nhất ${FORFEIT_NOTE_MIN} ký tự`
+  if (n > FORFEIT_NOTE_MAX) return `Ghi chú tối đa ${FORFEIT_NOTE_MAX} ký tự`
+  return null
+}
+
 /** Tổng phí chưa thu của hợp đồng */
 export function unpaidTotal(contract: FacilityContract): number {
   return contract.fees.filter((f) => f.status === "UNPAID").reduce((sum, f) => sum + f.amount, 0)
@@ -37,7 +92,8 @@ export function unpaidTotal(contract: FacilityContract): number {
 /** Hợp đồng cần Manager để mắt ở trang "Trả kho & công nợ": quá hạn, đang trả kho, hoặc còn phí chưa thu */
 export function needsFollowUp(contract: FacilityContract): boolean {
   if (contract.status === "OVERDUE") return true
-  if (contract.status !== "TERMINATED" && contract.checkoutStage !== "NONE") return true
+  if (contract.status === "FORFEITED" && !contract.forfeitProcessed) return true
+  if (!isClosedContract(contract.status) && contract.checkoutStage !== "NONE") return true
   return unpaidTotal(contract) > 0
 }
 

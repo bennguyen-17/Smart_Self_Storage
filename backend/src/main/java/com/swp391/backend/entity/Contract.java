@@ -22,7 +22,7 @@ public class Contract {
     private LocalDateTime terminatedAt;
 
     @Column(nullable = false, length = 30)
-    private String status = "PENDING_CHECKIN"; // States: INITIATED, PENDING_CHECKIN, ACTIVE, OVERDUE, TERMINATED, FORFEITED, CANCELED
+    private String status = "PENDING_CHECKIN"; // States: INITIATED, PENDING_CHECKIN, ACTIVE, OVERDUE, TERMINATED, COMPLETED, FORFEITED, CANCELED
 
     @Column(length = 50)
     private String cancelReason; // NO_SHOW, CUSTOMER_REQUEST, VIOLATION, EARLY_TERMINATION

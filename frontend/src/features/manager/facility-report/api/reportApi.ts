@@ -6,12 +6,19 @@ import apiClient, { isMockMode } from "@/lib/apiClient"
 import { managerHeaders } from "@/features/manager/unit-management/managerContext"
 import type { ManagerContext } from "@/features/manager/unit-management/types"
 
+import type { ReportRange } from "../reportRules"
 import type { ManagerDashboard } from "../types"
 import { mockGetManagerDashboard } from "./reportApi.mock"
 
-/** GET /api/manager/dashboard/overview (BE lọc theo cơ sở trong header X-Facility-Id) */
-export async function getManagerDashboard(ctx: ManagerContext): Promise<ManagerDashboard> {
+/**
+ * GET /api/manager/dashboard/overview?from=&to= (BE lọc theo cơ sở trong header X-Facility-Id).
+ * from/to (YYYY-MM-DD) chỉ áp cho doanh thu, hoàn tiền, miễn giảm, ticket; số ô kho và hợp đồng là số hiện tại.
+ */
+export async function getManagerDashboard(ctx: ManagerContext, range?: ReportRange): Promise<ManagerDashboard> {
   if (isMockMode()) return mockGetManagerDashboard()
-  const body = await apiClient.get("/manager/dashboard/overview", { headers: managerHeaders(ctx) })
+  const params: Record<string, string> = {}
+  if (range?.from) params.from = range.from
+  if (range?.to) params.to = range.to
+  const body = await apiClient.get("/manager/dashboard/overview", { params, headers: managerHeaders(ctx) })
   return unwrapApiData<ManagerDashboard>(body)
 }

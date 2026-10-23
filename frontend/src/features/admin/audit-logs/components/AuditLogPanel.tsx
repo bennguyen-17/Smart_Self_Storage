@@ -22,6 +22,9 @@ import { listActivityLogs } from "../api/auditApi"
 import {
   ACTION_LABEL,
   ACTIVITY_CSV_HEADER,
+  AUDIENCE_LABEL,
+  logAudience,
+  type LogAudience,
   activityCsvRows,
   actionLabel,
   actorLabel,
@@ -45,13 +48,17 @@ const EMPTY_FILTER: ActivityFilter = {
 function AuditLogPanel() {
   const [reloadCount, setReloadCount] = useState(0)
   const [filter, setFilter] = useState<ActivityFilter>(EMPTY_FILTER)
+  const [audience, setAudience] = useState<LogAudience>("CUSTOMER")
   const { data, error, isLoading } = useAsyncData(
     `activity:${filter.from}:${filter.to}#${reloadCount}`,
     () => listActivityLogs({ from: filter.from, to: filter.to })
   )
-  const all = data ?? []
+  const loaded = data ?? []
+  const counts: Record<LogAudience, number> = { CUSTOMER: 0, INTERNAL: 0 }
+  for (const l of loaded) counts[logAudience(l)] += 1
+  const all = loaded.filter((l) => logAudience(l) === audience)
   const rows = filterActivityLogs(all, filter)
-  const { slice, pagination } = usePagedRows(rows, JSON.stringify(filter))
+  const { slice, pagination } = usePagedRows(rows, `${audience}|${JSON.stringify(filter)}`)
   const rangeOk = isRangeValid(filter.from, filter.to)
   const update = (patch: Partial<ActivityFilter>) =>
     setFilter((f) => ({ ...f, ...patch }))
@@ -68,6 +75,27 @@ function AuditLogPanel() {
 
   return (
     <section aria-label="Nhật ký hoạt động hệ thống" className="space-y-4">
+      <div role="tablist" aria-label="Loại nhật ký" className="card-box inline-flex gap-1 rounded-2xl border p-1 shadow-sm">
+        {(Object.keys(AUDIENCE_LABEL) as LogAudience[]).map((a) => (
+          <button
+            key={a}
+            type="button"
+            role="tab"
+            aria-selected={audience === a}
+            onClick={() => setAudience(a)}
+            className={cn(
+              "cursor-pointer rounded-xl px-4 py-2 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none",
+              audience === a ? "bg-blue-600 text-white shadow-sm" : "text-title hover:bg-slate-100 dark:hover:bg-slate-800"
+            )}
+          >
+            {AUDIENCE_LABEL[a]}{" "}
+            <span className={cn("ml-1 tabular-nums", audience === a ? "text-blue-100" : "text-muted")}>
+              {isLoading ? "…" : counts[a]}
+            </span>
+          </button>
+        ))}
+      </div>
+
       <FilterBar>
         <SearchFilter
           value={filter.query}
@@ -103,7 +131,7 @@ function AuditLogPanel() {
           disabled={rows.length === 0}
           onClick={() =>
             downloadCsv(
-              `nhat-ky-hoat-dong-${todayInVietnam()}.csv`,
+              `nhat-ky-${audience === "CUSTOMER" ? "khach-hang" : "noi-bo"}-${todayInVietnam()}.csv`,
               toCsv(ACTIVITY_CSV_HEADER, activityCsvRows(rows))
             )
           }
@@ -130,7 +158,7 @@ function AuditLogPanel() {
       />
 
       <TableCard
-        caption="Nhật ký hoạt động hệ thống"
+        caption={`Nhật ký hoạt động: ${AUDIENCE_LABEL[audience].toLowerCase()}`}
         columns={[
           { header: "Thời gian" },
           { header: "Người thực hiện" },

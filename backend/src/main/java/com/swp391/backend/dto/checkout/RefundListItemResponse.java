@@ -8,6 +8,7 @@ public class RefundListItemResponse {
     private Integer paymentId;
     private String invoiceNumber;
     private Integer contractId;
+    private String contractCode;
     private String reservationCode;
     private String unitCode;
     private String customerName;
@@ -16,9 +17,14 @@ public class RefundListItemResponse {
     private String refundBankName;
     private String refundAccountNumber;
     private String refundAccountName;
+    private String refundType;
     private String cancelReason;
     private String status;
     private LocalDateTime issuedAt;
+    private LocalDateTime refundedAt;
+    private String transactionCode;
+    private String evidenceUrl;
+    private String confirmedByName;
 
     public RefundListItemResponse() {
     }
@@ -31,6 +37,7 @@ public class RefundListItemResponse {
         this.invoiceNumber = invoiceNumber;
         this.contractId = contractId;
         this.reservationCode = reservationCode;
+        this.contractCode = reservationCode;
         this.unitCode = unitCode;
         this.customerName = customerName;
         this.customerPhone = customerPhone;
@@ -65,6 +72,14 @@ public class RefundListItemResponse {
 
     public void setContractId(Integer contractId) {
         this.contractId = contractId;
+    }
+
+    public String getContractCode() {
+        return contractCode;
+    }
+
+    public void setContractCode(String contractCode) {
+        this.contractCode = contractCode;
     }
 
     public String getReservationCode() {
@@ -131,6 +146,14 @@ public class RefundListItemResponse {
         this.refundAccountName = refundAccountName;
     }
 
+    public String getRefundType() {
+        return refundType;
+    }
+
+    public void setRefundType(String refundType) {
+        this.refundType = refundType;
+    }
+
     public String getCancelReason() {
         return cancelReason;
     }
@@ -153,5 +176,37 @@ public class RefundListItemResponse {
 
     public void setIssuedAt(LocalDateTime issuedAt) {
         this.issuedAt = issuedAt;
+    }
+
+    public LocalDateTime getRefundedAt() {
+        return refundedAt;
+    }
+
+    public void setRefundedAt(LocalDateTime refundedAt) {
+        this.refundedAt = refundedAt;
+    }
+
+    public String getTransactionCode() {
+        return transactionCode;
+    }
+
+    public void setTransactionCode(String transactionCode) {
+        this.transactionCode = transactionCode;
+    }
+
+    public String getEvidenceUrl() {
+        return evidenceUrl;
+    }
+
+    public void setEvidenceUrl(String evidenceUrl) {
+        this.evidenceUrl = evidenceUrl;
+    }
+
+    public String getConfirmedByName() {
+        return confirmedByName;
+    }
+
+    public void setConfirmedByName(String confirmedByName) {
+        this.confirmedByName = confirmedByName;
     }
 }

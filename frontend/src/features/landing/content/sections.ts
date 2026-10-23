@@ -1,9 +1,8 @@
-// Thứ tự và bật/tắt section của landing. Đổi thứ tự mảng để đổi thứ tự trên trang;
-// enabled: false để ẩn section (tự ẩn luôn link trên nav).
+// Thứ tự và cấu hình các section của landing page.
+// Đổi thứ tự mảng để đổi thứ tự trên trang.
 
 export type SectionId =
   | "use-cases"
-  | "estimator"
   | "pricing"
   | "facilities"
   | "process"
@@ -20,8 +19,7 @@ export interface SectionConfig {
 
 export const SECTIONS: readonly SectionConfig[] = [
   { id: "use-cases", enabled: true },
-  { id: "estimator", navLabel: "Tính cỡ kho", enabled: true },
-  { id: "pricing", navLabel: "Bảng giá", enabled: true },
+  { id: "pricing", navLabel: "Bảng giá & Cỡ kho", enabled: true },
   { id: "facilities", navLabel: "Cơ sở", enabled: true },
   { id: "process", navLabel: "Cách thuê", enabled: true },
   { id: "testimonials", enabled: false },

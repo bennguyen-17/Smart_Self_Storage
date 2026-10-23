@@ -51,6 +51,28 @@ public class DashboardService {
      * US-33: Dashboard & Báo cáo cơ sở cho Facility Manager
      */
     public ManagerDashboardResponse getManagerDashboard(Integer facilityId) {
+        return getManagerDashboard(facilityId, null, null);
+    }
+
+    /**
+     * B5 / US-33 / BR-51: Báo cáo lọc theo khoảng thời gian (from, to)
+     * Doanh thu, hoàn tiền, miễn giảm, ticket tính trong khoảng; số ô, hợp đồng hiệu lực vẫn là snapshot hiện tại.
+     */
+    public ManagerDashboardResponse getManagerDashboard(Integer facilityId, String fromStr, String toStr) {
+        LocalDateTime parsedFrom = null;
+        LocalDateTime parsedTo = null;
+        if (fromStr != null && !fromStr.isBlank()) {
+            try {
+                parsedFrom = java.time.LocalDate.parse(fromStr.trim()).atStartOfDay();
+            } catch (Exception ignored) {}
+        }
+        if (toStr != null && !toStr.isBlank()) {
+            try {
+                parsedTo = java.time.LocalDate.parse(toStr.trim()).atTime(23, 59, 59);
+            } catch (Exception ignored) {}
+        }
+        final LocalDateTime fromLdt = parsedFrom;
+        final LocalDateTime toLdt = parsedTo;
         Optional<Facility> facOpt = facilityRepository.findById(facilityId);
         if (facOpt.isEmpty()) {
             throw new IllegalArgumentException("Không tìm thấy cơ sở #" + facilityId);
@@ -89,7 +111,7 @@ public class DashboardService {
         long activeContracts = contracts.stream().filter(c -> "ACTIVE".equalsIgnoreCase(c.getStatus())).count();
         long pendingCheckin = contracts.stream().filter(c -> "PENDING_CHECKIN".equalsIgnoreCase(c.getStatus())).count();
         long overdueContracts = contracts.stream().filter(c -> "OVERDUE".equalsIgnoreCase(c.getStatus())).count();
-        long terminatedContracts = contracts.stream().filter(c -> "TERMINATED".equalsIgnoreCase(c.getStatus())).count();
+        long terminatedContracts = contracts.stream().filter(c -> "TERMINATED".equalsIgnoreCase(c.getStatus()) || "COMPLETED".equalsIgnoreCase(c.getStatus())).count();
 
         // 3. Thống kê Tài chính Doanh thu
         Set<Integer> contractIds = contracts.stream().map(Contract::getContractId).collect(Collectors.toSet());
@@ -104,24 +126,39 @@ public class DashboardService {
         BigDecimal totalRefunds = BigDecimal.ZERO;
         BigDecimal depositHolding = BigDecimal.ZERO;
         BigDecimal forfeitedDeposit = BigDecimal.ZERO;
+        BigDecimal waivedAmount = BigDecimal.ZERO;
 
         for (Payment p : payments) {
             String invNum = p.getInvoiceNumber() != null ? p.getInvoiceNumber() : "";
-            boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus());
+            boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()) || "REFUNDED".equalsIgnoreCase(p.getStatus());
 
-            if (invNum.startsWith("REF-") && isPaid) {
+            LocalDateTime paymentTime = p.getPaidAt() != null ? p.getPaidAt() : p.getIssuedAt();
+            if (fromLdt != null && paymentTime != null && paymentTime.isBefore(fromLdt)) {
+                continue;
+            }
+            if (toLdt != null && paymentTime != null && paymentTime.isAfter(toLdt)) {
+                continue;
+            }
+
+            if ((invNum.startsWith("REF-") || "REF".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                 totalRefunds = totalRefunds.add(p.getAmount());
-            } else if (invNum.startsWith("CMP-") && isPaid) {
+            } else if ((invNum.startsWith("CMP-") || "CMP".equalsIgnoreCase(p.getInvoiceType()) || "INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                 compensationRevenue = compensationRevenue.add(p.getAmount());
-            } else if ("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) && isPaid) {
+            } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                 penaltyRevenue = penaltyRevenue.add(p.getAmount());
-            } else if ("MONTHLY_RENEWAL".equalsIgnoreCase(p.getInvoiceType()) && isPaid) {
+            } else if (("MONTHLY_RENEWAL".equalsIgnoreCase(p.getInvoiceType()) || "EXT".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                 extensionRevenue = extensionRevenue.add(p.getAmount());
-            } else if ("INITIAL_RENTAL".equalsIgnoreCase(p.getInvoiceType()) && isPaid) {
+            } else if (("INITIAL_RENTAL".equalsIgnoreCase(p.getInvoiceType()) || "DEP".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                 rentalRevenue = rentalRevenue.add(p.getAmount());
             }
-        }
 
+            if ("CANCELED".equalsIgnoreCase(p.getStatus()) || "CANCELLED".equalsIgnoreCase(p.getStatus())) {
+                if ("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())
+                        || "PEN".equalsIgnoreCase(p.getInvoiceType()) || "CMP".equalsIgnoreCase(p.getInvoiceType())) {
+                    waivedAmount = waivedAmount.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
+                }
+            }
+        }
         for (Reservation r : reservations) {
             Optional<Contract> cOpt = contracts.stream().filter(c -> c.getReservationId().equals(r.getReservationId())).findFirst();
             if (cOpt.isPresent()) {
@@ -142,7 +179,13 @@ public class DashboardService {
         BigDecimal netRevenue = grossRevenue.subtract(totalRefunds);
 
         // 4. Thống kê Support Ticket & SLA
-        List<SupportTicket> tickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
+        List<SupportTicket> allFacilityTickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
+        List<SupportTicket> tickets = allFacilityTickets.stream().filter(t -> {
+            if (t.getCreatedAt() == null) return true;
+            if (fromLdt != null && t.getCreatedAt().isBefore(fromLdt)) return false;
+            if (toLdt != null && t.getCreatedAt().isAfter(toLdt)) return false;
+            return true;
+        }).collect(Collectors.toList());
         long totalTickets = tickets.size();
         long submittedTickets = tickets.stream().filter(t -> "SUBMITTED".equalsIgnoreCase(t.getStatus()) || "ESCALATED".equalsIgnoreCase(t.getStatus())).count();
         long inProgressTickets = tickets.stream().filter(t -> "IN_PROGRESS".equalsIgnoreCase(t.getStatus())).count();
@@ -205,7 +248,7 @@ public class DashboardService {
 
         resp.setDepositHolding(depositHolding);
         resp.setForfeitedDeposit(forfeitedDeposit);
-        resp.setWaivedAmount(BigDecimal.ZERO);
+        resp.setWaivedAmount(waivedAmount);
 
         resp.setTotalTickets(totalTickets);
         resp.setSubmittedTickets(submittedTickets);
