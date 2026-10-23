@@ -4,7 +4,10 @@ import {
   daysRemaining,
   discountValue,
   filterContracts,
+  canConfirmForfeitProcessed,
+  forfeitNoteError,
   isClosedContract,
+  normalizeContractStatus,
   needsFollowUp,
   needsForfeitHandling,
   overdueDays,
@@ -140,7 +143,8 @@ describe("Trạng thái đã đóng và quá hạn trên 30 ngày (thanh lý tà
   test.each([
     { name: "đang hiệu lực dù đã qua ngày", status: "ACTIVE", endDate: "2026-09-01", days: 0, forfeit: false },
     { name: "quá hạn 12 ngày", status: "OVERDUE", endDate: "2026-10-10", days: 12, forfeit: false },
-    { name: "quá hạn đúng 30 ngày: chưa thanh lý", status: "OVERDUE", endDate: "2026-09-22", days: 30, forfeit: false },
+    { name: "quá hạn 29 ngày: chưa thanh lý", status: "OVERDUE", endDate: "2026-09-23", days: 29, forfeit: false },
+    { name: "quá hạn đủ 30 ngày: cần thanh lý", status: "OVERDUE", endDate: "2026-09-22", days: 30, forfeit: true },
     { name: "quá hạn 31 ngày: cần thanh lý", status: "OVERDUE", endDate: "2026-09-21", days: 31, forfeit: true },
     { name: "BE đã chuyển FORFEITED", status: "FORFEITED", endDate: "2026-08-01", days: 0, forfeit: true },
     { name: "đã hoàn tất", status: "COMPLETED", endDate: "2026-08-01", days: 0, forfeit: false },
@@ -155,5 +159,45 @@ describe("Trạng thái đã đóng và quá hạn trên 30 ngày (thanh lý tà
     { name: "CANCELED hết nợ thì không", patch: { status: "CANCELED" as const }, expected: false },
   ])("needsFollowUp: $name", ({ patch, expected }) => {
     expect(needsFollowUp(contract(9, patch))).toBe(expected)
+  })
+})
+
+describe("normalizeContractStatus: gộp 2 cách viết của trạng thái hủy", () => {
+  test.each([
+    { input: "CANCELLED", expected: "CANCELED" },
+    { input: "CANCELED", expected: "CANCELED" },
+    { input: "cancelled", expected: "CANCELED" },
+    { input: "COMPLETED", expected: "COMPLETED" },
+    { input: " active ", expected: "ACTIVE" },
+  ])("$input → $expected", ({ input, expected }) => {
+    expect(normalizeContractStatus(input)).toBe(expected)
+  })
+})
+
+describe("Xác nhận đã xử lý tài sản (hợp đồng FORFEITED)", () => {
+  const TODAY = "2026-10-23"
+  test.each([
+    { name: "FORFEITED chưa xử lý", c: { status: "FORFEITED", forfeitProcessed: false }, can: true, handling: true },
+    { name: "FORFEITED đã xử lý", c: { status: "FORFEITED", forfeitProcessed: true }, can: false, handling: false },
+    { name: "OVERDUE đủ 30 ngày, BE chưa chuyển", c: { status: "OVERDUE", forfeitProcessed: false }, can: false, handling: true },
+    { name: "ACTIVE", c: { status: "ACTIVE" }, can: false, handling: false },
+  ] as const)("$name → được xác nhận: $can, còn cần xử lý: $handling", ({ c, can, handling }) => {
+    expect(canConfirmForfeitProcessed(c)).toBe(can)
+    expect(needsForfeitHandling({ ...c, endDate: "2026-09-22" }, TODAY)).toBe(handling)
+  })
+
+  test("FORFEITED đã xử lý và hết nợ thì không còn trong danh sách cần theo dõi", () => {
+    expect(needsFollowUp(contract(5, { status: "FORFEITED", forfeitProcessed: false }))).toBe(true)
+    expect(needsFollowUp(contract(5, { status: "FORFEITED", forfeitProcessed: true }))).toBe(false)
+  })
+
+  test.each([
+    { note: "", error: "Nhập ghi chú xử lý tài sản" },
+    { note: "   ", error: "Nhập ghi chú xử lý tài sản" },
+    { note: "Đã cắt", error: "Ghi chú ít nhất 10 ký tự" },
+    { note: "Đã cắt khóa, có camera", error: null },
+    { note: "x".repeat(501), error: "Ghi chú tối đa 500 ký tự" },
+  ])("ghi chú '$note' → $error", ({ note, error }) => {
+    expect(forfeitNoteError(note)).toBe(error)
   })
 })

@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react"
+import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, test, vi } from "vitest"
 
@@ -37,9 +37,11 @@ const CONTRACTS = [
   contract(4, "Khách Bốn", { status: "COMPLETED", checkoutStage: "HANDED_OVER" }),
 ]
 
+const api = vi.hoisted(() => ({ markForfeitProcessed: vi.fn() }))
 vi.mock("../api/contractApi", () => ({
   listFacilityContracts: vi.fn(async () => CONTRACTS),
   applyFeeDiscount: vi.fn(),
+  markForfeitProcessed: api.markForfeitProcessed,
 }))
 
 describe("CheckoutDebtPanel: quá hạn trên 30 ngày cần lập hồ sơ thanh lý", () => {
@@ -55,12 +57,47 @@ describe("CheckoutDebtPanel: quá hạn trên 30 ngày cần lập hồ sơ than
     expect(screen.queryByText("Khách Bốn")).not.toBeInTheDocument()
   })
 
-  test("lọc 'Quá hạn trên 30 ngày' chỉ còn hồ sơ cần thanh lý", async () => {
+  test("lọc 'Quá hạn từ 30 ngày' chỉ còn hồ sơ cần thanh lý", async () => {
     const user = userEvent.setup()
     render(<CheckoutDebtPanel />)
     await screen.findByText("Khách Một")
     await user.selectOptions(screen.getByRole("combobox", { name: /cần xử lý/i }), "FORFEIT")
     const names = within(screen.getByRole("table")).getAllByRole("row").slice(1).map((r) => r.querySelector("p")?.textContent)
     expect(names).toEqual(["Khách Hai", "Khách Ba"])
+  })
+})
+
+describe("CheckoutDebtPanel: Manager xác nhận đã xử lý tài sản", () => {
+  test("chỉ hợp đồng FORFEITED mới có nút; quá hạn 35 ngày (BE chưa chuyển) chỉ có cảnh báo", async () => {
+    render(<CheckoutDebtPanel />)
+    await screen.findByText("Khách Một")
+    expect(screen.getByRole("button", { name: "Xác nhận đã xử lý tài sản hợp đồng CTR-HN01-03" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /xử lý tài sản hợp đồng CTR-HN01-02/ })).not.toBeInTheDocument()
+  })
+
+  test("chưa ghi chú → báo lỗi, KHÔNG gọi API; ghi chú đủ → gọi API, đóng ngăn và tải lại", async () => {
+    api.markForfeitProcessed.mockReset().mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    render(<CheckoutDebtPanel />)
+    await user.click(await screen.findByRole("button", { name: "Xác nhận đã xử lý tài sản hợp đồng CTR-HN01-03" }))
+    const sheet = await screen.findByRole("dialog", { name: "Xác nhận đã xử lý tài sản" })
+    await user.click(within(sheet).getByRole("button", { name: "Xác nhận đã xử lý tài sản" }))
+    expect(within(sheet).getByText("Nhập ghi chú xử lý tài sản")).toBeInTheDocument()
+    expect(api.markForfeitProcessed).not.toHaveBeenCalled()
+    await user.type(within(sheet).getByLabelText(/ghi chú xử lý tài sản/i), "Đã cắt khóa lúc 09:00, có camera")
+    await user.click(within(sheet).getByRole("button", { name: "Xác nhận đã xử lý tài sản" }))
+    expect(api.markForfeitProcessed).toHaveBeenCalledWith(expect.anything(), 3, "Đã cắt khóa lúc 09:00, có camera")
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+  })
+
+  test("BE từ chối → giữ ngăn mở, hiện nguyên câu lỗi của BE", async () => {
+    api.markForfeitProcessed.mockReset().mockRejectedValue(new Error("Hợp đồng đã được xác nhận xử lý tài sản."))
+    const user = userEvent.setup()
+    render(<CheckoutDebtPanel />)
+    await user.click(await screen.findByRole("button", { name: "Xác nhận đã xử lý tài sản hợp đồng CTR-HN01-03" }))
+    const sheet = await screen.findByRole("dialog", { name: "Xác nhận đã xử lý tài sản" })
+    await user.type(within(sheet).getByLabelText(/ghi chú xử lý tài sản/i), "Đã cắt khóa lúc 09:00, có camera")
+    await user.click(within(sheet).getByRole("button", { name: "Xác nhận đã xử lý tài sản" }))
+    expect(await within(sheet).findByRole("alert")).toHaveTextContent("Hợp đồng đã được xác nhận xử lý tài sản.")
   })
 })

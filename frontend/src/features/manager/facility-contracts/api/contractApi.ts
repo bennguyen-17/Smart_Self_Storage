@@ -8,6 +8,7 @@ import apiClient, { isMockMode } from "@/lib/apiClient"
 import { managerHeaders } from "@/features/manager/unit-management/managerContext"
 import type { ManagerContext } from "@/features/manager/unit-management/types"
 
+import { normalizeContractStatus } from "../contractRules"
 import type { FacilityContract, FeeDiscountRequest } from "../types"
 import { mockApplyFeeDiscount, mockListFacilityContracts } from "./contractApi.mock"
 
@@ -15,7 +16,8 @@ import { mockApplyFeeDiscount, mockListFacilityContracts } from "./contractApi.m
 export async function listFacilityContracts(ctx: ManagerContext): Promise<FacilityContract[]> {
   if (isMockMode()) return mockListFacilityContracts()
   const body = await apiClient.get("/manager/contracts", { headers: managerHeaders(ctx) })
-  return unwrapApiData<FacilityContract[]>(body) ?? []
+  // DB có thể trả "CANCELLED" (2 chữ L): gộp về một cách viết trước khi tới giao diện
+  return (unwrapApiData<FacilityContract[]>(body) ?? []).map((c) => ({ ...c, status: normalizeContractStatus(c.status) }))
 }
 
 /** POST /api/manager/payments/{paymentId}/discount  body { discountPercent | discountAmount, reason } */
@@ -25,4 +27,13 @@ export async function applyFeeDiscount(ctx: ManagerContext, paymentId: number, r
     return
   }
   await apiClient.post(`/manager/payments/${paymentId}/discount`, req, { headers: managerHeaders(ctx) })
+}
+
+/**
+ * POST /api/manager/contracts/{contractId}/forfeit-processed  body { note } (K1).
+ * Chỉ hợp đồng FORFEITED của cơ sở mình; BE chuyển ô kho sang bảo trì và ghi nhật ký.
+ */
+export async function markForfeitProcessed(ctx: ManagerContext, contractId: number, note: string): Promise<void> {
+  if (isMockMode()) return
+  await apiClient.post(`/manager/contracts/${contractId}/forfeit-processed`, { note: note.trim() }, { headers: managerHeaders(ctx) })
 }
