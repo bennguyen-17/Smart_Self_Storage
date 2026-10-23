@@ -148,11 +148,19 @@ public class DashboardService {
                 penaltyRevenue = penaltyRevenue.add(p.getAmount());
             } else if (("MONTHLY_RENEWAL".equalsIgnoreCase(p.getInvoiceType()) || "EXT".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                 extensionRevenue = extensionRevenue.add(p.getAmount());
-            } else if (("INITIAL_RENTAL".equalsIgnoreCase(p.getInvoiceType()) || "DEP".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
+            } else if ("DEP".equalsIgnoreCase(p.getInvoiceType()) && "PAID".equalsIgnoreCase(p.getStatus())) {
+                BigDecimal depAmt = contracts.stream()
+                        .filter(c -> c.getContractId().equals(p.getContractId()))
+                        .findFirst()
+                        .flatMap(c -> reservations.stream().filter(r -> r.getReservationId().equals(c.getReservationId())).findFirst())
+                        .map(r -> r.getDepositAmount() != null ? r.getDepositAmount() : BigDecimal.ZERO)
+                        .orElse(BigDecimal.ZERO);
+                rentalRevenue = rentalRevenue.add((p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO).subtract(depAmt).max(BigDecimal.ZERO));
+            } else if ("INITIAL_RENTAL".equalsIgnoreCase(p.getInvoiceType()) && isPaid) {
                 rentalRevenue = rentalRevenue.add(p.getAmount());
             }
 
-            if ("CANCELED".equalsIgnoreCase(p.getStatus()) || "CANCELLED".equalsIgnoreCase(p.getStatus())) {
+            if ("CANCELLED".equalsIgnoreCase(p.getStatus())) {
                 if ("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())
                         || "PEN".equalsIgnoreCase(p.getInvoiceType()) || "CMP".equalsIgnoreCase(p.getInvoiceType())) {
                     waivedAmount = waivedAmount.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
@@ -163,13 +171,21 @@ public class DashboardService {
             Optional<Contract> cOpt = contracts.stream().filter(c -> c.getReservationId().equals(r.getReservationId())).findFirst();
             if (cOpt.isPresent()) {
                 String cStatus = cOpt.get().getStatus();
-                if ("ACTIVE".equalsIgnoreCase(cStatus) || "PENDING_CHECKIN".equalsIgnoreCase(cStatus)) {
+                if ("ACTIVE".equalsIgnoreCase(cStatus) || "PENDING_CHECKIN".equalsIgnoreCase(cStatus) || "OVERDUE".equalsIgnoreCase(cStatus)) {
                     if (r.getDepositAmount() != null) {
                         depositHolding = depositHolding.add(r.getDepositAmount());
                     }
                 } else if ("CANCELED".equalsIgnoreCase(cStatus) || "FORFEITED".equalsIgnoreCase(cStatus)) {
                     if (r.getDepositAmount() != null) {
-                        forfeitedDeposit = forfeitedDeposit.add(r.getDepositAmount());
+                        Integer cId = cOpt.get().getContractId();
+                        BigDecimal refundedForContract = payments.stream()
+                                .filter(p -> cId.equals(p.getContractId()))
+                                .filter(p -> "REF".equalsIgnoreCase(p.getInvoiceType())
+                                        || (p.getInvoiceNumber() != null && p.getInvoiceNumber().startsWith("REF-")))
+                                .filter(p -> !"CANCELLED".equalsIgnoreCase(p.getStatus()))
+                                .map(p -> p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                        forfeitedDeposit = forfeitedDeposit.add(r.getDepositAmount().subtract(refundedForContract).max(BigDecimal.ZERO));
                     }
                 }
             }
@@ -203,6 +219,7 @@ public class DashboardService {
         }).count();
 
         ManagerDashboardResponse resp = new ManagerDashboardResponse();
+        resp.setFacilityId(facilityId);
         com.swp391.backend.dto.FacilityResponse mappedFac = storageService.mapFacilityToResponse(fac);
         resp.setFacilityName(mappedFac.getFacilityName());
         resp.setFacilityCode(mappedFac.getFacilityCode());

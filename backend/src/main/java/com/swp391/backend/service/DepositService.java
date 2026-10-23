@@ -123,7 +123,7 @@ public class DepositService {
         reservation.setRentalAmount(priceRes.getFinalRentalAmount());
         reservation.setDepositAmount(priceRes.getDepositAmount());
         reservation.setStatus("PENDING");
-        reservation.setHoldExpiresAt(LocalDateTime.now().plusMinutes(15)); // Giữ chỗ 15 phút để thanh toán
+        reservation.setHoldExpiresAt(LocalDateTime.now().plusMinutes(5)); // Giữ chỗ 5 phút để thanh toán (BR-14)
 
         // Sinh Mã Hợp Đồng theo quy tắc thống nhất: CTR-[Mã Cơ Sở]-[DDMMYY]-[4 số ngẫu nhiên]
         String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyy"));
@@ -155,7 +155,7 @@ public class DepositService {
         payment.setAmount(totalAmount);
         payment.setPaidAmount(BigDecimal.ZERO);
         payment.setRemainingAmount(totalAmount);
-        payment.setDueAt(LocalDateTime.now().plusMinutes(15));
+        payment.setDueAt(LocalDateTime.now().plusMinutes(5));
         payment.setStatus("PENDING");
         payment.setPaymentMethod("VIETQR");
         payment.setPaymentStatus("PENDING");

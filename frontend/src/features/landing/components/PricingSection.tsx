@@ -1,35 +1,26 @@
 import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import {
-  ArrowRight,
-  Box,
-  CheckCircle2,
-  Home,
-  Luggage,
-  Package,
-  Receipt,
-  Users,
-} from "lucide-react"
+import { ArrowRight, Package, Receipt } from "lucide-react"
 
 import { formatVnd } from "../lib/format"
 import { cn } from "@/lib/utils"
 
 import { PRICING_SECTION } from "../content/copy"
 import { CTA, ROUTES } from "../content/site"
-import { PRICING_NOTES, UNITS, type UnitSize } from "../content/units"
+import { UNITS, type UnitSize } from "../content/units"
 import { DURATION, EASE_OUT_QUART } from "../motion/presets"
 import { LandingLink } from "./LandingButton"
 import { RevealItem, RevealList } from "./Reveal"
 import { SectionHeading } from "./SectionHeading"
 
 interface PricingSectionProps {
-  /** Cỡ đang được gợi ý (ví dụ Cỡ M) */
+  /** Cỡ gợi ý (nếu có) */
   suggested?: UnitSize | null
 }
 
 type ViewMode = "capacity" | "pricing"
 
-export function PricingSection({ suggested = "M" }: PricingSectionProps) {
+export function PricingSection({ suggested: _suggested }: PricingSectionProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("capacity")
 
   return (
@@ -38,19 +29,19 @@ export function PricingSection({ suggested = "M" }: PricingSectionProps) {
       aria-labelledby="pricing-title"
       className="relative overflow-hidden py-(--l-section-space)"
     >
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
         <SectionHeading
           id="pricing-title"
           title={PRICING_SECTION.title}
           lead={PRICING_SECTION.lead}
         />
 
-        {/* NÚT GẠT ĐÔI CHUYỂN ĐỔI CHẾ ĐỘ XEM (TOGGLE VIEW) */}
+        {/* NÚT GẠT ĐÔI CHUYỂN ĐỔI CHẾ ĐỘ XEM */}
         <div className="mx-auto flex items-center justify-center">
           <div
             role="tablist"
             aria-label="Chế độ xem bảng giá hoặc sức chứa"
-            className="inline-flex rounded-2xl bg-muted/80 p-1.5 ring-1 ring-border/70 shadow-inner dark:bg-card/70"
+            className="inline-flex rounded-xl bg-muted/80 p-1 ring-1 ring-border/70 shadow-inner dark:bg-card/70"
           >
             <button
               type="button"
@@ -58,7 +49,7 @@ export function PricingSection({ suggested = "M" }: PricingSectionProps) {
               aria-selected={viewMode === "capacity"}
               onClick={() => setViewMode("capacity")}
               className={cn(
-                "relative flex cursor-pointer items-center gap-2 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                "relative flex cursor-pointer items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 outline-none",
                 viewMode === "capacity"
                   ? "text-blue-900 shadow-sm dark:text-blue-100"
                   : "text-muted-foreground hover:text-foreground"
@@ -67,11 +58,11 @@ export function PricingSection({ suggested = "M" }: PricingSectionProps) {
               {viewMode === "capacity" && (
                 <motion.span
                   layoutId="pricing-view-pill"
-                  className="absolute inset-0 rounded-xl bg-white shadow-sm ring-1 ring-border/50 dark:bg-blue-950/70 dark:ring-blue-500/30"
+                  className="absolute inset-0 rounded-lg bg-white shadow-sm ring-1 ring-border/50 dark:bg-blue-950/70 dark:ring-blue-500/30"
                   transition={{ duration: DURATION.base, ease: EASE_OUT_QUART }}
                 />
               )}
-              <Package className="relative z-10 size-4 text-blue-600 dark:text-blue-400" />
+              <Package className="relative z-10 size-3.5 text-blue-600 dark:text-blue-400" />
               <span className="relative z-10">{PRICING_SECTION.capacityTab}</span>
             </button>
 
@@ -81,7 +72,7 @@ export function PricingSection({ suggested = "M" }: PricingSectionProps) {
               aria-selected={viewMode === "pricing"}
               onClick={() => setViewMode("pricing")}
               className={cn(
-                "relative flex cursor-pointer items-center gap-2 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                "relative flex cursor-pointer items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 outline-none",
                 viewMode === "pricing"
                   ? "text-blue-900 shadow-sm dark:text-blue-100"
                   : "text-muted-foreground hover:text-foreground"
@@ -90,194 +81,120 @@ export function PricingSection({ suggested = "M" }: PricingSectionProps) {
               {viewMode === "pricing" && (
                 <motion.span
                   layoutId="pricing-view-pill"
-                  className="absolute inset-0 rounded-xl bg-white shadow-sm ring-1 ring-border/50 dark:bg-blue-950/70 dark:ring-blue-500/30"
+                  className="absolute inset-0 rounded-lg bg-white shadow-sm ring-1 ring-border/50 dark:bg-blue-950/70 dark:ring-blue-500/30"
                   transition={{ duration: DURATION.base, ease: EASE_OUT_QUART }}
                 />
               )}
-              <Receipt className="relative z-10 size-4 text-blue-600 dark:text-blue-400" />
+              <Receipt className="relative z-10 size-3.5 text-blue-600 dark:text-blue-400" />
               <span className="relative z-10">{PRICING_SECTION.pricingTab}</span>
             </button>
           </div>
         </div>
 
-        {/* 4 CARD CỠ KHO CÓ HÌNH ẢNH THỰC TẾ & NỘI DUNG TINH GỌN */}
-        <RevealList className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        {/* 4 CARD CỠ KHO: DI CHUỘT VÀO CARD NÀO THÌ CARD ĐÓ NỔI BẬT */}
+        <RevealList className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {UNITS.map((u) => {
-            const isSuggested = suggested === u.size
             return (
               <RevealItem key={u.size} className="relative">
-                <article
-                  className={cn(
-                    "relative flex h-full flex-col justify-between gap-4 rounded-(--l-radius-card) p-5 ring-1 transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-1.5 hover:shadow-xl motion-reduce:hover:translate-y-0",
-                    isSuggested
-                      ? "bg-blue-50/70 ring-blue-500/50 dark:bg-blue-950/40 dark:ring-blue-400/50"
-                      : "bg-card ring-border/70 dark:bg-card/80"
-                  )}
-                >
-                  {/* 1. ẢNH KHO THỰC TẾ TRỰC QUAN */}
-                  <div className="relative aspect-16/10 w-full overflow-hidden rounded-xl bg-muted ring-1 ring-border/50">
+                <article className="group relative flex h-full flex-col justify-between gap-3.5 rounded-2xl bg-card p-4 ring-1 ring-border/80 transition-all duration-200 hover:-translate-y-1 hover:ring-2 hover:ring-blue-600 hover:shadow-lg dark:hover:ring-blue-500">
+                  {/* 1. ẢNH KHO TỰ NHIÊN, DÀI VÀ RÕ NÉT HƠN */}
+                  <div className="relative aspect-4/3 w-full overflow-hidden rounded-xl bg-muted">
                     <img
                       src={u.image}
-                      alt={`Kho tự quản cỡ ${u.size} - ${u.name}`}
+                      alt={`Kho tự quản ${u.name} - ${u.size}`}
                       loading="lazy"
-                      className="size-full object-cover transition-transform duration-500 hover:scale-105"
+                      className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
-
-                    {/* Badge Cỡ & Diện tích ở góc ảnh */}
-                    <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
-                      <span
-                        className={cn(
-                          "rounded-lg px-2.5 py-1 text-xs font-black tracking-wide uppercase shadow-sm",
-                          isSuggested
-                            ? "bg-blue-600 text-white"
-                            : "bg-black/75 text-white backdrop-blur-xs"
-                        )}
-                      >
-                        Cỡ {u.size}
-                      </span>
-                      <span className="rounded-lg bg-black/60 px-2 py-1 text-[11px] font-semibold text-white/95 backdrop-blur-xs">
-                        {u.areaM2} m²
-                      </span>
-                    </div>
-
-                    {/* Tag nổi bật ở góc phải ảnh */}
-                    {u.tag && (
-                      <div className="absolute top-2.5 right-2.5">
-                        <span className="rounded-lg bg-blue-600/90 px-2 py-1 text-[11px] font-bold text-white shadow-sm backdrop-blur-xs">
-                          {u.tag}
-                        </span>
-                      </div>
-                    )}
                   </div>
 
-                  {/* 2. TIÊU ĐỀ & KÍCH THƯỚC */}
-                  <div className="flex flex-col gap-0.5">
-                    <h3 className="text-xl font-black text-foreground">
-                      {u.name}
+                  {/* 2. TIÊU ĐỀ: TÊN KHO - SIZE & KÍCH THƯỚC (CĂN GIỮA, GỌN GÀNG) */}
+                  <div className="flex flex-col items-center text-center gap-1 pt-1">
+                    <h3 className="text-base font-bold text-foreground transition-colors duration-200 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                      {u.name} - {u.size}
                     </h3>
-                    <p className="text-xs font-medium text-muted-foreground">
-                      {u.dimensions} · Trần cao 2.0m
+                    <p className="text-xs text-muted-foreground font-medium">
+                      {u.dimensions}
                     </p>
                   </div>
 
-                  {/* 3. THÂN CARD: ĐỔI MƯỢT GIỮA 2 CHẾ ĐỘ XEM */}
-                  <div className="flex flex-1 flex-col justify-between gap-3 py-1">
+                  {/* 3. NỘI DUNG: TAB SỨC CHỨA HOẶC TAB BẢNG GIÁ */}
+                  <div className="flex flex-1 flex-col justify-between gap-4 pt-1">
                     <AnimatePresence mode="wait" initial={false}>
                       {viewMode === "capacity" ? (
                         <motion.div
                           key="capacity"
-                          initial={{ opacity: 0, y: 8 }}
+                          initial={{ opacity: 0, y: 6 }}
                           animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -8 }}
-                          transition={{
-                            duration: DURATION.fast,
-                            ease: EASE_OUT_QUART,
-                          }}
-                          className="flex flex-1 flex-col gap-3"
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: DURATION.fast, ease: EASE_OUT_QUART }}
+                          className="flex min-h-[160px] flex-1 flex-col justify-between gap-3 text-xs"
                         >
-                          {/* Không gian tương đương ngắn gọn */}
-                          <div className="flex items-center gap-2 rounded-xl bg-blue-50/80 p-2.5 text-xs font-semibold text-blue-900 ring-1 ring-blue-500/20 dark:bg-blue-950/40 dark:text-blue-200">
-                            <Home className="size-4 shrink-0 text-blue-600 dark:text-blue-400" />
-                            <span className="line-clamp-1">
-                              {u.equivalent}
-                            </span>
-                          </div>
-
-                          {/* 3 Dòng sức chứa tối đa ngắn gọn, rõ ràng */}
-                          <ul className="flex flex-col gap-2.5 text-xs">
-                            <li className="flex items-center gap-2.5 font-medium text-foreground">
-                              <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-400/15 dark:text-blue-400">
-                                <Box className="size-4" />
-                              </div>
-                              <span className="line-clamp-1">
-                                <strong>Thùng carton:</strong> {u.capacityHighlights[0].label}
-                              </span>
-                            </li>
-
-                            <li className="flex items-center gap-2.5 font-medium text-foreground">
-                              <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-400/15 dark:text-blue-400">
-                                <Luggage className="size-4" />
-                              </div>
-                              <span className="line-clamp-1">
-                                <strong>Vali du lịch:</strong> {u.capacityHighlights[1].label}
-                              </span>
-                            </li>
-
-                            <li className="flex items-start gap-2.5 font-medium text-foreground">
-                              <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:bg-emerald-400/15 dark:text-emerald-400 mt-0.5">
-                                <CheckCircle2 className="size-4" />
-                              </div>
-                              <span className="line-clamp-2">
-                                <strong>Đồ lớn:</strong> {u.capacityHighlights[2].label}
-                              </span>
-                            </li>
+                          {/* Sức chứa thực tế dạng bullet point */}
+                          <ul className="flex flex-col gap-2 text-foreground/90 pt-1">
+                            {u.capacityHighlights.map((item, idx) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <span className="text-muted-foreground/60 select-none">•</span>
+                                <span className="leading-snug">{item.label}</span>
+                              </li>
+                            ))}
                           </ul>
 
-                          {/* Giá tóm tắt */}
-                          <div className="mt-auto flex items-baseline justify-between border-t border-border/70 pt-2 text-xs">
-                            <span className="text-muted-foreground">
-                              Giá chỉ từ:
-                            </span>
-                            <span className="text-base font-black text-blue-600 tabular-nums dark:text-blue-400">
-                              {formatVnd(u.pricePerMonth)}/tháng
-                            </span>
+                          {/* Đối tượng phù hợp ở chân thẻ thay cho giá tiền */}
+                          <div className="mt-auto rounded-lg bg-muted/40 p-2.5 text-[11.5px] text-muted-foreground ring-1 ring-border/50">
+                            <span className="font-semibold text-foreground">Phù hợp: </span>
+                            <span>{u.idealFor}</span>
                           </div>
                         </motion.div>
                       ) : (
                         <motion.div
                           key="pricing"
-                          initial={{ opacity: 0, y: 8 }}
+                          initial={{ opacity: 0, y: 6 }}
                           animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -8 }}
-                          transition={{
-                            duration: DURATION.fast,
-                            ease: EASE_OUT_QUART,
-                          }}
-                          className="flex flex-1 flex-col gap-3"
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: DURATION.fast, ease: EASE_OUT_QUART }}
+                          className="flex min-h-[160px] flex-1 flex-col justify-between gap-3 text-xs"
                         >
-                          {/* Giá chính to rõ */}
-                          <div className="flex flex-col gap-0.5">
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-2xl font-black text-foreground tabular-nums">
+                          {/* 3 dòng đơn giá cơ bản */}
+                          <div className="space-y-2 pt-1">
+                            <div className="flex justify-between items-baseline">
+                              <span className="text-muted-foreground">Giá theo tháng:</span>
+                              <span className="font-bold text-foreground transition-colors duration-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 tabular-nums">
                                 {formatVnd(u.pricePerMonth)}
                               </span>
-                              <span className="text-xs font-normal text-muted-foreground">
-                                {PRICING_SECTION.perMonth}
-                              </span>
                             </div>
-                            <span className="text-xs text-muted-foreground">
-                              hoặc {formatVnd(u.pricePerDay)}/ngày · Cọc {formatVnd(u.deposit)}
-                            </span>
-                          </div>
-
-                          {/* Bảng chiết khấu dài hạn gọn gàng */}
-                          <div className="rounded-xl border border-border/70 bg-muted/30 p-2.5 text-xs dark:bg-muted/15 space-y-1.5">
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="text-muted-foreground">Gói 3 tháng (-5%):</span>
-                              <span className="font-bold tabular-nums text-foreground">
-                                {formatVnd(Math.round(u.pricePerMonth * 0.95))}/tháng
-                              </span>
+                            <div className="flex justify-between items-baseline text-muted-foreground">
+                              <span>Giá theo ngày:</span>
+                              <span className="tabular-nums">{formatVnd(u.pricePerDay)}</span>
                             </div>
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="text-muted-foreground">Gói 6 tháng (-10%):</span>
-                              <span className="font-bold tabular-nums text-foreground">
-                                {formatVnd(Math.round(u.pricePerMonth * 0.9))}/tháng
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                              <span>Gói 12 tháng (-15%):</span>
-                              <span className="font-black tabular-nums">
-                                {formatVnd(Math.round(u.pricePerMonth * 0.85))}/tháng
-                              </span>
+                            <div className="flex justify-between items-baseline text-muted-foreground">
+                              <span>Tiền cọc:</span>
+                              <span className="tabular-nums">{formatVnd(u.deposit)}</span>
                             </div>
                           </div>
 
-                          {/* Đối tượng phù hợp */}
-                          <div className="mt-auto flex items-start gap-1.5 text-xs text-muted-foreground">
-                            <Users className="size-3.5 shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
-                            <span className="line-clamp-2">
-                              <strong>Phù hợp:</strong> {u.idealFor}
-                            </span>
+                          {/* Giá gói dài hạn: dùng grid 2 cột gọn gàng không bị rớt dòng */}
+                          <div className="mt-auto border-t border-border/60 pt-2.5 space-y-1.5 text-muted-foreground">
+                            <span className="font-medium text-foreground block text-[11.5px]">Giá thuê theo gói dài hạn:</span>
+                            <div className="space-y-1.5 text-xs">
+                              <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground shrink-0">Gói 3 tháng (-5%):</span>
+                                <span className="font-semibold text-foreground tabular-nums">
+                                  {formatVnd(Math.round(u.pricePerMonth * 0.95))}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground shrink-0">Gói 6 tháng (-10%):</span>
+                                <span className="font-semibold text-foreground tabular-nums">
+                                  {formatVnd(Math.round(u.pricePerMonth * 0.9))}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground shrink-0">Gói 12 tháng (-15%):</span>
+                                <span className="font-semibold text-foreground tabular-nums">
+                                  {formatVnd(Math.round(u.pricePerMonth * 0.85))}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </motion.div>
                       )}
@@ -287,31 +204,18 @@ export function PricingSection({ suggested = "M" }: PricingSectionProps) {
                   {/* 4. NÚT ĐẶT KHO */}
                   <LandingLink
                     to={`${ROUTES.book}?size=${u.size}`}
-                    variant={isSuggested ? "primary" : "soft"}
+                    variant="soft"
                     size="md"
-                    className="w-full justify-center shadow-sm"
+                    className="w-full justify-center text-xs font-semibold shadow-xs transition-all duration-200 group-hover:bg-blue-600 group-hover:text-white dark:group-hover:bg-blue-600 dark:group-hover:text-white"
                   >
                     <span>{CTA.book} Cỡ {u.size}</span>
-                    <ArrowRight className="size-4" />
+                    <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
                   </LandingLink>
                 </article>
               </RevealItem>
             )
           })}
         </RevealList>
-
-        {/* CHÍNH SÁCH NIÊM YẾT DƯỚI CÙNG */}
-        <ul className="flex flex-col gap-2.5 text-[0.9375rem] text-muted-foreground md:flex-row md:flex-wrap md:gap-x-8">
-          {PRICING_NOTES.map((n) => (
-            <li key={n} className="flex items-center gap-2">
-              <span
-                aria-hidden
-                className="size-1.5 shrink-0 rounded-full bg-blue-500"
-              />
-              <span>{n}</span>
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   )

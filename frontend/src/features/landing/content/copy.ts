@@ -4,7 +4,7 @@
 import type { UnitSize } from "./units"
 
 export const HERO = {
-  badge: "✨ Giải pháp lưu kho thông minh 4.0",
+  badge: "Giải pháp lưu kho thông minh",
   title: "Thảnh thơi dọn phố, rộng chỗ an tâm",
   lead: "Dịch vụ thuê kho tự quản thông minh theo ngày & tháng. Mở khóa 24/7 bằng mã PIN riêng biệt — Giá rõ ràng, an tâm gửi gắm!",
   image: {
@@ -32,7 +32,7 @@ export interface UseCase {
 
 export const USE_CASES_SECTION = {
   title: "Cần bao nhiêu chỗ, có bấy nhiêu kho",
-  lead: "Chọn tình huống phù hợp với bạn, hệ thống thông minh sẽ gợi ý kích cỡ kho vừa vặn tức thì.",
+  lead: "Chọn tình huống phù hợp với bạn để tìm ra kích cỡ kho phù hợp tức thì",
   tryLabel: "Xem chi tiết kho",
 } as const
 
@@ -80,8 +80,8 @@ export const USE_CASES: readonly UseCase[] = [
 ]
 
 export const PRICING_SECTION = {
-  title: "Kích thước chuẩn & Bảng giá minh bạch",
-  lead: "Bốn cỡ kho linh hoạt, trần cao 2.0m tiêu chuẩn. Dễ dàng chuyển đổi giữa chế độ xem sức chứa đồ đạc thực tế và so sánh bảng giá chi tiết.",
+  title: "Bảng giá theo cỡ kho",
+  lead: "Bốn cỡ kho linh hoạt. Dễ dàng chuyển đổi giữa chế độ xem sức chứa đồ đạc thực tế và so sánh bảng giá chi tiết.",
   capacityTab: "Sức chứa & Đồ đạc tối đa",
   pricingTab: "Bảng giá & Chiết khấu gói",
   perMonth: "/ tháng",

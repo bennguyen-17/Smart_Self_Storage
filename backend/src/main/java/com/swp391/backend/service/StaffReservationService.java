@@ -368,7 +368,7 @@ public class StaffReservationService {
         BigDecimal penaltyAmount = BigDecimal.ZERO;
         if (paidDeposit.signum() > 0) {
             long diffDays = ChronoUnit.DAYS.between(LocalDate.now(), reservation.getStartDate());
-            BigDecimal refundRate = diffDays >= 4 ? BigDecimal.ONE : new BigDecimal("0.50");
+            BigDecimal refundRate = new BigDecimal("0.50"); // BR-20: Hủy tại quầy giữ 50% cọc, hoàn 50%
             refundAmount = paidDeposit.multiply(refundRate).setScale(2, java.math.RoundingMode.HALF_UP);
             penaltyAmount = paidDeposit.subtract(refundAmount);
             if (refundAmount.signum() > 0) {
@@ -722,14 +722,14 @@ public class StaffReservationService {
                 ? request.getPaymentMethod().trim().toUpperCase(java.util.Locale.ROOT)
                 : "";
         String paymentMethod = switch (requestedMethod) {
-            case "CASH" -> "CASH";
+            case "CASH", "" -> "CASH";
             case "TRANSFER", "BANK_TRANSFER" -> "BANK_TRANSFER";
-            case "CARD" -> "CARD";
+            case "VIETQR" -> "VIETQR";
             default -> null;
         };
         if (paymentMethod == null) {
             return new CollectPenaltyResponse(false,
-                    "Phương thức thanh toán phải là CASH, BANK_TRANSFER hoặc CARD.");
+                    "Phương thức thanh toán phải là CASH, BANK_TRANSFER hoặc VIETQR.");
         }
 
         LocalDate today = LocalDate.now();
