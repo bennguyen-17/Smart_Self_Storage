@@ -40,6 +40,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/staff/contracts/overdue-alerts")
                         .hasRole("STAFF")
 
+                        .requestMatchers("/api/staff/shifts/current", "/api/staff/shifts/current/start")
+                        .hasRole("STAFF")
+
+                        .requestMatchers("/api/staff/tickets/**")
+                        .hasRole("STAFF")
+
+                        .requestMatchers("/api/staff/checkout/**")
+                        .hasRole("STAFF")
+
                         .requestMatchers("/api/manager/contracts/overdue-alerts")
                         .hasRole("MANAGER")
 

@@ -128,11 +128,28 @@ public class ManagerShiftService {
             employeeIds = Collections.emptyList();
         }
 
+        if (shiftRepository.findById(shiftId)
+                .filter(item -> "ACTIVE".equalsIgnoreCase(item.getStatus()))
+                .isEmpty()) {
+            throw new IllegalArgumentException("Ca làm không tồn tại hoặc không còn hoạt động.");
+        }
+
+        List<StaffShift> existingAssignments = staffShiftRepository
+                .findByFacilityIdAndShiftIdAndWorkDate(facilityId, shiftId, date);
+        if (existingAssignments.stream().anyMatch(item -> "ATTENDED".equalsIgnoreCase(item.getStatus()))) {
+            throw new IllegalArgumentException("Không thể thay đổi phân công sau khi Staff đã bắt đầu ca.");
+        }
+
         // Kiểm tra xem tất cả nhân viên có thuộc cơ sở này không
         for (Integer empId : employeeIds) {
             Optional<EmployeeProfile> empOpt = employeeProfileRepository.findById(empId);
             if (empOpt.isEmpty() || !facilityId.equals(empOpt.get().getFacilityId())) {
                 throw new IllegalArgumentException("Nhân viên ID [" + empId + "] không thuộc cơ sở này! Không thể phân công.");
+            }
+            Account account = accountRepository.findAccountByAccountId(empOpt.get().getAccountId())
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản của nhân viên ID [" + empId + "]."));
+            if (!Long.valueOf(4L).equals(account.getRoleId()) || !"ACTIVE".equalsIgnoreCase(account.getStatus())) {
+                throw new IllegalArgumentException("Chỉ có thể phân công nhân viên Staff đang hoạt động.");
             }
         }
 

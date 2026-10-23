@@ -12,6 +12,7 @@ public class FacilityContractResponse {
     private String startDate;
     private String endDate;
     private String status;
+    private boolean forfeitProcessed;
     private Double depositAmount;
     private String checkoutStage;
     private List<FeeInvoiceResponse> fees = new ArrayList<>();
@@ -97,6 +98,14 @@ public class FacilityContractResponse {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public boolean isForfeitProcessed() {
+        return forfeitProcessed;
+    }
+
+    public void setForfeitProcessed(boolean forfeitProcessed) {
+        this.forfeitProcessed = forfeitProcessed;
     }
 
     public Double getDepositAmount() {

@@ -258,6 +258,7 @@ CREATE TABLE Contract (
     activatedAt DATETIME,
     terminatedAt DATETIME,
     status ENUM('INITIATED', 'PENDING_CHECKIN', 'ACTIVE', 'OVERDUE', 'TERMINATED', 'COMPLETED', 'FORFEITED', 'CANCELED') NOT NULL DEFAULT 'INITIATED',
+    forfeitProcessed BOOLEAN NOT NULL DEFAULT FALSE,
     cancelReason VARCHAR(255),
     refundBankName VARCHAR(100),
     refundAccountNumber VARCHAR(50),

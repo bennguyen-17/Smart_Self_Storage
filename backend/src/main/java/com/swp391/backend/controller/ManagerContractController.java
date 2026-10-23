@@ -2,9 +2,12 @@ package com.swp391.backend.controller;
 
 import com.swp391.backend.dto.FacilityContractResponse;
 import com.swp391.backend.dto.FacilityContractResponse.FeeInvoiceResponse;
+import com.swp391.backend.dto.ForfeitProcessedRequest;
 import com.swp391.backend.entity.*;
 import com.swp391.backend.repository.*;
+import com.swp391.backend.service.ForfeitProcessingService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -21,6 +24,7 @@ public class ManagerContractController {
     private final FacilityRepository facilityRepository;
     private final AccountRepository accountRepository;
     private final PaymentRepository paymentRepository;
+    private final ForfeitProcessingService forfeitProcessingService;
 
     public ManagerContractController(ContractRepository contractRepository,
                                      ReservationRepository reservationRepository,
@@ -28,7 +32,8 @@ public class ManagerContractController {
                                      FloorRepository floorRepository,
                                      FacilityRepository facilityRepository,
                                      AccountRepository accountRepository,
-                                     PaymentRepository paymentRepository) {
+                                     PaymentRepository paymentRepository,
+                                     ForfeitProcessingService forfeitProcessingService) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -36,6 +41,7 @@ public class ManagerContractController {
         this.facilityRepository = facilityRepository;
         this.accountRepository = accountRepository;
         this.paymentRepository = paymentRepository;
+        this.forfeitProcessingService = forfeitProcessingService;
     }
 
     /**
@@ -140,7 +146,7 @@ public class ManagerContractController {
                 ));
             }
 
-            result.add(new FacilityContractResponse(
+            FacilityContractResponse response = new FacilityContractResponse(
                     c.getContractId(),
                     contractCode,
                     customerName,
@@ -152,9 +158,26 @@ public class ManagerContractController {
                     deposit,
                     checkoutStage,
                     fees
-            ));
+            );
+            response.setForfeitProcessed(c.isForfeitProcessed());
+            result.add(response);
         }
 
         return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/contracts/{contractId}/forfeit-processed")
+    public ResponseEntity<?> markForfeitProcessed(
+            @PathVariable Integer contractId,
+            @RequestBody ForfeitProcessedRequest request,
+            @AuthenticationPrincipal Integer managerAccountId) {
+        forfeitProcessingService.markProcessed(contractId,
+                request != null ? request.getNote() : null,
+                managerAccountId);
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Đã xác nhận xử lý tài sản tịch thu.",
+                "contractId", contractId,
+                "forfeitProcessed", true));
     }
 }

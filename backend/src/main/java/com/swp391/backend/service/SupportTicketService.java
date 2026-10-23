@@ -27,6 +27,7 @@ public class SupportTicketService {
     private final FloorRepository floorRepository;
     private final FacilityRepository facilityRepository;
     private final EmailService emailService;
+    private final StaffShiftService staffShiftService;
 
     public SupportTicketService(SupportTicketRepository supportTicketRepository,
                                 ContractRepository contractRepository,
@@ -37,7 +38,8 @@ public class SupportTicketService {
                                 StorageUnitRepository storageUnitRepository,
                                 FloorRepository floorRepository,
                                 FacilityRepository facilityRepository,
-                                EmailService emailService) {
+                                EmailService emailService,
+                                StaffShiftService staffShiftService) {
         this.supportTicketRepository = supportTicketRepository;
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
@@ -48,6 +50,7 @@ public class SupportTicketService {
         this.floorRepository = floorRepository;
         this.facilityRepository = facilityRepository;
         this.emailService = emailService;
+        this.staffShiftService = staffShiftService;
     }
 
     private Integer getFacilityIdByUnit(String unitCode) {
@@ -107,7 +110,8 @@ public class SupportTicketService {
                     .orElse(customerId);
         }
         ticket.setCustomerId(targetCustomerId != null ? targetCustomerId : 1);
-        ticket.setFacilityId(req.getFacilityId());
+        Integer unitFacilityId = getFacilityIdByUnit(req.getUnitCode());
+        ticket.setFacilityId(unitFacilityId != null ? unitFacilityId : req.getFacilityId());
         ticket.setUnitCode(req.getUnitCode());
         ticket.setTitle(req.getTitle() != null ? req.getTitle() : "Báo sự cố ô kho");
         ticket.setDescription(req.getDescription());
@@ -117,7 +121,7 @@ public class SupportTicketService {
         ticket.setIsSlaBreached(false);
         ticket.setIdentityVerified(false);
 
-        return supportTicketRepository.save(ticket);
+        return saveIncidentWithAssignment(ticket);
     }
 
     // --- US-21: Tạo Ticket Hỗ trợ kỹ thuật 24/7 (Sự cố, Mở khóa, Bảo trì, Thắc mắc) ---
@@ -147,7 +151,9 @@ public class SupportTicketService {
         ticket.setIsSlaBreached(false);
         ticket.setIdentityVerified("UNLOCK".equalsIgnoreCase(type) ? false : true);
 
-        return supportTicketRepository.save(ticket);
+        return "INCIDENT".equalsIgnoreCase(ticket.getType())
+                ? saveIncidentWithAssignment(ticket)
+                : supportTicketRepository.save(ticket);
     }
 
     @Transactional
@@ -217,7 +223,9 @@ public class SupportTicketService {
         ticket.setIsSlaBreached(false);
         ticket.setIdentityVerified(false);
 
-        return supportTicketRepository.save(ticket);
+        return "INCIDENT".equalsIgnoreCase(ticket.getType())
+                ? saveIncidentWithAssignment(ticket)
+                : supportTicketRepository.save(ticket);
     }
 
     @Transactional
@@ -228,6 +236,35 @@ public class SupportTicketService {
     public SupportTicket saveTicket(SupportTicket ticket) {
         return supportTicketRepository.save(ticket);
     }
+
+    private SupportTicket saveIncidentWithAssignment(SupportTicket ticket) {
+        SupportTicket saved = supportTicketRepository.save(ticket);
+        List<Integer> onDutyStaffIds = staffShiftService.getOnDutyStaffAccountIds(saved.getFacilityId());
+        if (onDutyStaffIds.isEmpty()) {
+            saved.setStatus("ESCALATED");
+            saved.setIsSlaBreached(false);
+            saved = supportTicketRepository.save(saved);
+
+            ActivityLog log = new ActivityLog();
+            log.setAccountId(1);
+            log.setAction("INCIDENT_NO_STAFF_ON_DUTY");
+            log.setDescription("Ticket " + saved.getTicketCode() + " được chuyển lên Manager vì cơ sở #"
+                    + saved.getFacilityId() + " không có Staff đang trực ca.");
+            log.setCreatedAt(LocalDateTime.now());
+            activityLogRepository.save(log);
+            return saved;
+        }
+
+        Integer assigneeAccountId = onDutyStaffIds.stream()
+                .min(Comparator
+                        .comparingLong((Integer id) -> supportTicketRepository
+                                .countByAssignedStaffIdAndStatusIn(id, List.of("SUBMITTED", "IN_PROGRESS", "ESCALATED")))
+                        .thenComparingInt(Integer::intValue))
+                .orElseThrow();
+        saved.setAssignedStaffId(assigneeAccountId);
+        return supportTicketRepository.save(saved);
+    }
+
     // --- US-21: 3. Gửi OTP xác thực trả kho trước hạn ---
     @Transactional
     public Map<String, Object> sendEarlyTerminationOtp(Integer contractId, Integer customerId) {
@@ -450,16 +487,9 @@ public class SupportTicketService {
 
     // --- US-22: 1. Staff xem hàng đợi Ticket của cơ sở kèm đếm lùi SLA 15 phút ---
     @Transactional
-    public List<SupportTicket> getStaffTickets(Integer facilityId, String status, String type) {
-        List<SupportTicket> tickets;
-        if (facilityId == null || facilityId <= 0) {
-            tickets = supportTicketRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
-        } else {
-            tickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
-            if (tickets.isEmpty()) {
-                tickets = supportTicketRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
-            }
-        }
+    public List<SupportTicket> getStaffTickets(Integer staffAccountId, String status, String type) {
+        Integer facilityId = staffShiftService.requireOnDutyFacility(staffAccountId);
+        List<SupportTicket> tickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
 
         checkAndEscalateTickets(tickets);
 
@@ -471,12 +501,17 @@ public class SupportTicketService {
 
     // --- US-22: 2. Staff bấm Tiếp nhận Ticket (SUBMITTED / ESCALATED -> IN_PROGRESS) ---
     @Transactional
-    public SupportTicket acceptTicket(Long ticketId, Integer staffId, Integer facilityId) {
+    public SupportTicket acceptTicket(Long ticketId, Integer staffId) {
+        Integer facilityId = staffShiftService.requireOnDutyFacility(staffId);
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy ticket # " + ticketId));
 
         if (facilityId != null && ticket.getFacilityId() != null && !ticket.getFacilityId().equals(facilityId)) {
             throw new AccessDeniedException("Bạn không có quyền tiếp nhận ticket của cơ sở khác!");
+        }
+        if (ticket.getAssignedStaffId() != null && !ticket.getAssignedStaffId().equals(staffId)
+                && staffShiftService.getOnDutyStaffAccountIds(facilityId).contains(ticket.getAssignedStaffId())) {
+            throw new AccessDeniedException("Ticket này đã được gán cho nhân viên khác đang trực ca.");
         }
 
         if (!"SUBMITTED".equalsIgnoreCase(ticket.getStatus()) && !"ESCALATED".equalsIgnoreCase(ticket.getStatus())) {
@@ -491,7 +526,8 @@ public class SupportTicketService {
     }
 
     // --- US-23: 1. Lấy thông tin đối chiếu CCCD cho màn hình Mở khóa hộ ---
-    public UnlockDetailResponse getUnlockDetails(Long ticketId, Integer facilityId) {
+    public UnlockDetailResponse getUnlockDetails(Long ticketId, Integer staffAccountId) {
+        Integer facilityId = staffShiftService.requireOnDutyFacility(staffAccountId);
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy ticket # " + ticketId));
 
@@ -522,7 +558,8 @@ public class SupportTicketService {
 
     // --- US-23: 2. Staff xác nhận đối chiếu CCCD và hoàn tất mở khóa hộ ---
     @Transactional
-    public SupportTicket resolveUnlockTicket(Long ticketId, ResolveUnlockRequest req, Integer staffId, Integer facilityId) {
+    public SupportTicket resolveUnlockTicket(Long ticketId, ResolveUnlockRequest req, Integer staffId) {
+        Integer facilityId = staffShiftService.requireOnDutyFacility(staffId);
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy ticket # " + ticketId));
 
@@ -563,7 +600,8 @@ public class SupportTicketService {
 
     // --- Staff hoàn tất và đóng ticket thông thường (Sự cố bảo trì, nghiệm thu xong, ...) ---
     @Transactional
-    public SupportTicket resolveTicket(Long ticketId, String note, Integer staffId, Integer facilityId) {
+    public SupportTicket resolveTicket(Long ticketId, String note, Integer staffId) {
+        Integer facilityId = staffShiftService.requireOnDutyFacility(staffId);
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy ticket # " + ticketId));
 

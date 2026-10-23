@@ -5,6 +5,7 @@ import com.swp391.backend.dto.ticket.UnlockDetailResponse;
 import com.swp391.backend.entity.SupportTicket;
 import com.swp391.backend.service.SupportTicketService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,12 +25,12 @@ public class StaffTicketController {
     // --- US-22: 1. Xem hàng đợi Ticket của cơ sở kèm đếm ngược SLA 15 phút ---
     @GetMapping("/tickets")
     public ResponseEntity<?> getStaffTickets(
-            @RequestHeader(value = "X-Facility-Id", required = false) Integer facilityId,
+            @AuthenticationPrincipal Integer staffAccountId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String type
     ) {
         try {
-            List<SupportTicket> tickets = supportTicketService.getStaffTickets(facilityId, status, type);
+            List<SupportTicket> tickets = supportTicketService.getStaffTickets(staffAccountId, status, type);
             return ResponseEntity.ok(tickets);
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(403).body(e.getMessage());
@@ -42,11 +43,10 @@ public class StaffTicketController {
     @PostMapping("/tickets/{id}/accept")
     public ResponseEntity<?> acceptTicket(
             @PathVariable Long id,
-            @RequestHeader(value = "X-Facility-Id", required = false) Integer facilityId,
-            @RequestHeader(value = "X-Account-Id", defaultValue = "1") Integer staffId
+            @AuthenticationPrincipal Integer staffId
     ) {
         try {
-            SupportTicket ticket = supportTicketService.acceptTicket(id, staffId, facilityId);
+            SupportTicket ticket = supportTicketService.acceptTicket(id, staffId);
             return ResponseEntity.ok(ticket);
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(403).body(e.getMessage());
@@ -61,10 +61,10 @@ public class StaffTicketController {
     @GetMapping("/tickets/{id}/unlock-detail")
     public ResponseEntity<?> getUnlockDetails(
             @PathVariable Long id,
-            @RequestHeader(value = "X-Facility-Id", required = false) Integer facilityId
+            @AuthenticationPrincipal Integer staffAccountId
     ) {
         try {
-            UnlockDetailResponse res = supportTicketService.getUnlockDetails(id, facilityId);
+            UnlockDetailResponse res = supportTicketService.getUnlockDetails(id, staffAccountId);
             return ResponseEntity.ok(res);
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(403).body(e.getMessage());
@@ -78,11 +78,10 @@ public class StaffTicketController {
     public ResponseEntity<?> resolveUnlock(
             @PathVariable Long id,
             @RequestBody ResolveUnlockRequest request,
-            @RequestHeader(value = "X-Facility-Id", required = false) Integer facilityId,
-            @RequestHeader(value = "X-Account-Id", defaultValue = "1") Integer staffId
+            @AuthenticationPrincipal Integer staffId
     ) {
         try {
-            SupportTicket ticket = supportTicketService.resolveUnlockTicket(id, request, staffId, facilityId);
+            SupportTicket ticket = supportTicketService.resolveUnlockTicket(id, request, staffId);
             return ResponseEntity.ok(ticket);
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(403).body(e.getMessage());
@@ -98,12 +97,11 @@ public class StaffTicketController {
     public ResponseEntity<?> resolveTicket(
             @PathVariable Long id,
             @RequestBody(required = false) Map<String, String> body,
-            @RequestHeader(value = "X-Facility-Id", required = false) Integer facilityId,
-            @RequestHeader(value = "X-Account-Id", defaultValue = "1") Integer staffId
+            @AuthenticationPrincipal Integer staffId
     ) {
         try {
             String note = (body != null) ? body.get("note") : null;
-            SupportTicket ticket = supportTicketService.resolveTicket(id, note, staffId, facilityId);
+            SupportTicket ticket = supportTicketService.resolveTicket(id, note, staffId);
             return ResponseEntity.ok(ticket);
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(403).body(e.getMessage());

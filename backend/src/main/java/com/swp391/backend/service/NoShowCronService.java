@@ -107,8 +107,8 @@ public class NoShowCronService {
         return count;
     }
 
-    // --- US-19: Cron Job kiểm tra hợp đồng quá hạn chạy tự động mỗi phút ---
-    @Scheduled(cron = "0 * * * * ?")
+    // --- US-27: Cập nhật hợp đồng quá hạn hằng ngày lúc 00:00 giờ Việt Nam ---
+    @Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Ho_Chi_Minh")
     public void scheduledOverdueContractJob() {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
         int updatedCount = overdueService.markExpiredContracts(today);

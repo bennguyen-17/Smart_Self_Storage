@@ -48,7 +48,7 @@ public class EmailService {
     }
 
     // 1. Send plain text email
-    public void sendTextEmail(String to, String subject, String content) {
+    public boolean sendTextEmail(String to, String subject, String content) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom("Smart Self Storage <" + fromEmail + ">");
@@ -57,8 +57,10 @@ public class EmailService {
             message.setText(content);
             mailSender.send(message);
             log.info("Đã gửi email plain text thành công tới: {}", to);
+            return true;
         } catch (Exception e) {
             log.error("Lỗi khi gửi email plain text tới {}: {}", to, e.getMessage());
+            return false;
         }
     }
 
