@@ -1,9 +1,13 @@
-import { render, screen, within } from "@testing-library/react"
+import { fireEvent, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
 import { downloadCsv } from "@/components/internal/csv"
 
+import { todayInVietnam } from "@/lib/format"
+
+import { getManagerDashboard } from "../api/reportApi"
+import { presetRange } from "../reportRules"
 import FacilityReportPanel from "./FacilityReportPanel"
 
 vi.mock("@/lib/apiClient", () => ({ default: {}, isMockMode: () => true }))
@@ -12,7 +16,15 @@ vi.mock("@/components/internal/csv", async (importOriginal) => {
   return { ...actual, downloadCsv: vi.fn() }
 })
 
-beforeEach(() => vi.mocked(downloadCsv).mockClear())
+vi.mock("../api/reportApi", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../api/reportApi")>()
+  return { ...actual, getManagerDashboard: vi.fn(actual.getManagerDashboard) }
+})
+
+beforeEach(() => {
+  vi.mocked(downloadCsv).mockClear()
+  vi.mocked(getManagerDashboard).mockClear()
+})
 
 async function renderPanel() {
   const user = userEvent.setup()
@@ -58,5 +70,34 @@ describe("FacilityReportPanel: báo cáo cơ sở dạng biểu đồ (US-33)", 
     const [filename, csv] = vi.mocked(downloadCsv).mock.calls[0]
     expect(filename).toMatch(/^bao-cao-HN-01-\d{4}-\d{2}-\d{2}\.csv$/)
     expect(csv).toContain("Doanh thu,Doanh thu thuần,114500000")
+  })
+})
+
+describe("FacilityReportPanel: lọc theo khoảng thời gian", () => {
+  test("mặc định Từ trước đến nay; chọn Tháng trước → tải lại đúng khoảng, ghi rõ phạm vi số liệu", async () => {
+    const user = await renderPanel()
+    expect(vi.mocked(getManagerDashboard).mock.calls[0][1]).toEqual({ from: "", to: "" })
+    expect(screen.getByText("Từ trước đến nay", { selector: "span" })).toBeInTheDocument()
+    await user.selectOptions(screen.getByRole("combobox", { name: /khoảng thời gian/i }), "LAST_MONTH")
+    const expected = presetRange("LAST_MONTH", todayInVietnam())!
+    expect(vi.mocked(getManagerDashboard).mock.calls.at(-1)?.[1]).toEqual(expected)
+    expect(screen.getByLabelText("Từ ngày")).toHaveValue(expected.from)
+    expect(screen.getByText(/doanh thu, hoàn tiền, miễn giảm và yêu cầu hỗ trợ tính trong khoảng này/i)).toBeInTheDocument()
+  })
+
+  test("tự sửa ngày → chuyển sang Tùy chọn", async () => {
+    await renderPanel()
+    fireEvent.change(screen.getByLabelText("Từ ngày"), { target: { value: "2026-10-01" } })
+    expect(screen.getByRole("combobox", { name: /khoảng thời gian/i })).toHaveValue("CUSTOM")
+    expect(screen.getByText("Từ 01/10/2026")).toBeInTheDocument()
+  })
+
+  test("khoảng ngày ngược → báo lỗi, không gọi API", async () => {
+    await renderPanel()
+    const calls = vi.mocked(getManagerDashboard).mock.calls.length
+    fireEvent.change(screen.getByLabelText("Từ ngày"), { target: { value: "2026-10-23" } })
+    fireEvent.change(screen.getByLabelText("Đến ngày"), { target: { value: "2026-10-01" } })
+    expect(screen.getByRole("alert")).toHaveTextContent(/ngày bắt đầu phải trước/i)
+    expect(vi.mocked(getManagerDashboard).mock.calls.length).toBe(calls + 1)
   })
 })
