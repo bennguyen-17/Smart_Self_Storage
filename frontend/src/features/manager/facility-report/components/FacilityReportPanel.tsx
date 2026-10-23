@@ -4,13 +4,26 @@ import { cn } from "cn"
 
 import { Button } from "@/components/ui/button"
 import { downloadCsv, toCsv } from "@/components/internal/csv"
-import { FilterBar, LoadError } from "@/components/internal/components/PanelKit"
+import { DateFilter, FilterBar, LoadError, SelectFilter } from "@/components/internal/components/PanelKit"
 import { getManagerContext } from "@/features/manager/unit-management/managerContext"
 import { useAsyncData } from "@/hooks/useAsyncData"
 import { formatVnd, todayInVietnam } from "@/lib/format"
 
 import { getManagerDashboard } from "../api/reportApi"
-import { buildReportSections, percentOf, reportCsvRows, unitMix, type MetricRow } from "../reportRules"
+import {
+  ALL_TIME,
+  buildReportSections,
+  isReportRangeValid,
+  percentOf,
+  presetRange,
+  RANGE_PRESET_LABEL,
+  rangeLabel,
+  reportCsvRows,
+  unitMix,
+  type MetricRow,
+  type RangePreset,
+  type ReportRange,
+} from "../reportRules"
 import type { ManagerDashboard } from "../types"
 import { BarList, Meter, UnitDonut } from "./ReportCharts"
 
@@ -64,7 +77,7 @@ function Charts({ d }: { d: ManagerDashboard }) {
             { label: "Đang hiệu lực", value: d.activeContracts, display: count(d.activeContracts) },
             { label: "Chờ nhận kho", value: d.pendingCheckinContracts, display: count(d.pendingCheckinContracts) },
             { label: "Quá hạn", value: d.overdueContracts, display: count(d.overdueContracts) },
-            { label: "Đã thanh lý", value: d.terminatedContracts, display: count(d.terminatedContracts) },
+            { label: "Đã trả kho / hoàn tất", value: d.terminatedContracts, display: count(d.terminatedContracts) },
           ]}
         />
       </ChartCard>
@@ -86,7 +99,7 @@ function Charts({ d }: { d: ManagerDashboard }) {
         <dl className="grid gap-4 sm:grid-cols-3">
           {[
             { label: "Cọc đang giữ", value: d.depositHolding, note: "Không tính vào doanh thu" },
-            { label: "Cọc bị tịch thu", value: d.forfeitedDeposit, note: "Khách không đến nhận kho" },
+            { label: "Cọc bị tịch thu", value: d.forfeitedDeposit, note: "Không đến nhận kho, quá hạn 30 ngày" },
             { label: "Đã miễn / giảm phí", value: d.waivedAmount, note: "Theo duyệt của quản lý" },
           ].map((s) => (
             <div key={s.label}>
@@ -142,7 +155,25 @@ function FacilityReportPanel() {
   const ctx = useMemo(() => getManagerContext(), [])
   const [reloadCount, setReloadCount] = useState(0)
   const [view, setView] = useState<View>("charts")
-  const { data, error, isLoading } = useAsyncData(`report#${reloadCount}`, () => getManagerDashboard(ctx))
+  const [preset, setPreset] = useState<RangePreset>("ALL")
+  const [range, setRange] = useState<ReportRange>(ALL_TIME)
+  const rangeOk = isReportRangeValid(range)
+  // Khoảng ngày ngược thì không gọi API (key = null), chỉ báo lỗi
+  const { data, error, isLoading } = useAsyncData(
+    rangeOk ? `report:${range.from}:${range.to}#${reloadCount}` : null,
+    () => getManagerDashboard(ctx, range)
+  )
+
+  function choosePreset(next: RangePreset) {
+    setPreset(next)
+    const r = presetRange(next, todayInVietnam())
+    if (r) setRange(r)
+  }
+
+  function editRange(patch: Partial<ReportRange>) {
+    setPreset("CUSTOM")
+    setRange((r) => ({ ...r, ...patch }))
+  }
 
   if (error) {
     return <LoadError title="Không tải được báo cáo cơ sở" message={error} onRetry={() => setReloadCount((n) => n + 1)} />
@@ -150,17 +181,22 @@ function FacilityReportPanel() {
 
   function exportCsv() {
     if (!data) return
-    downloadCsv(`bao-cao-${data.facilityCode}-${todayInVietnam()}.csv`, toCsv(["Nhóm", "Chỉ số", "Giá trị"], reportCsvRows(data)))
+    const period = range.from || range.to ? `${range.from || "dau"}_${range.to || todayInVietnam()}` : todayInVietnam()
+    downloadCsv(`bao-cao-${data.facilityCode}-${period}.csv`, toCsv(["Nhóm", "Chỉ số", "Giá trị"], reportCsvRows(data, range)))
   }
 
   return (
     <section aria-label="Báo cáo cơ sở" className="space-y-4">
-      <FilterBar className="items-center justify-between">
-        <div className="text-xs">
-          <p className="text-title font-bold">{data ? data.facilityName : "Đang tải…"}</p>
-          <p className="text-muted">Số liệu tính đến thời điểm hiện tại</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+      <FilterBar>
+        <SelectFilter
+          label="Khoảng thời gian"
+          value={preset}
+          onChange={(v) => choosePreset(v as RangePreset)}
+          options={(Object.keys(RANGE_PRESET_LABEL) as RangePreset[]).map((p) => ({ value: p, label: RANGE_PRESET_LABEL[p] }))}
+        />
+        <DateFilter label="Từ ngày" value={range.from} onChange={(from) => editRange({ from })} invalid={!rangeOk} />
+        <DateFilter label="Đến ngày" value={range.to} onChange={(to) => editRange({ to })} invalid={!rangeOk} />
+        <div className="ml-auto flex flex-wrap items-center gap-2">
           <div role="group" aria-label="Cách xem" className="inner-box flex rounded-lg border p-0.5">
             {([
               { key: "charts", label: "Biểu đồ", icon: ChartColumnIcon },
@@ -188,6 +224,18 @@ function FacilityReportPanel() {
           </Button>
         </div>
       </FilterBar>
+
+      {rangeOk ? (
+        <p className="text-muted text-xs">
+          <span className="text-title font-bold">{data ? data.facilityName : "Đang tải…"}</span> ·{" "}
+          <span className="text-title font-semibold">{rangeLabel(range)}</span>. Doanh thu, hoàn tiền, miễn giảm và yêu cầu hỗ trợ tính
+          trong khoảng này; số ô kho, hợp đồng và tiền cọc đang giữ là số hiện tại.
+        </p>
+      ) : (
+        <p role="alert" className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+          Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.
+        </p>
+      )}
 
       {isLoading && (
         <div className="grid gap-4 lg:grid-cols-2" aria-hidden="true">

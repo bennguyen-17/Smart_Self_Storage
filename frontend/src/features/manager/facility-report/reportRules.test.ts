@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 
-import { barWidths, buildReportSections, donutArcs, percentOf, reportCsvRows, unitMix } from "./reportRules"
+import { barWidths, buildReportSections, donutArcs, percentOf, reportCsvRows, unitMix, isReportRangeValid, presetRange, rangeLabel } from "./reportRules"
 import type { ManagerDashboard } from "./types"
 
 const D: ManagerDashboard = {
@@ -63,6 +63,15 @@ describe("reportCsvRows: file CSV đúng số liệu đang xem", () => {
     expect(rows).toContainEqual(["Ô kho", "Tỷ lệ lấp đầy", 84])
     expect(rows.every((r) => r.length === 3)).toBe(true)
   })
+
+  test("dòng đầu ghi khoảng thời gian của số liệu", () => {
+    expect(reportCsvRows(D)[0]).toEqual(["Phạm vi", "Khoảng thời gian", "Từ trước đến nay"])
+    expect(reportCsvRows(D, { from: "2026-10-01", to: "2026-10-23" })[0]).toEqual([
+      "Phạm vi",
+      "Khoảng thời gian",
+      "Từ 01/10/2026 đến 23/10/2026",
+    ])
+  })
 })
 
 describe("unitMix: các phần của thanh ô kho cộng đủ 100%", () => {
@@ -110,5 +119,35 @@ describe("donutArcs: cung của biểu đồ vành khuyên", () => {
   })
   test("không có ô nào → không có cung", () => {
     expect(donutArcs([seg("occupied", 0), seg("available", 0)])).toEqual([])
+  })
+})
+
+describe("Khoảng thời gian của báo cáo", () => {
+  test.each([
+    { preset: "ALL", today: "2026-10-23", expected: { from: "", to: "" } },
+    { preset: "THIS_MONTH", today: "2026-10-23", expected: { from: "2026-10-01", to: "2026-10-23" } },
+    { preset: "LAST_MONTH", today: "2026-10-23", expected: { from: "2026-09-01", to: "2026-09-30" } },
+    { preset: "LAST_MONTH", today: "2026-01-05", expected: { from: "2025-12-01", to: "2025-12-31" } },
+    { preset: "LAST_MONTH", today: "2028-03-10", expected: { from: "2028-02-01", to: "2028-02-29" } },
+    { preset: "LAST_30_DAYS", today: "2026-10-23", expected: { from: "2026-09-24", to: "2026-10-23" } },
+    { preset: "LAST_30_DAYS", today: "2026-01-10", expected: { from: "2025-12-12", to: "2026-01-10" } },
+  ] as const)("$preset ngày $today → $expected.from … $expected.to", ({ preset, today, expected }) => {
+    expect(presetRange(preset, today)).toEqual(expected)
+  })
+
+  test("Tùy chọn: không tự đổi ngày", () => {
+    expect(presetRange("CUSTOM", "2026-10-23")).toBeNull()
+  })
+
+  test.each([
+    { range: { from: "", to: "" }, ok: true, label: "Từ trước đến nay" },
+    { range: { from: "2026-10-01", to: "2026-10-23" }, ok: true, label: "Từ 01/10/2026 đến 23/10/2026" },
+    { range: { from: "2026-10-23", to: "2026-10-23" }, ok: true, label: "Từ 23/10/2026 đến 23/10/2026" },
+    { range: { from: "2026-10-01", to: "" }, ok: true, label: "Từ 01/10/2026" },
+    { range: { from: "", to: "2026-10-23" }, ok: true, label: "Đến 23/10/2026" },
+    { range: { from: "2026-10-24", to: "2026-10-23" }, ok: false, label: "Từ 24/10/2026 đến 23/10/2026" },
+  ])("$label → hợp lệ: $ok", ({ range, ok, label }) => {
+    expect(isReportRangeValid(range)).toBe(ok)
+    expect(rangeLabel(range)).toBe(label)
   })
 })
