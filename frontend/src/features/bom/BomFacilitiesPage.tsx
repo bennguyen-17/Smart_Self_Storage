@@ -12,7 +12,6 @@ import {
   Sparkles,
   CheckCircle2,
   Building2,
-  MapPin,
   ShieldCheck,
   User,
   UserCheck,
@@ -336,19 +335,12 @@ export default function BomFacilitiesPage() {
                         <div className="font-extrabold text-white text-xs sm:text-sm">
                           {cleanName}
                         </div>
-                        <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5">
-                          <MapPin className="size-3 text-slate-500 shrink-0" />
-                          <span>{fac.address}</span>
-                        </div>
                       </td>
 
                       {/* CỘT 3: QUẢN LÝ CHI NHÁNH */}
                       <td className="py-4 px-4 text-center whitespace-nowrap">
                         <div className="font-bold text-white text-xs sm:text-sm text-center">
                           {cleanManager || "Chưa phân công"}
-                        </div>
-                        <div className="text-[11px] text-slate-400 mt-0.5 text-center font-mono">
-                          {fac.managerEmail || fac.managerPhone}
                         </div>
                       </td>
 
@@ -357,9 +349,6 @@ export default function BomFacilitiesPage() {
                         <div className="font-bold text-slate-200 text-xs sm:text-sm">
                           {stdUnits} Kho
                         </div>
-                        <div className="text-[10px] text-slate-400 font-normal mt-0.5">
-                          3 Tầng
-                        </div>
                       </td>
 
                       {/* CỘT 5: TỶ LỆ LẤP ĐẦY */}
@@ -367,9 +356,6 @@ export default function BomFacilitiesPage() {
                         <span className="font-bold text-sky-400 font-mono text-xs sm:text-sm">
                           {displayOccRate}%
                         </span>
-                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                          {rented}/{fac.totalUnits || stdUnits} đang thuê
-                        </div>
                       </td>
 
                       {/* CỘT 6: DOANH THU */}
