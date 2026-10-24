@@ -12,7 +12,6 @@ import {
   Sparkles,
   CheckCircle2,
   Building2,
-  ShieldCheck,
   User,
   UserCheck,
   UserX,
@@ -735,14 +734,9 @@ export default function BomFacilitiesPage() {
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="font-bold text-slate-300 uppercase text-[10px]">
-                      Mã Cơ Sở Hệ Thống:
-                    </label>
-                    <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
-                      <ShieldCheck className="size-3" /> Tự động sinh • Không trùng
-                    </span>
-                  </div>
+                  <label className="block font-bold text-slate-300 uppercase text-[10px] mb-1">
+                    Mã Cơ Sở Hệ Thống:
+                  </label>
                   <div className="relative">
                     <input
                       type="text"
