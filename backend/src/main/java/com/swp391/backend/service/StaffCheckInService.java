@@ -235,7 +235,8 @@ public class StaffCheckInService {
         writeActivityLog(staffAccountId, "STAFF_RESERVATION_CHECK_IN",
                 "RES " + reservation.getReservationCode() + " (id=" + reservationId
                         + "): collected " + collectedAmount + " via " + paymentMethod
-                        + "; contract=ACTIVE; unit=OCCUPIED; result=SUCCESS");
+                        + "; contract=ACTIVE; unit=OCCUPIED; result=SUCCESS",
+                floorRepository.findById(unit.getFloorId()).map(Floor::getFacilityId).orElse(null));
 
         sendCheckInEmail(reservation, contract, gatePin.getPin(), unit);
 
@@ -374,8 +375,13 @@ public class StaffCheckInService {
     }
 
     private void writeActivityLog(Integer accountId, String action, String description) {
+        writeActivityLog(accountId, action, description, null);
+    }
+
+    private void writeActivityLog(Integer accountId, String action, String description, Integer facilityId) {
         ActivityLog log = new ActivityLog();
         log.setAccountId(accountId);
+        log.setFacilityId(facilityId);
         log.setAction(action);
         log.setDescription(description);
         log.setCreatedAt(LocalDateTime.now());

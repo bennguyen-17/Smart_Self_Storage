@@ -93,11 +93,13 @@ DROP TABLE IF EXISTS ActivityLog;
 CREATE TABLE ActivityLog (
     activityLogId INT AUTO_INCREMENT PRIMARY KEY,
     accountId INT NOT NULL,
+    facilityId INT NULL,
     action VARCHAR(100) NOT NULL,
     description TEXT,
     createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ipAddress VARCHAR(45),
-    CONSTRAINT fk_activity_account FOREIGN KEY (accountId) REFERENCES Account (accountId) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT fk_activity_account FOREIGN KEY (accountId) REFERENCES Account (accountId) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_activity_facility FOREIGN KEY (facilityId) REFERENCES Facility (facilityId) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------

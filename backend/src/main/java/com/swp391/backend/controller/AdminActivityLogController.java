@@ -5,6 +5,7 @@ import com.swp391.backend.entity.Account;
 import com.swp391.backend.entity.ActivityLog;
 import com.swp391.backend.repository.AccountRepository;
 import com.swp391.backend.repository.ActivityLogRepository;
+import com.swp391.backend.repository.FacilityRepository;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,10 +23,12 @@ public class AdminActivityLogController {
 
     private final ActivityLogRepository activityLogRepository;
     private final AccountRepository accountRepository;
+    private final FacilityRepository facilityRepository;
 
-    public AdminActivityLogController(ActivityLogRepository activityLogRepository, AccountRepository accountRepository) {
+    public AdminActivityLogController(ActivityLogRepository activityLogRepository, AccountRepository accountRepository, FacilityRepository facilityRepository) {
         this.activityLogRepository = activityLogRepository;
         this.accountRepository = accountRepository;
+        this.facilityRepository = facilityRepository;
     }
 
     // --- 4. GET /api/admin/activity-logs: Nhật ký hoạt động hệ thống cho Admin ---
@@ -68,6 +71,8 @@ public class AdminActivityLogController {
             response.add(new AdminActivityLogResponse(
                     log.getActivityLogId(),
                     log.getAccountId(),
+                    log.getFacilityId(),
+                    log.getFacilityId() == null ? null : facilityRepository.findById(log.getFacilityId()).map(f -> f.getFacilityCode()).orElse(null),
                     actorName,
                     actorRole,
                     log.getAction(),

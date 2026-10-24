@@ -13,6 +13,7 @@ import com.swp391.backend.entity.ActivityLog;
 import com.swp391.backend.entity.Contract;
 import com.swp391.backend.entity.CustomerProfile;
 import com.swp391.backend.entity.EmployeeProfile;
+import com.swp391.backend.entity.Floor;
 import com.swp391.backend.entity.Payment;
 import com.swp391.backend.entity.Reservation;
 import com.swp391.backend.entity.StorageUnit;
@@ -469,8 +470,13 @@ public class StaffReservationService {
     }
 
     private void writeActivityLog(Integer accountId, String action, String description) {
+        writeActivityLog(accountId, action, description, null);
+    }
+
+    private void writeActivityLog(Integer accountId, String action, String description, Integer facilityId) {
         ActivityLog log = new ActivityLog();
         log.setAccountId(accountId);
+        log.setFacilityId(facilityId);
         log.setAction(action);
         log.setDescription(description);
         log.setCreatedAt(LocalDateTime.now());
@@ -780,7 +786,8 @@ public class StaffReservationService {
         paymentRepository.save(penaltyInvoice);
 
         writeActivityLog(staffAccountId, "COLLECT_PENALTY_AT_COUNTER",
-                "Thu phạt quá hạn tại quầy bằng " + paymentMethod + " cho hợp đồng " + (reservation.getReservationCode() != null ? reservation.getReservationCode() : contract.getContractId()) + ", số tiền: " + collectedAmount + " VND (" + overdueDays + " ngày quá hạn, đơn giá 50.000đ/ngày)");
+                "Thu phạt quá hạn tại quầy bằng " + paymentMethod + " cho hợp đồng " + (reservation.getReservationCode() != null ? reservation.getReservationCode() : contract.getContractId()) + ", số tiền: " + collectedAmount + " VND (" + overdueDays + " ngày quá hạn, đơn giá 50.000đ/ngày)",
+                unitOpt.map(StorageUnit::getFloorId).flatMap(floorRepository::findById).map(Floor::getFacilityId).orElse(null));
 
         CollectPenaltyResponse resp = new CollectPenaltyResponse();
         resp.setSuccess(true);

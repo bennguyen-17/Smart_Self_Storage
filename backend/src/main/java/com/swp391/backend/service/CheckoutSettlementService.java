@@ -403,6 +403,7 @@ public class CheckoutSettlementService {
         if (activityLogRepository != null) {
             ActivityLog act = new ActivityLog();
             act.setAccountId(staffAccountId != null ? staffAccountId : res.getAccountId());
+            act.setFacilityId(floorRepository.findById(unit.getFloorId()).map(Floor::getFacilityId).orElse(null));
             act.setAction("CONFIRM_CHECKOUT_TERMINATED");
             act.setDescription(String.format("Xác nhận bàn giao trả kho #%d (ô %s). HĐ -> TERMINATED, ô -> UNDER_MAINTENANCE, PIN vô hiệu hóa. Quyết toán: %s (Hóa đơn hoàn: %s).",
                     contract.getContractId(), unit.getUnitCode(), netAmount, refInvoice != null ? refInvoice : "0 VNĐ"));
@@ -597,6 +598,9 @@ public class CheckoutSettlementService {
         if (activityLogRepository != null) {
             ActivityLog act = new ActivityLog();
             act.setAccountId(managerAccountId != null ? managerAccountId : 1);
+            act.setFacilityId(contractRepository.findById(p.getContractId()).flatMap(c -> reservationRepository.findById(c.getReservationId()))
+                    .map(Reservation::getUnitCode).flatMap(storageUnitRepository::findById).map(StorageUnit::getFloorId)
+                    .flatMap(floorRepository::findById).map(Floor::getFacilityId).orElse(null));
             act.setAction("APPROVE_FEE_DISCOUNT");
             act.setDescription(String.format("Quản lý duyệt miễn giảm hóa đơn %s từ %s xuống %s VNĐ. Lý do: %s",
                     p.getInvoiceNumber(), originalAmount, p.getAmount(), request.getReason().trim()));

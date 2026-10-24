@@ -14,6 +14,9 @@ public class ActivityLog {
     @Column(nullable = false)
     private Integer accountId;
 
+    @Column
+    private Integer facilityId;
+
     @Column(nullable = false, length = 100)
     private String action;
 
@@ -53,6 +56,10 @@ public class ActivityLog {
     public void setAccountId(Integer accountId) {
         this.accountId = accountId;
     }
+
+    public Integer getFacilityId() { return facilityId; }
+
+    public void setFacilityId(Integer facilityId) { this.facilityId = facilityId; }
 
     public String getAction() {
         return action;
