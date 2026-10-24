@@ -18,6 +18,7 @@ import { cn } from "cn"
 import { toast } from "sonner"
 
 import { useAuth } from "@/context/AuthContext"
+import { getErrorMessage } from "@/lib/api"
 import type { ManagerTicketItem, ManagerTicketStatus } from "../types"
 import { listManagerTickets, managerAcceptTicket } from "../api/ticketApi"
 import ResolveTicketModal from "./ResolveTicketModal"
@@ -54,8 +55,8 @@ export default function ManagerTicketPanel() {
       setLoading(true)
       const data = await listManagerTickets(facilityId)
       setTickets(data)
-    } catch {
-      toast.error("Không thể tải danh sách ticket của cơ sở")
+    } catch (err) {
+      toast.error(`Không thể tải danh sách ticket của cơ sở: ${getErrorMessage(err)}`)
     } finally {
       setLoading(false)
     }
@@ -74,8 +75,8 @@ export default function ManagerTicketPanel() {
       const updated = await managerAcceptTicket(ticket.id)
       toast.success(`Quản lý đã tiếp nhận Ticket #${ticket.ticketCode} (IN_PROGRESS).`)
       setTickets((prev) => prev.map((t) => (t.id === ticket.id ? { ...t, ...updated, status: "IN_PROGRESS" } : t)))
-    } catch (err: any) {
-      toast.error(err?.response?.data || "Không thể tiếp nhận ticket, vui lòng thử lại.")
+    } catch (err) {
+      toast.error(`Không thể tiếp nhận ticket: ${getErrorMessage(err)}`)
     }
   }
 
