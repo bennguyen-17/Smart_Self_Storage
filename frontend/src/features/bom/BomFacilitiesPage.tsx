@@ -385,13 +385,10 @@ export default function BomFacilitiesPage() {
                         <button
                           type="button"
                           onClick={() => handleOpenFacilityDetail(fac)}
-                          className="font-extrabold text-white text-xs sm:text-sm hover:text-sky-400 hover:underline transition-colors text-left cursor-pointer flex items-center gap-1.5 group"
+                          className="font-extrabold text-white text-xs sm:text-sm hover:text-sky-400 hover:underline transition-colors text-left cursor-pointer"
                           title="Bấm để xem chi tiết cơ sở & danh sách ô kho"
                         >
-                          <span>{cleanName}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-950/80 text-sky-400 border border-sky-500/30 font-mono opacity-80 group-hover:opacity-100 group-hover:border-sky-400">
-                            Chi tiết &amp; Ô kho →
-                          </span>
+                          {cleanName}
                         </button>
                       </td>
 
