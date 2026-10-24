@@ -476,22 +476,11 @@ export default function BomFacilitiesPage() {
             <div className="space-y-4 text-xs">
               {/* PHÂN CÔNG QUẢN LÝ CƠ SỞ */}
               <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <UserCheck className="size-4 text-sky-400" />
-                    <span className="text-[11px] text-slate-300 uppercase font-black tracking-wider">
-                      Phân công Quản Lý Cơ Sở (Facility Manager)
-                    </span>
-                  </div>
-                  {editManagerName.trim() ? (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                      Đã gán quản lý
-                    </span>
-                  ) : (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                      Chưa phân công
-                    </span>
-                  )}
+                <div className="flex items-center gap-2">
+                  <UserCheck className="size-4 text-sky-400" />
+                  <span className="text-[11px] text-slate-300 uppercase font-black tracking-wider">
+                    Phân công Quản Lý Cơ Sở (Facility Manager)
+                  </span>
                 </div>
 
                 {/* 1. MENU SỔ XUỐNG ĐƯA LÊN TRÊN CÙNG */}
