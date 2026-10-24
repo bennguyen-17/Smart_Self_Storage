@@ -67,6 +67,7 @@ public class StaffReservationService {
     private static final String RESERVATION_PENDING = "PENDING";
     private static final String RESERVATION_CONFIRMED = "CONFIRMED";
     private static final BigDecimal DAILY_OVERDUE_FEE = new BigDecimal("50000.00");
+    private static final int MAX_CHARGEABLE_OVERDUE_DAYS = 29;
 
     private final ReservationRepository reservationRepository;
     private final AccountRepository accountRepository;
@@ -583,7 +584,8 @@ public class StaffReservationService {
         LocalDate endDate = reservation.getEndDate();
         int overdueDays = 0;
         if (endDate != null && endDate.isBefore(today)) {
-            overdueDays = (int) ChronoUnit.DAYS.between(endDate, today);
+            overdueDays = (int) Math.min(
+                    ChronoUnit.DAYS.between(endDate, today), MAX_CHARGEABLE_OVERDUE_DAYS);
         }
         item.setOverdueDays(overdueDays);
 
@@ -735,7 +737,8 @@ public class StaffReservationService {
         LocalDate today = LocalDate.now();
         LocalDate endDate = reservation.getEndDate();
         int overdueDays = (endDate != null && endDate.isBefore(today))
-                ? (int) ChronoUnit.DAYS.between(endDate, today)
+                ? (int) Math.min(
+                        ChronoUnit.DAYS.between(endDate, today), MAX_CHARGEABLE_OVERDUE_DAYS)
                 : 0;
 
         BigDecimal totalExpected = DAILY_OVERDUE_FEE.multiply(BigDecimal.valueOf(overdueDays));
@@ -824,7 +827,8 @@ public class StaffReservationService {
         LocalDate today = LocalDate.now();
         LocalDate endDate = reservation.getEndDate();
         int overdueDays = (endDate != null && endDate.isBefore(today))
-                ? (int) ChronoUnit.DAYS.between(endDate, today)
+                ? (int) Math.min(
+                        ChronoUnit.DAYS.between(endDate, today), MAX_CHARGEABLE_OVERDUE_DAYS)
                 : 0;
         BigDecimal expectedPenalty = DAILY_OVERDUE_FEE.multiply(BigDecimal.valueOf(overdueDays));
 
