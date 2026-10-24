@@ -15,7 +15,7 @@ export const CONTRACT_STATUS_LABEL: Record<ContractStatus, string> = {
 }
 
 /**
- * DB có thể lẫn 2 cách viết "CANCELED" / "CANCELLED" (ENUM nhận cả hai); FE chỉ dùng "CANCELED".
+ * Trạng thái hợp đồng chuẩn hóa CANCELLED (2 chữ L).
  * Trạng thái khác giữ nguyên, viết hoa.
  */
 export function normalizeContractStatus(status: string): ContractStatus {

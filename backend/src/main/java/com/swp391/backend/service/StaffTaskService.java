@@ -126,7 +126,7 @@ public class StaffTaskService {
             if (!facilityId.equals(getUnitFacilityId(unit))) {
                 throw new AccessDeniedException("Ô kho không thuộc cơ sở của Manager.");
             }
-            if (!"UNDER_MAINTENANCE".equalsIgnoreCase(unit.getStatus())
+            if (!"MAINTENANCE".equalsIgnoreCase(unit.getStatus())
                     && !"MAINTENANCE".equalsIgnoreCase(unit.getStatus())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Ô kho chưa ở trạng thái bảo trì.");
             }

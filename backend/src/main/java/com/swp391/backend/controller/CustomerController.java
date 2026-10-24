@@ -36,44 +36,37 @@ public class CustomerController {
         this.emailService = emailService;
     }
 
-    private Account resolveAccount(String authHeader, Long accountId) {
-        Long targetId = accountId;
-
-        if (targetId == null && authHeader != null && authHeader.startsWith("Bearer ")) {
-            try {
-                String token = authHeader.substring(7);
-                Claims claims = jwtService.validateTokenAndGetClaims(token);
-                Object userIdObj = claims.get("userId");
-                if (userIdObj instanceof Number) {
-                    targetId = ((Number) userIdObj).longValue();
-                } else if (userIdObj != null) {
-                    targetId = Long.parseLong(userIdObj.toString());
-                }
-            } catch (Exception e) {
-                // Token parse error
+    private Account resolveAccount(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        try {
+            String token = authHeader.substring(7);
+            Claims claims = jwtService.validateTokenAndGetClaims(token);
+            Object userIdObj = claims.get("userId");
+            Long targetId = null;
+            if (userIdObj instanceof Number) {
+                targetId = ((Number) userIdObj).longValue();
+            } else if (userIdObj != null) {
+                targetId = Long.parseLong(userIdObj.toString());
             }
+            if (targetId != null) {
+                return accountRepository.findById(targetId).orElse(null);
+            }
+        } catch (Exception e) {
+            // Token parse error
         }
-
-        if (targetId != null) {
-            Account account = accountRepository.findById(targetId).orElse(null);
-            if (account != null) return account;
-        }
-
-        return accountRepository.findAll().stream()
-                .filter(a -> a.getRoleId() != null && a.getRoleId() == 5L)
-                .findFirst()
-                .orElse(null);
+        return null;
     }
 
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestParam(required = false) Long accountId) {
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         
-        Account account = resolveAccount(authHeader, accountId);
+        Account account = resolveAccount(authHeader);
 
         if (account == null) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(401).body(new ApiResponse(false, "Vui lòng đăng nhập để xem thông tin hồ sơ."));
         }
 
         // Fetch CustomerProfile from Database
@@ -107,11 +100,9 @@ public class CustomerController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, Object> request) {
         
-        Long accountId = request.containsKey("accountId") && request.get("accountId") != null 
-                ? Long.parseLong(request.get("accountId").toString()) : null;
-        Account account = resolveAccount(authHeader, accountId);
+        Account account = resolveAccount(authHeader);
         if (account == null) {
-            return ResponseEntity.badRequest().body(new ApiResponse(false, "Không tìm thấy thông tin tài khoản."));
+            return ResponseEntity.status(401).body(new ApiResponse(false, "Vui lòng đăng nhập."));
         }
 
         String newEmail = request.get("newEmail") != null ? request.get("newEmail").toString().trim().toLowerCase() : null;
@@ -145,11 +136,9 @@ public class CustomerController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, Object> updateData) {
         
-        Long accountId = updateData.containsKey("accountId") && updateData.get("accountId") != null 
-                ? Long.parseLong(updateData.get("accountId").toString()) : null;
-        Account account = resolveAccount(authHeader, accountId);
+        Account account = resolveAccount(authHeader);
         if (account == null) {
-            return ResponseEntity.badRequest().body(new ApiResponse(false, "Không tìm thấy tài khoản."));
+            return ResponseEntity.status(401).body(new ApiResponse(false, "Vui lòng đăng nhập."));
         }
 
         // 1. Họ và tên

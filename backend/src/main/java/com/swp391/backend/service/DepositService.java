@@ -139,7 +139,7 @@ public class DepositService {
         Contract contract = new Contract();
         contract.setReservationId(reservation.getReservationId());
         contract.setPdfUrl("/contracts/" + contractCode + ".pdf");
-        contract.setStatus("PENDING_CHECKIN");
+        contract.setStatus("INITIATED");
         contract = contractRepository.save(contract);
 
         // Tạo Hóa đơn tiền cọc (Payment): DEP-[Mã Hợp Đồng]

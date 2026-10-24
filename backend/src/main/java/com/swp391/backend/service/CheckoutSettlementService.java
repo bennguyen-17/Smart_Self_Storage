@@ -313,8 +313,8 @@ public class CheckoutSettlementService {
         contract.setTerminatedAt(LocalDateTime.now());
         contractRepository.save(contract);
 
-        // Ô kho chuyển ngay sang UNDER_MAINTENANCE để Staff dọn dẹp
-        unit.setStatus("UNDER_MAINTENANCE");
+        // Ô kho chuyển ngay sang MAINTENANCE để Staff dọn dẹp
+        unit.setStatus("MAINTENANCE");
         storageUnitRepository.save(unit);
 
         // Vô hiệu hóa toàn bộ mã PIN của khách tại cơ sở này ngay lập tức
@@ -407,7 +407,7 @@ public class CheckoutSettlementService {
             act.setAccountId(staffAccountId != null ? staffAccountId : res.getAccountId());
             act.setFacilityId(floorRepository.findById(unit.getFloorId()).map(Floor::getFacilityId).orElse(null));
             act.setAction("CONFIRM_CHECKOUT_TERMINATED");
-            act.setDescription(String.format("Xác nhận bàn giao trả kho #%d (ô %s). HĐ -> TERMINATED, ô -> UNDER_MAINTENANCE, PIN vô hiệu hóa. Quyết toán: %s (Hóa đơn hoàn: %s).",
+            act.setDescription(String.format("Xác nhận bàn giao trả kho #%d (ô %s). HĐ -> TERMINATED, ô -> MAINTENANCE, PIN vô hiệu hóa. Quyết toán: %s (Hóa đơn hoàn: %s).",
                     contract.getContractId(), unit.getUnitCode(), netAmount, refInvoice != null ? refInvoice : "0 VNĐ"));
             act.setCreatedAt(LocalDateTime.now());
             activityLogRepository.save(act);
@@ -419,12 +419,12 @@ public class CheckoutSettlementService {
 
         CheckoutConfirmResponse resp = new CheckoutConfirmResponse();
         resp.setSuccess(true);
-        resp.setMessage(String.format("Nhận bàn giao thành công! Hợp đồng đã chuyển TERMINATED, ô kho chuyển UNDER_MAINTENANCE, mã PIN bị vô hiệu. Lệnh hoàn cọc: %s.",
+        resp.setMessage(String.format("Nhận bàn giao thành công! Hợp đồng đã chuyển TERMINATED, ô kho chuyển MAINTENANCE, mã PIN bị vô hiệu. Lệnh hoàn cọc: %s.",
                 refInvoice != null ? refInvoice + " (" + netAmount + " VNĐ)" : "0 VNĐ"));
         resp.setContractId(contract.getContractId());
         resp.setContractStatus("TERMINATED");
         resp.setUnitCode(unit.getUnitCode());
-        resp.setUnitStatus("UNDER_MAINTENANCE");
+        resp.setUnitStatus("MAINTENANCE");
         resp.setGatePinDisabled(true);
         resp.setInvoiceNumber(refInvoice);
         resp.setInvoiceType("REFUND");

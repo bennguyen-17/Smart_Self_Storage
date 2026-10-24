@@ -73,11 +73,10 @@ public class ContractController {
 
     @GetMapping("/contracts/my-contracts")
     public ResponseEntity<List<Map<String, Object>>> getMyContracts(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestParam(required = false) Integer accountId) {
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
-        Integer targetId = accountId;
-        if (targetId == null && authHeader != null && authHeader.startsWith("Bearer ")) {
+        Integer targetId = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
             try {
                 String token = authHeader.substring(7);
                 Claims claims = jwtService.validateTokenAndGetClaims(token);
@@ -90,7 +89,7 @@ public class ContractController {
             } catch (Exception ignored) {}
         }
         if (targetId == null) {
-            targetId = 7;
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
         }
 
         List<Reservation> reservations = reservationRepository.findByAccountId(targetId);
@@ -101,6 +100,9 @@ public class ContractController {
             if (contractOpt.isEmpty()) continue;
 
             Contract c = contractOpt.get();
+            if ("INITIATED".equalsIgnoreCase(c.getStatus())) {
+                continue; // Bỏ qua đơn giữ chỗ chưa thanh toán cọc
+            }
             Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitCode());
             if (unitOpt.isEmpty()) continue;
 
@@ -259,11 +261,10 @@ public class ContractController {
     @GetMapping("/gate-pins/live")
     public ResponseEntity<Map<String, Object>> getLiveGatePin(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestParam(required = false) Integer accountId,
             @RequestParam(required = false) String branchCode) {
 
-        Integer targetId = accountId;
-        if (targetId == null && authHeader != null && authHeader.startsWith("Bearer ")) {
+        Integer targetId = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
             try {
                 String token = authHeader.substring(7);
                 Claims claims = jwtService.validateTokenAndGetClaims(token);
@@ -276,7 +277,7 @@ public class ContractController {
             } catch (Exception ignored) {}
         }
         if (targetId == null) {
-            targetId = 7;
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
         }
 
         String targetBranch = branchCode != null ? branchCode.trim().replace("-", "").toUpperCase() : "HN01";

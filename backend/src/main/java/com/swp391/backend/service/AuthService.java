@@ -11,6 +11,9 @@ import com.swp391.backend.repository.CustomerProfileRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.swp391.backend.entity.ActivityLog;
+import com.swp391.backend.repository.ActivityLogRepository;
+import io.jsonwebtoken.Claims;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
@@ -22,15 +25,24 @@ public class AuthService {
     private final CustomerProfileRepository customerProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final TokenBlacklistService tokenBlacklistService;
+    private final ActivityLogRepository activityLogRepository;
+    private final JwtService jwtService;
 
-    public AuthService(AccountRepository accountRepository, 
+    public AuthService(AccountRepository accountRepository,
                        CustomerProfileRepository customerProfileRepository,
                        PasswordEncoder passwordEncoder,
-                       EmailService emailService) {
+                       EmailService emailService,
+                       TokenBlacklistService tokenBlacklistService,
+                       ActivityLogRepository activityLogRepository,
+                       JwtService jwtService) {
         this.accountRepository = accountRepository;
         this.customerProfileRepository = customerProfileRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.tokenBlacklistService = tokenBlacklistService;
+        this.activityLogRepository = activityLogRepository;
+        this.jwtService = jwtService;
     }
 
     // --- US-01: Đăng ký & OTP ---
@@ -159,5 +171,34 @@ public class AuthService {
         }
 
         return new ApiResponse(true, "Mã OTP mới đã được gửi lại vào email của bạn. Vui lòng kiểm tra hộp thư!");
+    }
+
+    // --- US-02: Đăng xuất & Thu hồi Token (Logout) ---
+    public ApiResponse logout(String authHeader, String ipAddress) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7).trim();
+            tokenBlacklistService.blacklistToken(token);
+
+            try {
+                Claims claims = jwtService.validateTokenAndGetClaims(token);
+                Object userIdObj = claims.get("userId");
+                Integer accountId = null;
+                if (userIdObj instanceof Number) {
+                    accountId = ((Number) userIdObj).intValue();
+                } else if (userIdObj != null) {
+                    accountId = Integer.parseInt(userIdObj.toString());
+                }
+                if (accountId != null && activityLogRepository != null) {
+                    ActivityLog log = new ActivityLog();
+                    log.setAccountId(accountId);
+                    log.setAction("LOGOUT");
+                    log.setDescription("Người dùng đã đăng xuất khỏi hệ thống.");
+                    log.setIpAddress(ipAddress != null ? ipAddress : "127.0.0.1");
+                    log.setCreatedAt(LocalDateTime.now());
+                    activityLogRepository.save(log);
+                }
+            } catch (Exception ignored) {}
+        }
+        return new ApiResponse(true, "Đăng xuất thành công.");
     }
 }
