@@ -1013,7 +1013,7 @@ export default function BomFacilitiesPage() {
               </button>
             </div>
 
-            {/* Thống kê 4 thẻ KPI nhanh */}
+            {/* Thống kê 4 thẻ KPI nhanh - ĐỒNG BỘ 1 MÀU DUY NHẤT */}
             {(() => {
               const all = facilityUnits
               const total = all.length || (detailFacility.totalUnits || 46)
@@ -1024,43 +1024,43 @@ export default function BomFacilitiesPage() {
 
               return (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  <div className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
+                  <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
                     <div>
                       <div className="text-[10px] uppercase font-bold text-slate-400">Tổng Số Ô Kho</div>
-                      <div className="text-lg font-black text-white">{total}</div>
+                      <div className="text-xl font-black font-mono text-white mt-0.5">{total}</div>
                     </div>
-                    <div className="size-8 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center font-bold text-xs">
+                    <div className="size-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs">
                       🏢
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-slate-950/70 border border-emerald-500/20 flex items-center justify-between">
+                  <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
                     <div>
-                      <div className="text-[10px] uppercase font-bold text-emerald-400">Còn Trống</div>
-                      <div className="text-lg font-black text-emerald-300">{available}</div>
+                      <div className="text-[10px] uppercase font-bold text-slate-400">Còn Trống</div>
+                      <div className="text-xl font-black font-mono text-white mt-0.5">{available}</div>
                     </div>
-                    <div className="size-8 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold text-xs">
-                      🟢
+                    <div className="size-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs">
+                      📦
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-slate-950/70 border border-rose-500/20 flex items-center justify-between">
+                  <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
                     <div>
-                      <div className="text-[10px] uppercase font-bold text-rose-400">Đang Thuê</div>
-                      <div className="text-lg font-black text-rose-300">{occupied}</div>
+                      <div className="text-[10px] uppercase font-bold text-slate-400">Đang Thuê</div>
+                      <div className="text-xl font-black font-mono text-white mt-0.5">{occupied}</div>
                     </div>
-                    <div className="size-8 rounded-xl bg-rose-500/15 text-rose-400 flex items-center justify-center font-bold text-xs">
-                      🔴
+                    <div className="size-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs">
+                      🔑
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-slate-950/70 border border-amber-500/20 flex items-center justify-between">
+                  <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
                     <div>
-                      <div className="text-[10px] uppercase font-bold text-amber-400">Giữ Chỗ / Bảo Trì</div>
-                      <div className="text-lg font-black text-amber-300">{hold + maintenance}</div>
+                      <div className="text-[10px] uppercase font-bold text-slate-400">Giữ Chỗ / Bảo Trì</div>
+                      <div className="text-xl font-black font-mono text-white mt-0.5">{hold + maintenance}</div>
                     </div>
-                    <div className="size-8 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center font-bold text-xs">
-                      🟡
+                    <div className="size-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs">
+                      🛠️
                     </div>
                   </div>
                 </div>
@@ -1071,7 +1071,7 @@ export default function BomFacilitiesPage() {
             <div className="flex-1 overflow-y-auto pr-1 space-y-4">
               {isLoadingUnits ? (
                 <div className="p-12 text-center text-slate-400 font-bold space-y-2">
-                  <div className="size-6 border-2 border-sky-400 border-t-transparent rounded-full animate-spin mx-auto" />
+                  <div className="size-6 border-2 border-slate-400 border-t-transparent rounded-full animate-spin mx-auto" />
                   <p className="text-xs">Đang tổng hợp số liệu báo cáo cơ sở...</p>
                 </div>
               ) : (
@@ -1079,8 +1079,8 @@ export default function BomFacilitiesPage() {
                   {/* BẢNG 1: BÁO CÁO CƠ CẤU Ô KHO THEO SIZE */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-black text-xs uppercase text-sky-400 tracking-wider flex items-center gap-1.5">
-                        <span>📊 BÁO CÁO CƠ CẤU Ô KHO THEO SIZE &amp; LOẠI HÌNH</span>
+                      <h4 className="font-black text-xs uppercase text-slate-200 tracking-wider">
+                        BÁO CÁO CƠ CẤU Ô KHO THEO SIZE &amp; LOẠI HÌNH
                       </h4>
                       <span className="text-[11px] text-slate-400">
                         Mô hình: <strong className="text-white">{detailFacility.layoutType || "Layout A"}</strong>
@@ -1094,10 +1094,10 @@ export default function BomFacilitiesPage() {
                             <th className="p-3 text-left">Phân Loại / Size</th>
                             <th className="p-3 text-center">Quy Cách Sàn</th>
                             <th className="p-3 text-center">Tổng Số Ô</th>
-                            <th className="p-3 text-center text-rose-400">Đang Thuê</th>
-                            <th className="p-3 text-center text-emerald-400">Còn Trống</th>
-                            <th className="p-3 text-center text-amber-400">Giữ Chỗ / Bảo Trì</th>
-                            <th className="p-3 text-center text-sky-400">Tỷ Lệ Lấp Đầy</th>
+                            <th className="p-3 text-center">Đang Thuê</th>
+                            <th className="p-3 text-center">Còn Trống</th>
+                            <th className="p-3 text-center">Giữ Chỗ / Bảo Trì</th>
+                            <th className="p-3 text-center">Tỷ Lệ Lấp Đầy</th>
                             <th className="p-3 text-right">Doanh Thu / Tháng</th>
                           </tr>
                         </thead>
@@ -1158,21 +1158,21 @@ export default function BomFacilitiesPage() {
                                   </td>
                                   <td className="p-3 text-center font-mono text-slate-400">{cfg.dim}</td>
                                   <td className="p-3 text-center font-bold text-white font-mono">{total} ô</td>
-                                  <td className="p-3 text-center font-bold text-rose-400 font-mono">{occupied}</td>
-                                  <td className="p-3 text-center font-bold text-emerald-400 font-mono">{available}</td>
-                                  <td className="p-3 text-center font-bold text-amber-400 font-mono">{holdMaint}</td>
+                                  <td className="p-3 text-center font-bold text-white font-mono">{occupied}</td>
+                                  <td className="p-3 text-center font-bold text-white font-mono">{available}</td>
+                                  <td className="p-3 text-center font-bold text-white font-mono">{holdMaint}</td>
                                   <td className="p-3 text-center">
                                     <div className="flex items-center justify-center gap-2">
-                                      <span className="font-mono font-bold text-sky-400">{occRate}%</span>
+                                      <span className="font-mono font-bold text-white">{occRate}%</span>
                                       <div className="w-14 bg-slate-800 rounded-full h-1.5 overflow-hidden">
                                         <div
-                                          className="h-full bg-sky-500 rounded-full"
+                                          className="h-full bg-slate-300 rounded-full"
                                           style={{ width: `${Math.min(occRate, 100)}%` }}
                                         />
                                       </div>
                                     </div>
                                   </td>
-                                  <td className="p-3 text-right font-mono font-black text-sky-400">
+                                  <td className="p-3 text-right font-mono font-bold text-white">
                                     ₫{revenue.toLocaleString("vi-VN")}
                                   </td>
                                 </tr>
@@ -1185,16 +1185,16 @@ export default function BomFacilitiesPage() {
                               <>
                                 {rows}
                                 <tr className="bg-slate-950 font-black border-t-2 border-slate-700 text-white">
-                                  <td className="p-3 text-left uppercase text-sky-400 tracking-wider">
+                                  <td className="p-3 text-left uppercase text-white tracking-wider">
                                     TỔNG CỘNG CƠ CẤU
                                   </td>
                                   <td className="p-3 text-center text-slate-400 font-mono">—</td>
                                   <td className="p-3 text-center font-mono text-white text-sm">{grandTotal} ô</td>
-                                  <td className="p-3 text-center font-mono text-rose-400 text-sm">{grandOccupied}</td>
-                                  <td className="p-3 text-center font-mono text-emerald-400 text-sm">{grandAvailable}</td>
-                                  <td className="p-3 text-center font-mono text-amber-400 text-sm">{grandHoldMaint}</td>
-                                  <td className="p-3 text-center font-mono text-sky-400 text-sm">{grandRate}%</td>
-                                  <td className="p-3 text-right font-mono text-sky-400 text-sm">
+                                  <td className="p-3 text-center font-mono text-white text-sm">{grandOccupied}</td>
+                                  <td className="p-3 text-center font-mono text-white text-sm">{grandAvailable}</td>
+                                  <td className="p-3 text-center font-mono text-white text-sm">{grandHoldMaint}</td>
+                                  <td className="p-3 text-center font-mono text-white text-sm">{grandRate}%</td>
+                                  <td className="p-3 text-right font-mono text-white text-sm">
                                     ₫{grandRevenue.toLocaleString("vi-VN")}
                                   </td>
                                 </tr>
@@ -1208,8 +1208,8 @@ export default function BomFacilitiesPage() {
 
                   {/* BẢNG 2: BÁO CÁO PHÂN BỔ THEO TẦNG */}
                   <div className="space-y-2 pt-2">
-                    <h4 className="font-black text-xs uppercase text-sky-400 tracking-wider flex items-center gap-1.5">
-                      <span>🏢 BÁO CÁO KHAI THÁC &amp; TẢI TRỌNG THEO TẦNG</span>
+                    <h4 className="font-black text-xs uppercase text-slate-200 tracking-wider">
+                      BÁO CÁO KHAI THÁC &amp; TẢI TRỌNG THEO TẦNG
                     </h4>
 
                     <div className="overflow-x-auto rounded-2xl border border-slate-800">
@@ -1219,9 +1219,9 @@ export default function BomFacilitiesPage() {
                             <th className="p-3 text-left">Vị Trí Tầng</th>
                             <th className="p-3 text-left">Bố Trí Không Gian &amp; Tải Trọng</th>
                             <th className="p-3 text-center">Tổng Số Ô</th>
-                            <th className="p-3 text-center text-rose-400">Đang Thuê</th>
-                            <th className="p-3 text-center text-emerald-400">Còn Trống</th>
-                            <th className="p-3 text-center text-sky-400">Tỷ Lệ Lấp Đầy</th>
+                            <th className="p-3 text-center">Đang Thuê</th>
+                            <th className="p-3 text-center">Còn Trống</th>
+                            <th className="p-3 text-center">Tỷ Lệ Lấp Đầy</th>
                             <th className="p-3 text-right">Doanh Thu Theo Tầng</th>
                           </tr>
                         </thead>
@@ -1259,20 +1259,20 @@ export default function BomFacilitiesPage() {
                                   </td>
                                   <td className="p-3 text-left text-slate-400">{f.desc}</td>
                                   <td className="p-3 text-center font-bold text-white font-mono">{total} ô</td>
-                                  <td className="p-3 text-center font-bold text-rose-400 font-mono">{occupied}</td>
-                                  <td className="p-3 text-center font-bold text-emerald-400 font-mono">{available}</td>
+                                  <td className="p-3 text-center font-bold text-white font-mono">{occupied}</td>
+                                  <td className="p-3 text-center font-bold text-white font-mono">{available}</td>
                                   <td className="p-3 text-center">
                                     <div className="flex items-center justify-center gap-2">
-                                      <span className="font-mono font-bold text-sky-400">{occRate}%</span>
+                                      <span className="font-mono font-bold text-white">{occRate}%</span>
                                       <div className="w-14 bg-slate-800 rounded-full h-1.5 overflow-hidden">
                                         <div
-                                          className="h-full bg-sky-500 rounded-full"
+                                          className="h-full bg-slate-300 rounded-full"
                                           style={{ width: `${Math.min(occRate, 100)}%` }}
                                         />
                                       </div>
                                     </div>
                                   </td>
-                                  <td className="p-3 text-right font-mono font-black text-sky-400">
+                                  <td className="p-3 text-right font-mono font-bold text-white">
                                     ₫{revenue.toLocaleString("vi-VN")}
                                   </td>
                                 </tr>
