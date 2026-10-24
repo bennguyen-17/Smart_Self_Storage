@@ -764,12 +764,7 @@ export default function BomFacilitiesPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-xs text-sky-400">Layout A</span>
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">
-                          Đa Năng / Đô Thị
-                        </span>
-                      </div>
+                      <span className="font-extrabold text-xs text-sky-400">Layout A</span>
                       {newFacLayout === "A" && <CheckCircle2 className="size-4 text-sky-400" />}
                     </div>
                     <div className="space-y-1 text-[10px] text-slate-400 bg-slate-900/90 p-2 rounded-xl border border-slate-800">
@@ -798,12 +793,7 @@ export default function BomFacilitiesPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-xs text-amber-400">Layout B</span>
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                          Kho Vận / Tinh Gọn
-                        </span>
-                      </div>
+                      <span className="font-extrabold text-xs text-amber-400">Layout B</span>
                       {newFacLayout === "B" && <CheckCircle2 className="size-4 text-amber-400" />}
                     </div>
                     <div className="space-y-1 text-[10px] text-slate-400 bg-slate-900/90 p-2 rounded-xl border border-slate-800">
