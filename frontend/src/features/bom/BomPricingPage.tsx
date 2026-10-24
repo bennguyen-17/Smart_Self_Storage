@@ -9,8 +9,6 @@ import {
   CheckCircle,
   X,
   Trash2,
-  LayoutGrid,
-  Table,
   Snowflake,
   ShieldCheck,
   Tag,
@@ -52,9 +50,6 @@ const SIZE_THEMES: Record<string, { badge: string; border: string; glow: string;
 
 export default function BomPricingPage() {
   const { pricingList, setPricingList, surcharges, setSurcharges, updatePricingInDb } = useBomContext()
-
-  // View mode: cards (thẻ trực quan) hoặc table (bảng đối soát)
-  const [pricingViewMode, setPricingViewMode] = useState<"cards" | "table">("cards")
 
   // Search & Filter state for surcharges
   const [searchSurcharge, setSearchSurcharge] = useState("")
@@ -233,51 +228,6 @@ export default function BomPricingPage() {
               Quy chuẩn 4 kích thước kho cố định (chiều cao 2.0m), đơn giá kho mát (+20%) và biểu phí áp dụng toàn chuỗi
             </p>
           </div>
-
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Chuyển đổi giao diện Thẻ / Bảng */}
-            <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-1 text-xs">
-              <button
-                type="button"
-                onClick={() => setPricingViewMode("cards")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
-                  pricingViewMode === "cards"
-                    ? "bg-sky-500 text-slate-950 font-black shadow-sm"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                <LayoutGrid className="size-3.5" />
-                <span>Dạng Thẻ</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setPricingViewMode("table")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
-                  pricingViewMode === "table"
-                    ? "bg-sky-500 text-slate-950 font-black shadow-sm"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                <Table className="size-3.5" />
-                <span>Dạng Bảng</span>
-              </button>
-            </div>
-
-            <button
-              onClick={handleOpenAddSurcharge}
-              className="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm"
-            >
-              <Plus className="size-4 text-sky-400" />
-              <span>Thêm Phụ Thu</span>
-            </button>
-            <button
-              onClick={() => handleOpenPricingModal()}
-              className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl shadow-md shadow-sky-500/20 transition flex items-center gap-1.5 cursor-pointer"
-            >
-              <Edit3 className="size-4" />
-              <span>Cập Nhật Giá</span>
-            </button>
-          </div>
         </div>
 
         {/* 1. KHUNG GIÁ THUÊ 4 SIZE KHO */}
@@ -294,158 +244,95 @@ export default function BomPricingPage() {
             </div>
           </div>
 
-          {pricingViewMode === "cards" ? (
-            /* GIAO DIỆN DẠNG THẺ (PRICING CARDS - THUẬN MẮT, HIỆN ĐẠI) */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {pricingList.map((item) => {
-                const theme = SIZE_THEMES[item.size] || SIZE_THEMES.S
-                return (
-                  <div
-                    key={item.id}
-                    className={`group relative p-5 rounded-2xl bg-slate-900/60 border ${theme.border} transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between shadow-lg overflow-hidden`}
-                  >
-                    {/* Gradient ánh sáng phía trên */}
-                    <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.glow}`} />
+          {/* GIAO DIỆN DẠNG THẺ (PRICING CARDS - THUẬN MẮT, HIỆN ĐẠI) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {pricingList.map((item) => {
+              const theme = SIZE_THEMES[item.size] || SIZE_THEMES.S
+              return (
+                <div
+                  key={item.id}
+                  className={`group relative p-5 rounded-2xl bg-slate-900/60 border ${theme.border} transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between shadow-lg overflow-hidden`}
+                >
+                  {/* Gradient ánh sáng phía trên */}
+                  <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.glow}`} />
 
-                    <div className="space-y-3.5">
-                      {/* Size Badge & Tên */}
-                      <div className="flex items-center justify-between">
-                        <span className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase border ${theme.badge}`}>
-                          Size {item.size}
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-                          {item.status}
-                        </span>
-                      </div>
+                  <div className="space-y-3.5">
+                    {/* Size Badge & Tên */}
+                    <div className="flex items-center justify-between">
+                      <span className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase border ${theme.badge}`}>
+                        Size {item.size}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                        {item.status}
+                      </span>
+                    </div>
 
-                      <div>
-                        <div className="font-black text-white text-base group-hover:text-sky-300 transition-colors">
-                          {item.name}
-                        </div>
-                      </div>
-
-                      {/* Quy cách sàn & kích thước */}
-                      <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs font-mono text-center">
-                        <span className="text-white font-bold">{item.dimensions}</span>
-                        <span className="text-slate-400 text-[10px] block mt-0.5">
-                          Sàn {item.area} • Cao {item.height || "2.0m"}
-                        </span>
-                      </div>
-
-                      {/* Giá thuê chính (Kho Thường) */}
-                      <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800/80 text-center space-y-1">
-                        <div className="text-[10px] uppercase font-bold text-slate-400">Giá Kho Thường</div>
-                        <div className="text-xl font-black font-mono text-sky-400">
-                          ₫{item.normPrice.toLocaleString("vi-VN")}
-                          <span className="text-[10px] font-sans font-medium text-slate-400"> /tháng</span>
-                        </div>
-                        <div className="text-[11px] font-mono font-semibold text-slate-300">
-                          ₫{item.dailyPrice.toLocaleString("vi-VN")}{" "}
-                          <span className="text-[10px] font-sans text-slate-500">/ngày</span>
-                        </div>
-                      </div>
-
-                      {/* Thông số phụ: Kho Điều Hòa & Tiền Cọc */}
-                      <div className="space-y-2 text-xs">
-                        <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
-                          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300">
-                            <Snowflake className="size-3 text-sky-400" />
-                            <span>Kho Mát (+20%):</span>
-                          </span>
-                          <span className="font-mono font-bold text-sky-300 text-xs">
-                            ₫{item.acPrice.toLocaleString("vi-VN")}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
-                          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300">
-                            <ShieldCheck className="size-3 text-sky-400" />
-                            <span>Tiền Cọc Chuẩn:</span>
-                          </span>
-                          <span className="font-mono font-bold text-slate-200 text-xs">
-                            ₫{item.depositAmount.toLocaleString("vi-VN")}
-                          </span>
-                        </div>
+                    <div>
+                      <div className="font-black text-white text-base group-hover:text-sky-300 transition-colors">
+                        {item.name}
                       </div>
                     </div>
 
-                    {/* Nút hành động sửa giá & cọc */}
-                    <div className="pt-4 mt-2 border-t border-slate-800">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenPricingModal(item)}
-                        className="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-sky-500 text-slate-200 hover:text-slate-950 font-black text-xs transition cursor-pointer flex items-center justify-center gap-1.5 border border-slate-700"
-                      >
-                        <Edit3 className="size-3.5" />
-                        <span>Sửa Giá &amp; Cọc</span>
-                      </button>
+                    {/* Quy cách sàn & kích thước */}
+                    <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs font-mono text-center">
+                      <span className="text-white font-bold">{item.dimensions}</span>
+                      <span className="text-slate-400 text-[10px] block mt-0.5">
+                        Sàn {item.area} • Cao {item.height || "2.0m"}
+                      </span>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            /* GIAO DIỆN DẠNG BẢNG (TABLE VIEW) */
-            <div className="overflow-x-auto rounded-2xl border border-slate-800">
-              <table className="w-full text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-800 bg-slate-900/80 uppercase font-black text-slate-300 text-[10px]">
-                    <th className="p-3.5 text-center">Size Kho</th>
-                    <th className="p-3.5 text-center">Quy Cách Sàn</th>
-                    <th className="p-3.5 text-center">Giá Ngày (Non-AC)</th>
-                    <th className="p-3.5 text-center">Kho Thường (Tháng)</th>
-                    <th className="p-3.5 text-center">Kho Điều Hòa (+20%)</th>
-                    <th className="p-3.5 text-center">Tiền Cọc Chuẩn</th>
-                    <th className="p-3.5 text-center">Trạng Thái</th>
-                    <th className="p-3.5 text-center">Thao Tác</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800 font-semibold text-slate-300">
-                  {pricingList.map((item) => (
-                    <tr key={item.id} className="hover:bg-slate-900/40 transition">
-                      <td className="p-3.5 text-center">
-                        <div className="font-extrabold text-white">{item.name}</div>
-                      </td>
-                      <td className="p-3.5 text-center font-mono">
-                        <span className="font-bold text-white">{item.dimensions}</span>
-                        <span className="text-slate-400 block text-[10px]">({item.area} • Cao {item.height || "2.0m"})</span>
-                      </td>
-                      <td className="p-3.5 text-center font-semibold font-mono text-slate-300 text-sm">
-                        ₫{item.dailyPrice.toLocaleString("vi-VN")} <span className="text-[10px] text-slate-400 font-sans">/ngày</span>
-                      </td>
-                      <td className="p-3.5 text-center font-black font-mono text-sky-400 text-sm">
-                        ₫{item.normPrice.toLocaleString("vi-VN")} <span className="text-[10px] text-slate-400 font-sans">/tháng</span>
-                      </td>
-                      <td className="p-3.5 text-center font-semibold font-mono text-sky-300 text-sm">
-                        ₫{item.acPrice.toLocaleString("vi-VN")} <span className="text-[10px] text-slate-400 font-sans">/tháng</span>
-                        <span className="block text-[10px] text-slate-400 font-sans">
-                          (₫{Math.round(item.dailyPrice * 1.2).toLocaleString("vi-VN")}/ngày)
+
+                    {/* Giá thuê chính (Kho Thường) */}
+                    <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800/80 text-center space-y-1">
+                      <div className="text-[10px] uppercase font-bold text-slate-400">Giá Kho Thường</div>
+                      <div className="text-xl font-black font-mono text-sky-400">
+                        ₫{item.normPrice.toLocaleString("vi-VN")}
+                        <span className="text-[10px] font-sans font-medium text-slate-400"> /tháng</span>
+                      </div>
+                      <div className="text-[11px] font-mono font-semibold text-slate-300">
+                        ₫{item.dailyPrice.toLocaleString("vi-VN")}{" "}
+                        <span className="text-[10px] font-sans text-slate-500">/ngày</span>
+                      </div>
+                    </div>
+
+                    {/* Thông số phụ: Kho Điều Hòa & Tiền Cọc */}
+                    <div className="space-y-2 text-xs">
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
+                        <span className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300">
+                          <Snowflake className="size-3 text-sky-400" />
+                          <span>Kho Mát (+20%):</span>
                         </span>
-                      </td>
-                      <td className="p-3.5 text-center">
-                        <span className="inline-block px-3 py-1 rounded-xl bg-slate-800/80 border border-slate-700 font-semibold font-mono text-slate-200 text-xs shadow-sm">
+                        <span className="font-mono font-bold text-sky-300 text-xs">
+                          ₫{item.acPrice.toLocaleString("vi-VN")}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
+                        <span className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300">
+                          <ShieldCheck className="size-3 text-sky-400" />
+                          <span>Tiền Cọc Chuẩn:</span>
+                        </span>
+                        <span className="font-mono font-bold text-slate-200 text-xs">
                           ₫{item.depositAmount.toLocaleString("vi-VN")}
                         </span>
-                      </td>
-                      <td className="p-3.5 text-center">
-                        <span className="bg-slate-800 text-slate-300 font-bold px-2.5 py-0.5 rounded-full text-[10px] border border-slate-700">
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="p-3.5 text-center">
-                        <button
-                          onClick={() => handleOpenPricingModal(item)}
-                          className="text-sky-400 hover:text-sky-300 font-bold underline cursor-pointer"
-                        >
-                          Sửa Giá &amp; Cọc
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Nút hành động sửa giá & cọc */}
+                  <div className="pt-4 mt-2 border-t border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenPricingModal(item)}
+                      className="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-sky-500 text-slate-200 hover:text-slate-950 font-black text-xs transition cursor-pointer flex items-center justify-center gap-1.5 border border-slate-700"
+                    >
+                      <Edit3 className="size-3.5" />
+                      <span>Sửa Giá &amp; Cọc</span>
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
 
         {/* 2. BIỂU PHÍ PHỤ THU, PHẠT QUÁ HẠN & GIẢM GIÁ */}
@@ -471,6 +358,14 @@ export default function BomPricingPage() {
                   className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-700 bg-slate-950 text-xs font-bold text-white placeholder-slate-500"
                 />
               </div>
+              <button
+                type="button"
+                onClick={handleOpenAddSurcharge}
+                className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-3.5 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm whitespace-nowrap"
+              >
+                <Plus className="size-3.5" />
+                <span>Thêm Phụ Thu</span>
+              </button>
             </div>
           </div>
 
