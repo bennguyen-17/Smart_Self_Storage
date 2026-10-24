@@ -32,6 +32,7 @@ public class CheckoutSettlementService {
     private final StorageService storageService;
     private final AccountRepository accountRepository;
     private final StaffShiftService staffShiftService;
+    private final StaffTaskService staffTaskService;
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private EmailService emailService;
 
@@ -46,7 +47,8 @@ public class CheckoutSettlementService {
                                    ActivityLogRepository activityLogRepository,
                                    StorageService storageService,
                                    AccountRepository accountRepository,
-                                   StaffShiftService staffShiftService) {
+                                   StaffShiftService staffShiftService,
+                                   StaffTaskService staffTaskService) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -59,6 +61,7 @@ public class CheckoutSettlementService {
         this.storageService = storageService;
         this.accountRepository = accountRepository;
         this.staffShiftService = staffShiftService;
+        this.staffTaskService = staffTaskService;
     }
 
     /**
@@ -405,6 +408,10 @@ public class CheckoutSettlementService {
                     contract.getContractId(), unit.getUnitCode(), netAmount, refInvoice != null ? refInvoice : "0 VNĐ"));
             act.setCreatedAt(LocalDateTime.now());
             activityLogRepository.save(act);
+        }
+
+        if (staffAccountId != null) {
+            staffTaskService.completeCheckoutTaskForCurrentStaff(contract.getContractId(), staffAccountId);
         }
 
         CheckoutConfirmResponse resp = new CheckoutConfirmResponse();

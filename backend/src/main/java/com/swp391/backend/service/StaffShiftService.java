@@ -87,11 +87,22 @@ public class StaffShiftService {
         }
         EmployeeProfile employee = employeeProfileRepository.findByAccountId(accountId)
                 .orElseThrow(() -> new AccessDeniedException("Không tìm thấy hồ sơ Staff."));
-        StaffCurrentShiftResponse currentShift = getCurrentShift(accountId);
-        if (currentShift == null || !currentShift.attended()) {
+        requireCurrentAttendedShift(accountId);
+        return employee.getFacilityId();
+    }
+
+    @Transactional(readOnly = true)
+    public StaffShift requireCurrentAttendedShift(Integer accountId) {
+        EmployeeProfile employee = getEmployee(accountId);
+        LocalDateTime now = LocalDateTime.now(VIETNAM_ZONE);
+        CurrentAssignment assignment = findCurrentAssignment(
+                employee.getEmployeeId(), employee.getFacilityId(), now, false)
+                .orElseThrow(() -> new AccessDeniedException(
+                        "Staff phải bắt đầu ca được phân công trước khi xử lý công việc."));
+        if (!"ATTENDED".equalsIgnoreCase(assignment.staffShift().getStatus())) {
             throw new AccessDeniedException("Staff phải bắt đầu ca được phân công trước khi xử lý công việc.");
         }
-        return employee.getFacilityId();
+        return assignment.staffShift();
     }
 
     @Transactional(readOnly = true)
