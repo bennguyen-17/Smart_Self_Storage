@@ -680,7 +680,7 @@ export default function BomFacilitiesPage() {
       {/* MODAL 2: THÊM CƠ SỞ KHO MỚI & CHỌN LAYOUT 2D - PORTAL RA BODY */}
       {isAddFacilityModalOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[999] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-slate-900 rounded-3xl border border-slate-800 p-5 sm:p-6 max-w-xl w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-white my-auto max-h-[92vh] overflow-y-auto">
+          <div className="bg-slate-900 rounded-3xl border border-slate-800 p-5 sm:p-6 max-w-2xl w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-white my-auto max-h-[92vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
@@ -767,18 +767,20 @@ export default function BomFacilitiesPage() {
                       <span className="font-extrabold text-xs text-sky-400">Layout A</span>
                       {newFacLayout === "A" && <CheckCircle2 className="size-4 text-sky-400" />}
                     </div>
-                    <div className="space-y-1 text-[10px] text-slate-400 bg-slate-900/90 p-2 rounded-xl border border-slate-800">
-                      <div className="flex justify-between">
-                        <span>Quy mô thống nhất:</span>
-                        <span className="font-black text-sky-300">46 Ô Kho (3 Tầng)</span>
+                    <div className="space-y-1.5 text-[10px] bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 shrink-0">Quy mô:</span>
+                        <span className="font-black text-sky-300 font-mono">46 Ô Kho (3 Tầng)</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Kích thước:</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 shrink-0">Kích thước:</span>
                         <span className="font-bold text-white">Size S, M, L, XL</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Cơ cấu tầng:</span>
-                        <span className="text-slate-300">Trệt (10 XL) + 2 Lầu (36 ô S, M, L)</span>
+                      <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
+                        <span className="text-slate-400 shrink-0 whitespace-nowrap">Cơ cấu tầng:</span>
+                        <span className="text-slate-200 font-medium whitespace-nowrap text-right">
+                          Trệt (10 XL) + 2 Lầu (36 ô S, M, L)
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -796,18 +798,20 @@ export default function BomFacilitiesPage() {
                       <span className="font-extrabold text-xs text-amber-400">Layout B</span>
                       {newFacLayout === "B" && <CheckCircle2 className="size-4 text-amber-400" />}
                     </div>
-                    <div className="space-y-1 text-[10px] text-slate-400 bg-slate-900/90 p-2 rounded-xl border border-slate-800">
-                      <div className="flex justify-between">
-                        <span>Quy mô thống nhất:</span>
-                        <span className="font-black text-amber-300">15 Ô Kho (3 Tầng)</span>
+                    <div className="space-y-1.5 text-[10px] bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 shrink-0">Quy mô:</span>
+                        <span className="font-black text-amber-300 font-mono">15 Ô Kho (3 Tầng)</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Kích thước:</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 shrink-0">Kích thước:</span>
                         <span className="font-bold text-white">Size S, M, L, XL</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Cơ cấu tầng:</span>
-                        <span className="text-slate-300">Trệt (5 XL) + 2 Lầu (10 ô S, M, L)</span>
+                      <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
+                        <span className="text-slate-400 shrink-0 whitespace-nowrap">Cơ cấu tầng:</span>
+                        <span className="text-slate-200 font-medium whitespace-nowrap text-right">
+                          Trệt (5 XL) + 2 Lầu (10 ô S, M, L)
+                        </span>
                       </div>
                     </div>
                   </div>
