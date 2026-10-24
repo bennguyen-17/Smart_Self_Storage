@@ -1175,6 +1175,42 @@ export default function BomFacilitiesPage() {
                               { floor: 3, name: "Tầng 2", desc: "Cụm kho Size S, M, L (500 kg/m²), kho mát & tiêu chuẩn" },
                             ]
 
+                            // Danh sách floorId của cơ sở sắp xếp tăng dần để ánh xạ tầng 1, 2, 3
+                            const sortedFloorIds = Array.from(
+                              new Set(
+                                facilityUnits
+                                  .map((u: any) => Number(u.floorId))
+                                  .filter((id: number) => !isNaN(id) && id > 0)
+                              )
+                            ).sort((a, b) => a - b)
+
+                            const getFloorIndex = (u: any) => {
+                              const code = (u.unitCode || u.unitId || "").toUpperCase()
+                              const flName = (u.floorName || "").toLowerCase()
+                              const fid = Number(u.floorId)
+
+                              // 1. Phân loại theo mã ô kho (e.g. HN01-G-XL01, CT01-F1-M01, DN01-F2-L01)
+                              if (code.includes("-G-") || code.includes("-TR-") || code.includes("-GR-")) return 1
+                              if (code.includes("-F1-") || code.includes("-T1-") || code.includes("-1-")) return 2
+                              if (code.includes("-F2-") || code.includes("-T2-") || code.includes("-2-")) return 3
+
+                              // 2. Phân loại theo tên tầng
+                              if (flName.includes("trệt") || flName.includes("tr?t") || flName.includes("ground")) return 1
+                              if (flName.includes("1")) return 2
+                              if (flName.includes("2")) return 3
+
+                              // 3. Phân loại theo thứ tự floorId trong cơ sở
+                              if (!isNaN(fid) && sortedFloorIds.length > 0) {
+                                const idx = sortedFloorIds.indexOf(fid)
+                                if (idx >= 0 && idx < 3) return idx + 1
+                              }
+
+                              // 4. Fallback số tầng
+                              const fl = Number(u.floor || u.floorId || 1)
+                              if (fl === 1 || fl === 2 || fl === 3) return fl
+                              return 1
+                            }
+
                             let grandTotal = 0
                             let grandOccupied = 0
                             let grandAvailable = 0
@@ -1182,10 +1218,7 @@ export default function BomFacilitiesPage() {
                             let grandRevenue = 0
 
                             const rows = FLOORS.map((f) => {
-                              const list = facilityUnits.filter((u) => {
-                                const fl = u.floorId || u.floor || 1
-                                return fl === f.floor
-                              })
+                              const list = facilityUnits.filter((u) => getFloorIndex(u) === f.floor)
                               const total = list.length
                               const occupied = list.filter((u) => {
                                 const st = (u.status || "").toUpperCase()
