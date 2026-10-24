@@ -289,6 +289,7 @@ public class StorageService {
         if (activityLogRepository != null && accountId != null) {
             ActivityLog log = new ActivityLog();
             log.setAccountId(accountId);
+            log.setFacilityId(floorRepository.findById(unit.getFloorId()).map(Floor::getFacilityId).orElse(null));
             log.setAction("CHANGE_UNIT_TYPE");
             log.setDescription("Đổi loại ô kho " + unitCode + " từ typeId " + oldTypeId + " sang " + newUnitTypeId);
             log.setCreatedAt(java.time.LocalDateTime.now());
@@ -326,6 +327,7 @@ public class StorageService {
         if (activityLogRepository != null && accountId != null) {
             ActivityLog log = new ActivityLog();
             log.setAccountId(accountId);
+            log.setFacilityId(floor.getFacilityId());
             log.setAction("PUT_MAINTENANCE");
             String desc = "Đưa ô kho " + unitCode + " vào trạng thái bảo trì UNDER_MAINTENANCE";
             if (note != null && !note.trim().isEmpty()) {
@@ -362,6 +364,7 @@ public class StorageService {
         if (activityLogRepository != null && accountId != null) {
             ActivityLog log = new ActivityLog();
             log.setAccountId(accountId);
+            log.setFacilityId(floor.getFacilityId());
             log.setAction("COMPLETE_MAINTENANCE");
             log.setDescription("Nghiệm thu hoàn tất bảo trì, mở lại ô kho " + unitCode + " thành AVAILABLE");
             log.setCreatedAt(java.time.LocalDateTime.now());

@@ -87,6 +87,7 @@ public class ForfeitProcessingService {
 
         ActivityLog log = new ActivityLog();
         log.setAccountId(managerAccountId);
+        log.setFacilityId(floor.getFacilityId());
         log.setAction("FORFEIT_ASSET_PROCESSED");
         log.setDescription("Đã cắt khóa và xử lý tài sản hợp đồng " + contractId
                 + ", ô kho " + unit.getUnitCode() + ". Ghi chú: " + note.trim());

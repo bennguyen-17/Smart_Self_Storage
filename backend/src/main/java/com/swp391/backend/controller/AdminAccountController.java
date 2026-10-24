@@ -9,6 +9,7 @@ import com.swp391.backend.repository.ActivityLogRepository;
 import com.swp391.backend.repository.EmployeeProfileRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -169,13 +170,17 @@ public class AdminAccountController {
     @PatchMapping("/accounts/{accountId}")
     public ResponseEntity<?> updateAccountAssignment(
             @PathVariable Integer accountId,
-            @RequestBody Map<String, Object> body) {
+            @RequestBody Map<String, Object> body,
+            @AuthenticationPrincipal Integer adminAccountId) {
 
         Optional<Account> accOpt = accountRepository.findAccountByAccountId(accountId);
         if (accOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         Account account = accOpt.get();
+        Long oldRoleId = account.getRoleId();
+        Integer oldFacilityId = employeeProfileRepository.findByAccountId(accountId)
+                .map(EmployeeProfile::getFacilityId).orElse(null);
 
         if (body.containsKey("role") && body.get("role") != null) {
             String roleStr = body.get("role").toString().trim().toUpperCase();
@@ -204,6 +209,18 @@ public class AdminAccountController {
             employeeProfileRepository.save(ep);
         }
 
+        Integer loggedFacilityId = facilityId != null ? facilityId : oldFacilityId;
+        if (!Objects.equals(oldRoleId, saved.getRoleId()) || !Objects.equals(oldFacilityId, facilityId != null ? facilityId : oldFacilityId)) {
+            ActivityLog log = new ActivityLog();
+            log.setAccountId(adminAccountId != null ? adminAccountId : 1);
+            log.setFacilityId(loggedFacilityId);
+            log.setAction("ADMIN_ACCOUNT_ASSIGNMENT_CHANGED");
+            log.setDescription("Admin thay đổi tài khoản " + accountId + ": vai trò " + mapRoleIdToName(oldRoleId) + " → " + mapRoleIdToName(saved.getRoleId())
+                    + ", cơ sở " + oldFacilityId + " → " + (facilityId != null ? facilityId : oldFacilityId));
+            log.setCreatedAt(LocalDateTime.now());
+            activityLogRepository.save(log);
+        }
+
         return ResponseEntity.ok(toResponse(saved));
     }
 
@@ -213,18 +230,31 @@ public class AdminAccountController {
     @PatchMapping("/accounts/{accountId}/status")
     public ResponseEntity<?> setAccountStatus(
             @PathVariable Integer accountId,
-            @RequestBody Map<String, Object> body) {
+            @RequestBody Map<String, Object> body,
+            @AuthenticationPrincipal Integer adminAccountId) {
 
         Optional<Account> accOpt = accountRepository.findAccountByAccountId(accountId);
         if (accOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         Account account = accOpt.get();
+        String oldStatus = account.getStatus();
 
         String status = body.get("status") != null ? body.get("status").toString().trim().toUpperCase() : "ACTIVE";
         account.setStatus("LOCKED".equals(status) || "SUSPENDED".equals(status) ? "SUSPENDED" : "ACTIVE");
         account.setUpdatedAt(LocalDateTime.now());
         Account saved = accountRepository.save(account);
+
+        if (!Objects.equals(oldStatus, saved.getStatus())) {
+            ActivityLog log = new ActivityLog();
+            log.setAccountId(adminAccountId != null ? adminAccountId : 1);
+            log.setFacilityId(employeeProfileRepository.findByAccountId(accountId).map(EmployeeProfile::getFacilityId).orElse(null));
+            log.setAction("LOCKED".equalsIgnoreCase(saved.getStatus()) || "SUSPENDED".equalsIgnoreCase(saved.getStatus())
+                    ? "ADMIN_ACCOUNT_LOCKED" : "ADMIN_ACCOUNT_UNLOCKED");
+            log.setDescription("Admin đổi trạng thái tài khoản " + accountId + " từ " + oldStatus + " thành " + saved.getStatus());
+            log.setCreatedAt(LocalDateTime.now());
+            activityLogRepository.save(log);
+        }
 
         return ResponseEntity.ok(toResponse(saved));
     }

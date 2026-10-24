@@ -5,6 +5,8 @@ import com.swp391.backend.dto.CalculatePriceResponse;
 import com.swp391.backend.dto.UnitDetailResponse;
 import com.swp391.backend.entity.StorageUnit;
 import com.swp391.backend.service.StorageService;
+import com.swp391.backend.service.StaffTaskService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,9 +17,11 @@ import java.util.List;
 public class StorageUnitController {
 
     private final StorageService storageService;
+    private final StaffTaskService staffTaskService;
 
-    public StorageUnitController(StorageService storageService) {
+    public StorageUnitController(StorageService storageService, StaffTaskService staffTaskService) {
         this.storageService = storageService;
+        this.staffTaskService = staffTaskService;
     }
 
     // --- US-03: Lấy danh sách ô kho theo tầng (để vẽ bản đồ 2D) ---
@@ -113,11 +117,10 @@ public class StorageUnitController {
     @PostMapping("/staff/units/{unitCode}/complete-maintenance")
     public ResponseEntity<?> completeMaintenance(
             @PathVariable String unitCode,
-            @RequestHeader(value = "X-Facility-Id", required = false) Integer staffFacilityId,
-            @RequestHeader(value = "X-Account-Id", required = false) Integer accountId
+            @AuthenticationPrincipal Integer staffAccountId
     ) {
         try {
-            StorageUnit updated = storageService.completeMaintenance(unitCode, staffFacilityId, accountId);
+            StorageUnit updated = staffTaskService.completeMaintenanceForCurrentStaff(unitCode, staffAccountId);
             return ResponseEntity.ok(updated);
         } catch (org.springframework.security.access.AccessDeniedException e) {
             return ResponseEntity.status(403).body(e.getMessage());

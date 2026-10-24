@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 public class AdminActivityLogResponse {
     private Integer activityLogId;
     private Integer accountId;
+    private Integer facilityId;
+    private String facilityCode;
     private String actorName;
     private String actorRole;
     private String action;
@@ -15,9 +17,11 @@ public class AdminActivityLogResponse {
     public AdminActivityLogResponse() {
     }
 
-    public AdminActivityLogResponse(Integer activityLogId, Integer accountId, String actorName, String actorRole, String action, String description, LocalDateTime createdAt, String ipAddress) {
+    public AdminActivityLogResponse(Integer activityLogId, Integer accountId, Integer facilityId, String facilityCode, String actorName, String actorRole, String action, String description, LocalDateTime createdAt, String ipAddress) {
         this.activityLogId = activityLogId;
         this.accountId = accountId;
+        this.facilityId = facilityId;
+        this.facilityCode = facilityCode;
         this.actorName = actorName;
         this.actorRole = actorRole;
         this.action = action;
@@ -41,6 +45,11 @@ public class AdminActivityLogResponse {
     public void setAccountId(Integer accountId) {
         this.accountId = accountId;
     }
+
+    public Integer getFacilityId() { return facilityId; }
+    public void setFacilityId(Integer facilityId) { this.facilityId = facilityId; }
+    public String getFacilityCode() { return facilityCode; }
+    public void setFacilityCode(String facilityCode) { this.facilityCode = facilityCode; }
 
     public String getActorName() {
         return actorName;

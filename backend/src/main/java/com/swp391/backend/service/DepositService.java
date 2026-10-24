@@ -265,6 +265,14 @@ public class DepositService {
         unit.setStatus("RESERVED");
         storageUnitRepository.save(unit);
 
+        ActivityLog log = new ActivityLog();
+        log.setAccountId(res.getAccountId());
+        log.setFacilityId(floorRepository.findById(unit.getFloorId()).map(Floor::getFacilityId).orElse(null));
+        log.setAction("CUSTOMER_DEPOSIT_PAID");
+        log.setDescription("Khách đã thanh toán tiền cọc cho hợp đồng " + contract.getContractId() + ", hóa đơn " + payment.getInvoiceNumber());
+        log.setCreatedAt(LocalDateTime.now());
+        activityLogRepository.save(log);
+
         return new ApiResponse(true, "Xác nhận nộp cọc thành công! Hợp đồng ở trạng thái PENDING_CHECKIN và ô kho đã được bảo lưu giữ chỗ.");
     }
 
@@ -396,6 +404,8 @@ public class DepositService {
         // Ghi nhật ký kiểm toán (ActivityLog)
         ActivityLog log = new ActivityLog();
         log.setAccountId(res.getAccountId());
+        log.setFacilityId(res.getUnitCode() == null ? null : storageUnitRepository.findById(res.getUnitCode())
+                .map(StorageUnit::getFloorId).flatMap(floorRepository::findById).map(Floor::getFacilityId).orElse(null));
         log.setAction("EXTEND_CONTRACT_VNPAY");
         log.setDescription(String.format("Gia hạn thành công hợp đồng %s thêm %d ngày qua VNPay. Hạn mới: %s. Hóa đơn: %s",
                 contractCode, days, newEnd, invoiceNumber));

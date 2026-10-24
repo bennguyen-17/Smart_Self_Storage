@@ -46,6 +46,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/staff/tickets/**")
                         .hasRole("STAFF")
 
+                        .requestMatchers("/api/staff/tasks/**")
+                        .hasRole("STAFF")
+
+                        .requestMatchers("/api/staff/units/**")
+                        .hasRole("STAFF")
+
                         .requestMatchers("/api/staff/checkout/**")
                         .hasRole("STAFF")
 

@@ -121,7 +121,7 @@ public class SupportTicketService {
         ticket.setIsSlaBreached(false);
         ticket.setIdentityVerified(false);
 
-        return saveIncidentWithAssignment(ticket);
+        return saveIncidentWithAssignment(ticket, customerId);
     }
 
     // --- US-21: Tạo Ticket Hỗ trợ kỹ thuật 24/7 (Sự cố, Mở khóa, Bảo trì, Thắc mắc) ---
@@ -152,8 +152,8 @@ public class SupportTicketService {
         ticket.setIdentityVerified("UNLOCK".equalsIgnoreCase(type) ? false : true);
 
         return "INCIDENT".equalsIgnoreCase(ticket.getType())
-                ? saveIncidentWithAssignment(ticket)
-                : supportTicketRepository.save(ticket);
+                ? saveIncidentWithAssignment(ticket, customerId)
+                : logCreatedTicket(supportTicketRepository.save(ticket), customerId);
     }
 
     @Transactional
@@ -224,8 +224,8 @@ public class SupportTicketService {
         ticket.setIdentityVerified(false);
 
         return "INCIDENT".equalsIgnoreCase(ticket.getType())
-                ? saveIncidentWithAssignment(ticket)
-                : supportTicketRepository.save(ticket);
+                ? saveIncidentWithAssignment(ticket, accountId)
+                : logCreatedTicket(supportTicketRepository.save(ticket), accountId);
     }
 
     @Transactional
@@ -237,7 +237,7 @@ public class SupportTicketService {
         return supportTicketRepository.save(ticket);
     }
 
-    private SupportTicket saveIncidentWithAssignment(SupportTicket ticket) {
+    private SupportTicket saveIncidentWithAssignment(SupportTicket ticket, Integer customerAccountId) {
         SupportTicket saved = supportTicketRepository.save(ticket);
         List<Integer> onDutyStaffIds = staffShiftService.getOnDutyStaffAccountIds(saved.getFacilityId());
         if (onDutyStaffIds.isEmpty()) {
@@ -247,12 +247,13 @@ public class SupportTicketService {
 
             ActivityLog log = new ActivityLog();
             log.setAccountId(1);
+            log.setFacilityId(saved.getFacilityId());
             log.setAction("INCIDENT_NO_STAFF_ON_DUTY");
             log.setDescription("Ticket " + saved.getTicketCode() + " được chuyển lên Manager vì cơ sở #"
                     + saved.getFacilityId() + " không có Staff đang trực ca.");
             log.setCreatedAt(LocalDateTime.now());
             activityLogRepository.save(log);
-            return saved;
+            return logCreatedTicket(saved, customerAccountId);
         }
 
         Integer assigneeAccountId = onDutyStaffIds.stream()
@@ -262,7 +263,20 @@ public class SupportTicketService {
                         .thenComparingInt(Integer::intValue))
                 .orElseThrow();
         saved.setAssignedStaffId(assigneeAccountId);
-        return supportTicketRepository.save(saved);
+        return logCreatedTicket(supportTicketRepository.save(saved), customerAccountId);
+    }
+
+    private SupportTicket logCreatedTicket(SupportTicket ticket, Integer customerAccountId) {
+        if (customerAccountId != null) {
+            ActivityLog log = new ActivityLog();
+            log.setAccountId(customerAccountId);
+            log.setFacilityId(ticket.getFacilityId());
+            log.setAction("CUSTOMER_TICKET_CREATED");
+            log.setDescription("Khách tạo ticket " + ticket.getTicketCode() + " loại " + ticket.getType());
+            log.setCreatedAt(LocalDateTime.now());
+            activityLogRepository.save(log);
+        }
+        return ticket;
     }
 
     // --- US-21: 3. Gửi OTP xác thực trả kho trước hạn ---
@@ -365,7 +379,7 @@ public class SupportTicketService {
         ticket.setIsSlaBreached(false);
         ticket.setIdentityVerified(false);
 
-        return supportTicketRepository.save(ticket);
+        return logCreatedTicket(supportTicketRepository.save(ticket), customerId);
     }
 
     // --- US-21: 5. Khách xem danh sách ticket của mình ---
@@ -476,6 +490,7 @@ public class SupportTicketService {
             if (activityLogRepository != null) {
                 ActivityLog log = new ActivityLog();
                 log.setAccountId(1);
+                log.setFacilityId(t.getFacilityId());
                 log.setAction("AUTO_ESCALATE_TICKET");
                 log.setDescription(String.format("Ticket %s quá hạn 15 phút chưa được nhân viên tiếp nhận -> Hệ thống tự động chuyển tiếp lên Quản lý chi nhánh (Cơ sở #%s, Vị trí %s)",
                         t.getTicketCode(), String.valueOf(t.getFacilityId()), t.getUnitCode() != null ? t.getUnitCode() : "N/A"));
@@ -520,6 +535,7 @@ public class SupportTicketService {
 
         ticket.setStatus("IN_PROGRESS");
         ticket.setAssignedStaffId(staffId);
+        ticket.setAcceptedAt(LocalDateTime.now());
         SupportTicket saved = supportTicketRepository.save(ticket);
         populateTicketExtraInfo(saved);
         return saved;
@@ -588,6 +604,7 @@ public class SupportTicketService {
         if (activityLogRepository != null && staffId != null) {
             ActivityLog log = new ActivityLog();
             log.setAccountId(staffId);
+            log.setFacilityId(ticket.getFacilityId());
             log.setAction("RESOLVE_UNLOCK_TICKET");
             log.setDescription(String.format("Nhân viên #%d xác nhận đối chiếu CCCD trùng khớp và mở khóa hộ ô %s (Ticket: %s)",
                     staffId, ticket.getUnitCode(), ticket.getTicketCode()));
@@ -623,6 +640,7 @@ public class SupportTicketService {
         if (activityLogRepository != null && staffId != null) {
             ActivityLog log = new ActivityLog();
             log.setAccountId(staffId);
+            log.setFacilityId(ticket.getFacilityId());
             log.setAction("RESOLVE_TICKET");
             log.setDescription(String.format("Nhân viên #%d đã xử lý hoàn tất ticket %s: %s",
                     staffId, ticket.getTicketCode(), ticket.getResolutionNote()));
@@ -694,6 +712,7 @@ public class SupportTicketService {
         if (activityLogRepository != null && managerAccountId != null) {
             ActivityLog log = new ActivityLog();
             log.setAccountId(managerAccountId);
+            log.setFacilityId(ticket.getFacilityId());
             log.setAction("MANAGER_ACCEPT_TICKET");
             log.setDescription(String.format("Quản lý cơ sở #%d trực tiếp tiếp nhận giải quyết ticket %s (Vị trí: %s)",
                     managerAccountId, ticket.getTicketCode(), ticket.getUnitCode() != null ? ticket.getUnitCode() : "N/A"));
@@ -729,6 +748,7 @@ public class SupportTicketService {
         if (activityLogRepository != null && managerAccountId != null) {
             ActivityLog log = new ActivityLog();
             log.setAccountId(managerAccountId);
+            log.setFacilityId(ticket.getFacilityId());
             log.setAction("MANAGER_RESOLVE_TICKET");
             log.setDescription(String.format("Quản lý cơ sở #%d trực tiếp hoàn tất và đóng ticket %s: %s",
                     managerAccountId, ticket.getTicketCode(), ticket.getResolutionNote()));

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 @Repository
 public interface SupportTicketRepository extends JpaRepository<SupportTicket, Long> {
@@ -25,4 +26,20 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     List<SupportTicket> findByUnitCode(String unitCode);
 
     long countByAssignedStaffIdAndStatusIn(Integer assignedStaffId, List<String> statuses);
+
+    @org.springframework.data.jpa.repository.Query(value = """
+            SELECT assignedStaffId, AVG(TIMESTAMPDIFF(SECOND, createdAt, acceptedAt)) / 60.0
+            FROM SupportTicket
+            WHERE facilityId = :facilityId
+              AND assignedStaffId IN (:accountIds)
+              AND acceptedAt IS NOT NULL
+              AND createdAt >= :from
+              AND createdAt < :to
+            GROUP BY assignedStaffId
+            """, nativeQuery = true)
+    List<Object[]> findAverageAcceptMinutesByStaffAndShift(
+            @org.springframework.data.repository.query.Param("facilityId") Integer facilityId,
+            @org.springframework.data.repository.query.Param("accountIds") List<Integer> accountIds,
+            @org.springframework.data.repository.query.Param("from") LocalDateTime from,
+            @org.springframework.data.repository.query.Param("to") LocalDateTime to);
 }

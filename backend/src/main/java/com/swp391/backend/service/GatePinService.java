@@ -14,6 +14,8 @@ import com.swp391.backend.repository.FloorRepository;
 import com.swp391.backend.repository.GatePinRepository;
 import com.swp391.backend.repository.ReservationRepository;
 import com.swp391.backend.repository.StorageUnitRepository;
+import com.swp391.backend.entity.ActivityLog;
+import com.swp391.backend.repository.ActivityLogRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +36,7 @@ public class GatePinService {
     private final FloorRepository floorRepository;
     private final CustomerProfileRepository customerProfileRepository;
     private final AuditLogRepository auditLogRepository;
+    private final ActivityLogRepository activityLogRepository;
     private final SecureRandom random = new SecureRandom();
 
     public GatePinService(GatePinRepository gatePinRepository,
@@ -42,7 +45,8 @@ public class GatePinService {
                           StorageUnitRepository storageUnitRepository,
                           FloorRepository floorRepository,
                           CustomerProfileRepository customerProfileRepository,
-                          AuditLogRepository auditLogRepository) {
+                          AuditLogRepository auditLogRepository,
+                          ActivityLogRepository activityLogRepository) {
         this.gatePinRepository = gatePinRepository;
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
@@ -50,6 +54,7 @@ public class GatePinService {
         this.floorRepository = floorRepository;
         this.customerProfileRepository = customerProfileRepository;
         this.auditLogRepository = auditLogRepository;
+        this.activityLogRepository = activityLogRepository;
     }
 
     @Transactional
@@ -87,6 +92,19 @@ public class GatePinService {
         }
 
         gatePinRepository.save(gatePin);
+
+        Reservation reservation = reservationRepository.findById(contract.getReservationId()).orElse(null);
+        if (reservation != null && reservation.getAccountId() != null) {
+            Integer facilityId = storageUnitRepository.findById(reservation.getUnitCode()).map(StorageUnit::getFloorId)
+                    .flatMap(floorRepository::findById).map(Floor::getFacilityId).orElse(null);
+            ActivityLog log = new ActivityLog();
+            log.setAccountId(reservation.getAccountId());
+            log.setFacilityId(facilityId);
+            log.setAction("CUSTOMER_GATE_PIN_ISSUED");
+            log.setDescription("Cấp mã PIN truy cập cho hợp đồng " + contract.getContractId());
+            log.setCreatedAt(now);
+            activityLogRepository.save(log);
+        }
 
         return new GatePinResult(pin, TTL_SECONDS, expiresAt);
     }
