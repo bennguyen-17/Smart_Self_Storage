@@ -47,7 +47,7 @@ export function buildReportSections(d: ManagerDashboard): ReportSection[] {
         { label: "Đang hiệu lực", value: d.activeContracts, kind: "count" },
         { label: "Chờ nhận kho", value: d.pendingCheckinContracts, kind: "count" },
         { label: "Quá hạn", value: d.overdueContracts, kind: "count", emphasis: d.overdueContracts > 0 },
-        { label: "Đã thanh lý", value: d.terminatedContracts, kind: "count" },
+        { label: "Đã trả kho / hoàn tất", value: d.terminatedContracts, kind: "count" },
       ],
     },
     {
@@ -88,8 +88,68 @@ export function buildReportSections(d: ManagerDashboard): ReportSection[] {
 }
 
 /** Các dòng CSV: Nhóm, Chỉ số, Giá trị (số thô để Excel tính toán được) */
-export function reportCsvRows(d: ManagerDashboard): (string | number)[][] {
-  return buildReportSections(d).flatMap((s) => s.rows.map((r) => [s.title, r.label, r.value]))
+export function reportCsvRows(d: ManagerDashboard, range: ReportRange = ALL_TIME): (string | number)[][] {
+  return [
+    ["Phạm vi", "Khoảng thời gian", rangeLabel(range)],
+    ...buildReportSections(d).flatMap((s) => s.rows.map((r) => [s.title, r.label, r.value])),
+  ]
+}
+
+// ---- Khoảng thời gian (BE: ?from=&to=, YYYY-MM-DD, gồm cả 2 đầu) ----
+
+/** "" nghĩa là không giới hạn đầu đó */
+export interface ReportRange {
+  from: string
+  to: string
+}
+
+export const ALL_TIME: ReportRange = { from: "", to: "" }
+
+export type RangePreset = "ALL" | "THIS_MONTH" | "LAST_MONTH" | "LAST_30_DAYS" | "CUSTOM"
+
+export const RANGE_PRESET_LABEL: Record<RangePreset, string> = {
+  ALL: "Từ trước đến nay",
+  THIS_MONTH: "Tháng này",
+  LAST_MONTH: "Tháng trước",
+  LAST_30_DAYS: "30 ngày qua",
+  CUSTOM: "Tùy chọn",
+}
+
+/** Đổi mốc nhanh thành khoảng ngày theo lịch (today là YYYY-MM-DD giờ Việt Nam). CUSTOM giữ nguyên, trả null */
+export function presetRange(preset: RangePreset, today: string): ReportRange | null {
+  const [y, m] = today.split("-").map(Number)
+  const firstOf = (year: number, month: number) => `${year}-${String(month).padStart(2, "0")}-01`
+  const lastOf = (year: number, month: number) => {
+    const days = new Date(Date.UTC(year, month, 0)).getUTCDate()
+    return `${year}-${String(month).padStart(2, "0")}-${String(days).padStart(2, "0")}`
+  }
+  if (preset === "ALL") return ALL_TIME
+  if (preset === "THIS_MONTH") return { from: firstOf(y, m), to: today }
+  if (preset === "LAST_MONTH") {
+    const year = m === 1 ? y - 1 : y
+    const month = m === 1 ? 12 : m - 1
+    return { from: firstOf(year, month), to: lastOf(year, month) }
+  }
+  if (preset === "LAST_30_DAYS") {
+    const from = new Date(Date.parse(`${today}T00:00:00Z`) - 29 * 86_400_000).toISOString().slice(0, 10)
+    return { from, to: today }
+  }
+  return null
+}
+
+/** Hợp lệ khi chưa chọn đủ 2 đầu, hoặc ngày bắt đầu không sau ngày kết thúc */
+export function isReportRangeValid(range: ReportRange): boolean {
+  return !range.from || !range.to || range.from <= range.to
+}
+
+const dmy = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`
+
+/** "Từ 01/10/2026 đến 23/10/2026", "Từ 01/10/2026", "Đến 23/10/2026", "Từ trước đến nay" */
+export function rangeLabel(range: ReportRange): string {
+  if (range.from && range.to) return `Từ ${dmy(range.from)} đến ${dmy(range.to)}`
+  if (range.from) return `Từ ${dmy(range.from)}`
+  if (range.to) return `Đến ${dmy(range.to)}`
+  return RANGE_PRESET_LABEL.ALL
 }
 
 // ---- Dữ liệu cho biểu đồ ----

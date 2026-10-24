@@ -119,7 +119,7 @@ public class ManagerContractController {
                         String feeStatus = "UNPAID";
                         if ("PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus())) {
                             feeStatus = "PAID";
-                        } else if ("CANCELLED".equalsIgnoreCase(p.getStatus()) || "CANCELED".equalsIgnoreCase(p.getStatus())) {
+                        } else if ("CANCELLED".equalsIgnoreCase(p.getStatus())) {
                             feeStatus = "CANCELED";
                         }
                         fees.add(new FeeInvoiceResponse(

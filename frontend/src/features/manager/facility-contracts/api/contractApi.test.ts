@@ -6,7 +6,7 @@ const env = vi.hoisted(() => ({ mockMode: false }))
 const http = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }))
 vi.mock("@/lib/apiClient", () => ({ default: http, isMockMode: () => env.mockMode }))
 
-const { applyFeeDiscount, listFacilityContracts } = await import("./contractApi")
+const { applyFeeDiscount, listFacilityContracts, markForfeitProcessed } = await import("./contractApi")
 const { resetFacilityContractsMock } = await import("./contractApi.mock")
 
 const CTX: ManagerContext = { facilityId: 1, accountId: 3, fullName: "Trần Văn Quản Lý", isDemo: false }
@@ -40,5 +40,24 @@ describe("contractApi", () => {
     expect(fee?.status).toBe("CANCELED")
     await expect(applyFeeDiscount(CTX, 7001, { discountPercent: 10, reason: "x" })).rejects.toThrow(/không thể miễn giảm/i)
     expect(http.post).not.toHaveBeenCalled()
+  })
+})
+
+describe("contractApi: gộp cách viết trạng thái hủy", () => {
+  test("BE trả CANCELLED → giao diện nhận CANCELED", async () => {
+    http.get.mockResolvedValue([{ contractId: 1, status: "CANCELLED", fees: [] }])
+    const [c] = await listFacilityContracts(CTX)
+    expect(c.status).toBe("CANCELED")
+  })
+})
+
+describe("contractApi: xác nhận đã xử lý tài sản", () => {
+  test("POST đúng đường dẫn, ghi chú đã bỏ khoảng trắng thừa, kèm header cơ sở", async () => {
+    await markForfeitProcessed(CTX, 203, "  Đã cắt khóa, có camera  ")
+    expect(http.post).toHaveBeenCalledWith(
+      "/manager/contracts/203/forfeit-processed",
+      { note: "Đã cắt khóa, có camera" },
+      { headers: { "X-Facility-Id": "1", "X-Account-Id": "3" } }
+    )
   })
 })

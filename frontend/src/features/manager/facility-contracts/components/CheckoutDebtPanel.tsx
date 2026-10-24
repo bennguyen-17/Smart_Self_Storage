@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { BadgePercentIcon, TriangleAlertIcon } from "lucide-react"
+import { BadgePercentIcon, CheckCircle2Icon, TriangleAlertIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -25,12 +25,14 @@ import {
   isClosedContract,
   needsFollowUp,
   needsForfeitHandling,
+  canConfirmForfeitProcessed,
   overdueDays,
   unpaidTotal,
 } from "../contractRules"
 import type { FacilityContract, FeeInvoice } from "../types"
 import { CheckoutStageBadge, ContractStatusBadge } from "./ContractBadges"
 import FeeDiscountSheet from "./FeeDiscountSheet"
+import ForfeitProcessedSheet from "./ForfeitProcessedSheet"
 
 type Focus = "ALL" | "OVERDUE" | "FORFEIT" | "CHECKOUT" | "DEBT"
 
@@ -53,6 +55,7 @@ function CheckoutDebtPanel() {
   const [query, setQuery] = useState("")
   const [focus, setFocus] = useState<Focus>("ALL")
   const [discounting, setDiscounting] = useState<{ contract: FacilityContract; fee: FeeInvoice } | null>(null)
+  const [forfeiting, setForfeiting] = useState<FacilityContract | null>(null)
   const { data, error, isLoading } = useAsyncData(`debt#${reloadCount}`, () => listFacilityContracts(ctx))
 
   const followUps = (data ?? []).filter(needsFollowUp)
@@ -77,7 +80,7 @@ function CheckoutDebtPanel() {
           options={[
             { value: "ALL", label: "Tất cả" },
             { value: "OVERDUE", label: "Quá hạn" },
-            { value: "FORFEIT", label: `Quá hạn trên ${FORFEIT_AFTER_DAYS} ngày (cần thanh lý)` },
+            { value: "FORFEIT", label: `Quá hạn từ ${FORFEIT_AFTER_DAYS} ngày (cần thanh lý)` },
             { value: "CHECKOUT", label: "Đang trả kho" },
             { value: "DEBT", label: "Còn phí chưa thu" },
           ]}
@@ -122,6 +125,23 @@ function CheckoutDebtPanel() {
                     Cần lập hồ sơ niêm phong, thanh lý tài sản
                   </p>
                 )}
+                {canConfirmForfeitProcessed(c) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/40"
+                    aria-label={`Xác nhận đã xử lý tài sản hợp đồng ${c.contractCode}`}
+                    onClick={() => setForfeiting(c)}
+                  >
+                    Xác nhận đã xử lý tài sản
+                  </Button>
+                )}
+                {c.status === "FORFEITED" && c.forfeitProcessed && (
+                  <p className="mt-1 flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-300">
+                    <CheckCircle2Icon aria-hidden="true" className="size-3.5 shrink-0" />
+                    Đã xử lý tài sản
+                  </p>
+                )}
               </td>
               <td className="px-4 py-3">
                 <CheckoutStageBadge stage={c.checkoutStage} />
@@ -156,6 +176,20 @@ function CheckoutDebtPanel() {
       </TableCard>
 
       {!isLoading && <Pagination {...pagination} unit="hồ sơ" />}
+
+      {forfeiting && (
+        <ForfeitProcessedSheet
+          key={forfeiting.contractId}
+          contract={forfeiting}
+          ctx={ctx}
+          onClose={() => setForfeiting(null)}
+          onDone={(message) => {
+            toast.success(message)
+            setForfeiting(null)
+            setReloadCount((n) => n + 1)
+          }}
+        />
+      )}
 
       {discounting && (
         <FeeDiscountSheet

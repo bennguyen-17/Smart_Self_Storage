@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef } from "react"
 
 import personalStorageBoxesImg from "@/assets/landing/personal-storage-boxes.jpg"
-import qrScanStorageImg from "@/assets/landing/qr-scan-storage.jpg"
 import { USE_CASES_SECTION } from "../content/copy"
 import { SectionHeading } from "./SectionHeading"
 
@@ -13,15 +12,15 @@ export function UseCasesSection() {
   const scrollLeftStart = useRef(0)
   const scrollPosRef = useRef(0)
 
-  // Danh sách các thẻ kho bãi & công nghệ thông minh (Mã QR, Kho tự quản, Thùng đồ, Pallet...)
+  // Danh sách các thẻ kho bãi & công nghệ thông minh (Mã PIN, Kho tự quản, Thùng đồ, Pallet...)
   const baseCards = [
     {
       title: "Khám phá sơ đồ kho 2D, chọn vị trí ô kho ưng ý",
       src: "https://images.unsplash.com/photo-1587293852726-70cdb56c2866?auto=format&fit=crop&w=1200&q=80",
     },
     {
-      title: "Mở cửa kho tự động 24/7 bằng quét mã QR & mã PIN",
-      src: qrScanStorageImg,
+      title: "Mở cổng & kho 24/7 bằng bàn phím số mã PIN bảo mật",
+      src: "https://images.unsplash.com/photo-1592933517664-ef7151097c5f?auto=format&fit=crop&w=1200&q=80",
     },
     {
       title: "Hành lang kho tự quản hiện đại, sạch sẽ & thông thoáng",
@@ -62,7 +61,7 @@ export function UseCasesSection() {
 
     const containerCenter = container.scrollLeft + container.clientWidth / 2
     // Khoảng cách chuẩn giữa các thẻ để tính chính xác tâm và 2 bên
-    const stepDist = Math.max(container.clientWidth * 0.28, 280)
+    const stepDist = Math.max(container.clientWidth * 0.28, 250)
 
     cardRefs.current.forEach((el) => {
       if (!el) return
@@ -163,14 +162,14 @@ export function UseCasesSection() {
       aria-labelledby="use-cases-title"
       className="relative overflow-hidden py-(--l-section-space)"
     >
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
         {/* TIÊU ĐỀ SECTION */}
         <SectionHeading
           id="use-cases-title"
           title={
             <span className="italic">
               <span className="block font-black text-foreground">Cần bao nhiêu chỗ,</span>
-              <span className="block ml-8 sm:ml-14 md:ml-20 font-black l-gradient-title">
+              <span className="block ml-7 sm:ml-12 md:ml-18 font-black l-gradient-title">
                 có bấy nhiêu kho
               </span>
             </span>
@@ -189,7 +188,7 @@ export function UseCasesSection() {
           onTouchMove={(e) => handleMove(e.touches[0].pageX)}
           onTouchEnd={handleEnd}
           onScroll={updateCardCurves}
-          className="relative flex w-full select-none items-center gap-4 sm:gap-6 overflow-x-auto pt-10 pb-16 cursor-grab active:cursor-grabbing [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="relative flex w-full select-none items-center gap-4 sm:gap-5 overflow-x-auto pt-8 pb-12 cursor-grab active:cursor-grabbing [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
           {loopCards.map((card, index) => (
             <div
@@ -201,7 +200,7 @@ export function UseCasesSection() {
                 willChange: "transform, opacity",
                 transformOrigin: "center center",
               }}
-              className="group relative h-[360px] w-[260px] shrink-0 sm:h-[400px] sm:w-[290px] md:h-[440px] md:w-[320px] overflow-hidden rounded-[2.25rem] border border-slate-200/80 bg-slate-100 text-left shadow-2xl transition-[box-shadow,border-color] duration-300 dark:border-slate-800 dark:bg-slate-900"
+              className="group relative h-[320px] w-[230px] shrink-0 sm:h-[355px] sm:w-[255px] md:h-[385px] md:w-[285px] overflow-hidden rounded-[1.9rem] border border-slate-200/80 bg-slate-100 text-left shadow-2xl transition-[box-shadow,border-color] duration-300 dark:border-slate-800 dark:bg-slate-900"
             >
               {/* Background Image with Zoom on Hover */}
               <img
@@ -216,8 +215,8 @@ export function UseCasesSection() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent pointer-events-none" />
 
               {/* Bottom Title */}
-              <div className="relative z-10 flex h-full flex-col justify-end p-5 sm:p-6 pb-6">
-                <h3 className="text-base sm:text-lg font-bold leading-snug text-white drop-shadow-md [text-wrap:balance]">
+              <div className="relative z-10 flex h-full flex-col justify-end p-4.5 sm:p-5 pb-5">
+                <h3 className="text-sm sm:text-base font-bold leading-snug text-white drop-shadow-md [text-wrap:balance]">
                   {card.title}
                 </h3>
               </div>

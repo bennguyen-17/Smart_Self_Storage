@@ -13,7 +13,7 @@ export function TestimonialsSection() {
       aria-labelledby="testimonials-title"
       className="relative overflow-hidden py-(--l-section-space)"
     >
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <SectionHeading
             id="testimonials-title"
@@ -27,21 +27,21 @@ export function TestimonialsSection() {
           )}
         </div>
 
-        <RevealList className="grid gap-6 md:grid-cols-3">
+        <RevealList className="grid gap-5 md:grid-cols-3">
           {items.map((t) => (
             <RevealItem key={t.name}>
-              <figure className="flex h-full flex-col gap-4 rounded-2xl l-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl">
+              <figure className="flex h-full flex-col gap-3.5 rounded-2xl l-card p-5.5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
                 <div className="flex gap-1 text-amber-400">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="size-4 fill-amber-400 text-amber-400" />
+                    <Star key={i} className="size-3.5 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
-                <blockquote className="text-[1.0625rem] leading-relaxed text-foreground/90">
+                <blockquote className="text-[0.9375rem] leading-relaxed text-foreground/90">
                   “{t.quote}”
                 </blockquote>
-                <figcaption className="mt-auto border-t border-border/60 pt-4">
-                  <span className="block font-bold text-foreground">{t.name}</span>
-                  <span className="text-xs font-medium text-muted-foreground">
+                <figcaption className="mt-auto border-t border-border/60 pt-3.5">
+                  <span className="block text-sm font-bold text-foreground">{t.name}</span>
+                  <span className="text-[11.5px] font-medium text-muted-foreground">
                     {t.context}
                   </span>
                 </figcaption>

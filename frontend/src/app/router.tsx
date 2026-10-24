@@ -20,6 +20,7 @@ import StaffPortalLayout from "@/features/staff/StaffPortalLayout"
 import StaffCheckinPage from "@/features/staff/StaffCheckinPage"
 import StaffSupportPage from "@/features/staff/StaffSupportPage"
 import StaffPinPage from "@/features/staff/StaffPinPage"
+import StaffTasksPage from "@/features/staff/tasks/StaffTasksPage"
 import ReservationManagementPage from "@/features/staff/ReservationManagementPage"
 
 // Manager & Admin pages
@@ -128,6 +129,7 @@ export function AppRouter() {
         <Route path="checkin" element={<StaffCheckinPage />} />
         <Route path="reservations" element={<ReservationManagementPage />} />
         <Route path="support" element={<StaffSupportPage />} />
+        <Route path="tasks" element={<StaffTasksPage />} />
         <Route path="pin" element={<StaffPinPage />} />
       </Route>
 

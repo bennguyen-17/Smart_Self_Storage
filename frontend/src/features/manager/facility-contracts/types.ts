@@ -44,6 +44,8 @@ export interface FacilityContract {
   status: ContractStatus
   depositAmount: number
   checkoutStage: CheckoutStage
+  /** Hợp đồng FORFEITED: Manager đã xác nhận cắt khóa, xử lý xong tài sản (ô kho chuyển bảo trì) */
+  forfeitProcessed?: boolean
   fees: FeeInvoice[]
 }
 

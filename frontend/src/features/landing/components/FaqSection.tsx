@@ -48,7 +48,7 @@ export function FaqSection() {
       <div className="pointer-events-none absolute -top-24 left-1/4 -z-10 size-96 rounded-full bg-blue-500/10 blur-3xl dark:bg-blue-600/15" />
       <div className="pointer-events-none absolute -bottom-24 right-1/4 -z-10 size-96 rounded-full bg-indigo-500/10 blur-3xl dark:bg-indigo-600/15" />
 
-      <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1.6fr] lg:gap-14 lg:px-8">
+      <div className="relative z-10 mx-auto grid w-full max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-[1fr_1.6fr] lg:gap-12 lg:px-8">
         {/* Left Column: Heading */}
         <div>
           <SectionHeading
@@ -67,7 +67,7 @@ export function FaqSection() {
 
         {/* Right Column: Clean Accordion List */}
         <Reveal>
-          <ul className="flex flex-col gap-3.5">
+          <ul className="flex flex-col gap-3">
             {FAQ_SECTION.items.map((item) => {
               const isOpen = open.has(item.id)
               const buttonId = `${baseId}-${item.id}-q`
@@ -91,23 +91,23 @@ export function FaqSection() {
                       aria-expanded={isOpen}
                       aria-controls={panelId}
                       onClick={() => toggle(item.id)}
-                      className="flex min-h-16 w-full items-center justify-between gap-4 p-4.5 sm:px-5 sm:py-4.5 text-left transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 cursor-pointer"
+                      className="flex min-h-14 w-full items-center justify-between gap-3.5 p-3.5 sm:px-4.5 sm:py-3.5 text-left transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 cursor-pointer"
                     >
-                      <div className="flex items-center gap-3.5 flex-1">
+                      <div className="flex items-center gap-3 flex-1">
                         <div
                           className={cn(
-                            "flex size-9 shrink-0 items-center justify-center rounded-xl transition-colors",
+                            "flex size-8 shrink-0 items-center justify-center rounded-xl transition-colors",
                             isOpen
                               ? "bg-blue-600 text-white shadow-xs"
                               : "bg-background/80 text-muted-foreground shadow-xs group-hover:text-foreground"
                           )}
                         >
-                          <Icon className="size-4.5" />
+                          <Icon className="size-4" />
                         </div>
 
                         <span
                           className={cn(
-                            "text-base sm:text-lg font-bold transition-colors leading-snug",
+                            "text-sm sm:text-base font-bold transition-colors leading-snug",
                             isOpen
                               ? "text-blue-600 dark:text-blue-300 font-extrabold"
                               : "text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400"
@@ -119,13 +119,13 @@ export function FaqSection() {
 
                       <div
                         className={cn(
-                          "flex size-8 shrink-0 items-center justify-center rounded-full transition-transform duration-300",
+                          "flex size-7 shrink-0 items-center justify-center rounded-full transition-transform duration-300",
                           isOpen
                             ? "bg-blue-600 text-white rotate-180 shadow-xs"
                             : "bg-muted/80 text-muted-foreground group-hover:bg-muted group-hover:text-foreground dark:bg-card"
                         )}
                       >
-                        <ChevronDown aria-hidden className="size-4" />
+                        <ChevronDown aria-hidden className="size-3.5" />
                       </div>
                     </button>
                   </h3>
@@ -146,9 +146,9 @@ export function FaqSection() {
                           ease: EASE_OUT_QUART,
                         }}
                       >
-                        <div className="px-5 pb-5 pt-1 sm:pl-16 sm:pr-6">
-                          <div className="rounded-xl border-l-2 border-blue-500 bg-background/60 p-3.5 pl-4 dark:bg-card/60">
-                            <p className="text-[0.9375rem] leading-relaxed text-muted-foreground dark:text-slate-300 font-normal">
+                        <div className="px-4 pb-4 pt-0.5 sm:pl-14 sm:pr-5">
+                          <div className="rounded-xl border-l-2 border-blue-500 bg-background/60 p-3 pl-3.5 dark:bg-card/60">
+                            <p className="text-sm leading-relaxed text-muted-foreground dark:text-slate-300 font-normal">
                               {item.answer}
                             </p>
                           </div>
@@ -165,5 +165,3 @@ export function FaqSection() {
     </section>
   )
 }
-
-
