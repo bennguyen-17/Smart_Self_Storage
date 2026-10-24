@@ -930,7 +930,7 @@ export default function BomFacilitiesPage() {
       {/* MODAL 4: XEM CHI TIẾT CƠ SỞ KHO & TÌNH TRẠNG Ô KHO - PORTAL RA BODY */}
       {isDetailModalOpen && detailFacility && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[999] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-slate-900 rounded-3xl border border-sky-500/30 p-5 sm:p-6 max-w-4xl w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-white my-auto max-h-[92vh] flex flex-col">
+          <div className="bg-slate-900 rounded-3xl border border-sky-500/30 p-5 sm:p-6 max-w-5xl w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-white my-auto max-h-[92vh] flex flex-col">
             
             {/* Modal Header */}
             <div className="flex items-start justify-between border-b border-slate-800 pb-3">
@@ -1046,14 +1046,14 @@ export default function BomFacilitiesPage() {
                       <table className="w-full text-xs border-collapse">
                         <thead>
                           <tr className="border-b border-slate-800 bg-slate-950/90 text-slate-400 uppercase font-black text-[10px]">
-                            <th className="p-3 text-left">Phân Loại / Size</th>
-                            <th className="p-3 text-center">Quy Cách Sàn</th>
-                            <th className="p-3 text-center">Tổng Số Ô</th>
-                            <th className="p-3 text-center">Đang Thuê</th>
-                            <th className="p-3 text-center">Còn Trống</th>
-                            <th className="p-3 text-center">Giữ Chỗ / Bảo Trì</th>
-                            <th className="p-3 text-center">Tỷ Lệ Lấp Đầy</th>
-                            <th className="p-3 text-right">Doanh Thu / Tháng</th>
+                            <th className="p-3 text-left whitespace-nowrap">Phân Loại / Size</th>
+                            <th className="p-3 text-center whitespace-nowrap">Quy Cách Sàn</th>
+                            <th className="p-3 text-center whitespace-nowrap">Tổng Số Ô</th>
+                            <th className="p-3 text-center whitespace-nowrap">Đang Thuê</th>
+                            <th className="p-3 text-center whitespace-nowrap">Còn Trống</th>
+                            <th className="p-3 text-center whitespace-nowrap">Giữ Chỗ / Bảo Trì</th>
+                            <th className="p-3 text-center whitespace-nowrap">Tỷ Lệ Lấp Đầy</th>
+                            <th className="p-3 text-right whitespace-nowrap">Doanh Thu / Tháng</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/80 font-semibold text-slate-300">
@@ -1108,15 +1108,15 @@ export default function BomFacilitiesPage() {
 
                               return (
                                 <tr key={cfg.size} className="hover:bg-slate-950/40 transition">
-                                  <td className="p-3 text-left">
-                                    <div className="font-extrabold text-white">{cfg.name}</div>
+                                  <td className="p-3 text-left whitespace-nowrap">
+                                    <div className="font-extrabold text-white whitespace-nowrap">{cfg.name}</div>
                                   </td>
-                                  <td className="p-3 text-center font-mono text-slate-400">{cfg.dim}</td>
-                                  <td className="p-3 text-center font-bold text-white font-mono">{total} ô</td>
-                                  <td className="p-3 text-center font-bold text-white font-mono">{occupied}</td>
-                                  <td className="p-3 text-center font-bold text-white font-mono">{available}</td>
-                                  <td className="p-3 text-center font-bold text-white font-mono">{holdMaint}</td>
-                                  <td className="p-3 text-center">
+                                  <td className="p-3 text-center font-mono text-slate-400 whitespace-nowrap">{cfg.dim}</td>
+                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{total} ô</td>
+                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{occupied}</td>
+                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{available}</td>
+                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{holdMaint}</td>
+                                  <td className="p-3 text-center whitespace-nowrap">
                                     <div className="flex items-center justify-center gap-2">
                                       <span className="font-mono font-bold text-white">{occRate}%</span>
                                       <div className="w-14 bg-slate-800 rounded-full h-1.5 overflow-hidden">
@@ -1127,7 +1127,7 @@ export default function BomFacilitiesPage() {
                                       </div>
                                     </div>
                                   </td>
-                                  <td className="p-3 text-right font-mono font-bold text-white">
+                                  <td className="p-3 text-right font-mono font-bold text-white whitespace-nowrap">
                                     ₫{revenue.toLocaleString("vi-VN")}
                                   </td>
                                 </tr>
@@ -1140,16 +1140,16 @@ export default function BomFacilitiesPage() {
                               <>
                                 {rows}
                                 <tr className="bg-slate-950 font-black border-t-2 border-slate-700 text-white">
-                                  <td className="p-3 text-left uppercase text-white tracking-wider">
+                                  <td className="p-3 text-left uppercase text-white tracking-wider whitespace-nowrap">
                                     TỔNG CỘNG CƠ CẤU
                                   </td>
-                                  <td className="p-3 text-center text-slate-400 font-mono">—</td>
-                                  <td className="p-3 text-center font-mono text-white text-sm">{grandTotal} ô</td>
-                                  <td className="p-3 text-center font-mono text-white text-sm">{grandOccupied}</td>
-                                  <td className="p-3 text-center font-mono text-white text-sm">{grandAvailable}</td>
-                                  <td className="p-3 text-center font-mono text-white text-sm">{grandHoldMaint}</td>
-                                  <td className="p-3 text-center font-mono text-white text-sm">{grandRate}%</td>
-                                  <td className="p-3 text-right font-mono text-white text-sm">
+                                  <td className="p-3 text-center text-slate-400 font-mono whitespace-nowrap">—</td>
+                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandTotal} ô</td>
+                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandOccupied}</td>
+                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandAvailable}</td>
+                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandHoldMaint}</td>
+                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandRate}%</td>
+                                  <td className="p-3 text-right font-mono text-white text-sm whitespace-nowrap">
                                     ₫{grandRevenue.toLocaleString("vi-VN")}
                                   </td>
                                 </tr>
@@ -1171,13 +1171,13 @@ export default function BomFacilitiesPage() {
                       <table className="w-full text-xs border-collapse">
                         <thead>
                           <tr className="border-b border-slate-800 bg-slate-950/90 text-slate-400 uppercase font-black text-[10px]">
-                            <th className="p-3 text-left">Vị Trí Tầng</th>
-                            <th className="p-3 text-left">Bố Trí Không Gian &amp; Tải Trọng</th>
-                            <th className="p-3 text-center">Tổng Số Ô</th>
-                            <th className="p-3 text-center">Đang Thuê</th>
-                            <th className="p-3 text-center">Còn Trống</th>
-                            <th className="p-3 text-center">Tỷ Lệ Lấp Đầy</th>
-                            <th className="p-3 text-right">Doanh Thu Theo Tầng</th>
+                            <th className="p-3 text-left whitespace-nowrap">Vị Trí Tầng</th>
+                            <th className="p-3 text-left whitespace-nowrap">Bố Trí Không Gian &amp; Tải Trọng</th>
+                            <th className="p-3 text-center whitespace-nowrap">Tổng Số Ô</th>
+                            <th className="p-3 text-center whitespace-nowrap">Đang Thuê</th>
+                            <th className="p-3 text-center whitespace-nowrap">Còn Trống</th>
+                            <th className="p-3 text-center whitespace-nowrap">Tỷ Lệ Lấp Đầy</th>
+                            <th className="p-3 text-right whitespace-nowrap">Doanh Thu Theo Tầng</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/80 font-semibold text-slate-300">
@@ -1209,14 +1209,14 @@ export default function BomFacilitiesPage() {
 
                               return (
                                 <tr key={f.floor} className="hover:bg-slate-950/40 transition">
-                                  <td className="p-3 text-left">
-                                    <div className="font-extrabold text-white">{f.name}</div>
+                                  <td className="p-3 text-left whitespace-nowrap">
+                                    <div className="font-extrabold text-white whitespace-nowrap">{f.name}</div>
                                   </td>
-                                  <td className="p-3 text-left text-slate-400">{f.desc}</td>
-                                  <td className="p-3 text-center font-bold text-white font-mono">{total} ô</td>
-                                  <td className="p-3 text-center font-bold text-white font-mono">{occupied}</td>
-                                  <td className="p-3 text-center font-bold text-white font-mono">{available}</td>
-                                  <td className="p-3 text-center">
+                                  <td className="p-3 text-left text-slate-400 whitespace-nowrap">{f.desc}</td>
+                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{total} ô</td>
+                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{occupied}</td>
+                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{available}</td>
+                                  <td className="p-3 text-center whitespace-nowrap">
                                     <div className="flex items-center justify-center gap-2">
                                       <span className="font-mono font-bold text-white">{occRate}%</span>
                                       <div className="w-14 bg-slate-800 rounded-full h-1.5 overflow-hidden">
@@ -1227,7 +1227,7 @@ export default function BomFacilitiesPage() {
                                       </div>
                                     </div>
                                   </td>
-                                  <td className="p-3 text-right font-mono font-bold text-white">
+                                  <td className="p-3 text-right font-mono font-bold text-white whitespace-nowrap">
                                     ₫{revenue.toLocaleString("vi-VN")}
                                   </td>
                                 </tr>
