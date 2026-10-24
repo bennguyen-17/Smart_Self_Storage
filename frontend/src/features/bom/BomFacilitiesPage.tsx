@@ -813,11 +813,11 @@ export default function BomFacilitiesPage() {
                       </div>
                       <div className="flex justify-between">
                         <span>Kích thước:</span>
-                        <span className="font-bold text-white">Size M, L, XL (Không có S)</span>
+                        <span className="font-bold text-white">Size S, M, L, XL</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Cơ cấu tầng:</span>
-                        <span className="text-slate-300">Trệt (5 XL) + 2 Lầu (10 ô M, L)</span>
+                        <span className="text-slate-300">Trệt (5 XL) + 2 Lầu (10 ô S, M, L)</span>
                       </div>
                     </div>
                   </div>

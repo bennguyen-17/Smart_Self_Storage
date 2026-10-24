@@ -674,10 +674,13 @@ public class StorageService {
                     newUnits.add(new StorageUnit(String.format("%s-F1-L%02d", cleanCode, l), floor2.getFloorId(), 3, "AVAILABLE"));
                 }
             } else {
-                for (int m = 1; m <= 3; m++) {
+                for (int s = 1; s <= 2; s++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F1-S%02d", cleanCode, s), floor2.getFloorId(), 1, "AVAILABLE"));
+                }
+                for (int m = 1; m <= 2; m++) {
                     newUnits.add(new StorageUnit(String.format("%s-F1-M%02d", cleanCode, m), floor2.getFloorId(), 2, "AVAILABLE"));
                 }
-                for (int l = 1; l <= 2; l++) {
+                for (int l = 1; l <= 1; l++) {
                     newUnits.add(new StorageUnit(String.format("%s-F1-L%02d", cleanCode, l), floor2.getFloorId(), 3, "AVAILABLE"));
                 }
             }
@@ -685,7 +688,7 @@ public class StorageService {
 
         // Floor 3 (Tầng 2):
         // Layout A: 6 ô S, 8 ô M, 4 ô L (18 ô)
-        // Layout B: 3 ô M, 2 ô L (5 ô)
+        // Layout B: 2 ô S, 2 ô M, 1 ô L (5 ô)
         if (createdFloors.size() >= 3) {
             Floor floor3 = createdFloors.get(2);
             if (layout.equals("A")) {
@@ -699,10 +702,13 @@ public class StorageService {
                     newUnits.add(new StorageUnit(String.format("%s-F2-L%02d", cleanCode, l), floor3.getFloorId(), 3, "AVAILABLE"));
                 }
             } else {
-                for (int m = 1; m <= 3; m++) {
+                for (int s = 1; s <= 2; s++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F2-S%02d", cleanCode, s), floor3.getFloorId(), 1, "AVAILABLE"));
+                }
+                for (int m = 1; m <= 2; m++) {
                     newUnits.add(new StorageUnit(String.format("%s-F2-M%02d", cleanCode, m), floor3.getFloorId(), 2, "AVAILABLE"));
                 }
-                for (int l = 1; l <= 2; l++) {
+                for (int l = 1; l <= 1; l++) {
                     newUnits.add(new StorageUnit(String.format("%s-F2-L%02d", cleanCode, l), floor3.getFloorId(), 3, "AVAILABLE"));
                 }
             }
