@@ -19,7 +19,15 @@ import {
   Phone,
   Mail,
   ChevronDown,
+  MapPin,
+  Search,
+  Snowflake,
+  Filter,
+  Eye,
+  Info,
 } from "lucide-react"
+import apiClient from "@/lib/apiClient"
+import { getStorageUnits } from "@/features/customer/rent/rentApi"
 import { useBomContext } from "@/features/bom/context/BomContext"
 import { type FacilityPerformance } from "@/features/bom/data/bomData"
 
@@ -94,6 +102,56 @@ export default function BomFacilitiesPage() {
 
   // Modal State Xóa cơ sở kho
   const [facilityToDelete, setFacilityToDelete] = useState<FacilityPerformance | null>(null)
+
+  // Modal State Xem chi tiết cơ sở & danh sách ô kho
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [detailFacility, setDetailFacility] = useState<FacilityPerformance | null>(null)
+  const [facilityUnits, setFacilityUnits] = useState<any[]>([])
+  const [isLoadingUnits, setIsLoadingUnits] = useState(false)
+  const [selectedFloorTab, setSelectedFloorTab] = useState<number | "ALL">("ALL")
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("ALL")
+  const [unitSearchQuery, setUnitSearchQuery] = useState("")
+
+  const handleOpenFacilityDetail = async (fac: FacilityPerformance) => {
+    setDetailFacility(fac)
+    setIsDetailModalOpen(true)
+    setSelectedFloorTab("ALL")
+    setSelectedStatusFilter("ALL")
+    setUnitSearchQuery("")
+    setIsLoadingUnits(true)
+
+    try {
+      let facId = Number(fac.id)
+      if (isNaN(facId) || facId <= 0) {
+        const match = (fac.code || "").match(/\d+/)
+        facId = match ? parseInt(match[0], 10) : 1
+      }
+      const res: any = await apiClient.get("/units/filter", {
+        params: { facilityId: facId }
+      })
+      const raw = Array.isArray(res) ? res : (res?.data || [])
+      if (raw.length > 0) {
+        setFacilityUnits(raw)
+      } else {
+        const u1 = (await getStorageUnits(fac.code, 1))?.data || []
+        const u2 = (await getStorageUnits(fac.code, 2))?.data || []
+        const u3 = (await getStorageUnits(fac.code, 3))?.data || []
+        setFacilityUnits([...u1, ...u2, ...u3])
+      }
+    } catch (err) {
+      console.warn("Lỗi tải ô kho cơ sở:", err)
+      try {
+        const u1 = (await getStorageUnits(fac.code, 1))?.data || []
+        const u2 = (await getStorageUnits(fac.code, 2))?.data || []
+        const u3 = (await getStorageUnits(fac.code, 3))?.data || []
+        setFacilityUnits([...u1, ...u2, ...u3])
+      } catch {
+        setFacilityUnits([])
+      }
+    } finally {
+      setIsLoadingUnits(false)
+    }
+  }
 
   // Quy mô chuẩn hóa: Layout A = 46 kho, Layout B = 15 kho
   const computedTotalUnits = useMemo(() => {
@@ -332,9 +390,17 @@ export default function BomFacilitiesPage() {
 
                       {/* CỘT 2: TÊN CƠ SỞ KHO */}
                       <td className="py-4 px-4 text-left whitespace-nowrap">
-                        <div className="font-extrabold text-white text-xs sm:text-sm">
-                          {cleanName}
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenFacilityDetail(fac)}
+                          className="font-extrabold text-white text-xs sm:text-sm hover:text-sky-400 hover:underline transition-colors text-left cursor-pointer flex items-center gap-1.5 group"
+                          title="Bấm để xem chi tiết cơ sở & danh sách ô kho"
+                        >
+                          <span>{cleanName}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-950/80 text-sky-400 border border-sky-500/30 font-mono opacity-80 group-hover:opacity-100 group-hover:border-sky-400">
+                            Chi tiết &amp; Ô kho →
+                          </span>
+                        </button>
                       </td>
 
                       {/* CỘT 3: QUẢN LÝ CHI NHÁNH */}
@@ -905,6 +971,329 @@ export default function BomFacilitiesPage() {
               >
                 <Trash2 className="size-4" />
                 <span>Xác Nhận Xóa Cơ Sở</span>
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* MODAL 4: XEM CHI TIẾT CƠ SỞ KHO & TÌNH TRẠNG Ô KHO - PORTAL RA BODY */}
+      {isDetailModalOpen && detailFacility && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[999] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-slate-900 rounded-3xl border border-sky-500/30 p-5 sm:p-6 max-w-4xl w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-white my-auto max-h-[92vh] flex flex-col">
+            
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b border-slate-800 pb-3">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-mono font-black text-xs px-2 py-0.5 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                    {detailFacility.code}
+                  </span>
+                  <h3 className="font-black text-base sm:text-lg text-white">
+                    {detailFacility.name.replace(/\s*\([A-Z0-9-]+\)\s*$/, "")}
+                  </h3>
+                </div>
+                <div className="text-xs text-slate-400 flex flex-wrap items-center gap-x-4 gap-y-1">
+                  <span className="flex items-center gap-1">
+                    <MapPin className="size-3.5 text-sky-400 shrink-0" />
+                    {detailFacility.address}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <User className="size-3.5 text-slate-400 shrink-0" />
+                    Quản lý: <strong className="text-slate-200">{detailFacility.managerName?.replace(/\s*\([A-Z0-9-]+\)\s*$/, "") || "Chưa phân công"}</strong>
+                  </span>
+                  {detailFacility.managerPhone && (
+                    <span className="flex items-center gap-1">
+                      <Phone className="size-3.5 text-slate-400 shrink-0" />
+                      {detailFacility.managerPhone}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => setIsDetailModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer shrink-0"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            {/* Thống kê 4 thẻ KPI nhanh */}
+            {(() => {
+              const all = facilityUnits
+              const total = all.length || (detailFacility.totalUnits || 46)
+              const occupied = all.filter(u => (u.status || '').toUpperCase() === 'OCCUPIED' || (u.status || '').toUpperCase() === 'RENTED').length
+              const available = all.filter(u => (u.status || '').toUpperCase() === 'AVAILABLE').length
+              const hold = all.filter(u => (u.status || '').toUpperCase() === 'HOLD').length
+              const maintenance = all.filter(u => (u.status || '').toUpperCase().includes('MAINTENANCE')).length
+
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  <div className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-slate-400">Tổng Số Ô Kho</div>
+                      <div className="text-lg font-black text-white">{total}</div>
+                    </div>
+                    <div className="size-8 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center font-bold text-xs">
+                      🏢
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-slate-950/70 border border-emerald-500/20 flex items-center justify-between">
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-emerald-400">Còn Trống</div>
+                      <div className="text-lg font-black text-emerald-300">{available}</div>
+                    </div>
+                    <div className="size-8 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold text-xs">
+                      🟢
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-slate-950/70 border border-rose-500/20 flex items-center justify-between">
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-rose-400">Đang Thuê</div>
+                      <div className="text-lg font-black text-rose-300">{occupied}</div>
+                    </div>
+                    <div className="size-8 rounded-xl bg-rose-500/15 text-rose-400 flex items-center justify-center font-bold text-xs">
+                      🔴
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-slate-950/70 border border-amber-500/20 flex items-center justify-between">
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-amber-400">Giữ Chỗ / Bảo Trì</div>
+                      <div className="text-lg font-black text-amber-300">{hold + maintenance}</div>
+                    </div>
+                    <div className="size-8 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center font-bold text-xs">
+                      🟡
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Thanh điều khiển: Chọn Tầng + Lọc Trạng Thái + Tìm Kiếm */}
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-slate-950/80 border border-slate-800">
+              {/* Tabs chọn tầng */}
+              <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setSelectedFloorTab("ALL")}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                    selectedFloorTab === "ALL"
+                      ? "bg-sky-500 text-slate-950 shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Tất cả tầng
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedFloorTab(1)}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                    selectedFloorTab === 1
+                      ? "bg-sky-500 text-slate-950 shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Tầng Trệt
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedFloorTab(2)}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                    selectedFloorTab === 2
+                      ? "bg-sky-500 text-slate-950 shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Tầng 1
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedFloorTab(3)}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                    selectedFloorTab === 3
+                      ? "bg-sky-500 text-slate-950 shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Tầng 2
+                </button>
+              </div>
+
+              {/* Lọc trạng thái & tìm kiếm */}
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedStatusFilter}
+                  onChange={(e) => setSelectedStatusFilter(e.target.value)}
+                  className="px-2.5 py-1.5 rounded-xl border border-slate-700 bg-slate-900 text-xs font-bold text-slate-200 outline-none focus:border-sky-400 cursor-pointer"
+                >
+                  <option value="ALL">Tất cả trạng thái</option>
+                  <option value="AVAILABLE">🟢 Trống</option>
+                  <option value="OCCUPIED">🔴 Đang thuê</option>
+                  <option value="HOLD">🟡 Đã giữ chỗ</option>
+                  <option value="MAINTENANCE">⚪ Bảo trì</option>
+                </select>
+
+                <div className="relative">
+                  <Search className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <input
+                    type="search"
+                    value={unitSearchQuery}
+                    onChange={(e) => setUnitSearchQuery(e.target.value)}
+                    placeholder="Tìm mã ô kho..."
+                    className="pl-8 pr-3 py-1.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white placeholder:text-slate-500 outline-none focus:border-sky-400 w-36 sm:w-44 font-semibold"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Danh sách ô kho */}
+            <div className="flex-1 overflow-y-auto pr-1">
+              {isLoadingUnits ? (
+                <div className="p-12 text-center text-slate-400 font-bold space-y-2">
+                  <div className="size-6 border-2 border-sky-400 border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-xs">Đang tải danh sách ô kho cơ sở...</p>
+                </div>
+              ) : (
+                (() => {
+                  const filtered = facilityUnits.filter((u) => {
+                    const fl = u.floorId || u.floor || 1
+                    if (selectedFloorTab !== "ALL" && fl !== selectedFloorTab) return false
+
+                    const st = (u.status || "AVAILABLE").toUpperCase()
+                    if (selectedStatusFilter !== "ALL") {
+                      if (selectedStatusFilter === "OCCUPIED" && st !== "OCCUPIED" && st !== "RENTED") return false
+                      if (selectedStatusFilter === "AVAILABLE" && st !== "AVAILABLE") return false
+                      if (selectedStatusFilter === "HOLD" && st !== "HOLD") return false
+                      if (selectedStatusFilter === "MAINTENANCE" && !st.includes("MAINTENANCE")) return false
+                    }
+
+                    if (unitSearchQuery.trim()) {
+                      const q = unitSearchQuery.trim().toLowerCase()
+                      const code = (u.unitCode || u.id || u.unitId || "").toLowerCase()
+                      const type = (u.typeName || u.typeLabel || "").toLowerCase()
+                      if (!code.includes(q) && !type.includes(q)) return false
+                    }
+
+                    return true
+                  })
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="p-10 text-center rounded-2xl bg-slate-950/50 border border-slate-800 text-slate-500">
+                        <Warehouse className="size-8 mx-auto mb-2 opacity-40 text-slate-400" />
+                        <p className="text-xs font-bold">Không tìm thấy ô kho nào phù hợp bộ lọc.</p>
+                      </div>
+                    )
+                  }
+
+                  return (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      {filtered.map((u, idx) => {
+                        const code = u.unitCode || u.id || u.unitId || `U-${idx + 1}`
+                        const st = (u.status || "AVAILABLE").toUpperCase()
+                        const isOccupied = st === "OCCUPIED" || st === "RENTED"
+                        const isHold = st === "HOLD"
+                        const isMaint = st.includes("MAINTENANCE")
+
+                        const shortCode = code.split("-").pop() || code
+                        const isClimate = Boolean(u.isClimate)
+                        const size = u.size?.includes("XL") ? "XL" : u.size?.includes("L") ? "L" : u.size?.includes("M") ? "M" : u.size?.includes("S") ? "S" : (u.size || "M")
+
+                        let statusBadge = (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400">
+                            <span className="size-1.5 rounded-full bg-emerald-500" /> Trống
+                          </span>
+                        )
+                        let cardBorder = "border-slate-800 bg-slate-950/70 hover:border-slate-700"
+
+                        if (isOccupied) {
+                          statusBadge = (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-400">
+                              <span className="size-1.5 rounded-full bg-rose-500" /> Đang thuê
+                            </span>
+                          )
+                          cardBorder = "border-rose-500/20 bg-rose-950/10 hover:border-rose-500/40"
+                        } else if (isHold) {
+                          statusBadge = (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-400">
+                              <span className="size-1.5 rounded-full bg-amber-500" /> Đã giữ chỗ
+                            </span>
+                          )
+                          cardBorder = "border-amber-500/20 bg-amber-950/10 hover:border-amber-500/40"
+                        } else if (isMaint) {
+                          statusBadge = (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                              <span className="size-1.5 rounded-full bg-slate-500" /> Bảo trì
+                            </span>
+                          )
+                          cardBorder = "border-slate-800 bg-slate-900/40 opacity-70"
+                        }
+
+                        const monthly = Number(u.monthlyPrice || 0)
+
+                        return (
+                          <div
+                            key={code}
+                            className={`p-3 rounded-2xl border transition flex flex-col justify-between space-y-2.5 ${cardBorder}`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <div className="font-mono font-black text-sm text-white">{shortCode}</div>
+                                <div className="text-[10px] text-slate-400 font-mono mt-0.5">{code}</div>
+                              </div>
+                              <span className="font-extrabold text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-200 border border-slate-700">
+                                {size}
+                              </span>
+                            </div>
+
+                            <div className="space-y-1 text-[10px]">
+                              <div className="flex items-center justify-between">
+                                <span className="text-slate-400">Trạng thái:</span>
+                                {statusBadge}
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-slate-400">Quy cách:</span>
+                                <span className="text-slate-200 font-mono">{u.size || u.dim || "Chuẩn"}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-slate-400">Môi trường:</span>
+                                <span className={isClimate ? "text-sky-300 font-bold" : "text-slate-400"}>
+                                  {isClimate ? "❄️ Mát 22-25°C" : "📦 Tiêu chuẩn"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {monthly > 0 && (
+                              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                                <span className="text-[9.5px] text-slate-500 uppercase font-bold">Giá thuê:</span>
+                                <span className="text-xs font-mono font-black text-sky-400">
+                                  ₫{monthly.toLocaleString("vi-VN")}<span className="text-[9px] font-normal text-slate-400">/th</span>
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })()
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+              <span className="text-xs text-slate-400">
+                Hiển thị tổng số <strong>{facilityUnits.length}</strong> ô kho của cơ sở {detailFacility.name.replace(/\s*\([A-Z0-9-]+\)\s*$/, "")}
+              </span>
+              <button
+                onClick={() => setIsDetailModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 font-bold text-xs text-white transition cursor-pointer"
+              >
+                Đóng
               </button>
             </div>
           </div>
