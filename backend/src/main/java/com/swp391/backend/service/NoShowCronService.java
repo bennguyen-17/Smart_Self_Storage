@@ -62,8 +62,8 @@ public class NoShowCronService {
 
             // Nếu đến 00:00 ngày hôm sau mà khách vẫn chưa đến Check-in (startDate < today)
             if (reservation.getStartDate() != null && reservation.getStartDate().isBefore(today)) {
-                // 1. Chuyển hợp đồng sang CANCELED
-                contract.setStatus("CANCELED");
+                // 1. Chuyển hợp đồng sang CANCELLED
+                contract.setStatus("CANCELLED");
                 contract.setCancelReason("NO_SHOW");
                 contractRepository.save(contract);
 
@@ -93,7 +93,7 @@ public class NoShowCronService {
                 if (activityLogRepository != null) {
                     ActivityLog activityLog = new ActivityLog();
                     activityLog.setAccountId(reservation.getAccountId());
-                    activityLog.setAction("NO_SHOW_CANCELED");
+                    activityLog.setAction("NO_SHOW_CANCELLED");
                     activityLog.setDescription(String.format("Tự động hủy do No-Show hợp đồng #%d, ô %s (ngày hẹn: %s). Tịch thu 100%% tiền cọc do quá hạn check-in.",
                             contract.getContractId(), reservation.getUnitCode(), reservation.getStartDate()));
                     activityLog.setCreatedAt(LocalDateTime.now());

@@ -37,7 +37,7 @@ interface CheckinContractTableProps {
 /** Dòng phụ dưới mã HĐ (bám prototype) */
 function codeSubtitle(item: StaffReservationItem): string | null {
   if (item.contractStatus === "TERMINATED") return "Hợp đồng đã thanh lý"
-  if (item.contractStatus === "CANCELED") return "Đã hoàn tiền cọc"
+  if (item.contractStatus === "CANCELLED") return "Đã hoàn tiền cọc"
   if (item.contractStatus === "ACTIVE" && (item.returnRequested || item.cancelReason === "EARLY_TERMINATION")) {
     const returnDateStr = item.desiredReturnDate ? formatDate(item.desiredReturnDate) : null
     return returnDateStr ? `Khách hẹn trả: ${returnDateStr}` : "Khách hẹn trả kho"
@@ -121,7 +121,7 @@ function CheckinContractTable({
                   key={item.reservationId}
                   className={cn(
                     "transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/40",
-                    item.contractStatus === "CANCELED" && "opacity-75"
+                    item.contractStatus === "CANCELLED" && "opacity-75"
                   )}
                   data-status={item.contractStatus ?? ""}
                 >

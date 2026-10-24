@@ -43,7 +43,7 @@ export const getMyContracts = async () => {
           let statusLabel = c.statusLabel || c.status;
           if (c.status === 'PENDING_CHECKIN') statusLabel = 'CHỜ CHECK-IN';
           else if (c.status === 'ACTIVE') statusLabel = 'HIỆU LỰC';
-          else if (c.status === 'CANCELED') statusLabel = 'ĐÃ HỦY CỌC';
+          else if (c.status === 'CANCELLED') statusLabel = 'ĐÃ HỦY CỌC';
           else if (c.status === 'TERMINATED') statusLabel = 'ĐÃ THANH LÝ';
 
           const resCode = c.reservationCode || c.bookingCode;

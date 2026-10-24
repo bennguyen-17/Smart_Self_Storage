@@ -26,7 +26,7 @@ export default function StorageCardList({
         const isActive = item.status === 'ACTIVE';
         const isCompleted = item.status === 'COMPLETED';
         const isTerminated = item.status === 'TERMINATED';
-        const isCanceled = item.status === 'CANCELED';
+        const isCanceled = item.status === 'CANCELLED';
         const isReturnRequested = isActive && Boolean(item.returnRequested || item.cancelReason === 'EARLY_TERMINATION');
 
         return (

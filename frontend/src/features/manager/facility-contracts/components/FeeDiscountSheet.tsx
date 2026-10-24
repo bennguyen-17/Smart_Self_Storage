@@ -24,7 +24,7 @@ import type { FacilityContract, FeeInvoice } from "../types"
 const MODES: { mode: DiscountMode; title: string; detail: string }[] = [
   { mode: "PERCENT", title: "Giảm theo %", detail: "Nhập phần trăm từ 1 đến 100." },
   { mode: "AMOUNT", title: "Giảm số tiền", detail: "Nhập số tiền không vượt quá khoản phí." },
-  { mode: "WAIVE", title: "Miễn toàn bộ", detail: "Khoản phí chuyển sang đã hủy (CANCELED)." },
+  { mode: "WAIVE", title: "Miễn toàn bộ", detail: "Khoản phí chuyển sang đã hủy." },
 ]
 
 /**

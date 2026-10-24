@@ -380,7 +380,7 @@ public class StaffReservationService {
 
         reservation.setPenaltyAmount(penaltyAmount);
         reservation.setStatus("CANCELLED");
-        contract.setStatus("CANCELED");
+        contract.setStatus("CANCELLED");
         contract.setCancelReason("COUNTER_CANCEL");
         contract.setTerminatedAt(LocalDateTime.now());
         unit.setStatus("AVAILABLE");

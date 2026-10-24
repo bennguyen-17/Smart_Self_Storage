@@ -19,13 +19,13 @@ export const RESERVATION_TABS: ReservationTab[] = [
   {
     key: "no-show",
     label: "Đã hủy do No-Show",
-    status: "CANCELED",
+    status: "CANCELLED",
     reason: "NO_SHOW",
   },
   {
     key: "customer-canceled",
     label: "Khách tự hủy",
-    status: "CANCELED",
+    status: "CANCELLED",
     reason: "CUSTOMER_REQUEST",
   },
 ]

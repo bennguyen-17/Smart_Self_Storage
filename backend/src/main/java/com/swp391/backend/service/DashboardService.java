@@ -175,7 +175,7 @@ public class DashboardService {
                     if (r.getDepositAmount() != null) {
                         depositHolding = depositHolding.add(r.getDepositAmount());
                     }
-                } else if ("CANCELED".equalsIgnoreCase(cStatus) || "FORFEITED".equalsIgnoreCase(cStatus)) {
+                } else if ("CANCELLED".equalsIgnoreCase(cStatus) || "FORFEITED".equalsIgnoreCase(cStatus)) {
                     if (r.getDepositAmount() != null) {
                         Integer cId = cOpt.get().getContractId();
                         BigDecimal refundedForContract = payments.stream()

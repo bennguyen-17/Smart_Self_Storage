@@ -71,6 +71,9 @@ CREATE TABLE CustomerProfile (
     customerId INT AUTO_INCREMENT PRIMARY KEY,
     accountId INT NOT NULL UNIQUE,
     identityNumber VARCHAR(20) NOT NULL UNIQUE,
+    bankName VARCHAR(100) NULL,
+    bankAccountNumber VARCHAR(50) NULL,
+    bankAccountName VARCHAR(100) NULL,
     CONSTRAINT fk_customer_account FOREIGN KEY (accountId) REFERENCES Account (accountId) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -98,6 +101,7 @@ CREATE TABLE ActivityLog (
     description TEXT,
     createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ipAddress VARCHAR(45),
+    INDEX idx_activity_facility_created (facilityId, createdAt),
     CONSTRAINT fk_activity_account FOREIGN KEY (accountId) REFERENCES Account (accountId) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_activity_facility FOREIGN KEY (facilityId) REFERENCES Facility (facilityId) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -259,7 +263,7 @@ CREATE TABLE Contract (
     pdfUrl VARCHAR(255),
     activatedAt DATETIME,
     terminatedAt DATETIME,
-    status ENUM('INITIATED', 'PENDING_CHECKIN', 'ACTIVE', 'OVERDUE', 'TERMINATED', 'COMPLETED', 'FORFEITED', 'CANCELED') NOT NULL DEFAULT 'INITIATED',
+    status ENUM('INITIATED', 'PENDING_CHECKIN', 'ACTIVE', 'OVERDUE', 'TERMINATED', 'COMPLETED', 'FORFEITED', 'CANCELLED') NOT NULL DEFAULT 'INITIATED',
     forfeitProcessed BOOLEAN NOT NULL DEFAULT FALSE,
     cancelReason VARCHAR(255),
     refundBankName VARCHAR(100),
@@ -305,7 +309,7 @@ CREATE TABLE StaffTask (
     unitCode VARCHAR(50),
     contractId INT,
     note TEXT,
-    status ENUM('ASSIGNED', 'DONE', 'CANCELED') NOT NULL DEFAULT 'ASSIGNED',
+    status ENUM('ASSIGNED', 'DONE', 'CANCELLED') NOT NULL DEFAULT 'ASSIGNED',
     workDate DATE NOT NULL,
     shiftId INT NOT NULL,
     createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -484,13 +488,13 @@ INSERT INTO Account (accountId, roleId, phone, fullName, email, password, status
 (36, 5, '0944556677', 'Vũ Mai Phương', 'maiphuong.vu@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE');
 
 -- 4. Hồ sơ khách hàng (CustomerProfiles gắn CCCD 12 số chuẩn)
-INSERT INTO CustomerProfile (customerId, accountId, identityNumber) VALUES
-(1, 31, '001201012345'),
-(2, 32, '079201098765'),
-(3, 33, '001202023456'),
-(4, 34, '079202087654'),
-(5, 35, '048201034567'),
-(6, 36, '092201045678');
+INSERT INTO CustomerProfile (customerId, accountId, identityNumber, bankName, bankAccountNumber, bankAccountName) VALUES
+(1, 31, '001201012345', 'MBBank', '0912345678', 'NGUYEN THANH LONG'),
+(2, 32, '079201098765', 'Vietcombank', '079201098765', 'TRAN THU HA'),
+(3, 33, '001202023456', 'Techcombank', '1903678901234', 'TRAN THI BICH NGOC'),
+(4, 34, '079202087654', 'Techcombank', '079202087654', 'LE HUU DAT'),
+(5, 35, '048201034567', 'VietinBank', '108876543210', 'LE HOANG LONG'),
+(6, 36, '092201045678', 'ACB', '246813579', 'VU MAI PHUONG');
 
 -- 5. Hồ sơ nhân viên & Quản lý cơ sở (EmployeeProfiles gắn với từng cơ sở)
 INSERT INTO EmployeeProfile (employeeId, accountId, facilityId) VALUES
@@ -909,10 +913,10 @@ INSERT INTO Contract (contractId, reservationId, pdfUrl, activatedAt, terminated
 (2, 2, '/contracts/CTR-HCM01-200726-1002.pdf', '2026-07-20 10:00:00', '2026-09-25 11:00:00', 'TERMINATED', 'Khách hàng tất toán hợp đồng trước hạn theo biên bản nghiệm thu', 'Vietcombank', '079201098765', 'TRAN THU HA'),
 
 -- HĐ 3: Quá hạn check-in (No-Show) tự động hủy & tịch thu 100% cọc
-(3, 3, '/contracts/CTR-HN01-051026-1003.pdf', NULL, NULL, 'CANCELED', 'Quá hạn check-in (No-Show). Tịch thu 100% tiền cọc theo quy định BR-20.', NULL, NULL, NULL),
+(3, 3, '/contracts/CTR-HN01-051026-1003.pdf', NULL, NULL, 'CANCELLED', 'Quá hạn check-in (No-Show). Tịch thu 100% tiền cọc theo quy định BR-20.', NULL, NULL, NULL),
 
 -- HĐ 4: Khách chủ động hủy trước ngày bắt đầu >= 4 ngày, hoàn 100% cọc
-(4, 4, '/contracts/CTR-HN02-250926-1004.pdf', NULL, NULL, 'CANCELED', 'Khách hàng chủ động hủy trước ngày bắt đầu >= 4 ngày. Hoàn lại 100% cọc theo BR-17.', 'Techcombank', '079202087654', 'LE HUU DAT'),
+(4, 4, '/contracts/CTR-HN02-250926-1004.pdf', NULL, NULL, 'CANCELLED', 'Khách hàng chủ động hủy trước ngày bắt đầu >= 4 ngày. Hoàn lại 100% cọc theo BR-17.', 'Techcombank', '079202087654', 'LE HUU DAT'),
 
 -- HĐ 5: Quá hạn trên 30 ngày bị tịch thu tài sản (FORFEITED)
 (5, 5, '/contracts/CTR-HCM02-010726-1005.pdf', '2026-07-01 08:30:00', NULL, 'FORFEITED', 'Quá hạn thanh lý trên 30 ngày. Tịch thu quyền sử dụng tài sản theo quy định BR-21.', NULL, NULL, NULL),

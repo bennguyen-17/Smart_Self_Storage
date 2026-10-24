@@ -1,6 +1,6 @@
 export type StaffTaskType = "MAINTENANCE" | "CHECKOUT_INSPECTION"
 
-export type StaffTaskStatus = "ASSIGNED" | "DONE" | "CANCELED"
+export type StaffTaskStatus = "ASSIGNED" | "DONE" | "CANCELLED"
 
 /** Việc Manager giao cho Staff trong một ca (BR-50 / US-32). */
 export interface StaffTask {

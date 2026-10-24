@@ -95,7 +95,7 @@ public class ManagerContractController {
             }
 
             // Chuẩn hóa trạng thái
-            // Trả đúng trạng thái thật: PENDING_CHECKIN | ACTIVE | OVERDUE | TERMINATED | COMPLETED | FORFEITED | CANCELED
+            // Trả đúng trạng thái thật: PENDING_CHECKIN | ACTIVE | OVERDUE | TERMINATED | COMPLETED | FORFEITED | CANCELLED
             String rawStatus = c.getStatus() != null ? c.getStatus().toUpperCase() : "ACTIVE";
             String status = rawStatus;
 
@@ -120,7 +120,7 @@ public class ManagerContractController {
                         if ("PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus())) {
                             feeStatus = "PAID";
                         } else if ("CANCELLED".equalsIgnoreCase(p.getStatus())) {
-                            feeStatus = "CANCELED";
+                            feeStatus = "CANCELLED";
                         }
                         fees.add(new FeeInvoiceResponse(
                                 p.getPaymentId(),

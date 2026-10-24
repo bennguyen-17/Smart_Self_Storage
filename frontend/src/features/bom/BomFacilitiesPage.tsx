@@ -439,7 +439,7 @@ export default function BomFacilitiesPage() {
                   <div className="flex items-center gap-2">
                     <UserCheck className="size-4 text-sky-400" />
                     <span className="text-[11px] text-slate-300 uppercase font-black tracking-wider">
-                      Phân công Quản Lý Cơ Sở (Facility Manager)
+                      Phân công Quản Lý Cơ Sở
                     </span>
                   </div>
                   {editManagerName.trim() ? (
@@ -586,15 +586,15 @@ export default function BomFacilitiesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
-                    Quy Mô Ô Kho (Theo Layout):
+                    Quy Mô Ô Kho:
                   </label>
                   <div className="p-2.5 rounded-xl border border-slate-800 bg-slate-950/80 font-bold text-xs text-sky-300 flex items-center justify-between">
                     <span>
                       {selectedFacility.layoutType === "Layout B" ||
                       selectedFacility.layoutType === "B" ||
                       [2, 4, 5, 7].includes(Number(selectedFacility.id))
-                        ? "15 Ô kho (Layout B)"
-                        : "46 Ô kho (Layout A)"}
+                        ? "15 Ô kho"
+                        : "46 Ô kho"}
                     </span>
                     <span className="text-[10px] text-slate-500 font-normal">3 Tầng Chuẩn</span>
                   </div>

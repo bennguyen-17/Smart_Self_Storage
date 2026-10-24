@@ -13,7 +13,7 @@ export type ContractStatus =
   | "TERMINATED"
   | "COMPLETED"
   | "FORFEITED"
-  | "CANCELED"
+  | "CANCELLED"
 
 /** Tiến độ trả kho: chưa trả → đã lập biên bản nghiệm thu (US-24) → đã bàn giao, thu chìa (US-25) */
 export type CheckoutStage = "NONE" | "INSPECTED" | "HANDED_OVER"
@@ -21,7 +21,7 @@ export type CheckoutStage = "NONE" | "INSPECTED" | "HANDED_OVER"
 /** Khoản phí có thể miễn/giảm: phạt trễ hạn (PEN) hoặc truy thu đền bù (CMP) */
 export type FeeType = "PEN" | "CMP"
 
-export type FeeStatus = "UNPAID" | "PAID" | "CANCELED"
+export type FeeStatus = "UNPAID" | "PAID" | "CANCELLED"
 
 export interface FeeInvoice {
   paymentId: number

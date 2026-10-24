@@ -93,6 +93,9 @@ public class CustomerController {
         boolean isActive = "ACTIVE".equalsIgnoreCase(account.getStatus());
         data.put("status", account.getStatus());
         data.put("identityNumber", identityNumber);
+        data.put("bankName", profileOpt.map(CustomerProfile::getBankName).orElse("Chưa cập nhật"));
+        data.put("bankAccountNumber", profileOpt.map(CustomerProfile::getBankAccountNumber).orElse("Chưa cập nhật"));
+        data.put("bankAccountName", profileOpt.map(CustomerProfile::getBankAccountName).orElse("Chưa cập nhật"));
         data.put("isVerified", isActive);
         data.put("verificationBadge", isActive ? "ĐÃ XÁC THỰC THÔNG TIN" : "CHƯA XÁC THỰC THÔNG TIN");
 
@@ -208,9 +211,20 @@ public class CustomerController {
 
         accountRepository.save(account);
 
-        // Fetch CustomerProfile from Database
+        // Fetch or create CustomerProfile from Database
         Optional<CustomerProfile> profileOpt = customerProfileRepository.findByAccountId(account.getAccountId());
-        String identityNumber = profileOpt.map(CustomerProfile::getIdentityNumber).orElse("Chưa cập nhật");
+        CustomerProfile profile = profileOpt.orElseGet(() -> new CustomerProfile(account.getAccountId(), "Chưa cập nhật"));
+        if (updateData.containsKey("bankName")) {
+            profile.setBankName(updateData.get("bankName") != null ? updateData.get("bankName").toString().trim() : null);
+        }
+        if (updateData.containsKey("bankAccountNumber")) {
+            profile.setBankAccountNumber(updateData.get("bankAccountNumber") != null ? updateData.get("bankAccountNumber").toString().trim() : null);
+        }
+        if (updateData.containsKey("bankAccountName")) {
+            profile.setBankAccountName(updateData.get("bankAccountName") != null ? updateData.get("bankAccountName").toString().trim().toUpperCase() : null);
+        }
+        customerProfileRepository.save(profile);
+        String identityNumber = profile.getIdentityNumber() != null ? profile.getIdentityNumber() : "Chưa cập nhật";
 
         Map<String, Object> data = new HashMap<>();
         data.put("customerId", account.getAccountId());
@@ -220,6 +234,9 @@ public class CustomerController {
         data.put("email", account.getEmail());
         data.put("status", account.getStatus());
         data.put("identityNumber", identityNumber);
+        data.put("bankName", profile.getBankName() != null ? profile.getBankName() : "Chưa cập nhật");
+        data.put("bankAccountNumber", profile.getBankAccountNumber() != null ? profile.getBankAccountNumber() : "Chưa cập nhật");
+        data.put("bankAccountName", profile.getBankAccountName() != null ? profile.getBankAccountName() : "Chưa cập nhật");
         data.put("isVerified", "ACTIVE".equalsIgnoreCase(account.getStatus()));
         data.put("verificationBadge", "ACTIVE".equalsIgnoreCase(account.getStatus()) ? "ĐÃ XÁC THỰC THÔNG TIN" : "CHƯA XÁC THỰC THÔNG TIN");
 

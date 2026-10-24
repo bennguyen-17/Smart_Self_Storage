@@ -174,7 +174,7 @@ function RefundConfirmForm({
                 }}
                 className="text-xs"
               >
-                <ImageIcon aria-hidden="true" className="mr-1 size-3.5" /> Dùng ảnh biên lai mẫu (demo)
+                <ImageIcon aria-hidden="true" className="mr-1 size-3.5" /> Dùng ảnh biên lai mẫu
               </Button>
             </div>
           </div>

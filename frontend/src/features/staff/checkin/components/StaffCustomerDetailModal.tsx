@@ -6,7 +6,7 @@ import { updateCustomerCccd } from "../api/checkinApi"
 import { formatDate, formatVnd } from "@/lib/format"
 
 import type { StaffReservationItem } from "../types"
-import ProtoModal from "./ProtoModal"
+import ProtoModal from "@/features/staff/components/ProtoModal"
 
 /** Item có thể kèm thêm field của lookup (unitStatus, contractPdfUrl). */
 export type CheckinTarget = StaffReservationItem & {
@@ -32,7 +32,7 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
     label: "🚨 QUÁ HẠN",
     className: "bg-rose-600 text-white animate-pulse",
   },
-  CANCELED: {
+  CANCELLED: {
     label: "❌ ĐÃ HỦY ĐƠN",
     className: "bg-slate-200 text-slate-700",
   },

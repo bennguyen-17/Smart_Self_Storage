@@ -4,11 +4,11 @@ import { toast } from "sonner"
 
 import { getErrorMessage } from "@/lib/api"
 
-import { startCurrentShift } from "../../shifts/api/staffShiftApi"
+import { startCurrentShift } from "@/features/staff/shifts/api/staffShiftApi"
 import {
   getStaffProfile,
   type StaffProfileData,
-} from "../services/staffProfileService"
+} from "@/features/staff/services/staffProfileService"
 import StaffProfileModal from "./StaffProfileModal"
 
 export default function StaffShiftBadge() {

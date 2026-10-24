@@ -9,7 +9,7 @@ import { toast } from "sonner"
 
 import { login } from "../authApi"
 import ForgotPasswordModal from "./ForgotPasswordModal"
-import { loginSchema, type LoginFormValues } from "@/utils/validation"
+import { loginSchema, type LoginFormValues } from "@/lib/validation"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"

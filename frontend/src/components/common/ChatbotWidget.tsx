@@ -45,7 +45,7 @@ export default function ChatbotWidget() {
       } else if (lower.includes('giờ') || lower.includes('thời gian') || lower.includes('mấy giờ')) {
         reply = 'Smart Self Storage mở cửa tự động 24/7. Bạn có thể đến cất hoặc lấy đồ vào bất kỳ lúc nào, kể cả ban đêm hay lễ tết.';
       } else if (lower.includes('cọc') || lower.includes('hủy')) {
-        reply = 'Bạn có thể giữ chỗ trước (Hold) trong vòng 24h. Tiền cọc sẽ được hoàn trả 100% khi bạn kết thúc hợp đồng mà không có hư hại kho.';
+        reply = 'Bạn có thể giữ chỗ trước trong vòng 24h. Tiền cọc sẽ được hoàn trả 100% khi bạn kết thúc hợp đồng mà không có hư hại kho.';
       } else if (lower.includes('hướng dẫn') || lower.includes('cách')) {
         reply = 'Rất đơn giản! Bạn chỉ cần vào mục "Sơ đồ 2D & Thuê kho", chọn một ô màu xanh/cam còn trống, sau đó bấm nút "Đặt cọc qua VietQR" là xong ngay!';
       } else if (lower.includes('chào') || lower.includes('hi ') || lower.includes('hello')) {

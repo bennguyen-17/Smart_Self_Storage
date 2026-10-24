@@ -137,7 +137,7 @@ public class FacilityContractResponse {
         private String invoiceNumber;
         private String type; // PEN or CMP
         private Double amount;
-        private String status; // UNPAID, PAID, CANCELED
+        private String status; // UNPAID, PAID, CANCELLED
         private String issuedAt;
 
         public FeeInvoiceResponse() {

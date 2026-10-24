@@ -34,7 +34,7 @@ export default function ContractDetailModal({
   const isCompleted = contract.status === 'COMPLETED';
   const isTerminated = contract.status === 'TERMINATED';
   const isOverdue = contract.status === 'OVERDUE';
-  const isCanceled = contract.status === 'CANCELED';
+  const isCanceled = contract.status === 'CANCELLED';
 
   const modalContent = (
     <div

@@ -20,7 +20,7 @@ import StaffPortalLayout from "@/features/staff/StaffPortalLayout"
 import StaffCheckinPage from "@/features/staff/StaffCheckinPage"
 import StaffSupportPage from "@/features/staff/StaffSupportPage"
 import StaffPinPage from "@/features/staff/StaffPinPage"
-import StaffTasksPage from "@/features/staff/tasks/StaffTasksPage"
+import StaffTasksPage from "@/features/staff/StaffTasksPage"
 import ReservationManagementPage from "@/features/staff/ReservationManagementPage"
 
 // Manager & Admin pages

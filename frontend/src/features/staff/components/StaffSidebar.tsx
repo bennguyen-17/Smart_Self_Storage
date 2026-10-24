@@ -17,7 +17,6 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-  SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/context/AuthContext"
 import StaffProfileModal from "./StaffProfileModal"
@@ -92,12 +91,10 @@ function StaffSidebar({ isDark, onToggleTheme }: StaffSidebarProps) {
                   Smart Storage
                 </span>
                 <span className="block truncate text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                  Hệ thống cho thuê kho tự quản thông minh 24/7
+                  Cổng nhân viên
                 </span>
               </div>
             </div>
-
-            <SidebarTrigger className="shrink-0 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800" />
           </div>
         </SidebarHeader>
 

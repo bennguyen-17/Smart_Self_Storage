@@ -203,7 +203,7 @@ public class StaffTaskService {
         if (!"ASSIGNED".equalsIgnoreCase(task.getStatus())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Chỉ task ASSIGNED mới được hủy.");
         }
-        task.setStatus("CANCELED");
+        task.setStatus("CANCELLED");
         return toResponse(taskRepository.save(task));
     }
 

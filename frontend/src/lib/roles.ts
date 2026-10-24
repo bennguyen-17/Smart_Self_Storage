@@ -41,16 +41,16 @@ export function getRoleDestination(role: UserRole): string {
 export function getRoleTitle(role: UserRole): string {
   switch (role) {
     case "ADMIN":
-      return "Quản Trị Viên Hệ Thống (Admin)"
+      return "Quản Trị Viên Hệ Thống"
     case "BOM":
-      return "Ban Giám Đốc (BOM)"
+      return "Ban Giám Đốc"
     case "MANAGER":
-      return "Quản Lý Chi Nhánh (Manager)"
+      return "Quản Lý Chi Nhánh"
     case "STAFF":
-      return "Chuyên Viên Vận Hành (Staff)"
+      return "Nhân Viên Vận Hành"
     case "CUSTOMER":
     default:
-      return "Khách Hàng (Customer)"
+      return "Khách Hàng"
   }
 }
 
@@ -60,16 +60,16 @@ export function getRoleTitle(role: UserRole): string {
 export function getRolePortalName(role: UserRole): string {
   switch (role) {
     case "ADMIN":
-      return "Cổng Quản Trị Hệ Thống (Admin Portal)"
+      return "Cổng Quản Trị Hệ Thống"
     case "BOM":
-      return "Cổng Ban Giám Đốc (BOM Portal)"
+      return "Cổng Ban Giám Đốc"
     case "MANAGER":
-      return "Cổng Quản Lý Chi Nhánh (Manager Portal)"
+      return "Cổng Quản Lý Chi Nhánh"
     case "STAFF":
-      return "Cổng Vận Hành & Check-in (Staff Portal)"
+      return "Cổng Vận Hành & Check-in"
     case "CUSTOMER":
     default:
-      return "Cổng Khách Hàng (Customer Portal)"
+      return "Cổng Khách Hàng"
   }
 }
 
