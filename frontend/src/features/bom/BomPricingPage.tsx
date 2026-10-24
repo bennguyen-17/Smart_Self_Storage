@@ -322,9 +322,6 @@ export default function BomPricingPage() {
                         <div className="font-black text-white text-base group-hover:text-sky-300 transition-colors">
                           {item.name}
                         </div>
-                        <div className="text-[11px] text-slate-400 mt-0.5">
-                          {item.description}
-                        </div>
                       </div>
 
                       {/* Quy cách sàn & kích thước */}
@@ -408,7 +405,6 @@ export default function BomPricingPage() {
                     <tr key={item.id} className="hover:bg-slate-900/40 transition">
                       <td className="p-3.5 text-center">
                         <div className="font-extrabold text-white">{item.name}</div>
-                        <div className="text-[11px] text-slate-400">{item.description}</div>
                       </td>
                       <td className="p-3.5 text-center font-mono">
                         <span className="font-bold text-white">{item.dimensions}</span>
