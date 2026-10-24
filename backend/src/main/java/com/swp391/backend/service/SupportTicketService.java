@@ -535,6 +535,7 @@ public class SupportTicketService {
 
         ticket.setStatus("IN_PROGRESS");
         ticket.setAssignedStaffId(staffId);
+        ticket.setAcceptedAt(LocalDateTime.now());
         SupportTicket saved = supportTicketRepository.save(ticket);
         populateTicketExtraInfo(saved);
         return saved;

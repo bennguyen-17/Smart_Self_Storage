@@ -43,6 +43,8 @@ public class SupportTicket {
 
     private LocalDateTime slaDeadline; // Cho loại INCIDENT (created_at + 15m)
 
+    private LocalDateTime acceptedAt;
+
     @Column(nullable = false)
     private Boolean isSlaBreached = false;
 
@@ -174,6 +176,14 @@ public class SupportTicket {
 
     public void setSlaDeadline(LocalDateTime slaDeadline) {
         this.slaDeadline = slaDeadline;
+    }
+
+    public LocalDateTime getAcceptedAt() {
+        return acceptedAt;
+    }
+
+    public void setAcceptedAt(LocalDateTime acceptedAt) {
+        this.acceptedAt = acceptedAt;
     }
 
     public Boolean getIsSlaBreached() {

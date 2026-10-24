@@ -392,6 +392,7 @@ CREATE TABLE SupportTicket (
     desiredDate DATE NULL,
     assignedStaffId INT NULL,
     slaDeadline DATETIME NULL,
+    acceptedAt DATETIME NULL,
     isSlaBreached BOOLEAN NOT NULL DEFAULT FALSE,
     identityVerified BOOLEAN NOT NULL DEFAULT FALSE,
     resolutionNote TEXT NULL,
