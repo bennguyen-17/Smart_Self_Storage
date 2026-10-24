@@ -974,8 +974,7 @@ export default function BomFacilitiesPage() {
               const total = all.length || (detailFacility.totalUnits || 46)
               const occupied = all.filter(u => (u.status || '').toUpperCase() === 'OCCUPIED' || (u.status || '').toUpperCase() === 'RENTED').length
               const available = all.filter(u => (u.status || '').toUpperCase() === 'AVAILABLE').length
-              const hold = all.filter(u => (u.status || '').toUpperCase() === 'HOLD').length
-              const maintenance = all.filter(u => (u.status || '').toUpperCase().includes('MAINTENANCE')).length
+              const holdMaint = Math.max(0, total - occupied - available)
 
               return (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -1012,7 +1011,7 @@ export default function BomFacilitiesPage() {
                   <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
                     <div>
                       <div className="text-[10px] uppercase font-bold text-slate-400">Giữ Chỗ / Bảo Trì</div>
-                      <div className="text-xl font-black font-mono text-white mt-0.5">{hold + maintenance}</div>
+                      <div className="text-xl font-black font-mono text-white mt-0.5">{holdMaint}</div>
                     </div>
                     <div className="size-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs">
                       🛠️
@@ -1075,10 +1074,11 @@ export default function BomFacilitiesPage() {
                               const list = facilityUnits.filter((u) => {
                                 const typeStr = (u.typeName || u.typeLabel || "").toUpperCase()
                                 const sz = (u.size || "").toUpperCase()
-                                if (cfg.size === "XL") return typeStr.includes("XL") || sz === "XL" || sz.includes("XL")
-                                if (cfg.size === "S") return (typeStr.includes("SIZE S") || sz === "S") && !typeStr.includes("XL")
-                                if (cfg.size === "M") return typeStr.includes("SIZE M") || sz === "M"
-                                if (cfg.size === "L") return (typeStr.includes("SIZE L") || sz === "L") && !typeStr.includes("XL")
+                                const code = (u.unitCode || u.unitId || "").toUpperCase()
+                                if (cfg.size === "XL") return typeStr.includes("XL") || sz === "XL" || sz.includes("XL") || code.includes("-XL")
+                                if (cfg.size === "S") return (typeStr.includes("SIZE S") || sz === "S" || code.includes("-S")) && !typeStr.includes("XL") && !code.includes("-XL")
+                                if (cfg.size === "M") return typeStr.includes("SIZE M") || sz === "M" || code.includes("-M")
+                                if (cfg.size === "L") return (typeStr.includes("SIZE L") || sz === "L" || code.includes("-L")) && !typeStr.includes("XL") && !code.includes("-XL")
                                 return false
                               })
 
@@ -1088,10 +1088,7 @@ export default function BomFacilitiesPage() {
                                 return st === "OCCUPIED" || st === "RENTED"
                               }).length
                               const available = list.filter((u) => (u.status || "").toUpperCase() === "AVAILABLE").length
-                              const holdMaint = list.filter((u) => {
-                                const st = (u.status || "").toUpperCase()
-                                return st === "HOLD" || st.includes("MAINTENANCE")
-                              }).length
+                              const holdMaint = Math.max(0, total - occupied - available)
                               const occRate = total > 0 ? Math.round((occupied / total) * 100) : 0
                               const revenue = list
                                 .filter((u) => {
@@ -1176,6 +1173,7 @@ export default function BomFacilitiesPage() {
                             <th className="p-3 text-center whitespace-nowrap">Tổng Số Ô</th>
                             <th className="p-3 text-center whitespace-nowrap">Đang Thuê</th>
                             <th className="p-3 text-center whitespace-nowrap">Còn Trống</th>
+                            <th className="p-3 text-center whitespace-nowrap">Giữ Chỗ / Bảo Trì</th>
                             <th className="p-3 text-center whitespace-nowrap">Tỷ Lệ Lấp Đầy</th>
                             <th className="p-3 text-right whitespace-nowrap">Doanh Thu Theo Tầng</th>
                           </tr>
@@ -1188,7 +1186,13 @@ export default function BomFacilitiesPage() {
                               { floor: 3, name: "Tầng 2", desc: "Cụm kho Size S, M, L (500 kg/m²), kho mát & tiêu chuẩn" },
                             ]
 
-                            return FLOORS.map((f) => {
+                            let grandTotal = 0
+                            let grandOccupied = 0
+                            let grandAvailable = 0
+                            let grandHoldMaint = 0
+                            let grandRevenue = 0
+
+                            const rows = FLOORS.map((f) => {
                               const list = facilityUnits.filter((u) => {
                                 const fl = u.floorId || u.floor || 1
                                 return fl === f.floor
@@ -1199,6 +1203,7 @@ export default function BomFacilitiesPage() {
                                 return st === "OCCUPIED" || st === "RENTED"
                               }).length
                               const available = list.filter((u) => (u.status || "").toUpperCase() === "AVAILABLE").length
+                              const holdMaint = Math.max(0, total - occupied - available)
                               const occRate = total > 0 ? Math.round((occupied / total) * 100) : 0
                               const revenue = list
                                 .filter((u) => {
@@ -1206,6 +1211,12 @@ export default function BomFacilitiesPage() {
                                   return st === "OCCUPIED" || st === "RENTED"
                                 })
                                 .reduce((sum, u) => sum + Number(u.monthlyPrice || 1000000), 0)
+
+                              grandTotal += total
+                              grandOccupied += occupied
+                              grandAvailable += available
+                              grandHoldMaint += holdMaint
+                              grandRevenue += revenue
 
                               return (
                                 <tr key={f.floor} className="hover:bg-slate-950/40 transition">
@@ -1216,6 +1227,7 @@ export default function BomFacilitiesPage() {
                                   <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{total} ô</td>
                                   <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{occupied}</td>
                                   <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{available}</td>
+                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{holdMaint}</td>
                                   <td className="p-3 text-center whitespace-nowrap">
                                     <div className="flex items-center justify-center gap-2">
                                       <span className="font-mono font-bold text-white">{occRate}%</span>
@@ -1233,6 +1245,28 @@ export default function BomFacilitiesPage() {
                                 </tr>
                               )
                             })
+
+                            const grandRate = grandTotal > 0 ? Math.round((grandOccupied / grandTotal) * 100) : 0
+
+                            return (
+                              <>
+                                {rows}
+                                <tr className="bg-slate-950 font-black border-t-2 border-slate-700 text-white">
+                                  <td className="p-3 text-left uppercase text-white tracking-wider whitespace-nowrap">
+                                    TỔNG CỘNG THEO TẦNG
+                                  </td>
+                                  <td className="p-3 text-left text-slate-400 font-mono whitespace-nowrap">—</td>
+                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandTotal} ô</td>
+                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandOccupied}</td>
+                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandAvailable}</td>
+                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandHoldMaint}</td>
+                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandRate}%</td>
+                                  <td className="p-3 text-right font-mono text-white text-sm whitespace-nowrap">
+                                    ₫{grandRevenue.toLocaleString("vi-VN")}
+                                  </td>
+                                </tr>
+                              </>
+                            )
                           })()}
                         </tbody>
                       </table>
