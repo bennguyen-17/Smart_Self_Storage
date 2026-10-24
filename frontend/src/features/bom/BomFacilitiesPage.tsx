@@ -347,7 +347,7 @@ export default function BomFacilitiesPage() {
                 <th className="py-3 px-4 text-center whitespace-nowrap">MÃ CƠ SỞ</th>
                 <th className="py-3 px-4 text-left whitespace-nowrap">CƠ SỞ KHO</th>
                 <th className="py-3 px-4 text-center whitespace-nowrap">QUẢN LÝ CHI NHÁNH</th>
-                <th className="py-3 px-4 text-center whitespace-nowrap">QUY MÔ KHO</th>
+                <th className="py-3 px-4 text-center whitespace-nowrap">KHO THUÊ</th>
                 <th className="py-3 px-4 text-center whitespace-nowrap">TỶ LỆ LẤP ĐẦY</th>
                 <th className="py-3 px-4 text-center whitespace-nowrap">DOANH THU</th>
                 <th className="py-3 px-4 text-center whitespace-nowrap">THAO TÁC</th>
@@ -399,10 +399,11 @@ export default function BomFacilitiesPage() {
                         </div>
                       </td>
 
-                      {/* CỘT 4: QUY MÔ KHO CHUẨN HÓA */}
+                      {/* CỘT 4: KHO THUÊ (ĐANG THUÊ / TỔNG SỐ KHO) */}
                       <td className="py-4 px-4 text-center whitespace-nowrap">
-                        <div className="font-bold text-slate-200 text-xs sm:text-sm">
-                          {stdUnits} Kho
+                        <div className="font-bold text-slate-200 text-xs sm:text-sm font-mono">
+                          <span className="text-white">{rented}</span>
+                          <span className="text-slate-400"> / {stdUnits} Kho</span>
                         </div>
                       </td>
 
