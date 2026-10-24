@@ -1025,9 +1025,6 @@ export default function BomFacilitiesPage() {
                       <h4 className="font-black text-xs uppercase text-slate-200 tracking-wider">
                         BÁO CÁO CƠ CẤU Ô KHO THEO SIZE &amp; LOẠI HÌNH
                       </h4>
-                      <span className="text-[11px] text-slate-400">
-                        Mô hình: <strong className="text-white">{detailFacility.layoutType || "Layout A"}</strong>
-                      </span>
                     </div>
 
                     <div className="overflow-x-auto rounded-2xl border border-slate-800">
@@ -1146,185 +1143,29 @@ export default function BomFacilitiesPage() {
                       </table>
                     </div>
                   </div>
-
-                  {/* BẢNG 2: BÁO CÁO PHÂN BỔ THEO TẦNG */}
-                  <div className="space-y-2 pt-2">
-                    <h4 className="font-black text-xs uppercase text-slate-200 tracking-wider">
-                      BÁO CÁO KHAI THÁC &amp; TẢI TRỌNG THEO TẦNG
-                    </h4>
-
-                    <div className="overflow-x-auto rounded-2xl border border-slate-800">
-                      <table className="w-full text-xs border-collapse">
-                        <thead>
-                          <tr className="border-b border-slate-800 bg-slate-950/90 text-slate-400 uppercase font-black text-[10px]">
-                            <th className="p-3 text-left whitespace-nowrap">Vị Trí Tầng</th>
-                            <th className="p-3 text-left whitespace-nowrap">Bố Trí Không Gian &amp; Tải Trọng</th>
-                            <th className="p-3 text-center whitespace-nowrap">Tổng Số Ô</th>
-                            <th className="p-3 text-center whitespace-nowrap">Đang Thuê</th>
-                            <th className="p-3 text-center whitespace-nowrap">Còn Trống</th>
-                            <th className="p-3 text-center whitespace-nowrap">Giữ Chỗ / Bảo Trì</th>
-                            <th className="p-3 text-center whitespace-nowrap">Tỷ Lệ Lấp Đầy</th>
-                            <th className="p-3 text-right whitespace-nowrap">Doanh Thu Theo Tầng</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800/80 font-semibold text-slate-300">
-                          {(() => {
-                            const FLOORS = [
-                              { floor: 1, name: "Tầng Trệt", desc: "Khu kho tải nặng XL (1.000 kg/m²), lối xe tải 24/7" },
-                              { floor: 2, name: "Tầng 1", desc: "Cụm kho Size S, M, L (500 kg/m²), hành lang nội bộ" },
-                              { floor: 3, name: "Tầng 2", desc: "Cụm kho Size S, M, L (500 kg/m²), kho mát & tiêu chuẩn" },
-                            ]
-
-                            // Danh sách floorId của cơ sở sắp xếp tăng dần để ánh xạ tầng 1, 2, 3
-                            const sortedFloorIds = Array.from(
-                              new Set(
-                                facilityUnits
-                                  .map((u: any) => Number(u.floorId))
-                                  .filter((id: number) => !isNaN(id) && id > 0)
-                              )
-                            ).sort((a, b) => a - b)
-
-                            const getFloorIndex = (u: any) => {
-                              const code = (u.unitCode || u.unitId || "").toUpperCase()
-                              const flName = (u.floorName || "").toLowerCase()
-                              const fid = Number(u.floorId)
-
-                              // 1. Phân loại theo mã ô kho (e.g. HN01-G-XL01, CT01-F1-M01, DN01-F2-L01)
-                              if (code.includes("-G-") || code.includes("-TR-") || code.includes("-GR-")) return 1
-                              if (code.includes("-F1-") || code.includes("-T1-") || code.includes("-1-")) return 2
-                              if (code.includes("-F2-") || code.includes("-T2-") || code.includes("-2-")) return 3
-
-                              // 2. Phân loại theo tên tầng
-                              if (flName.includes("trệt") || flName.includes("tr?t") || flName.includes("ground")) return 1
-                              if (flName.includes("1")) return 2
-                              if (flName.includes("2")) return 3
-
-                              // 3. Phân loại theo thứ tự floorId trong cơ sở
-                              if (!isNaN(fid) && sortedFloorIds.length > 0) {
-                                const idx = sortedFloorIds.indexOf(fid)
-                                if (idx >= 0 && idx < 3) return idx + 1
-                              }
-
-                              // 4. Fallback số tầng
-                              const fl = Number(u.floor || u.floorId || 1)
-                              if (fl === 1 || fl === 2 || fl === 3) return fl
-                              return 1
-                            }
-
-                            let grandTotal = 0
-                            let grandOccupied = 0
-                            let grandAvailable = 0
-                            let grandHoldMaint = 0
-                            let grandRevenue = 0
-
-                            const rows = FLOORS.map((f) => {
-                              const list = facilityUnits.filter((u) => getFloorIndex(u) === f.floor)
-                              const total = list.length
-                              const occupied = list.filter((u) => {
-                                const st = (u.status || "").toUpperCase()
-                                return st === "OCCUPIED" || st === "RENTED"
-                              }).length
-                              const available = list.filter((u) => (u.status || "").toUpperCase() === "AVAILABLE").length
-                              const holdMaint = Math.max(0, total - occupied - available)
-                              const occRate = total > 0 ? Math.round((occupied / total) * 100) : 0
-                              const revenue = list
-                                .filter((u) => {
-                                  const st = (u.status || "").toUpperCase()
-                                  return st === "OCCUPIED" || st === "RENTED"
-                                })
-                                .reduce((sum, u) => sum + Number(u.monthlyPrice || 1000000), 0)
-
-                              grandTotal += total
-                              grandOccupied += occupied
-                              grandAvailable += available
-                              grandHoldMaint += holdMaint
-                              grandRevenue += revenue
-
-                              return (
-                                <tr key={f.floor} className="hover:bg-slate-950/40 transition">
-                                  <td className="p-3 text-left whitespace-nowrap">
-                                    <div className="font-extrabold text-white whitespace-nowrap">{f.name}</div>
-                                  </td>
-                                  <td className="p-3 text-left text-slate-400 whitespace-nowrap">{f.desc}</td>
-                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{total} ô</td>
-                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{occupied}</td>
-                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{available}</td>
-                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{holdMaint}</td>
-                                  <td className="p-3 text-center whitespace-nowrap">
-                                    <div className="flex items-center justify-center gap-2">
-                                      <span className="font-mono font-bold text-white">{occRate}%</span>
-                                      <div className="w-14 bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                                        <div
-                                          className="h-full bg-slate-300 rounded-full"
-                                          style={{ width: `${Math.min(occRate, 100)}%` }}
-                                        />
-                                      </div>
-                                    </div>
-                                  </td>
-                                  <td className="p-3 text-right font-mono font-bold text-white whitespace-nowrap">
-                                    ₫{revenue.toLocaleString("vi-VN")}
-                                  </td>
-                                </tr>
-                              )
-                            })
-
-                            const grandRate = grandTotal > 0 ? Math.round((grandOccupied / grandTotal) * 100) : 0
-
-                            return (
-                              <>
-                                {rows}
-                                <tr className="bg-slate-950 font-black border-t-2 border-slate-700 text-white">
-                                  <td className="p-3 text-left uppercase text-white tracking-wider whitespace-nowrap">
-                                    TỔNG CỘNG THEO TẦNG
-                                  </td>
-                                  <td className="p-3 text-left text-slate-400 font-mono whitespace-nowrap">—</td>
-                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandTotal} ô</td>
-                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandOccupied}</td>
-                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandAvailable}</td>
-                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandHoldMaint}</td>
-                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandRate}%</td>
-                                  <td className="p-3 text-right font-mono text-white text-sm whitespace-nowrap">
-                                    ₫{grandRevenue.toLocaleString("vi-VN")}
-                                  </td>
-                                </tr>
-                              </>
-                            )
-                          })()}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
                 </>
               )}
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
-              <span className="text-xs text-slate-400">
-                Báo cáo tổng hợp số liệu vận hành của cơ sở{" "}
-                <strong className="text-slate-200">
-                  {detailFacility.name.replace(/\s*\([A-Z0-9-]+\)\s*$/, "")}
-                </strong>
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsDetailModalOpen(false)
-                    navigate("/bom/reports")
-                  }}
-                  className="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 font-bold text-xs text-slate-950 transition cursor-pointer flex items-center gap-1.5 shadow-sm"
-                >
-                  <span>Xem Báo Cáo Chuỗi</span>
-                  <span>→</span>
-                </button>
-                <button
-                  onClick={() => setIsDetailModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 font-bold text-xs text-white transition cursor-pointer"
-                >
-                  Đóng
-                </button>
-              </div>
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDetailModalOpen(false)
+                  navigate("/bom/reports")
+                }}
+                className="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 font-bold text-xs text-slate-950 transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+              >
+                <span>Xem Báo Cáo Chuỗi</span>
+                <span>→</span>
+              </button>
+              <button
+                onClick={() => setIsDetailModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 font-bold text-xs text-white transition cursor-pointer"
+              >
+                Đóng
+              </button>
             </div>
           </div>
         </div>,
