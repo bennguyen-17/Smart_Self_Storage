@@ -3,6 +3,7 @@ import { CheckCircle2Icon, ShieldCheckIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
 import type { ManagerTicketItem } from "../types"
 import { managerResolveTicket } from "../api/ticketApi"
+import { getErrorMessage } from "@/lib/api"
 
 interface ResolveTicketModalProps {
   ticket: ManagerTicketItem | null
@@ -31,8 +32,8 @@ export default function ResolveTicketModal({ ticket, onClose, onResolved }: Reso
       toast.success(`Đã đóng và giải quyết thành công Ticket #${ticket.ticketCode}`)
       onResolved(updated)
       onClose()
-    } catch (err: any) {
-      toast.error(err?.response?.data || "Không thể đóng ticket, vui lòng thử lại.")
+    } catch (err) {
+      toast.error(`Không thể đóng ticket: ${getErrorMessage(err)}`)
     } finally {
       setSubmitting(false)
     }
