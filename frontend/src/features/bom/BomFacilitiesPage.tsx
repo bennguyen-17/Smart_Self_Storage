@@ -688,11 +688,8 @@ export default function BomFacilitiesPage() {
               <div>
                 <h3 className="font-black text-sm uppercase text-sky-400 flex items-center gap-2">
                   <Warehouse className="size-4.5" />
-                  <span>THÊM CƠ SỞ KHO MỚI &amp; THIẾT LẬP LAYOUT 2D</span>
+                  <span>THÊM CƠ SỞ KHO MỚI</span>
                 </h3>
-                <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                  Tự động sinh mã chuẩn, quy mô thống nhất theo Layout và đồng bộ trực tiếp lên Customer Portal
-                </p>
               </div>
               <button
                 onClick={() => setIsAddFacilityModalOpen(false)}
