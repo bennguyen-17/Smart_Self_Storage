@@ -81,7 +81,7 @@ function build(): ActivityLogEntry[] {
     },
     {
       ...system,
-      action: "NO_SHOW_CANCELED",
+      action: "NO_SHOW_CANCELLED",
       description:
         "Tự động hủy do No-Show hợp đồng #98, ô HN01-F2-L01. Tịch thu 100% tiền cọc do quá hạn check-in.",
       createdAt: at(-2, "00:10:00"),

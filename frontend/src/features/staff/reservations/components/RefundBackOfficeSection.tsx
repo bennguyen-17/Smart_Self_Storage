@@ -67,7 +67,7 @@ function RefundBackOfficeSection({
         {/* BẰNG CHỨNG BIÊN LAI / EVIDENCE IMAGE */}
         <div className="pt-2">
           <span className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">
-            Ảnh chụp biên lai ủy nhiệm chi (Evidence):
+            Ảnh chụp biên lai ủy nhiệm chi:
           </span>
           {evidence ? (
             <div className="flex items-start gap-3">

@@ -3,7 +3,7 @@ import { cn } from "cn"
 import type { StatusGroup, UnitDetailResponse } from "../types"
 import { STATUS_STYLES, statusGroupOf } from "../unitDisplay"
 
-const ORDER: StatusGroup[] = ["AVAILABLE", "HOLD", "TAKEN", "MAINTENANCE"]
+const ORDER: StatusGroup[] = ["AVAILABLE", "HOLD", "RESERVED", "RENTED", "MAINTENANCE"]
 
 /** Chú thích 4 màu trạng thái, kèm số ô mỗi loại trên tầng đang xem */
 function StatusLegend({ units }: { units: UnitDetailResponse[] }) {

@@ -3,7 +3,7 @@
 
 /** Trạng thái hợp đồng (Contract.status) */
 export type ContractStatus =
-  "PENDING_CHECKIN" | "ACTIVE" | "OVERDUE" | "CANCELED" | "TERMINATED"
+  "PENDING_CHECKIN" | "ACTIVE" | "OVERDUE" | "CANCELLED" | "TERMINATED"
 
 /** Dòng danh sách trả về từ BE (StaffReservationListItemResponse). */
 export interface StaffReservationItem {

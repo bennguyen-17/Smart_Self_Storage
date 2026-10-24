@@ -3,7 +3,7 @@ import { CheckCircle2Icon, IdCardIcon, KeyRoundIcon, ShieldAlertIcon } from "luc
 import { toast } from "sonner"
 
 import apiClient, { isMockMode } from "@/lib/apiClient"
-import ProtoModal from "./ProtoModal"
+import ProtoModal from "@/features/staff/components/ProtoModal"
 
 export interface UnlockTicketInfo {
   id: string | number

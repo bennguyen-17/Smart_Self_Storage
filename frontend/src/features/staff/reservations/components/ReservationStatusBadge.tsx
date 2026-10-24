@@ -8,7 +8,7 @@ type BadgeInput = Pick<Reservation, "status" | "cancelReason"> & {
 }
 
 function getBadge({ status, cancelReason, refundStatus }: BadgeInput) {
-  if (status === "CANCELED" && cancelReason === "NO_SHOW") {
+  if (status === "CANCELLED" && cancelReason === "NO_SHOW") {
     return {
       label: "HỦY CỌC (QUÁ HẠN CHECK-IN)",
       Icon: BanIcon,
@@ -16,10 +16,10 @@ function getBadge({ status, cancelReason, refundStatus }: BadgeInput) {
         "border-rose-300 bg-slate-100 text-rose-700 dark:border-rose-800 dark:bg-slate-800 dark:text-rose-300",
     }
   }
-  if (status === "CANCELED") {
+  if (status === "CANCELLED") {
     if (refundStatus === "REFUNDED") {
       return {
-        label: "KHÁCH HỦY • ĐÃ HOÀN TIỀN (REFUNDED)",
+        label: "KHÁCH HỦY • ĐÃ HOÀN TIỀN",
         Icon: CircleCheckIcon,
         className:
           "border-emerald-400 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
@@ -27,7 +27,7 @@ function getBadge({ status, cancelReason, refundStatus }: BadgeInput) {
     }
     if (refundStatus === "PENDING") {
       return {
-        label: "KHÁCH HỦY • CHỜ HOÀN TIỀN (PENDING)",
+        label: "KHÁCH HỦY • CHỜ HOÀN TIỀN",
         Icon: ClockIcon,
         className:
           "border-amber-400 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-950/70 dark:text-amber-300",

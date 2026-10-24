@@ -71,6 +71,9 @@ CREATE TABLE CustomerProfile (
     customerId INT AUTO_INCREMENT PRIMARY KEY,
     accountId INT NOT NULL UNIQUE,
     identityNumber VARCHAR(20) NOT NULL UNIQUE,
+    bankName VARCHAR(100) NULL,
+    bankAccountNumber VARCHAR(50) NULL,
+    bankAccountName VARCHAR(100) NULL,
     CONSTRAINT fk_customer_account FOREIGN KEY (accountId) REFERENCES Account (accountId) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -98,6 +101,7 @@ CREATE TABLE ActivityLog (
     description TEXT,
     createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ipAddress VARCHAR(45),
+    INDEX idx_activity_facility_created (facilityId, createdAt),
     CONSTRAINT fk_activity_account FOREIGN KEY (accountId) REFERENCES Account (accountId) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_activity_facility FOREIGN KEY (facilityId) REFERENCES Facility (facilityId) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -151,7 +155,7 @@ CREATE TABLE StorageUnit (
     unitCode VARCHAR(50) PRIMARY KEY,
     floorId INT NOT NULL,
     unitTypeId INT NOT NULL,
-    status ENUM('AVAILABLE', 'HOLD', 'RESERVED', 'OCCUPIED', 'UNDER_MAINTENANCE', 'RENTED', 'MAINTENANCE', 'OVERDUE') NOT NULL DEFAULT 'AVAILABLE',
+    status ENUM('AVAILABLE', 'HOLD', 'RESERVED', 'RENTED', 'MAINTENANCE') NOT NULL DEFAULT 'AVAILABLE',
     CONSTRAINT fk_unit_floor FOREIGN KEY (floorId) REFERENCES Floor (floorId) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_unit_type FOREIGN KEY (unitTypeId) REFERENCES UnitType (unitTypeId) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -259,7 +263,7 @@ CREATE TABLE Contract (
     pdfUrl VARCHAR(255),
     activatedAt DATETIME,
     terminatedAt DATETIME,
-    status ENUM('INITIATED', 'PENDING_CHECKIN', 'ACTIVE', 'OVERDUE', 'TERMINATED', 'COMPLETED', 'FORFEITED', 'CANCELED') NOT NULL DEFAULT 'INITIATED',
+    status ENUM('INITIATED', 'PENDING_CHECKIN', 'ACTIVE', 'OVERDUE', 'TERMINATED', 'COMPLETED', 'FORFEITED', 'CANCELLED') NOT NULL DEFAULT 'INITIATED',
     forfeitProcessed BOOLEAN NOT NULL DEFAULT FALSE,
     cancelReason VARCHAR(255),
     refundBankName VARCHAR(100),
@@ -305,7 +309,7 @@ CREATE TABLE StaffTask (
     unitCode VARCHAR(50),
     contractId INT,
     note TEXT,
-    status ENUM('ASSIGNED', 'DONE', 'CANCELED') NOT NULL DEFAULT 'ASSIGNED',
+    status ENUM('ASSIGNED', 'DONE', 'CANCELLED') NOT NULL DEFAULT 'ASSIGNED',
     workDate DATE NOT NULL,
     shiftId INT NOT NULL,
     createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -484,13 +488,13 @@ INSERT INTO Account (accountId, roleId, phone, fullName, email, password, status
 (36, 5, '0944556677', 'Vũ Mai Phương', 'maiphuong.vu@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE');
 
 -- 4. Hồ sơ khách hàng (CustomerProfiles gắn CCCD 12 số chuẩn)
-INSERT INTO CustomerProfile (customerId, accountId, identityNumber) VALUES
-(1, 31, '001201012345'),
-(2, 32, '079201098765'),
-(3, 33, '001202023456'),
-(4, 34, '079202087654'),
-(5, 35, '048201034567'),
-(6, 36, '092201045678');
+INSERT INTO CustomerProfile (customerId, accountId, identityNumber, bankName, bankAccountNumber, bankAccountName) VALUES
+(1, 31, '001201012345', 'MBBank', '0912345678', 'NGUYEN THANH LONG'),
+(2, 32, '079201098765', 'Vietcombank', '079201098765', 'TRAN THU HA'),
+(3, 33, '001202023456', 'Techcombank', '1903678901234', 'TRAN THI BICH NGOC'),
+(4, 34, '079202087654', 'Techcombank', '079202087654', 'LE HUU DAT'),
+(5, 35, '048201034567', 'VietinBank', '108876543210', 'LE HOANG LONG'),
+(6, 36, '092201045678', 'ACB', '246813579', 'VU MAI PHUONG');
 
 -- 5. Hồ sơ nhân viên & Quản lý cơ sở (EmployeeProfiles gắn với từng cơ sở)
 INSERT INTO EmployeeProfile (employeeId, accountId, facilityId) VALUES
@@ -569,7 +573,8 @@ INSERT INTO UnitType (unitTypeId, typeName, size, storageCondition, status) VALU
 (3, 'Size L (Phòng lớn)', '2.0m x 3.0m x 2.0m', 'NORMAL', 'ACTIVE'),
 (4, 'Size XL (Kho doanh nghiệp)', '2.5m x 4.0m x 2.0m', 'NORMAL', 'ACTIVE'),
 (5, 'Size M - Climate (Kho mát VIP)', '1.5m x 2.0m x 2.0m', 'CLIMATE_CONTROLLED', 'ACTIVE'),
-(6, 'Size L - Climate (Kho mát VIP)', '2.0m x 3.0m x 2.0m', 'CLIMATE_CONTROLLED', 'ACTIVE');
+(6, 'Size L - Climate (Kho mát VIP)', '2.0m x 3.0m x 2.0m', 'CLIMATE_CONTROLLED', 'ACTIVE'),
+(7, 'Size XL - Climate (Kho mát VIP)', '2.5m x 4.0m x 2.0m', 'CLIMATE_CONTROLLED', 'ACTIVE');
 
 -- 8. Bảng giá thuê chuẩn & Mức cọc (Prices)
 INSERT INTO Price (priceId, unitTypeId, dailyPrice, monthlyPrice, depositAmount, climateSurchargePercent, effectiveFrom, effectiveTo, status) VALUES
@@ -578,83 +583,84 @@ INSERT INTO Price (priceId, unitTypeId, dailyPrice, monthlyPrice, depositAmount,
 (3, 3, 120000.00, 2400000.00, 2000000.00, 0.00, '2026-01-01', NULL, 'ACTIVE'),
 (4, 4, 200000.00, 4000000.00, 3000000.00, 0.00, '2026-01-01', NULL, 'ACTIVE'),
 (5, 5, 60000.00, 1200000.00, 1000000.00, 20.00, '2026-01-01', NULL, 'ACTIVE'),
-(6, 6, 120000.00, 2400000.00, 2000000.00, 20.00, '2026-01-01', NULL, 'ACTIVE');
+(6, 6, 120000.00, 2400000.00, 2000000.00, 20.00, '2026-01-01', NULL, 'ACTIVE'),
+(7, 7, 200000.00, 4000000.00, 3000000.00, 20.00, '2026-01-01', NULL, 'ACTIVE');
 
 -- 9. Danh mục Ngăn kho thực tế (StorageUnits) phân bổ trên cả 7 cơ sở
 INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 -- === CƠ SỞ 1: HN-01 (Cầu Giấy, Hà Nội) ===
 -- Floor 1 (Trệt): 10 Ô Kho XL
 ('HN01-G-XL01', 1, 4, 'AVAILABLE'),
-('HN01-G-XL02', 1, 4, 'OCCUPIED'),
+('HN01-G-XL02', 1, 4, 'RENTED'),
 ('HN01-G-XL03', 1, 4, 'AVAILABLE'),
 ('HN01-G-XL04', 1, 4, 'AVAILABLE'),
-('HN01-G-XL05', 1, 4, 'UNDER_MAINTENANCE'),
-('HN01-G-XL06', 1, 4, 'AVAILABLE'),
+('HN01-G-XL05', 1, 4, 'MAINTENANCE'),
+('HN01-G-XL06', 1, 7, 'AVAILABLE'),
 ('HN01-G-XL07', 1, 4, 'RESERVED'),
 ('HN01-G-XL08', 1, 4, 'AVAILABLE'),
-('HN01-G-XL09', 1, 4, 'OCCUPIED'),
+('HN01-G-XL09', 1, 4, 'RENTED'),
 ('HN01-G-XL10', 1, 4, 'AVAILABLE'),
 -- Floor 2 (Tầng 1): 8 ô S, 6 ô M, 4 ô L
 ('HN01-F1-S01', 2, 1, 'AVAILABLE'),
-('HN01-F1-S02', 2, 1, 'OCCUPIED'),
+('HN01-F1-S02', 2, 1, 'RENTED'),
 ('HN01-F1-S03', 2, 1, 'AVAILABLE'),
-('HN01-F1-S04', 2, 1, 'OCCUPIED'),
+('HN01-F1-S04', 2, 1, 'RENTED'),
 ('HN01-F1-S05', 2, 1, 'AVAILABLE'),
 ('HN01-F1-S06', 2, 1, 'AVAILABLE'),
-('HN01-F1-S07', 2, 1, 'UNDER_MAINTENANCE'),
+('HN01-F1-S07', 2, 1, 'MAINTENANCE'),
 ('HN01-F1-S08', 2, 1, 'AVAILABLE'),
 ('HN01-F1-M01', 2, 2, 'AVAILABLE'),
 ('HN01-F1-M02', 2, 2, 'AVAILABLE'),
 ('HN01-F1-M03', 2, 2, 'AVAILABLE'),
 ('HN01-F1-M04', 2, 2, 'RESERVED'),
-('HN01-F1-M05', 2, 2, 'AVAILABLE'),
-('HN01-F1-M06', 2, 2, 'AVAILABLE'),
+('HN01-F1-M05', 2, 5, 'AVAILABLE'),
+('HN01-F1-M06', 2, 5, 'AVAILABLE'),
 ('HN01-F1-L01', 2, 3, 'AVAILABLE'),
-('HN01-F1-L02', 2, 3, 'OCCUPIED'),
-('HN01-F1-L03', 2, 3, 'AVAILABLE'),
-('HN01-F1-L04', 2, 3, 'AVAILABLE'),
+('HN01-F1-L02', 2, 3, 'RENTED'),
+('HN01-F1-L03', 2, 6, 'AVAILABLE'),
+('HN01-F1-L04', 2, 6, 'AVAILABLE'),
 -- Floor 3 (Tầng 2): 6 ô S, 8 ô M, 4 ô L
 ('HN01-F2-S01', 3, 1, 'AVAILABLE'),
-('HN01-F2-S02', 3, 1, 'OCCUPIED'),
+('HN01-F2-S02', 3, 1, 'RENTED'),
 ('HN01-F2-S03', 3, 1, 'AVAILABLE'),
 ('HN01-F2-S04', 3, 1, 'AVAILABLE'),
 ('HN01-F2-S05', 3, 1, 'AVAILABLE'),
 ('HN01-F2-S06', 3, 1, 'AVAILABLE'),
 ('HN01-F2-M01', 3, 2, 'AVAILABLE'),
 ('HN01-F2-M02', 3, 2, 'AVAILABLE'),
-('HN01-F2-M03', 3, 2, 'OCCUPIED'),
+('HN01-F2-M03', 3, 2, 'RENTED'),
 ('HN01-F2-M04', 3, 2, 'RESERVED'),
 ('HN01-F2-M05', 3, 2, 'AVAILABLE'),
 ('HN01-F2-M06', 3, 2, 'AVAILABLE'),
 ('HN01-F2-M07', 3, 2, 'AVAILABLE'),
 ('HN01-F2-M08', 3, 2, 'AVAILABLE'),
-('HN01-F2-L01', 3, 3, 'UNDER_MAINTENANCE'),
+('HN01-F2-L01', 3, 3, 'MAINTENANCE'),
 ('HN01-F2-L02', 3, 3, 'AVAILABLE'),
-('HN01-F2-L03', 3, 3, 'OCCUPIED'),
+('HN01-F2-L03', 3, 3, 'RENTED'),
 ('HN01-F2-L04', 3, 3, 'AVAILABLE'),
 
 -- === CƠ SỞ 2: HN-02 (Thanh Xuân, Hà Nội - Mẫu B: 15 Ô Kho) ===
-('HN02-G-XL01', 4, 4, 'OCCUPIED'),
+('HN02-G-XL01', 4, 4, 'RENTED'),
 ('HN02-G-XL02', 4, 4, 'AVAILABLE'),
-('HN02-G-XL03', 4, 4, 'AVAILABLE'),
-('HN02-G-XL04', 4, 4, 'OCCUPIED'),
+('HN02-G-XL03', 4, 7, 'AVAILABLE'),
+('HN02-G-XL04', 4, 4, 'RENTED'),
 ('HN02-G-XL05', 4, 4, 'AVAILABLE'),
 ('HN02-F1-M01', 5, 2, 'AVAILABLE'),
-('HN02-F1-M02', 5, 2, 'OCCUPIED'),
-('HN02-F1-M03', 5, 2, 'AVAILABLE'),
-('HN02-F1-L01', 5, 3, 'OCCUPIED'),
-('HN02-F1-L02', 5, 3, 'AVAILABLE'),
+('HN02-F1-M02', 5, 2, 'RENTED'),
+('HN02-F1-M03', 5, 5, 'AVAILABLE'),
+('HN02-F1-L01', 5, 3, 'RENTED'),
+('HN02-F1-L02', 5, 6, 'AVAILABLE'),
 ('HN02-F2-M01', 6, 2, 'AVAILABLE'),
 ('HN02-F2-M02', 6, 2, 'AVAILABLE'),
 ('HN02-F2-M03', 6, 2, 'AVAILABLE'),
 ('HN02-F2-L01', 6, 3, 'AVAILABLE'),
-('HN02-F2-L02', 6, 3, 'OCCUPIED'),
+('HN02-F2-L02', 6, 3, 'RENTED'),
 
 -- === CƠ SỞ 3: HCM-01 (Quận 1, TP.HCM - Mẫu A VIP: 46 Ô Kho Mát) ===
-('HCM01-G-XL01', 7, 6, 'OCCUPIED'),
+('HCM01-G-XL01', 7, 6, 'RENTED'),
 ('HCM01-G-XL02', 7, 6, 'AVAILABLE'),
-('HCM01-G-XL03', 7, 6, 'AVAILABLE'),
-('HCM01-G-XL04', 7, 6, 'OCCUPIED'),
+('HCM01-G-XL03', 7, 7, 'AVAILABLE'),
+('HCM01-G-XL04', 7, 6, 'RENTED'),
 ('HCM01-G-XL05', 7, 6, 'AVAILABLE'),
 ('HCM01-G-XL06', 7, 6, 'AVAILABLE'),
 ('HCM01-G-XL07', 7, 6, 'AVAILABLE'),
@@ -669,14 +675,14 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 ('HCM01-F1-S06', 8, 1, 'AVAILABLE'),
 ('HCM01-F1-S07', 8, 1, 'AVAILABLE'),
 ('HCM01-F1-S08', 8, 1, 'AVAILABLE'),
-('HCM01-F1-M01', 8, 5, 'OCCUPIED'),
+('HCM01-F1-M01', 8, 5, 'RENTED'),
 ('HCM01-F1-M02', 8, 5, 'AVAILABLE'),
 ('HCM01-F1-M03', 8, 5, 'AVAILABLE'),
 ('HCM01-F1-M04', 8, 5, 'AVAILABLE'),
 ('HCM01-F1-M05', 8, 5, 'AVAILABLE'),
 ('HCM01-F1-M06', 8, 5, 'AVAILABLE'),
 ('HCM01-F1-L01', 8, 6, 'AVAILABLE'),
-('HCM01-F1-L02', 8, 6, 'OCCUPIED'),
+('HCM01-F1-L02', 8, 6, 'RENTED'),
 ('HCM01-F1-L03', 8, 6, 'AVAILABLE'),
 ('HCM01-F1-L04', 8, 6, 'AVAILABLE'),
 ('HCM01-F2-S01', 9, 1, 'AVAILABLE'),
@@ -688,7 +694,7 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 ('HCM01-F2-S07', 9, 1, 'AVAILABLE'),
 ('HCM01-F2-S08', 9, 1, 'AVAILABLE'),
 ('HCM01-F2-M01', 9, 5, 'AVAILABLE'),
-('HCM01-F2-M02', 9, 5, 'OCCUPIED'),
+('HCM01-F2-M02', 9, 5, 'RENTED'),
 ('HCM01-F2-M03', 9, 5, 'AVAILABLE'),
 ('HCM01-F2-M04', 9, 5, 'AVAILABLE'),
 ('HCM01-F2-M05', 9, 5, 'AVAILABLE'),
@@ -699,16 +705,16 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 ('HCM01-F2-L04', 9, 6, 'AVAILABLE'),
 
 -- === CƠ SỞ 4: HCM-02 (Quận 7, TP.HCM - Mẫu B: 15 Ô Kho) ===
-('HCM02-G-XL01', 10, 4, 'OCCUPIED'),
-('HCM02-G-XL02', 10, 4, 'UNDER_MAINTENANCE'),
-('HCM02-G-XL03', 10, 4, 'AVAILABLE'),
+('HCM02-G-XL01', 10, 4, 'RENTED'),
+('HCM02-G-XL02', 10, 4, 'MAINTENANCE'),
+('HCM02-G-XL03', 10, 7, 'AVAILABLE'),
 ('HCM02-G-XL04', 10, 4, 'AVAILABLE'),
 ('HCM02-G-XL05', 10, 4, 'AVAILABLE'),
 ('HCM02-F1-M01', 11, 2, 'AVAILABLE'),
-('HCM02-F1-M02', 11, 2, 'OCCUPIED'),
-('HCM02-F1-M03', 11, 2, 'AVAILABLE'),
+('HCM02-F1-M02', 11, 2, 'RENTED'),
+('HCM02-F1-M03', 11, 5, 'AVAILABLE'),
 ('HCM02-F1-L01', 11, 3, 'AVAILABLE'),
-('HCM02-F1-L02', 11, 3, 'OCCUPIED'),
+('HCM02-F1-L02', 11, 3, 'RENTED'),
 ('HCM02-F2-M01', 12, 2, 'AVAILABLE'),
 ('HCM02-F2-M02', 12, 2, 'AVAILABLE'),
 ('HCM02-F2-M03', 12, 2, 'AVAILABLE'),
@@ -717,13 +723,13 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 
 -- === CƠ SỞ 5: HCM-03 (Thủ Đức, TP.HCM - Mẫu B: 15 Ô Kho) ===
 ('HCM03-G-XL01', 13, 4, 'AVAILABLE'),
-('HCM03-G-XL02', 13, 4, 'OCCUPIED'),
-('HCM03-G-XL03', 13, 4, 'AVAILABLE'),
+('HCM03-G-XL02', 13, 4, 'RENTED'),
+('HCM03-G-XL03', 13, 7, 'AVAILABLE'),
 ('HCM03-G-XL04', 13, 4, 'AVAILABLE'),
 ('HCM03-G-XL05', 13, 4, 'AVAILABLE'),
 ('HCM03-F1-M01', 14, 2, 'AVAILABLE'),
-('HCM03-F1-M02', 14, 2, 'OCCUPIED'),
-('HCM03-F1-M03', 14, 2, 'AVAILABLE'),
+('HCM03-F1-M02', 14, 2, 'RENTED'),
+('HCM03-F1-M03', 14, 5, 'AVAILABLE'),
 ('HCM03-F1-L01', 14, 3, 'AVAILABLE'),
 ('HCM03-F1-L02', 14, 3, 'AVAILABLE'),
 ('HCM03-F2-M01', 15, 2, 'AVAILABLE'),
@@ -735,7 +741,7 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 -- === CƠ SỞ 6: DN-01 (Hải Châu, Đà Nẵng - Mẫu A: 46 Ô Kho) ===
 ('DN01-G-XL01', 16, 4, 'AVAILABLE'),
 ('DN01-G-XL02', 16, 4, 'AVAILABLE'),
-('DN01-G-XL03', 16, 4, 'AVAILABLE'),
+('DN01-G-XL03', 16, 7, 'AVAILABLE'),
 ('DN01-G-XL04', 16, 4, 'AVAILABLE'),
 ('DN01-G-XL05', 16, 4, 'AVAILABLE'),
 ('DN01-G-XL06', 16, 4, 'AVAILABLE'),
@@ -744,7 +750,7 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 ('DN01-G-XL09', 16, 4, 'AVAILABLE'),
 ('DN01-G-XL10', 16, 4, 'AVAILABLE'),
 ('DN01-F1-S01', 17, 1, 'AVAILABLE'),
-('DN01-F1-S02', 17, 1, 'OCCUPIED'),
+('DN01-F1-S02', 17, 1, 'RENTED'),
 ('DN01-F1-S03', 17, 1, 'AVAILABLE'),
 ('DN01-F1-S04', 17, 1, 'AVAILABLE'),
 ('DN01-F1-S05', 17, 1, 'AVAILABLE'),
@@ -752,13 +758,13 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 ('DN01-F1-S07', 17, 1, 'AVAILABLE'),
 ('DN01-F1-S08', 17, 1, 'AVAILABLE'),
 ('DN01-F1-M01', 17, 2, 'AVAILABLE'),
-('DN01-F1-M02', 17, 2, 'AVAILABLE'),
+('DN01-F1-M02', 17, 5, 'AVAILABLE'),
 ('DN01-F1-M03', 17, 2, 'AVAILABLE'),
 ('DN01-F1-M04', 17, 2, 'AVAILABLE'),
 ('DN01-F1-M05', 17, 2, 'AVAILABLE'),
 ('DN01-F1-M06', 17, 2, 'AVAILABLE'),
 ('DN01-F1-L01', 17, 3, 'AVAILABLE'),
-('DN01-F1-L02', 17, 3, 'AVAILABLE'),
+('DN01-F1-L02', 17, 6, 'AVAILABLE'),
 ('DN01-F1-L03', 17, 3, 'AVAILABLE'),
 ('DN01-F1-L04', 17, 3, 'AVAILABLE'),
 ('DN01-F2-S01', 18, 1, 'AVAILABLE'),
@@ -782,13 +788,13 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 
 -- === CƠ SỞ 7: CT-01 (Ninh Kiều, Cần Thơ - Mẫu B: 15 Ô Kho) ===
 ('CT01-G-XL01', 19, 4, 'AVAILABLE'),
-('CT01-G-XL02', 19, 4, 'OCCUPIED'),
-('CT01-G-XL03', 19, 4, 'AVAILABLE'),
+('CT01-G-XL02', 19, 4, 'RENTED'),
+('CT01-G-XL03', 19, 7, 'AVAILABLE'),
 ('CT01-G-XL04', 19, 4, 'AVAILABLE'),
 ('CT01-G-XL05', 19, 4, 'AVAILABLE'),
-('CT01-F1-M01', 20, 2, 'OCCUPIED'),
+('CT01-F1-M01', 20, 2, 'RENTED'),
 ('CT01-F1-M02', 20, 2, 'AVAILABLE'),
-('CT01-F1-M03', 20, 2, 'AVAILABLE'),
+('CT01-F1-M03', 20, 5, 'AVAILABLE'),
 ('CT01-F1-L01', 20, 3, 'AVAILABLE'),
 ('CT01-F1-L02', 20, 3, 'AVAILABLE'),
 ('CT01-F2-M01', 21, 2, 'AVAILABLE'),
@@ -847,13 +853,13 @@ INSERT INTO Reservation (reservationId, reservationCode, accountId, unitCode, st
 (3, 'CTR-HN01-051026-1003', 33, 'HN01-F1-M02', '2026-10-05', '2026-11-05', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CANCELLED', '2026-10-03 14:00:00', NULL),
 
 -- HĐ 4: HN-02 (Khách tự hủy ngày 27/09 trước ngày bắt đầu 02/10 >= 4 ngày, hoàn 100% cọc)
-(4, 'CTR-HN02-250926-1004', 34, 'HN02-F1-M03', '2026-10-02', '2026-11-02', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CANCELLED', '2026-09-25 10:00:00', NULL),
+(4, 'CTR-HN02-250926-1004', 31, 'HN02-F1-M03', '2026-10-02', '2026-11-02', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CANCELLED', '2026-09-25 10:00:00', NULL),
 
 -- HĐ 5: HCM-02 (Quá hạn > 30 ngày từ 01/08/2026 -> 02/09/2026 tịch thu tài sản FORFEITED)
 (5, 'CTR-HCM02-010726-1005', 35, 'HCM02-G-XL02', '2026-07-01', '2026-08-01', 'MONTHLY', 4000000.00, 3000000.00, 1500000.00, 'CONFIRMED', '2026-06-29 08:00:00', NULL),
 
 -- HĐ 6: HN-01 (Quá hạn 17 ngày từ 01/10/2026 -> nợ phạt 850.000đ OVERDUE)
-(6, 'CTR-HN01-010926-1006', 36, 'HN01-F1-L02', '2026-09-01', '2026-10-01', 'MONTHLY', 2400000.00, 2000000.00, 850000.00, 'CONFIRMED', '2026-08-30 08:30:00', NULL),
+(6, 'CTR-HN01-010926-1006', 31, 'HN01-F1-L02', '2026-09-01', '2026-10-01', 'MONTHLY', 2400000.00, 2000000.00, 850000.00, 'CONFIRMED', '2026-08-30 08:30:00', NULL),
 
 -- HĐ 7: HN-01 (ACTIVE - Kho XL 3 tháng 01/09/2026 -> 01/12/2026)
 (7, 'CTR-HN01-010926-1007', 31, 'HN01-G-XL02', '2026-09-01', '2026-12-01', 'MONTHLY', 12000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-08-30 09:00:00', NULL),
@@ -892,13 +898,13 @@ INSERT INTO Reservation (reservationId, reservationCode, accountId, unitCode, st
 (18, 'CTR-CT01-100926-1018', 36, 'CT01-G-XL02', '2026-09-10', '2026-11-10', 'MONTHLY', 8000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-09-09 11:20:00', NULL),
 
 -- HĐ 19: HN-01 (PENDING_CHECKIN - Hẹn nhận kho HÔM NAY 18/10/2026, đã cọc 1tr online, chờ thu 1.2tr tại quầy)
-(19, 'CTR-HN01-181026-1019', 31, 'HN01-F1-M04', '2026-10-18', '2026-11-18', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-10-17 14:00:00', NULL),
+(19, 'CTR-HN01-181026-1019', 31, 'HN01-F1-M04', '2026-11-01', '2026-12-01', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-10-17 14:00:00', NULL),
 
 -- HĐ 20: HN-01 (PENDING_CHECKIN - Hẹn nhận kho HÔM NAY 18/10/2026, đã cọc 3tr online, chờ thu 4.0tr tại quầy)
-(20, 'CTR-HN01-181026-1020', 32, 'HN01-G-XL07', '2026-10-18', '2026-11-18', 'MONTHLY', 4000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-10-17 16:30:00', NULL),
+(20, 'CTR-HN01-181026-1020', 32, 'HN01-G-XL07', '2026-11-02', '2026-12-02', 'MONTHLY', 4000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-10-17 16:30:00', NULL),
 
 -- HĐ 21: HN-01 (PENDING_CHECKIN - Hẹn nhận kho NGÀY MAI 19/10/2026, đã cọc 1tr online, chờ thu 1.2tr tại quầy)
-(21, 'CTR-HN01-181026-1021', 33, 'HN01-F2-M04', '2026-10-19', '2026-11-19', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-10-18 10:15:00', NULL);
+(21, 'CTR-HN01-181026-1021', 33, 'HN01-F2-M04', '2026-11-03', '2026-12-03', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-10-18 10:15:00', NULL);
 
 -- 15. Hợp đồng thuê kho (Contracts) đa dạng chu trình 7 trạng thái chuẩn BR-21
 INSERT INTO Contract (contractId, reservationId, pdfUrl, activatedAt, terminatedAt, status, cancelReason, refundBankName, refundAccountNumber, refundAccountName) VALUES
@@ -909,10 +915,10 @@ INSERT INTO Contract (contractId, reservationId, pdfUrl, activatedAt, terminated
 (2, 2, '/contracts/CTR-HCM01-200726-1002.pdf', '2026-07-20 10:00:00', '2026-09-25 11:00:00', 'TERMINATED', 'Khách hàng tất toán hợp đồng trước hạn theo biên bản nghiệm thu', 'Vietcombank', '079201098765', 'TRAN THU HA'),
 
 -- HĐ 3: Quá hạn check-in (No-Show) tự động hủy & tịch thu 100% cọc
-(3, 3, '/contracts/CTR-HN01-051026-1003.pdf', NULL, NULL, 'CANCELED', 'Quá hạn check-in (No-Show). Tịch thu 100% tiền cọc theo quy định BR-20.', NULL, NULL, NULL),
+(3, 3, '/contracts/CTR-HN01-051026-1003.pdf', NULL, NULL, 'CANCELLED', 'Quá hạn check-in (No-Show). Tịch thu 100% tiền cọc theo quy định BR-20.', NULL, NULL, NULL),
 
 -- HĐ 4: Khách chủ động hủy trước ngày bắt đầu >= 4 ngày, hoàn 100% cọc
-(4, 4, '/contracts/CTR-HN02-250926-1004.pdf', NULL, NULL, 'CANCELED', 'Khách hàng chủ động hủy trước ngày bắt đầu >= 4 ngày. Hoàn lại 100% cọc theo BR-17.', 'Techcombank', '079202087654', 'LE HUU DAT'),
+(4, 4, '/contracts/CTR-HN02-250926-1004.pdf', NULL, NULL, 'CANCELLED', 'Khách hàng chủ động hủy trước ngày bắt đầu >= 4 ngày. Hoàn lại 100% cọc theo BR-17.', 'MBBank', '0912345678', 'NGUYEN THANH LONG'),
 
 -- HĐ 5: Quá hạn trên 30 ngày bị tịch thu tài sản (FORFEITED)
 (5, 5, '/contracts/CTR-HCM02-010726-1005.pdf', '2026-07-01 08:30:00', NULL, 'FORFEITED', 'Quá hạn thanh lý trên 30 ngày. Tịch thu quyền sử dụng tài sản theo quy định BR-21.', NULL, NULL, NULL),
@@ -954,7 +960,7 @@ INSERT INTO Payment (paymentId, contractId, invoiceNumber, invoiceType, amount, 
 
 -- HĐ 4 (HN-02, Khách tự hủy >= 4 ngày): DEP hủy, REF hoàn 100% cọc
 (6, 4, 'DEP-CTR-HN02-250926-1004', 'DEP', 2200000.00, 1000000.00, 1200000.00, '/invoices/INV-006.pdf', '2026-09-25 10:05:00', '2026-10-02 23:59:59', 'CANCELLED', 'VNPAY', 'TXN_VNP_250926_1004', 'SUCCESS', 'VNP2509261004', '2026-09-25 10:15:00'),
-(7, 4, 'REF-HN02-20260927-1004', 'REF', 1000000.00, 1000000.00, 0.00, '/invoices/INV-007.pdf', '2026-09-27 15:30:00', '2026-09-29 23:59:59', 'PAID', 'BANK_TRANSFER', 'TCB_270926_1004', 'SUCCESS', 'TCB2609271004', '2026-09-27 16:00:00'),
+(7, 4, 'REF-HN02-20260927-1004', 'REF', 1000000.00, 1000000.00, 0.00, '/invoices/INV-007.pdf', '2026-09-27 15:30:00', '2026-09-29 23:59:59', 'PAID', 'BANK_TRANSFER', 'MB_270926_1004', 'SUCCESS', 'MB2609271004', '2026-09-27 16:00:00'),
 
 -- HĐ 5 (HCM-02, Forfeited): DEP hoàn tất, PEN phạt gộp 30 ngày (1.5tr) nợ quá hạn
 (8, 5, 'DEP-CTR-HCM02-010726-1005', 'DEP', 7000000.00, 7000000.00, 0.00, '/invoices/INV-008.pdf', '2026-06-29 08:10:00', '2026-07-01 23:59:59', 'PAID', 'BANK_TRANSFER', 'TCB_010726_1005', 'SUCCESS', 'TCB0107261005', '2026-07-01 08:35:00'),
@@ -1001,11 +1007,20 @@ INSERT INTO AuditLog (auditLogId, accountId, facilityId, customerId, action, ope
 
 -- 19. Yêu cầu hỗ trợ & Sự cố vận hành SLA (SupportTickets)
 INSERT INTO SupportTicket (id, ticketCode, type, status, customerId, facilityId, unitCode, contractId, title, description, desiredDate, assignedStaffId, slaDeadline, isSlaBreached, identityVerified, resolutionNote, createdAt, resolvedAt) VALUES
-(1, 'TCK-202609-001', 'EARLY_TERMINATION', 'RESOLVED', 2, 3, 'HCM01-F1-M02', 2, 'Yêu cầu trả kho sớm', 'Khách hàng có kế hoạch dọn sang cơ sở khác nên xin thanh lý trước hạn vào ngày 25/09/2026', '2026-09-25', 14, NULL, FALSE, TRUE, 'Đã hoàn tất nghiệm thu và tất toán tiền cọc theo biên bản', '2026-09-20 09:00:00', '2026-09-25 11:00:00'),
-(2, 'TCK-202610-001', 'INCIDENT', 'RESOLVED', 1, 1, 'HN01-G-XL02', 7, 'Báo sự cố kỹ thuật', 'Khách hàng quẹt cổng chính mất 5-10s để IoT nhận tín hiệu', NULL, 8, '2026-10-10 18:00:00', FALSE, TRUE, 'Đã cấu hình reset module controller cổng chính và tối ưu cache PIN', '2026-10-10 14:00:00', '2026-10-10 15:30:00'),
-(3, 'TCK-202610-002', 'INCIDENT', 'IN_PROGRESS', 2, 1, 'HN01-F1-S02', 8, 'Hỗ trợ thiết bị kho', 'Khách hàng nhập thêm kiện hàng nặng cần xe đẩy trợ lực', NULL, 9, '2026-10-18 13:00:00', FALSE, TRUE, NULL, '2026-10-18 09:00:00', NULL),
-(4, 'TCK-202610-003', 'INCIDENT', 'RESOLVED', 1, 3, 'HCM01-G-XL01', 13, 'Kiểm tra kỹ thuật kho', 'Yêu cầu nhân viên kiểm tra nhiệt độ buồng kho rượu vang', NULL, 14, '2026-10-12 17:00:00', FALSE, TRUE, 'Nhiệt độ thực tế 23°C, độ ẩm 55%, đạt chuẩn bảo quản rượu vang', '2026-10-12 10:00:00', '2026-10-12 11:30:00'),
-(5, 'TCK-202610-004', 'INCIDENT', 'IN_PROGRESS', 6, 2, 'HN02-F1-M02', 12, 'Bảo trì cơ sở vật chất', 'Đèn LED cảm biến phía trước cửa kho nhấp nháy vào ban đêm', NULL, 11, '2026-10-18 20:00:00', FALSE, TRUE, NULL, '2026-10-17 16:30:00', NULL);
+-- Customer 1 (Nguyễn Thành Long - Account 31) - Ticket 1: Kẹt chốt khóa thông minh
+(1, 'TCK-202610-001', 'INCIDENT', 'RESOLVED', 1, 1, 'HN01-G-XL02', 7, 'Kẹt chốt ổ khóa thông minh', 'Khóa thông minh buồng kho không tự bung chốt sau khi nhập mã PIN, đèn tín hiệu nháy đỏ liên tục.', NULL, 8, '2026-10-10 18:00:00', FALSE, TRUE, 'Đã kiểm tra cơ cấu chấp hành, tra dầu mỡ trục khóa và reset cảm biến hành trình.', '2026-10-10 14:00:00', '2026-10-10 15:30:00'),
+-- Customer 1 (Nguyễn Thành Long - Account 31) - Ticket 2: Kiểm tra độ ẩm buồng kho mát VIP
+(2, 'TCK-202610-002', 'INCIDENT', 'IN_PROGRESS', 1, 1, 'HN01-G-XL02', 7, 'Kiểm tra nhiệt độ & độ ẩm kho mát', 'Yêu cầu nhân viên đo kiểm tra thực tế độ ẩm buồng kho mát định kỳ để bảo quản tài sản đồ da và tranh sơn dầu.', NULL, 8, '2026-10-25 18:00:00', FALSE, TRUE, NULL, '2026-10-24 10:00:00', NULL),
+
+-- Customer 2 (Trần Thu Hà - Account 32) - Ticket 1: Trả kho sớm & nghiệm thu
+(3, 'TCK-202609-001', 'EARLY_TERMINATION', 'RESOLVED', 2, 3, 'HCM01-F1-M02', 2, 'Yêu cầu trả kho sớm', 'Khách hàng dọn hàng sang địa điểm mới nên xin thanh lý hợp đồng trước hạn vào ngày 25/09/2026.', '2026-09-25', 14, NULL, FALSE, TRUE, 'Đã hoàn tất nghiệm thu buồng kho và lập lệnh hoàn cọc theo biên bản kiểm tra.', '2026-09-20 09:00:00', '2026-09-25 11:00:00'),
+-- Customer 2 (Trần Thu Hà - Account 32) - Ticket 2: Bảng số khóa báo pin yếu
+(4, 'TCK-202610-003', 'INCIDENT', 'RESOLVED', 2, 1, 'HN01-F1-S02', 8, 'Cảnh báo pin yếu bảng khóa điện tử', 'Bảng khóa số điện tử phát âm thanh bíp ngắt quãng và nháy đèn báo pin yếu (Low Battery 15%), cần thay pin.', NULL, 9, '2026-10-18 13:00:00', FALSE, TRUE, 'Đã thay 4 pin AA Alkaline mới, bảng khóa hoạt động ổn định và đo pin đạt 100%.', '2026-10-18 09:00:00', '2026-10-18 10:15:00'),
+
+-- Customer 3 (Trần Thị Bích Ngọc - Account 33) - Ticket 1: Đèn LED hành lang chập chờn
+(5, 'TCK-202610-004', 'INCIDENT', 'RESOLVED', 3, 1, 'HN01-F1-S04', 9, 'Đèn cảm biến hành lang chập chờn', 'Đèn LED chiếu sáng cảm biến tại lối đi phía trước cửa buồng kho nhấp nháy vào ban đêm.', NULL, 8, '2026-10-15 20:00:00', FALSE, TRUE, 'Đã thay bộ nguồn LED driver và bóng đèn mới tại vị trí hành lang tầng 1.', '2026-10-15 16:30:00', '2026-10-15 17:45:00'),
+-- Customer 3 (Trần Thị Bích Ngọc - Account 33) - Ticket 2: Cân chỉnh gioăng cao su cửa kho
+(6, 'TCK-202610-005', 'INCIDENT', 'IN_PROGRESS', 3, 1, 'HN01-F1-S04', 9, 'Hỗ trợ kiểm tra độ khít cửa kho', 'Mép gioăng cao su viền cửa hơi bị lệch, nhờ nhân viên kiểm tra cân chỉnh lại để chống bụi mịn.', NULL, 9, '2026-10-25 21:00:00', FALSE, TRUE, NULL, '2026-10-24 16:00:00', NULL);
 
 -- 20. Biên bản nghiệm thu kiểm tra trả kho (Inspections & InspectionItems)
 INSERT INTO Inspection (inspectionId, paymentId, employeeId, inspectionDate, conditionStatus) VALUES

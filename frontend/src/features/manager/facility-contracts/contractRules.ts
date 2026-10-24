@@ -11,21 +11,21 @@ export const CONTRACT_STATUS_LABEL: Record<ContractStatus, string> = {
   TERMINATED: "Đã trả kho, chờ tất toán",
   COMPLETED: "Đã hoàn tất",
   FORFEITED: "Đã tịch thu, thanh lý tài sản",
-  CANCELED: "Đã hủy",
+  CANCELLED: "Đã hủy",
 }
 
 /**
- * DB có thể lẫn 2 cách viết "CANCELED" / "CANCELLED" (ENUM nhận cả hai); FE chỉ dùng "CANCELED".
+ * Trạng thái hợp đồng chuẩn hóa CANCELLED (2 chữ L).
  * Trạng thái khác giữ nguyên, viết hoa.
  */
 export function normalizeContractStatus(status: string): ContractStatus {
   const s = status.trim().toUpperCase()
-  return (s === "CANCELLED" ? "CANCELED" : s) as ContractStatus
+  return s as ContractStatus
 }
 
 /** Hợp đồng đã kết thúc (không còn tính ngày còn lại, không còn trả kho) */
 export function isClosedContract(status: ContractStatus | string): boolean {
-  return status === "TERMINATED" || status === "COMPLETED" || status === "FORFEITED" || status === "CANCELED"
+  return status === "TERMINATED" || status === "COMPLETED" || status === "FORFEITED" || status === "CANCELLED"
 }
 
 /** Quá hạn đủ số ngày này thì hợp đồng chuyển FORFEITED, cơ sở được niêm phong và thanh lý tài sản (BE chuyển đúng ngày thứ 30) */

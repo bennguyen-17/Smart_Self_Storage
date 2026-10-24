@@ -90,7 +90,7 @@ function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, 
                 Smart Storage
               </span>
               <span className="block truncate text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                Hệ thống cho thuê kho tự quản thông minh 24/7
+                {portalName || "Hệ thống nội bộ"}
               </span>
             </div>
           </div>

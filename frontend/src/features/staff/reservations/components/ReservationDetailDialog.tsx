@@ -100,7 +100,7 @@ function DetailBody({ code }: { code: string }) {
           <DetailFields reservation={data} />
 
           {/* QUY TRÌNH HOÀN TIỀN BACK-OFFICE */}
-          {data.status === "CANCELED" &&
+          {data.status === "CANCELLED" &&
             (data.cancelReason === "CUSTOMER_REQUEST" ||
               (data.refundAmount !== undefined &&
                 data.refundAmount !== null &&
@@ -157,7 +157,7 @@ function DetailFields({ reservation: r }: { reservation: Reservation }) {
     ["Tiền cọc đã nộp", formatVnd(r.depositAmount)],
     ["Ngày tạo đơn", formatDateTime(r.createdAt)],
   ]
-  if (r.status === "CANCELED") {
+  if (r.status === "CANCELLED") {
     fields.push(
       ["Tiền cọc đã tịch thu", formatVnd(r.forfeitedAmount)],
       [
@@ -174,8 +174,8 @@ function DetailFields({ reservation: r }: { reservation: Reservation }) {
         [
           "Trạng thái hoàn tiền",
           r.refundStatus === "REFUNDED"
-            ? "ĐÃ HOÀN TIỀN (REFUNDED)"
-            : "CHỜ ĐỐI SOÁT (PENDING)",
+            ? "ĐÃ HOÀN TIỀN"
+            : "CHỜ ĐỐI SOÁT",
         ]
       )
     }

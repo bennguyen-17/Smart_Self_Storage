@@ -24,21 +24,14 @@ public class CustomerTicketController {
     @PostMapping("/support/tickets")
     public ResponseEntity<?> submitSupportTicket(
             @RequestBody Map<String, Object> body,
-            @RequestHeader(value = "X-Account-Id", required = false) Integer headerAccountId,
             Authentication authentication
     ) {
         try {
-            Integer accountId = headerAccountId;
-            if (accountId == null && body.get("accountId") != null) {
-                try {
-                    accountId = Integer.parseInt(body.get("accountId").toString());
-                } catch (Exception ignored) {}
-            }
-            if (accountId == null && authentication != null && authentication.getPrincipal() instanceof Integer) {
-                accountId = (Integer) authentication.getPrincipal();
-            }
+            Integer accountId = (authentication != null && authentication.getPrincipal() instanceof Integer)
+                    ? (Integer) authentication.getPrincipal() : null;
             if (accountId == null) {
-                accountId = 13;
+                return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Vui lòng đăng nhập để gửi yêu cầu hỗ trợ!"));
             }
 
             String type = body.get("type") != null ? body.get("type").toString() : "UNLOCK";
@@ -130,15 +123,14 @@ public class CustomerTicketController {
     // --- US-21: 5. Khách hàng xem lịch sử ticket của mình ---
     @GetMapping("/customer/tickets")
     public ResponseEntity<?> getMyTickets(
-            @RequestHeader(value = "X-Account-Id", required = false) Integer headerAccountId,
-            @RequestParam(value = "accountId", required = false) Integer paramAccountId,
             Authentication authentication
     ) {
-        Integer accountId = headerAccountId != null ? headerAccountId : paramAccountId;
-        if (accountId == null && authentication != null && authentication.getPrincipal() instanceof Integer) {
-            accountId = (Integer) authentication.getPrincipal();
+        Integer accountId = (authentication != null && authentication.getPrincipal() instanceof Integer)
+                ? (Integer) authentication.getPrincipal() : null;
+        if (accountId == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Vui lòng đăng nhập để xem danh sách ticket!"));
         }
-        if (accountId == null) accountId = 13;
         return ResponseEntity.ok(supportTicketService.getCustomerTickets(accountId));
     }
 }

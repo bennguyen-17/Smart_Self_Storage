@@ -9,10 +9,10 @@ export const ACTION_LABEL: Record<string, string> = {
   LOGIN_SUCCESS: "Đăng nhập",
   LOGIN_FAILED: "Đăng nhập thất bại",
   CLICKWRAP_E_CONTRACT_SIGNED: "Khách ký hợp đồng điện tử",
-  STAFF_RESERVATION_CHECK_IN: "Nhận kho (check-in)",
+  STAFF_RESERVATION_CHECK_IN: "Nhận kho",
   STAFF_CHANGE_UNIT: "Đổi ô kho cho khách",
   STAFF_CANCEL_RESERVATION: "Nhân viên hủy đặt chỗ",
-  NO_SHOW_CANCELED: "Tự hủy do khách không đến",
+  NO_SHOW_CANCELLED: "Tự hủy do khách không đến",
   CUSTOMER_CANCEL_DEPOSIT_REFUND: "Khách hủy cọc, hoàn toàn bộ",
   CUSTOMER_CANCEL_DEPOSIT_PARTIAL_REFUND: "Khách hủy cọc, hoàn một phần",
   CONFIRM_REFUND_EXECUTED: "Xác nhận đã hoàn tiền",
@@ -48,7 +48,7 @@ export function isSensitive(action: string): boolean {
     "APPROVE_FEE_DISCOUNT",
     "CONFIRM_REFUND_EXECUTED",
     "STAFF_CANCEL_RESERVATION",
-    "NO_SHOW_CANCELED",
+    "NO_SHOW_CANCELLED",
   ].includes(action)
 }
 

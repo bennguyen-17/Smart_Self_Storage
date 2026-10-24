@@ -20,9 +20,9 @@ import apiClient, { isMockMode } from "@/lib/apiClient"
 
 import StaffInspectionModal, {
   type InspectionTarget,
-} from "./StaffInspectionModal"
+} from "@/features/staff/checkin/components/StaffInspectionModal"
 import StaffUnlockModal, { type UnlockTicketInfo } from "./StaffUnlockModal"
-import StaffShiftBadge from "./StaffShiftBadge"
+import StaffShiftBadge from "@/features/staff/components/StaffShiftBadge"
 
 type TicketStatus = "SUBMITTED" | "ESCALATED" | "IN_PROGRESS" | "RESOLVED"
 
@@ -102,7 +102,7 @@ const INITIAL_FALLBACK_TICKETS: TicketItem[] = [
 
 const FILTERS: { key: "ALL" | TicketStatus; label: string }[] = [
   { key: "ALL", label: "Tất Cả" },
-  { key: "ESCALATED", label: "🚨 Chuyển Quản Lý" },
+  { key: "ESCALATED", label: "Chuyển Quản Lý" },
   { key: "SUBMITTED", label: "Chờ Tiếp Nhận" },
   { key: "IN_PROGRESS", label: "Đang Xử Lý" },
   { key: "RESOLVED", label: "Đã Hoàn Tất" },
@@ -344,7 +344,7 @@ function StaffTicketPanel() {
       }
       updateStatus(ticket.id, "RESOLVED")
       toast.success(
-        `Ticket #${ticket.ticketCode} đã xử lý hoàn tất (RESOLVED).`
+        `Ticket #${ticket.ticketCode} đã xử lý hoàn tất.`
       )
     } catch (err: any) {
       toast.error(

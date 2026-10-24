@@ -60,12 +60,17 @@ export function statusGroupOf(status: string): StatusGroup {
       return "AVAILABLE"
     case "HOLD":
       return "HOLD"
+    case "RESERVED":
+      return "RESERVED"
+    case "RENTED":
+    case "OCCUPIED":
+    case "OVERDUE":
+      return "RENTED"
     case "MAINTENANCE":
     case "UNDER_MAINTENANCE":
       return "MAINTENANCE"
     default:
-      // RENTED, OVERDUE, OCCUPIED, RESERVED
-      return "TAKEN"
+      return "AVAILABLE"
   }
 }
 
@@ -83,8 +88,13 @@ export const STATUS_STYLES: Record<
     cell: "border-amber-500 bg-amber-100 text-amber-900 dark:border-amber-600 dark:bg-amber-950 dark:text-amber-100",
     swatch: "border-amber-500 bg-amber-100 dark:bg-amber-950",
   },
-  TAKEN: {
-    label: "Đã thuê / đặt",
+  RESERVED: {
+    label: "Đã cọc",
+    cell: "border-purple-500 bg-purple-100 text-purple-900 dark:border-purple-600 dark:bg-purple-950 dark:text-purple-100",
+    swatch: "border-purple-500 bg-purple-100 dark:bg-purple-950",
+  },
+  RENTED: {
+    label: "Đang thuê",
     cell: "border-rose-500 bg-rose-100 text-rose-900 dark:border-rose-600 dark:bg-rose-950 dark:text-rose-100",
     swatch: "border-rose-500 bg-rose-100 dark:bg-rose-950",
   },

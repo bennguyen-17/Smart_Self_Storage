@@ -41,8 +41,8 @@ export function mockApplyFeeDiscount(paymentId: number, req: FeeDiscountRequest)
       if (fee.status !== "UNPAID") return reject(new Error("Hóa đơn đã thanh toán xong, không thể miễn giảm!"))
       const off = req.discountPercent != null ? Math.round((fee.amount * req.discountPercent) / 100) : (req.discountAmount ?? 0)
       fee.amount = Math.max(0, fee.amount - off)
-      if (fee.amount === 0) fee.status = "CANCELED"
-      resolve({ success: true, message: fee.status === "CANCELED" ? "Đã miễn toàn bộ khoản phí" : "Đã giảm phí" })
+      if (fee.amount === 0) fee.status = "CANCELLED"
+      resolve({ success: true, message: fee.status === "CANCELLED" ? "Đã miễn toàn bộ khoản phí" : "Đã giảm phí" })
     }, LATENCY)
   )
 }

@@ -18,7 +18,7 @@ import {
 } from "../constants"
 import type { StaffCheckInResponse } from "../types"
 import type { CheckinTarget } from "./StaffCustomerDetailModal"
-import ProtoModal from "./ProtoModal"
+import ProtoModal from "@/features/staff/components/ProtoModal"
 
 interface ConfirmCheckinDialogProps {
   contract: CheckinTarget | null

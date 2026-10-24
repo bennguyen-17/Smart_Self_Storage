@@ -11,7 +11,7 @@ const STATUS_TONE: Record<ContractStatus, BadgeTone> = {
   TERMINATED: "blue",
   COMPLETED: "slate",
   FORFEITED: "red",
-  CANCELED: "slate",
+  CANCELLED: "slate",
 }
 
 const STAGE_TONE: Record<CheckoutStage, BadgeTone> = { NONE: "slate", INSPECTED: "amber", HANDED_OVER: "blue" }

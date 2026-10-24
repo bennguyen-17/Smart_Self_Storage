@@ -10,7 +10,7 @@ import { toast } from "sonner"
 import apiClient from "@/lib/apiClient"
 import { formatVnd } from "@/lib/format"
 
-import ProtoModal from "./ProtoModal"
+import ProtoModal from "@/features/staff/components/ProtoModal"
 
 export interface InspectionTarget {
   contractId?: number | null

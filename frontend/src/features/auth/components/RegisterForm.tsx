@@ -11,7 +11,7 @@ import {
   passwordRules,
   registerSchema,
   type RegisterFormValues,
-} from "@/utils/validation"
+} from "@/lib/validation"
 
 import OtpModal from "./OtpModal"
 import PolicyDialog, { type PolicyTab } from "@/components/common/PolicyDialog"

@@ -26,7 +26,7 @@ function BrandLogo({ internal = false, onClick }: BrandLogoProps) {
         </div>
 
         <div className="text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-400">
-          Hệ thống cho thuê kho tự quản thông minh 24/7
+          {internal ? "Cổng đăng nhập nội bộ" : "Hệ thống cho thuê kho tự quản thông minh 24/7"}
         </div>
       </div>
     </Link>

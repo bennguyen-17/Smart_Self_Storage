@@ -39,10 +39,25 @@ export default function CustomerLayout({ children, activeNav = 'home' }: Custome
     setTheme(isDarkMode ? 'light' : 'dark');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (window.confirm('Bạn có chắc chắn muốn đăng xuất khỏi Cổng Khách Hàng SmartStorage?')) {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (token) {
+        try {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+        } catch (e) {
+          console.error('Logout error:', e);
+        }
+      }
       localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
       localStorage.removeItem('user');
+      sessionStorage.removeItem('user');
+      localStorage.removeItem('auth_session');
+      sessionStorage.removeItem('auth_session');
       setShowProfileModal(false);
       window.location.href = '/login';
     }

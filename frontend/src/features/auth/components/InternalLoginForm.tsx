@@ -18,7 +18,7 @@ import {
 import {
   internalLoginSchema,
   type InternalLoginFormValues,
-} from "@/utils/validation"
+} from "@/lib/validation"
 
 import SignedInPanel from "./SignedInPanel"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -151,7 +151,7 @@ function InternalLoginForm() {
 
         <h1 className="text-xl font-bold text-foreground">Đăng nhập nội bộ</h1>
         <p className="text-xs text-muted-foreground">
-          Dành cho Nhân viên (Staff), Quản lý chi nhánh (Manager), BOM, Admin
+          Dành cho Nhân viên, Quản lý chi nhánh, Ban giám đốc, Quản trị viên
         </p>
       </div>
 

@@ -37,7 +37,7 @@ describe("contractApi", () => {
     env.mockMode = true
     await applyFeeDiscount(CTX, 7001, { discountPercent: 100, reason: "Miễn do lỗi hệ thống" })
     const fee = (await listFacilityContracts(CTX)).flatMap((c) => c.fees).find((f) => f.paymentId === 7001)
-    expect(fee?.status).toBe("CANCELED")
+    expect(fee?.status).toBe("CANCELLED")
     await expect(applyFeeDiscount(CTX, 7001, { discountPercent: 10, reason: "x" })).rejects.toThrow(/không thể miễn giảm/i)
     expect(http.post).not.toHaveBeenCalled()
   })
@@ -47,7 +47,7 @@ describe("contractApi: gộp cách viết trạng thái hủy", () => {
   test("BE trả CANCELLED → giao diện nhận CANCELED", async () => {
     http.get.mockResolvedValue([{ contractId: 1, status: "CANCELLED", fees: [] }])
     const [c] = await listFacilityContracts(CTX)
-    expect(c.status).toBe("CANCELED")
+    expect(c.status).toBe("CANCELLED")
   })
 })
 

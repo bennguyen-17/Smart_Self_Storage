@@ -9,7 +9,7 @@ import {
 import { toast } from "sonner"
 
 import { useAuth } from "@/context/AuthContext"
-import { fetchStaffGatePin } from "../api/checkinApi"
+import { fetchStaffGatePin } from "@/features/staff/checkin/api/checkinApi"
 
 const TTL_TOTAL = 15 // Business Rule: IoT Gate PIN TTL 15s
 

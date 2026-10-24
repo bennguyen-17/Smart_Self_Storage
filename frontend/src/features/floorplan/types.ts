@@ -14,7 +14,7 @@ export type SizeFilter = "ALL" | UnitSize
 export type ClimateFilter = "ALL" | StorageCondition
 
 /** 4 nhóm màu trạng thái hiển thị trên sơ đồ */
-export type StatusGroup = "AVAILABLE" | "HOLD" | "TAKEN" | "MAINTENANCE"
+export type StatusGroup = "AVAILABLE" | "HOLD" | "RESERVED" | "RENTED" | "MAINTENANCE"
 
 export interface UnitQuery {
   facilityId: number

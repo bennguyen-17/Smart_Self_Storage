@@ -26,7 +26,7 @@ import StaffCustomerDetailModal, {
 import StaffInspectionModal, {
   type InspectionTarget,
 } from "./StaffInspectionModal"
-import StaffShiftBadge from "./StaffShiftBadge"
+import StaffShiftBadge from "@/features/staff/components/StaffShiftBadge"
 
 const TAB_COLORS: Record<CheckinTabKey, string> = {
   all: "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300",
@@ -43,7 +43,7 @@ const STATUS_LABEL: Record<string, string> = {
   ACTIVE: "ĐANG THUÊ",
   OVERDUE: "QUÁ HẠN",
   TERMINATED: "ĐÃ TRẢ KHO",
-  CANCELED: "ĐÃ HỦY",
+  CANCELLED: "ĐÃ HỦY",
 }
 
 function matches(item: StaffReservationItem, keyword: string): boolean {

@@ -2,21 +2,21 @@ import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
-import { startCurrentShift } from "../../shifts/api/staffShiftApi"
+import { startCurrentShift } from "@/features/staff/shifts/api/staffShiftApi"
 import {
   getStaffProfile,
   type StaffProfileData,
-} from "../services/staffProfileService"
+} from "@/features/staff/services/staffProfileService"
 import StaffShiftBadge from "./StaffShiftBadge"
 
 vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }))
 vi.mock("./StaffProfileModal", () => ({ default: () => null }))
-vi.mock("../services/staffProfileService", () => ({
+vi.mock("@/features/staff/services/staffProfileService", () => ({
   getStaffProfile: vi.fn(),
 }))
-vi.mock("../../shifts/api/staffShiftApi", () => ({
+vi.mock("@/features/staff/shifts/api/staffShiftApi", () => ({
   startCurrentShift: vi.fn(),
 }))
 

@@ -56,7 +56,7 @@ describe("unpaidTotal / needsFollowUp", () => {
   test.each([
     { name: "không phí", c: contract(1), total: 0, follow: false },
     { name: "phí đã thu", c: contract(1, { fees: [fee(1, 500_000, "PAID")] }), total: 0, follow: false },
-    { name: "phí đã miễn", c: contract(1, { fees: [fee(1, 500_000, "CANCELED")] }), total: 0, follow: false },
+    { name: "phí đã miễn", c: contract(1, { fees: [fee(1, 500_000, "CANCELLED")] }), total: 0, follow: false },
     { name: "còn 2 phí chưa thu", c: contract(1, { fees: [fee(1, 500_000), fee(2, 300_000, "UNPAID", "CMP")] }), total: 800_000, follow: true },
     { name: "quá hạn, không phí", c: contract(1, { status: "OVERDUE" }), total: 0, follow: true },
     { name: "đã nghiệm thu, chờ bàn giao", c: contract(1, { checkoutStage: "INSPECTED" }), total: 0, follow: true },
@@ -134,7 +134,7 @@ describe("Trạng thái đã đóng và quá hạn trên 30 ngày (thanh lý tà
     { status: "TERMINATED", closed: true },
     { status: "COMPLETED", closed: true },
     { status: "FORFEITED", closed: true },
-    { status: "CANCELED", closed: true },
+    { status: "CANCELLED", closed: true },
   ] as const)("isClosedContract($status) → $closed", ({ status, closed }) => {
     expect(isClosedContract(status)).toBe(closed)
   })
@@ -156,7 +156,7 @@ describe("Trạng thái đã đóng và quá hạn trên 30 ngày (thanh lý tà
   test.each([
     { name: "FORFEITED luôn cần theo dõi", patch: { status: "FORFEITED" as const }, expected: true },
     { name: "COMPLETED hết nợ thì không", patch: { status: "COMPLETED" as const, checkoutStage: "HANDED_OVER" as const }, expected: false },
-    { name: "CANCELED hết nợ thì không", patch: { status: "CANCELED" as const }, expected: false },
+    { name: "CANCELLED hết nợ thì không", patch: { status: "CANCELLED" as const }, expected: false },
   ])("needsFollowUp: $name", ({ patch, expected }) => {
     expect(needsFollowUp(contract(9, patch))).toBe(expected)
   })
@@ -164,9 +164,9 @@ describe("Trạng thái đã đóng và quá hạn trên 30 ngày (thanh lý tà
 
 describe("normalizeContractStatus: gộp 2 cách viết của trạng thái hủy", () => {
   test.each([
-    { input: "CANCELLED", expected: "CANCELED" },
-    { input: "CANCELED", expected: "CANCELED" },
-    { input: "cancelled", expected: "CANCELED" },
+    { input: "CANCELLED", expected: "CANCELLED" },
+
+    { input: "cancelled", expected: "CANCELLED" },
     { input: "COMPLETED", expected: "COMPLETED" },
     { input: " active ", expected: "ACTIVE" },
   ])("$input → $expected", ({ input, expected }) => {

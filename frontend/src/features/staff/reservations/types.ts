@@ -2,7 +2,7 @@
 // Contract FE đề xuất, chờ Bảo chốt DTO backend.
 
 /** PENDING_CHECKIN: đã cọc, chờ khách đến nhận kho. ACTIVE: đã check-in. */
-export type ReservationStatus = "PENDING_CHECKIN" | "ACTIVE" | "CANCELED"
+export type ReservationStatus = "PENDING_CHECKIN" | "ACTIVE" | "CANCELLED"
 
 /** NO_SHOW: hệ thống tự hủy do quá hạn check-in. CUSTOMER_REQUEST: khách hủy trước ngày check-in. */
 export type CancelReason = "NO_SHOW" | "CUSTOMER_REQUEST"

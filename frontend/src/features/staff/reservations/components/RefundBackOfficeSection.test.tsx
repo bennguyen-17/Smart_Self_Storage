@@ -20,7 +20,7 @@ const PENDING: Reservation = {
   unitCode: "U-205",
   checkinDate: "2026-10-14",
   depositAmount: 1_000_000,
-  status: "CANCELED",
+  status: "CANCELLED",
   cancelReason: "CUSTOMER_REQUEST",
   forfeitedAmount: 500_000,
   refundAmount: 500_000,

@@ -317,11 +317,11 @@ public class StorageService {
             throw new AccessDeniedException("Bạn không có quyền quản lý ô kho thuộc cơ sở này!");
         }
 
-        if ("OCCUPIED".equalsIgnoreCase(unit.getStatus()) || "RESERVED".equalsIgnoreCase(unit.getStatus()) || "HOLD".equalsIgnoreCase(unit.getStatus())) {
+        if ("RENTED".equalsIgnoreCase(unit.getStatus()) || "RESERVED".equalsIgnoreCase(unit.getStatus()) || "HOLD".equalsIgnoreCase(unit.getStatus())) {
             throw new RuntimeException("Không thể đưa vào bảo trì khi ô kho đang có khách đặt hoặc đang thuê! Trạng thái: " + unit.getStatus());
         }
 
-        unit.setStatus("UNDER_MAINTENANCE");
+        unit.setStatus("MAINTENANCE");
         StorageUnit saved = storageUnitRepository.save(unit);
 
         if (activityLogRepository != null && accountId != null) {
@@ -329,7 +329,7 @@ public class StorageService {
             log.setAccountId(accountId);
             log.setFacilityId(floor.getFacilityId());
             log.setAction("PUT_MAINTENANCE");
-            String desc = "Đưa ô kho " + unitCode + " vào trạng thái bảo trì UNDER_MAINTENANCE";
+            String desc = "Đưa ô kho " + unitCode + " vào trạng thái bảo trì MAINTENANCE";
             if (note != null && !note.trim().isEmpty()) {
                 desc += ". Ghi chú: " + note.trim();
             }
@@ -354,8 +354,8 @@ public class StorageService {
             throw new AccessDeniedException("Bạn không có quyền quản lý ô kho thuộc cơ sở này!");
         }
 
-        if (!"UNDER_MAINTENANCE".equalsIgnoreCase(unit.getStatus()) && !"MAINTENANCE".equalsIgnoreCase(unit.getStatus())) {
-            throw new RuntimeException("Chỉ có thể nghiệm thu ô kho đang ở trạng thái bảo trì (UNDER_MAINTENANCE)! Trạng thái hiện tại: " + unit.getStatus());
+        if (!"MAINTENANCE".equalsIgnoreCase(unit.getStatus())) {
+            throw new RuntimeException("Chỉ có thể nghiệm thu ô kho đang ở trạng thái bảo trì (MAINTENANCE)! Trạng thái hiện tại: " + unit.getStatus());
         }
 
         unit.setStatus("AVAILABLE");
@@ -376,7 +376,7 @@ public class StorageService {
 
     // --- US-14: Lấy danh sách ô kho đang bảo trì của cơ sở ---
     public List<UnitDetailResponse> getMaintenanceUnits(Integer facilityId) {
-        return filterUnits(facilityId, null, null, null, "UNDER_MAINTENANCE");
+        return filterUnits(facilityId, null, null, null, "MAINTENANCE");
     }
 
     private List<UnitDetailResponse> mapToUnitDetailResponses(List<StorageUnit> units) {

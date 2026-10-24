@@ -380,7 +380,7 @@ public class StaffReservationService {
 
         reservation.setPenaltyAmount(penaltyAmount);
         reservation.setStatus("CANCELLED");
-        contract.setStatus("CANCELED");
+        contract.setStatus("CANCELLED");
         contract.setCancelReason("COUNTER_CANCEL");
         contract.setTerminatedAt(LocalDateTime.now());
         unit.setStatus("AVAILABLE");
@@ -946,7 +946,7 @@ public class StaffReservationService {
         resp.setReservationId(reservation.getReservationId());
         resp.setReservationCode(reservation.getReservationCode());
         resp.setContractStatus("ACTIVE");
-        resp.setUnitStatus(unitOpt.map(StorageUnit::getStatus).orElse("OCCUPIED"));
+        resp.setUnitStatus(unitOpt.map(StorageUnit::getStatus).orElse("RENTED"));
         resp.setInvoiceNumber(invoiceNumber);
         resp.setAmount(finalAmount);
         resp.setDiscountPercent(discountPercent);

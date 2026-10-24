@@ -73,7 +73,7 @@ function BomLayoutContent() {
   const storedUser = typeof window !== "undefined" ? localStorage.getItem("user") : null
   const parsedStoredUser = storedUser ? (() => { try { return JSON.parse(storedUser); } catch (e) { return null; } })() : null
   const currentUserName = user?.fullName || parsedStoredUser?.fullName || "Quản Trị Viên"
-  const currentUserRole = user?.role ? (user.role === "BOM" ? "Ban Điều Hành (BOM)" : user.role) : "Chuyên viên Quản lý Vận hành"
+  const currentUserRole = user?.role ? (user.role === "BOM" ? "Ban Giám Đốc" : user.role) : "Chuyên viên Quản lý Vận hành"
   const currentUserEmail = user?.email || parsedStoredUser?.email || "bom@smartstorage.vn"
   const userInitials = currentUserName
     .split(" ")
@@ -131,7 +131,7 @@ function BomLayoutContent() {
                 <span>Smart Storage</span>
               </div>
               <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden xl:block leading-none mt-0.5">
-                Hệ thống cho thuê kho tự quản thông minh 24/7
+                Cổng Ban giám đốc
               </div>
             </div>
           </div>

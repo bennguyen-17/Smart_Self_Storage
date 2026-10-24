@@ -141,7 +141,7 @@ const SEEDS: Seed[] = [
     overdueDays: 0,
     unpaidPenaltyAmount: 0,
     monthlyPrice: 2_200_000,
-    contractStatus: "CANCELED",
+    contractStatus: "CANCELLED",
     depStatus: "CANCELLED",
     depPaymentStatus: "FAILED",
     depAmount: 3_800_000,
@@ -309,7 +309,7 @@ export function mockCancelReservation(
   if (index === -1) return fail("Reservation was not found.")
   const paid = store[index].depPaidAmount ?? 0
   const refundAmount = Math.round(paid * 0.5)
-  store[index] = { ...store[index], contractStatus: "CANCELED" }
+  store[index] = { ...store[index], contractStatus: "CANCELLED" }
   return delay({
     success: true,
     message: "Reservation cancelled.",

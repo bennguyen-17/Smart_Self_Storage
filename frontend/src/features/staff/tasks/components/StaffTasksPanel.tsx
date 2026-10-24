@@ -25,14 +25,14 @@ const TASK_TYPE_LABEL: Record<StaffTaskType, string> = {
 const TASK_STATUS_LABEL: Record<StaffTaskStatus, string> = {
   ASSIGNED: "Cần làm",
   DONE: "Đã xong",
-  CANCELED: "Đã hủy",
+  CANCELLED: "Đã hủy",
 }
 
 const TASK_STATUS_CLASS: Record<StaffTaskStatus, string> = {
   ASSIGNED:
     "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
   DONE: "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
-  CANCELED:
+  CANCELLED:
     "border-slate-300 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300",
 }
 

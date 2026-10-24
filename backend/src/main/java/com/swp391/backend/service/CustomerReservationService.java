@@ -1,6 +1,8 @@
 package com.swp391.backend.service;
 
 import com.swp391.backend.entity.Account;
+import com.swp391.backend.entity.CustomerProfile;
+import com.swp391.backend.repository.CustomerProfileRepository;
 import com.swp391.backend.entity.Contract;
 import com.swp391.backend.entity.Payment;
 import com.swp391.backend.entity.Reservation;
@@ -35,6 +37,8 @@ public class CustomerReservationService {
     private final ReservationRepository reservationRepository;
     private final StorageUnitRepository storageUnitRepository;
     private final PaymentRepository paymentRepository;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private CustomerProfileRepository customerProfileRepository;
 
     public CustomerReservationService(AccountRepository accountRepository,
                                       ContractRepository contractRepository,
@@ -102,12 +106,22 @@ public class CustomerReservationService {
         String bankName = value(body != null ? body.getBankName() : null);
         String bankAccountNumber = value(body != null ? body.getBankAccountNumber() : null);
         String bankAccountName = value(body != null ? body.getBankAccountName() : null);
+
+        // Tự động fallback lấy từ CustomerProfile nếu khách không nhập lại lúc hủy đơn
+        if ((bankName == null || bankAccountNumber == null || bankAccountName == null) && reservation.getAccountId() != null && customerProfileRepository != null) {
+            CustomerProfile cp = customerProfileRepository.findByAccountId(reservation.getAccountId()).orElse(null);
+            if (cp != null) {
+                if (bankName == null && cp.getBankName() != null && !cp.getBankName().isBlank()) bankName = cp.getBankName();
+                if (bankAccountNumber == null && cp.getBankAccountNumber() != null && !cp.getBankAccountNumber().isBlank()) bankAccountNumber = cp.getBankAccountNumber();
+                if (bankAccountName == null && cp.getBankAccountName() != null && !cp.getBankAccountName().isBlank()) bankAccountName = cp.getBankAccountName();
+            }
+        }
         if (refundAmount.signum() > 0
                 && (bankName == null || bankAccountNumber == null || bankAccountName == null)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cần cung cấp đầy đủ thông tin ngân hàng để nhận hoàn tiền.");
         }
 
-        contract.setStatus("CANCELED");
+        contract.setStatus("CANCELLED");
         contract.setCancelReason("CUSTOMER_REQUEST");
         contract.setTerminatedAt(now);
         if (bankName != null) contract.setRefundBankName(bankName);
