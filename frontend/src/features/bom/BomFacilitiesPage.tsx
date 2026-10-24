@@ -713,9 +713,6 @@ export default function BomFacilitiesPage() {
                   placeholder="VD: SmartStorage Cầu Giấy hoặc SmartStorage Bình Thạnh"
                   className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400 placeholder:text-slate-600"
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">
-                  Chỉ cần nhập tên chi nhánh thuần túy, mã code cơ sở sẽ được phân tách thành cột riêng biệt.
-                </span>
               </div>
 
               {/* Row 2: Khu vực tỉnh thành & Mã Code tự động */}
