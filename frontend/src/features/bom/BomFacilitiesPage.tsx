@@ -9,7 +9,6 @@ import {
   Trash2,
   AlertTriangle,
   Layers,
-  Sparkles,
   CheckCircle2,
   Building2,
   User,
@@ -773,9 +772,6 @@ export default function BomFacilitiesPage() {
                       </div>
                       {newFacLayout === "A" && <CheckCircle2 className="size-4 text-sky-400" />}
                     </div>
-                    <p className="text-[11px] text-slate-300 leading-relaxed mb-2.5">
-                      Phù hợp khu vực đông dân cư &amp; cá nhân. Đầy đủ các kích thước từ tủ nhỏ đến kho lớn.
-                    </p>
                     <div className="space-y-1 text-[10px] text-slate-400 bg-slate-900/90 p-2 rounded-xl border border-slate-800">
                       <div className="flex justify-between">
                         <span>Quy mô thống nhất:</span>
@@ -810,9 +806,6 @@ export default function BomFacilitiesPage() {
                       </div>
                       {newFacLayout === "B" && <CheckCircle2 className="size-4 text-amber-400" />}
                     </div>
-                    <p className="text-[11px] text-slate-300 leading-relaxed mb-2.5">
-                      Tối ưu cho doanh nghiệp SME, thương mại điện tử và logistics trung chuyển.
-                    </p>
                     <div className="space-y-1 text-[10px] text-slate-400 bg-slate-900/90 p-2 rounded-xl border border-slate-800">
                       <div className="flex justify-between">
                         <span>Quy mô thống nhất:</span>
@@ -828,23 +821,6 @@ export default function BomFacilitiesPage() {
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* Hộp tóm tắt quy mô & đồng bộ 2D */}
-              <div className="p-3 rounded-xl bg-slate-950 border border-sky-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                <div className="flex items-center gap-2 text-slate-300">
-                  <Sparkles className="size-4 text-sky-400 shrink-0" />
-                  <span>
-                    Quy mô chuẩn hóa:{" "}
-                    <strong className="text-sky-400 font-bold">{computedTotalUnits} ô kho</strong>
-                    {" · "}
-                    <span className="text-slate-400">3 tầng vận hành ({newFacLayout === "A" ? "Mẫu A Đa Năng" : "Mẫu B Tinh Gọn"})</span>
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-400">
-                  <CheckCircle2 className="size-3.5" />
-                  <span>Đồng bộ tự động lên Sơ Đồ 2D Khách Hàng</span>
                 </div>
               </div>
 
