@@ -56,23 +56,42 @@ export default function BomReportsPage() {
   const totalMaintenanceUnits = breakdownList.reduce((acc, r) => acc + Number(r.maintenanceUnits || 0), 0)
   const totalDebtAndPenalty = totalPenaltyRevenue + totalCompensationRevenue
 
-  // Dữ liệu doanh thu các tháng gần nhất (tháng hiện tại lấy từ netRevenue thực tế)
-  const monthlyRevenueData = [
-    { month: "T5", label: "Tháng 05/2024", revenue: Math.round(netRevenue * 0.64) || 49800000 },
-    { month: "T6", label: "Tháng 06/2024", revenue: Math.round(netRevenue * 0.72) || 56200000 },
-    { month: "T7", label: "Tháng 07/2024", revenue: Math.round(netRevenue * 0.81) || 63500000 },
-    { month: "T8", label: "Tháng 08/2024", revenue: Math.round(netRevenue * 0.88) || 68700000 },
-    { month: "T9", label: "Tháng 09/2024", revenue: Math.round(netRevenue * 0.94) || 73400000 },
-    { month: "T10", label: "Tháng 10/2024 (Hiện tại)", revenue: netRevenue || 78190000 },
-  ]
+  // Dữ liệu doanh thu các tháng thực tế lấy từ Database (API chainOverview.monthlyRevenues)
+  const apiMonthlyRevenues = chainOverview?.monthlyRevenues
+  const monthlyRevenueData =
+    apiMonthlyRevenues && apiMonthlyRevenues.length > 0
+      ? apiMonthlyRevenues.map((m) => ({
+          month: m.month,
+          label: m.label,
+          revenue: Number(m.revenue || 0),
+        }))
+      : [
+          { month: "T5", label: "Tháng 05", revenue: 0 },
+          { month: "T6", label: "Tháng 06", revenue: 0 },
+          { month: "T7", label: "Tháng 07", revenue: 0 },
+          { month: "T8", label: "Tháng 08", revenue: 0 },
+          { month: "T9", label: "Tháng 09", revenue: 0 },
+          { month: "T10", label: "Tháng 10 (Hiện tại)", revenue: netRevenue },
+        ]
 
-  const maxRevenue = Math.max(...monthlyRevenueData.map((d) => d.revenue)) * 1.15 || 100000000
+  const latestMonth = monthlyRevenueData[monthlyRevenueData.length - 1]
+  const prevMonthRevenue =
+    monthlyRevenueData.length >= 2 ? monthlyRevenueData[monthlyRevenueData.length - 2].revenue : 0
+  const currentMonthRevenue = latestMonth ? latestMonth.revenue : netRevenue
+  const growthPercent =
+    prevMonthRevenue > 0
+      ? Math.round(((currentMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 1000) / 10
+      : currentMonthRevenue > 0
+        ? 100
+        : 0
+
+  const maxRevenue = Math.max(...monthlyRevenueData.map((d) => d.revenue), netRevenue) * 1.15 || 10000000
   const minRevenue = 0
 
   // Tọa độ vẽ biểu đồ SVG: plotWidth 412, plotHeight 115, x: 38 -> 450, y: 15 -> 130
   const chartPoints = monthlyRevenueData.map((d, i) => {
-    const x = 38 + (i / (monthlyRevenueData.length - 1)) * 412
-    const y = 130 - ((d.revenue - minRevenue) / (maxRevenue - minRevenue)) * 115
+    const x = 38 + (i / Math.max(1, monthlyRevenueData.length - 1)) * 412
+    const y = 130 - ((d.revenue - minRevenue) / Math.max(1, maxRevenue - minRevenue)) * 115
     return { ...d, x, y }
   })
 
@@ -195,8 +214,8 @@ export default function BomReportsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs font-bold">
-                <TrendingUp className="size-3.5 text-emerald-400" />
-                <span>+14.8%</span>
+                <TrendingUp className={`size-3.5 ${growthPercent >= 0 ? "text-emerald-400" : "text-rose-400"}`} />
+                <span>{growthPercent >= 0 ? `+${growthPercent}%` : `${growthPercent}%`}</span>
               </div>
             </div>
 
@@ -204,10 +223,10 @@ export default function BomReportsPage() {
             <div className="flex items-baseline justify-between px-1 mb-2">
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                  {hoveredMonthIndex !== null ? monthlyRevenueData[hoveredMonthIndex].label : "Doanh Thu Tháng 10 (Hiện Tại)"}
+                  {hoveredMonthIndex !== null ? monthlyRevenueData[hoveredMonthIndex].label : (latestMonth?.label || "Tháng Hiện Tại")}
                 </span>
                 <div className="font-mono font-black text-white text-2xl sm:text-3xl mt-0.5 tracking-tight">
-                  ₫{(hoveredMonthIndex !== null ? monthlyRevenueData[hoveredMonthIndex].revenue : netRevenue).toLocaleString("vi-VN")}
+                  ₫{(hoveredMonthIndex !== null ? monthlyRevenueData[hoveredMonthIndex].revenue : (latestMonth?.revenue ?? netRevenue)).toLocaleString("vi-VN")}
                 </div>
               </div>
               <div className="text-right">

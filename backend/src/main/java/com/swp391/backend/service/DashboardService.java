@@ -308,6 +308,70 @@ public class DashboardService {
 
         double chainOccupancy = chainTotalUnits > 0 ? ((double) chainOccupiedUnits / chainTotalUnits) * 100.0 : 0.0;
 
+        // 4. Tính toán doanh thu thực tế từng tháng từ Database cho Biểu đồ
+        List<Payment> allPayments = paymentRepository.findAll();
+        List<Contract> allContracts = contractRepository.findAll();
+        List<Reservation> allReservations = reservationRepository.findAll();
+
+        java.time.YearMonth maxPaymentYm = allPayments.stream()
+                .map(p -> p.getPaidAt() != null ? p.getPaidAt() : p.getIssuedAt())
+                .filter(Objects::nonNull)
+                .map(java.time.YearMonth::from)
+                .max(Comparator.naturalOrder())
+                .orElse(java.time.YearMonth.now());
+
+        java.time.YearMonth endYm = maxPaymentYm.isAfter(java.time.YearMonth.now()) ? maxPaymentYm : java.time.YearMonth.now();
+        List<java.time.YearMonth> targetMonths = new ArrayList<>();
+        for (int i = 5; i >= 0; i--) {
+            targetMonths.add(endYm.minusMonths(i));
+        }
+
+        List<com.swp391.backend.dto.dashboard.MonthlyRevenueItemResponse> monthlyRevenueList = new ArrayList<>();
+        for (java.time.YearMonth ym : targetMonths) {
+            BigDecimal mRental = BigDecimal.ZERO;
+            BigDecimal mExtension = BigDecimal.ZERO;
+            BigDecimal mPenalty = BigDecimal.ZERO;
+            BigDecimal mCompensation = BigDecimal.ZERO;
+            BigDecimal mRefunds = BigDecimal.ZERO;
+
+            for (Payment p : allPayments) {
+                LocalDateTime pTime = p.getPaidAt() != null ? p.getPaidAt() : p.getIssuedAt();
+                if (pTime == null || !ym.equals(java.time.YearMonth.from(pTime))) {
+                    continue;
+                }
+
+                String invNum = p.getInvoiceNumber() != null ? p.getInvoiceNumber() : "";
+                boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()) || "REFUNDED".equalsIgnoreCase(p.getStatus());
+
+                if ((invNum.startsWith("REF-") || "REF".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
+                    mRefunds = mRefunds.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
+                } else if ((invNum.startsWith("CMP-") || "CMP".equalsIgnoreCase(p.getInvoiceType()) || "INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
+                    mCompensation = mCompensation.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
+                } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
+                    mPenalty = mPenalty.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
+                } else if (("MONTHLY_RENEWAL".equalsIgnoreCase(p.getInvoiceType()) || "EXT".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
+                    mExtension = mExtension.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
+                } else if ("DEP".equalsIgnoreCase(p.getInvoiceType()) && "PAID".equalsIgnoreCase(p.getStatus())) {
+                    BigDecimal depAmt = allContracts.stream()
+                            .filter(c -> c.getContractId().equals(p.getContractId()))
+                            .findFirst()
+                            .flatMap(c -> allReservations.stream().filter(r -> r.getReservationId().equals(c.getReservationId())).findFirst())
+                            .map(r -> r.getDepositAmount() != null ? r.getDepositAmount() : BigDecimal.ZERO)
+                            .orElse(BigDecimal.ZERO);
+                    mRental = mRental.add((p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO).subtract(depAmt).max(BigDecimal.ZERO));
+                } else if ("INITIAL_RENTAL".equalsIgnoreCase(p.getInvoiceType()) && isPaid) {
+                    mRental = mRental.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
+                }
+            }
+
+            BigDecimal mGross = mRental.add(mExtension).add(mPenalty).add(mCompensation);
+            BigDecimal mNet = mGross.subtract(mRefunds);
+
+            String monthCode = "T" + ym.getMonthValue();
+            String monthLabel = String.format("Tháng %02d/%d", ym.getMonthValue(), ym.getYear());
+            monthlyRevenueList.add(new com.swp391.backend.dto.dashboard.MonthlyRevenueItemResponse(monthCode, monthLabel, mNet));
+        }
+
         ChainDashboardResponse resp = new ChainDashboardResponse();
         resp.setChainTotalFacilities(facilities.size());
         resp.setChainTotalUnits(chainTotalUnits);
@@ -318,6 +382,7 @@ public class DashboardService {
         resp.setChainNetRevenue(chainNet);
         resp.setChainDepositHolding(chainDeposit);
         resp.setFacilityBreakdown(breakdown);
+        resp.setMonthlyRevenues(monthlyRevenueList);
 
         return resp;
     }

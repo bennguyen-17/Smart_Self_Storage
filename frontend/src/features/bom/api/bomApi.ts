@@ -32,6 +32,12 @@ export interface FacilityBreakdownItem {
   slaBreachedTickets?: number
 }
 
+export interface MonthlyRevenueItem {
+  month: string
+  label: string
+  revenue: number
+}
+
 export interface ChainDashboardData {
   chainTotalFacilities: number
   chainTotalUnits: number
@@ -42,6 +48,7 @@ export interface ChainDashboardData {
   chainNetRevenue: number
   chainDepositHolding: number
   facilityBreakdown: FacilityBreakdownItem[]
+  monthlyRevenues?: MonthlyRevenueItem[]
 }
 
 export interface FacilityApiItem {

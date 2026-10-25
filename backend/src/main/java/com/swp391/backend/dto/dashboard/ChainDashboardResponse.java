@@ -82,11 +82,21 @@ public class ChainDashboardResponse {
         this.chainDepositHolding = chainDepositHolding;
     }
 
+    private List<MonthlyRevenueItemResponse> monthlyRevenues;
+
     public List<ManagerDashboardResponse> getFacilityBreakdown() {
         return facilityBreakdown;
     }
 
     public void setFacilityBreakdown(List<ManagerDashboardResponse> facilityBreakdown) {
         this.facilityBreakdown = facilityBreakdown;
+    }
+
+    public List<MonthlyRevenueItemResponse> getMonthlyRevenues() {
+        return monthlyRevenues;
+    }
+
+    public void setMonthlyRevenues(List<MonthlyRevenueItemResponse> monthlyRevenues) {
+        this.monthlyRevenues = monthlyRevenues;
     }
 }
