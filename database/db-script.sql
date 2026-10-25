@@ -225,7 +225,7 @@ CREATE TABLE StaffShift (
     facilityId INT NOT NULL,
     shiftId INT NOT NULL,
     workDate DATE NOT NULL,
-    status ENUM('SCHEDULED', 'ATTENDED', 'ABSENT', 'CANCELLED') NOT NULL DEFAULT 'SCHEDULED',
+    status ENUM('SCHEDULED', 'ATTENDED', 'COMPLETED', 'ABSENT', 'CANCELLED') NOT NULL DEFAULT 'SCHEDULED',
     CONSTRAINT fk_staffshift_employee FOREIGN KEY (employeeId) REFERENCES EmployeeProfile (employeeId) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_staffshift_facility FOREIGN KEY (facilityId) REFERENCES Facility (facilityId) ON UPDATE CASCADE,
     CONSTRAINT fk_staffshift_shift FOREIGN KEY (shiftId) REFERENCES Shift (shiftId) ON UPDATE CASCADE
@@ -819,8 +819,7 @@ INSERT INTO StaffShift (staffShiftId, employeeId, facilityId, shiftId, workDate,
 (6, 17, 4, 1, '2026-10-18', 'ATTENDED'),
 (7, 20, 5, 1, '2026-10-18', 'ATTENDED'),
 (8, 23, 6, 1, '2026-10-18', 'ATTENDED'),
-(9, 26, 7, 1, '2026-10-18', 'ATTENDED'),
-(10, 8, 1, 3, '2026-10-25', 'SCHEDULED');
+(9, 26, 7, 1, '2026-10-18', 'ATTENDED');
 
 -- 12. Chương trình khuyến mãi (Promotions)
 INSERT INTO Promotion (promotionId, promotionName, promotionType, discountValue, startDate, endDate, status) VALUES
@@ -988,20 +987,20 @@ INSERT INTO AuditLog (auditLogId, accountId, facilityId, customerId, action, ope
 -- 19. Yêu cầu hỗ trợ & Sự cố vận hành SLA (SupportTickets)
 INSERT INTO SupportTicket (id, ticketCode, type, status, customerId, facilityId, unitCode, contractId, title, description, desiredDate, assignedStaffId, slaDeadline, isSlaBreached, identityVerified, resolutionNote, createdAt, resolvedAt) VALUES
 -- === KHÁCH HÀNG 1: Nguyễn Thành Long (CustomerId 1, Cơ sở HN-01, Ô HN01-G-XL02) ===
-(1, 'TCK-202610-001', 'INCIDENT', 'RESOLVED', 1, 1, 'HN01-G-XL02', 1, 'Báo sự cố an ninh & kỹ thuật', 'Khóa thông minh buồng kho không tự bung chốt sau khi nhập mã PIN, đèn tín hiệu nháy đỏ liên tục.', NULL, 8, '2026-10-10 18:00:00', FALSE, TRUE, 'Đã kiểm tra cơ cấu chấp hành, tra dầu mỡ trục khóa và reset cảm biến hành trình.', '2026-10-10 14:00:00', '2026-10-10 15:30:00'),
-(2, 'TCK-202610-002', 'MAINTENANCE', 'RESOLVED', 1, 1, 'HN01-G-XL02', 1, 'Bảo trì / Sửa chữa', 'Yêu cầu nhân viên đo kiểm tra thực tế độ ẩm buồng kho mát định kỳ để bảo quản tài sản đồ da và tranh vẽ.', NULL, 8, '2026-10-25 18:00:00', FALSE, TRUE, 'Đã tiến hành đo kiểm thực tế: độ ẩm đạt 50%RH, nhiệt độ 22°C đạt chuẩn bảo quản đồ da.', '2026-10-24 10:00:00', '2026-10-24 11:30:00'),
+(1, 'TCK-202610-001', 'INCIDENT', 'RESOLVED', 1, 1, 'HN01-G-XL02', 1, 'Báo sự cố an ninh & kỹ thuật', 'Khóa thông minh buồng kho không tự bung chốt sau khi nhập mã PIN, đèn tín hiệu nháy đỏ liên tục.', NULL, 10, '2026-10-10 18:00:00', FALSE, TRUE, 'Đã kiểm tra cơ cấu chấp hành, tra dầu mỡ trục khóa và reset cảm biến hành trình.', '2026-10-10 14:00:00', '2026-10-10 15:30:00'),
+(2, 'TCK-202610-002', 'MAINTENANCE', 'RESOLVED', 1, 1, 'HN01-G-XL02', 1, 'Bảo trì / Sửa chữa', 'Yêu cầu nhân viên đo kiểm tra thực tế độ ẩm buồng kho mát định kỳ để bảo quản tài sản đồ da và tranh vẽ.', NULL, 10, '2026-10-25 18:00:00', FALSE, TRUE, 'Đã tiến hành đo kiểm thực tế: độ ẩm đạt 50%RH, nhiệt độ 22°C đạt chuẩn bảo quản đồ da.', '2026-10-24 10:00:00', '2026-10-24 11:30:00'),
 
 -- === KHÁCH HÀNG 2: Trần Thu Hà (CustomerId 2, Cơ sở HN-01, Ô HN01-F1-S02) ===
-(3, 'TCK-202609-001', 'EARLY_TERMINATION', 'RESOLVED', 2, 1, 'HN01-F1-S02', 5, 'Yêu cầu trả kho sớm', 'Khách hàng dọn đồ sang địa điểm mới nên xin làm thủ tục bàn giao kho trước thời hạn.', '2026-09-25', 8, NULL, FALSE, TRUE, 'Đã hoàn tất nghiệm thu buồng kho sạch sẽ và hướng dẫn khách nhận lại tiền cọc.', '2026-09-20 09:00:00', '2026-09-22 10:00:00'),
-(4, 'TCK-202610-003', 'INCIDENT', 'RESOLVED', 2, 1, 'HN01-F1-S02', 5, 'Báo sự cố an ninh & kỹ thuật', 'Bảng khóa số điện tử phát âm thanh bíp ngắt quãng và nháy đèn báo pin yếu (Low Battery 15%), cần thay pin.', NULL, 9, '2026-10-18 13:00:00', FALSE, TRUE, 'Đã thay 4 pin AA Alkaline mới, bảng khóa hoạt động ổn định và đo pin đạt 100%.', '2026-10-18 09:00:00', '2026-10-18 10:15:00'),
+(3, 'TCK-202609-001', 'EARLY_TERMINATION', 'RESOLVED', 2, 1, 'HN01-F1-S02', 5, 'Yêu cầu trả kho sớm', 'Khách hàng dọn đồ sang địa điểm mới nên xin làm thủ tục bàn giao kho trước thời hạn.', '2026-09-25', 10, NULL, FALSE, TRUE, 'Đã hoàn tất nghiệm thu buồng kho sạch sẽ và hướng dẫn khách nhận lại tiền cọc.', '2026-09-20 09:00:00', '2026-09-22 10:00:00'),
+(4, 'TCK-202610-003', 'INCIDENT', 'RESOLVED', 2, 1, 'HN01-F1-S02', 5, 'Báo sự cố an ninh & kỹ thuật', 'Bảng khóa số điện tử phát âm thanh bíp ngắt quãng và nháy đèn báo pin yếu (Low Battery 15%), cần thay pin.', NULL, 11, '2026-10-18 13:00:00', FALSE, TRUE, 'Đã thay 4 pin AA Alkaline mới, bảng khóa hoạt động ổn định và đo pin đạt 100%.', '2026-10-18 09:00:00', '2026-10-18 10:15:00'),
 
 -- === KHÁCH HÀNG 3: Trần Thị Bích Ngọc (CustomerId 3, Cơ sở HN-01, Ô HN01-F1-S04) ===
-(5, 'TCK-202610-004', 'MAINTENANCE', 'RESOLVED', 3, 1, 'HN01-F1-S04', 9, 'Bảo trì / Sửa chữa', 'Đèn LED chiếu sáng cảm biến tại lối đi phía trước cửa buồng kho nhấp nháy vào ban đêm.', NULL, 8, '2026-10-15 20:00:00', FALSE, TRUE, 'Đã thay bộ nguồn LED driver và bóng đèn mới tại vị trí hành lang tầng 1.', '2026-10-15 16:30:00', '2026-10-15 17:45:00'),
-(6, 'TCK-202610-005', 'MAINTENANCE', 'RESOLVED', 3, 1, 'HN01-F1-S04', 9, 'Bảo trì / Sửa chữa', 'Mép gioăng cao su viền cửa hơi bị lệch, nhờ nhân viên kiểm tra cân chỉnh lại để chống bụi mịn.', NULL, 9, '2026-10-25 21:00:00', FALSE, TRUE, 'Đã căn chỉnh lại gioăng cao su viền cánh cửa khít hoàn toàn, đạt tiêu chuẩn chống bụi.', '2026-10-24 14:00:00', '2026-10-24 15:30:00'),
+(5, 'TCK-202610-004', 'MAINTENANCE', 'RESOLVED', 3, 1, 'HN01-F1-S04', 9, 'Bảo trì / Sửa chữa', 'Đèn LED chiếu sáng cảm biến tại lối đi phía trước cửa buồng kho nhấp nháy vào ban đêm.', NULL, 10, '2026-10-15 20:00:00', FALSE, TRUE, 'Đã thay bộ nguồn LED driver và bóng đèn mới tại vị trí hành lang tầng 1.', '2026-10-15 16:30:00', '2026-10-15 17:45:00'),
+(6, 'TCK-202610-005', 'MAINTENANCE', 'RESOLVED', 3, 1, 'HN01-F1-S04', 9, 'Bảo trì / Sửa chữa', 'Mép gioăng cao su viền cửa hơi bị lệch, nhờ nhân viên kiểm tra cân chỉnh lại để chống bụi mịn.', NULL, 11, '2026-10-25 21:00:00', FALSE, TRUE, 'Đã căn chỉnh lại gioăng cao su viền cánh cửa khít hoàn toàn, đạt tiêu chuẩn chống bụi.', '2026-10-24 14:00:00', '2026-10-24 15:30:00'),
 
 -- === KHÁCH HÀNG 4: Lê Hữu Đạt (CustomerId 4, Cơ sở HN-01, Ô HN01-F2-M03) ===
-(7, 'TCK-202610-006', 'UNLOCK', 'RESOLVED', 4, 1, 'HN01-F2-M03', 13, 'Mở khóa khẩn cấp', 'Khách hàng để quên mã PIN trong điện thoại bị sập nguồn, nhờ nhân viên hỗ trợ mở khóa khẩn cấp.', NULL, 8, '2026-10-16 11:00:00', FALSE, TRUE, 'Đã đối chiếu CCCD chính chủ trùng khớp hồ sơ và hỗ trợ mở khóa trực tiếp tại quầy.', '2026-10-16 10:15:00', '2026-10-16 10:45:00'),
-(8, 'TCK-202610-007', 'MAINTENANCE', 'RESOLVED', 4, 1, 'HN01-F2-M03', 13, 'Bảo trì / Sửa chữa', 'Bản lề cánh cửa buồng kho bị rít và phát tiếng cọt kẹt khi mở, nhờ nhân viên hỗ trợ tra dầu bôi trơn.', NULL, 9, '2026-10-25 17:00:00', FALSE, TRUE, 'Đã tra mỡ bôi trơn chuyên dụng vào toàn bộ cụm bản lề, cửa đóng mở êm ái.', '2026-10-24 11:00:00', '2026-10-24 11:45:00'),
+(7, 'TCK-202610-006', 'UNLOCK', 'RESOLVED', 4, 1, 'HN01-F2-M03', 13, 'Mở khóa khẩn cấp', 'Khách hàng để quên mã PIN trong điện thoại bị sập nguồn, nhờ nhân viên hỗ trợ mở khóa khẩn cấp.', NULL, 10, '2026-10-16 11:00:00', FALSE, TRUE, 'Đã đối chiếu CCCD chính chủ trùng khớp hồ sơ và hỗ trợ mở khóa trực tiếp tại quầy.', '2026-10-16 10:15:00', '2026-10-16 10:45:00'),
+(8, 'TCK-202610-007', 'MAINTENANCE', 'RESOLVED', 4, 1, 'HN01-F2-M03', 13, 'Bảo trì / Sửa chữa', 'Bản lề cánh cửa buồng kho bị rít và phát tiếng cọt kẹt khi mở, nhờ nhân viên hỗ trợ tra dầu bôi trơn.', NULL, 11, '2026-10-25 17:00:00', FALSE, TRUE, 'Đã tra mỡ bôi trơn chuyên dụng vào toàn bộ cụm bản lề, cửa đóng mở êm ái.', '2026-10-24 11:00:00', '2026-10-24 11:45:00'),
 
 -- === KHÁCH HÀNG 5: Lê Hoàng Long (CustomerId 5, Cơ sở HN-02, Ô HN02-G-XL01) ===
 (9, 'TCK-202610-008', 'INCIDENT', 'RESOLVED', 5, 2, 'HN02-G-XL01', 17, 'Báo sự cố an ninh & kỹ thuật', 'Màn hình cảm ứng bảng khóa thông minh bị mờ số hiển thị vào ban ngày, đề nghị kiểm tra màn led.', NULL, 11, '2026-10-14 18:00:00', FALSE, TRUE, 'Đã vệ sinh bề mặt cảm ứng và điều chỉnh lại độ sáng đèn nền LED của bảng điều khiển.', '2026-10-14 14:00:00', '2026-10-14 15:20:00'),

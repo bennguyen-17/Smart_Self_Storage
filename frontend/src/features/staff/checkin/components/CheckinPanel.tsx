@@ -15,6 +15,7 @@ import {
 import { CHECKIN_TABS, findCheckinTab, type CheckinTabKey } from "../constants"
 import type { StaffReservationItem } from "../types"
 import CheckinContractTable from "./CheckinContractTable"
+import StaffShiftBadge from "@/features/staff/components/StaffShiftBadge"
 import ChangeUnitDialog from "./ChangeUnitDialog"
 import CollectPenaltyDialog from "./CollectPenaltyDialog"
 import ConfirmCheckinDialog from "./ConfirmCheckinDialog"
@@ -182,9 +183,9 @@ function CheckinPanel() {
         </h1>
       </div>
 
-      {/* Cụm Tìm kiếm */}
+      {/* Cụm Tìm kiếm & Trạng thái Ca trực */}
       <div className="card-box flex flex-col justify-between gap-3 rounded-2xl border p-4 shadow-sm md:flex-row md:items-center">
-        <div className="flex w-full space-x-2">
+        <div className="flex max-w-xl flex-1 space-x-2">
           <div className="relative flex-1">
             <SearchIcon className="pointer-events-none absolute top-2.5 left-3.5 size-4 text-muted" />
             <input
@@ -206,6 +207,8 @@ function CheckinPanel() {
             {isLookingUp ? "Đang tìm..." : "Tra cứu"}
           </button>
         </div>
+
+        <StaffShiftBadge />
       </div>
 
       {lookupError && (

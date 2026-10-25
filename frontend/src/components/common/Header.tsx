@@ -14,8 +14,8 @@ interface HeaderProps {
 export default function Header({ isDarkMode, onToggleTheme, onOpenProfileModal, onGoHome, isSticky = false, centerContent }: HeaderProps) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-  let userName = 'Nguyễn Văn Khách';
-  let userInitials = 'NK';
+  let userName = 'Khách Hàng';
+  let userInitials = 'KH';
   if (userStr) {
     try {
       const u = JSON.parse(userStr);

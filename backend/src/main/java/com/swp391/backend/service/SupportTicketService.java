@@ -244,25 +244,16 @@ public class SupportTicketService {
         SupportTicket saved = supportTicketRepository.save(ticket);
         List<Integer> onDutyStaffIds = staffShiftService.getOnDutyStaffAccountIds(saved.getFacilityId());
         if (onDutyStaffIds.isEmpty()) {
-            saved.setStatus("ESCALATED");
+            saved.setStatus("SUBMITTED");
             saved.setIsSlaBreached(false);
             saved = supportTicketRepository.save(saved);
-
-            ActivityLog log = new ActivityLog();
-            log.setAccountId(1);
-            log.setFacilityId(saved.getFacilityId());
-            log.setAction("INCIDENT_NO_STAFF_ON_DUTY");
-            log.setDescription("Ticket " + saved.getTicketCode() + " được chuyển lên Manager vì cơ sở #"
-                    + saved.getFacilityId() + " không có Staff đang trực ca.");
-            log.setCreatedAt(LocalDateTime.now());
-            activityLogRepository.save(log);
             return logCreatedTicket(saved, customerAccountId);
         }
 
         Integer assigneeAccountId = onDutyStaffIds.stream()
                 .min(Comparator
                         .comparingLong((Integer id) -> supportTicketRepository
-                                .countByAssignedStaffIdAndStatusIn(id, List.of("SUBMITTED", "IN_PROGRESS", "ESCALATED")))
+                                .countByAssignedStaffIdAndStatusIn(id, List.of("SUBMITTED", "IN_PROGRESS")))
                         .thenComparingInt(Integer::intValue))
                 .orElseThrow();
         saved.setAssignedStaffId(assigneeAccountId);
@@ -463,61 +454,20 @@ public class SupportTicketService {
 
     public void checkAndEscalateTickets(List<SupportTicket> tickets) {
         if (tickets == null) return;
-        LocalDateTime now = LocalDateTime.now();
         for (SupportTicket t : tickets) {
             populateTicketExtraInfo(t);
-            if ("SUBMITTED".equalsIgnoreCase(t.getStatus())
-                    && t.getSlaDeadline() != null
-                    && now.isAfter(t.getSlaDeadline())) {
-                t.setStatus("ESCALATED");
-                t.setIsSlaBreached(true);
-                supportTicketRepository.save(t);
-            }
         }
     }
 
-    // Quét định kỳ mỗi 30s: Tự động chuyển tiếp ticket sang ESCALATED (Quản lý) nếu quá 15 phút chưa ai nhận
-    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 30000)
-    @Transactional
+    // Đã loại bỏ logic tự động escalate lên Quản lý theo quy trình tinh gọn 3 trạng thái
     public void autoEscalateBreachedTickets() {
-        LocalDateTime now = LocalDateTime.now();
-        List<SupportTicket> submitted = supportTicketRepository.findAll().stream()
-                .filter(t -> "SUBMITTED".equalsIgnoreCase(t.getStatus()) && t.getSlaDeadline() != null && now.isAfter(t.getSlaDeadline()))
-                .collect(Collectors.toList());
-
-        for (SupportTicket t : submitted) {
-            t.setStatus("ESCALATED");
-            t.setIsSlaBreached(true);
-            supportTicketRepository.save(t);
-
-            if (activityLogRepository != null) {
-                ActivityLog log = new ActivityLog();
-                log.setAccountId(1);
-                log.setFacilityId(t.getFacilityId());
-                log.setAction("AUTO_ESCALATE_TICKET");
-                log.setDescription(String.format("Ticket %s quá hạn 15 phút chưa được nhân viên tiếp nhận -> Hệ thống tự động chuyển tiếp lên Quản lý chi nhánh (Cơ sở #%s, Vị trí %s)",
-                        t.getTicketCode(), String.valueOf(t.getFacilityId()), t.getUnitCode() != null ? t.getUnitCode() : "N/A"));
-                log.setCreatedAt(LocalDateTime.now());
-                activityLogRepository.save(log);
-            }
-        }
+        // No-op
     }
 
     // --- US-22: 1. Staff xem hàng đợi Ticket của cơ sở kèm đếm lùi SLA 15 phút ---
     @Transactional
     public List<SupportTicket> getStaffTickets(Integer staffAccountId, String status, String type) {
-        Integer facilityId = null;
-        try {
-            facilityId = staffShiftService.requireOnDutyFacility(staffAccountId);
-        } catch (Exception ignored) {
-            if (staffAccountId != null) {
-                facilityId = employeeProfileRepository.findByAccountId(staffAccountId)
-                        .map(EmployeeProfile::getFacilityId).orElse(null);
-            }
-        }
-        if (facilityId == null) {
-            facilityId = 1;
-        }
+        Integer facilityId = staffShiftService.requireOnDutyFacility(staffAccountId);
         List<SupportTicket> tickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
 
         checkAndEscalateTickets(tickets);
@@ -697,11 +647,10 @@ public class SupportTicketService {
     }
 
     private int getStatusPriority(String status) {
-        if ("ESCALATED".equalsIgnoreCase(status)) return 1;
-        if ("SUBMITTED".equalsIgnoreCase(status)) return 2;
-        if ("IN_PROGRESS".equalsIgnoreCase(status)) return 3;
-        if ("RESOLVED".equalsIgnoreCase(status)) return 4;
-        return 5;
+        if ("SUBMITTED".equalsIgnoreCase(status)) return 1;
+        if ("IN_PROGRESS".equalsIgnoreCase(status)) return 2;
+        if ("RESOLVED".equalsIgnoreCase(status)) return 3;
+        return 4;
     }
 
     // --- CÁCH 2: Quản lý trực tiếp Tiếp nhận ticket (ESCALATED / SUBMITTED -> IN_PROGRESS) ---

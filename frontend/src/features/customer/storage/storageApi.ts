@@ -25,7 +25,7 @@ const getStoredAccountId = (): number => {
     }
   } catch (e) {}
 
-  return 13;
+  return 0;
 };
 
 export const getMyContracts = async () => {
@@ -94,14 +94,14 @@ export const cancelDepositContract = async (
   bankInfo?: { bankName?: string; bankAccountNumber?: string; bankAccountName?: string }
 ) => {
   const rawId = contract.rawContractId || (typeof contract.contractId === 'string' ? contract.contractId.replace('#HD-', '') : contract.contractId);
-  try {
-    if (rawId) {
-      await apiClient.post(`/contracts/${rawId}/cancel-deposit`, bankInfo || {});
-    }
-  } catch (err) {
-    console.warn('Backend cancel-deposit fallback error:', err);
+  if (!rawId) {
+    return { success: false, message: 'Không tìm thấy mã hợp đồng để hủy cọc.' };
   }
-  return { success: true, message: 'Đã hủy cọc và hoàn trả ô kho về trạng thái trống thành công!' };
+  const res: any = await apiClient.post(`/contracts/${rawId}/cancel-deposit`, bankInfo || {});
+  return {
+    success: true,
+    message: res?.message || 'Đã hủy cọc và hoàn trả ô kho về trạng thái trống thành công!'
+  };
 };
 
 /**
@@ -160,15 +160,7 @@ export const extendStorageContract = async (
       return res?.data || res;
     } catch (retryErr) {
       console.error('Both extend calls failed:', retryErr);
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event('storage_contracts_updated'));
-      }
-      return {
-        success: true,
-        message: 'Gia hạn hợp đồng hoàn tất!',
-        newExpiryDate: extendData.newExpiryDate,
-        effectiveDays: extendData.effectiveDays,
-      };
+      throw retryErr;
     }
   }
 };

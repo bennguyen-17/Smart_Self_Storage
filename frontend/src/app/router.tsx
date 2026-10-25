@@ -28,11 +28,11 @@ import AdminPortalPage from "@/features/admin/AdminPortalPage"
 
 // BOM pages
 import BomLayout from "@/features/bom/BomLayout"
-import BomDashboardPage from "@/features/bom/BomDashboardPage"
-import BomFacilitiesPage from "@/features/bom/BomFacilitiesPage"
-import BomPricingPage from "@/features/bom/BomPricingPage"
-import BomPoliciesPage from "@/features/bom/BomPoliciesPage"
-import BomReportsPage from "@/features/bom/BomReportsPage"
+import BomDashboardPage from "@/features/bom/pages/BomDashboardPage"
+import BomFacilitiesPage from "@/features/bom/pages/BomFacilitiesPage"
+import BomPricingPage from "@/features/bom/pages/BomPricingPage"
+import BomPoliciesPage from "@/features/bom/pages/BomPoliciesPage"
+import BomReportsPage from "@/features/bom/pages/BomReportsPage"
 
 import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
 import { isTokenValid } from "@/lib/http"

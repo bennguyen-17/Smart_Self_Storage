@@ -19,7 +19,7 @@ import ProtoModal from "./ProtoModal"
 import {
   getStaffProfile,
   type StaffProfileData,
-} from "@/features/staff/services/staffProfileService"
+} from "@/features/staff/shifts/api/staffProfileService"
 
 interface StaffProfileModalProps {
   open: boolean

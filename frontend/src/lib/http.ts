@@ -117,12 +117,25 @@ export function unwrapApiData<T>(body: unknown): T {
 }
 
 /** Lấy thông báo lỗi dễ đọc cho người dùng từ lỗi axios hoặc lỗi bất kỳ */
+function cleanErrorMessage(raw: string): string {
+  if (!raw) return '';
+  let msg = raw.trim();
+  if (msg.startsWith('Lỗi hệ thống:')) {
+    msg = msg.replace(/^Lỗi hệ thống:\s*/, '').trim();
+  }
+  msg = msg.replace(/^\d{3}\s+[A-Z_]+(?:\s+)?/, '').trim();
+  if (msg.startsWith('"') && msg.endsWith('"') && msg.length >= 2) {
+    msg = msg.slice(1, -1).trim();
+  }
+  return msg;
+}
+
 export function getErrorMessage(error: unknown): string {
   if (isAxiosError(error)) {
     const data = error.response?.data;
-    if (typeof data === 'string' && data.trim()) return data;
+    if (typeof data === 'string' && data.trim()) return cleanErrorMessage(data);
     const serverMessage = (data as { message?: string })?.message;
-    if (serverMessage) return serverMessage;
+    if (serverMessage) return cleanErrorMessage(serverMessage);
     if (error.response?.status === 401)
       return 'Phiên đăng nhập hết hạn hoặc chưa đăng nhập. Vui lòng đăng nhập lại.';
     if (error.response?.status === 403)
@@ -131,7 +144,7 @@ export function getErrorMessage(error: unknown): string {
       return 'Không tìm thấy API (404). Kiểm tra backend.';
     if (!error.response) return 'Không thể kết nối đến máy chủ Backend.';
   }
-  return error instanceof Error ? error.message : 'Đã có lỗi xảy ra.';
+  return error instanceof Error ? cleanErrorMessage(error.message) : 'Đã có lỗi xảy ra.';
 }
 
 export default http;

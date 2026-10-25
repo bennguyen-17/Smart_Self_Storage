@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -149,7 +150,7 @@ public class StaffProfileController {
 
         // Lấy danh sách ca trực được Quản lý phân công
         DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
-        LocalTime nowTime = LocalTime.now();
+        LocalDateTime now = LocalDateTime.now();
 
         List<Shift> allActiveShifts = shiftRepository.findByStatusOrderByStartTimeAsc("ACTIVE");
         Map<Integer, Shift> shiftMap = new HashMap<>();
@@ -171,17 +172,24 @@ public class StaffProfileController {
                     boolean isAttended = "ATTENDED".equalsIgnoreCase(ss.getStatus());
                     boolean isScheduled = "SCHEDULED".equalsIgnoreCase(ss.getStatus());
 
+                    LocalDate shiftDate = ss.getWorkDate() != null ? ss.getWorkDate() : date;
+                    LocalDateTime startAt = shiftDate.atTime(s.getStartTime());
+                    LocalDateTime endAt = s.getEndTime().isAfter(s.getStartTime())
+                            ? shiftDate.atTime(s.getEndTime())
+                            : shiftDate.plusDays(1).atTime(s.getEndTime());
+                    LocalDateTime startWindow = startAt.minusMinutes(30);
+
                     boolean current = false;
                     if (isAttended) {
-                        current = !nowTime.isBefore(s.getStartTime().minusMinutes(30));
+                        current = !now.isBefore(startWindow) && now.isBefore(endAt.plusHours(8));
                     } else if (isScheduled) {
-                        current = !nowTime.isBefore(s.getStartTime().minusMinutes(30)) && !nowTime.isAfter(s.getEndTime());
+                        current = !now.isBefore(startWindow) && !now.isAfter(endAt);
                     }
 
                     if (current) {
                         isCurrentlyInShift = true;
                     }
-                    if (isScheduled && nowTime.isBefore(s.getStartTime().minusMinutes(30))) {
+                    if (isScheduled && now.isBefore(startWindow)) {
                         hasUpcomingShift = true;
                     }
                     assignedList.add(new StaffProfileResponse.AssignedShiftDto(

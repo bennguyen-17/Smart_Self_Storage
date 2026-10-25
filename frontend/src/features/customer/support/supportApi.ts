@@ -21,7 +21,7 @@ export const getStoredAccountId = (): number => {
     }
   } catch (e) {}
 
-  return 13;
+  return 0;
 };
 
 /**
