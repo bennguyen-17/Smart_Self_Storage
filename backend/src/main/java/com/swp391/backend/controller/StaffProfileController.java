@@ -168,11 +168,20 @@ public class StaffProfileController {
             for (StaffShift ss : staffShifts) {
                 Shift s = shiftMap.get(ss.getShiftId());
                 if (s != null) {
-                    boolean current = !nowTime.isBefore(s.getStartTime()) && !nowTime.isAfter(s.getEndTime());
+                    boolean isAttended = "ATTENDED".equalsIgnoreCase(ss.getStatus());
+                    boolean isScheduled = "SCHEDULED".equalsIgnoreCase(ss.getStatus());
+
+                    boolean current = false;
+                    if (isAttended) {
+                        current = !nowTime.isBefore(s.getStartTime().minusMinutes(30));
+                    } else if (isScheduled) {
+                        current = !nowTime.isBefore(s.getStartTime().minusMinutes(30)) && !nowTime.isAfter(s.getEndTime());
+                    }
+
                     if (current) {
                         isCurrentlyInShift = true;
                     }
-                    if (nowTime.isBefore(s.getStartTime())) {
+                    if (isScheduled && nowTime.isBefore(s.getStartTime().minusMinutes(30))) {
                         hasUpcomingShift = true;
                     }
                     assignedList.add(new StaffProfileResponse.AssignedShiftDto(

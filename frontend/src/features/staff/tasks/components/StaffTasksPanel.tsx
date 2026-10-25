@@ -1,10 +1,13 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   CheckCircle2Icon,
   ClipboardListIcon,
+  ClockIcon,
   InboxIcon,
+  PlayIcon,
   RotateCwIcon,
 } from "lucide-react"
+import { startCurrentShift } from "@/features/staff/shifts/api/staffShiftApi"
 import { toast } from "sonner"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -40,6 +43,12 @@ const TASK_STATUS_CLASS: Record<StaffTaskStatus, string> = {
 function StaffTasksPanel() {
   const [reload, setReload] = useState(0)
   const [completingId, setCompletingId] = useState<number | null>(null)
+
+  useEffect(() => {
+    const handleShiftChange = () => setReload((n) => n + 1)
+    window.addEventListener("staff-shift-changed", handleShiftChange)
+    return () => window.removeEventListener("staff-shift-changed", handleShiftChange)
+  }, [])
 
   const { data, error, isLoading } = useAsyncData(
     `staff-tasks:${reload}`,
@@ -107,10 +116,37 @@ function StaffTasksPanel() {
         )}
 
         {error && (
-          <Alert variant="destructive" className="mt-3">
-            <AlertTitle>Không tải được danh sách việc</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+          error.toLowerCase().includes("bắt đầu ca") || error.toLowerCase().includes("ca được phân công") ? (
+            <div className="mt-3 relative overflow-hidden rounded-2xl border border-blue-200/80 bg-gradient-to-br from-blue-50/90 to-indigo-50/80 p-6 text-center dark:border-blue-900/60 dark:from-slate-900 dark:to-slate-950">
+              <ClockIcon className="mx-auto mb-2 size-10 text-blue-600 dark:text-blue-400" />
+              <p className="font-bold text-slate-900 dark:text-white">Bạn chưa bắt đầu ca trực để nhận việc</p>
+              <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                Vui lòng bắt đầu ca trực để xem và xử lý danh sách công việc Quản lý giao cho ca này.
+              </p>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await startCurrentShift()
+                    window.dispatchEvent(new CustomEvent("staff-shift-changed"))
+                    toast.success("Đã bắt đầu ca trực thành công!")
+                    setReload((n) => n + 1)
+                  } catch (err) {
+                    toast.error(getErrorMessage(err))
+                  }
+                }}
+                className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/30 hover:bg-blue-700 transition"
+              >
+                <PlayIcon className="size-3.5 fill-current" />
+                <span>Bắt Đầu Ca Ngay</span>
+              </button>
+            </div>
+          ) : (
+            <Alert variant="destructive" className="mt-3">
+              <AlertTitle>Không tải được danh sách việc</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )
         )}
 
         {!isLoading && !error && tasks.length === 0 && (

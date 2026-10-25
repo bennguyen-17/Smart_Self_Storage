@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { SearchIcon, UsersIcon } from "lucide-react"
 import { cn } from "cn"
@@ -26,7 +26,6 @@ import StaffCustomerDetailModal, {
 import StaffInspectionModal, {
   type InspectionTarget,
 } from "./StaffInspectionModal"
-import StaffShiftBadge from "@/features/staff/components/StaffShiftBadge"
 
 const TAB_COLORS: Record<CheckinTabKey, string> = {
   all: "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300",
@@ -63,6 +62,12 @@ function CheckinPanel() {
 
   const [reload, setReload] = useState(0)
   const [query, setQuery] = useState("")
+
+  useEffect(() => {
+    const handleShiftChange = () => setReload((n) => n + 1)
+    window.addEventListener("staff-shift-changed", handleShiftChange)
+    return () => window.removeEventListener("staff-shift-changed", handleShiftChange)
+  }, [])
   const [lookupError, setLookupError] = useState<string | null>(null)
   const [isLookingUp, setIsLookingUp] = useState(false)
 
@@ -177,9 +182,9 @@ function CheckinPanel() {
         </h1>
       </div>
 
-      {/* Cụm Tìm kiếm & Trạng thái Ca trực */}
+      {/* Cụm Tìm kiếm */}
       <div className="card-box flex flex-col justify-between gap-3 rounded-2xl border p-4 shadow-sm md:flex-row md:items-center">
-        <div className="flex max-w-xl flex-1 space-x-2">
+        <div className="flex w-full space-x-2">
           <div className="relative flex-1">
             <SearchIcon className="pointer-events-none absolute top-2.5 left-3.5 size-4 text-muted" />
             <input
@@ -201,8 +206,6 @@ function CheckinPanel() {
             {isLookingUp ? "Đang tìm..." : "Tra cứu"}
           </button>
         </div>
-
-        <StaffShiftBadge />
       </div>
 
       {lookupError && (

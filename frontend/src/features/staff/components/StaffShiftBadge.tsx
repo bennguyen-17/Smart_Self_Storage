@@ -1,10 +1,22 @@
 import { useEffect, useState } from "react"
-import { ClockIcon, PlayIcon } from "lucide-react"
+import { ClockIcon, PlayIcon, SquareIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { getErrorMessage } from "@/lib/api"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
-import { startCurrentShift } from "@/features/staff/shifts/api/staffShiftApi"
+import {
+  startCurrentShift,
+  endCurrentShift,
+} from "@/features/staff/shifts/api/staffShiftApi"
 import {
   getStaffProfile,
   type StaffProfileData,
@@ -14,24 +26,31 @@ import StaffProfileModal from "./StaffProfileModal"
 export default function StaffShiftBadge() {
   const [profile, setProfile] = useState<StaffProfileData | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [confirmEndOpen, setConfirmEndOpen] = useState(false)
   const [starting, setStarting] = useState(false)
+  const [ending, setEnding] = useState(false)
   const [started, setStarted] = useState(false)
 
-  useEffect(() => {
-    let isMounted = true
+  const loadProfile = () => {
     getStaffProfile()
       .then((data) => {
-        if (isMounted && data && data.success) {
+        if (data && data.success) {
           setProfile(data)
         }
       })
       .catch((err) => {
         console.error("Lỗi tải thông tin ca trực cho badge:", err)
       })
+  }
 
-    return () => {
-      isMounted = false
+  useEffect(() => {
+    loadProfile()
+
+    const onShiftChanged = () => {
+      loadProfile()
     }
+    window.addEventListener("staff-shift-changed", onShiftChanged)
+    return () => window.removeEventListener("staff-shift-changed", onShiftChanged)
   }, [])
 
   const shiftStatus = profile?.shiftStatus || "NO_SHIFT"
@@ -44,15 +63,37 @@ export default function StaffShiftBadge() {
     try {
       await startCurrentShift()
       setStarted(true)
+      window.dispatchEvent(new CustomEvent("staff-shift-changed"))
       toast.success(
         currentShift
           ? `Đã bắt đầu ca ${currentShift.shiftName}`
           : "Đã bắt đầu ca"
       )
+      loadProfile()
     } catch (err) {
       toast.error(getErrorMessage(err))
     } finally {
       setStarting(false)
+    }
+  }
+
+  async function handleEndShift() {
+    setEnding(true)
+    try {
+      await endCurrentShift()
+      setStarted(false)
+      setConfirmEndOpen(false)
+      window.dispatchEvent(new CustomEvent("staff-shift-changed"))
+      toast.success(
+        currentShift
+          ? `Đã kết thúc ca ${currentShift.shiftName} và bàn giao ca thành công.`
+          : "Đã kết thúc ca làm việc và bàn giao thành công."
+      )
+      loadProfile()
+    } catch (err) {
+      toast.error(getErrorMessage(err))
+    } finally {
+      setEnding(false)
     }
   }
 
@@ -84,6 +125,19 @@ export default function StaffShiftBadge() {
           >
             <PlayIcon className="size-3" />
             <span>{starting ? "Đang bắt đầu…" : "Bắt đầu ca"}</span>
+          </button>
+        )}
+
+        {shiftStatus === "IN_SHIFT" && currentShift && attended && (
+          <button
+            type="button"
+            onClick={() => setConfirmEndOpen(true)}
+            disabled={ending}
+            className="flex items-center gap-1.5 rounded-full border border-rose-300 bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700 transition hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300 dark:hover:bg-rose-900/50 cursor-pointer shadow-2xs"
+            title="Bấm để kết thúc ca làm việc và bàn giao quầy cho nhân viên kế tiếp"
+          >
+            <SquareIcon className="size-3 fill-rose-600 text-rose-600 dark:fill-rose-400 dark:text-rose-400" />
+            <span>{ending ? "Đang kết thúc…" : "Kết thúc ca"}</span>
           </button>
         )}
 
@@ -130,6 +184,41 @@ export default function StaffShiftBadge() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
       />
+
+      <Dialog open={confirmEndOpen} onOpenChange={setConfirmEndOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+              <SquareIcon className="size-5 fill-rose-600" />
+              Xác nhận kết thúc & bàn giao ca
+            </DialogTitle>
+            <DialogDescription className="text-sm pt-2">
+              Bạn có chắc muốn kết thúc ca làm việc{" "}
+              <strong>{currentShift?.shiftName}</strong> (
+              {currentShift?.startTime} - {currentShift?.endTime})?
+              <br />
+              <br />
+              Hệ thống sẽ ghi nhận hoàn thành ca trực để nhân viên tiếp theo vào nhận bàn giao quầy. Sau khi kết thúc, bạn sẽ rời khỏi quyền xử lý nghiệp vụ quầy.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setConfirmEndOpen(false)}
+              disabled={ending}
+            >
+              Hủy bỏ
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleEndShift}
+              disabled={ending}
+            >
+              {ending ? "Đang xử lý…" : "Xác nhận kết thúc ca"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

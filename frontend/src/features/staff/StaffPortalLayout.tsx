@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { useTheme } from "@/components/common/theme-provider"
 
 import StaffSidebar from "@/features/staff/components/StaffSidebar"
+import StaffShiftBadge from "@/features/staff/components/StaffShiftBadge"
 
 function resolveIsDark(theme: string): boolean {
   if (theme === "dark") return true
@@ -33,12 +34,24 @@ function StaffPortalLayout() {
           />
 
           <SidebarInset className="relative z-10 flex min-h-screen flex-1 flex-col bg-transparent">
-            {/* Top mobile navigation bar (đồng bộ header với Manager) */}
-            <div className="flex items-center gap-3 border-b border-slate-200/80 bg-slate-50/95 px-4 py-2.5 shadow-xs backdrop-blur-xl md:hidden dark:border-slate-800 dark:bg-slate-950/95">
-              <span className="text-xs font-black tracking-wide uppercase text-slate-900 dark:text-white">
-                Smart Storage
-              </span>
-            </div>
+            {/* Top persistent navigation bar */}
+            <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between gap-3 border-b border-slate-200/80 bg-white/80 px-4 py-2.5 backdrop-blur-md md:px-8 dark:border-slate-800/80 dark:bg-slate-950/80">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-black tracking-wide uppercase text-slate-900 md:hidden dark:text-white">
+                  Smart Storage
+                </span>
+                <div className="hidden items-center gap-2 sm:flex">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50/80 px-3 py-1 text-xs font-semibold text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/50 dark:text-blue-300">
+                    <span className="size-2 rounded-full bg-blue-500" />
+                    Cơ sở: HN01 - Cầu Giấy
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <StaffShiftBadge />
+              </div>
+            </header>
 
             <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
               <Outlet />

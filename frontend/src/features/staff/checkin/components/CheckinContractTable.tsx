@@ -65,6 +65,52 @@ function CheckinContractTable({
   unitMeta,
 }: CheckinContractTableProps) {
   if (error) {
+    const isShiftError =
+      error.toLowerCase().includes("bắt đầu ca") ||
+      error.toLowerCase().includes("ca được phân công")
+
+    if (isShiftError) {
+      return (
+        <div className="relative overflow-hidden rounded-3xl border border-blue-200/80 bg-gradient-to-br from-blue-50/90 via-sky-50/50 to-indigo-50/80 p-8 shadow-sm backdrop-blur-md dark:border-blue-900/60 dark:from-slate-900/90 dark:via-blue-950/40 dark:to-slate-900/90 text-center">
+          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/25">
+            <ClockIcon className="size-7" />
+          </div>
+          <h3 className="text-base font-black tracking-tight text-slate-900 dark:text-white">
+            Bạn chưa tiếp nhận ca trực được phân công
+          </h3>
+          <p className="mx-auto mt-2 max-w-md text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+            Để đảm bảo trách nhiệm bàn giao ca và an toàn dữ liệu, nhân viên cần xác nhận bắt đầu ca trực trước khi thực hiện duyệt nhận kho, đổi kho và thu tiền tại quầy.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await startCurrentShift()
+                  window.dispatchEvent(new CustomEvent("staff-shift-changed"))
+                  toast.success("Đã bắt đầu ca trực thành công!")
+                  onRetry()
+                } catch (err) {
+                  toast.error(getErrorMessage(err))
+                }
+              }}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/30 transition hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <PlayIcon className="size-3.5 fill-current" />
+              <span>Bắt Đầu Ca Ngay</span>
+            </button>
+            <button
+              type="button"
+              onClick={onRetry}
+              className="cursor-pointer rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              Kiểm tra lại
+            </button>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="rounded-2xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-300">
         <p className="font-bold">Không tải được danh sách hợp đồng</p>
