@@ -222,9 +222,6 @@ export default function BomPricingPage() {
                 BẢNG GIÁ THUÊ &amp; BIỂU PHÍ HỆ THỐNG
               </h3>
             </div>
-            <p className="text-xs text-slate-400 mt-1.5">
-              Quy chuẩn 4 kích thước kho cố định (chiều cao 2.0m), đơn giá kho mát (+20%) và biểu phí áp dụng toàn chuỗi
-            </p>
           </div>
         </div>
 
@@ -236,9 +233,6 @@ export default function BomPricingPage() {
                 <Sparkles className="size-3.5 text-sky-400" />
                 <span>1. Khung Giá Thuê Tiêu Chuẩn &amp; Mức Cọc Theo 4 Size Kho</span>
               </h4>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Chiều cao kho cố định 2.0m. Kho Điều hòa / Mát (22°C–25°C) tự động cộng 20% vào đơn giá thuê.
-              </p>
             </div>
           </div>
 
