@@ -362,18 +362,18 @@ export default function BomPricingPage() {
             </button>
           </div>
 
-          {/* GIAO DIỆN DẠNG BẢNG NGANG (HORIZONTAL TABLE FORMAT) */}
-          <div className="overflow-x-auto rounded-xl border border-slate-800 shadow-md">
-            <table className="w-full text-left text-xs border-collapse">
+          {/* GIAO DIỆN DẠNG BẢNG NGANG (HORIZONTAL TABLE FORMAT - VỪA VẶN 100% KHÔNG CUỘN) */}
+          <div className="rounded-xl border border-slate-800 shadow-md overflow-hidden">
+            <table className="w-full text-left text-xs border-collapse table-auto">
               <thead>
                 <tr className="bg-slate-900 border-b border-sky-500/30 text-sky-400 uppercase font-bold text-[11px] sm:text-xs tracking-wider">
-                  <th className="py-3 px-4 text-left whitespace-nowrap">LOẠI KHO / SIZE</th>
-                  <th className="py-3 px-4 text-center whitespace-nowrap">KÍCH THƯỚC</th>
-                  <th className="py-3 px-4 text-center whitespace-nowrap">GIÁ THEO NGÀY</th>
-                  <th className="py-3 px-4 text-center whitespace-nowrap">GIÁ THEO THÁNG</th>
-                  <th className="py-3 px-4 text-center whitespace-nowrap">PHỤ PHÍ KHO MÁT</th>
-                  <th className="py-3 px-4 text-center whitespace-nowrap">TIỀN CỌC CHUẨN</th>
-                  <th className="py-3 px-4 text-center whitespace-nowrap">THAO TÁC</th>
+                  <th className="py-3 px-3 sm:px-4 text-left">LOẠI KHO / SIZE</th>
+                  <th className="py-3 px-2 sm:px-3 text-center">KÍCH THƯỚC</th>
+                  <th className="py-3 px-2 sm:px-3 text-center">GIÁ THEO NGÀY</th>
+                  <th className="py-3 px-2 sm:px-3 text-center">GIÁ THEO THÁNG</th>
+                  <th className="py-3 px-2 sm:px-3 text-center">PHỤ PHÍ KHO MÁT</th>
+                  <th className="py-3 px-2 sm:px-3 text-center">TIỀN CỌC CHUẨN</th>
+                  <th className="py-3 px-2 sm:px-3 text-center">THAO TÁC</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/80 font-medium text-slate-300">
@@ -381,49 +381,49 @@ export default function BomPricingPage() {
                   return (
                     <tr key={item.id} className="hover:bg-slate-900/60 transition">
                       {/* CỘT 1: SIZE & TÊN LOẠI KHO */}
-                      <td className="py-3.5 px-4 text-left whitespace-nowrap">
+                      <td className="py-3 px-3 sm:px-4 text-left">
                         <span className="font-extrabold text-white text-xs sm:text-sm">
                           {item.name}
                         </span>
                       </td>
 
                       {/* CỘT 2: KÍCH THƯỚC */}
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                        <span className="font-mono font-bold text-slate-200 text-xs bg-slate-950/70 px-2.5 py-1 rounded-lg border border-slate-800">
+                      <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
+                        <span className="font-mono font-bold text-slate-200 text-xs bg-slate-950/70 px-2 py-0.5 rounded-lg border border-slate-800">
                           {item.dimensions}
                         </span>
                       </td>
 
                       {/* CỘT 3: GIÁ THEO NGÀY */}
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                      <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
                         <span className="font-mono font-bold text-slate-200 text-xs sm:text-sm">
                           ₫{item.dailyPrice.toLocaleString("vi-VN")}
                         </span>
                       </td>
 
                       {/* CỘT 4: GIÁ THEO THÁNG */}
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                      <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
                         <span className="font-mono font-black text-sky-400 text-xs sm:text-sm">
                           ₫{item.normPrice.toLocaleString("vi-VN")}
                         </span>
                       </td>
 
                       {/* CỘT 5: PHỤ PHÍ KHO MÁT */}
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                      <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
                         <span className="font-mono font-bold text-cyan-300 text-xs bg-cyan-950/40 px-2 py-0.5 rounded-md border border-cyan-800/50">
                           +{item.climateSurchargePercent ?? 20}%
                         </span>
                       </td>
 
                       {/* CỘT 6: TIỀN CỌC CHUẨN */}
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                      <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
                         <span className="font-mono font-bold text-slate-200 text-xs sm:text-sm">
                           ₫{item.depositAmount.toLocaleString("vi-VN")}
                         </span>
                       </td>
 
                       {/* CỘT 7: THAO TÁC */}
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                      <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             type="button"
