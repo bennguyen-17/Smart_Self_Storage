@@ -70,9 +70,9 @@ export default function StoragePage() {
     // Trong cùng nhóm: cái nào mới nhất (rawContractId lớn hơn hoặc ngày bắt đầu mới hơn) nằm trên
     const getStatusPriority = (status: string) => {
       switch (status) {
-        case 'ACTIVE':
-          return 0;
         case 'PENDING_CHECKIN':
+          return 0;
+        case 'ACTIVE':
           return 1;
         case 'OVERDUE':
           return 2;
@@ -286,24 +286,6 @@ export default function StoragePage() {
 
                 <button
                   type="button"
-                  onClick={() => { setActiveTab('ACTIVE'); setCurrentPage(1); }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
-                    activeTab === 'ACTIVE'
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
-                  }`}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Đang hiệu lực</span>
-                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                    activeTab === 'ACTIVE' ? 'bg-emerald-700 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-                  }`}>
-                    {counts.active}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
                   onClick={() => { setActiveTab('PENDING_CHECKIN'); setCurrentPage(1); }}
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
                     activeTab === 'PENDING_CHECKIN'
@@ -317,6 +299,24 @@ export default function StoragePage() {
                     activeTab === 'PENDING_CHECKIN' ? 'bg-amber-700 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                   }`}>
                     {counts.pending}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setActiveTab('ACTIVE'); setCurrentPage(1); }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === 'ACTIVE'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span>Đang hiệu lực</span>
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                    activeTab === 'ACTIVE' ? 'bg-emerald-700 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                  }`}>
+                    {counts.active}
                   </span>
                 </button>
 

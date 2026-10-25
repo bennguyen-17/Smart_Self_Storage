@@ -566,9 +566,9 @@ public class ContractController {
     private int getContractStatusPriority(String status) {
         if (status == null) return 99;
         switch (status.toUpperCase()) {
-            case "ACTIVE":
-                return 0;
             case "PENDING_CHECKIN":
+                return 0;
+            case "ACTIVE":
                 return 1;
             case "OVERDUE":
                 return 2;
