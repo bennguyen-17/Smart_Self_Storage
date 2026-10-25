@@ -409,13 +409,13 @@ export default function BomFacilitiesPage() {
 
                       {/* CỘT 5: TỶ LỆ LẤP ĐẦY */}
                       <td className="py-4 px-4 text-center whitespace-nowrap">
-                        <span className="font-bold text-sky-400 font-mono text-xs sm:text-sm">
+                        <span className="font-bold text-slate-200 font-mono text-xs sm:text-sm">
                           {displayOccRate}%
                         </span>
                       </td>
 
                       {/* CỘT 6: DOANH THU */}
-                      <td className="py-4 px-4 text-center whitespace-nowrap font-bold text-sky-400 font-mono text-xs sm:text-sm">
+                      <td className="py-4 px-4 text-center whitespace-nowrap font-bold text-slate-200 font-mono text-xs sm:text-sm">
                         {fac.monthlyRevenue || "₫0"}
                       </td>
 
