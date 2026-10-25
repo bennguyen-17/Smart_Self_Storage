@@ -15,11 +15,21 @@ export interface FacilityBreakdownItem {
   overdueContracts: number
   terminatedContracts: number
   rentalRevenue: number
+  extensionRevenue?: number
+  penaltyRevenue?: number
+  compensationRevenue?: number
+  totalRefunds?: number
   netRevenue: number
   depositHolding: number
+  forfeitedDeposit?: number
+  waivedAmount?: number
   managerName?: string
   managerEmail?: string
   managerPhone?: string
+  totalTickets?: number
+  inProgressTickets?: number
+  resolvedTickets?: number
+  slaBreachedTickets?: number
 }
 
 export interface ChainDashboardData {
