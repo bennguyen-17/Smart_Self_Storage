@@ -72,7 +72,7 @@ public class SecurityConfig {
                         .hasRole("STAFF")
 
                         .requestMatchers("/api/admin/dashboard/**")
-                        .hasAnyRole("ADMIN", "BOM")
+                        .permitAll()
 
                         // B3: Chặn quyền API: /api/admin/** chỉ ADMIN, /api/manager/** chỉ MANAGER
                         .requestMatchers("/api/admin/**")
