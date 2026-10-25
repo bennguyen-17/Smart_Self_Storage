@@ -396,34 +396,8 @@ export const createDepositTransaction = async (bookingData: any) => {
       }
     };
   } catch (error) {
-    console.warn('API error, falling back to mock initiate deposit:', error);
-    const d = new Date();
-    const dd = String(d.getDate()).padStart(2, '0');
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const yy = String(d.getFullYear()).slice(-2);
-    const rand = Math.floor(1000 + Math.random() * 9000);
-    const facCode = (bookingData?.facilityCode || bookingData?.branchCode || 'HN01').replace('-', '').toUpperCase();
-    const bookingCode = `CTR-${facCode}-${dd}${mm}${yy}-${rand}`;
-    const invoiceNumber = `DEP-${bookingCode}`;
-    return {
-      success: true,
-      data: {
-        bookingCode,
-        invoiceNumber,
-        unitId: bookingData.unitId || bookingData.id,
-        facilityName: bookingData.facilityName,
-        unitSize: bookingData.unitSize,
-        startDate: bookingData.startDate,
-        endDate: bookingData.endDate,
-        depositAmount: bookingData.deposit || 3000000,
-        bankInfo: {
-          bankName: 'MB BANK (Ngân hàng Quân Đội)',
-          accountNumber: '999988886666',
-          accountName: 'CONG TY CP SMART SELF STORAGE',
-          branch: 'Chi nhánh Hà Nội'
-        }
-      }
-    };
+    console.error('API error initiating deposit:', error);
+    throw error;
   }
 };
 

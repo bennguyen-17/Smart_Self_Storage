@@ -51,8 +51,8 @@ describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
     expect(screen.getByTestId("location")).toHaveTextContent("/manager/units")
     expect(screen.getByRole("heading", { level: 1, name: "Quản lý ô kho" })).toBeInTheDocument()
     expect(within(desktopNav()).getAllByRole("link")).toHaveLength(8)
-    // Trang thứ 7 do Bảo thêm: tiếp nhận ticket quá hạn SLA
-    expect(within(desktopNav()).getByRole("link", { name: /^Sự cố & Escalation/ })).toHaveAttribute("href", "/manager/tickets")
+    // Trang sự cố cơ sở: theo dõi & hỗ trợ xử lý ticket
+    expect(within(desktopNav()).getByRole("link", { name: /^Sự cố cơ sở/ })).toHaveAttribute("href", "/manager/tickets")
     expect(within(desktopNav()).getByRole("link", { name: /^Ô kho/ })).toHaveAttribute("aria-current", "page")
     expect(await screen.findByText("HN01-F1-M01")).toBeInTheDocument()
   })
@@ -124,13 +124,9 @@ describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
     expect(screen.getByRole("button", { name: /mở danh sách trang/i })).toHaveAttribute("aria-expanded", "false")
   })
 
-  test("có footer chung của web: bản quyền, chính sách, điều khoản, hotline", () => {
+  test("không hiển thị footer công cộng trên cổng nội bộ quản lý", () => {
     renderAt("/manager/units")
-    const footer = screen.getByRole("contentinfo")
-    expect(within(footer).getByText("© 2026 Smart Storage")).toBeInTheDocument()
-    expect(within(footer).getByRole("button", { name: /chính sách bảo mật/i })).toBeInTheDocument()
-    expect(within(footer).getByRole("button", { name: /điều khoản dịch vụ/i })).toBeInTheDocument()
-    expect(within(footer).getByRole("link", { name: /hotline/i })).toHaveAttribute("href", "tel:1900391391")
+    expect(screen.queryByRole("contentinfo")).not.toBeInTheDocument()
   })
 
   test("mỗi mục trên thanh dọc có dòng mô tả ngắn", () => {

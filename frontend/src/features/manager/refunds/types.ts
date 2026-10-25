@@ -36,3 +36,8 @@ export interface RefundFilter {
   query: string
   state: RefundState | "ALL"
 }
+
+export interface ConfirmRefundPayload {
+  evidenceUrl: string
+  transactionRef?: string
+}

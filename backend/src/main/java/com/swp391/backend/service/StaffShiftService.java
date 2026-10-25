@@ -75,6 +75,25 @@ public class StaffShiftService {
         return toResponse(staffShift, assignment.shift());
     }
 
+    @Transactional
+    public void endCurrentShift(Integer accountId) {
+        EmployeeProfile employee = getEmployee(accountId);
+        LocalDateTime now = LocalDateTime.now(VIETNAM_ZONE);
+        CurrentAssignment assignment = findCurrentAssignment(
+                employee.getEmployeeId(), employee.getFacilityId(), now, true)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Không có ca đang làm việc để kết thúc."));
+
+        StaffShift staffShift = assignment.staffShift();
+        if (!"ATTENDED".equalsIgnoreCase(staffShift.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Chỉ có thể kết thúc ca khi đang trong ca làm việc.");
+        }
+
+        staffShift.setStatus("COMPLETED");
+        staffShiftRepository.save(staffShift);
+    }
+
     @Transactional(readOnly = true)
     public Integer requireOnDutyFacility(Integer accountId) {
         if (accountId == null) {
@@ -203,7 +222,10 @@ public class StaffShiftService {
             return false;
         }
 
-        return !now.isBefore(startAt) && now.isBefore(endAt);
+        if ("ATTENDED".equalsIgnoreCase(assignment.getStatus())) {
+            return !now.isBefore(startAt.minusMinutes(30)) && now.isBefore(endAt.plusHours(8));
+        }
+        return !now.isBefore(startAt.minusMinutes(30)) && now.isBefore(endAt);
     }
 
     private StaffCurrentShiftResponse toResponse(StaffShift staffShift, Shift shift) {

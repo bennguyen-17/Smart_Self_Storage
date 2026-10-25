@@ -17,11 +17,10 @@ import SupportPage from "@/features/customer/support/SupportPage"
 
 // Staff pages
 import StaffPortalLayout from "@/features/staff/StaffPortalLayout"
-import StaffCheckinPage from "@/features/staff/StaffCheckinPage"
-import StaffSupportPage from "@/features/staff/StaffSupportPage"
-import StaffPinPage from "@/features/staff/StaffPinPage"
-import StaffTasksPage from "@/features/staff/StaffTasksPage"
-import ReservationManagementPage from "@/features/staff/ReservationManagementPage"
+import CheckinPanel from "@/features/staff/checkin/components/CheckinPanel"
+import StaffTicketPanel from "@/features/staff/support/components/StaffTicketPanel"
+import StaffPinPanel from "@/features/staff/pin/components/StaffPinPanel"
+import StaffTasksPanel from "@/features/staff/tasks/components/StaffTasksPanel"
 
 // Manager & Admin pages
 import ManagerPortalPage from "@/features/manager/ManagerPortalPage"
@@ -29,11 +28,11 @@ import AdminPortalPage from "@/features/admin/AdminPortalPage"
 
 // BOM pages
 import BomLayout from "@/features/bom/BomLayout"
-import BomDashboardPage from "@/features/bom/BomDashboardPage"
-import BomFacilitiesPage from "@/features/bom/BomFacilitiesPage"
-import BomPricingPage from "@/features/bom/BomPricingPage"
-import BomPoliciesPage from "@/features/bom/BomPoliciesPage"
-import BomReportsPage from "@/features/bom/BomReportsPage"
+import BomDashboardPage from "@/features/bom/pages/BomDashboardPage"
+import BomFacilitiesPage from "@/features/bom/pages/BomFacilitiesPage"
+import BomPricingPage from "@/features/bom/pages/BomPricingPage"
+import BomPoliciesPage from "@/features/bom/pages/BomPoliciesPage"
+import BomReportsPage from "@/features/bom/pages/BomReportsPage"
 
 import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
 import { isTokenValid } from "@/lib/http"
@@ -126,11 +125,10 @@ export function AppRouter() {
         }
       >
         <Route index element={<Navigate to="/staff/checkin" replace />} />
-        <Route path="checkin" element={<StaffCheckinPage />} />
-        <Route path="reservations" element={<ReservationManagementPage />} />
-        <Route path="support" element={<StaffSupportPage />} />
-        <Route path="tasks" element={<StaffTasksPage />} />
-        <Route path="pin" element={<StaffPinPage />} />
+        <Route path="checkin" element={<CheckinPanel />} />
+        <Route path="support" element={<StaffTicketPanel />} />
+        <Route path="tasks" element={<StaffTasksPanel />} />
+        <Route path="pin" element={<StaffPinPanel />} />
       </Route>
 
       {/* Cổng Quản Lý Cơ Sở: Manager Portal (Role MANAGER) */}

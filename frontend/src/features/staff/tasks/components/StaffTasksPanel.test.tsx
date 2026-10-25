@@ -6,6 +6,10 @@ import { completeTask, listMyTasks } from "../api/staffTaskApi"
 import type { StaffTask } from "../types"
 import StaffTasksPanel from "./StaffTasksPanel"
 
+vi.mock("@/features/staff/components/StaffShiftBadge", () => ({
+  default: () => null,
+}))
+
 vi.mock("../api/staffTaskApi", () => ({
   listMyTasks: vi.fn(),
   completeTask: vi.fn(),

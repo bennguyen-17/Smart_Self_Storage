@@ -65,7 +65,7 @@ function StaffSidebar({ isDark, onToggleTheme }: StaffSidebarProps) {
   const { user } = useAuth()
   const [profileOpen, setProfileOpen] = useState(false)
 
-  const staffName = user?.fullName || "Nguyễn Văn Staff"
+  const staffName = user?.fullName || "Nhân viên"
   const staffRole =
     user?.role === "STAFF"
       ? "Nhân viên cơ sở"

@@ -132,21 +132,21 @@ public class ContractController {
 
             String statusLabel;
             if ("PENDING_CHECKIN".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "CHỜ CHECK-IN";
+                statusLabel = "Chờ check-in";
             } else if ("ACTIVE".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "HIỆU LỰC";
+                statusLabel = "Đang hiệu lực";
             } else if ("INITIATED".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "KHỞI TẠO";
+                statusLabel = "Khởi tạo";
             } else if ("OVERDUE".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "QUÁ HẠN";
+                statusLabel = "Quá hạn";
             } else if ("TERMINATED".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "ĐÃ THANH LÝ";
+                statusLabel = "Đã thanh lý";
             } else if ("COMPLETED".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "ĐÃ HOÀN TẤT";
+                statusLabel = "Đã hoàn tất";
             } else if ("CANCELLED".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "ĐÃ HỦY CỌC";
+                statusLabel = "Đã hủy cọc";
             } else if ("FORFEITED".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "MẤT CỌC";
+                statusLabel = "Mất cọc";
             } else {
                 statusLabel = c.getStatus();
             }
@@ -192,6 +192,20 @@ public class ContractController {
 
             result.add(map);
         }
+
+        result.sort((a, b) -> {
+            int prioA = getContractStatusPriority((String) a.get("status"));
+            int prioB = getContractStatusPriority((String) b.get("status"));
+            if (prioA != prioB) {
+                return Integer.compare(prioA, prioB);
+            }
+            Integer idA = (Integer) a.get("rawContractId");
+            Integer idB = (Integer) b.get("rawContractId");
+            if (idA != null && idB != null) {
+                return idB.compareTo(idA);
+            }
+            return 0;
+        });
 
         return ResponseEntity.ok(result);
     }
@@ -547,5 +561,23 @@ public class ContractController {
         resp.put("amount", finalTotal);
 
         return ResponseEntity.ok(resp);
+    }
+
+    private int getContractStatusPriority(String status) {
+        if (status == null) return 99;
+        switch (status.toUpperCase()) {
+            case "PENDING_CHECKIN":
+                return 0;
+            case "ACTIVE":
+                return 1;
+            case "OVERDUE":
+                return 2;
+            case "CANCELLED":
+            case "TERMINATED":
+            case "COMPLETED":
+            case "FORFEITED":
+            default:
+                return 3;
+        }
     }
 }

@@ -56,10 +56,10 @@ function StaffUnlockModal({
     const initialData: UnlockDetail = {
       ticketId: ticket.id,
       ticketCode: ticket.ticketCode,
-      unitCode: ticket.unitCode || "F2-M205",
-      customerName: ticket.customerName || "Nguyễn Văn Khách",
-      phone: ticket.phone || "0988 123 719",
-      identityNumber: ticket.identityNumber || "079201008899",
+      unitCode: ticket.unitCode || "—",
+      customerName: ticket.customerName || "—",
+      phone: ticket.phone || "—",
+      identityNumber: ticket.identityNumber || "—",
     }
     setDetail(initialData)
 

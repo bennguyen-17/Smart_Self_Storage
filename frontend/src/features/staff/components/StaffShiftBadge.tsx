@@ -1,135 +1,147 @@
 import { useEffect, useState } from "react"
-import { ClockIcon, PlayIcon } from "lucide-react"
+import { SquareIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { getErrorMessage } from "@/lib/api"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
-import { startCurrentShift } from "@/features/staff/shifts/api/staffShiftApi"
+import { endCurrentShift } from "@/features/staff/shifts/api/staffShiftApi"
 import {
   getStaffProfile,
   type StaffProfileData,
-} from "@/features/staff/services/staffProfileService"
-import StaffProfileModal from "./StaffProfileModal"
+} from "@/features/staff/shifts/api/staffProfileService"
 
 export default function StaffShiftBadge() {
   const [profile, setProfile] = useState<StaffProfileData | null>(null)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [starting, setStarting] = useState(false)
-  const [started, setStarted] = useState(false)
+  const [confirmEndOpen, setConfirmEndOpen] = useState(false)
+  const [ending, setEnding] = useState(false)
 
-  useEffect(() => {
-    let isMounted = true
+  const loadProfile = () => {
     getStaffProfile()
       .then((data) => {
-        if (isMounted && data && data.success) {
+        if (data && data.success) {
           setProfile(data)
         }
       })
       .catch((err) => {
         console.error("Lỗi tải thông tin ca trực cho badge:", err)
       })
+  }
 
-    return () => {
-      isMounted = false
+  useEffect(() => {
+    loadProfile()
+
+    const onShiftChanged = () => {
+      loadProfile()
     }
+    window.addEventListener("staff-shift-changed", onShiftChanged)
+    return () => window.removeEventListener("staff-shift-changed", onShiftChanged)
   }, [])
 
-  const shiftStatus = profile?.shiftStatus || "NO_SHIFT"
   const shifts = profile?.assignedShifts || []
   const currentShift = shifts.find((s) => s.isCurrent) || shifts[0]
-  const attended = started || currentShift?.status === "ATTENDED"
+  const attended = currentShift?.status === "ATTENDED"
 
-  async function handleStartShift() {
-    setStarting(true)
+  // Cách 1: Chỉ khi nào nhân viên đang trong ca trực (attended) mới hiển thị
+  // Còn khi chưa vào ca, chưa có ca hoặc hết ca thì ẩn hoàn toàn để Card to ở giữa lo thông báo
+  if (!attended) {
+    return null
+  }
+
+  async function handleEndShift() {
+    setEnding(true)
     try {
-      await startCurrentShift()
-      setStarted(true)
+      await endCurrentShift()
+      setConfirmEndOpen(false)
+      window.dispatchEvent(new CustomEvent("staff-shift-changed"))
       toast.success(
         currentShift
-          ? `Đã bắt đầu ca ${currentShift.shiftName}`
-          : "Đã bắt đầu ca"
+          ? `Đã kết thúc ca ${currentShift.shiftName} và bàn giao ca thành công.`
+          : "Đã kết thúc ca làm việc và bàn giao thành công."
       )
+      loadProfile()
     } catch (err) {
       toast.error(getErrorMessage(err))
     } finally {
-      setStarting(false)
+      setEnding(false)
     }
   }
 
   return (
     <>
       <div className="flex items-center gap-2">
-        {shiftStatus === "IN_SHIFT" && currentShift && (
-          <button
-            type="button"
-            onClick={() => setModalOpen(true)}
-            title="Nhấp để xem chi tiết ca trực & hồ sơ nhân viên"
-            className="flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-100/80 px-3 py-1 text-xs font-bold text-emerald-800 transition hover:bg-emerald-200/90 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60 cursor-pointer shadow-2xs"
-          >
-            <span className="size-2 animate-pulse rounded-full bg-emerald-500" />
-            <span>
-              {attended ? "Ca Trực Hoạt Động" : "Trong Ca · Chưa Bắt Đầu"} (
-              {currentShift.shiftName}: {currentShift.startTime} -{" "}
-              {currentShift.endTime})
-            </span>
-          </button>
-        )}
+        <div
+          className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50/90 px-3 py-1 text-xs font-medium text-slate-700 select-none dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300"
+        >
+          <span className="size-1.5 rounded-full " />
+          <span>
+            Ca Trực Hoạt Động
+            {currentShift
+              ? ` · ${currentShift.shiftName} (${currentShift.startTime} - ${currentShift.endTime})`
+              : ""}
+          </span>
+        </div>
 
-        {shiftStatus === "IN_SHIFT" && currentShift && !attended && (
-          <button
-            type="button"
-            onClick={handleStartShift}
-            disabled={starting}
-            className="flex items-center gap-1.5 rounded-full border border-blue-300 bg-blue-600 px-3 py-1 text-xs font-bold text-white shadow-2xs transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
-          >
-            <PlayIcon className="size-3" />
-            <span>{starting ? "Đang bắt đầu…" : "Bắt đầu ca"}</span>
-          </button>
-        )}
-
-        {shiftStatus === "UPCOMING" && currentShift && (
-          <button
-            type="button"
-            onClick={() => setModalOpen(true)}
-            title="Nhấp để xem chi tiết ca trực & hồ sơ nhân viên"
-            className="flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-100/80 px-3 py-1 text-xs font-bold text-amber-900 transition hover:bg-amber-200/90 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-300 cursor-pointer shadow-2xs"
-          >
-            <ClockIcon className="size-3 text-amber-600 dark:text-amber-400" />
-            <span>
-              Ca Sắp Tới ({currentShift.shiftName}: {currentShift.startTime} - {currentShift.endTime})
-            </span>
-          </button>
-        )}
-
-        {shiftStatus === "ENDED" && (
-          <button
-            type="button"
-            onClick={() => setModalOpen(true)}
-            title="Nhấp để xem chi tiết ca trực & hồ sơ nhân viên"
-            className="flex items-center gap-1.5 rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 cursor-pointer shadow-2xs"
-          >
-            <span className="size-2 rounded-full bg-slate-400" />
-            <span>Đã Hết Ca Trực Hôm Nay</span>
-          </button>
-        )}
-
-        {shiftStatus === "NO_SHIFT" && (
-          <button
-            type="button"
-            onClick={() => setModalOpen(true)}
-            title="Nhấp để xem chi tiết ca trực & hồ sơ nhân viên"
-            className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100/70 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-200/80 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 cursor-pointer shadow-2xs"
-          >
-            <span className="size-2 rounded-full bg-slate-300 dark:bg-slate-600" />
-            <span>Chưa Có Phân Ca Hôm Nay</span>
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setConfirmEndOpen(true)}
+          disabled={ending}
+          className="flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50/90 px-2.5 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-100 hover:text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/50 dark:text-rose-300 dark:hover:bg-rose-900/60 cursor-pointer disabled:opacity-50"
+          title="Kết thúc ca làm việc"
+        >
+          <SquareIcon className="size-2.5 fill-current text-rose-600 dark:text-rose-400" />
+          <span>{ending ? "Đang kết thúc…" : "Kết thúc ca"}</span>
+        </button>
       </div>
 
-      <StaffProfileModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-      />
+      <Dialog open={confirmEndOpen} onOpenChange={setConfirmEndOpen}>
+        <DialogContent className="max-w-md rounded-2xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold text-slate-900 dark:text-white">
+              Xác Nhận Kết Thúc Ca Trực
+            </DialogTitle>
+            <DialogDescription className="space-y-2 pt-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed" render={<div />}>
+              <div className="text-sm text-slate-800 dark:text-slate-200">
+                Bạn có chắc chắn muốn kết thúc{" "}
+                <span className="font-bold text-slate-900 dark:text-white">
+                  {currentShift?.shiftName || "ca trực hiện tại"}
+                </span>{" "}
+                và bàn giao quầy không?
+              </div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">
+                Sau khi kết thúc ca, quyền thao tác nghiệp vụ tại quầy sẽ được
+                khóa lại cho đến khi nhân viên ca tiếp theo tiếp nhận.
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-5 flex items-center justify-end gap-2.5">
+            <button
+              type="button"
+              disabled={ending}
+              onClick={() => setConfirmEndOpen(false)}
+              className="cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 disabled:opacity-50"
+            >
+              Hủy bỏ
+            </button>
+            <button
+              type="button"
+              disabled={ending}
+              onClick={handleEndShift}
+              className="cursor-pointer rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-rose-700 disabled:opacity-50"
+            >
+              {ending ? "Đang xử lý…" : "Xác nhận kết thúc ca"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </>
   )
 }

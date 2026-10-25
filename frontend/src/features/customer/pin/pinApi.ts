@@ -21,7 +21,7 @@ const getStoredAccountId = (): number => {
     }
   } catch (e) {}
 
-  return 13;
+  return 0;
 };
 
 /**
@@ -37,14 +37,7 @@ export const getGatePin = async (branchCode: string) => {
     return res;
   } catch (error) {
     console.warn('Lỗi gọi API mã PIN:', error);
-    const p1 = Math.floor(100 + Math.random() * 900);
-    const p2 = Math.floor(100 + Math.random() * 900);
-    return {
-      success: true,
-      hasAccess: true,
-      pin: `${p1} ${p2}`,
-      ttlSeconds: 15
-    };
+    throw error;
   }
 };
 

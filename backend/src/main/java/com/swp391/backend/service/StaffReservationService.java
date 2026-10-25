@@ -138,11 +138,15 @@ public class StaffReservationService {
             return new StaffReservationListResponse(false, ex.getMessage(), List.of());
         }
 
+        LocalDate today = LocalDate.now();
         List<StaffReservationListItemResponse> reservations = reservationRepository
                 .findByFacilityId(employee.get().getFacilityId()).stream()
                 .map(this::toListItem)
                 .filter(item -> item.getContractStatus() != null &&
                         List.of(CONTRACT_PENDING_CHECKIN, CONTRACT_ACTIVE, CONTRACT_OVERDUE).contains(item.getContractStatus()))
+                .filter(item -> !CONTRACT_PENDING_CHECKIN.equals(item.getContractStatus())
+                        || item.getCheckInDate() == null
+                        || !item.getCheckInDate().isBefore(today))
                 .sorted(Comparator
                         .comparing((StaffReservationListItemResponse item) -> {
                             if (CONTRACT_PENDING_CHECKIN.equals(item.getContractStatus())) return 0;

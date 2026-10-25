@@ -33,7 +33,6 @@ function StaffPortalLayout() {
           />
 
           <SidebarInset className="relative z-10 flex min-h-screen flex-1 flex-col bg-transparent">
-            {/* Top mobile navigation bar (đồng bộ header với Manager) */}
             <div className="flex items-center gap-3 border-b border-slate-200/80 bg-slate-50/95 px-4 py-2.5 shadow-xs backdrop-blur-xl md:hidden dark:border-slate-800 dark:bg-slate-950/95">
               <span className="text-xs font-black tracking-wide uppercase text-slate-900 dark:text-white">
                 Smart Storage

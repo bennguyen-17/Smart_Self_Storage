@@ -4,7 +4,6 @@ import {
   CheckCircle2Icon,
   CircleCheckIcon,
   ClipboardCheckIcon,
-  ClockIcon,
   HeadphonesIcon,
   IdCardIcon,
   InfoIcon,
@@ -17,6 +16,8 @@ import { cn } from "cn"
 import { toast } from "sonner"
 
 import apiClient, { isMockMode } from "@/lib/apiClient"
+import { getErrorMessage } from "@/lib/api"
+import StaffShiftRequiredCard from "@/features/staff/components/StaffShiftRequiredCard"
 
 import StaffInspectionModal, {
   type InspectionTarget,
@@ -24,7 +25,7 @@ import StaffInspectionModal, {
 import StaffUnlockModal, { type UnlockTicketInfo } from "./StaffUnlockModal"
 import StaffShiftBadge from "@/features/staff/components/StaffShiftBadge"
 
-type TicketStatus = "SUBMITTED" | "ESCALATED" | "IN_PROGRESS" | "RESOLVED"
+type TicketStatus = "SUBMITTED" | "IN_PROGRESS" | "RESOLVED"
 
 export interface TicketItem {
   id: string | number
@@ -48,77 +49,16 @@ export interface TicketItem {
   createdAt?: string
 }
 
-const INITIAL_FALLBACK_TICKETS: TicketItem[] = [
-  {
-    id: 9901,
-    ticketCode: "TCK-202610-001",
-    title: "Mở Khóa Ô Kho Hộ (Quên Chìa)",
-    type: "INCIDENT",
-    status: "SUBMITTED",
-    customerName: "Nguyễn Văn Khách",
-    customerPhone: "0988 123 719",
-    identityNumber: "079201008899",
-    unitCode: "F2-M205",
-    contractCode: "HD-CG-2026-801",
-    description:
-      "Quên chìa khóa cơ ở nhà, đang đứng trước kho cần Staff lên đối chiếu CCCD và hỗ trợ mở khóa gấp.",
-    slaDeadline: new Date(
-      Date.now() + 13 * 60 * 1000 + 45 * 1000
-    ).toISOString(),
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 9905,
-    ticketCode: "TCK-202610-002",
-    title: "Trả Kho Sớm Trước Hạn",
-    type: "EARLY_TERMINATION",
-    status: "IN_PROGRESS",
-    customerName: "Trần Thị B",
-    customerPhone: "0912 345 678",
-    identityNumber: "079198007766",
-    unitCode: "F1-S105",
-    contractCode: "HD-CG-2026-902",
-    description:
-      "Đã dọn đồ xong trước hạn, hẹn nhân viên cùng ra kho kiểm tra hiện trạng và thanh lý cọc.",
-    desiredDate: "14:00 Hôm nay",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 9902,
-    ticketCode: "TCK-202610-003",
-    title: "Báo Cáo Cơ Sở Vật Chất (Đèn Trần Hỏng)",
-    type: "INCIDENT",
-    status: "IN_PROGRESS",
-    customerName: "Lê Văn C",
-    customerPhone: "0977 888 999",
-    unitCode: "F1-M102",
-    contractCode: "HD-CG-2026-750",
-    description:
-      "Bóng đèn trần Dãy 1 gần cửa kho F1-M102 bị chớp nháy liên tục, nhờ kỹ thuật kiểm tra thay bóng.",
-    slaDeadline: new Date(Date.now() + 8 * 60 * 1000 + 10 * 1000).toISOString(),
-    createdAt: new Date().toISOString(),
-  },
-]
-
 const FILTERS: { key: "ALL" | TicketStatus; label: string }[] = [
   { key: "ALL", label: "Tất Cả" },
-  { key: "ESCALATED", label: "Chuyển Quản Lý" },
   { key: "SUBMITTED", label: "Chờ Tiếp Nhận" },
   { key: "IN_PROGRESS", label: "Đang Xử Lý" },
   { key: "RESOLVED", label: "Đã Hoàn Tất" },
 ]
 
-function getSlaInfo(ticket: TicketItem, now: number) {
+function formatTicketTimeInfo(ticket: TicketItem) {
   if (ticket.status === "RESOLVED") {
-    return { text: "Đã Hoàn Tất", className: "text-muted", isBreached: false }
-  }
-
-  if (ticket.status === "ESCALATED" || ticket.isSlaBreached) {
-    return {
-      text: "Quá Hạn 15p - Chuyển Quản Lý",
-      className: "border border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/60 dark:text-rose-300 font-black animate-pulse",
-      isBreached: true,
-    }
+    return { text: "—", className: "text-slate-400 font-medium" }
   }
 
   if (ticket.type === "EARLY_TERMINATION") {
@@ -144,36 +84,35 @@ function getSlaInfo(ticket: TicketItem, now: number) {
           : `Hẹn ngày: ${ticket.desiredDate}`
         : "Hẹn Hôm Nay",
       className: isTodayOrPast
-        ? "border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
-        : "border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300",
-      isBreached: false,
+        ? "border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 font-medium"
+        : "border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 font-medium",
     }
   }
 
-  if (!ticket.slaDeadline) {
-    return { text: "15m SLA", className: "text-muted", isBreached: false }
-  }
-
-  const deadlineMs = new Date(ticket.slaDeadline).getTime()
-  const diffSec = Math.floor((deadlineMs - now) / 1000)
-
-  if (diffSec <= 0) {
+  if (ticket.desiredDate) {
     return {
-      text: "SLA Quá Hạn",
-      className: "text-rose-600 dark:text-rose-400 font-bold",
-      isBreached: true,
+      text: `Hẹn: ${ticket.desiredDate}`,
+      className: "border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 font-medium",
     }
   }
 
-  const m = Math.floor(diffSec / 60)
-  const s = diffSec % 60
-  const timeStr = `${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s SLA`
-
-  return {
-    text: timeStr,
-    className: m < 5 ? "text-rose-600 dark:text-rose-400 font-semibold" : "text-muted",
-    isBreached: false,
+  if (ticket.createdAt) {
+    try {
+      const d = new Date(ticket.createdAt)
+      if (!isNaN(d.getTime())) {
+        const hh = String(d.getHours()).padStart(2, "0")
+        const mm = String(d.getMinutes()).padStart(2, "0")
+        const dd = String(d.getDate()).padStart(2, "0")
+        const MM = String(d.getMonth() + 1).padStart(2, "0")
+        return {
+          text: `${hh}:${mm} - ${dd}/${MM}`,
+          className: "text-slate-600 dark:text-slate-300 font-medium",
+        }
+      }
+    } catch {}
   }
+
+  return { text: "—", className: "text-slate-400 font-medium" }
 }
 
 function formatTicketCode(code: string | undefined, ticketId?: string | number): string {
@@ -243,10 +182,10 @@ function getTicketTypeDisplayName(ticket: TicketItem): string {
 
 /** TAB 2: Hỗ trợ kỹ thuật & xử lý ticket sự cố động — kết nối API Staff Tickets & SLA (US-22, US-23) */
 function StaffTicketPanel() {
-  const [tickets, setTickets] = useState<TicketItem[]>(INITIAL_FALLBACK_TICKETS)
+  const [tickets, setTickets] = useState<TicketItem[]>([])
   const [filter, setFilter] = useState<"ALL" | TicketStatus>("ALL")
   const [searchQuery, setSearchQuery] = useState("")
-  const [now, setNow] = useState(Date.now())
+  const [shiftError, setShiftError] = useState<string | null>(null)
 
   // Modals state
   const [inspectionTarget, setInspectionTarget] =
@@ -258,17 +197,12 @@ function StaffTicketPanel() {
     null
   )
 
-  // Real-time SLA timer
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 5000)
-    return () => clearInterval(timer)
-  }, [])
-
   const fetchTickets = useCallback(async () => {
     try {
       if (!isMockMode()) {
         const res: any = await apiClient.get("/staff/tickets")
-        if (Array.isArray(res) && res.length > 0) {
+        setShiftError(null)
+        if (Array.isArray(res)) {
           const mapped: TicketItem[] = res.map((t: any) => ({
             id: t.id,
             ticketCode: t.ticketCode || `TCK-${t.id}`,
@@ -299,15 +233,48 @@ function StaffTicketPanel() {
           return
         }
       }
-      // If mock mode or empty backend data, retain rich fallback
-      setTickets(INITIAL_FALLBACK_TICKETS)
-    } catch {
-      setTickets(INITIAL_FALLBACK_TICKETS)
+      if (isMockMode()) {
+        setTickets([])
+      } else {
+        setTickets([])
+      }
+      setShiftError(null)
+    } catch (err: any) {
+      const msg = getErrorMessage(err)
+      const lower = msg.toLowerCase()
+      const isShiftErr =
+        err?.response?.status === 403 ||
+        lower.includes("bắt đầu ca") ||
+        lower.includes("ca được phân công") ||
+        lower.includes("tiếp nhận ca") ||
+        lower.includes("ca trực") ||
+        lower.includes("chưa tiếp nhận ca") ||
+        lower.includes("quyền") ||
+        lower.includes("chưa được gắn cơ sở")
+
+      if (isShiftErr) {
+        setShiftError(msg)
+        setTickets([])
+        return
+      }
+      if (isMockMode()) {
+        setTickets([])
+      } else {
+        setTickets([])
+      }
+      setShiftError(null)
     }
   }, [])
 
   useEffect(() => {
     fetchTickets()
+    const handleShiftChange = () => {
+      fetchTickets()
+    }
+    window.addEventListener("staff-shift-changed", handleShiftChange)
+    return () => {
+      window.removeEventListener("staff-shift-changed", handleShiftChange)
+    }
   }, [fetchTickets])
 
   function updateStatus(id: string | number, nextStatus: TicketStatus) {
@@ -483,7 +450,9 @@ function StaffTicketPanel() {
         </div>
 
         {/* TICKET VIEW (LIST OR GRID) */}
-        {filtered.length === 0 ? (
+        {shiftError ? (
+          <StaffShiftRequiredCard onStarted={fetchTickets} />
+        ) : filtered.length === 0 ? (
           <div className="card-box flex flex-col items-center justify-center rounded-2xl border py-12 text-center text-muted">
             <CheckCircle2Icon className="mb-2 size-10 text-muted" />
             <h4 className="text-title text-sm font-bold">
@@ -503,14 +472,14 @@ function StaffTicketPanel() {
                   <th className="px-4 py-3.5 text-center whitespace-nowrap">Vị trí Ô Kho</th>
                   <th className="px-4 py-3.5 text-center whitespace-nowrap">Khách Hàng</th>
                   <th className="min-w-[220px] max-w-[380px] px-4 py-3.5 text-center whitespace-nowrap">Nội Dung Yêu Cầu</th>
-                  <th className="px-4 py-3.5 text-center whitespace-nowrap">Thời Hạn / Hẹn</th>
+                  <th className="px-4 py-3.5 text-center whitespace-nowrap">Thời Gian / Lịch Hẹn</th>
                   <th className="px-4 py-3.5 text-center whitespace-nowrap">Trạng Thái</th>
                   <th className="px-4 py-3.5 text-center whitespace-nowrap">Thao Tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                 {filtered.map((ticket) => {
-                  const sla = getSlaInfo(ticket, now)
+                  const timeInfo = formatTicketTimeInfo(ticket)
                   const isUnlock =
                     ticket.type === "INCIDENT" &&
                     (ticket.title.toLowerCase().includes("mở khóa") ||
@@ -585,16 +554,15 @@ function StaffTicketPanel() {
                         </p>
                       </td>
 
-                      {/* Cột 5: Thời hạn SLA */}
+                      {/* Cột 5: Thời gian / Lịch hẹn */}
                       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
                         <span
                           className={cn(
-                            "inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black whitespace-nowrap",
-                            sla.className
+                            "inline-flex items-center rounded-full px-2.5 py-1 text-xs whitespace-nowrap",
+                            timeInfo.className
                           )}
                         >
-                          <ClockIcon className="mr-1 inline size-2.5" />
-                          {sla.text}
+                          {timeInfo.text}
                         </span>
                       </td>
 
@@ -603,43 +571,31 @@ function StaffTicketPanel() {
                         <div className="flex flex-col items-center">
                           <span
                             className={cn(
-                              "rounded-md border px-2 py-0.5 text-[10px] font-extrabold whitespace-nowrap",
-                              ticket.status === "ESCALATED"
-                                ? "border-rose-300 bg-rose-100 text-rose-800 dark:border-rose-800 dark:bg-rose-950/60 dark:text-rose-300"
-                                : ticket.status === "SUBMITTED"
-                                  ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
-                                  : ticket.status === "IN_PROGRESS"
-                                    ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300"
-                                    : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                              "inline-flex min-w-[104px] items-center justify-center rounded-full border px-3.5 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs",
+                              ticket.status === "SUBMITTED"
+                                ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+                                : ticket.status === "IN_PROGRESS"
+                                  ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300"
+                                  : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
                             )}
                           >
-                            {ticket.status === "ESCALATED"
-                              ? "🚨 ĐÃ CHUYỂN QUẢN LÝ"
-                              : ticket.status === "SUBMITTED"
-                                ? "⌛ Chờ Tiếp Nhận"
-                                : ticket.status === "IN_PROGRESS"
-                                  ? "⚙ Đang Xử Lý"
-                                  : "✓ Đã Hoàn Tất"}
+                            {ticket.status === "SUBMITTED"
+                              ? "Chờ Tiếp Nhận"
+                              : ticket.status === "IN_PROGRESS"
+                                ? "Đang Xử Lý"
+                                : "Đã Hoàn Tất"}
                           </span>
-                          {ticket.assignedStaffName && ticket.status !== "SUBMITTED" && ticket.status !== "ESCALATED" && (
-                            <span className="text-[10px] text-slate-500 mt-0.5">
-                              ({ticket.assignedStaffName})
-                            </span>
-                          )}
                         </div>
                       </td>
 
                       {/* Cột 7: Thao tác */}
                       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
-                          {(ticket.status === "SUBMITTED" || ticket.status === "ESCALATED") && (
+                          {ticket.status === "SUBMITTED" && (
                             <button
                               type="button"
                               onClick={() => handleClaim(ticket)}
-                              className={cn(
-                                "inline-flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap text-white shadow-xs transition hover:opacity-90",
-                                ticket.status === "ESCALATED" ? "bg-rose-600 hover:bg-rose-700" : "bg-blue-600 hover:bg-blue-700"
-                              )}
+                              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-white shadow-xs transition hover:bg-blue-700"
                             >
                               <UserCheckIcon className="size-3.5" />
                               <span>Tiếp Nhận</span>

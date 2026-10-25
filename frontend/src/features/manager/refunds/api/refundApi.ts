@@ -1,11 +1,11 @@
 // Hoàn tiền cho khách do Manager xác nhận (BR-35, US-26).
 // Đã kết nối API B1: /api/manager/refunds và /api/manager/refunds/{paymentId}/confirm
 
-import { type ConfirmRefundPayload } from "@/features/staff/reservations/api/refundApi"
+
 import { unwrapApiData } from "@/lib/api"
 import apiClient from "@/lib/apiClient"
 
-import type { ManagerRefund, RefundState } from "../types"
+import type { ConfirmRefundPayload, ManagerRefund, RefundState } from "../types"
 
 export const REFUND_LIST_PATH = "/manager/refunds"
 
