@@ -41,6 +41,9 @@ export default function BomReportsPage() {
   // Modal chi tiết cơ sở
   const [selectedFacilityDetail, setSelectedFacilityDetail] = useState<FacilityBreakdownItem | null>(null)
 
+  // Biểu đồ cột: chỉ số đang hiển thị
+  const [chartMetric, setChartMetric] = useState<"occupancy" | "revenue" | "units">("occupancy")
+
   const breakdownList = chainOverview?.facilityBreakdown || []
 
   // Xử lý làm mới dữ liệu
@@ -362,89 +365,153 @@ export default function BomReportsPage() {
         </div>
       </div>
 
-      {/* 3. TRỰC QUAN HÓA: SO SÁNH HIỆU SUẤT & TỶ LỆ LẤP ĐẦY TỪNG CƠ SỞ */}
-      <div className="bg-slate-950/75 backdrop-blur-md p-6 rounded-3xl border border-slate-800 shadow-xl space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-4">
+      {/* 3. BIỂU ĐỒ CỘT SO SÁNH HIỆU SUẤT & DÒNG TIỀN 7 CƠ SỞ */}
+      <div className="bg-slate-950/75 backdrop-blur-md p-6 rounded-3xl border border-slate-800 shadow-xl space-y-6">
+        {/* Header biểu đồ */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
           <div className="flex items-center gap-2.5">
             <span className="p-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400">
-              <BarChart3 className="size-4" />
+              <BarChart3 className="size-5" />
             </span>
             <div>
               <h3 className="font-black text-sm uppercase text-white tracking-wide">
-                BẢNG XẾP HẠNG &amp; SO SÁNH CÔNG SUẤT 7 CƠ SỞ
+                BIỂU ĐỒ CỘT SO SÁNH HIỆU SUẤT &amp; CÔNG SUẤT 7 CƠ SỞ
               </h3>
-              <p className="text-[11px] text-slate-400">
-                Trực quan hóa tỷ lệ lấp đầy, số kho đang thuê và đóng góp doanh thu của từng chi nhánh
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Trực quan hóa dạng cột so sánh tỷ lệ lấp đầy, doanh thu thực thu và công suất khai thác
               </p>
             </div>
           </div>
-          <div className="text-xs text-slate-400 font-mono">
-            Tổng: <b className="text-sky-400">{breakdownList.length}</b> cơ sở
+
+          {/* Tab chuyển đổi chỉ số hiển thị */}
+          <div className="flex items-center p-1 bg-slate-900 rounded-2xl border border-slate-800 text-xs font-bold self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setChartMetric("occupancy")}
+              className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
+                chartMetric === "occupancy"
+                  ? "bg-sky-500 text-slate-950 font-black shadow-md"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Tỷ Lệ Lấp Đầy (%)
+            </button>
+            <button
+              type="button"
+              onClick={() => setChartMetric("revenue")}
+              className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
+                chartMetric === "revenue"
+                  ? "bg-sky-500 text-slate-950 font-black shadow-md"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Doanh Thu Thực Thu
+            </button>
+            <button
+              type="button"
+              onClick={() => setChartMetric("units")}
+              className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
+                chartMetric === "units"
+                  ? "bg-sky-500 text-slate-950 font-black shadow-md"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Công Suất Ô Kho
+            </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
-          {breakdownList.map((item, idx) => {
-            const occ = Number(item.occupancyRate || 0)
-            const isHigh = occ >= 20
-            const isMedium = occ >= 10 && occ < 20
+        {/* Khung Biểu đồ cột */}
+        <div className="relative pt-6 pb-2">
+          {/* Lưới ngang tham chiếu (Grid lines) */}
+          <div className="absolute inset-x-0 top-6 bottom-20 flex flex-col justify-between pointer-events-none opacity-20 z-0">
+            <div className="border-b border-dashed border-slate-400 w-full" />
+            <div className="border-b border-dashed border-slate-400 w-full" />
+            <div className="border-b border-dashed border-slate-400 w-full" />
+            <div className="border-b border-slate-600 w-full" />
+          </div>
+
+          {/* Các cột hiển thị */}
+          {(() => {
+            const maxOccupancy = Math.max(...breakdownList.map((r) => Number(r.occupancyRate || 0)), 35)
+            const maxRevenue = Math.max(...breakdownList.map((r) => Number(r.netRevenue || 0)), 22000000)
+            const maxUnits = Math.max(...breakdownList.map((r) => Number(r.totalUnits || 0)), 50)
 
             return (
-              <div
-                key={item.facilityId || idx}
-                onClick={() => setSelectedFacilityDetail(item)}
-                className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-sky-500/40 hover:bg-slate-900 transition cursor-pointer space-y-3 group"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="text-[10px] font-mono text-sky-400 font-bold uppercase">
-                      {item.facilityCode}
-                    </div>
-                    <div className="font-extrabold text-white text-xs mt-0.5 group-hover:text-sky-300 transition-colors">
-                      {item.facilityName}
-                    </div>
-                  </div>
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                      isHigh
-                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                        : isMedium
-                        ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
-                        : "bg-slate-800 text-slate-400 border border-slate-700"
-                    }`}
-                  >
-                    {occ}% Lấp đầy
-                  </span>
-                </div>
+              <div className="grid grid-cols-7 gap-2 sm:gap-4 items-end h-72 relative z-10 px-2 sm:px-4">
+                {breakdownList.map((item, idx) => {
+                  const occ = Number(item.occupancyRate || 0)
+                  const rev = Number(item.netRevenue || 0)
+                  const totalU = Number(item.totalUnits || 0)
+                  const occU = Number(item.occupiedUnits || 0)
 
-                {/* Progress bar */}
-                <div className="space-y-1">
-                  <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+                  // Tính toán % chiều cao cột tùy theo chỉ số
+                  let heightPercent = 10
+                  let topLabel = ""
+                  let barGradient = "from-sky-600 to-sky-400"
+
+                  if (chartMetric === "occupancy") {
+                    heightPercent = Math.max(Math.round((occ / maxOccupancy) * 100), 6)
+                    topLabel = `${occ}%`
+                    barGradient =
+                      occ >= 20
+                        ? "from-emerald-600 via-emerald-500 to-emerald-400 shadow-emerald-500/20"
+                        : occ >= 10
+                        ? "from-sky-600 via-sky-500 to-sky-400 shadow-sky-500/20"
+                        : "from-slate-700 via-slate-600 to-slate-500"
+                  } else if (chartMetric === "revenue") {
+                    heightPercent = Math.max(Math.round((rev / maxRevenue) * 100), 6)
+                    topLabel = `₫${(rev / 1000000).toFixed(1)} Tr`
+                    barGradient = "from-sky-600 via-sky-500 to-cyan-400 shadow-sky-500/25"
+                  } else {
+                    heightPercent = Math.max(Math.round((occU / maxUnits) * 100), 6)
+                    topLabel = `${occU}/${totalU}`
+                    barGradient = "from-indigo-600 via-sky-500 to-cyan-300 shadow-indigo-500/20"
+                  }
+
+                  const shortName = item.facilityName.replace(/^SmartStorage\s*/i, "").trim()
+
+                  return (
                     <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        isHigh ? "bg-emerald-500" : isMedium ? "bg-sky-500" : "bg-slate-600"
-                      }`}
-                      style={{ width: `${Math.min(occ, 100)}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] text-slate-400">
-                    <span>{item.occupiedUnits} / {item.totalUnits} Kho đã thuê</span>
-                    <span>Còn {item.availableUnits} trống</span>
-                  </div>
-                </div>
+                      key={item.facilityId || idx}
+                      onClick={() => setSelectedFacilityDetail(item)}
+                      className="flex flex-col items-center h-full justify-end group cursor-pointer"
+                      title={`${item.facilityName} (${item.facilityCode}): Click để xem chi tiết`}
+                    >
+                      {/* Số liệu trên đỉnh cột */}
+                      <div className="font-mono font-black text-[11px] sm:text-xs text-sky-300 group-hover:text-white transition-colors mb-2 text-center whitespace-nowrap">
+                        {topLabel}
+                      </div>
 
-                {/* Doanh thu & người quản lý */}
-                <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
-                  <div className="text-[11px] text-slate-400 truncate max-w-[120px]">
-                    QL: <b className="text-slate-300">{item.managerName || "Chưa gán"}</b>
-                  </div>
-                  <div className="font-mono font-black text-sky-400 text-xs">
-                    ₫{Number(item.netRevenue || 0).toLocaleString("vi-VN")}
-                  </div>
-                </div>
+                      {/* Cột đồ họa (Column Bar) */}
+                      <div className="w-full flex justify-center items-end h-44">
+                        <div
+                          className={`w-full max-w-[40px] sm:max-w-[48px] rounded-t-xl bg-gradient-to-t ${barGradient} group-hover:brightness-125 transition-all duration-300 shadow-lg relative`}
+                          style={{ height: `${heightPercent}%` }}
+                        >
+                          {/* Hiệu ứng bóng phản chiếu nhẹ trên cột */}
+                          <div className="absolute inset-x-0 top-0 h-1.5 bg-white/30 rounded-t-xl" />
+                        </div>
+                      </div>
+
+                      {/* Nhãn trục X dưới chân cột */}
+                      <div className="mt-3 text-center space-y-1 w-full">
+                        <div className="inline-block px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-mono font-bold text-sky-400 border border-slate-700 group-hover:bg-sky-500 group-hover:text-slate-950 transition">
+                          {item.facilityCode}
+                        </div>
+                        <div className="font-extrabold text-[11px] sm:text-xs text-slate-200 group-hover:text-sky-300 transition-colors truncate w-full">
+                          {shortName}
+                        </div>
+                        <div className="text-[10px] text-slate-500 truncate w-full hidden sm:block">
+                          {item.managerName || "Chưa gán"}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             )
-          })}
+          })()}
         </div>
       </div>
 
