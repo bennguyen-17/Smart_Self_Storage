@@ -487,7 +487,17 @@ public class StorageService {
                     dto.setStatus(ut.getStatus());
 
                     String lower = ut.getTypeName().toLowerCase();
-                    if (lower.contains("size s") || lower.contains("tủ cá nhân")) {
+                    if (lower.contains("size xxl") || lower.contains("xxl")) {
+                        dto.setSize("XXL");
+                        dto.setDescription("Kho diện tích lớn đặc biệt");
+                        dto.setArea("15.0m²");
+                        dto.setHeight("2.5m");
+                    } else if (lower.contains("size xl") || lower.contains("kho doanh nghiệp") || lower.contains("xl")) {
+                        dto.setSize("XL");
+                        dto.setDescription("Kho doanh nghiệp lưu kho hàng hóa, máy móc, nguyên vật liệu");
+                        dto.setArea("10.0m²");
+                        dto.setHeight("2.0m");
+                    } else if (lower.contains("size s") || lower.contains("tủ cá nhân")) {
                         dto.setSize("S");
                         dto.setDescription("Tủ cá nhân đồ đạc nhỏ, balo, vali, tài liệu cá nhân");
                         dto.setArea("1.0m²");
@@ -497,15 +507,15 @@ public class StorageService {
                         dto.setDescription("Phòng chứa lớn đồ gia đình 3-4 phòng, nội thất, pallet");
                         dto.setArea("6.0m²");
                         dto.setHeight("2.0m");
-                    } else if (lower.contains("size xl") || lower.contains("kho doanh nghiệp")) {
-                        dto.setSize("XL");
-                        dto.setDescription("Kho doanh nghiệp lưu kho hàng hóa, máy móc, nguyên vật liệu");
-                        dto.setArea("10.0m²");
-                        dto.setHeight("2.0m");
-                    } else {
+                    } else if (lower.contains("size m") || lower.contains("phòng vừa")) {
                         dto.setSize("M");
                         dto.setDescription("Phòng vừa đồ gia đình nhỏ, xe máy, 15-20 thùng carton");
                         dto.setArea("3.0m²");
+                        dto.setHeight("2.0m");
+                    } else {
+                        dto.setSize(reqCustomSize(ut.getTypeName()));
+                        dto.setDescription("Loại kho lưu trữ tiêu chuẩn");
+                        dto.setArea("Tiêu chuẩn");
                         dto.setHeight("2.0m");
                     }
 
@@ -571,6 +581,70 @@ public class StorageService {
         BigDecimal surcharge = saved.getClimateSurchargePercent().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         req.setAcPrice(saved.getMonthlyPrice().multiply(BigDecimal.ONE.add(surcharge)).setScale(0, RoundingMode.HALF_UP));
         return req;
+    }
+
+    private String reqCustomSize(String typeName) {
+        if (typeName == null) return "CUSTOM";
+        if (typeName.toUpperCase().startsWith("SIZE ")) {
+            String[] parts = typeName.split(" ");
+            if (parts.length > 1) return parts[1].replace("(", "").trim().toUpperCase();
+        }
+        return typeName.length() <= 6 ? typeName.toUpperCase() : "CUSTOM";
+    }
+
+    // --- BOM: Thêm loại ô kho mới kèm bảng giá & mức cọc vào Database ---
+    @Transactional
+    public PriceDto createPrice(PriceDto req) {
+        UnitType ut = new UnitType();
+        String sizeCode = (req.getSize() != null && !req.getSize().trim().isEmpty()) ? req.getSize().trim().toUpperCase() : "CUSTOM";
+        String displayName = (req.getName() != null && !req.getName().trim().isEmpty()) ? req.getName().trim() : "Kho Mới";
+        if (!displayName.toUpperCase().startsWith("SIZE ") && !displayName.toUpperCase().contains(sizeCode)) {
+            ut.setTypeName(String.format("Size %s (%s)", sizeCode, displayName));
+        } else {
+            ut.setTypeName(displayName);
+        }
+
+        ut.setSize(req.getDimensions() != null && !req.getDimensions().trim().isEmpty() ? req.getDimensions().trim() : "2.0m x 2.0m x 2.0m");
+        ut.setStorageCondition("NORMAL");
+        ut.setStatus("ACTIVE");
+        UnitType savedUt = unitTypeRepository.save(ut);
+
+        Price price = new Price();
+        price.setUnitTypeId(savedUt.getUnitTypeId());
+        price.setDailyPrice(req.getDailyPrice() != null ? req.getDailyPrice() : BigDecimal.valueOf(50000));
+        price.setMonthlyPrice(req.getMonthlyPrice() != null ? req.getMonthlyPrice() : BigDecimal.valueOf(1000000));
+        price.setDepositAmount(req.getDepositAmount() != null ? req.getDepositAmount() : BigDecimal.valueOf(1000000));
+        price.setClimateSurchargePercent(req.getClimateSurchargePercent() != null ? req.getClimateSurchargePercent() : BigDecimal.valueOf(20.00));
+        price.setEffectiveFrom(java.time.LocalDate.now());
+        price.setStatus("ACTIVE");
+        Price savedPrice = priceRepository.save(price);
+
+        req.setUnitTypeId(savedUt.getUnitTypeId());
+        req.setPriceId(savedPrice.getPriceId());
+        req.setName(savedUt.getTypeName());
+        req.setSize(sizeCode);
+        req.setDimensions(savedUt.getSize());
+        req.setStatus("ACTIVE");
+        BigDecimal surcharge = savedPrice.getClimateSurchargePercent().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        req.setAcPrice(savedPrice.getMonthlyPrice().multiply(BigDecimal.ONE.add(surcharge)).setScale(0, RoundingMode.HALF_UP));
+        return req;
+    }
+
+    // --- BOM: Xóa mềm loại ô kho & bảng giá khỏi hệ thống ---
+    @Transactional
+    public void deletePrice(Integer unitTypeId) {
+        UnitType ut = unitTypeRepository.findById(unitTypeId).orElse(null);
+        if (ut != null) {
+            ut.setStatus("INACTIVE");
+            unitTypeRepository.save(ut);
+        }
+
+        Optional<Price> priceOpt = priceRepository.findByUnitTypeIdAndStatus(unitTypeId, "ACTIVE");
+        if (priceOpt.isPresent()) {
+            Price price = priceOpt.get();
+            price.setStatus("INACTIVE");
+            priceRepository.save(price);
+        }
     }
 
     // --- Thêm cơ sở kho mới vào Database kèm Tự Động Sinh Tầng & Ô Kho theo Layout ---

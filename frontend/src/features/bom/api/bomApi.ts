@@ -98,4 +98,18 @@ export const bomApi = {
   updatePrice: async (unitTypeId: number, data: { dailyPrice?: number; monthlyPrice?: number; depositAmount?: number; climateSurchargePercent?: number }): Promise<any> => {
     return apiClient.put(`/prices/${unitTypeId}`, data)
   },
+  createPrice: async (data: {
+    name: string
+    size?: string
+    dimensions: string
+    dailyPrice: number
+    monthlyPrice: number
+    depositAmount: number
+    climateSurchargePercent?: number
+  }): Promise<any> => {
+    return apiClient.post('/prices', data)
+  },
+  deletePrice: async (unitTypeId: number): Promise<any> => {
+    return apiClient.delete(`/prices/${unitTypeId}`)
+  },
 }

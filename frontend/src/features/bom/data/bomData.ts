@@ -25,7 +25,7 @@ export interface FacilityPerformance {
 export interface UnitPricing {
   id: string
   unitTypeId?: number
-  size: "S" | "M" | "L" | "XL"
+  size: "S" | "M" | "L" | "XL" | string
   name: string
   description: string
   dimensions: string

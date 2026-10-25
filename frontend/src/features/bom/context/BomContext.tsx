@@ -23,6 +23,16 @@ interface BomContextType {
   formatShortCurrency: (val?: number) => string
   reloadData: () => Promise<void>
   updatePricingInDb: (unitTypeId: number, data: { dailyPrice?: number; monthlyPrice?: number; depositAmount?: number; climateSurchargePercent?: number }) => Promise<boolean>
+  createPricingInDb: (data: {
+    name: string
+    size?: string
+    dimensions: string
+    dailyPrice: number
+    monthlyPrice: number
+    depositAmount: number
+    climateSurchargePercent?: number
+  }) => Promise<boolean>
+  deletePricingInDb: (unitTypeId: number) => Promise<boolean>
   createFacilityInDb: (data: {
     facilityName: string
     address: string
@@ -281,6 +291,38 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // Thêm loại kho mới vào Database
+  const createPricingInDb = async (data: {
+    name: string
+    size?: string
+    dimensions: string
+    dailyPrice: number
+    monthlyPrice: number
+    depositAmount: number
+    climateSurchargePercent?: number
+  }): Promise<boolean> => {
+    try {
+      await bomApi.createPrice(data)
+      await loadLiveData()
+      return true
+    } catch (err) {
+      console.error("Lỗi thêm loại kho vào database:", err)
+      return false
+    }
+  }
+
+  // Xóa mềm loại kho khỏi Database
+  const deletePricingInDb = async (unitTypeId: number): Promise<boolean> => {
+    try {
+      await bomApi.deletePrice(unitTypeId)
+      await loadLiveData()
+      return true
+    } catch (err) {
+      console.error("Lỗi xóa loại kho khỏi database:", err)
+      return false
+    }
+  }
+
   // Thêm cơ sở kho lưu trực tiếp vào Database
   const createFacilityInDb = async (data: {
     facilityName: string
@@ -405,6 +447,8 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
         formatShortCurrency,
         reloadData: loadLiveData,
         updatePricingInDb,
+        createPricingInDb,
+        deletePricingInDb,
         createFacilityInDb,
         updateFacilityInDb,
         deleteFacilityInDb,
