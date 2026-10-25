@@ -361,9 +361,6 @@ function BomLayoutContent() {
               </div>
 
               <div className="space-y-2 pt-1">
-                <div className="text-[11px] font-black uppercase text-slate-400">
-                  1. Thông tin Định danh &amp; Công tác
-                </div>
                 <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 font-semibold">
                   <div className="flex justify-between">
                     <span className="text-slate-500">Họ và Tên:</span>
