@@ -6,9 +6,9 @@ import RefundConfirmForm, { type RefundConfirmFormProps } from "./RefundConfirmF
 
 // Giả lập API và cờ mock để test không gọi mạng
 const env = vi.hoisted(() => ({ mockMode: false }))
-const { confirmRefundPayment } = vi.hoisted(() => ({ confirmRefundPayment: vi.fn() }))
+const { confirmRefund } = vi.hoisted(() => ({ confirmRefund: vi.fn() }))
 vi.mock("@/lib/apiClient", () => ({ default: {}, isMockMode: () => env.mockMode }))
-vi.mock("../api/refundApi", () => ({ confirmRefundPayment }))
+vi.mock("../api/refundApi", () => ({ confirmRefund }))
 
 const STAFF = { id: 5, fullName: "Nguyễn Văn Nhân Viên 1", role: "STAFF" }
 const LINK = "https://drive.google.com/file/d/1AbC/view"
@@ -29,7 +29,7 @@ function renderForm(props: Partial<RefundConfirmFormProps> = {}) {
 
 beforeEach(() => {
   env.mockMode = false
-  confirmRefundPayment.mockReset().mockResolvedValue(undefined)
+  confirmRefund.mockReset().mockResolvedValue(undefined)
   localStorage.setItem("user", JSON.stringify(STAFF))
 })
 afterEach(() => localStorage.clear())
@@ -92,7 +92,7 @@ describe("RefundConfirmForm khi chạy thật: biên lai là link (BE chỉ lưu
     await user.type(linkInput(), LINK)
     expect(confirmButton()).toBeEnabled()
     await user.click(confirmButton())
-    expect(confirmRefundPayment).toHaveBeenCalledWith(61, { evidenceUrl: LINK, transactionRef: "" })
+    expect(confirmRefund).toHaveBeenCalledWith(61, { evidenceUrl: LINK, transactionRef: "" })
     expect(onConfirmed).toHaveBeenCalledTimes(1)
   })
 
@@ -101,11 +101,11 @@ describe("RefundConfirmForm khi chạy thật: biên lai là link (BE chỉ lưu
     await user.type(linkInput(), LINK)
     await user.type(screen.getByLabelText(/mã giao dịch ngân hàng/i), "FT2610028891")
     await user.click(confirmButton())
-    expect(confirmRefundPayment).toHaveBeenCalledWith(61, { evidenceUrl: LINK, transactionRef: "FT2610028891" })
+    expect(confirmRefund).toHaveBeenCalledWith(61, { evidenceUrl: LINK, transactionRef: "FT2610028891" })
   })
 
   test("BE báo lỗi → hiện lỗi, không báo thành công", async () => {
-    confirmRefundPayment.mockRejectedValue(new Error("Không tìm thấy hóa đơn hoàn tiền hợp lệ!"))
+    confirmRefund.mockRejectedValue(new Error("Không tìm thấy hóa đơn hoàn tiền hợp lệ!"))
     const { user, confirmButton, linkInput, onConfirmed } = renderForm()
     await user.type(linkInput(), LINK)
     await user.click(confirmButton())
@@ -123,7 +123,7 @@ describe("RefundConfirmForm khi demo: cho chọn ảnh từ máy", () => {
     expect(await screen.findByText(/đã chọn ảnh biên lai/i)).toBeInTheDocument()
     expect(confirmButton()).toBeEnabled()
     await user.click(confirmButton())
-    expect(confirmRefundPayment).toHaveBeenCalledWith(61, {
+    expect(confirmRefund).toHaveBeenCalledWith(61, {
       evidenceUrl: expect.stringMatching(/^data:image\/png;base64,/),
       transactionRef: "",
     })

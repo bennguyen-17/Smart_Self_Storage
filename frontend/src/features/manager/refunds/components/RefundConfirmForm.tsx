@@ -8,7 +8,8 @@ import { getErrorMessage } from "@/lib/api"
 import { isMockMode } from "@/lib/apiClient"
 import { formatVnd } from "@/lib/format"
 
-import { confirmRefundPayment, type ConfirmRefundPayload } from "../api/refundApi"
+import { confirmRefund } from "../api/refundApi"
+import type { ConfirmRefundPayload } from "../types"
 import { EVIDENCE_URL_MAX, getRefundBlockers, REFUND_BLOCKER_LABEL } from "../refundRules"
 
 /** Ảnh biên lai mẫu, CHỈ dùng khi demo ở chế độ mock */
@@ -37,7 +38,7 @@ function RefundConfirmForm({
   refundAmount,
   bankAccount,
   onConfirmed,
-  submit = confirmRefundPayment,
+  submit = confirmRefund,
 }: RefundConfirmFormProps) {
   const demo = isMockMode()
   const [evidenceUrl, setEvidenceUrl] = useState("")

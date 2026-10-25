@@ -15,7 +15,7 @@ import {
   TableCard,
 } from "@/components/internal/components/PanelKit"
 import { usePagedRows } from "@/components/internal/usePagedRows"
-import RefundConfirmForm from "@/features/staff/reservations/components/RefundConfirmForm"
+import RefundConfirmForm from "./RefundConfirmForm"
 import { useAsyncData } from "@/hooks/useAsyncData"
 import { formatDateTime, formatVnd } from "@/lib/format"
 
