@@ -12,8 +12,6 @@ import {
   X,
   LogOut,
   PanelLeft,
-  LayoutGrid,
-  ChevronRight,
 } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 import { useTheme } from "@/components/common/theme-provider"
@@ -196,29 +194,10 @@ function BomLayoutContent() {
               className={`fixed top-[58px] bottom-0 left-0 z-40 w-64 bg-white/95 text-slate-900 shadow-sm backdrop-blur-2xl border-r border-slate-200/80 dark:border-sky-500/20 dark:bg-slate-950/95 dark:text-white flex flex-col justify-between p-4 transition-transform duration-300 lg:translate-x-0 ${isMobileSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
                 }`}
             >
-              {/* Phần trên: Nút quay lại Tổng quan & Danh mục 4 Phân hệ */}
+              {/* Phần trên: Danh mục Phân hệ */}
               <div className="space-y-4">
-                {/* Nút Quay Về Tổng Quan (Hub 4 Cụm) */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigate("/bom")
-                    setIsMobileSidebarOpen(false)
-                  }}
-                  className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition cursor-pointer group shadow-xs dark:text-slate-300 dark:hover:text-white dark:bg-slate-800/70 dark:hover:bg-slate-800 dark:border-slate-700/60"
-                  title="Quay về trang Tổng quan 4 cụm chức năng"
-                >
-                  <div className="size-8 rounded-xl bg-sky-500/15 text-sky-600 group-hover:bg-sky-500 group-hover:text-slate-950 flex items-center justify-center transition-colors shrink-0 dark:text-sky-400">
-                    <LayoutGrid className="size-4.5" />
-                  </div>
-                  <div className="text-left flex-1 min-w-0">
-                    <div className="text-xs font-black text-slate-900 dark:text-white truncate">Tổng Quan</div>
-                  </div>
-                  <ChevronRight className="size-4 text-slate-400 group-hover:text-sky-600 group-hover:translate-x-0.5 transition shrink-0 dark:text-slate-500 dark:group-hover:text-sky-400" />
-                </button>
-
                 {/* Tiêu đề nhóm quản trị */}
-                <div className="pt-2">
+                <div>
                   <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 px-2 pb-2">
                     Danh Mục Quản Lý
                   </div>
