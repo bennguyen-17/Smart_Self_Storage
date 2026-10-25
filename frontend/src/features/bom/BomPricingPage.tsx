@@ -374,50 +374,74 @@ export default function BomPricingPage() {
             ))}
           </div>
 
-          {/* Dạng thẻ gọn gàng cho từng khoản phí */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {filteredSurcharges.map((sc) => {
-              const badgeConfig = {
-                surcharge: { label: "Phụ Thu Dịch Vụ", style: "bg-slate-800 text-slate-300 border-slate-700" },
-                penalty: { label: "Phí Phạt Quá Hạn", style: "bg-slate-800 text-slate-300 border-slate-700" },
-                discount: { label: "Chính Sách Miễn Giảm", style: "bg-slate-800 text-slate-300 border-slate-700" },
-              }[sc.category] || { label: "Khác", style: "bg-slate-800 text-slate-300 border-slate-700" }
+          {/* Dạng bảng cột cho từng khoản phí */}
+          <div className="overflow-x-auto rounded-2xl border border-slate-800">
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-800 bg-slate-900/90 uppercase font-black text-slate-300 text-[10px]">
+                  <th className="p-3.5 text-left">Tên Biểu Phí &amp; Chính Sách</th>
+                  <th className="p-3.5 text-center">Phân Loại Danh Mục</th>
+                  <th className="p-3.5 text-center">Hình Thức Áp Dụng</th>
+                  <th className="p-3.5 text-right">Mức Phí Áp Dụng</th>
+                  <th className="p-3.5 text-center">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800 font-semibold text-slate-300">
+                {filteredSurcharges.map((sc) => {
+                  const badgeConfig = {
+                    surcharge: { label: "Phụ Thu Dịch Vụ", style: "bg-slate-800 text-slate-300 border-slate-700" },
+                    penalty: { label: "Phí Phạt Quá Hạn", style: "bg-amber-500/10 text-amber-300 border-amber-500/20" },
+                    discount: { label: "Chính Sách Miễn Giảm", style: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20" },
+                  }[sc.category] || { label: "Khác", style: "bg-slate-800 text-slate-300 border-slate-700" }
 
-              return (
-                <div
-                  key={sc.id}
-                  className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-slate-700 transition flex flex-col justify-between space-y-3"
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badgeConfig.style}`}>
-                        {badgeConfig.label}
-                      </span>
-                    </div>
-                    <div className="font-extrabold text-white text-sm">
-                      {sc.name}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
-                    <div>
-                      <div className="text-[10px] uppercase font-bold text-slate-400">Mức Phí Áp Dụng</div>
-                      <div className="font-black font-mono text-sky-400 text-sm">
-                        {sc.rate}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEditSurcharge(sc)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-sky-500 text-slate-200 hover:text-slate-950 border border-slate-700 font-bold transition cursor-pointer text-xs"
+                  return (
+                    <tr
+                      key={sc.id}
+                      className="hover:bg-slate-900/50 transition"
                     >
-                      <Edit3 className="size-3.5" />
-                      <span>Sửa</span>
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
+                      {/* Tên biểu phí */}
+                      <td className="p-3.5 text-left">
+                        <div className="font-extrabold text-white text-xs">{sc.name}</div>
+                        {sc.note && (
+                          <div className="text-[11px] text-slate-400 mt-0.5 font-normal">
+                            {sc.note}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Phân loại */}
+                      <td className="p-3.5 text-center">
+                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badgeConfig.style}`}>
+                          {badgeConfig.label}
+                        </span>
+                      </td>
+
+                      {/* Hình thức */}
+                      <td className="p-3.5 text-center text-slate-400 font-medium text-xs">
+                        {sc.type}
+                      </td>
+
+                      {/* Mức phí áp dụng */}
+                      <td className="p-3.5 text-right font-mono font-black text-sky-400 text-sm">
+                        {sc.rate}
+                      </td>
+
+                      {/* Thao tác */}
+                      <td className="p-3.5 text-center">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditSurcharge(sc)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-sky-500 text-slate-200 hover:text-slate-950 border border-slate-700 font-bold transition cursor-pointer text-xs"
+                        >
+                          <Edit3 className="size-3.5" />
+                          <span>Sửa</span>
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
 
           {filteredSurcharges.length === 0 && (
