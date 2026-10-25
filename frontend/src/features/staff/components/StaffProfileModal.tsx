@@ -68,21 +68,21 @@ export default function StaffProfileModal({
     }
   }, [open])
 
-  // Dữ liệu hiển thị (Ưu tiên từ API -> fallback dữ liệu phiên đăng nhập hiện tại)
-  const staffName = profile?.fullName || user?.fullName || "Nguyễn Văn Hùng"
-  const staffEmail = profile?.email || user?.email || "staff.hn01.1@smartstorage.vn"
-  const staffPhone = profile?.phone || user?.phone || "0901000001"
+  // Dữ liệu hiển thị (Lấy từ API hồ sơ, fallback từ phiên đăng nhập thực tế của tài khoản)
+  const staffName = profile?.fullName || user?.fullName || "Chưa cập nhật"
+  const staffEmail = profile?.email || user?.email || "—"
+  const staffPhone = profile?.phone || user?.phone || "—"
   const staffCode =
     profile?.staffCode ||
-    (user?.id ? `NV-${String(user.id).padStart(4, "0")}` : "NV-0008")
+    (user?.id ? `NV-${String(user.id).padStart(4, "0")}` : "—")
   const facilityCode =
     profile?.facilityCode ||
-    user?.facilityCode ||
-    "HN-01"
+    (user as { facilityCode?: string })?.facilityCode ||
+    ""
   const branchName =
-    profile?.facilityName || user?.facilityName || "SmartStorage Cầu Giấy"
-  const branchAddress =
-    profile?.facilityAddress || "Số 391 Cầu Giấy, Q. Cầu Giấy, Hà Nội"
+    profile?.facilityName ||
+    (user as { facilityName?: string })?.facilityName ||
+    (facilityCode ? `Cơ sở ${facilityCode}` : "Chưa phân bổ cơ sở")
   const roleName =
     profile?.roleTitle || (user?.role === "MANAGER" ? "Quản lý cơ sở" : "Nhân viên cơ sở")
   const initials = getInitials(staffName)
@@ -127,7 +127,11 @@ export default function StaffProfileModal({
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-slate-400 font-medium">Chi nhánh:</span>
-              <b className="text-white font-mono font-bold tracking-wide">{branchName} - {facilityCode}</b>
+              <b className="text-white font-mono font-bold tracking-wide">
+                {facilityCode && !branchName.includes(facilityCode)
+                  ? `${branchName} - ${facilityCode}`
+                  : branchName}
+              </b>
             </div>
           </div>
         </div>
