@@ -195,13 +195,8 @@ function BomLayoutContent() {
                 }`}
             >
               {/* Phần trên: Danh mục Phân hệ */}
-              <div className="space-y-4">
-                {/* Tiêu đề nhóm quản trị */}
-                <div>
-                  <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 px-2 pb-2">
-                    Danh Mục Quản Lý
-                  </div>
-                  <nav className="space-y-1.5">
+              <div>
+                <nav className="space-y-1.5">
                     {NAV_MODULES.map((item) => {
                       const Icon = item.icon
                       const isActive = location.pathname.startsWith(item.path)
@@ -266,7 +261,6 @@ function BomLayoutContent() {
                     })}
                   </nav>
                 </div>
-              </div>
 
               {/* Phần dưới cùng: User Profile và Nút Theme Toggle - Đồng bộ phong cách Staff */}
               <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800/80 shrink-0">
