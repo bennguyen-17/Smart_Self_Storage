@@ -38,7 +38,7 @@ export const getMyContracts = async () => {
     const apiData = res.data || res;
     if (Array.isArray(apiData)) {
       const mappedApiData = apiData
-        .filter((c: any) => !String(c.contractId).startsWith('#HD-') && c.rawContractId !== 2 && c.unitCode !== 'HN02-G-XL03')
+        .filter((c: any) => !String(c.contractId).startsWith('#HD-'))
         .map((c: any) => {
           let statusLabel = c.statusLabel || c.status;
           if (c.status === 'PENDING_CHECKIN') statusLabel = 'CHỜ CHECK-IN';
