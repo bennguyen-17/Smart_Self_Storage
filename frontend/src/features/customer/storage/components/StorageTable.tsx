@@ -76,6 +76,8 @@ export default function StorageTable({
                       ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                       : isPending
                       ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                      : item.status === 'OVERDUE'
+                      ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
                       : isCompleted
                       ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
                       : isTerminated
@@ -89,6 +91,8 @@ export default function StorageTable({
                         ? 'bg-emerald-500'
                         : isPending
                         ? 'bg-amber-500'
+                        : item.status === 'OVERDUE'
+                        ? 'bg-rose-500'
                         : isCompleted
                         ? 'bg-emerald-500'
                         : isTerminated
@@ -99,10 +103,16 @@ export default function StorageTable({
                       ? 'Chờ trả kho'
                       : isPending
                       ? 'Chờ check-in'
+                      : isActive
+                      ? 'Đang hiệu lực'
+                      : item.status === 'OVERDUE'
+                      ? 'Quá hạn'
                       : isCompleted
                       ? 'Đã hoàn tất'
                       : isTerminated
                       ? 'Đã thanh lý'
+                      : isCanceled
+                      ? 'Đã hủy cọc'
                       : (item.statusLabel || item.status)}
                   </span>
                 </td>

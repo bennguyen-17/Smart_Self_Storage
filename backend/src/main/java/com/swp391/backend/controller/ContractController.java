@@ -132,21 +132,21 @@ public class ContractController {
 
             String statusLabel;
             if ("PENDING_CHECKIN".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "CHỜ CHECK-IN";
+                statusLabel = "Chờ check-in";
             } else if ("ACTIVE".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "HIỆU LỰC";
+                statusLabel = "Đang hiệu lực";
             } else if ("INITIATED".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "KHỞI TẠO";
+                statusLabel = "Khởi tạo";
             } else if ("OVERDUE".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "QUÁ HẠN";
+                statusLabel = "Quá hạn";
             } else if ("TERMINATED".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "ĐÃ THANH LÝ";
+                statusLabel = "Đã thanh lý";
             } else if ("COMPLETED".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "ĐÃ HOÀN TẤT";
+                statusLabel = "Đã hoàn tất";
             } else if ("CANCELLED".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "ĐÃ HỦY CỌC";
+                statusLabel = "Đã hủy cọc";
             } else if ("FORFEITED".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "MẤT CỌC";
+                statusLabel = "Mất cọc";
             } else {
                 statusLabel = c.getStatus();
             }
