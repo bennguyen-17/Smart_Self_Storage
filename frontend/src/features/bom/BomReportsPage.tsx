@@ -155,7 +155,7 @@ export default function BomReportsPage() {
             <tr className="hover:bg-slate-900/40 transition">
               <td className="p-4 text-left">
                 <div className="flex items-center gap-2.5">
-                  <span className="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
+                  <span className="p-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 shrink-0">
                     <DollarSign className="size-4" />
                   </span>
                   <div>
@@ -167,14 +167,12 @@ export default function BomReportsPage() {
                 </div>
               </td>
               <td className="p-4 text-left">
-                <span className="font-mono font-black text-sky-400 text-base sm:text-lg">
+                <span className="font-mono font-black text-white text-base sm:text-lg">
                   ₫{netRevenue.toLocaleString("vi-VN")}
                 </span>
               </td>
               <td className="p-4 text-left text-slate-300 text-xs">
-                Gồm: Tiền thuê kho ban đầu{" "}
-                <b className="font-mono text-white">₫{totalInitialRevenue.toLocaleString("vi-VN")}</b> • Gia hạn hàng tháng{" "}
-                <b className="font-mono text-white">₫{totalExtensionRevenue.toLocaleString("vi-VN")}</b>
+                Tổng số tiền thực tế thu được từ dịch vụ thuê kho
               </td>
             </tr>
 
@@ -182,7 +180,7 @@ export default function BomReportsPage() {
             <tr className="hover:bg-slate-900/40 transition">
               <td className="p-4 text-left">
                 <div className="flex items-center gap-2.5">
-                  <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+                  <span className="p-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 shrink-0">
                     <Shield className="size-4" />
                   </span>
                   <div>
@@ -199,7 +197,7 @@ export default function BomReportsPage() {
                 </span>
               </td>
               <td className="p-4 text-left text-slate-300 text-xs">
-                <span className="text-emerald-400 font-bold">Bảo chứng 100% nguồn vốn an toàn</span> • Tiền cọc đã cấn trừ vi phạm{" "}
+                Bảo chứng 100% nguồn vốn an toàn • Tiền cọc đã cấn trừ vi phạm{" "}
                 <b className="font-mono text-white">₫{totalForfeitedDeposit.toLocaleString("vi-VN")}</b>
               </td>
             </tr>
@@ -208,7 +206,7 @@ export default function BomReportsPage() {
             <tr className="hover:bg-slate-900/40 transition">
               <td className="p-4 text-left">
                 <div className="flex items-center gap-2.5">
-                  <span className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 shrink-0">
+                  <span className="p-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 shrink-0">
                     <ArrowDownLeft className="size-4" />
                   </span>
                   <div>
@@ -220,13 +218,13 @@ export default function BomReportsPage() {
                 </div>
               </td>
               <td className="p-4 text-left">
-                <span className="font-mono font-black text-rose-400 text-base sm:text-lg">
+                <span className="font-mono font-black text-white text-base sm:text-lg">
                   ₫{totalRefunds.toLocaleString("vi-VN")}
                 </span>
               </td>
               <td className="p-4 text-left text-slate-300 text-xs">
                 Tiền đã thanh toán hoàn trả cọc và tiền thừa khi kết thúc{" "}
-                <b className="text-white">{totalTerminatedContracts} hợp đồng thuê</b>
+                <b className="font-mono text-white">{totalTerminatedContracts} hợp đồng thuê</b>
               </td>
             </tr>
 
@@ -234,7 +232,7 @@ export default function BomReportsPage() {
             <tr className="hover:bg-slate-900/40 transition">
               <td className="p-4 text-left">
                 <div className="flex items-center gap-2.5">
-                  <span className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
+                  <span className="p-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 shrink-0">
                     <AlertTriangle className="size-4" />
                   </span>
                   <div>
@@ -246,16 +244,14 @@ export default function BomReportsPage() {
                 </div>
               </td>
               <td className="p-4 text-left">
-                <span className="font-mono font-black text-amber-400 text-base sm:text-lg">
+                <span className="font-mono font-black text-white text-base sm:text-lg">
                   {totalOverdueContracts} HĐ Quá Hạn
                 </span>
               </td>
               <td className="p-4 text-left text-slate-300 text-xs">
                 Phạt quá hạn &amp; phụ phí chế tài:{" "}
-                <b className="font-mono text-amber-300">₫{totalDebtAndPenalty.toLocaleString("vi-VN")}</b> •{" "}
-                <span className="text-amber-400/90 font-medium">
-                  Hệ thống đã khóa mã PIN tạm dừng quyền ra vào để đôn đốc thu nợ
-                </span>
+                <b className="font-mono text-white">₫{totalDebtAndPenalty.toLocaleString("vi-VN")}</b> •{" "}
+                Hệ thống đã khóa mã PIN tạm dừng quyền ra vào để đôn đốc thu nợ
               </td>
             </tr>
 
@@ -267,7 +263,7 @@ export default function BomReportsPage() {
                     <Warehouse className="size-4" />
                   </span>
                   <div>
-                    <div className="font-black text-sky-400 uppercase text-xs">
+                    <div className="font-black text-white uppercase text-xs">
                       Tổng Quy Mô &amp; Khai Thác Hệ Thống
                     </div>
                     <div className="text-[10px] text-slate-400 mt-0.5 font-normal">
@@ -280,15 +276,15 @@ export default function BomReportsPage() {
                 <div className="font-mono font-black text-white text-base">
                   {totalUnits} Ô Kho
                 </div>
-                <div className="text-[11px] text-sky-400 font-bold mt-0.5">
+                <div className="text-[11px] text-slate-300 font-bold mt-0.5">
                   Tỷ lệ lấp đầy: {avgOccupancy}%
                 </div>
               </td>
-              <td className="p-4 text-left text-xs font-normal">
+              <td className="p-4 text-left text-xs font-normal text-slate-300">
                 Đang cho thuê: <b className="text-white font-mono">{totalOccupiedUnits} kho</b> • Còn trống:{" "}
-                <b className="text-emerald-400 font-mono">{totalAvailableUnits} kho</b> • Đang bảo trì:{" "}
-                <b className="text-amber-400 font-mono">{totalMaintenanceUnits} kho</b> • Hợp đồng hoạt động:{" "}
-                <b className="text-sky-300 font-mono">{totalActiveContracts} HĐ</b>
+                <b className="text-white font-mono">{totalAvailableUnits} kho</b> • Đang bảo trì:{" "}
+                <b className="text-white font-mono">{totalMaintenanceUnits} kho</b> • Hợp đồng hoạt động:{" "}
+                <b className="text-white font-mono">{totalActiveContracts} HĐ</b>
               </td>
             </tr>
           </tbody>
