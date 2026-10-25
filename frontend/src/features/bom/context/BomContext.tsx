@@ -67,9 +67,32 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
   const [chainOverview, setChainOverview] = useState<ChainDashboardData | null>(null)
   const [facilities, setFacilities] = useState<FacilityPerformance[]>([])
   const [pricingList, setPricingList] = useState<UnitPricing[]>(INITIAL_PRICING)
-  const [surcharges, setSurcharges] = useState<SurchargeItem[]>(INITIAL_SURCHARGES)
+  const [surcharges, setSurcharges] = useState<SurchargeItem[]>(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("smart_storage_surcharges")
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          if (Array.isArray(parsed)) return parsed
+        }
+      }
+    } catch (e) {
+      console.warn("Lỗi đọc surcharges từ localStorage:", e)
+    }
+    return INITIAL_SURCHARGES
+  })
   const [isLoadingApi, setIsLoadingApi] = useState<boolean>(true)
   const [isApiConnected, setIsApiConnected] = useState<boolean>(false)
+
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("smart_storage_surcharges", JSON.stringify(surcharges))
+      }
+    } catch (e) {
+      console.warn("Lỗi lưu surcharges vào localStorage:", e)
+    }
+  }, [surcharges])
 
   const loadLiveData = useCallback(async () => {
     try {

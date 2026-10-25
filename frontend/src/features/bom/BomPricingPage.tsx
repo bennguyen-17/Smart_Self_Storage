@@ -181,6 +181,7 @@ export default function BomPricingPage() {
   const [surchargeCat, setSurchargeCat] = useState<"surcharge" | "penalty" | "discount">("surcharge")
   const [surchargeName, setSurchargeName] = useState("")
   const [surchargeRate, setSurchargeRate] = useState("")
+  const [surchargeToDelete, setSurchargeToDelete] = useState<SurchargeItem | null>(null)
 
   const filteredSurcharges = useMemo(() => {
     return surcharges.filter((item) => {
@@ -260,10 +261,19 @@ export default function BomPricingPage() {
   }
 
   const handleDeleteSurcharge = (id: string) => {
-    setSurcharges((prev) => prev.filter((sc) => sc.id !== id))
+    setSurcharges((prev) => {
+      const next = prev.filter((sc) => sc.id !== id)
+      try {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("smart_storage_surcharges", JSON.stringify(next))
+        }
+      } catch (e) {}
+      return next
+    })
     toast.success("Đã xóa khoản phí thành công!")
     setIsSurchargeModalOpen(false)
     setEditingSurcharge(null)
+    setSurchargeToDelete(null)
   }
 
   const handleSaveSurcharge = (e: React.FormEvent) => {
@@ -286,8 +296,8 @@ export default function BomPricingPage() {
     }
 
     if (editingSurcharge) {
-      setSurcharges((prev) =>
-        prev.map((sc) =>
+      setSurcharges((prev) => {
+        const next = prev.map((sc) =>
           sc.id === editingSurcharge.id
             ? {
                 ...sc,
@@ -299,7 +309,13 @@ export default function BomPricingPage() {
               }
             : sc
         )
-      )
+        try {
+          if (typeof window !== "undefined") {
+            localStorage.setItem("smart_storage_surcharges", JSON.stringify(next))
+          }
+        } catch (e) {}
+        return next
+      })
       toast.success(`Đã cập nhật biểu phí "${surchargeName.trim()}"!`)
     } else {
       const newItem: SurchargeItem = {
@@ -312,7 +328,15 @@ export default function BomPricingPage() {
         isActive: true,
         note: "",
       }
-      setSurcharges((prev) => [newItem, ...prev])
+      setSurcharges((prev) => {
+        const next = [newItem, ...prev]
+        try {
+          if (typeof window !== "undefined") {
+            localStorage.setItem("smart_storage_surcharges", JSON.stringify(next))
+          }
+        } catch (e) {}
+        return next
+      })
       toast.success("Đã thêm hạng mục biểu phí thành công!")
     }
 
@@ -551,14 +575,26 @@ export default function BomPricingPage() {
 
                       {/* Thao tác */}
                       <td className="p-3.5 text-center">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEditSurcharge(sc)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-sky-500 text-slate-200 hover:text-slate-950 border border-slate-700 font-bold transition cursor-pointer text-xs"
-                        >
-                          <Edit3 className="size-3.5" />
-                          <span>Sửa</span>
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditSurcharge(sc)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-sky-500 text-slate-200 hover:text-slate-950 border border-slate-700 font-bold transition cursor-pointer text-xs"
+                            title="Chỉnh sửa biểu phí"
+                          >
+                            <Edit3 className="size-3.5" />
+                            <span>Sửa</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSurchargeToDelete(sc)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 hover:text-rose-300 border border-rose-900/50 font-bold transition cursor-pointer text-xs"
+                            title="Xóa khoản phí này"
+                          >
+                            <Trash2 className="size-3.5" />
+                            <span>Xóa</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -1023,6 +1059,54 @@ export default function BomPricingPage() {
                 className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs shadow-md shadow-rose-500/20 cursor-pointer disabled:opacity-50"
               >
                 {isDeletingPricing ? "Đang Xóa..." : "Xác Nhận Xóa"}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* MODAL 5: XÁC NHẬN XÓA BIỂU PHÍ / PHỤ THU - PORTAL RA BODY */}
+      {surchargeToDelete && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[999] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 max-w-md w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-white">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+                <Trash2 className="size-5" />
+              </div>
+              <div>
+                <h3 className="font-black text-sm uppercase text-white">
+                  XÁC NHẬN XÓA BIỂU PHÍ
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Thao tác này sẽ xóa hoàn toàn khoản phí khỏi hệ thống
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-slate-950 rounded-2xl border border-slate-800 text-xs text-slate-300 leading-relaxed space-y-1.5">
+              <p>
+                Bạn có chắc chắn muốn xóa: <strong className="text-rose-400 font-bold">{surchargeToDelete.name}</strong> ({surchargeToDelete.rate})?
+              </p>
+              <p className="text-[11px] text-slate-400">
+                Sau khi xác nhận xóa, khoản phí này sẽ không còn hiển thị trong hệ thống và không áp dụng cho khách hàng thuê mới.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setSurchargeToDelete(null)}
+                className="px-4 py-2 rounded-xl border border-slate-700 font-bold text-xs text-slate-300 hover:text-white cursor-pointer"
+              >
+                Hủy Bỏ
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteSurcharge(surchargeToDelete.id)}
+                className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs shadow-md shadow-rose-500/20 cursor-pointer"
+              >
+                Xác Nhận Xóa
               </button>
             </div>
           </div>
