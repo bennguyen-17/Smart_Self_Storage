@@ -1,6 +1,7 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useLocation, useNavigate, useOutlet } from "react-router-dom"
 import { toast } from "sonner"
+import apiClient from "@/lib/apiClient"
 import {
   Warehouse,
   SlidersHorizontal,
@@ -59,12 +60,41 @@ function BomLayoutContent() {
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches)
 
-  // Thông tin người dùng lấy trực tiếp từ Auth / Session
+  // Thông tin người dùng lấy trực tiếp từ API / Database
+  const [profileData, setProfileData] = useState<{
+    fullName?: string
+    phone?: string
+    email?: string
+    role?: string
+    roleTitle?: string
+    staffCode?: string
+    facilityName?: string
+  } | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+    apiClient
+      .get("/staff/profile")
+      .then((res: any) => {
+        if (isMounted && res && (res.success || res.fullName)) {
+          setProfileData(res)
+        }
+      })
+      .catch((err) => {
+        console.warn("Không thể tải thông tin profile từ API:", err)
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   const storedUser = typeof window !== "undefined" ? localStorage.getItem("user") : null
   const parsedStoredUser = storedUser ? (() => { try { return JSON.parse(storedUser); } catch (e) { return null; } })() : null
-  const currentUserName = user?.fullName || parsedStoredUser?.fullName || "Quản Trị Viên"
-  const currentUserRole = user?.role ? (user.role === "BOM" ? "Ban Điều Hành (BOM)" : user.role) : "Chuyên viên Quản lý Vận hành"
-  const currentUserEmail = user?.email || parsedStoredUser?.email || "bom@smartstorage.vn"
+  const currentUserName = profileData?.fullName || user?.fullName || parsedStoredUser?.fullName || "Ban Điều Hành"
+  const currentUserRole = profileData?.roleTitle || (user?.role ? (user.role === "BOM" ? "Ban Điều Hành (BOM)" : user.role) : "Ban Điều Hành (BOM)")
+  const currentUserEmail = profileData?.email || user?.email || parsedStoredUser?.email || "bom@smartstorage.vn"
+  const currentUserPhone = profileData?.phone || user?.phone || "Chưa cập nhật"
+  const currentUserCode = profileData?.staffCode || (user?.id ? `BM-${String(user.id).padStart(4, "0")}` : "BM-0001")
   const userInitials = currentUserName
     .split(" ")
     .filter(Boolean)
@@ -361,18 +391,26 @@ function BomLayoutContent() {
               </div>
 
               <div className="space-y-2 pt-1">
-                <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 font-semibold">
-                  <div className="flex justify-between">
+                <div className="space-y-2 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 font-semibold text-xs">
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60 dark:border-slate-700/60">
+                    <span className="text-slate-500">Mã Định Danh:</span>
+                    <span className="font-mono font-bold text-sky-600 dark:text-sky-400">{currentUserCode}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60 dark:border-slate-700/60">
                     <span className="text-slate-500">Họ và Tên:</span>
                     <span className="text-slate-900 dark:text-white font-bold">{currentUserName}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60 dark:border-slate-700/60">
                     <span className="text-slate-500">Vai Trò:</span>
-                    <span className="font-mono font-bold text-sky-600">{currentUserRole}</span>
+                    <span className="font-mono font-bold text-sky-600 dark:text-sky-400">{currentUserRole}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60 dark:border-slate-700/60">
                     <span className="text-slate-500">Email:</span>
                     <span className="font-mono font-bold">{currentUserEmail}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5">
+                    <span className="text-slate-500">Số Điện Thoại:</span>
+                    <span className="font-mono font-bold">{currentUserPhone}</span>
                   </div>
                 </div>
               </div>
