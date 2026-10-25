@@ -379,19 +379,13 @@ export default function BomPricingPage() {
               </thead>
               <tbody className="divide-y divide-slate-800/80 font-medium text-slate-300">
                 {pricingList.map((item) => {
-                  const theme = SIZE_THEMES[item.size] || SIZE_THEMES.S
                   return (
                     <tr key={item.id} className="hover:bg-slate-900/60 transition">
                       {/* CỘT 1: SIZE & TÊN LOẠI KHO */}
                       <td className="py-3.5 px-4 text-left whitespace-nowrap">
-                        <div className="flex items-center gap-2.5">
-                          <span className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase border ${theme.badge}`}>
-                            Size {item.size}
-                          </span>
-                          <span className="font-extrabold text-white text-xs sm:text-sm">
-                            {item.name}
-                          </span>
-                        </div>
+                        <span className="font-extrabold text-white text-xs sm:text-sm">
+                          {item.name}
+                        </span>
                       </td>
 
                       {/* CỘT 2: KÍCH THƯỚC */}
