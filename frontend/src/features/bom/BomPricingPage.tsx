@@ -522,10 +522,10 @@ export default function BomPricingPage() {
               <tbody className="divide-y divide-slate-800 font-semibold text-slate-300">
                 {filteredSurcharges.map((sc) => {
                   const badgeConfig = {
-                    surcharge: { label: "Phụ Thu Dịch Vụ", style: "bg-slate-800 text-slate-300 border-slate-700" },
-                    penalty: { label: "Phí Phạt Quá Hạn", style: "bg-amber-500/10 text-amber-300 border-amber-500/20" },
-                    discount: { label: "Chính Sách Miễn Giảm", style: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20" },
-                  }[sc.category] || { label: "Khác", style: "bg-slate-800 text-slate-300 border-slate-700" }
+                    surcharge: { label: "Phụ Thu Dịch Vụ" },
+                    penalty: { label: "Phí Phạt Quá Hạn" },
+                    discount: { label: "Chính Sách Miễn Giảm" },
+                  }[sc.category] || { label: "Khác" }
 
                   return (
                     <tr
@@ -544,7 +544,7 @@ export default function BomPricingPage() {
 
                       {/* Phân loại */}
                       <td className="p-3.5 text-center">
-                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badgeConfig.style}`}>
+                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border bg-slate-800 text-slate-200 border-slate-700">
                           {badgeConfig.label}
                         </span>
                       </td>
@@ -555,7 +555,7 @@ export default function BomPricingPage() {
                       </td>
 
                       {/* Mức phí áp dụng */}
-                      <td className="p-3.5 text-right font-mono font-black text-sky-400 text-sm">
+                      <td className="p-3.5 text-right font-mono font-bold text-slate-200 text-xs sm:text-sm">
                         {sc.rate}
                       </td>
 
