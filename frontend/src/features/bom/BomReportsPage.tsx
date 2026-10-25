@@ -148,107 +148,105 @@ export default function BomReportsPage() {
         </div>
       </div>
 
-      {/* 2. KHỐI 4 THẺ TÀI CHÍNH CỐT LÕI HỆ THỐNG: TIỀN THU, TIỀN CỌC, TIỀN HOÀN, TIỀN NỢ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Tổng Tiền Thu (Thực Thu Ròng) */}
-        <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-sky-500/40 shadow-xl space-y-3 backdrop-blur-md transition group">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider">
-              Tổng Doanh Thu Thực Thu
+      {/* 2. KHỐI 4 CHỈ SỐ TÀI CHÍNH CỐT LÕI HỆ THỐNG - DẠNG HÀNG NGANG */}
+      <div className="space-y-3">
+        {/* Hàng 1: Tổng Doanh Thu Thực Thu */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-sky-500/40 shadow-lg backdrop-blur-md transition flex flex-col md:flex-row md:items-center justify-between gap-3 group">
+          <div className="flex items-center gap-3.5">
+            <span className="p-2.5 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 group-hover:bg-sky-500 group-hover:text-slate-950 transition shrink-0">
+              <DollarSign className="size-5" />
             </span>
-            <span className="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 group-hover:bg-sky-500 group-hover:text-slate-950 transition">
-              <DollarSign className="size-4" />
-            </span>
-          </div>
-          <div className="text-3xl font-black font-mono text-sky-400">
-            ₫{netRevenue.toLocaleString("vi-VN")}
-          </div>
-          <div className="pt-2 border-t border-slate-800/80 text-[11px] text-slate-400 space-y-1">
-            <div className="flex items-center justify-between">
-              <span>Tiền thuê kho:</span>
-              <span className="font-mono text-slate-200 font-bold">₫{totalInitialRevenue.toLocaleString("vi-VN")}</span>
+            <div>
+              <div className="text-xs font-black uppercase text-slate-300 tracking-wider">
+                Tổng Doanh Thu Thực Thu
+              </div>
+              <div className="text-[11px] text-slate-400 mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span>Tiền thuê ban đầu: <b className="text-slate-200 font-mono font-bold">₫{totalInitialRevenue.toLocaleString("vi-VN")}</b></span>
+                <span className="text-slate-600">•</span>
+                <span>Gia hạn hàng tháng: <b className="text-slate-200 font-mono font-bold">₫{totalExtensionRevenue.toLocaleString("vi-VN")}</b></span>
+              </div>
             </div>
-            <div className="flex items-center justify-between">
-              <span>Gia hạn hàng tháng:</span>
-              <span className="font-mono text-slate-200 font-bold">₫{totalExtensionRevenue.toLocaleString("vi-VN")}</span>
+          </div>
+          <div className="text-left md:text-right shrink-0">
+            <div className="text-2xl sm:text-3xl font-black font-mono text-sky-400">
+              ₫{netRevenue.toLocaleString("vi-VN")}
             </div>
+            <div className="text-[10px] text-slate-500">Dòng tiền thực thu sau khi trừ hoàn tiền</div>
           </div>
         </div>
 
-        {/* Card 2: Tiền Cọc Ký Quỹ Đang Giữ */}
-        <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-emerald-500/40 shadow-xl space-y-3 backdrop-blur-md transition group">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider">
-              Tiền Cọc Ký Quỹ Đang Giữ
+        {/* Hàng 2: Tiền Cọc Ký Quỹ Đang Giữ */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-emerald-500/40 shadow-lg backdrop-blur-md transition flex flex-col md:flex-row md:items-center justify-between gap-3 group">
+          <div className="flex items-center gap-3.5">
+            <span className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-slate-950 transition shrink-0">
+              <Shield className="size-5" />
             </span>
-            <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-slate-950 transition">
-              <Shield className="size-4" />
-            </span>
-          </div>
-          <div className="text-3xl font-black font-mono text-white">
-            ₫{depositHolding.toLocaleString("vi-VN")}
-          </div>
-          <div className="pt-2 border-t border-slate-800/80 text-[11px] text-slate-400 space-y-1">
-            <div className="flex items-center justify-between">
-              <span>Tình trạng ký quỹ:</span>
-              <span className="font-bold text-emerald-400">Bảo chứng an toàn 100%</span>
+            <div>
+              <div className="text-xs font-black uppercase text-slate-300 tracking-wider">
+                Tiền Cọc Ký Quỹ Đang Giữ
+              </div>
+              <div className="text-[11px] text-slate-400 mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="text-emerald-400 font-medium">Bảo chứng 100% nguồn vốn an toàn</span>
+                <span className="text-slate-600">•</span>
+                <span>Tiền cọc đã cấn trừ vi phạm: <b className="text-slate-200 font-mono font-bold">₫{totalForfeitedDeposit.toLocaleString("vi-VN")}</b></span>
+              </div>
             </div>
-            <div className="flex items-center justify-between">
-              <span>Tiền cọc đã cấn trừ:</span>
-              <span className="font-mono text-slate-300 font-bold">₫{totalForfeitedDeposit.toLocaleString("vi-VN")}</span>
+          </div>
+          <div className="text-left md:text-right shrink-0">
+            <div className="text-2xl sm:text-3xl font-black font-mono text-white">
+              ₫{depositHolding.toLocaleString("vi-VN")}
             </div>
+            <div className="text-[10px] text-slate-500">Tài sản ký quỹ bảo toàn lưu ký</div>
           </div>
         </div>
 
-        {/* Card 3: Tổng Tiền Hoàn Trả Khách Hàng */}
-        <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-rose-500/40 shadow-xl space-y-3 backdrop-blur-md transition group">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider">
-              Tiền Hoàn Trả Khách Hàng
+        {/* Hàng 3: Tổng Tiền Hoàn Trả Khách Hàng */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-rose-500/40 shadow-lg backdrop-blur-md transition flex flex-col md:flex-row md:items-center justify-between gap-3 group">
+          <div className="flex items-center gap-3.5">
+            <span className="p-2.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 group-hover:bg-rose-500 group-hover:text-slate-950 transition shrink-0">
+              <ArrowDownLeft className="size-5" />
             </span>
-            <span className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 group-hover:bg-rose-500 group-hover:text-slate-950 transition">
-              <ArrowDownLeft className="size-4" />
-            </span>
-          </div>
-          <div className="text-3xl font-black font-mono text-rose-400">
-            ₫{totalRefunds.toLocaleString("vi-VN")}
-          </div>
-          <div className="pt-2 border-t border-slate-800/80 text-[11px] text-slate-400 space-y-1">
-            <div className="flex items-center justify-between">
-              <span>Mục đích:</span>
-              <span className="text-slate-300 font-medium">Hoàn cọc &amp; tiền thừa trả kho</span>
+            <div>
+              <div className="text-xs font-black uppercase text-slate-300 tracking-wider">
+                Tổng Tiền Hoàn Trả Khách Hàng
+              </div>
+              <div className="text-[11px] text-slate-400 mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span>Đã quyết toán hoàn trả cọc và tiền thừa khi kết thúc <b className="text-slate-200 font-bold">{totalTerminatedContracts} hợp đồng</b></span>
+                <span className="text-slate-600">•</span>
+                <span className="text-rose-400 font-medium">Hoàn trả an toàn qua ngân hàng</span>
+              </div>
             </div>
-            <div className="flex items-center justify-between">
-              <span>Hợp đồng hoàn tất:</span>
-              <span className="font-mono text-slate-200 font-bold">{totalTerminatedContracts} hợp đồng</span>
+          </div>
+          <div className="text-left md:text-right shrink-0">
+            <div className="text-2xl sm:text-3xl font-black font-mono text-rose-400">
+              ₫{totalRefunds.toLocaleString("vi-VN")}
             </div>
+            <div className="text-[10px] text-slate-500">Tổng chi hoàn tiền nghiệm thu trả kho</div>
           </div>
         </div>
 
-        {/* Card 4: Công Nợ & Hợp Đồng Quá Hạn */}
-        <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-amber-500/40 shadow-xl space-y-3 backdrop-blur-md transition group">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider">
-              Khách Nợ &amp; HĐ Quá Hạn
+        {/* Hàng 4: Khách Nợ & Hợp Đồng Quá Hạn */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-amber-500/40 shadow-lg backdrop-blur-md transition flex flex-col md:flex-row md:items-center justify-between gap-3 group">
+          <div className="flex items-center gap-3.5">
+            <span className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 group-hover:bg-amber-500 group-hover:text-slate-950 transition shrink-0">
+              <AlertTriangle className="size-5" />
             </span>
-            <span className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 group-hover:bg-amber-500 group-hover:text-slate-950 transition">
-              <AlertTriangle className="size-4" />
-            </span>
-          </div>
-          <div className="text-3xl font-black font-mono text-amber-400">
-            {totalOverdueContracts} <span className="text-sm font-sans font-bold text-slate-400">HĐ Quá Hạn</span>
-          </div>
-          <div className="pt-2 border-t border-slate-800/80 text-[11px] text-slate-400 space-y-1">
-            <div className="flex items-center justify-between">
-              <span>Tiền phạt &amp; bồi thường:</span>
-              <span className="font-mono text-amber-300 font-bold">₫{totalDebtAndPenalty.toLocaleString("vi-VN")}</span>
+            <div>
+              <div className="text-xs font-black uppercase text-slate-300 tracking-wider">
+                Khách Nợ &amp; Hợp Đồng Quá Hạn
+              </div>
+              <div className="text-[11px] text-slate-400 mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span>Phạt quá hạn &amp; phụ phí chế tài: <b className="text-amber-300 font-mono font-bold">₫{totalDebtAndPenalty.toLocaleString("vi-VN")}</b></span>
+                <span className="text-slate-600">•</span>
+                <span className="text-amber-400 font-medium">Đang đôn đốc thu hồi nợ tự động</span>
+              </div>
             </div>
-            <div className="flex items-center justify-between">
-              <span>Trạng thái:</span>
-              <span className="text-amber-400 font-bold">
-                {totalOverdueContracts > 0 ? "Đang đôn đốc thu hồi" : "Không có nợ xấu"}
-              </span>
+          </div>
+          <div className="text-left md:text-right shrink-0">
+            <div className="text-2xl sm:text-3xl font-black font-mono text-amber-400">
+              {totalOverdueContracts} <span className="text-sm font-sans font-bold text-slate-400">HĐ Quá Hạn</span>
             </div>
+            <div className="text-[10px] text-slate-500">Đã khóa mã PIN tạm dừng quyền ra vào</div>
           </div>
         </div>
       </div>
