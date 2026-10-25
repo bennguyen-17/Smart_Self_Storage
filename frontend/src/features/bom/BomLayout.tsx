@@ -4,6 +4,7 @@ import { toast } from "sonner"
 import {
   Warehouse,
   SlidersHorizontal,
+  ShieldAlert,
   FileSpreadsheet,
   Moon,
   Sun,
@@ -35,6 +36,13 @@ const NAV_MODULES = [
     navLabel: "Khung Giá & Phí",
     subLabel: "Biểu giá thuê & Phí dịch vụ",
     icon: SlidersHorizontal,
+  },
+  {
+    path: "/bom/policies",
+    label: "Thông Số Vận Hành",
+    navLabel: "Quy Chuẩn",
+    subLabel: "Quy chuẩn an ninh & Chế tài",
+    icon: ShieldAlert,
   },
   {
     path: "/bom/reports",
@@ -95,25 +103,23 @@ function BomLayoutContent() {
       <header className="fixed top-0 left-0 right-0 z-50 w-full min-h-[58px] bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-sky-500/20 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4 shrink-0 shadow-xs text-slate-900 dark:text-white transition-colors">
         {/* BRAND LOGO & NÚT MENU MOBILE */}
         <div className="shrink-0 flex items-center gap-2 sm:gap-3">
-          {/* Nút toggle mở sidebar trên mobile khi đang ở trang con */}
-          {!isHome && (
-            <button
-              type="button"
-              onClick={() => setIsMobileSidebarOpen((prev) => !prev)}
-              className="lg:hidden p-2 rounded-xl bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 cursor-pointer transition shadow-xs dark:bg-slate-800 dark:text-sky-400 dark:hover:text-white dark:hover:bg-slate-700 dark:border-slate-700/80"
-              title="Mở thanh điều hướng"
-            >
-              <PanelLeft className="size-4.5" />
-            </button>
-          )}
+          {/* Nút toggle mở sidebar trên mobile */}
+          <button
+            type="button"
+            onClick={() => setIsMobileSidebarOpen((prev) => !prev)}
+            className="lg:hidden p-2 rounded-xl bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 cursor-pointer transition shadow-xs dark:bg-slate-800 dark:text-sky-400 dark:hover:text-white dark:hover:bg-slate-700 dark:border-slate-700/80"
+            title="Mở thanh điều hướng"
+          >
+            <PanelLeft className="size-4.5" />
+          </button>
 
           <div
             className="flex items-center gap-2 sm:gap-3 cursor-pointer group"
             onClick={() => {
-              navigate("/bom")
+              navigate("/bom/facilities")
               setIsMobileSidebarOpen(false)
             }}
-            title="Về Trang Chủ Điều Hành"
+            title="Về Trang Giám Sát Cơ Sở Kho"
           >
             <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20 group-hover:scale-105 transition-transform">
               <Warehouse className="size-5" />
