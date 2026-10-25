@@ -296,7 +296,7 @@ export default function BomPricingPage() {
                       <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
                         <span className="text-slate-400 font-medium text-xs">Kho mát theo tháng:</span>
                         <span className="font-mono font-bold text-white text-xs">
-                          ₫{item.acPrice.toLocaleString("vi-VN")}
+                          ₫{(item.acPrice > item.normPrice ? item.acPrice : Math.round(item.normPrice * 1.2)).toLocaleString("vi-VN")}
                         </span>
                       </div>
 

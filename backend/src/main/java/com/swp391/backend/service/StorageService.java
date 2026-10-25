@@ -515,8 +515,11 @@ public class StorageService {
                         dto.setDailyPrice(p.getDailyPrice());
                         dto.setMonthlyPrice(p.getMonthlyPrice());
                         dto.setDepositAmount(p.getDepositAmount());
-                        dto.setClimateSurchargePercent(p.getClimateSurchargePercent() != null ? p.getClimateSurchargePercent() : BigDecimal.valueOf(20.00));
-                        BigDecimal surcharge = dto.getClimateSurchargePercent().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                        BigDecimal surchargePercent = (p.getClimateSurchargePercent() != null && p.getClimateSurchargePercent().compareTo(BigDecimal.ZERO) > 0)
+                                ? p.getClimateSurchargePercent()
+                                : BigDecimal.valueOf(20.00);
+                        dto.setClimateSurchargePercent(surchargePercent);
+                        BigDecimal surcharge = surchargePercent.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
                         dto.setAcPrice(p.getMonthlyPrice().multiply(BigDecimal.ONE.add(surcharge)).setScale(0, RoundingMode.HALF_UP));
                     } else {
                         dto.setDailyPrice(BigDecimal.valueOf(60000));
