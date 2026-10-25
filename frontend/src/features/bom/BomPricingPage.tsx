@@ -270,7 +270,7 @@ export default function BomPricingPage() {
                       <span className="text-white font-bold">{item.dimensions}</span>
                     </div>
 
-                    {/* 5 MỨC GIÁ: 5 HÀNG CÙNG MÀU CHỮ & CÙNG CỠ CHỮ */}
+                    {/* 5 MỨC GIÁ: 2 NGÀY TRƯỚC RỒI ĐẾN 2 THÁNG, CUỐI LÀ CỌC */}
                     <div className="space-y-1.5 text-xs">
                       <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
                         <span className="text-slate-400 font-medium text-xs">Giá theo ngày:</span>
@@ -280,16 +280,16 @@ export default function BomPricingPage() {
                       </div>
 
                       <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
-                        <span className="text-slate-400 font-medium text-xs">Giá theo tháng:</span>
+                        <span className="text-slate-400 font-medium text-xs">Kho mát theo ngày:</span>
                         <span className="font-mono font-bold text-white text-xs">
-                          ₫{item.normPrice.toLocaleString("vi-VN")}
+                          ₫{Math.round(item.dailyPrice * 1.2).toLocaleString("vi-VN")}
                         </span>
                       </div>
 
                       <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
-                        <span className="text-slate-400 font-medium text-xs">Kho mát theo ngày:</span>
+                        <span className="text-slate-400 font-medium text-xs">Giá theo tháng:</span>
                         <span className="font-mono font-bold text-white text-xs">
-                          ₫{Math.round(item.dailyPrice * 1.2).toLocaleString("vi-VN")}
+                          ₫{item.normPrice.toLocaleString("vi-VN")}
                         </span>
                       </div>
 
