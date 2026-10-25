@@ -1,11 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import {
-  CheckIcon,
-  CopyIcon,
-  HourglassIcon,
-  RefreshCwIcon,
-  ShieldCheckIcon,
-} from "lucide-react"
+import { Clock } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAuth } from "@/context/AuthContext"
@@ -18,10 +12,9 @@ function StaffPinPanel() {
   const { user } = useAuth()
   const [pin, setPin] = useState<string>("--- ---")
   const [seconds, setSeconds] = useState<number>(TTL_TOTAL)
-  const [copied, setCopied] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
-  const [facilityName, setFacilityName] = useState<string>(
-    (user as { facilityName?: string })?.facilityName || "Cơ sở Cầu Giấy (Hà Nội)"
+  const [facilityCode, setFacilityCode] = useState<string>(
+    ((user as { facilityCode?: string })?.facilityCode || "HN-01").replace("-", "")
   )
 
   const loadLivePin = useCallback(async (isManual = false) => {
@@ -29,15 +22,14 @@ function StaffPinPanel() {
       if (isManual) setLoading(true)
       const data = await fetchStaffGatePin()
       if (data && data.success) {
-        setPin(data.pin || data.rawPin)
+        const raw = data.pin || data.rawPin || ""
+        // Chuẩn hóa định dạng "XXX XXX" cho khớp với giao diện mẫu
+        const clean = raw.replace(/\s+/g, "")
+        const formatted = clean.length === 6 ? `${clean.slice(0, 3)} ${clean.slice(3)}` : (raw || "--- ---")
+        setPin(formatted)
         setSeconds(data.ttlSeconds > 0 ? data.ttlSeconds : TTL_TOTAL)
-        if (data.facilityName) {
-          setFacilityName(
-            data.facilityCode ? `${data.facilityName} (${data.facilityCode})` : data.facilityName
-          )
-        }
-        if (isManual) {
-          toast.success("Đã làm mới mã PIN cổng thành công!")
+        if (data.facilityCode) {
+          setFacilityCode(data.facilityCode.replace("-", ""))
         }
       }
     } catch (err: any) {
@@ -57,7 +49,6 @@ function StaffPinPanel() {
     const timer = setInterval(() => {
       setSeconds((prev) => {
         if (prev <= 1) {
-          // Auto-refresh seamlessly on expiry
           loadLivePin()
           return TTL_TOTAL
         }
@@ -68,86 +59,47 @@ function StaffPinPanel() {
     return () => clearInterval(timer)
   }, [loadLivePin])
 
-  function handleCopy() {
+  const handleCopy = () => {
     if (!pin || pin === "--- ---") return
     navigator.clipboard.writeText(pin.replace(/\s+/g, ""))
-    setCopied(true)
-    toast.success(`Đã sao chép mã PIN cổng ${pin} vào bộ nhớ tạm!`)
-    setTimeout(() => setCopied(false), 2500)
+    toast.success(`Đã sao chép mã PIN cổng: ${pin}`)
   }
 
-  const progressPercent = Math.max(0, Math.min(100, (seconds / TTL_TOTAL) * 100))
-
   return (
-    <div className="mx-auto my-3 max-w-xl space-y-3">
-      <div className="card-box pin-gate-card relative space-y-3 overflow-hidden rounded-3xl border border-blue-500/40 p-5 text-center shadow-xl">
-        <div className="flex flex-col items-center justify-center gap-1 sm:flex-row sm:justify-between">
-          <div className="flex items-center space-x-1.5 text-[11px] font-black tracking-wider text-blue-600 uppercase dark:text-blue-400">
-            <ShieldCheckIcon className="size-4" />
-            <span>Mã pin mở cổng 24/7</span>
-          </div>
-          <span className="rounded-full bg-blue-500/10 px-2.5 py-0.5 text-[10px] font-bold text-blue-600 dark:bg-blue-900/30 dark:text-blue-300">
-            {facilityName}
-          </span>
-        </div>
-
-        <div className="pin-display-box relative mx-auto flex h-28 w-full flex-col items-center justify-center space-y-1 rounded-2xl border p-3 shadow-inner">
-          <div className="text-[10px] font-bold tracking-widest text-white uppercase">
-            Mã PIN xác thực cổng khẩn cấp
-          </div>
-          <div className="flex items-center justify-center space-x-3">
-            <span className="font-mono text-3xl font-black tracking-widest sm:text-5xl text-white">
-              {loading ? (
-                <span className="animate-pulse tracking-widest">--- ---</span>
-              ) : (
-                pin
-              )}
-            </span>
-            <button
-              type="button"
-              onClick={handleCopy}
-              disabled={loading || pin === "--- ---"}
-              title="Sao chép mã PIN"
-              className="inline-flex cursor-pointer items-center justify-center rounded-xl bg-white/10 p-2 text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {copied ? (
-                <CheckIcon className="size-5 text-emerald-400" />
-              ) : (
-                <CopyIcon className="size-5" />
-              )}
-            </button>
+    <div className="mx-auto my-6 max-w-xl">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-6 relative overflow-hidden">
+        {/* Header Status */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 text-xs font-mono font-bold">
+            <Clock className="size-3.5 text-blue-600 dark:text-blue-400" />
+            <span>Đổi sau: {seconds}s</span>
           </div>
         </div>
 
-        {/* PROGRESS BAR */}
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+        {/* Dãy Số PIN 6 Chữ Số Lớn */}
+        <div className="py-6 sm:py-8 text-center space-y-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
+          <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold">
+            MÃ BÀN PHÍM CỬA CHÍNH (6 CHỮ SỐ)
+          </p>
           <div
-            className={`h-full transition-all duration-1000 ease-linear ${
-              seconds <= 5 ? "bg-amber-500" : "bg-blue-600"
-            }`}
-            style={{ width: `${progressPercent}%` }}
-          />
+            onClick={handleCopy}
+            title="Bấm để sao chép"
+            className="text-4xl sm:text-6xl font-bold font-mono tracking-[0.25em] select-all transition-all duration-300 text-blue-600 dark:text-blue-400 cursor-pointer hover:opacity-90"
+          >
+            {loading ? "--- ---" : pin}
+          </div>
+
+          <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto px-4">
+            Nhập trực tiếp dãy 6 số này tại bàn phím số gắn trước cổng chính để mở cửa.
+          </p>
         </div>
 
-        <div className="flex items-center justify-between px-1 text-[11px] font-bold text-slate-700 dark:text-slate-300">
-          <div className="flex items-center space-x-1.5">
-            <HourglassIcon className="size-3.5 text-amber-500" />
-            <span>
-              Mã PIN tự đổi sau:{" "}
-              <b className="font-mono text-xs text-blue-600 dark:text-blue-400">
-                {seconds}s
-              </b>
-            </span>
-          </div>
-          <button
-            type="button"
-            disabled={loading}
-            onClick={() => loadLivePin(true)}
-            className="flex cursor-pointer items-center space-x-1 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-sm transition hover:bg-blue-500 disabled:opacity-50"
-          >
-            <RefreshCwIcon className={`size-3 ${loading ? "animate-spin" : ""}`} />
-            <span>{loading ? "Đang tạo..." : "Tạo mã mới"}</span>
-          </button>
+        {/* Footer info bar */}
+        <div className="border-t border-slate-200 dark:border-slate-800 pt-4 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+            CƠ SỞ: {facilityCode}
+          </span>
+          <span>Tự động mã hóa động mỗi 15s</span>
         </div>
       </div>
     </div>
