@@ -179,24 +179,6 @@ export default function BomReportsPage() {
               </div>
             </div>
 
-            {/* Thông số doanh thu thực thu toàn hệ thống */}
-            <div className="flex items-baseline justify-between px-1 mb-2">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                  Tổng Doanh Thu Thực Thu
-                </span>
-                <div className="font-mono font-black text-white text-2xl sm:text-3xl mt-0.5 tracking-tight">
-                  ₫{netRevenue.toLocaleString("vi-VN")}
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="text-[10px] text-slate-400 block font-medium">Đỉnh Doanh Thu (T9)</span>
-                <span className="font-mono font-bold text-sky-400 text-xs sm:text-sm">
-                  ₫{Math.max(...monthlyRevenueData.map((d) => d.revenue)).toLocaleString("vi-VN")}
-                </span>
-              </div>
-            </div>
-
             {/* BIỂU ĐỒ ĐƯỜNG SVG (LINE CHART) */}
             <div className="relative w-full overflow-hidden pt-1 pb-1">
               <svg viewBox="0 0 460 170" className="w-full h-auto overflow-visible">
