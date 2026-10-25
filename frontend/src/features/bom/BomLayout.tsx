@@ -423,13 +423,7 @@ function BomLayoutContent() {
               </div>
             </div>
 
-            <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-slate-800">
-              <button
-                onClick={() => toast.info("Vui lòng liên hệ Admin để đổi mật khẩu tài khoản cấp cao.")}
-                className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-              >
-                Đổi Mật Khẩu
-              </button>
+            <div className="flex justify-end items-center pt-2 border-t border-slate-200 dark:border-slate-800">
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs flex items-center gap-1.5 cursor-pointer shadow-md"
