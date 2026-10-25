@@ -373,7 +373,6 @@ export default function BomPricingPage() {
                   <th className="py-3 px-4 text-center whitespace-nowrap">GIÁ THEO THÁNG</th>
                   <th className="py-3 px-4 text-center whitespace-nowrap">PHỤ PHÍ KHO MÁT</th>
                   <th className="py-3 px-4 text-center whitespace-nowrap">TIỀN CỌC CHUẨN</th>
-                  <th className="py-3 px-4 text-center whitespace-nowrap">TRẠNG THÁI</th>
                   <th className="py-3 px-4 text-center whitespace-nowrap">THAO TÁC</th>
                 </tr>
               </thead>
@@ -423,15 +422,7 @@ export default function BomPricingPage() {
                         </span>
                       </td>
 
-                      {/* CỘT 7: TRẠNG THÁI */}
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/60">
-                          <CheckCircle className="size-3" />
-                          <span>{item.status}</span>
-                        </span>
-                      </td>
-
-                      {/* CỘT 8: THAO TÁC */}
+                      {/* CỘT 7: THAO TÁC */}
                       <td className="py-3.5 px-4 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
