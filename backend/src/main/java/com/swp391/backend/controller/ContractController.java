@@ -193,6 +193,20 @@ public class ContractController {
             result.add(map);
         }
 
+        result.sort((a, b) -> {
+            int prioA = getContractStatusPriority((String) a.get("status"));
+            int prioB = getContractStatusPriority((String) b.get("status"));
+            if (prioA != prioB) {
+                return Integer.compare(prioA, prioB);
+            }
+            Integer idA = (Integer) a.get("rawContractId");
+            Integer idB = (Integer) b.get("rawContractId");
+            if (idA != null && idB != null) {
+                return idB.compareTo(idA);
+            }
+            return 0;
+        });
+
         return ResponseEntity.ok(result);
     }
 
@@ -547,5 +561,23 @@ public class ContractController {
         resp.put("amount", finalTotal);
 
         return ResponseEntity.ok(resp);
+    }
+
+    private int getContractStatusPriority(String status) {
+        if (status == null) return 99;
+        switch (status.toUpperCase()) {
+            case "ACTIVE":
+                return 0;
+            case "PENDING_CHECKIN":
+                return 1;
+            case "OVERDUE":
+                return 2;
+            case "CANCELLED":
+            case "TERMINATED":
+            case "COMPLETED":
+            case "FORFEITED":
+            default:
+                return 3;
+        }
     }
 }

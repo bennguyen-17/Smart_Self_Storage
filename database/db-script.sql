@@ -706,7 +706,7 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 
 -- === CƠ SỞ 4: HCM-02 (Quận 7, TP.HCM - Mẫu B: 15 Ô Kho) ===
 ('HCM02-G-XL01', 10, 4, 'RENTED'),
-('HCM02-G-XL02', 10, 4, 'RENTED'),
+('HCM02-G-XL02', 10, 4, 'AVAILABLE'),
 ('HCM02-G-XL03', 10, 7, 'AVAILABLE'),
 ('HCM02-G-XL04', 10, 4, 'AVAILABLE'),
 ('HCM02-G-XL05', 10, 4, 'AVAILABLE'),
@@ -877,15 +877,7 @@ INSERT INTO Reservation (reservationId, reservationCode, accountId, unitCode, st
 (21, 'CTR-HN02-120926-1021', 36, 'HN02-F1-M02', '2026-09-12', '2026-11-12', 'MONTHLY', 2400000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-09-10 15:00:00', NULL),
 (22, 'CTR-CT01-120826-1022', 36, 'CT01-G-XL02', '2026-08-12', '2026-09-12', 'MONTHLY', 4000000.00, 3000000.00, 1500000.00, 'CONFIRMED', '2026-08-10 16:00:00', NULL),
 (23, 'CTR-CT01-300926-1023', 36, 'CT01-F1-M01', '2026-10-07', '2026-11-07', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CANCELLED', '2026-09-30 10:00:00', NULL),
-(24, 'CTR-DN01-061126-1024', 36, 'DN01-F1-S04', '2026-11-06', '2026-12-06', 'MONTHLY', 600000.00, 500000.00, 0.00, 'CONFIRMED', '2026-10-24 14:10:00', NULL),
-
--- === HỢP ĐỒNG MINH HỌA CÁC TRẠNG THÁI KHÁC ===
--- No-Show ngày 05/10/2026 trong quá khứ -> tự động hủy, tịch thu 100% cọc
-(25, 'CTR-HN01-051026-1025', 33, 'HN01-F1-M02', '2026-10-05', '2026-11-05', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CANCELLED', '2026-10-03 14:00:00', NULL),
--- Trả kho trước hạn có nghiệm thu hoàn cọc (TERMINATED)
-(26, 'CTR-HCM01-200726-1026', 32, 'HCM01-F1-M02', '2026-07-20', '2026-10-20', 'MONTHLY', 4320000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-07-19 14:00:00', NULL),
--- Quá hạn > 30 ngày bị tịch thu tài sản (FORFEITED)
-(27, 'CTR-HCM02-010726-1027', 35, 'HCM02-G-XL02', '2026-07-01', '2026-08-01', 'MONTHLY', 4000000.00, 3000000.00, 1500000.00, 'CONFIRMED', '2026-06-29 08:00:00', NULL);
+(24, 'CTR-DN01-061126-1024', 36, 'DN01-F1-S04', '2026-11-06', '2026-12-06', 'MONTHLY', 600000.00, 500000.00, 0.00, 'CONFIRMED', '2026-10-24 14:10:00', NULL);
 
 -- 15. Hợp đồng thuê kho (Contracts) đa dạng chu trình 7 trạng thái chuẩn BR-21
 INSERT INTO Contract (contractId, reservationId, pdfUrl, activatedAt, terminatedAt, status, cancelReason, refundBankName, refundAccountNumber, refundAccountName) VALUES
@@ -923,16 +915,11 @@ INSERT INTO Contract (contractId, reservationId, pdfUrl, activatedAt, terminated
 (21, 21, '/contracts/CTR-HN02-120926-1021.pdf', '2026-09-12 15:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
 (22, 22, '/contracts/CTR-CT01-120826-1022.pdf', '2026-08-12 16:00:00', NULL, 'OVERDUE', NULL, NULL, NULL, NULL),
 (23, 23, '/contracts/CTR-CT01-300926-1023.pdf', NULL, NULL, 'CANCELLED', 'Khách hàng chủ động hủy trước ngày bắt đầu >= 4 ngày. Hoàn lại 100% cọc theo BR-17.', 'ACB', '246813579', 'VU MAI PHUONG'),
-(24, 24, '/contracts/CTR-DN01-061126-1024.pdf', NULL, NULL, 'PENDING_CHECKIN', NULL, NULL, NULL, NULL),
-
--- Các trạng thái khác: NO_SHOW, TERMINATED, FORFEITED
-(25, 25, '/contracts/CTR-HN01-051026-1025.pdf', NULL, NULL, 'CANCELLED', 'Quá hạn check-in (No-Show). Tịch thu 100% tiền cọc theo quy định BR-20.', NULL, NULL, NULL),
-(26, 26, '/contracts/CTR-HCM01-200726-1026.pdf', '2026-07-20 10:00:00', '2026-09-25 11:00:00', 'TERMINATED', 'Khách hàng tất toán hợp đồng trước hạn theo biên bản nghiệm thu', 'Vietcombank', '079201098765', 'TRAN THU HA'),
-(27, 27, '/contracts/CTR-HCM02-010726-1027.pdf', '2026-07-01 08:30:00', NULL, 'FORFEITED', 'Quá hạn thanh lý trên 30 ngày. Tịch thu quyền sử dụng tài sản theo quy định BR-21.', NULL, NULL, NULL);
+(24, 24, '/contracts/CTR-DN01-061126-1024.pdf', NULL, NULL, 'PENDING_CHECKIN', NULL, NULL, NULL, NULL);
 
 -- 16. Hóa đơn và Thanh toán (Payments) chuẩn mã định danh BR-37
 INSERT INTO Payment (paymentId, contractId, invoiceNumber, invoiceType, amount, paidAmount, remainingAmount, pdfUrl, issuedAt, dueAt, status, paymentMethod, transactionCode, paymentStatus, gatewayTransactionId, paidAt) VALUES
--- === Khách 1: HĐ 1 (ACTIVE), HĐ 2 (OVERDUE có PEN), HĐ 3 (CANCELLED có REF), HĐ 4 (PENDING_CHECKIN) ===
+-- === Khách 1 (Nguyễn Thành Long): HĐ 1 (ACTIVE), HĐ 2 (OVERDUE), HĐ 3 (CANCELLED), HĐ 4 (PENDING_CHECKIN) ===
 (1, 1, 'DEP-CTR-HN01-010926-1001', 'DEP', 15000000.00, 15000000.00, 0.00, '/invoices/INV-001.pdf', '2026-08-30 09:15:00', '2026-09-01 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_1001', 'SUCCESS', 'VNP1001', '2026-09-01 09:05:00'),
 (2, 2, 'DEP-CTR-HN01-010926-1002', 'DEP', 4400000.00, 4400000.00, 0.00, '/invoices/INV-002.pdf', '2026-08-30 08:35:00', '2026-09-01 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_1002', 'SUCCESS', 'VNP1002', '2026-09-01 09:10:00'),
 (3, 2, 'PEN-HN01-20261018-1002', 'OVERDUE_FEE', 850000.00, 0.00, 850000.00, '/invoices/INV-003.pdf', '2026-10-18 00:00:00', '2026-10-18 23:59:59', 'OVERDUE', NULL, NULL, 'PENDING', NULL, NULL),
@@ -940,7 +927,7 @@ INSERT INTO Payment (paymentId, contractId, invoiceNumber, invoiceType, amount, 
 (5, 3, 'REF-HN02-20260927-1003', 'REF', 1000000.00, 1000000.00, 0.00, '/invoices/INV-005.pdf', '2026-09-27 15:30:00', '2026-09-29 23:59:59', 'PAID', 'BANK_TRANSFER', 'MB_270926_1003', 'SUCCESS', 'MB2609271003', '2026-09-27 16:00:00'),
 (6, 4, 'DEP-CTR-HN01-011126-1004', 'DEP', 2200000.00, 1000000.00, 1200000.00, '/invoices/INV-006.pdf', '2026-10-24 14:00:00', '2026-11-01 23:59:59', 'PARTIALLY_PAID', 'VNPAY', 'TXN_VNP_1004', 'SUCCESS', 'VNP1004', '2026-10-24 14:05:00'),
 
--- === Khách 2: HĐ 5 (ACTIVE), HĐ 6 (OVERDUE có PEN), HĐ 7 (CANCELLED có REF), HĐ 8 (PENDING_CHECKIN) ===
+-- === Khách 2 (Trần Thu Hà): HĐ 5 (ACTIVE), HĐ 6 (OVERDUE), HĐ 7 (CANCELLED), HĐ 8 (PENDING_CHECKIN) ===
 (7, 5, 'DEP-CTR-HN01-150926-1005', 'DEP', 2300000.00, 2300000.00, 0.00, '/invoices/INV-007.pdf', '2026-09-14 10:10:00', '2026-09-15 23:59:59', 'PAID', 'VIETQR', 'TXN_VQR_1005', 'SUCCESS', 'QR1005', '2026-09-15 10:05:00'),
 (8, 6, 'DEP-CTR-HN01-150826-1006', 'DEP', 4400000.00, 4400000.00, 0.00, '/invoices/INV-008.pdf', '2026-08-14 09:35:00', '2026-08-15 23:59:59', 'PAID', 'VIETQR', 'TXN_VQR_1006', 'SUCCESS', 'QR1006', '2026-08-15 09:40:00'),
 (9, 6, 'PEN-HN01-20261018-1006', 'OVERDUE_FEE', 1200000.00, 0.00, 1200000.00, '/invoices/INV-009.pdf', '2026-10-18 00:00:00', '2026-10-18 23:59:59', 'OVERDUE', NULL, NULL, 'PENDING', NULL, NULL),
@@ -948,7 +935,7 @@ INSERT INTO Payment (paymentId, contractId, invoiceNumber, invoiceType, amount, 
 (11, 7, 'REF-HN01-20260928-1007', 'REF', 1000000.00, 1000000.00, 0.00, '/invoices/INV-011.pdf', '2026-09-28 14:00:00', '2026-09-30 23:59:59', 'PAID', 'BANK_TRANSFER', 'VCB_280926_1007', 'SUCCESS', 'VCB2809261007', '2026-09-28 15:00:00'),
 (12, 8, 'DEP-CTR-HN01-021126-1008', 'DEP', 7000000.00, 3000000.00, 4000000.00, '/invoices/INV-012.pdf', '2026-10-24 16:30:00', '2026-11-02 23:59:59', 'PARTIALLY_PAID', 'VIETQR', 'TXN_VQR_1008', 'SUCCESS', 'QR1008', '2026-10-24 16:35:00'),
 
--- === Khách 3: HĐ 9 (ACTIVE), HĐ 10 (OVERDUE có PEN), HĐ 11 (CANCELLED có REF), HĐ 12 (PENDING_CHECKIN) ===
+-- === Khách 3 (Trần Thị Bích Ngọc): HĐ 9 (ACTIVE), HĐ 10 (OVERDUE), HĐ 11 (CANCELLED), HĐ 12 (PENDING_CHECKIN) ===
 (13, 9, 'DEP-CTR-HN01-200826-1009', 'DEP', 2300000.00, 2300000.00, 0.00, '/invoices/INV-013.pdf', '2026-08-19 11:10:00', '2026-08-20 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_1009', 'SUCCESS', 'VNP1009', '2026-08-20 11:05:00'),
 (14, 10, 'DEP-CTR-HCM01-010826-1010', 'DEP', 7000000.00, 7000000.00, 0.00, '/invoices/INV-014.pdf', '2026-07-30 14:10:00', '2026-08-01 23:59:59', 'PAID', 'BANK_TRANSFER', 'TCB_1010', 'SUCCESS', 'TCB1010', '2026-08-01 14:05:00'),
 (15, 10, 'PEN-HCM01-20261018-1010', 'OVERDUE_FEE', 1500000.00, 0.00, 1500000.00, '/invoices/INV-015.pdf', '2026-10-18 00:00:00', '2026-10-18 23:59:59', 'OVERDUE', NULL, NULL, 'PENDING', NULL, NULL),
@@ -956,7 +943,7 @@ INSERT INTO Payment (paymentId, contractId, invoiceNumber, invoiceType, amount, 
 (17, 11, 'REF-HCM01-20260929-1011', 'REF', 1000000.00, 1000000.00, 0.00, '/invoices/INV-017.pdf', '2026-09-29 10:00:00', '2026-10-01 23:59:59', 'PAID', 'BANK_TRANSFER', 'TCB_290926_1011', 'SUCCESS', 'TCB2909261011', '2026-09-29 11:00:00'),
 (18, 12, 'DEP-CTR-HN01-031126-1012', 'DEP', 2200000.00, 1000000.00, 1200000.00, '/invoices/INV-018.pdf', '2026-10-24 10:15:00', '2026-11-03 23:59:59', 'PARTIALLY_PAID', 'VNPAY', 'TXN_VNP_1012', 'SUCCESS', 'VNP1012', '2026-10-24 10:20:00'),
 
--- === Khách 4: HĐ 13 (ACTIVE), HĐ 14 (OVERDUE có PEN), HĐ 15 (CANCELLED có REF), HĐ 16 (PENDING_CHECKIN) ===
+-- === Khách 4 (Lê Hữu Đạt): HĐ 13 (ACTIVE), HĐ 14 (OVERDUE), HĐ 15 (CANCELLED), HĐ 16 (PENDING_CHECKIN) ===
 (19, 13, 'DEP-CTR-HN01-210926-1013', 'DEP', 3400000.00, 3400000.00, 0.00, '/invoices/INV-019.pdf', '2026-09-20 15:10:00', '2026-09-21 23:59:59', 'PAID', 'MOMO', 'TXN_MM_1013', 'SUCCESS', 'MM1013', '2026-09-21 15:05:00'),
 (20, 14, 'DEP-CTR-HCM02-100826-1014', 'DEP', 7000000.00, 7000000.00, 0.00, '/invoices/INV-020.pdf', '2026-08-08 10:10:00', '2026-08-10 23:59:59', 'PAID', 'BANK_TRANSFER', 'TCB_1014', 'SUCCESS', 'TCB1014', '2026-08-10 10:05:00'),
 (21, 14, 'PEN-HCM02-20261018-1014', 'OVERDUE_FEE', 1500000.00, 0.00, 1500000.00, '/invoices/INV-021.pdf', '2026-10-18 00:00:00', '2026-10-18 23:59:59', 'OVERDUE', NULL, NULL, 'PENDING', NULL, NULL),
@@ -964,7 +951,7 @@ INSERT INTO Payment (paymentId, contractId, invoiceNumber, invoiceType, amount, 
 (23, 15, 'REF-HCM02-20260930-1015', 'REF', 1000000.00, 1000000.00, 0.00, '/invoices/INV-023.pdf', '2026-09-30 11:00:00', '2026-10-02 23:59:59', 'PAID', 'BANK_TRANSFER', 'TCB_300926_1015', 'SUCCESS', 'TCB3009261015', '2026-09-30 11:30:00'),
 (24, 16, 'DEP-CTR-HN02-041126-1016', 'DEP', 2200000.00, 1000000.00, 1200000.00, '/invoices/INV-024.pdf', '2026-10-24 11:20:00', '2026-11-04 23:59:59', 'PARTIALLY_PAID', 'VIETQR', 'TXN_VQR_1016', 'SUCCESS', 'QR1016', '2026-10-24 11:25:00'),
 
--- === Khách 5: HĐ 17 (ACTIVE), HĐ 18 (OVERDUE có PEN), HĐ 19 (CANCELLED có REF), HĐ 20 (PENDING_CHECKIN) ===
+-- === Khách 5 (Lê Hoàng Long): HĐ 17 (ACTIVE), HĐ 18 (OVERDUE), HĐ 19 (CANCELLED), HĐ 20 (PENDING_CHECKIN) ===
 (25, 17, 'DEP-CTR-HN02-100926-1017', 'DEP', 15000000.00, 15000000.00, 0.00, '/invoices/INV-025.pdf', '2026-09-08 10:15:00', '2026-09-10 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_1017', 'SUCCESS', 'VNP1017', '2026-09-10 10:05:00'),
 (26, 18, 'DEP-CTR-HCM03-050826-1018', 'DEP', 7000000.00, 7000000.00, 0.00, '/invoices/INV-026.pdf', '2026-08-03 14:35:00', '2026-08-05 23:59:59', 'PAID', 'BANK_TRANSFER', 'TCB_1018', 'SUCCESS', 'TCB1018', '2026-08-05 14:40:00'),
 (27, 18, 'PEN-HCM03-20261018-1018', 'OVERDUE_FEE', 1500000.00, 0.00, 1500000.00, '/invoices/INV-027.pdf', '2026-10-18 00:00:00', '2026-10-18 23:59:59', 'OVERDUE', NULL, NULL, 'PENDING', NULL, NULL),
@@ -972,24 +959,17 @@ INSERT INTO Payment (paymentId, contractId, invoiceNumber, invoiceType, amount, 
 (29, 19, 'REF-DN01-20261001-1019', 'REF', 1000000.00, 1000000.00, 0.00, '/invoices/INV-029.pdf', '2026-10-01 10:00:00', '2026-10-03 23:59:59', 'PAID', 'BANK_TRANSFER', 'CTG_011026_1019', 'SUCCESS', 'CTG0110261019', '2026-10-01 11:00:00'),
 (30, 20, 'DEP-CTR-HCM01-051126-1020', 'DEP', 2440000.00, 1000000.00, 1440000.00, '/invoices/INV-030.pdf', '2026-10-24 15:45:00', '2026-11-05 23:59:59', 'PARTIALLY_PAID', 'MOMO', 'TXN_MM_1020', 'SUCCESS', 'MM1020', '2026-10-24 15:50:00'),
 
--- === Khách 6: HĐ 21 (ACTIVE), HĐ 22 (OVERDUE có PEN), HĐ 23 (CANCELLED có REF), HĐ 24 (PENDING_CHECKIN) ===
+-- === Khách 6 (Vũ Mai Phương): HĐ 21 (ACTIVE), HĐ 22 (OVERDUE), HĐ 23 (CANCELLED), HĐ 24 (PENDING_CHECKIN) ===
 (31, 21, 'DEP-CTR-HN02-120926-1021', 'DEP', 3400000.00, 3400000.00, 0.00, '/invoices/INV-031.pdf', '2026-09-10 15:10:00', '2026-09-12 23:59:59', 'PAID', 'VIETQR', 'TXN_VQR_1021', 'SUCCESS', 'QR1021', '2026-09-12 15:05:00'),
 (32, 22, 'DEP-CTR-CT01-120826-1022', 'DEP', 7000000.00, 7000000.00, 0.00, '/invoices/INV-032.pdf', '2026-08-10 16:10:00', '2026-08-12 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_1022', 'SUCCESS', 'VNP1022', '2026-08-12 16:05:00'),
 (33, 22, 'PEN-CT01-20261018-1022', 'OVERDUE_FEE', 1500000.00, 0.00, 1500000.00, '/invoices/INV-033.pdf', '2026-10-18 00:00:00', '2026-10-18 23:59:59', 'OVERDUE', NULL, NULL, 'PENDING', NULL, NULL),
 (34, 23, 'DEP-CTR-CT01-300926-1023', 'DEP', 2200000.00, 1000000.00, 1200000.00, '/invoices/INV-034.pdf', '2026-09-30 10:05:00', '2026-10-07 23:59:59', 'CANCELLED', 'VNPAY', 'TXN_VNP_1023', 'SUCCESS', 'VNP1023', '2026-09-30 10:10:00'),
 (35, 23, 'REF-CT01-20261002-1023', 'REF', 1000000.00, 1000000.00, 0.00, '/invoices/INV-035.pdf', '2026-10-02 14:00:00', '2026-10-04 23:59:59', 'PAID', 'BANK_TRANSFER', 'ACB_021026_1023', 'SUCCESS', 'ACB0210261023', '2026-10-02 15:00:00'),
-(36, 24, 'DEP-CTR-DN01-061126-1024', 'DEP', 1100000.00, 500000.00, 600000.00, '/invoices/INV-036.pdf', '2026-10-24 14:10:00', '2026-11-06 23:59:59', 'PARTIALLY_PAID', 'VIETQR', 'TXN_VQR_1024', 'SUCCESS', 'QR1024', '2026-10-24 14:15:00'),
-
--- === Hóa đơn cho các hợp đồng đặc thù: NO-SHOW, TERMINATED, FORFEITED ===
-(37, 25, 'DEP-CTR-HN01-051026-1025', 'DEP', 2200000.00, 1000000.00, 1200000.00, '/invoices/INV-037.pdf', '2026-10-03 14:05:00', '2026-10-05 23:59:59', 'CANCELLED', 'VIETQR', 'TXN_VQR_1025', 'SUCCESS', 'QR1025', '2026-10-03 14:15:00'),
-(38, 26, 'DEP-CTR-HCM01-200726-1026', 'DEP', 5320000.00, 5320000.00, 0.00, '/invoices/INV-038.pdf', '2026-07-19 14:10:00', '2026-07-20 23:59:59', 'PAID', 'MOMO', 'TXN_MM_1026', 'SUCCESS', 'MM1026', '2026-07-20 10:05:00'),
-(39, 26, 'REF-HCM01-20260925-1026', 'REF', 850000.00, 850000.00, 0.00, '/invoices/INV-039.pdf', '2026-09-25 10:45:00', '2026-09-27 23:59:59', 'PAID', 'BANK_TRANSFER', 'VCB_250926_1026', 'SUCCESS', 'VCB2609251026', '2026-09-25 11:15:00'),
-(40, 27, 'DEP-CTR-HCM02-010726-1027', 'DEP', 7000000.00, 7000000.00, 0.00, '/invoices/INV-040.pdf', '2026-06-29 08:10:00', '2026-07-01 23:59:59', 'PAID', 'BANK_TRANSFER', 'TCB_1027', 'SUCCESS', 'TCB1027', '2026-07-01 08:35:00'),
-(41, 27, 'PEN-HCM02-20260902-1027', 'OVERDUE_FEE', 1500000.00, 0.00, 1500000.00, '/invoices/INV-041.pdf', '2026-09-02 00:00:00', '2026-09-02 23:59:59', 'OVERDUE', NULL, NULL, 'PENDING', NULL, NULL);
+(36, 24, 'DEP-CTR-DN01-061126-1024', 'DEP', 1100000.00, 500000.00, 600000.00, '/invoices/INV-036.pdf', '2026-10-24 14:10:00', '2026-11-06 23:59:59', 'PARTIALLY_PAID', 'VIETQR', 'TXN_VQR_1024', 'SUCCESS', 'QR1024', '2026-10-24 14:15:00');
 
 -- 17. Mã PIN động mở cổng IoT 24/7 (GatePins)
 INSERT INTO GatePin (gatePinId, contractId, pinCode, status, generatedAt, expiresAt) VALUES
--- Cấp mã PIN cho các hợp đồng đang ACTIVE (HĐ 1, 5, 9, 13, 17, 21)
+-- Cấp mã PIN cho 6 hợp đồng đang ACTIVE (HĐ 1, 5, 9, 13, 17, 21)
 (1, 1, '839201', 'ACTIVE', '2026-10-24 08:00:00', '2026-11-24 23:59:59'),
 (2, 5, '194726', 'ACTIVE', '2026-10-24 08:00:00', '2026-11-24 23:59:59'),
 (3, 9, '551920', 'ACTIVE', '2026-10-24 08:00:00', '2026-11-24 23:59:59'),
@@ -1008,34 +988,30 @@ INSERT INTO AuditLog (auditLogId, accountId, facilityId, customerId, action, ope
 INSERT INTO SupportTicket (id, ticketCode, type, status, customerId, facilityId, unitCode, contractId, title, description, desiredDate, assignedStaffId, slaDeadline, isSlaBreached, identityVerified, resolutionNote, createdAt, resolvedAt) VALUES
 -- === KHÁCH HÀNG 1: Nguyễn Thành Long (CustomerId 1, Cơ sở HN-01, Ô HN01-G-XL02) ===
 (1, 'TCK-202610-001', 'INCIDENT', 'RESOLVED', 1, 1, 'HN01-G-XL02', 1, 'Báo sự cố an ninh & kỹ thuật', 'Khóa thông minh buồng kho không tự bung chốt sau khi nhập mã PIN, đèn tín hiệu nháy đỏ liên tục.', NULL, 8, '2026-10-10 18:00:00', FALSE, TRUE, 'Đã kiểm tra cơ cấu chấp hành, tra dầu mỡ trục khóa và reset cảm biến hành trình.', '2026-10-10 14:00:00', '2026-10-10 15:30:00'),
-(2, 'TCK-202610-002', 'MAINTENANCE', 'IN_PROGRESS', 1, 1, 'HN01-G-XL02', 1, 'Bảo trì / Sửa chữa', 'Yêu cầu nhân viên đo kiểm tra thực tế độ ẩm buồng kho mát định kỳ để bảo quản tài sản đồ da và tranh vẽ.', NULL, 8, '2026-10-25 18:00:00', FALSE, TRUE, NULL, '2026-10-24 10:00:00', NULL),
+(2, 'TCK-202610-002', 'MAINTENANCE', 'RESOLVED', 1, 1, 'HN01-G-XL02', 1, 'Bảo trì / Sửa chữa', 'Yêu cầu nhân viên đo kiểm tra thực tế độ ẩm buồng kho mát định kỳ để bảo quản tài sản đồ da và tranh vẽ.', NULL, 8, '2026-10-25 18:00:00', FALSE, TRUE, 'Đã tiến hành đo kiểm thực tế: độ ẩm đạt 50%RH, nhiệt độ 22°C đạt chuẩn bảo quản đồ da.', '2026-10-24 10:00:00', '2026-10-24 11:30:00'),
 
 -- === KHÁCH HÀNG 2: Trần Thu Hà (CustomerId 2, Cơ sở HN-01, Ô HN01-F1-S02) ===
-(3, 'TCK-202609-001', 'EARLY_TERMINATION', 'RESOLVED', 2, 1, 'HN01-F1-S02', 5, 'Yêu cầu trả kho sớm', 'Khách hàng dọn đồ sang địa điểm mới nên xin thanh lý hợp đồng trước hạn vào ngày 25/09/2026.', '2026-09-25', 8, NULL, FALSE, TRUE, 'Đã hoàn tất nghiệm thu buồng kho và lập lệnh hoàn cọc theo biên bản kiểm tra.', '2026-09-20 09:00:00', '2026-09-25 11:00:00'),
+(3, 'TCK-202609-001', 'EARLY_TERMINATION', 'RESOLVED', 2, 1, 'HN01-F1-S02', 5, 'Yêu cầu trả kho sớm', 'Khách hàng dọn đồ sang địa điểm mới nên xin làm thủ tục bàn giao kho trước thời hạn.', '2026-09-25', 8, NULL, FALSE, TRUE, 'Đã hoàn tất nghiệm thu buồng kho sạch sẽ và hướng dẫn khách nhận lại tiền cọc.', '2026-09-20 09:00:00', '2026-09-22 10:00:00'),
 (4, 'TCK-202610-003', 'INCIDENT', 'RESOLVED', 2, 1, 'HN01-F1-S02', 5, 'Báo sự cố an ninh & kỹ thuật', 'Bảng khóa số điện tử phát âm thanh bíp ngắt quãng và nháy đèn báo pin yếu (Low Battery 15%), cần thay pin.', NULL, 9, '2026-10-18 13:00:00', FALSE, TRUE, 'Đã thay 4 pin AA Alkaline mới, bảng khóa hoạt động ổn định và đo pin đạt 100%.', '2026-10-18 09:00:00', '2026-10-18 10:15:00'),
 
 -- === KHÁCH HÀNG 3: Trần Thị Bích Ngọc (CustomerId 3, Cơ sở HN-01, Ô HN01-F1-S04) ===
 (5, 'TCK-202610-004', 'MAINTENANCE', 'RESOLVED', 3, 1, 'HN01-F1-S04', 9, 'Bảo trì / Sửa chữa', 'Đèn LED chiếu sáng cảm biến tại lối đi phía trước cửa buồng kho nhấp nháy vào ban đêm.', NULL, 8, '2026-10-15 20:00:00', FALSE, TRUE, 'Đã thay bộ nguồn LED driver và bóng đèn mới tại vị trí hành lang tầng 1.', '2026-10-15 16:30:00', '2026-10-15 17:45:00'),
-(6, 'TCK-202610-005', 'MAINTENANCE', 'IN_PROGRESS', 3, 1, 'HN01-F1-S04', 9, 'Bảo trì / Sửa chữa', 'Mép gioăng cao su viền cửa hơi bị lệch, nhờ nhân viên kiểm tra cân chỉnh lại để chống bụi mịn.', NULL, 9, '2026-10-25 21:00:00', FALSE, TRUE, NULL, '2026-10-24 16:00:00', NULL),
+(6, 'TCK-202610-005', 'MAINTENANCE', 'RESOLVED', 3, 1, 'HN01-F1-S04', 9, 'Bảo trì / Sửa chữa', 'Mép gioăng cao su viền cửa hơi bị lệch, nhờ nhân viên kiểm tra cân chỉnh lại để chống bụi mịn.', NULL, 9, '2026-10-25 21:00:00', FALSE, TRUE, 'Đã căn chỉnh lại gioăng cao su viền cánh cửa khít hoàn toàn, đạt tiêu chuẩn chống bụi.', '2026-10-24 14:00:00', '2026-10-24 15:30:00'),
 
 -- === KHÁCH HÀNG 4: Lê Hữu Đạt (CustomerId 4, Cơ sở HN-01, Ô HN01-F2-M03) ===
 (7, 'TCK-202610-006', 'UNLOCK', 'RESOLVED', 4, 1, 'HN01-F2-M03', 13, 'Mở khóa khẩn cấp', 'Khách hàng để quên mã PIN trong điện thoại bị sập nguồn, nhờ nhân viên hỗ trợ mở khóa khẩn cấp.', NULL, 8, '2026-10-16 11:00:00', FALSE, TRUE, 'Đã đối chiếu CCCD chính chủ trùng khớp hồ sơ và hỗ trợ mở khóa trực tiếp tại quầy.', '2026-10-16 10:15:00', '2026-10-16 10:45:00'),
-(8, 'TCK-202610-007', 'MAINTENANCE', 'IN_PROGRESS', 4, 1, 'HN01-F2-M03', 13, 'Bảo trì / Sửa chữa', 'Bản lề cánh cửa buồng kho bị rít và phát tiếng cọt kẹt khi mở, nhờ nhân viên hỗ trợ tra dầu bôi trơn.', NULL, 9, '2026-10-25 17:00:00', FALSE, TRUE, NULL, '2026-10-24 13:00:00', NULL),
+(8, 'TCK-202610-007', 'MAINTENANCE', 'RESOLVED', 4, 1, 'HN01-F2-M03', 13, 'Bảo trì / Sửa chữa', 'Bản lề cánh cửa buồng kho bị rít và phát tiếng cọt kẹt khi mở, nhờ nhân viên hỗ trợ tra dầu bôi trơn.', NULL, 9, '2026-10-25 17:00:00', FALSE, TRUE, 'Đã tra mỡ bôi trơn chuyên dụng vào toàn bộ cụm bản lề, cửa đóng mở êm ái.', '2026-10-24 11:00:00', '2026-10-24 11:45:00'),
 
 -- === KHÁCH HÀNG 5: Lê Hoàng Long (CustomerId 5, Cơ sở HN-02, Ô HN02-G-XL01) ===
 (9, 'TCK-202610-008', 'INCIDENT', 'RESOLVED', 5, 2, 'HN02-G-XL01', 17, 'Báo sự cố an ninh & kỹ thuật', 'Màn hình cảm ứng bảng khóa thông minh bị mờ số hiển thị vào ban ngày, đề nghị kiểm tra màn led.', NULL, 11, '2026-10-14 18:00:00', FALSE, TRUE, 'Đã vệ sinh bề mặt cảm ứng và điều chỉnh lại độ sáng đèn nền LED của bảng điều khiển.', '2026-10-14 14:00:00', '2026-10-14 15:20:00'),
 (10, 'TCK-202610-009', 'MAINTENANCE', 'RESOLVED', 5, 2, 'HN02-G-XL01', 17, 'Bảo trì / Sửa chữa', 'Khách hàng chuyển nhiều kiện hàng nặng vào kho, nhờ cơ sở hỗ trợ mượn xe đẩy nâng thủy lực.', NULL, 12, '2026-10-17 12:00:00', FALSE, TRUE, 'Nhân viên trực ca đã bàn giao xe đẩy hàng tải trọng 300kg và hỗ trợ đưa hàng vào buồng kho.', '2026-10-17 09:30:00', '2026-10-17 11:00:00'),
 
 -- === KHÁCH HÀNG 6: Vũ Mai Phương (CustomerId 6, Cơ sở HN-02, Ô HN02-F1-M02) ===
-(11, 'TCK-202610-010', 'MAINTENANCE', 'IN_PROGRESS', 6, 2, 'HN02-F1-M02', 21, 'Bảo trì / Sửa chữa', 'Cần kiểm tra định kỳ cảm biến nhiệt độ buồng kho mát để đảm bảo tiêu chuẩn bảo quản tài liệu điện tử.', NULL, 11, '2026-10-25 20:00:00', FALSE, TRUE, NULL, '2026-10-24 15:00:00', NULL),
+(11, 'TCK-202610-010', 'MAINTENANCE', 'RESOLVED', 6, 2, 'HN02-F1-M02', 21, 'Bảo trì / Sửa chữa', 'Cần kiểm tra định kỳ cảm biến nhiệt độ buồng kho mát để đảm bảo tiêu chuẩn bảo quản tài liệu điện tử.', NULL, 11, '2026-10-25 20:00:00', FALSE, TRUE, 'Hệ thống điều hòa và cảm biến nhiệt độ buồng kho hoạt động chuẩn xác, duy trì 22°C liên tục.', '2026-10-24 13:00:00', '2026-10-24 14:15:00'),
 (12, 'TCK-202610-011', 'EARLY_TERMINATION', 'RESOLVED', 6, 2, 'HN02-F1-M02', 21, 'Yêu cầu trả kho sớm', 'Khách hàng hoàn tất kế hoạch lưu trữ trước thời hạn, xin làm thủ tục bàn giao kho và tất toán hợp đồng.', '2026-10-22', 12, NULL, FALSE, TRUE, 'Đã hoàn tất nghiệm thu ô kho sạch sẽ, không hư hại và tạo lệnh hoàn tiền cọc.', '2026-10-18 10:00:00', '2026-10-22 10:30:00');
 
 -- 20. Biên bản nghiệm thu kiểm tra trả kho (Inspections & InspectionItems)
-INSERT INTO Inspection (inspectionId, paymentId, employeeId, inspectionDate, conditionStatus) VALUES
-(1, 39, 14, '2026-09-25 10:30:00', 'DAMAGED_DIRTY');
-
-INSERT INTO InspectionItem (inspectionItemId, inspectionId, feeItemId, quantity, amount) VALUES
-(1, 1, 1, 1, 150000.00);
+-- (Không có biên bản vi phạm phát sinh)
 
 -- ============================================================================
 -- HOÀN TẤT KHỞI TẠO CƠ SỞ DỮ LIỆU SMART STORAGE SYSTEM
