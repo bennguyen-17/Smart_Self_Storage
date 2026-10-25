@@ -144,7 +144,7 @@ export default function StorageTable({
                         title={AT_COUNTER_NOTE}
                         className="text-xs text-amber-700 dark:text-amber-300 font-medium italic whitespace-nowrap"
                       >
-                        Gia hạn tại quầy (Tiền mặt)
+                        Gia hạn tại quầy
                       </span>
                     )}
                   </div>
