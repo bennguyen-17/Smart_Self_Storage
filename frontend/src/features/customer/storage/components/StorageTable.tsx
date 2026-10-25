@@ -152,22 +152,12 @@ export default function StorageTable({
 
                     {/* HĐ OVERDUE */}
                     {extendModeOf(item.status) === 'AT_COUNTER' && (
-                      <div className="flex flex-col items-end gap-1">
-                        <button
-                          type="button"
-                          disabled
-                          className="px-3.5 py-1.5 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 cursor-not-allowed flex items-center justify-center gap-1.5 whitespace-nowrap"
-                        >
-                          <i className="fa-solid fa-arrows-rotate text-sm"></i> Gia Hạn
-                        </button>
-                        <span
-                          title={AT_COUNTER_NOTE}
-                          className="text-xs leading-tight font-semibold text-amber-700 dark:text-amber-300 whitespace-nowrap"
-                        >
-                          <i className="fa-solid fa-store text-xs mr-1" aria-hidden="true"></i>
-                          <span>Gia hạn tại quầy (Tiền mặt)</span>
-                        </span>
-                      </div>
+                      <span
+                        title={AT_COUNTER_NOTE}
+                        className="text-xs text-amber-700 dark:text-amber-300 font-medium italic whitespace-nowrap"
+                      >
+                        Gia hạn tại quầy (Tiền mặt)
+                      </span>
                     )}
                   </div>
                 </td>
