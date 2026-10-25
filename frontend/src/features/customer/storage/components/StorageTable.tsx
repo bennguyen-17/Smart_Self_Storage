@@ -132,21 +132,9 @@ export default function StorageTable({
                       </button>
                     )}
 
-                    {isCompleted && (
-                      <span className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">
-                        Đã hoàn tất
-                      </span>
-                    )}
-
-                    {isTerminated && (
-                      <span className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">
-                        Đã thanh lý &amp; hoàn cọc
-                      </span>
-                    )}
-
-                    {isCanceled && (
-                      <span className="text-sm text-rose-500/90 dark:text-rose-400 font-medium italic" title={getCancelReasonLabel(item.cancelReason)}>
-                        {getCancelReasonLabel(item.cancelReason)}
+                    {(isCompleted || isTerminated || isCanceled) && (
+                      <span className="text-slate-400 dark:text-slate-600 font-mono text-base select-none" title="Không có hành động khả dụng">
+                        —
                       </span>
                     )}
 

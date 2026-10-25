@@ -130,21 +130,9 @@ export default function StorageCardList({
                 </button>
               )}
 
-              {isCompleted && (
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium italic">
-                  Đã hoàn tất
-                </span>
-              )}
-
-              {isTerminated && (
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium italic">
-                  Đã thanh lý &amp; hoàn cọc
-                </span>
-              )}
-
-              {isCanceled && (
-                <span className="text-xs text-rose-500/90 dark:text-rose-400 font-medium italic">
-                  {getCancelReasonLabel(item.cancelReason)}
+              {(isCompleted || isTerminated || isCanceled) && (
+                <span className="text-slate-400 dark:text-slate-600 font-mono text-sm select-none" title="Không có hành động khả dụng">
+                  —
                 </span>
               )}
 
@@ -153,7 +141,7 @@ export default function StorageCardList({
                   title={AT_COUNTER_NOTE}
                   className="text-xs text-amber-700 dark:text-amber-300 font-medium italic whitespace-nowrap"
                 >
-                  Gia hạn tại quầy (Tiền mặt)
+                  Gia hạn tại quầy
                 </span>
               )}
             </div>
