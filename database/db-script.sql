@@ -174,6 +174,25 @@ CREATE TABLE Price (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
+-- 11.1. TABLE: FeePolicy (Biểu phí phụ thu, phí phạt, chính sách ưu đãi chiết khấu)
+-- ----------------------------------------------------------------------------
+DROP TABLE IF EXISTS FeePolicy;
+CREATE TABLE FeePolicy (
+    policyId INT AUTO_INCREMENT PRIMARY KEY,
+    policyCode VARCHAR(50) NOT NULL UNIQUE,
+    policyName VARCHAR(150) NOT NULL,
+    category ENUM('SURCHARGE', 'PENALTY', 'DISCOUNT') NOT NULL,
+    calcType ENUM('PERCENT', 'FIXED') NOT NULL,
+    feeValue DECIMAL(12, 2) NOT NULL,
+    unitBasis VARCHAR(50) NOT NULL DEFAULT 'TOTAL_BILL',
+    description VARCHAR(255) NULL,
+    isWaiveDeposit BOOLEAN DEFAULT FALSE,
+    status ENUM('ACTIVE', 'INACTIVE') NOT NULL DEFAULT 'ACTIVE',
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------------------------------------------
 -- 12. TABLE: Promotion (Chương trình khuyến mãi & Chiết khấu)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Promotion;
@@ -579,6 +598,18 @@ INSERT INTO Price (priceId, unitTypeId, dailyPrice, monthlyPrice, depositAmount,
 (4, 4, 200000.00, 4000000.00, 3000000.00, 0.00, '2026-01-01', NULL, 'ACTIVE'),
 (5, 5, 60000.00, 1200000.00, 1000000.00, 20.00, '2026-01-01', NULL, 'ACTIVE'),
 (6, 6, 120000.00, 2400000.00, 2000000.00, 20.00, '2026-01-01', NULL, 'ACTIVE');
+
+-- 8.1. Biểu phí phụ thu, phạt và chiết khấu (FeePolicies)
+INSERT INTO FeePolicy (policyId, policyCode, policyName, category, calcType, feeValue, unitBasis, description, isWaiveDeposit, status) VALUES
+(1, 'ELEC_247', 'Phí Điện Kho Lạnh 24/7', 'SURCHARGE', 'FIXED', 300000.00, 'PER_MONTH', 'Cấp nguồn điện liên tục cho kho mát bảo quản thực phẩm, mỹ phẩm', FALSE, 'ACTIVE'),
+(2, 'PORTER_SERVICE', 'Phí Hỗ Trợ Bốc Xếp', 'SURCHARGE', 'FIXED', 150000.00, 'PER_REQUEST', 'Đội bốc vác hỗ trợ vận chuyển hàng lên tầng và vào ô kho', FALSE, 'ACTIVE'),
+(3, 'PIN_REISSUE', 'Phí Cấp Lại Mã PIN Thẻ Từ', 'SURCHARGE', 'FIXED', 50000.00, 'PER_REQUEST', 'Cấp lại mã PIN hoặc thẻ từ vật lý khi khách hàng đánh mất', FALSE, 'ACTIVE'),
+(4, 'OVERDUE_DAILY_RATE', 'Mức Phạt Theo Ngày Quá Hạn', 'PENALTY', 'PERCENT', 1.50, 'PER_DAY', 'Phạt 1.5% giá trị hợp đồng mỗi ngày quá hạn thanh toán', FALSE, 'ACTIVE'),
+(5, 'PIN_UNBLOCK', 'Phí Mở Phong Tỏa PIN Động', 'PENALTY', 'FIXED', 100000.00, 'PER_REQUEST', 'Phí mở khóa sau khi hệ thống tự động ngắt mã PIN do nợ quá hạn', FALSE, 'ACTIVE'),
+(6, 'ASSET_SEAL', 'Phí Kiểm Kê Niêm Phong Tài Sản', 'PENALTY', 'FIXED', 500000.00, 'PER_REQUEST', 'Chi phí niêm phong, lập biên bản tài sản khi nợ quá 15 ngày', FALSE, 'ACTIVE'),
+(7, 'DISCOUNT_6M', 'Ưu Đãi Thuê Khách Hàng 6 Tháng', 'DISCOUNT', 'PERCENT', 10.00, 'CONTRACT_TOTAL', 'Chiết khấu 10% tổng tiền thuê cho hợp đồng từ 6 tháng', FALSE, 'ACTIVE'),
+(8, 'DISCOUNT_12M', 'Ưu Đãi Thuê Khách Hàng 12 Tháng', 'DISCOUNT', 'PERCENT', 15.00, 'CONTRACT_TOTAL', 'Chiết khấu 15% tổng tiền thuê cho hợp đồng dài hạn từ 12 tháng', FALSE, 'ACTIVE'),
+(9, 'DISCOUNT_MANAGER_CAP', 'Hạn Mức Duyệt Giảm Giá Manager', 'DISCOUNT', 'PERCENT', 10.00, 'CONTRACT_TOTAL', 'Hạn mức tối đa Quản lý cơ sở được phép chủ động giảm giá cho khách', FALSE, 'ACTIVE');
 
 -- 9. Danh mục Ngăn kho thực tế (StorageUnits) phân bổ trên cả 7 cơ sở
 INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES

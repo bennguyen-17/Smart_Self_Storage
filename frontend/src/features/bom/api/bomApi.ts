@@ -112,4 +112,30 @@ export const bomApi = {
   deletePrice: async (unitTypeId: number): Promise<any> => {
     return apiClient.delete(`/prices/${unitTypeId}`)
   },
+  getFeePolicies: async (): Promise<FeePolicyItem[]> => {
+    return apiClient.get('/fee-policies')
+  },
+  createFeePolicy: async (data: Partial<FeePolicyItem>): Promise<FeePolicyItem> => {
+    return apiClient.post('/fee-policies', data)
+  },
+  updateFeePolicy: async (policyId: number, data: Partial<FeePolicyItem>): Promise<FeePolicyItem> => {
+    return apiClient.put(`/fee-policies/${policyId}`, data)
+  },
+  deleteFeePolicy: async (policyId: number): Promise<void> => {
+    return apiClient.delete(`/fee-policies/${policyId}`)
+  },
 }
+
+export interface FeePolicyItem {
+  policyId: number
+  policyCode: string
+  policyName: string
+  category: "SURCHARGE" | "PENALTY" | "DISCOUNT" | string
+  calcType: "PERCENT" | "FIXED" | string
+  feeValue: number
+  unitBasis: string
+  description?: string
+  isWaiveDeposit?: boolean
+  status: string
+}
+

@@ -1151,17 +1151,6 @@ export default function BomFacilitiesPage() {
             {/* Modal Footer */}
             <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
               <button
-                type="button"
-                onClick={() => {
-                  setIsDetailModalOpen(false)
-                  navigate("/bom/reports")
-                }}
-                className="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 font-bold text-xs text-slate-950 transition cursor-pointer flex items-center gap-1.5 shadow-sm"
-              >
-                <span>Xem Báo Cáo Chuỗi</span>
-                <span>→</span>
-              </button>
-              <button
                 onClick={() => setIsDetailModalOpen(false)}
                 className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 font-bold text-xs text-white transition cursor-pointer"
               >

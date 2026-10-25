@@ -42,11 +42,17 @@ export interface UnitPricing {
 
 export interface SurchargeItem {
   id: string
+  policyId?: number
+  policyCode?: string
   category: "surcharge" | "penalty" | "discount"
   categoryLabel: string
   type: string
   name: string
   rate: string
+  calcType?: "PERCENT" | "FIXED"
+  feeValue?: number
+  unitBasis?: string
+  isWaiveDeposit?: boolean
   isActive: boolean
   note: string
 }

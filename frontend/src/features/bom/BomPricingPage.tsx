@@ -55,6 +55,9 @@ export default function BomPricingPage() {
     updatePricingInDb,
     createPricingInDb,
     deletePricingInDb,
+    createFeePolicyInDb,
+    updateFeePolicyInDb,
+    deleteFeePolicyInDb,
   } = useBomContext()
 
   // Search & Filter state for surcharges
@@ -260,7 +263,29 @@ export default function BomPricingPage() {
     setIsSurchargeModalOpen(true)
   }
 
-  const handleDeleteSurcharge = (id: string) => {
+  const parseRateString = (rateStr: string) => {
+    const isPercent = rateStr.includes("%")
+    const cleanNum = rateStr.replace(/[^\d.]/g, "")
+    const num = parseFloat(cleanNum) || 0
+    return {
+      calcType: isPercent ? ("PERCENT" as const) : ("FIXED" as const),
+      feeValue: num,
+    }
+  }
+
+  const handleDeleteSurcharge = async (id: string, targetItem?: SurchargeItem | null) => {
+    const item = targetItem || surcharges.find((sc) => sc.id === id)
+    if (item?.policyId) {
+      const ok = await deleteFeePolicyInDb(item.policyId)
+      if (ok) {
+        toast.success("Đã xóa khoản phí thành công khỏi Database!")
+        setIsSurchargeModalOpen(false)
+        setEditingSurcharge(null)
+        setSurchargeToDelete(null)
+        return
+      }
+    }
+
     setSurcharges((prev) => {
       const next = prev.filter((sc) => sc.id !== id)
       try {
@@ -276,11 +301,48 @@ export default function BomPricingPage() {
     setSurchargeToDelete(null)
   }
 
-  const handleSaveSurcharge = (e: React.FormEvent) => {
+  const handleSaveSurcharge = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!surchargeName.trim() || !surchargeRate.trim()) {
       toast.error("Vui lòng điền đầy đủ tên và mức phí áp dụng!")
       return
+    }
+
+    const categoryMap: Record<string, string> = {
+      surcharge: "SURCHARGE",
+      penalty: "PENALTY",
+      discount: "DISCOUNT",
+    }
+    const { calcType, feeValue } = parseRateString(surchargeRate)
+
+    if (editingSurcharge && editingSurcharge.policyId) {
+      const ok = await updateFeePolicyInDb(editingSurcharge.policyId, {
+        policyName: surchargeName.trim(),
+        category: categoryMap[surchargeCat] || "SURCHARGE",
+        calcType,
+        feeValue,
+        description: surchargeRate.trim(),
+      })
+      if (ok) {
+        toast.success(`Đã cập nhật biểu phí "${surchargeName.trim()}" trực tiếp vào Database!`)
+        setIsSurchargeModalOpen(false)
+        setEditingSurcharge(null)
+        return
+      }
+    } else if (!editingSurcharge) {
+      const ok = await createFeePolicyInDb({
+        policyName: surchargeName.trim(),
+        category: categoryMap[surchargeCat] || "SURCHARGE",
+        calcType,
+        feeValue,
+        unitBasis: calcType === "PERCENT" ? "TOTAL_BILL" : "PER_MONTH",
+        description: surchargeRate.trim(),
+      })
+      if (ok) {
+        toast.success(`Đã thêm biểu phí "${surchargeName.trim()}" thành công vào Database!`)
+        setIsSurchargeModalOpen(false)
+        return
+      }
     }
 
     const categoryLabels = {
@@ -381,7 +443,6 @@ export default function BomPricingPage() {
               <thead>
                 <tr className="bg-slate-900 border-b border-sky-500/30 text-sky-400 uppercase font-bold text-[11px] sm:text-xs tracking-wider">
                   <th className="py-3 px-3 sm:px-4 text-left">LOẠI KHO / SIZE</th>
-                  <th className="py-3 px-2 sm:px-3 text-center">KÍCH THƯỚC</th>
                   <th className="py-3 px-2 sm:px-3 text-center">GIÁ THEO NGÀY</th>
                   <th className="py-3 px-2 sm:px-3 text-center">GIÁ THEO THÁNG</th>
                   <th className="py-3 px-2 sm:px-3 text-center">PHỤ PHÍ KHO MÁT</th>
@@ -400,14 +461,7 @@ export default function BomPricingPage() {
                         </span>
                       </td>
 
-                      {/* CỘT 2: KÍCH THƯỚC */}
-                      <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
-                        <span className="font-mono font-bold text-slate-200 text-xs bg-slate-950/70 px-2 py-0.5 rounded-lg border border-slate-800">
-                          {item.dimensions}
-                        </span>
-                      </td>
-
-                      {/* CỘT 3: GIÁ THEO NGÀY */}
+                      {/* CỘT 2: GIÁ THEO NGÀY */}
                       <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
                         <span className="font-mono font-bold text-slate-200 text-xs sm:text-sm">
                           ₫{item.dailyPrice.toLocaleString("vi-VN")}
@@ -820,7 +874,7 @@ export default function BomPricingPage() {
               {editingSurcharge ? (
                 <button
                   type="button"
-                  onClick={() => handleDeleteSurcharge(editingSurcharge.id)}
+                  onClick={() => handleDeleteSurcharge(editingSurcharge.id, editingSurcharge)}
                   className="px-3.5 py-2 rounded-xl text-rose-400 hover:bg-rose-950/40 border border-rose-900/60 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
                 >
                   <Trash2 className="size-3.5" />
@@ -1103,7 +1157,7 @@ export default function BomPricingPage() {
               </button>
               <button
                 type="button"
-                onClick={() => handleDeleteSurcharge(surchargeToDelete.id)}
+                onClick={() => handleDeleteSurcharge(surchargeToDelete.id, surchargeToDelete)}
                 className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs shadow-md shadow-rose-500/20 cursor-pointer"
               >
                 Xác Nhận Xóa
