@@ -690,24 +690,15 @@ export default function BomPricingPage() {
 
                       {/* Thao tác */}
                       <td className="p-3.5 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
+                        <div className="flex items-center justify-center">
                           <button
                             type="button"
                             onClick={() => handleOpenEditSurcharge(sc)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-sky-500 text-slate-200 hover:text-slate-950 border border-slate-700 font-bold transition cursor-pointer text-xs"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-sky-500 text-slate-200 hover:text-slate-950 border border-slate-700 font-bold transition cursor-pointer text-xs"
                             title="Chỉnh sửa biểu phí"
                           >
                             <Edit3 className="size-3.5" />
                             <span>Sửa</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setSurchargeToDelete(sc)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 hover:text-rose-300 border border-rose-900/50 font-bold transition cursor-pointer text-xs"
-                            title="Xóa khoản phí này"
-                          >
-                            <Trash2 className="size-3.5" />
-                            <span>Xóa</span>
                           </button>
                         </div>
                       </td>
