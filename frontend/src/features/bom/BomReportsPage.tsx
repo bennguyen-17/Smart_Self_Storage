@@ -179,26 +179,26 @@ export default function BomReportsPage() {
               </div>
             </div>
 
-            {/* Thông số doanh thu tiêu điểm (tương tác khi rê chuột) */}
+            {/* Thông số doanh thu thực thu toàn hệ thống */}
             <div className="flex items-baseline justify-between px-1 mb-2">
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                  {hoveredMonthIndex !== null ? monthlyRevenueData[hoveredMonthIndex].label : (latestMonth?.label || "Tháng Hiện Tại")}
+                  Tổng Doanh Thu Thực Thu
                 </span>
                 <div className="font-mono font-black text-white text-2xl sm:text-3xl mt-0.5 tracking-tight">
-                  ₫{(hoveredMonthIndex !== null ? monthlyRevenueData[hoveredMonthIndex].revenue : (latestMonth?.revenue ?? netRevenue)).toLocaleString("vi-VN")}
+                  ₫{netRevenue.toLocaleString("vi-VN")}
                 </div>
               </div>
               <div className="text-right">
-                <span className="text-[10px] text-slate-400 block font-medium">Đỉnh Doanh Thu</span>
-                <span className="font-mono font-bold text-slate-300 text-xs sm:text-sm">
+                <span className="text-[10px] text-slate-400 block font-medium">Đỉnh Doanh Thu (T9)</span>
+                <span className="font-mono font-bold text-sky-400 text-xs sm:text-sm">
                   ₫{Math.max(...monthlyRevenueData.map((d) => d.revenue)).toLocaleString("vi-VN")}
                 </span>
               </div>
             </div>
 
             {/* BIỂU ĐỒ ĐƯỜNG SVG (LINE CHART) */}
-            <div className="relative w-full overflow-hidden pt-1 pb-2">
+            <div className="relative w-full overflow-hidden pt-1 pb-1">
               <svg viewBox="0 0 460 170" className="w-full h-auto overflow-visible">
                 <defs>
                   {/* Gradient đổ bóng mềm phía dưới đường biểu diễn */}
@@ -251,7 +251,7 @@ export default function BomReportsPage() {
                   strokeLinejoin="round"
                 />
 
-                {/* Các điểm tròn dữ liệu trên từng tháng */}
+                {/* Các điểm tròn dữ liệu trên từng tháng & Số tiền hiển thị trực tiếp */}
                 {chartPoints.map((p, idx) => (
                   <g
                     key={p.month}
@@ -262,31 +262,40 @@ export default function BomReportsPage() {
                     {/* Vùng nhận cảm ứng rê chuột */}
                     <circle cx={p.x} cy={p.y} r="14" fill="transparent" />
 
-                    {/* Vạch kẻ dọc khi rê chuột vào điểm */}
-                    {hoveredMonthIndex === idx && (
-                      <line
-                        x1={p.x}
-                        y1="15"
-                        x2={p.x}
-                        y2="130"
-                        stroke="#94a3b8"
-                        strokeDasharray="2 2"
-                        strokeWidth="1.2"
-                        opacity="0.75"
-                      />
-                    )}
+                    {/* Vạch kẻ dọc nhẹ */}
+                    <line
+                      x1={p.x}
+                      y1="20"
+                      x2={p.x}
+                      y2="130"
+                      stroke="#475569"
+                      strokeDasharray="2 2"
+                      strokeWidth="1"
+                      opacity="0.3"
+                    />
 
                     {/* Điểm nút */}
                     <circle
                       cx={p.x}
                       cy={p.y}
-                      r={hoveredMonthIndex === idx ? "5.5" : "3.5"}
-                      className={
-                        hoveredMonthIndex === idx
-                          ? "fill-white stroke-slate-900 stroke-2"
-                          : "fill-slate-400 stroke-slate-900 stroke-1"
-                      }
+                      r="4"
+                      className="fill-white stroke-slate-900 stroke-2"
                     />
+
+                    {/* SỐ TIỀN HIỂN THỊ TRỰC TIẾP TRÊN BIỂU ĐỒ - KHÔNG CẦN DI CHUỘT */}
+                    <text
+                      x={p.x}
+                      y={p.y <= 38 ? p.y + 18 : p.y - 9}
+                      textAnchor="middle"
+                      fontSize="9.5"
+                      className="font-mono font-bold fill-sky-300 select-none"
+                    >
+                      {p.revenue === 0
+                        ? "₫0"
+                        : p.revenue >= 1000000
+                          ? `₫${(p.revenue / 1000000).toFixed(1).replace(/\.0$/, "")}tr`
+                          : `₫${Math.round(p.revenue / 1000)}k`}
+                    </text>
 
                     {/* Nhãn tháng ở trục hoành X */}
                     <text
@@ -294,17 +303,28 @@ export default function BomReportsPage() {
                       y="152"
                       textAnchor="middle"
                       fontSize="10"
-                      className={`font-mono transition ${
-                        hoveredMonthIndex === idx
-                          ? "fill-white font-bold"
-                          : "fill-slate-400 font-medium"
-                      }`}
+                      className="font-mono fill-slate-300 font-bold"
                     >
                       {p.month}
                     </text>
                   </g>
                 ))}
               </svg>
+            </div>
+
+            {/* DẢI DOANH THU 6 THÁNG - HIỆN SỐ TIỀN ĐẦY ĐỦ RÕ RÀNG */}
+            <div className="grid grid-cols-6 gap-1.5 pt-3 pb-1 border-t border-slate-800/80">
+              {monthlyRevenueData.map((m) => (
+                <div
+                  key={m.month}
+                  className="p-1.5 sm:p-2 rounded-xl bg-slate-950/70 border border-slate-800/80 text-center"
+                >
+                  <div className="text-[10px] font-bold text-slate-400">{m.month}</div>
+                  <div className="text-[11px] sm:text-xs font-mono font-black text-white mt-0.5 truncate">
+                    {m.revenue > 0 ? `₫${m.revenue.toLocaleString("vi-VN")}` : "₫0"}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
