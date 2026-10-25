@@ -183,8 +183,34 @@ export default function BomPricingPage() {
   const [editingSurcharge, setEditingSurcharge] = useState<SurchargeItem | null>(null)
   const [surchargeCat, setSurchargeCat] = useState<"surcharge" | "penalty" | "discount">("surcharge")
   const [surchargeName, setSurchargeName] = useState("")
-  const [surchargeRate, setSurchargeRate] = useState("")
+  const [surchargeCalcType, setSurchargeCalcType] = useState<"FIXED" | "PERCENT">("FIXED")
+  const [surchargeFeeValue, setSurchargeFeeValue] = useState<number>(100000)
+  const [surchargeUnitBasis, setSurchargeUnitBasis] = useState<string>("PER_MONTH")
+  const [surchargeWaiveDeposit, setSurchargeWaiveDeposit] = useState<boolean>(false)
+  const [surchargeNote, setSurchargeNote] = useState<string>("")
   const [surchargeToDelete, setSurchargeToDelete] = useState<SurchargeItem | null>(null)
+
+  const previewRateString = useMemo(() => {
+    let text = ""
+    if (surchargeCalcType === "PERCENT") {
+      text = `${surchargeFeeValue}%`
+      if (surchargeUnitBasis === "PER_DAY") text += " / ngày trễ"
+      else if (surchargeUnitBasis === "TOTAL_BILL") text += " Tổng Đơn"
+      else if (surchargeUnitBasis === "PER_MONTH") text += " / tháng"
+      else text += ` ${surchargeUnitBasis}`
+    } else {
+      text = `₫${Number(surchargeFeeValue || 0).toLocaleString("vi-VN")}`
+      if (surchargeUnitBasis === "PER_MONTH") text += " / tháng"
+      else if (surchargeUnitBasis === "PER_HOUR") text += " / giờ"
+      else if (surchargeUnitBasis === "PER_DAY") text += " / ngày"
+      else if (surchargeUnitBasis === "TOTAL_BILL") text += " / đơn"
+      else text += " / lần"
+    }
+    if (surchargeWaiveDeposit) {
+      text += " + Miễn Cọc"
+    }
+    return text
+  }, [surchargeCalcType, surchargeFeeValue, surchargeUnitBasis, surchargeWaiveDeposit])
 
   const filteredSurcharges = useMemo(() => {
     return surcharges.filter((item) => {
@@ -251,7 +277,11 @@ export default function BomPricingPage() {
     setEditingSurcharge(null)
     setSurchargeCat("surcharge")
     setSurchargeName("")
-    setSurchargeRate("")
+    setSurchargeCalcType("FIXED")
+    setSurchargeFeeValue(150000)
+    setSurchargeUnitBasis("PER_MONTH")
+    setSurchargeWaiveDeposit(false)
+    setSurchargeNote("")
     setIsSurchargeModalOpen(true)
   }
 
@@ -259,7 +289,28 @@ export default function BomPricingPage() {
     setEditingSurcharge(item)
     setSurchargeCat(item.category)
     setSurchargeName(item.name)
-    setSurchargeRate(item.rate)
+    const isPct = item.calcType === "PERCENT" || item.rate.includes("%")
+    setSurchargeCalcType(isPct ? "PERCENT" : "FIXED")
+
+    const num = item.feeValue != null ? item.feeValue : (parseFloat(item.rate.replace(/[^\d.]/g, "")) || 0)
+    setSurchargeFeeValue(num)
+
+    if (item.unitBasis) {
+      setSurchargeUnitBasis(item.unitBasis)
+    } else if (item.rate.includes("/ tháng")) {
+      setSurchargeUnitBasis("PER_MONTH")
+    } else if (item.rate.includes("/ giờ")) {
+      setSurchargeUnitBasis("PER_HOUR")
+    } else if (item.rate.includes("/ ngày")) {
+      setSurchargeUnitBasis("PER_DAY")
+    } else if (item.rate.includes("Tổng Đơn") || item.rate.includes("/ đơn")) {
+      setSurchargeUnitBasis("TOTAL_BILL")
+    } else {
+      setSurchargeUnitBasis("PER_REQUEST")
+    }
+
+    setSurchargeWaiveDeposit(Boolean(item.isWaiveDeposit || item.rate.includes("Miễn Cọc")))
+    setSurchargeNote(item.note || "")
     setIsSurchargeModalOpen(true)
   }
 
@@ -303,8 +354,8 @@ export default function BomPricingPage() {
 
   const handleSaveSurcharge = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!surchargeName.trim() || !surchargeRate.trim()) {
-      toast.error("Vui lòng điền đầy đủ tên và mức phí áp dụng!")
+    if (!surchargeName.trim()) {
+      toast.error("Vui lòng nhập tên khoản phí / chính sách!")
       return
     }
 
@@ -313,15 +364,17 @@ export default function BomPricingPage() {
       penalty: "PENALTY",
       discount: "DISCOUNT",
     }
-    const { calcType, feeValue } = parseRateString(surchargeRate)
+    const rateStr = previewRateString
 
     if (editingSurcharge && editingSurcharge.policyId) {
       const ok = await updateFeePolicyInDb(editingSurcharge.policyId, {
         policyName: surchargeName.trim(),
         category: categoryMap[surchargeCat] || "SURCHARGE",
-        calcType,
-        feeValue,
-        description: surchargeRate.trim(),
+        calcType: surchargeCalcType,
+        feeValue: Number(surchargeFeeValue) || 0,
+        unitBasis: surchargeUnitBasis,
+        isWaiveDeposit: surchargeWaiveDeposit,
+        description: surchargeNote.trim() || rateStr,
       })
       if (ok) {
         toast.success(`Đã cập nhật biểu phí "${surchargeName.trim()}" trực tiếp vào Database!`)
@@ -333,10 +386,11 @@ export default function BomPricingPage() {
       const ok = await createFeePolicyInDb({
         policyName: surchargeName.trim(),
         category: categoryMap[surchargeCat] || "SURCHARGE",
-        calcType,
-        feeValue,
-        unitBasis: calcType === "PERCENT" ? "TOTAL_BILL" : "PER_MONTH",
-        description: surchargeRate.trim(),
+        calcType: surchargeCalcType,
+        feeValue: Number(surchargeFeeValue) || 0,
+        unitBasis: surchargeUnitBasis,
+        isWaiveDeposit: surchargeWaiveDeposit,
+        description: surchargeNote.trim() || rateStr,
       })
       if (ok) {
         toast.success(`Đã thêm biểu phí "${surchargeName.trim()}" thành công vào Database!`)
@@ -367,7 +421,12 @@ export default function BomPricingPage() {
                 categoryLabel: categoryLabels[surchargeCat],
                 type: typeLabels[surchargeCat],
                 name: surchargeName.trim(),
-                rate: surchargeRate.trim(),
+                rate: rateStr,
+                calcType: surchargeCalcType,
+                feeValue: Number(surchargeFeeValue) || 0,
+                unitBasis: surchargeUnitBasis,
+                isWaiveDeposit: surchargeWaiveDeposit,
+                note: surchargeNote.trim(),
               }
             : sc
         )
@@ -386,9 +445,13 @@ export default function BomPricingPage() {
         categoryLabel: categoryLabels[surchargeCat],
         type: typeLabels[surchargeCat],
         name: surchargeName.trim(),
-        rate: surchargeRate.trim(),
+        rate: rateStr,
+        calcType: surchargeCalcType,
+        feeValue: Number(surchargeFeeValue) || 0,
+        unitBasis: surchargeUnitBasis,
+        isWaiveDeposit: surchargeWaiveDeposit,
         isActive: true,
-        note: "",
+        note: surchargeNote.trim(),
       }
       setSurcharges((prev) => {
         const next = [newItem, ...prev]
@@ -404,8 +467,6 @@ export default function BomPricingPage() {
 
     setIsSurchargeModalOpen(false)
     setEditingSurcharge(null)
-    setSurchargeName("")
-    setSurchargeRate("")
   }
 
   return (
@@ -855,18 +916,105 @@ export default function BomPricingPage() {
                 />
               </div>
 
+              {/* Cách thức tính phí: Số tiền cố định hay % */}
               <div>
                 <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
-                  Mức Phí / Giá Trị Áp Dụng:
+                  Cách Thức Tính Phí:
                 </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ví dụ: ₫300,000 / tháng hoặc 1.5% / ngày"
-                  value={surchargeRate}
-                  onChange={(e) => setSurchargeRate(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSurchargeCalcType("FIXED")
+                      if (surchargeFeeValue < 1000) setSurchargeFeeValue(100000)
+                    }}
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      surchargeCalcType === "FIXED"
+                        ? "bg-sky-500 text-slate-950 border-sky-400 shadow-sm font-black"
+                        : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <span>💵 Số Tiền Cố Định (VNĐ)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSurchargeCalcType("PERCENT")
+                      if (surchargeFeeValue > 100) setSurchargeFeeValue(10)
+                    }}
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      surchargeCalcType === "PERCENT"
+                        ? "bg-sky-500 text-slate-950 border-sky-400 shadow-sm font-black"
+                        : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <span>% Tỷ Lệ Phần Trăm (%)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Mức phí và Đơn vị tính */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                    {surchargeCalcType === "PERCENT" ? "Tỷ Lệ Phần Trăm (%):" : "Số Tiền Áp Dụng (VNĐ):"}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      step={surchargeCalcType === "PERCENT" ? "0.1" : "1000"}
+                      value={surchargeFeeValue}
+                      onChange={(e) => setSurchargeFeeValue(parseFloat(e.target.value) || 0)}
+                      className="w-full p-2.5 pr-10 rounded-xl border border-slate-700 bg-slate-950 font-mono font-bold text-xs text-white outline-none focus:border-sky-400"
+                    />
+                    <span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400 pointer-events-none">
+                      {surchargeCalcType === "PERCENT" ? "%" : "₫"}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                    Chu Kỳ / Đơn Vị Tính:
+                  </label>
+                  <select
+                    value={surchargeUnitBasis}
+                    onChange={(e) => setSurchargeUnitBasis(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                  >
+                    <option value="PER_REQUEST">Theo Lần (/ lần)</option>
+                    <option value="PER_MONTH">Theo Tháng (/ tháng)</option>
+                    <option value="PER_DAY">Theo Ngày Trễ (/ ngày trễ)</option>
+                    <option value="PER_HOUR">Theo Giờ (/ giờ)</option>
+                    <option value="TOTAL_BILL">Tổng Đơn Hợp Đồng (Tổng bill)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Tùy chọn Miễn Cọc khi là Discount */}
+              {surchargeCat === "discount" && (
+                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                  <input
+                    type="checkbox"
+                    id="waiveDepositPolicy"
+                    checked={surchargeWaiveDeposit}
+                    onChange={(e) => setSurchargeWaiveDeposit(e.target.checked)}
+                    className="rounded border-slate-700 text-sky-500 focus:ring-sky-500 w-4 h-4 cursor-pointer"
+                  />
+                  <label htmlFor="waiveDepositPolicy" className="text-xs text-slate-300 font-bold cursor-pointer select-none">
+                    Miễn thu tiền cọc phòng khi áp dụng chính sách này
+                  </label>
+                </div>
+              )}
+
+              {/* Dòng Xem Trước (Preview) */}
+              <div className="p-3 bg-slate-950/80 rounded-xl border border-sky-500/30 flex items-center justify-between">
+                <span className="text-[11px] text-slate-400 font-medium">Mức phí áp dụng vào hóa đơn:</span>
+                <span className="font-mono font-black text-xs text-sky-400">
+                  {previewRateString}
+                </span>
               </div>
             </div>
 
