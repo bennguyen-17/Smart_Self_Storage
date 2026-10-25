@@ -9,8 +9,6 @@ import {
   CheckCircle,
   X,
   Trash2,
-  Snowflake,
-  ShieldCheck,
   Tag,
   Sparkles,
 } from "lucide-react"
@@ -278,37 +276,32 @@ export default function BomPricingPage() {
                       <span className="text-white font-bold">{item.dimensions}</span>
                     </div>
 
-                    {/* Giá thuê chính (Kho Thường) */}
-                    <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800/80 text-center space-y-1">
-                      <div className="text-[10px] uppercase font-bold text-slate-400">Giá Kho Thường</div>
-                      <div className="text-xl font-black font-mono text-sky-400">
-                        ₫{item.normPrice.toLocaleString("vi-VN")}
-                        <span className="text-[10px] font-sans font-medium text-slate-400"> /tháng</span>
-                      </div>
-                      <div className="text-[11px] font-mono font-semibold text-slate-300">
-                        ₫{item.dailyPrice.toLocaleString("vi-VN")}{" "}
-                        <span className="text-[10px] font-sans text-slate-500">/ngày</span>
-                      </div>
-                    </div>
-
-                    {/* Thông số phụ: Kho Điều Hòa & Tiền Cọc */}
-                    <div className="space-y-2 text-xs">
+                    {/* 4 MỨC GIÁ: 4 HÀNG CÙNG MÀU CHỮ & CÙNG CỠ CHỮ */}
+                    <div className="space-y-1.5 text-xs">
                       <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
-                        <span className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300">
-                          <Snowflake className="size-3 text-sky-400" />
-                          <span>Kho Mát (+20%):</span>
+                        <span className="text-slate-400 font-medium text-xs">Giá theo tháng:</span>
+                        <span className="font-mono font-bold text-white text-xs">
+                          ₫{item.normPrice.toLocaleString("vi-VN")}
                         </span>
-                        <span className="font-mono font-bold text-sky-300 text-xs">
+                      </div>
+
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
+                        <span className="text-slate-400 font-medium text-xs">Giá theo ngày:</span>
+                        <span className="font-mono font-bold text-white text-xs">
+                          ₫{item.dailyPrice.toLocaleString("vi-VN")}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
+                        <span className="text-slate-400 font-medium text-xs">Kho mát (+20%):</span>
+                        <span className="font-mono font-bold text-white text-xs">
                           ₫{item.acPrice.toLocaleString("vi-VN")}
                         </span>
                       </div>
 
                       <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
-                        <span className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300">
-                          <ShieldCheck className="size-3 text-sky-400" />
-                          <span>Tiền Cọc Chuẩn:</span>
-                        </span>
-                        <span className="font-mono font-bold text-slate-200 text-xs">
+                        <span className="text-slate-400 font-medium text-xs">Tiền cọc chuẩn:</span>
+                        <span className="font-mono font-bold text-white text-xs">
                           ₫{item.depositAmount.toLocaleString("vi-VN")}
                         </span>
                       </div>
