@@ -32,7 +32,6 @@ import BomLayout from "@/features/bom/BomLayout"
 import BomDashboardPage from "@/features/bom/BomDashboardPage"
 import BomFacilitiesPage from "@/features/bom/BomFacilitiesPage"
 import BomPricingPage from "@/features/bom/BomPricingPage"
-import BomPoliciesPage from "@/features/bom/BomPoliciesPage"
 import BomReportsPage from "@/features/bom/BomReportsPage"
 
 import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
@@ -155,7 +154,7 @@ export function AppRouter() {
         <Route index element={<BomDashboardPage />} />
         <Route path="facilities" element={<BomFacilitiesPage />} />
         <Route path="pricing" element={<BomPricingPage />} />
-        <Route path="policies" element={<BomPoliciesPage />} />
+        <Route path="policies" element={<Navigate to="/bom/facilities" replace />} />
         <Route path="reports" element={<BomReportsPage />} />
       </Route>
 

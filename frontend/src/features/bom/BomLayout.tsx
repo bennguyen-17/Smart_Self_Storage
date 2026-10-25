@@ -4,7 +4,6 @@ import { toast } from "sonner"
 import {
   Warehouse,
   SlidersHorizontal,
-  ShieldAlert,
   FileSpreadsheet,
   Moon,
   Sun,
@@ -36,13 +35,6 @@ const NAV_MODULES = [
     navLabel: "Khung Giá & Phí",
     subLabel: "Biểu giá thuê & Phí dịch vụ",
     icon: SlidersHorizontal,
-  },
-  {
-    path: "/bom/policies",
-    label: "Thông Số Vận Hành",
-    navLabel: "Quy Chuẩn",
-    subLabel: "Quy chuẩn an ninh & Chế tài",
-    icon: ShieldAlert,
   },
   {
     path: "/bom/reports",

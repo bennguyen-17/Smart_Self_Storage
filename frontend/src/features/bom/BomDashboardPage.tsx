@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom"
 import {
   Warehouse,
   SlidersHorizontal,
-  ShieldAlert,
   FileSpreadsheet,
   ArrowUpRight,
 } from "lucide-react"
@@ -24,13 +23,6 @@ const MODULE_CARDS = [
     badge: "Biểu Giá Thuê",
     shortDesc: "Biểu giá thuê chuẩn các kích cỡ ngăn kho & danh mục phụ phí dịch vụ toàn chuỗi",
     icon: SlidersHorizontal,
-  },
-  {
-    path: "/bom/policies",
-    label: "Thông Số Vận Hành",
-    badge: "An Ninh & Chế Tài",
-    shortDesc: "Quy chuẩn an ninh mã PIN mở cửa & quy trình chế tài xử lý nợ quá hạn",
-    icon: ShieldAlert,
   },
   {
     path: "/bom/reports",
@@ -82,8 +74,8 @@ export default function BomDashboardPage() {
         <BomKpiCards />
       </div>
 
-      {/* 4 cụm chức năng - Liên kết trực tiếp layoutId với thanh navbar bên trái */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-4 w-full max-w-6xl mx-auto">
+      {/* 3 cụm chức năng - Liên kết trực tiếp layoutId với thanh navbar bên trái */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 w-full max-w-6xl mx-auto">
         {MODULE_CARDS.map((item) => {
           const Icon = item.icon
           return (
