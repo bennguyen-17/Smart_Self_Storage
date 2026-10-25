@@ -71,6 +71,9 @@ public class SecurityConfig {
                                 "/api/staff/audit-logs/manual-gate-open")
                         .hasRole("STAFF")
 
+                        .requestMatchers("/api/admin/dashboard/**")
+                        .hasAnyRole("ADMIN", "BOM")
+
                         // B3: Chặn quyền API: /api/admin/** chỉ ADMIN, /api/manager/** chỉ MANAGER
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")
