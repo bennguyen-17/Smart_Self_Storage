@@ -263,16 +263,9 @@ export default function BomPricingPage() {
                           <span className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase border ${theme.badge}`}>
                             Size {item.size}
                           </span>
-                          <div>
-                            <div className="font-extrabold text-white text-xs sm:text-sm">
-                              {item.name}
-                            </div>
-                            {item.description && (
-                              <div className="text-[10px] text-slate-400 max-w-[220px] truncate">
-                                {item.description}
-                              </div>
-                            )}
-                          </div>
+                          <span className="font-extrabold text-white text-xs sm:text-sm">
+                            {item.name}
+                          </span>
                         </div>
                       </td>
 
