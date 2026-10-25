@@ -17,7 +17,6 @@ import {
 import { motion, AnimatePresence } from "motion/react"
 import { useTheme } from "@/components/common/theme-provider"
 import { useAuth } from "@/context/AuthContext"
-import ThreeBackground from "@/features/bom/components/ThreeBackground"
 import { BomProvider } from "@/features/bom/context/BomContext"
 
 const NAV_MODULES = [
@@ -115,9 +114,17 @@ function BomLayoutContent() {
   }
 
   return (
-    <div className="relative min-h-screen text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200 overflow-x-hidden">
-      {/* 3D Dynamic Waves Background */}
-      <ThreeBackground theme={theme} />
+    <div className="staff-portal relative min-h-screen bg-[#eef5fc] text-slate-900 dark:bg-[#0b1120] dark:text-slate-100 font-sans antialiased overflow-x-hidden transition-colors duration-200">
+      {/* Vầng sáng xanh mờ phía trên vùng nội dung, đồng bộ 100% chuẩn phong cách Staff & Manager */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed top-0 left-1/2 -z-0 h-80 w-full max-w-5xl -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-500/20 via-cyan-400/25 to-indigo-500/20 blur-3xl lg:left-[calc(50%+8rem)] dark:from-blue-500/10 dark:via-cyan-400/10 dark:to-indigo-500/10"
+      />
+      {/* Vầng sáng phụ lan tỏa góc dưới tạo chiều sâu màu loang mềm mại */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed -bottom-24 right-1/4 -z-0 size-96 rounded-full bg-indigo-500/15 blur-3xl dark:bg-indigo-600/10"
+      />
 
       {/* Top Header - Fixed cố định trên đỉnh */}
       <header className="fixed top-0 left-0 right-0 z-50 w-full min-h-[58px] bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-sky-500/20 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4 shrink-0 shadow-xs text-slate-900 dark:text-white transition-colors">
