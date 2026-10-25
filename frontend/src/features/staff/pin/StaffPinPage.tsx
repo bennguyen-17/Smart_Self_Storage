@@ -1,4 +1,4 @@
-import StaffPinPanel from "@/features/staff/pin/components/StaffPinPanel"
+import StaffPinPanel from "./components/StaffPinPanel"
 
 /** Nghiệp vụ "Lấy mã PIN" — /staff/pin */
 function StaffPinPage() {

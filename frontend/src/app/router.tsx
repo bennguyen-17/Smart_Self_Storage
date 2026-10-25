@@ -17,10 +17,10 @@ import SupportPage from "@/features/customer/support/SupportPage"
 
 // Staff pages
 import StaffPortalLayout from "@/features/staff/StaffPortalLayout"
-import StaffCheckinPage from "@/features/staff/StaffCheckinPage"
-import StaffSupportPage from "@/features/staff/StaffSupportPage"
-import StaffPinPage from "@/features/staff/StaffPinPage"
-import StaffTasksPage from "@/features/staff/StaffTasksPage"
+import StaffCheckinPage from "@/features/staff/checkin/StaffCheckinPage"
+import StaffSupportPage from "@/features/staff/support/StaffSupportPage"
+import StaffPinPage from "@/features/staff/pin/StaffPinPage"
+import StaffTasksPage from "@/features/staff/tasks/StaffTasksPage"
 
 // Manager & Admin pages
 import ManagerPortalPage from "@/features/manager/ManagerPortalPage"

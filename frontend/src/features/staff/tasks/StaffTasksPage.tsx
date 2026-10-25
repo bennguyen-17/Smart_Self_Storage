@@ -1,4 +1,4 @@
-import StaffTasksPanel from "./tasks/components/StaffTasksPanel"
+import StaffTasksPanel from "./components/StaffTasksPanel"
 
 /** Nghiệp vụ "Việc được giao theo ca" — /staff/tasks */
 function StaffTasksPage() {
