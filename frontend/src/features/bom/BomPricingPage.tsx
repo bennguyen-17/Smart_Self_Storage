@@ -276,9 +276,6 @@ export default function BomPricingPage() {
                     {/* Quy cách sàn & kích thước */}
                     <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs font-mono text-center">
                       <span className="text-white font-bold">{item.dimensions}</span>
-                      <span className="text-slate-400 text-[10px] block mt-0.5">
-                        Sàn {item.area} • Cao {item.height || "2.0m"}
-                      </span>
                     </div>
 
                     {/* Giá thuê chính (Kho Thường) */}
