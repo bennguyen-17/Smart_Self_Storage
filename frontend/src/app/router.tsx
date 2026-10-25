@@ -17,10 +17,10 @@ import SupportPage from "@/features/customer/support/SupportPage"
 
 // Staff pages
 import StaffPortalLayout from "@/features/staff/StaffPortalLayout"
-import StaffCheckinPage from "@/features/staff/checkin/StaffCheckinPage"
-import StaffSupportPage from "@/features/staff/support/StaffSupportPage"
-import StaffPinPage from "@/features/staff/pin/StaffPinPage"
-import StaffTasksPage from "@/features/staff/tasks/StaffTasksPage"
+import CheckinPanel from "@/features/staff/checkin/components/CheckinPanel"
+import StaffTicketPanel from "@/features/staff/support/components/StaffTicketPanel"
+import StaffPinPanel from "@/features/staff/pin/components/StaffPinPanel"
+import StaffTasksPanel from "@/features/staff/tasks/components/StaffTasksPanel"
 
 // Manager & Admin pages
 import ManagerPortalPage from "@/features/manager/ManagerPortalPage"
@@ -125,10 +125,10 @@ export function AppRouter() {
         }
       >
         <Route index element={<Navigate to="/staff/checkin" replace />} />
-        <Route path="checkin" element={<StaffCheckinPage />} />
-        <Route path="support" element={<StaffSupportPage />} />
-        <Route path="tasks" element={<StaffTasksPage />} />
-        <Route path="pin" element={<StaffPinPage />} />
+        <Route path="checkin" element={<CheckinPanel />} />
+        <Route path="support" element={<StaffTicketPanel />} />
+        <Route path="tasks" element={<StaffTasksPanel />} />
+        <Route path="pin" element={<StaffPinPanel />} />
       </Route>
 
       {/* Cổng Quản Lý Cơ Sở: Manager Portal (Role MANAGER) */}
