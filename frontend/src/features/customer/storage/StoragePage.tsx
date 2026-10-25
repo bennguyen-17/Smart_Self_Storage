@@ -347,7 +347,7 @@ export default function StoragePage() {
                       : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
                   }`}
                 >
-                  <span>Đã hủy / Lịch sử</span>
+                  <span>Đã hủy</span>
                   <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
                     activeTab === 'CANCELLED' ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                   }`}>
