@@ -522,10 +522,22 @@ export default function BomPricingPage() {
               <tbody className="divide-y divide-slate-800 font-semibold text-slate-300">
                 {filteredSurcharges.map((sc) => {
                   const badgeConfig = {
-                    surcharge: { label: "Phụ Thu Dịch Vụ" },
-                    penalty: { label: "Phí Phạt Quá Hạn" },
-                    discount: { label: "Chính Sách Miễn Giảm" },
-                  }[sc.category] || { label: "Khác" }
+                    surcharge: {
+                      label: "Phụ Thu Dịch Vụ",
+                      style: "bg-sky-950/60 text-sky-400 border-sky-800/60",
+                    },
+                    penalty: {
+                      label: "Phí Phạt Quá Hạn",
+                      style: "bg-amber-950/60 text-amber-400 border-amber-800/60",
+                    },
+                    discount: {
+                      label: "Chính Sách Miễn Giảm",
+                      style: "bg-emerald-950/60 text-emerald-400 border-emerald-800/60",
+                    },
+                  }[sc.category] || {
+                    label: "Khác",
+                    style: "bg-slate-800 text-slate-300 border-slate-700",
+                  }
 
                   return (
                     <tr
@@ -544,7 +556,7 @@ export default function BomPricingPage() {
 
                       {/* Phân loại */}
                       <td className="p-3.5 text-center">
-                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border bg-slate-800 text-slate-200 border-slate-700">
+                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badgeConfig.style}`}>
                           {badgeConfig.label}
                         </span>
                       </td>
