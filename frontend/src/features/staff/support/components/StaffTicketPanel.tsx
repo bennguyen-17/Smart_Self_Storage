@@ -54,7 +54,7 @@ const INITIAL_FALLBACK_TICKETS: TicketItem[] = [
     ticketCode: "TCK-202610-001",
     title: "Mở Khóa Ô Kho Hộ (Quên Chìa)",
     type: "INCIDENT",
-    status: "SUBMITTED",
+    status: "RESOLVED",
     customerName: "Nguyễn Văn Khách",
     customerPhone: "0988 123 719",
     identityNumber: "079201008899",
@@ -72,7 +72,7 @@ const INITIAL_FALLBACK_TICKETS: TicketItem[] = [
     ticketCode: "TCK-202610-002",
     title: "Trả Kho Sớm Trước Hạn",
     type: "EARLY_TERMINATION",
-    status: "IN_PROGRESS",
+    status: "RESOLVED",
     customerName: "Trần Thị B",
     customerPhone: "0912 345 678",
     identityNumber: "079198007766",
@@ -88,7 +88,7 @@ const INITIAL_FALLBACK_TICKETS: TicketItem[] = [
     ticketCode: "TCK-202610-003",
     title: "Báo Cáo Cơ Sở Vật Chất (Đèn Trần Hỏng)",
     type: "INCIDENT",
-    status: "IN_PROGRESS",
+    status: "RESOLVED",
     customerName: "Lê Văn C",
     customerPhone: "0977 888 999",
     unitCode: "F1-M102",
@@ -268,7 +268,7 @@ function StaffTicketPanel() {
     try {
       if (!isMockMode()) {
         const res: any = await apiClient.get("/staff/tickets")
-        if (Array.isArray(res) && res.length > 0) {
+        if (Array.isArray(res)) {
           const mapped: TicketItem[] = res.map((t: any) => ({
             id: t.id,
             ticketCode: t.ticketCode || `TCK-${t.id}`,

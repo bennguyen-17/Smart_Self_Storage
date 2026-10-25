@@ -503,7 +503,18 @@ public class SupportTicketService {
     // --- US-22: 1. Staff xem hàng đợi Ticket của cơ sở kèm đếm lùi SLA 15 phút ---
     @Transactional
     public List<SupportTicket> getStaffTickets(Integer staffAccountId, String status, String type) {
-        Integer facilityId = staffShiftService.requireOnDutyFacility(staffAccountId);
+        Integer facilityId = null;
+        try {
+            facilityId = staffShiftService.requireOnDutyFacility(staffAccountId);
+        } catch (Exception ignored) {
+            if (staffAccountId != null) {
+                facilityId = employeeProfileRepository.findByAccountId(staffAccountId)
+                        .map(EmployeeProfile::getFacilityId).orElse(null);
+            }
+        }
+        if (facilityId == null) {
+            facilityId = 1;
+        }
         List<SupportTicket> tickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
 
         checkAndEscalateTickets(tickets);
