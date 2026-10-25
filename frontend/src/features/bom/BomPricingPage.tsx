@@ -440,9 +440,6 @@ export default function BomPricingPage() {
                 <h3 className="font-black text-sm uppercase text-sky-400">
                   CẬP NHẬT BIỂU GIÁ &amp; MỨC CỌC CHUẨN - {selectedPricingItem.name}
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Kích thước sàn: {selectedPricingItem.dimensions} ({selectedPricingItem.area} • Cao {selectedPricingItem.height || "2.0m"})
-                </p>
               </div>
               <button
                 onClick={() => setIsPricingModalOpen(false)}
