@@ -293,21 +293,6 @@ export default function BomReportsPage() {
                 ))}
               </svg>
             </div>
-
-            {/* DẢI DOANH THU 6 THÁNG - HIỆN SỐ TIỀN ĐẦY ĐỦ RÕ RÀNG */}
-            <div className="grid grid-cols-6 gap-1.5 pt-3 pb-1 border-t border-slate-800/80">
-              {monthlyRevenueData.map((m) => (
-                <div
-                  key={m.month}
-                  className="p-1.5 sm:p-2 rounded-xl bg-slate-950/70 border border-slate-800/80 text-center"
-                >
-                  <div className="text-[10px] font-bold text-slate-400">{m.month}</div>
-                  <div className="text-[11px] sm:text-xs font-mono font-black text-white mt-0.5 truncate">
-                    {m.revenue > 0 ? `₫${m.revenue.toLocaleString("vi-VN")}` : "₫0"}
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* 3 THẺ TÀI CHÍNH BỔ TRỢ DƯỚI BIỂU ĐỒ (KÝ QUỸ, HOÀN TIỀN, NỢ) */}

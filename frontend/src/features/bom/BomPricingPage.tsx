@@ -349,17 +349,6 @@ export default function BomPricingPage() {
                 <span>1. Khung Giá Thuê Tiêu Chuẩn &amp; Mức Cọc Theo Các Size Kho</span>
               </h4>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                resetAddPricingForm()
-                setIsAddPricingModalOpen(true)
-              }}
-              className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-3.5 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm whitespace-nowrap self-start sm:self-auto"
-            >
-              <Plus className="size-3.5" />
-              <span>Thêm Loại Kho Mới</span>
-            </button>
           </div>
 
           {/* GIAO DIỆN DẠNG BẢNG NGANG (HORIZONTAL TABLE FORMAT - VỪA VẶN 100% KHÔNG CUỘN) */}
@@ -424,26 +413,15 @@ export default function BomPricingPage() {
 
                       {/* CỘT 7: THAO TÁC */}
                       <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenPricingModal(item)}
-                            className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-sky-500 text-slate-200 hover:text-slate-950 font-bold text-xs transition cursor-pointer inline-flex items-center gap-1 border border-slate-700 shadow-xs"
-                            title="Sửa khung giá & mức cọc"
-                          >
-                            <Edit3 className="size-3.5" />
-                            <span>Sửa</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setPricingToDelete(item)}
-                            className="px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 hover:text-rose-300 font-bold text-xs transition cursor-pointer inline-flex items-center gap-1 border border-rose-900/50 shadow-xs"
-                            title="Xóa loại kho này"
-                          >
-                            <Trash2 className="size-3.5" />
-                            <span>Xóa</span>
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenPricingModal(item)}
+                          className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-sky-500 text-slate-200 hover:text-slate-950 font-bold text-xs transition cursor-pointer inline-flex items-center gap-1.5 border border-slate-700 shadow-xs"
+                          title="Sửa khung giá & mức cọc"
+                        >
+                          <Edit3 className="size-3.5" />
+                          <span>Sửa Giá &amp; Cọc</span>
+                        </button>
                       </td>
                     </tr>
                   )
