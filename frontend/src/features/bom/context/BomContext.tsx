@@ -106,6 +106,7 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
             Number(p.acPrice || 0) > Number(p.monthlyPrice || 0)
               ? Number(p.acPrice)
               : Math.round(Number(p.monthlyPrice || 0) * 1.2),
+          climateSurchargePercent: Number(p.climateSurchargePercent || 20),
           depositAmount: Number(p.depositAmount || 0),
           depositText: `₫${Number(p.depositAmount || 0).toLocaleString("vi-VN")}`,
           status: p.status === "ACTIVE" ? "Đang áp dụng" : (p.status || "Đang áp dụng"),

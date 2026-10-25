@@ -58,7 +58,7 @@ export default function BomPricingPage() {
   const [selectedPricingItem, setSelectedPricingItem] = useState<UnitPricing | null>(null)
   const [editDailyPrice, setEditDailyPrice] = useState<number>(30000)
   const [editNormPrice, setEditNormPrice] = useState<number>(600000)
-  const [editAcPrice, setEditAcPrice] = useState<number>(720000)
+  const [editClimatePercent, setEditClimatePercent] = useState<number>(20)
   const [editDepositAmount, setEditDepositAmount] = useState<number>(500000)
 
   // Modal 2: Surcharge add/edit modal
@@ -85,7 +85,7 @@ export default function BomPricingPage() {
     setSelectedPricingItem(target)
     setEditDailyPrice(target.dailyPrice)
     setEditNormPrice(target.normPrice)
-    setEditAcPrice(target.acPrice)
+    setEditClimatePercent(target.climateSurchargePercent ?? 20)
     setEditDepositAmount(target.depositAmount)
     setIsPricingModalOpen(true)
   }
@@ -102,7 +102,7 @@ export default function BomPricingPage() {
       dailyPrice: editDailyPrice,
       monthlyPrice: editNormPrice,
       depositAmount: editDepositAmount,
-      climateSurchargePercent: 20,
+      climateSurchargePercent: editClimatePercent,
     })
 
     if (success) {
@@ -116,7 +116,8 @@ export default function BomPricingPage() {
                 ...p,
                 dailyPrice: editDailyPrice,
                 normPrice: editNormPrice,
-                acPrice: editAcPrice,
+                climateSurchargePercent: editClimatePercent,
+                acPrice: Math.round(editNormPrice * (1 + editClimatePercent / 100)),
                 depositAmount: editDepositAmount,
                 depositText: `₫${editDepositAmount.toLocaleString("vi-VN")}`,
               }
@@ -270,19 +271,12 @@ export default function BomPricingPage() {
                       <span className="text-white font-bold">{item.dimensions}</span>
                     </div>
 
-                    {/* 5 MỨC GIÁ: 2 NGÀY TRƯỚC RỒI ĐẾN 2 THÁNG, CUỐI LÀ CỌC */}
+                    {/* 4 MỨC GIÁ: THEO NGÀY, THEO THÁNG, PHỤ PHÍ KHO MÁT (%), TIỀN CỌC */}
                     <div className="space-y-1.5 text-xs">
                       <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
                         <span className="text-slate-400 font-medium text-xs">Giá theo ngày:</span>
                         <span className="font-mono font-bold text-white text-xs">
                           ₫{item.dailyPrice.toLocaleString("vi-VN")}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
-                        <span className="text-slate-400 font-medium text-xs">Kho mát theo ngày:</span>
-                        <span className="font-mono font-bold text-white text-xs">
-                          ₫{Math.round(item.dailyPrice * 1.2).toLocaleString("vi-VN")}
                         </span>
                       </div>
 
@@ -294,9 +288,9 @@ export default function BomPricingPage() {
                       </div>
 
                       <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/70 border border-slate-800">
-                        <span className="text-slate-400 font-medium text-xs">Kho mát theo tháng:</span>
+                        <span className="text-slate-400 font-medium text-xs">Phụ phí kho mát:</span>
                         <span className="font-mono font-bold text-white text-xs">
-                          ₫{(item.acPrice > item.normPrice ? item.acPrice : Math.round(item.normPrice * 1.2)).toLocaleString("vi-VN")}
+                          +{item.climateSurchargePercent ?? 20}%
                         </span>
                       </div>
 
@@ -470,7 +464,7 @@ export default function BomPricingPage() {
                       setSelectedPricingItem(p)
                       setEditDailyPrice(p.dailyPrice)
                       setEditNormPrice(p.normPrice)
-                      setEditAcPrice(p.acPrice)
+                      setEditClimatePercent(p.climateSurchargePercent ?? 20)
                       setEditDepositAmount(p.depositAmount)
                     }}
                     className={`flex-1 py-1.5 rounded-xl font-black text-xs transition cursor-pointer ${
@@ -489,7 +483,7 @@ export default function BomPricingPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
-                    Giá Thuê Theo Ngày (Non-AC):
+                    Giá Thuê Theo Ngày:
                   </label>
                   <div className="relative">
                     <input
@@ -503,17 +497,13 @@ export default function BomPricingPage() {
                 </div>
                 <div>
                   <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
-                    Giá Thuê Tháng (Kho Thường):
+                    Giá Thuê Theo Tháng:
                   </label>
                   <div className="relative">
                     <input
                       type="number"
                       value={editNormPrice}
-                      onChange={(e) => {
-                        const val = Number(e.target.value)
-                        setEditNormPrice(val)
-                        setEditAcPrice(Math.round(val * 1.2))
-                      }}
+                      onChange={(e) => setEditNormPrice(Number(e.target.value))}
                       className="w-full p-2.5 pr-14 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">VNĐ/tháng</span>
@@ -523,20 +513,19 @@ export default function BomPricingPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="font-bold text-slate-400 uppercase text-[10px]">
-                      Kho Điều Hòa (22°C–25°C):
-                    </label>
-                    <span className="text-[10px] text-sky-400 font-bold">+20%</span>
-                  </div>
+                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                    Phụ Phí Kho Mát (%):
+                  </label>
                   <div className="relative">
                     <input
                       type="number"
-                      value={editAcPrice}
-                      onChange={(e) => setEditAcPrice(Number(e.target.value))}
-                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                      min={0}
+                      max={100}
+                      value={editClimatePercent}
+                      onChange={(e) => setEditClimatePercent(Number(e.target.value))}
+                      className="w-full p-2.5 pr-8 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
                     />
-                    <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">VNĐ/tháng</span>
+                    <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">%</span>
                   </div>
                 </div>
                 <div>

@@ -34,6 +34,7 @@ export interface UnitPricing {
   dailyPrice: number
   normPrice: number
   acPrice: number
+  climateSurchargePercent?: number
   depositAmount: number
   depositText: string
   status: string
