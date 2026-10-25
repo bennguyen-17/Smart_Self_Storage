@@ -1,37 +1,15 @@
 import { useState } from "react"
 import {
   Download,
-  DollarSign,
-  Shield,
-  Lock,
-  CheckCircle2,
-  AlertTriangle,
-  RefreshCw,
-  ArrowDownLeft,
   Warehouse,
-  Sparkles,
   TrendingUp,
-  FileSpreadsheet,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useBomContext } from "@/features/bom/context/BomContext"
 
 export default function BomReportsPage() {
-  const { chainOverview, reloadData, isLoadingApi } = useBomContext()
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const { chainOverview } = useBomContext()
   const [hoveredMonthIndex, setHoveredMonthIndex] = useState<number | null>(null)
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true)
-    try {
-      await reloadData()
-      toast.success("Đã đồng bộ số liệu mới nhất từ hệ thống!")
-    } catch {
-      toast.error("Không thể làm mới dữ liệu lúc này.")
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
 
   const breakdownList = chainOverview?.facilityBreakdown || []
 
@@ -159,31 +137,13 @@ export default function BomReportsPage() {
     <div className="space-y-5">
       {/* HEADER ĐƠN GIẢN GỌN GÀNG */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-md">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 font-black text-[10px] tracking-wider uppercase flex items-center gap-1 border border-sky-500/20">
-              <Sparkles className="size-3" />
-              BOM SYSTEM REPORT
-            </span>
-            <span className="text-xs text-slate-400">• Cập nhật thời gian thực</span>
-          </div>
+        <div>
           <h2 className="text-lg sm:text-xl font-black text-white tracking-tight uppercase">
             Báo Cáo Tổng Quan Hệ Thống Thuê Kho
           </h2>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
-          <button
-            type="button"
-            onClick={handleRefresh}
-            disabled={isRefreshing || isLoadingApi}
-            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition cursor-pointer flex items-center gap-1.5 text-xs font-bold disabled:opacity-50"
-            title="Làm mới dữ liệu từ Database"
-          >
-            <RefreshCw className={`size-3.5 ${isRefreshing ? "animate-spin text-sky-400" : ""}`} />
-            <span>Làm Mới</span>
-          </button>
-
           <button
             type="button"
             onClick={handleExportCSV}
@@ -458,25 +418,6 @@ export default function BomReportsPage() {
                 <span className="font-mono font-black text-white text-xl sm:text-2xl mt-1">
                   {totalMaintenanceUnits.toLocaleString("vi-VN")}
                 </span>
-              </div>
-
-              {/* Ô 6: Kiểm Soát Ra Vào */}
-              <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-4 flex flex-col justify-center">
-                <span className="text-xs font-semibold text-slate-400">Kiểm Soát Ra Vào</span>
-                <span className="font-bold text-white text-base sm:text-lg mt-1 truncate">
-                  Mã PIN Tự Động
-                </span>
-              </div>
-
-              {/* Ô 7: Trạng Thái An Ninh */}
-              <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-4 flex flex-col justify-center">
-                <span className="text-xs font-semibold text-slate-400">Trạng Thái An Ninh</span>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
-                  <span className="font-bold text-white text-base sm:text-lg truncate">
-                    Bảo Mật 100%
-                  </span>
-                </div>
               </div>
             </div>
           </div>
