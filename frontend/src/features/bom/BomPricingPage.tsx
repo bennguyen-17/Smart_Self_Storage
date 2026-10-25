@@ -328,9 +328,6 @@ export default function BomPricingPage() {
                 <Tag className="size-3.5 text-sky-400" />
                 <span>2. Biểu Phí Phụ Thu, Phí Phạt Quá Hạn &amp; Chính Sách Miễn Giảm Giá</span>
               </h4>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Quy định mức thu dịch vụ bổ sung, chế tài trễ hạn và các ưu đãi thanh toán
-              </p>
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
