@@ -819,7 +819,8 @@ INSERT INTO StaffShift (staffShiftId, employeeId, facilityId, shiftId, workDate,
 (6, 17, 4, 1, '2026-10-18', 'ATTENDED'),
 (7, 20, 5, 1, '2026-10-18', 'ATTENDED'),
 (8, 23, 6, 1, '2026-10-18', 'ATTENDED'),
-(9, 26, 7, 1, '2026-10-18', 'ATTENDED');
+(9, 26, 7, 1, '2026-10-18', 'ATTENDED'),
+(10, 8, 1, 3, '2026-10-25', 'SCHEDULED');
 
 -- 12. Chương trình khuyến mãi (Promotions)
 INSERT INTO Promotion (promotionId, promotionName, promotionType, discountValue, startDate, endDate, status) VALUES
