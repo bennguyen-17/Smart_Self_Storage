@@ -301,9 +301,6 @@ function BomLayoutContent() {
                     )}
                   </button>
                 </div>
-                <p className="px-1 pt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-                  Cổng điều hành BOM
-                </p>
               </div>
             </motion.aside>
           </>
