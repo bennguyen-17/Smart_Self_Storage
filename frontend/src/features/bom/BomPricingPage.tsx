@@ -403,14 +403,14 @@ export default function BomPricingPage() {
 
                       {/* CỘT 4: GIÁ THEO THÁNG */}
                       <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
-                        <span className="font-mono font-black text-sky-400 text-xs sm:text-sm">
+                        <span className="font-mono font-bold text-slate-200 text-xs sm:text-sm">
                           ₫{item.normPrice.toLocaleString("vi-VN")}
                         </span>
                       </td>
 
                       {/* CỘT 5: PHỤ PHÍ KHO MÁT */}
                       <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
-                        <span className="font-mono font-bold text-cyan-300 text-xs bg-cyan-950/40 px-2 py-0.5 rounded-md border border-cyan-800/50">
+                        <span className="font-mono font-bold text-slate-200 text-xs sm:text-sm">
                           +{item.climateSurchargePercent ?? 20}%
                         </span>
                       </td>
