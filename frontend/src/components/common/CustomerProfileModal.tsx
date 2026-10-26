@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getCurrentCustomerProfile, updateCustomerProfile, sendEmailOtp } from '@/features/customer/api/customerService';
+import { OTHER_BANK, resolveBankName, splitBankName, VIETNAM_BANKS } from '@/lib/banks';
 import { toast } from 'sonner';
 
 const getInitials = (name: string) => {
@@ -11,6 +12,20 @@ const getInitials = (name: string) => {
     return words[0].substring(0, 2).toUpperCase();
   }
   return 'KH';
+};
+
+const normalizeBankValue = (value?: string | null) => {
+  const trimmed = (value || '').trim();
+  if (!trimmed || trimmed.toLowerCase() === 'chưa cập nhật') return '';
+  return trimmed;
+};
+
+const validateBankInfo = (bankName: string, bankAccountNumber: string, bankAccountName: string) => {
+  if (!bankName && !bankAccountNumber && !bankAccountName) return '';
+  if (!bankName) return 'Vui lòng nhập tên ngân hàng nhận hoàn cọc.';
+  if (!/^\d{6,20}$/.test(bankAccountNumber)) return 'Số tài khoản phải gồm 6–20 chữ số.';
+  if (!bankAccountName) return 'Vui lòng nhập tên chủ tài khoản thụ hưởng.';
+  return '';
 };
 
 const updateLocalSession = (updatedData: any) => {
@@ -49,7 +64,15 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
   
   // Edit state
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({ fullName: '', phone: '', email: '' });
+  const [formData, setFormData] = useState({
+    fullName: '',
+    phone: '',
+    email: '',
+    bankName: '',
+    bankNameCustom: '',
+    bankAccountNumber: '',
+    bankAccountName: '',
+  });
   const [isSaving, setIsSaving] = useState(false);
 
   // OTP state for email update
@@ -64,11 +87,16 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
       try {
         const res = await getCurrentCustomerProfile();
         if (res.success && res.data) {
+          const bank = splitBankName(res.data.bankName);
           setProfile(res.data);
           setFormData({
             fullName: res.data.fullName || '',
             phone: res.data.phone || '',
-            email: res.data.email || ''
+            email: res.data.email || '',
+            bankName: bank.bankName,
+            bankNameCustom: bank.customBankName,
+            bankAccountNumber: normalizeBankValue(res.data.bankAccountNumber),
+            bankAccountName: normalizeBankValue(res.data.bankAccountName),
           });
         }
       } catch (err) {
@@ -96,12 +124,17 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
   };
 
   const handleCancelEdit = () => {
+    const bank = splitBankName(profile?.bankName);
     setIsEditing(false);
     setShowOtpModal(false);
     setFormData({
       fullName: profile?.fullName || '',
       phone: profile?.phone || '',
-      email: profile?.email || ''
+      email: profile?.email || '',
+      bankName: bank.bankName,
+      bankNameCustom: bank.customBankName,
+      bankAccountNumber: normalizeBankValue(profile?.bankAccountNumber),
+      bankAccountName: normalizeBankValue(profile?.bankAccountName),
     });
   };
 
@@ -122,6 +155,16 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
 
     if (!/^[A-Za-z0-9+_.-]+@(.+)$/.test(trimmedEmail)) {
       toast.error('Địa chỉ email không hợp lệ.');
+      return;
+    }
+
+    const bankName = resolveBankName(formData.bankName, formData.bankNameCustom);
+    const bankAccountNumber = formData.bankAccountNumber.trim();
+    const bankAccountName = formData.bankAccountName.trim().toUpperCase();
+
+    const bankError = validateBankInfo(bankName, bankAccountNumber, bankAccountName);
+    if (bankError) {
+      toast.error(bankError);
       return;
     }
 
@@ -156,7 +199,10 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
         accountId: profile?.accountId,
         fullName: trimmedName,
         phone: trimmedPhone,
-        email: trimmedEmail
+        email: trimmedEmail,
+        bankName,
+        bankAccountNumber,
+        bankAccountName
       });
 
       const responseData = res?.data || res;
@@ -183,6 +229,16 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
       return;
     }
 
+    const bankName = resolveBankName(formData.bankName, formData.bankNameCustom);
+    const bankAccountNumber = formData.bankAccountNumber.trim();
+    const bankAccountName = formData.bankAccountName.trim().toUpperCase();
+
+    const bankError = validateBankInfo(bankName, bankAccountNumber, bankAccountName);
+    if (bankError) {
+      toast.error(bankError);
+      return;
+    }
+
     setIsVerifyingOtp(true);
     try {
       const res = await updateCustomerProfile({
@@ -190,6 +246,9 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
         fullName: formData.fullName.trim(),
         phone: formData.phone.trim(),
         email: formData.email.trim().toLowerCase(),
+        bankName,
+        bankAccountNumber,
+        bankAccountName,
         otpCode: trimmedOtp
       });
 
@@ -239,7 +298,7 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
 
   return (
     <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="card-box max-w-md w-full rounded-3xl border shadow-2xl overflow-hidden space-y-4 p-5 sm:p-6 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 modal-animate-pop relative">
+      <div className="card-box max-w-md w-full max-h-[92vh] overflow-y-auto rounded-3xl border shadow-2xl space-y-4 p-5 sm:p-6 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 modal-animate-pop relative">
         
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
           <div className="flex items-center space-x-2.5">
@@ -344,6 +403,62 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
                           className="w-full text-xs font-bold px-3.5 py-2 rounded-xl border border-blue-400 dark:border-blue-600 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
                         />
                       </div>
+
+                      {/* Dòng 5-7: Thông tin nhận hoàn cọc */}
+                      <div className="pt-1 border-t border-slate-200 dark:border-slate-700/70">
+                        <span className="text-slate-500 flex items-center gap-1 text-[10px] mb-1 font-semibold">
+                          <i className="fa-solid fa-building-columns text-blue-500 text-[9px]"></i> Ngân hàng nhận hoàn cọc:
+                        </span>
+                        <select
+                          value={formData.bankName}
+                          onChange={(e) => setFormData({...formData, bankName: e.target.value})}
+                          className="w-full text-xs font-bold px-3 py-2 rounded-xl border border-blue-400 dark:border-blue-600 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+                        >
+                          <option value="">Chọn ngân hàng</option>
+                          {VIETNAM_BANKS.map((bank) => (
+                            <option key={bank} value={bank}>{bank}</option>
+                          ))}
+                          <option value={OTHER_BANK}>{OTHER_BANK}</option>
+                        </select>
+                      </div>
+
+                      {formData.bankName === OTHER_BANK && (
+                        <div>
+                          <span className="text-slate-500 block text-[10px] mb-1 font-semibold">Tên ngân hàng khác:</span>
+                          <input
+                            type="text"
+                            value={formData.bankNameCustom}
+                            onChange={(e) => setFormData({...formData, bankNameCustom: e.target.value})}
+                            placeholder="VD: OCB, VIB..."
+                            maxLength={100}
+                            className="w-full text-xs font-bold px-3.5 py-2 rounded-xl border border-blue-400 dark:border-blue-600 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                          />
+                        </div>
+                      )}
+
+                      <div>
+                        <span className="text-slate-500 block text-[10px] mb-1 font-semibold">Số tài khoản:</span>
+                        <input
+                          type="text"
+                          value={formData.bankAccountNumber}
+                          onChange={(e) => setFormData({...formData, bankAccountNumber: e.target.value.replace(/\D/g, '')})}
+                          placeholder="VD: 1029384756"
+                          maxLength={20}
+                          className="w-full text-xs font-bold px-3.5 py-2 rounded-xl border border-blue-400 dark:border-blue-600 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <span className="text-slate-500 block text-[10px] mb-1 font-semibold">Chủ tài khoản:</span>
+                        <input
+                          type="text"
+                          value={formData.bankAccountName}
+                          onChange={(e) => setFormData({...formData, bankAccountName: e.target.value.toUpperCase()})}
+                          placeholder="NGUYEN VAN A"
+                          maxLength={100}
+                          className="w-full text-xs font-bold px-3.5 py-2 rounded-xl border border-blue-400 dark:border-blue-600 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none uppercase"
+                        />
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -370,6 +485,28 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
                     <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs gap-3">
                       <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider shrink-0">Email</span>
                       <span className="font-bold text-xs text-slate-900 dark:text-white text-right break-all" title={profile?.email || ''}>{profile?.email}</span>
+                    </div>
+
+                    {/* Dòng 5-7: Thông tin nhận hoàn cọc */}
+                    <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs gap-3">
+                      <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider shrink-0">Ngân hàng</span>
+                      <span className="font-bold text-xs text-slate-900 dark:text-white text-right" title={normalizeBankValue(profile?.bankName)}>
+                        {normalizeBankValue(profile?.bankName) || 'Chưa cập nhật'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs gap-3">
+                      <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider shrink-0">Số tài khoản</span>
+                      <span className="font-bold font-mono text-xs text-slate-900 dark:text-white text-right" title={normalizeBankValue(profile?.bankAccountNumber)}>
+                        {normalizeBankValue(profile?.bankAccountNumber) || 'Chưa cập nhật'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs gap-3">
+                      <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider shrink-0">Chủ tài khoản</span>
+                      <span className="font-bold text-xs text-slate-900 dark:text-white text-right uppercase" title={normalizeBankValue(profile?.bankAccountName)}>
+                        {normalizeBankValue(profile?.bankAccountName) || 'Chưa cập nhật'}
+                      </span>
                     </div>
                   </div>
                 )}

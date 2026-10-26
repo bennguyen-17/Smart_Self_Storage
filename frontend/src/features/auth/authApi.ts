@@ -8,6 +8,9 @@ export interface RegisterData {
   email: string;
   phone: string;
   password: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  bankAccountName?: string;
 }
 
 export interface AuthUser {
@@ -43,6 +46,9 @@ export const register = async (data: RegisterData) => {
     email: data.email,
     phone: data.phone,
     password: data.password,
+    bankName: data.bankName,
+    bankAccountNumber: data.bankAccountNumber,
+    bankAccountName: data.bankAccountName,
   });
 
   return response.data;
