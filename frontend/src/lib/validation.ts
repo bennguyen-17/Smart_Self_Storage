@@ -1,4 +1,5 @@
 import * as z from "zod"
+import { OTHER_BANK, resolveBankName } from "./banks"
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_REGEX = /^0\d{9}$/
@@ -144,6 +145,46 @@ export const registerSchema = z
         })
       }
     }),
+    // Thông tin nhận hoàn cọc: không bắt buộc, nhưng nếu điền thì phải đủ cả 3.
+    bankName: z.string().max(100, "Tên ngân hàng tối đa 100 ký tự"),
+    bankNameCustom: z.string().max(100, "Tên ngân hàng tối đa 100 ký tự"),
+    bankAccountNumber: z.string().max(50, "Số tài khoản tối đa 50 ký tự"),
+    bankAccountName: z.string().max(100, "Tên chủ tài khoản tối đa 100 ký tự"),
+  })
+  .superRefine((data, ctx) => {
+    const bankNameSelection = data.bankName.trim()
+    const bankName = resolveBankName(bankNameSelection, data.bankNameCustom)
+    const bankAccountNumber = data.bankAccountNumber.trim()
+    const bankAccountName = data.bankAccountName.trim()
+
+    if (!bankName && !bankAccountNumber && !bankAccountName) return
+
+    if (!bankName) {
+      ctx.addIssue({
+        code: "custom",
+        path: [bankNameSelection === OTHER_BANK ? "bankNameCustom" : "bankName"],
+        message:
+          bankNameSelection === OTHER_BANK
+            ? "Vui lòng nhập tên ngân hàng"
+            : "Vui lòng chọn ngân hàng",
+      })
+    }
+
+    if (!/^\d{6,20}$/.test(bankAccountNumber)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["bankAccountNumber"],
+        message: "Số tài khoản phải gồm 6–20 chữ số",
+      })
+    }
+
+    if (!/^[\p{L}\s.]+$/u.test(bankAccountName)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["bankAccountName"],
+        message: "Tên chủ tài khoản chỉ gồm chữ cái và khoảng trắng",
+      })
+    }
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Mật khẩu xác nhận không khớp",

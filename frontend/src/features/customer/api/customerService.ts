@@ -47,6 +47,9 @@ export const getCurrentCustomerProfile = async () => {
     identityNumber: getCccd(localUser) || 'Chưa cập nhật',
     phone: localUser?.phone || 'Chưa cập nhật',
     email: localUser?.email || 'Chưa cập nhật',
+    bankName: '',
+    bankAccountNumber: '',
+    bankAccountName: '',
     isVerified: localUser ? (localUser.status !== 'UNVERIFIED' && localUser.isVerified !== false) : true,
     verificationBadge: (localUser?.status !== 'UNVERIFIED' && localUser?.isVerified !== false) ? 'ĐÃ XÁC THỰC THÔNG TIN' : 'CHƯA XÁC THỰC THÔNG TIN',
     avatarText: getInitials(localUser?.fullName || localUser?.name || 'Khách Hàng'),
@@ -107,4 +110,26 @@ export const updateCustomerProfile = async (updateData: any) => {
 
   const res = await apiClient.put('/customers/profile', updateData);
   return { success: true, data: res.data || res };
+};
+
+export interface CustomerNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  timestamp: string | null;
+  isRead: boolean;
+  link: string | null;
+}
+
+/**
+ * Lịch sử đăng nhập & cảnh báo an toàn tài khoản (đọc từ ActivityLog)
+ * SWAGGER ENDPOINT: GET /api/customer/notifications
+ */
+export const getCustomerNotifications = async (): Promise<CustomerNotification[]> => {
+  if (isMockMode()) return [];
+
+  const res: unknown = await apiClient.get('/customer/notifications');
+  const payload = (res as { data?: unknown })?.data ?? res;
+  return Array.isArray(payload) ? (payload as CustomerNotification[]) : [];
 };

@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { getCurrentCustomerProfile } from '@/features/customer/api/customerService';
+import { OTHER_BANK, splitBankName, VIETNAM_BANKS } from '@/lib/banks';
+
+const isFilled = (value?: string | null) => {
+  const trimmed = (value || '').trim();
+  return trimmed.length > 0 && trimmed.toLowerCase() !== 'chưa cập nhật';
+};
 
 interface CancelDepositModalProps {
   contract: any;
@@ -21,15 +28,59 @@ export default function CancelDepositModal({
   const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Tự điền tên tài khoản từ profile
+  // Tự điền sẵn thông tin thụ hưởng từ hồ sơ khách hàng (nếu đã lưu)
   useEffect(() => {
-    try {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const u = JSON.parse(userStr);
-        if (u.fullName) setAccountName(u.fullName.toUpperCase());
+    let cancelled = false;
+
+    const prefill = async () => {
+      let fallbackName = '';
+      try {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const u = JSON.parse(userStr);
+          if (u.fullName) fallbackName = String(u.fullName).toUpperCase();
+        }
+      } catch {
+        // Bỏ qua nếu không đọc được phiên đăng nhập cục bộ.
       }
-    } catch (e) { }
+
+      let hasAccountName = false;
+      try {
+        const res = await getCurrentCustomerProfile();
+        const profile = res.success ? res.data : null;
+        if (cancelled || !profile) return;
+
+        if (isFilled(profile.bankName)) {
+          const bank = splitBankName(profile.bankName);
+          if (bank.bankName && bank.bankName !== OTHER_BANK) {
+            setBankName(bank.bankName);
+          } else if (bank.customBankName) {
+            setBankName(OTHER_BANK);
+            setCustomBankName(bank.customBankName);
+          }
+        }
+
+        if (isFilled(profile.bankAccountNumber)) {
+          setAccountNumber(String(profile.bankAccountNumber).trim());
+        }
+
+        if (isFilled(profile.bankAccountName)) {
+          setAccountName(String(profile.bankAccountName).trim().toUpperCase());
+          hasAccountName = true;
+        }
+      } catch {
+        // Không chặn luồng hủy cọc nếu tải hồ sơ thất bại.
+      }
+
+      if (!cancelled && !hasAccountName && fallbackName) {
+        setAccountName(fallbackName);
+      }
+    };
+
+    void prefill();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Tính số ngày còn lại đến ngày nhận kho
@@ -48,8 +99,8 @@ export default function CancelDepositModal({
   const refundAmount = isRefundEligible ? depositVal : Math.round(depositVal * 0.5);
 
   const handleSubmit = async () => {
-    const finalBankName = bankName === 'Khác' ? customBankName.trim() : bankName;
-    if (bankName === 'Khác' && !finalBankName) {
+    const finalBankName = bankName === OTHER_BANK ? customBankName.trim() : bankName;
+    if (bankName === OTHER_BANK && !finalBankName) {
       setError('Vui lòng nhập tên ngân hàng của bạn.');
       return;
     }
@@ -114,7 +165,7 @@ export default function CancelDepositModal({
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-500 dark:text-slate-400">Ngân hàng nhận:</span>
-                <span className="font-semibold text-slate-900 dark:text-white">{bankName}</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{bankName === OTHER_BANK ? customBankName.trim() : bankName}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-500 dark:text-slate-400">Số tài khoản:</span>
@@ -220,19 +271,13 @@ export default function CancelDepositModal({
                 onChange={(e) => setBankName(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-xs focus:border-blue-500 focus:outline-none cursor-pointer"
               >
-                <option value="Vietcombank">Vietcombank (VCB)</option>
-                <option value="MB Bank">MB Bank (Quân Đội)</option>
-                <option value="Techcombank">Techcombank (TCB)</option>
-                <option value="ACB">ACB (Á Châu)</option>
-                <option value="VPBank">VPBank</option>
-                <option value="TPBank">TPBank (Tiên Phong)</option>
-                <option value="BIDV">BIDV</option>
-                <option value="Agribank">Agribank</option>
-                <option value="VietinBank">VietinBank</option>
-                <option value="Khác">Ngân hàng khác</option>
+                {VIETNAM_BANKS.map((bank) => (
+                  <option key={bank} value={bank}>{bank}</option>
+                ))}
+                <option value={OTHER_BANK}>Ngân hàng khác</option>
               </select>
 
-              {bankName === 'Khác' && (
+              {bankName === OTHER_BANK && (
                 <div className="mt-2">
                   <input
                     type="text"

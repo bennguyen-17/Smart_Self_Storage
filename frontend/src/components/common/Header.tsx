@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import BrandLogo from '@/components/common/BrandLogo';
 import ThemeToggle from '@/components/common/ThemeToggle';
+import NotificationBell from '@/components/common/NotificationBell';
 
 interface HeaderProps {
   isDarkMode?: boolean;
@@ -69,20 +70,24 @@ export default function Header({ isDarkMode, onToggleTheme, onOpenProfileModal, 
             </Link>
           </div>
         ) : (
-          <button
-            onClick={onOpenProfileModal}
-            className="flex items-center space-x-2 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white text-slate-900 hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 transition cursor-pointer shadow-xs group text-left"
-            title="Nhấn để xem Hồ sơ & Đăng xuất"
-            type="button"
-          >
-            <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
-              {userInitials}
-            </div>
-            <div className="text-left hidden md:flex items-center space-x-1">
-              <span className="text-xs font-extrabold text-slate-900 dark:text-white leading-tight">{userName}</span>
-              <i className="fa-solid fa-chevron-down text-[9px] text-slate-400 group-hover:text-blue-600 transition-colors ml-0.5"></i>
-            </div>
-          </button>
+          <>
+            <NotificationBell onOpenProfile={onOpenProfileModal} />
+
+            <button
+              onClick={onOpenProfileModal}
+              className="flex items-center space-x-2 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white text-slate-900 hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 transition cursor-pointer shadow-xs group text-left"
+              title="Nhấn để xem Hồ sơ & Đăng xuất"
+              type="button"
+            >
+              <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                {userInitials}
+              </div>
+              <div className="text-left hidden md:flex items-center space-x-1">
+                <span className="text-xs font-extrabold text-slate-900 dark:text-white leading-tight">{userName}</span>
+                <i className="fa-solid fa-chevron-down text-[9px] text-slate-400 group-hover:text-blue-600 transition-colors ml-0.5"></i>
+              </div>
+            </button>
+          </>
         )}
       </div>
     </header>

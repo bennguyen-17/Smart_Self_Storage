@@ -1,7 +1,7 @@
 import { useState } from "react"
 import axios from "axios"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Check, Circle, Eye, EyeOff } from "lucide-react"
+import { Check, ChevronDown, Circle, Eye, EyeOff, List } from "lucide-react"
 import { Controller, useForm, useWatch, type Control } from "react-hook-form"
 import { Link } from "react-router-dom"
 import { cn } from "cn"
@@ -12,6 +12,7 @@ import {
   registerSchema,
   type RegisterFormValues,
 } from "@/lib/validation"
+import { OTHER_BANK, resolveBankName, VIETNAM_BANKS } from "@/lib/banks"
 
 import OtpModal from "./OtpModal"
 import PolicyDialog, { type PolicyTab } from "@/components/common/PolicyDialog"
@@ -32,7 +33,13 @@ import {
 } from "@/components/ui/input-group"
 import { Spinner } from "@/components/ui/spinner"
 
-type TextFieldName = "fullName" | "identityNumber" | "email" | "phone"
+type TextFieldName =
+  | "fullName"
+  | "identityNumber"
+  | "email"
+  | "phone"
+  | "bankAccountNumber"
+  | "bankAccountName"
 
 interface TextFieldProps {
   control: Control<RegisterFormValues>
@@ -42,6 +49,7 @@ interface TextFieldProps {
   type?: string
   maxLength?: number
   autoComplete?: string
+  digitsOnly?: boolean
 }
 
 function TextField({
@@ -52,6 +60,7 @@ function TextField({
   type = "text",
   maxLength,
   autoComplete,
+  digitsOnly = false,
 }: TextFieldProps) {
   return (
     <Controller
@@ -72,11 +81,103 @@ function TextField({
             autoComplete={autoComplete}
             aria-invalid={fieldState.invalid}
             className="h-10 text-sm rounded-xl"
+            onChange={(event) =>
+              field.onChange(
+                digitsOnly ? event.target.value.replace(/\D/g, "") : event.target.value
+              )
+            }
           />
 
           <FieldError errors={[fieldState.error]} />
         </Field>
       )}
+    />
+  )
+}
+
+function BankNameField({ control }: { control: Control<RegisterFormValues> }) {
+  return (
+    <Controller
+      name="bankName"
+      control={control}
+      render={({ field, fieldState }) => {
+        if (field.value === OTHER_BANK) {
+          return (
+            <Controller
+              name="bankNameCustom"
+              control={control}
+              render={({ field: customField, fieldState: customState }) => (
+                <Field data-invalid={customState.invalid}>
+                  <FieldLabel htmlFor={customField.name} className="text-xs font-semibold sm:text-sm">
+                    Ngân hàng
+                  </FieldLabel>
+
+                  <div className="relative">
+                    <Input
+                      {...customField}
+                      id={customField.name}
+                      placeholder="Nhập tên ngân hàng"
+                      maxLength={100}
+                      autoFocus
+                      aria-invalid={customState.invalid}
+                      className="h-10 pr-10 text-sm rounded-xl"
+                    />
+
+                    <button
+                      type="button"
+                      title="Chọn ngân hàng từ danh sách"
+                      aria-label="Chọn ngân hàng từ danh sách"
+                      onClick={() => {
+                        customField.onChange("")
+                        field.onChange("")
+                      }}
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 size-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                    >
+                      <List className="size-4" />
+                    </button>
+                  </div>
+
+                  <FieldError errors={[customState.error]} />
+                </Field>
+              )}
+            />
+          )
+        }
+
+        return (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor={field.name} className="text-xs font-semibold sm:text-sm">
+              Ngân hàng
+            </FieldLabel>
+
+            <div className="relative">
+              <select
+                {...field}
+                id={field.name}
+                aria-invalid={fieldState.invalid}
+                className={cn(
+                  "h-10 w-full appearance-none rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 pr-9 text-sm font-semibold shadow-xs outline-none transition-colors cursor-pointer",
+                  "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                  "aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20",
+                  !field.value && "font-normal text-muted-foreground"
+                )}
+              >
+                <option value="">— Chọn ngân hàng —</option>
+                {VIETNAM_BANKS.map((bank) => (
+                  <option key={bank} value={bank}>
+                    {bank}
+                  </option>
+                ))}
+                <option value={OTHER_BANK}>{OTHER_BANK}</option>
+              </select>
+
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+            </div>
+
+            <FieldError errors={[fieldState.error]} />
+          </Field>
+        )
+      }}
     />
   )
 }
@@ -163,6 +264,10 @@ function RegisterForm() {
       phone: "",
       password: "",
       confirmPassword: "",
+      bankName: "",
+      bankNameCustom: "",
+      bankAccountNumber: "",
+      bankAccountName: "",
     },
   })
 
@@ -192,6 +297,9 @@ function RegisterForm() {
         email: values.email,
         phone: values.phone,
         password: values.password,
+        bankName: resolveBankName(values.bankName, values.bankNameCustom),
+        bankAccountNumber: values.bankAccountNumber.trim(),
+        bankAccountName: values.bankAccountName.trim().toUpperCase(),
       })
 
       setRegisteredContact({ phone: values.phone, email: values.email })
@@ -322,6 +430,39 @@ function RegisterForm() {
               ))}
             </ul>
           )}
+
+          {/* Thông tin nhận hoàn cọc (không bắt buộc) */}
+          <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 p-2.5 space-y-2">
+            <div>
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                Thông tin nhận hoàn cọc
+              </p>
+              <p className="text-[10px] leading-snug text-muted-foreground">
+                Không bắt buộc · Điền đủ 3 ô để hệ thống tự động hoàn tiền cọc khi hủy hoặc thanh lý hợp đồng.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+              <BankNameField control={form.control} />
+
+              <TextField
+                control={form.control}
+                name="bankAccountNumber"
+                label="Số tài khoản"
+                placeholder="VD: 1029384756"
+                maxLength={20}
+                digitsOnly
+              />
+
+              <TextField
+                control={form.control}
+                name="bankAccountName"
+                label="Chủ tài khoản"
+                placeholder="NGUYEN VAN A"
+                maxLength={100}
+              />
+            </div>
+          </div>
 
           {/* Điều khoản */}
           <div className="pt-0.5">
