@@ -97,19 +97,36 @@ export function needsFollowUp(contract: FacilityContract): boolean {
   return unpaidTotal(contract) > 0
 }
 
+/** Mốc nhắc gia hạn xa nhất của hệ thống (nhắc trước 7, 3, 1 ngày) */
+export const RENEWAL_WINDOW_DAYS = 7
+
+/** Hợp đồng đang hiệu lực, còn 0–7 ngày là hết hạn: khách cần gia hạn hoặc chuẩn bị trả kho */
+export function isExpiringSoon(contract: Pick<FacilityContract, "status" | "endDate">, today: string): boolean {
+  if (contract.status !== "ACTIVE") return false
+  const left = daysRemaining(contract.endDate, today)
+  return left >= 0 && left <= RENEWAL_WINDOW_DAYS
+}
+
 export type PaymentFilter = "ALL" | "CLEAR" | "DEBT"
 
 export interface ContractFilter {
   query: string
   status: ContractStatus | "ALL"
   payment: PaymentFilter
+  /** Chỉ hợp đồng sắp hết hạn (cần theo dõi gia hạn); cần truyền `today` khi bật */
+  expiringSoon?: boolean
 }
 
-/** Lọc theo từ khóa (khách, SĐT, mã HĐ, mã ô), trạng thái HĐ, tình trạng công nợ; hết hạn sớm nhất lên đầu */
-export function filterContracts(list: readonly FacilityContract[], filter: ContractFilter): FacilityContract[] {
+/** Lọc theo từ khóa (khách, SĐT, mã HĐ, mã ô), trạng thái HĐ, công nợ, sắp hết hạn; hết hạn sớm nhất lên đầu */
+export function filterContracts(
+  list: readonly FacilityContract[],
+  filter: ContractFilter,
+  today = ""
+): FacilityContract[] {
   return list
     .filter((c) => filter.status === "ALL" || c.status === filter.status)
     .filter((c) => filter.payment === "ALL" || (filter.payment === "DEBT") === unpaidTotal(c) > 0)
+    .filter((c) => !filter.expiringSoon || isExpiringSoon(c, today))
     .filter((c) => matchesQuery(filter.query, [c.customerName, c.customerPhone, c.contractCode, c.unitCode]))
     .sort((a, b) => a.endDate.localeCompare(b.endDate))
 }

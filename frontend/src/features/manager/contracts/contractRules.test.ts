@@ -7,6 +7,7 @@ import {
   canConfirmForfeitProcessed,
   forfeitNoteError,
   isClosedContract,
+  isExpiringSoon,
   normalizeContractStatus,
   needsFollowUp,
   needsForfeitHandling,
@@ -85,6 +86,29 @@ describe("filterContracts", () => {
     { name: "không nợ", filter: { ...ALL, payment: "CLEAR" }, expected: [3, 1] },
   ] as { name: string; filter: ContractFilter; expected: number[] }[])("$name", ({ filter, expected }) => {
     expect(ids(filter)).toEqual(expected)
+  })
+
+  test("sắp hết hạn: chỉ hợp đồng đang hiệu lực còn 0–7 ngày", () => {
+    const soon = [
+      contract(4, { endDate: "2026-10-27" }),
+      contract(5, { endDate: "2026-11-03" }),
+      contract(6, { endDate: "2026-11-04" }),
+      contract(7, { status: "OVERDUE", endDate: "2026-10-26" }),
+    ]
+    expect(filterContracts(soon, { ...ALL, expiringSoon: true }, "2026-10-27").map((c) => c.contractId)).toEqual([4, 5])
+  })
+})
+
+describe("isExpiringSoon", () => {
+  test.each([
+    ["hết hạn hôm nay", "ACTIVE", "2026-10-27", true],
+    ["còn 7 ngày", "ACTIVE", "2026-11-03", true],
+    ["còn 8 ngày", "ACTIVE", "2026-11-04", false],
+    ["đã qua ngày hết hạn, BE chưa kịp chuyển quá hạn", "ACTIVE", "2026-10-26", false],
+    ["đã quá hạn", "OVERDUE", "2026-10-20", false],
+    ["chờ nhận kho", "PENDING_CHECKIN", "2026-10-30", false],
+  ] as const)("%s → %s", (_, status, endDate, expected) => {
+    expect(isExpiringSoon({ status, endDate }, "2026-10-27")).toBe(expected)
   })
 })
 
