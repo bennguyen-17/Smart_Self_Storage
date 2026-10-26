@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils"
 
 import { PRICING_SECTION } from "../content/copy"
 import { CTA, ROUTES } from "../content/site"
-import { UNITS, type UnitSize } from "../content/units"
+import { type UnitSize } from "../content/units"
+import { useLiveUnits } from "../hooks/useLiveLandingData"
 import { DURATION, EASE_OUT_QUART } from "../motion/presets"
 import { LandingLink } from "./LandingButton"
 import { RevealItem, RevealList } from "./Reveal"
@@ -22,6 +23,7 @@ type ViewMode = "capacity" | "pricing"
 
 export function PricingSection({ suggested: _suggested }: PricingSectionProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("capacity")
+  const units = useLiveUnits()
 
   return (
     <section
@@ -93,7 +95,7 @@ export function PricingSection({ suggested: _suggested }: PricingSectionProps) {
 
         {/* 4 CARD CỠ KHO: DI CHUỘT VÀO CARD NÀO THÌ CARD ĐÓ NỔI BẬT */}
         <RevealList className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {UNITS.map((u) => {
+          {units.map((u) => {
             return (
               <RevealItem key={u.size} className="relative">
                 <article className="group relative flex h-full flex-col justify-between gap-3.5 rounded-2xl bg-card p-4 ring-1 ring-border/80 transition-all duration-200 hover:-translate-y-1 hover:ring-2 hover:ring-blue-600 hover:shadow-lg dark:hover:ring-blue-500">

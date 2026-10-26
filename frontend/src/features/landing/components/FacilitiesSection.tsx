@@ -5,7 +5,9 @@ import { MapPin } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 import { FACILITIES_SECTION } from "../content/copy"
-import { CITIES, FACILITIES, type CityId } from "../content/facilities"
+import { CITIES, type CityId } from "../content/facilities"
+import { useLiveFacilities } from "../hooks/useLiveLandingData"
+import { availabilityLabel } from "../lib/liveData"
 import { DURATION, EASE_OUT_QUART } from "../motion/presets"
 import { Reveal } from "./Reveal"
 import { SectionHeading } from "./SectionHeading"
@@ -28,7 +30,8 @@ export function FacilitiesSection({
 
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
   const baseId = useId()
-  const list = FACILITIES.filter((f) => f.city === city)
+  const facilities = useLiveFacilities()
+  const list = facilities.filter((f) => f.city === city)
 
   // WAI-ARIA Tabs: ←/→/Home/End chuyển tab, roving tabindex.
   const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>, index: number) => {
@@ -136,6 +139,18 @@ export function FacilitiesSection({
                       <h3 className="text-lg leading-[1.35] font-bold text-foreground">
                         {f.name}
                       </h3>
+                      {availabilityLabel(f) && (
+                        <span
+                          className={cn(
+                            "rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                            f.paused || f.available === 0
+                              ? "bg-muted text-muted-foreground"
+                              : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+                          )}
+                        >
+                          {availabilityLabel(f)}
+                        </span>
+                      )}
                     </div>
                     <p className="flex gap-2 text-sm text-muted-foreground">
                       <MapPin className="mt-0.5 size-4 shrink-0 text-blue-500" aria-hidden />
