@@ -2,23 +2,22 @@ package com.swp391.backend.controller;
 
 import com.swp391.backend.dto.CustomerInvoiceResponse;
 import com.swp391.backend.dto.CustomerNotificationResponse;
+import com.swp391.backend.entity.ActivityLog;
 import com.swp391.backend.entity.Contract;
 import com.swp391.backend.entity.Payment;
 import com.swp391.backend.entity.Reservation;
-import com.swp391.backend.entity.SupportTicket;
+import com.swp391.backend.repository.ActivityLogRepository;
 import com.swp391.backend.repository.ContractRepository;
 import com.swp391.backend.repository.PaymentRepository;
 import com.swp391.backend.repository.ReservationRepository;
-import com.swp391.backend.repository.SupportTicketRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @RestController
@@ -28,16 +27,16 @@ public class CustomerPortalDataController {
     private final ReservationRepository reservationRepository;
     private final ContractRepository contractRepository;
     private final PaymentRepository paymentRepository;
-    private final SupportTicketRepository supportTicketRepository;
+    private final ActivityLogRepository activityLogRepository;
 
     public CustomerPortalDataController(ReservationRepository reservationRepository,
                                         ContractRepository contractRepository,
                                         PaymentRepository paymentRepository,
-                                        SupportTicketRepository supportTicketRepository) {
+                                        ActivityLogRepository activityLogRepository) {
         this.reservationRepository = reservationRepository;
         this.contractRepository = contractRepository;
         this.paymentRepository = paymentRepository;
-        this.supportTicketRepository = supportTicketRepository;
+        this.activityLogRepository = activityLogRepository;
     }
 
     @GetMapping("/invoices")
@@ -130,69 +129,59 @@ public class CustomerPortalDataController {
             return ResponseEntity.status(401).build();
         }
 
+        List<ActivityLog> logs = activityLogRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
         List<CustomerNotificationResponse> list = new ArrayList<>();
-        List<Reservation> reservations = reservationRepository.findByAccountId(accountId);
-        LocalDate today = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy");
 
-        for (Reservation r : reservations) {
-            String code = r.getReservationCode() != null ? r.getReservationCode() : ("Đơn #" + r.getReservationId());
-            String unit = r.getUnitCode() != null ? r.getUnitCode() : "";
+        for (ActivityLog log : logs) {
+            String action = log.getAction() != null ? log.getAction() : "";
+            String ip = (log.getIpAddress() != null && !log.getIpAddress().isBlank()) ? log.getIpAddress() : "Không xác định";
+            String timeStr = log.getCreatedAt() != null ? log.getCreatedAt().format(formatter) : "";
 
-            if (r.getEndDate() != null) {
-                long daysUntilExpiry = ChronoUnit.DAYS.between(today, r.getEndDate());
-                if (daysUntilExpiry == 7 || daysUntilExpiry == 3 || daysUntilExpiry == 1) {
-                    list.add(new CustomerNotificationResponse(
-                            "exp-" + r.getReservationId() + "-" + daysUntilExpiry,
-                            "Nhắc hạn thuê kho (" + code + ")",
-                            "Hợp đồng thuê ô " + unit + " sẽ hết hạn sau " + daysUntilExpiry + " ngày (ngày " + r.getEndDate() + "). Vui lòng gia hạn hoặc chuẩn bị trả kho.",
-                            "REMINDER",
-                            LocalDateTime.now().minusHours(2),
-                            false,
-                            "/storage"
-                    ));
-                } else if (daysUntilExpiry < 0 && daysUntilExpiry >= -30) {
-                    long overdueDays = Math.abs(daysUntilExpiry);
-                    list.add(new CustomerNotificationResponse(
-                            "ovd-" + r.getReservationId(),
-                            "Cảnh báo hợp đồng quá hạn (" + code + ")",
-                            "Hợp đồng ô " + unit + " đã quá hạn " + overdueDays + " ngày. Phí phạt 50.000đ/ngày. Vui lòng liên hệ cơ sở để xử lý.",
-                            "WARNING",
-                            LocalDateTime.now().minusHours(1),
-                            false,
-                            "/storage"
-                    ));
-                }
-            }
-        }
-
-        // Thông báo về ticket hỗ trợ
-        List<SupportTicket> tickets = supportTicketRepository.findByCustomerIdOrderByCreatedAtDesc(accountId);
-        for (SupportTicket t : tickets) {
-            if ("RESOLVED".equalsIgnoreCase(t.getStatus())) {
+            if ("LOGIN_SUCCESS".equalsIgnoreCase(action)) {
                 list.add(new CustomerNotificationResponse(
-                        "tck-res-" + t.getId(),
-                        "Yêu cầu hỗ trợ đã xử lý",
-                        "Yêu cầu #" + t.getTicketCode() + " đã được nhân viên cơ sở giải quyết hoàn tất.",
-                        "SUCCESS",
-                        t.getResolvedAt() != null ? t.getResolvedAt() : t.getCreatedAt(),
-                        true,
-                        "/support?tab=tickets"
-                ));
-            } else if ("IN_PROGRESS".equalsIgnoreCase(t.getStatus())) {
-                list.add(new CustomerNotificationResponse(
-                        "tck-inp-" + t.getId(),
-                        "Yêu cầu hỗ trợ đang xử lý",
-                        "Nhân viên cơ sở đang tiếp nhận và kiểm tra yêu cầu #" + t.getTicketCode() + " của bạn.",
+                        "act-" + log.getActivityLogId(),
+                        "Đăng nhập thành công",
+                        "Đăng nhập hệ thống lúc " + timeStr + " (IP: " + ip + ")",
                         "INFO",
-                        t.getAcceptedAt() != null ? t.getAcceptedAt() : t.getCreatedAt(),
+                        log.getCreatedAt(),
                         false,
-                        "/support?tab=tickets"
+                        "/profile"
+                ));
+            } else if ("LOGIN_FAILED".equalsIgnoreCase(action)) {
+                list.add(new CustomerNotificationResponse(
+                        "act-" + log.getActivityLogId(),
+                        "Cảnh báo đăng nhập sai mật khẩu",
+                        "Phát hiện lần thử đăng nhập không thành công lúc " + timeStr + " (IP: " + ip + ")",
+                        "WARNING",
+                        log.getCreatedAt(),
+                        false,
+                        "/profile"
+                ));
+            } else if (action.toUpperCase().contains("LOCK") || action.toUpperCase().contains("SUSPEND")) {
+                list.add(new CustomerNotificationResponse(
+                        "act-" + log.getActivityLogId(),
+                        "Cảnh báo tài khoản tạm khóa",
+                        "Tài khoản bị tạm khóa vì lý do an toàn lúc " + timeStr + " (IP: " + ip + ")",
+                        "WARNING",
+                        log.getCreatedAt(),
+                        false,
+                        "/profile"
+                ));
+            } else if (action.toUpperCase().contains("PASSWORD") || action.toUpperCase().contains("RESET")) {
+                list.add(new CustomerNotificationResponse(
+                        "act-" + log.getActivityLogId(),
+                        "Bảo mật: Đổi mật khẩu",
+                        "Mật khẩu tài khoản đã được thay đổi lúc " + timeStr + " (IP: " + ip + ")",
+                        "INFO",
+                        log.getCreatedAt(),
+                        false,
+                        "/profile"
                 ));
             }
         }
 
-        // Sắp xếp mới nhất lên đầu, giới hạn 20 thông báo
-        list.sort((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()));
+        // Giới hạn 20 thông báo gần nhất
         if (list.size() > 20) {
             list = list.subList(0, 20);
         }

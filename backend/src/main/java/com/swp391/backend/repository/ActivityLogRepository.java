@@ -48,6 +48,7 @@ public interface ActivityLogRepository
                         @Param("accountId") Integer accountId);
 
       List<ActivityLog> findByAccountId(Integer accountId);
+      List<ActivityLog> findByAccountIdOrderByCreatedAtDesc(Integer accountId);
       boolean existsByActionAndDescriptionStartingWith(String action, String descriptionPrefix);
       List<ActivityLog> findByCreatedAtBetweenOrderByCreatedAtDesc(LocalDateTime from, LocalDateTime to);
       List<ActivityLog> findAllByOrderByCreatedAtDesc();
