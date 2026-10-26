@@ -1,7 +1,8 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import {
   Warehouse,
   TrendingUp,
+  TrendingDown,
 } from "lucide-react"
 import { useBomContext } from "@/features/bom/context/BomContext"
 
@@ -61,16 +62,48 @@ export default function BomReportsPage() {
         ? 100
         : 0
 
-  const maxRevenue = Math.max(...monthlyRevenueData.map((d) => d.revenue), netRevenue) * 1.15 || 10000000
-  const minRevenue = 0
+  // Xác định khoảng giá trị min và max để vẽ đồ thị hỗ trợ cả tháng có doanh thu âm
+  const allRevenues = monthlyRevenueData.map((d) => d.revenue)
+  const rawMax = Math.max(...allRevenues, netRevenue, 1000000)
+  const rawMin = Math.min(...allRevenues, 0)
+  const hasNegative = rawMin < 0
 
-  // Tọa độ vẽ biểu đồ SVG: plotWidth 412, plotHeight 115, x: 38 -> 450, y: 15 -> 130
+  // Đỉnh dương làm tròn đẹp
+  const maxRevenue = Math.max(Math.ceil((rawMax * 1.15) / 1000000) * 1000000, 10000000)
+
+  // Mốc đáy âm làm tròn đẹp khi có tháng âm
+  const minRevenue = hasNegative
+    ? Math.floor((rawMin * 1.3) / 1000000) * 1000000 || -1000000
+    : 0
+
+  // Cấu hình không gian vẽ SVG
+  const svgViewBox = hasNegative ? "0 0 460 215" : "0 0 460 170"
+  const plotTop = 18
+  const plotZero = hasNegative ? 122 : 130
+  const plotBottom = hasNegative ? 168 : 130
+  const plotLeft = 44
+  const plotRight = 422
+  const plotWidth = plotRight - plotLeft
+
+  // Tính tọa độ Y chuẩn xác cho từng điểm (kéo xuống dưới nếu âm)
+  const getY = (val: number) => {
+    if (val >= 0) {
+      const ratio = Math.min(1, Math.max(0, val / maxRevenue))
+      return plotZero - ratio * (plotZero - plotTop)
+    } else {
+      const ratio = Math.min(1, Math.max(0, Math.abs(val) / Math.abs(minRevenue)))
+      return plotZero + ratio * (plotBottom - plotZero)
+    }
+  }
+
+  // Tọa độ các điểm tròn của 6 tháng
   const chartPoints = monthlyRevenueData.map((d, i) => {
-    const x = 38 + (i / Math.max(1, monthlyRevenueData.length - 1)) * 412
-    const y = 130 - ((d.revenue - minRevenue) / Math.max(1, maxRevenue - minRevenue)) * 115
+    const x = plotLeft + (i / Math.max(1, monthlyRevenueData.length - 1)) * plotWidth
+    const y = getY(d.revenue)
     return { ...d, x, y }
   })
 
+  // Đường cong bezier mượt mà qua các điểm
   const revenueLinePath = chartPoints.reduce((acc, point, i, arr) => {
     if (i === 0) return `M ${point.x} ${point.y}`
     const prev = arr[i - 1]
@@ -81,7 +114,51 @@ export default function BomReportsPage() {
     return `${acc} C ${cpx1} ${cpy1}, ${cpx2} ${cpy2}, ${point.x} ${point.y}`
   }, "")
 
-  const revenueAreaPath = `${revenueLinePath} L ${chartPoints[chartPoints.length - 1].x} 130 L ${chartPoints[0].x} 130 Z`
+  const revenueAreaPath = `${revenueLinePath} L ${chartPoints[chartPoints.length - 1].x} ${plotZero} L ${chartPoints[0].x} ${plotZero} Z`
+
+  // Danh sách các đường lưới ngang
+  const gridLines = useMemo(() => {
+    if (!hasNegative) {
+      return [0, 0.33, 0.66, 1].map((ratio) => {
+        const y = 15 + 115 * (1 - ratio)
+        const val = Math.round((maxRevenue * ratio) / 1000000)
+        return { y, label: `${val}tr`, isZero: ratio === 0, isNegative: false }
+      })
+    } else {
+      const negLabel =
+        Math.abs(minRevenue) >= 1000000
+          ? `${Math.round(minRevenue / 1000000)}tr`
+          : `${Math.round(minRevenue / 1000)}k`
+      return [
+        { y: plotBottom, label: negLabel, isZero: false, isNegative: true },
+        { y: plotZero, label: "0tr", isZero: true, isNegative: false },
+        {
+          y: plotZero - 0.5 * (plotZero - plotTop),
+          label: `${Math.round((maxRevenue * 0.5) / 1000000)}tr`,
+          isZero: false,
+          isNegative: false,
+        },
+        {
+          y: plotTop,
+          label: `${Math.round(maxRevenue / 1000000)}tr`,
+          isZero: false,
+          isNegative: false,
+        },
+      ]
+    }
+  }, [hasNegative, plotZero, plotTop, plotBottom, maxRevenue, minRevenue])
+
+  // Hàm format rút gọn số tiền hiển thị trên điểm biểu đồ
+  const formatShortVnd = (val: number) => {
+    if (val === 0) return "₫0"
+    const sign = val < 0 ? "-" : ""
+    const abs = Math.abs(val)
+    if (abs >= 1000000) {
+      const num = abs / 1000000
+      return `₫${sign}${num.toFixed(1).replace(/\.0$/, "")}tr`
+    }
+    return `₫${sign}${Math.round(abs / 1000)}k`
+  }
 
   return (
     <div className="space-y-5">
@@ -113,14 +190,20 @@ export default function BomReportsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs font-bold">
-                <TrendingUp className={`size-3.5 ${growthPercent >= 0 ? "text-emerald-400" : "text-rose-400"}`} />
-                <span>{growthPercent >= 0 ? `+${growthPercent}%` : `${growthPercent}%`}</span>
+                {growthPercent >= 0 ? (
+                  <TrendingUp className="size-3.5 text-emerald-400" />
+                ) : (
+                  <TrendingDown className="size-3.5 text-rose-400" />
+                )}
+                <span className={growthPercent >= 0 ? "text-emerald-400" : "text-rose-400"}>
+                  {growthPercent >= 0 ? `+${growthPercent}%` : `${growthPercent}%`}
+                </span>
               </div>
             </div>
 
             {/* BIỂU ĐỒ ĐƯỜNG SVG (LINE CHART) */}
             <div className="relative w-full overflow-hidden pt-1 pb-1">
-              <svg viewBox="0 0 460 170" className="w-full h-auto overflow-visible">
+              <svg viewBox={svgViewBox} className="w-full h-auto overflow-visible">
                 <defs>
                   {/* Gradient đổ bóng mềm phía dưới đường biểu diễn */}
                   <linearGradient id="revenueLineGradient" x1="0" y1="0" x2="0" y2="1">
@@ -130,34 +213,30 @@ export default function BomReportsPage() {
                 </defs>
 
                 {/* Các đường lưới ngang (Grid lines) */}
-                {[0, 0.33, 0.66, 1].map((ratio) => {
-                  const y = 15 + 115 * (1 - ratio)
-                  const val = Math.round((maxRevenue * ratio) / 1000000)
-                  return (
-                    <g key={ratio}>
-                      <line
-                        x1="32"
-                        y1={y}
-                        x2="450"
-                        y2={y}
-                        stroke="#334155"
-                        strokeDasharray="3 3"
-                        strokeWidth="1"
-                        opacity="0.45"
-                      />
-                      <text
-                        x="24"
-                        y={y + 3}
-                        textAnchor="end"
-                        fontSize="9"
-                        fill="#64748b"
-                        className="font-mono"
-                      >
-                        {val}tr
-                      </text>
-                    </g>
-                  )
-                })}
+                {gridLines.map((line, idx) => (
+                  <g key={idx}>
+                    <line
+                      x1="32"
+                      y1={line.y}
+                      x2="435"
+                      y2={line.y}
+                      stroke={line.isZero ? "#64748b" : line.isNegative ? "#f43f5e" : "#334155"}
+                      strokeDasharray={line.isZero ? "4 4" : "3 3"}
+                      strokeWidth={line.isZero ? "1.2" : "1"}
+                      opacity={line.isZero ? "0.7" : line.isNegative ? "0.4" : "0.45"}
+                    />
+                    <text
+                      x="26"
+                      y={line.y + 3}
+                      textAnchor="end"
+                      fontSize="9"
+                      fill={line.isZero ? "#94a3b8" : line.isNegative ? "#f87171" : "#64748b"}
+                      className={`font-mono ${line.isZero ? "font-bold" : ""}`}
+                    >
+                      {line.label}
+                    </text>
+                  </g>
+                ))}
 
                 {/* Vùng đổ bóng Gradient bên dưới đường cong */}
                 <path d={revenueAreaPath} fill="url(#revenueLineGradient)" />
@@ -173,63 +252,72 @@ export default function BomReportsPage() {
                 />
 
                 {/* Các điểm tròn dữ liệu trên từng tháng & Số tiền hiển thị trực tiếp */}
-                {chartPoints.map((p, idx) => (
-                  <g
-                    key={p.month}
-                    className="cursor-pointer"
-                    onMouseEnter={() => setHoveredMonthIndex(idx)}
-                    onMouseLeave={() => setHoveredMonthIndex(null)}
-                  >
-                    {/* Vùng nhận cảm ứng rê chuột */}
-                    <circle cx={p.x} cy={p.y} r="14" fill="transparent" />
+                {chartPoints.map((p, idx) => {
+                  const isNeg = p.revenue < 0
+                  const labelY = isNeg ? p.y + 15 : (p.y <= 38 ? p.y + 16 : p.y - 9)
 
-                    {/* Vạch kẻ dọc nhẹ */}
-                    <line
-                      x1={p.x}
-                      y1="20"
-                      x2={p.x}
-                      y2="130"
-                      stroke="#475569"
-                      strokeDasharray="2 2"
-                      strokeWidth="1"
-                      opacity="0.3"
-                    />
-
-                    {/* Điểm nút */}
-                    <circle
-                      cx={p.x}
-                      cy={p.y}
-                      r="4"
-                      className="fill-white stroke-slate-900 stroke-2"
-                    />
-
-                    {/* SỐ TIỀN HIỂN THỊ TRỰC TIẾP TRÊN BIỂU ĐỒ - KHÔNG CẦN DI CHUỘT */}
-                    <text
-                      x={p.x}
-                      y={p.y <= 38 ? p.y + 18 : p.y - 9}
-                      textAnchor="middle"
-                      fontSize="9.5"
-                      className="font-mono font-bold fill-sky-300 select-none"
+                  return (
+                    <g
+                      key={p.month}
+                      className="cursor-pointer"
+                      onMouseEnter={() => setHoveredMonthIndex(idx)}
+                      onMouseLeave={() => setHoveredMonthIndex(null)}
                     >
-                      {p.revenue === 0
-                        ? "₫0"
-                        : p.revenue >= 1000000
-                          ? `₫${(p.revenue / 1000000).toFixed(1).replace(/\.0$/, "")}tr`
-                          : `₫${Math.round(p.revenue / 1000)}k`}
-                    </text>
+                      {/* Vùng nhận cảm ứng rê chuột */}
+                      <circle cx={p.x} cy={p.y} r="14" fill="transparent" />
 
-                    {/* Nhãn tháng ở trục hoành X */}
-                    <text
-                      x={p.x}
-                      y="152"
-                      textAnchor="middle"
-                      fontSize="10"
-                      className="font-mono fill-slate-300 font-bold"
-                    >
-                      {p.month}
-                    </text>
-                  </g>
-                ))}
+                      {/* Vạch kẻ dọc nhẹ */}
+                      <line
+                        x1={p.x}
+                        y1={plotTop}
+                        x2={p.x}
+                        y2={hasNegative ? plotBottom : 130}
+                        stroke="#475569"
+                        strokeDasharray="2 2"
+                        strokeWidth="1"
+                        opacity="0.3"
+                      />
+
+                      {/* Điểm nút */}
+                      <circle
+                        cx={p.x}
+                        cy={p.y}
+                        r="4"
+                        className={
+                          isNeg
+                            ? "fill-rose-500 stroke-slate-900 stroke-2"
+                            : "fill-white stroke-slate-900 stroke-2"
+                        }
+                      />
+
+                      {/* SỐ TIỀN HIỂN THỊ TRỰC TIẾP TRÊN BIỂU ĐỒ - KHÔNG CẦN DI CHUỘT */}
+                      <text
+                        x={p.x}
+                        y={labelY}
+                        textAnchor="middle"
+                        fontSize="9.5"
+                        className={`font-mono font-bold select-none ${
+                          isNeg ? "fill-rose-400" : "fill-sky-300"
+                        }`}
+                      >
+                        {formatShortVnd(p.revenue)}
+                      </text>
+
+                      {/* Nhãn tháng ở trục hoành X */}
+                      <text
+                        x={p.x}
+                        y={hasNegative ? "198" : "152"}
+                        textAnchor="middle"
+                        fontSize="10"
+                        className={`font-mono font-bold ${
+                          isNeg ? "fill-rose-300" : "fill-slate-300"
+                        }`}
+                      >
+                        {p.month}
+                      </text>
+                    </g>
+                  )
+                })}
               </svg>
             </div>
           </div>
