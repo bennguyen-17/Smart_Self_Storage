@@ -132,16 +132,18 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
       if (apiFeePolicies && Array.isArray(apiFeePolicies) && apiFeePolicies.length > 0) {
         setIsApiConnected(true)
         const mappedSurcharges: SurchargeItem[] = apiFeePolicies.map((fp) => {
-          const cat = (fp.category || "SURCHARGE").toLowerCase() as "surcharge" | "penalty" | "discount"
+          const cat = (fp.category || "SURCHARGE").toLowerCase() as "surcharge" | "penalty" | "discount" | "damage"
           const catLabels: Record<string, string> = {
             surcharge: "Biểu Phí Phụ Thu (Surcharges)",
             penalty: "Phí Phạt Quá Hạn (Penalties & Overdue Fees)",
             discount: "Chính Sách Miễn Giảm Giá (Discount Policy & Waivers)",
+            damage: "Biểu Phí Bồi Thường Hư Hỏng & Vệ Sinh",
           }
           const typeLabels: Record<string, string> = {
             surcharge: "Phụ Thu Dịch Vụ",
             penalty: "Chế Tài / Phạt Hợp Đồng",
             discount: "Ưu Đãi / Khuyến Mãi",
+            damage: "Bồi Thường Hư Hỏng",
           }
           let rateStr = ""
           if (fp.calcType === "PERCENT") {

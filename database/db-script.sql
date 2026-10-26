@@ -179,15 +179,16 @@ CREATE TABLE Price (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 11.1. TABLE: FeePolicy (Biểu phí phụ thu, phí phạt, chính sách ưu đãi chiết khấu)
+-- 11.1. TABLE: FeeItem (Danh mục biểu phí phụ thu, phí phạt, ưu đãi & bồi thường hư hỏng)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS FeePolicy;
-CREATE TABLE FeePolicy (
-    policyId INT AUTO_INCREMENT PRIMARY KEY,
-    policyCode VARCHAR(50) NOT NULL UNIQUE,
-    policyName VARCHAR(150) NOT NULL,
-    category ENUM('SURCHARGE', 'PENALTY', 'DISCOUNT') NOT NULL,
-    calcType ENUM('PERCENT', 'FIXED') NOT NULL,
+DROP TABLE IF EXISTS FeeItem;
+CREATE TABLE FeeItem (
+    feeItemId INT AUTO_INCREMENT PRIMARY KEY,
+    feeCode VARCHAR(50) NOT NULL UNIQUE,
+    feeName VARCHAR(150) NOT NULL,
+    category ENUM('SURCHARGE', 'PENALTY', 'DISCOUNT', 'DAMAGE') NOT NULL DEFAULT 'SURCHARGE',
+    calcType ENUM('PERCENT', 'FIXED') NOT NULL DEFAULT 'FIXED',
     feeValue DECIMAL(12, 2) NOT NULL,
     unitBasis VARCHAR(50) NOT NULL DEFAULT 'TOTAL_BILL',
     description VARCHAR(255) NULL,
@@ -358,16 +359,8 @@ CREATE TABLE GatePin (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 20. TABLE: FeeItem (Danh mục biểu phí phụ thu / Bồi thường hư hỏng)
+-- 20. (Bảng FeeItem đã được hợp nhất tại mục 11.1 phục vụ cả Phụ thu, Phạt, Ưu đãi & Nghiệm thu hư hại)
 -- ----------------------------------------------------------------------------
-DROP TABLE IF EXISTS FeeItem;
-CREATE TABLE FeeItem (
-    feeItemId INT AUTO_INCREMENT PRIMARY KEY,
-    feeName VARCHAR(100) NOT NULL,
-    unitPrice DECIMAL(12, 2) NOT NULL,
-    description VARCHAR(255),
-    status ENUM('ACTIVE', 'INACTIVE') NOT NULL DEFAULT 'ACTIVE'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
 -- 21. TABLE: Inspection (Biên bản kiểm tra kho khi bàn giao / trả kho)
@@ -618,17 +611,23 @@ INSERT INTO Price (priceId, unitTypeId, dailyPrice, monthlyPrice, depositAmount,
 (6, 6, 120000.00, 2400000.00, 2000000.00, 20.00, '2026-01-01', NULL, 'ACTIVE'),
 (7, 7, 200000.00, 4000000.00, 3000000.00, 20.00, '2026-01-01', NULL, 'ACTIVE');
 
--- 8.1. Biểu phí phụ thu, phạt và chiết khấu (FeePolicies)
-INSERT INTO FeePolicy (policyId, policyCode, policyName, category, calcType, feeValue, unitBasis, description, isWaiveDeposit, status) VALUES
+-- 8.1. Biểu phí phụ thu, phạt, chiết khấu & bồi thường hư hỏng (FeeItems)
+INSERT INTO FeeItem (feeItemId, feeCode, feeName, category, calcType, feeValue, unitBasis, description, isWaiveDeposit, status) VALUES
 (1, 'ELEC_247', 'Phí Điện Kho Lạnh 24/7', 'SURCHARGE', 'FIXED', 300000.00, 'PER_MONTH', 'Cấp nguồn điện liên tục cho kho mát bảo quản thực phẩm, mỹ phẩm', FALSE, 'ACTIVE'),
 (2, 'PORTER_SERVICE', 'Phí Hỗ Trợ Bốc Xếp', 'SURCHARGE', 'FIXED', 150000.00, 'PER_REQUEST', 'Đội bốc vác hỗ trợ vận chuyển hàng lên tầng và vào ô kho', FALSE, 'ACTIVE'),
 (3, 'PIN_REISSUE', 'Phí Cấp Lại Mã PIN Thẻ Từ', 'SURCHARGE', 'FIXED', 50000.00, 'PER_REQUEST', 'Cấp lại mã PIN hoặc thẻ từ vật lý khi khách hàng đánh mất', FALSE, 'ACTIVE'),
-(4, 'OVERDUE_DAILY_RATE', 'Mức Phạt Theo Ngày Quá Hạn', 'PENALTY', 'PERCENT', 1.50, 'PER_DAY', 'Phạt 1.5% giá trị hợp đồng mỗi ngày quá hạn thanh toán', FALSE, 'ACTIVE'),
+(4, 'OVERDUE_DAILY_RATE', 'Mức Phạt Theo Ngày Quá Hạn', 'PENALTY', 'FIXED', 50000.00, 'PER_DAY', 'Phạt 50.000 VNĐ mỗi ngày quá hạn thanh toán', FALSE, 'ACTIVE'),
 (5, 'PIN_UNBLOCK', 'Phí Mở Phong Tỏa PIN Động', 'PENALTY', 'FIXED', 100000.00, 'PER_REQUEST', 'Phí mở khóa sau khi hệ thống tự động ngắt mã PIN do nợ quá hạn', FALSE, 'ACTIVE'),
 (6, 'ASSET_SEAL', 'Phí Kiểm Kê Niêm Phong Tài Sản', 'PENALTY', 'FIXED', 500000.00, 'PER_REQUEST', 'Chi phí niêm phong, lập biên bản tài sản khi nợ quá 15 ngày', FALSE, 'ACTIVE'),
 (7, 'DISCOUNT_6M', 'Ưu Đãi Thuê Khách Hàng 6 Tháng', 'DISCOUNT', 'PERCENT', 10.00, 'CONTRACT_TOTAL', 'Chiết khấu 10% tổng tiền thuê cho hợp đồng từ 6 tháng', FALSE, 'ACTIVE'),
 (8, 'DISCOUNT_12M', 'Ưu Đãi Thuê Khách Hàng 12 Tháng', 'DISCOUNT', 'PERCENT', 15.00, 'CONTRACT_TOTAL', 'Chiết khấu 15% tổng tiền thuê cho hợp đồng dài hạn từ 12 tháng', FALSE, 'ACTIVE'),
-(9, 'DISCOUNT_MANAGER_CAP', 'Hạn Mức Duyệt Giảm Giá Manager', 'DISCOUNT', 'PERCENT', 10.00, 'CONTRACT_TOTAL', 'Hạn mức tối đa Quản lý cơ sở được phép chủ động giảm giá cho khách', FALSE, 'ACTIVE');
+(9, 'DISCOUNT_MANAGER_CAP', 'Hạn Mức Duyệt Giảm Giá Manager', 'DISCOUNT', 'PERCENT', 10.00, 'CONTRACT_TOTAL', 'Hạn mức tối đa Quản lý cơ sở được phép chủ động giảm giá cho khách', FALSE, 'ACTIVE'),
+(10, 'DMG_CLEANING', 'Phí vệ sinh kho', 'DAMAGE', 'FIXED', 150000.00, 'PER_REQUEST', 'Dọn dẹp rác cơ bản hoặc vệ sinh kho sau khi trả kho', FALSE, 'ACTIVE'),
+(11, 'DMG_LOST_KEY', 'Mất chìa khóa cơ mở tủ', 'DAMAGE', 'FIXED', 200000.00, 'PER_REQUEST', 'Đền bù làm lại chìa khóa cơ / thay ổ khóa tủ cá nhân', FALSE, 'ACTIVE'),
+(12, 'DMG_WALL_SCRATCH', 'Phí sơn lại / vá điểm trầy xước', 'DAMAGE', 'FIXED', 300000.00, 'PER_REQUEST', 'Xử lý trầy xước, dặm vá sơn bề mặt vách ngăn', FALSE, 'ACTIVE'),
+(13, 'DMG_ELECTRIC_BROKEN', 'Hư hỏng bóng đèn / ổ cắm', 'DAMAGE', 'FIXED', 300000.00, 'PER_REQUEST', 'Thay thế bóng đèn LED hoặc ổ cắm điện bị cháy hỏng', FALSE, 'ACTIVE'),
+(14, 'DMG_WALL_DENT', 'Vách ngăn ô kho bị móp / thủng', 'DAMAGE', 'FIXED', 500000.00, 'PER_REQUEST', 'Gia cố hoặc thay tấm vách panel ngăn ô kho bị va đập móp méo', FALSE, 'ACTIVE'),
+(15, 'DMG_DOOR_BROKEN', 'Hư hỏng cửa kho / khóa cửa chính', 'DAMAGE', 'FIXED', 1000000.00, 'PER_REQUEST', 'Sửa chữa cửa cuốn, thay thế khóa cửa chính ô kho', FALSE, 'ACTIVE');
 
 -- 9. Danh mục Ngăn kho thực tế (StorageUnits) phân bổ trên cả 7 cơ sở
 INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
@@ -876,14 +875,8 @@ INSERT INTO PromotionUnitType (promotionId, unitTypeId) VALUES
 (1, 3),
 (2, 4);
 
--- 13. Danh mục bồi thường hư hỏng / vệ sinh (FeeItems theo chuẩn BR-33)
-INSERT INTO FeeItem (feeItemId, feeName, unitPrice, description, status) VALUES
-(1, 'Phí vệ sinh kho', 150000.00, 'Dọn dẹp rác cơ bản hoặc vệ sinh kho sau khi trả kho', 'ACTIVE'),
-(2, 'Mất chìa khóa cơ mở tủ', 200000.00, 'Đền bù làm lại chìa khóa cơ / thay ổ khóa tủ cá nhân', 'ACTIVE'),
-(3, 'Phí sơn lại / vá điểm trầy xước', 300000.00, 'Xử lý trầy xước, dặm vá sơn bề mặt vách ngăn', 'ACTIVE'),
-(4, 'Hư hỏng bóng đèn / ổ cắm', 300000.00, 'Thay thế bóng đèn LED hoặc ổ cắm điện bị cháy hỏng', 'ACTIVE'),
-(5, 'Vách ngăn ô kho bị móp / thủng', 500000.00, 'Gia cố hoặc thay tấm vách panel ngăn ô kho bị va đập móp méo', 'ACTIVE'),
-(6, 'Hư hỏng cửa kho / khóa cửa chính', 1000000.00, 'Sửa chữa cửa cuốn, thay thế khóa cửa chính ô kho', 'ACTIVE');
+-- 13. (Danh mục bồi thường hư hỏng / vệ sinh đã được gộp chung vào bảng FeeItem ở mục 8.1)
+
 
 -- 14. Đơn đặt chỗ mẫu (Reservations) trải dài 07/2026 - 10/2026 (Chuẩn mã: CTR-[Mã Cơ Sở]-[DDMMYY]-[4 số])
 INSERT INTO Reservation (reservationId, reservationCode, accountId, unitCode, startDate, endDate, rentalType, rentalAmount, depositAmount, penaltyAmount, status, createdAt, holdExpiresAt) VALUES

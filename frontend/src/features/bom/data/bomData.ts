@@ -44,7 +44,7 @@ export interface SurchargeItem {
   id: string
   policyId?: number
   policyCode?: string
-  category: "surcharge" | "penalty" | "discount"
+  category: "surcharge" | "penalty" | "discount" | "damage"
   categoryLabel: string
   type: string
   name: string

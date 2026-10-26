@@ -5,21 +5,22 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "FeePolicy")
+@Table(name = "FeeItem")
 public class FeePolicy {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "feeItemId")
     private Integer policyId;
 
-    @Column(nullable = false, length = 50, unique = true)
+    @Column(name = "feeCode", nullable = false, length = 50, unique = true)
     private String policyCode;
 
-    @Column(nullable = false, length = 150)
+    @Column(name = "feeName", nullable = false, length = 150)
     private String policyName;
 
     @Column(nullable = false, length = 50)
-    private String category; // SURCHARGE, PENALTY, DISCOUNT
+    private String category; // SURCHARGE, PENALTY, DISCOUNT, DAMAGE
 
     @Column(nullable = false, length = 20)
     private String calcType; // PERCENT, FIXED
@@ -169,5 +170,30 @@ public class FeePolicy {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    // Alias methods for FeeItem naming
+    public Integer getFeeItemId() {
+        return policyId;
+    }
+
+    public void setFeeItemId(Integer feeItemId) {
+        this.policyId = feeItemId;
+    }
+
+    public String getFeeCode() {
+        return policyCode;
+    }
+
+    public void setFeeCode(String feeCode) {
+        this.policyCode = feeCode;
+    }
+
+    public String getFeeName() {
+        return policyName;
+    }
+
+    public void setFeeName(String feeName) {
+        this.policyName = feeName;
     }
 }

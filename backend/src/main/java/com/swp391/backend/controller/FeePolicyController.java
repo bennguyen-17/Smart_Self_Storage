@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/fee-policies")
+@RequestMapping({"/api/fee-policies", "/api/fee-items"})
 public class FeePolicyController {
 
     private final FeePolicyService feePolicyService;

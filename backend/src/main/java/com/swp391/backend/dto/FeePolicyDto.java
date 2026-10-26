@@ -6,7 +6,7 @@ public class FeePolicyDto {
     private Integer policyId;
     private String policyCode;
     private String policyName;
-    private String category; // SURCHARGE, PENALTY, DISCOUNT
+    private String category; // SURCHARGE, PENALTY, DISCOUNT, DAMAGE
     private String calcType; // PERCENT, FIXED
     private BigDecimal feeValue;
     private String unitBasis;

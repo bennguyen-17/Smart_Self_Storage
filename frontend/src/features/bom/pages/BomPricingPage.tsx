@@ -62,7 +62,7 @@ export default function BomPricingPage() {
 
   // Search & Filter state for surcharges
   const [searchSurcharge, setSearchSurcharge] = useState("")
-  const [surchargeFilter, setSurchargeFilter] = useState<"all" | "surcharge" | "penalty" | "discount">("all")
+  const [surchargeFilter, setSurchargeFilter] = useState<"all" | "surcharge" | "penalty" | "discount" | "damage">("all")
 
   // Modal 1: Pricing edit modal
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false)
@@ -181,7 +181,7 @@ export default function BomPricingPage() {
   // Modal 2: Surcharge add/edit modal
   const [isSurchargeModalOpen, setIsSurchargeModalOpen] = useState(false)
   const [editingSurcharge, setEditingSurcharge] = useState<SurchargeItem | null>(null)
-  const [surchargeCat, setSurchargeCat] = useState<"surcharge" | "penalty" | "discount">("surcharge")
+  const [surchargeCat, setSurchargeCat] = useState<"surcharge" | "penalty" | "discount" | "damage">("surcharge")
   const [surchargeName, setSurchargeName] = useState("")
   const [surchargeCalcType, setSurchargeCalcType] = useState<"FIXED" | "PERCENT">("FIXED")
   const [surchargeFeeValue, setSurchargeFeeValue] = useState<number>(100000)
@@ -363,6 +363,7 @@ export default function BomPricingPage() {
       surcharge: "SURCHARGE",
       penalty: "PENALTY",
       discount: "DISCOUNT",
+      damage: "DAMAGE",
     }
     const rateStr = previewRateString
 
@@ -403,12 +404,14 @@ export default function BomPricingPage() {
       surcharge: "Biểu Phí Phụ Thu (Surcharges)",
       penalty: "Phí Phạt Quá Hạn (Penalties & Overdue Fees)",
       discount: "Chính Sách Miễn Giảm Giá (Discount Policy)",
+      damage: "Biểu Phí Bồi Thường Hư Hỏng & Vệ Sinh",
     }
 
     const typeLabels = {
       surcharge: "Phụ Thu Dịch Vụ",
       penalty: "Chế Tài / Phạt Hợp Đồng",
       discount: "Ưu Đãi / Khuyến Mãi",
+      damage: "Bồi Thường Hư Hỏng",
     }
 
     if (editingSurcharge) {
@@ -603,7 +606,7 @@ export default function BomPricingPage() {
 
           {/* Thanh phân loại tab */}
           <div className="flex items-center gap-2 overflow-x-auto text-xs pb-1">
-            {(["all", "surcharge", "penalty", "discount"] as const).map((filterKey) => (
+            {(["all", "surcharge", "penalty", "discount", "damage"] as const).map((filterKey) => (
               <button
                 key={filterKey}
                 onClick={() => setSurchargeFilter(filterKey)}
@@ -619,7 +622,9 @@ export default function BomPricingPage() {
                   ? "Biểu Phí Phụ Thu"
                   : filterKey === "penalty"
                   ? "Phí Phạt Quá Hạn"
-                  : "Chính Sách Miễn Giảm"}
+                  : filterKey === "discount"
+                  ? "Chính Sách Miễn Giảm"
+                  : "Bồi Thường Hư Hỏng"}
               </button>
             ))}
           </div>
@@ -650,6 +655,10 @@ export default function BomPricingPage() {
                     discount: {
                       label: "Chính Sách Miễn Giảm",
                       style: "bg-emerald-950/60 text-emerald-400 border-emerald-800/60",
+                    },
+                    damage: {
+                      label: "Bồi Thường Hư Hỏng",
+                      style: "bg-rose-950/60 text-rose-400 border-rose-800/60",
                     },
                   }[sc.category] || {
                     label: "Khác",
@@ -890,6 +899,7 @@ export default function BomPricingPage() {
                   <option value="surcharge">1. Biểu Phí Phụ Thu (Surcharges)</option>
                   <option value="penalty">2. Phí Phạt Quá Hạn (Penalties)</option>
                   <option value="discount">3. Chính Sách Miễn Giảm Giá (Discount Policy)</option>
+                  <option value="damage">4. Bồi Thường Hư Hỏng &amp; Vệ Sinh (Damages)</option>
                 </select>
               </div>
 
