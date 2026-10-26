@@ -126,12 +126,14 @@ describe("UnitManagementPanel: bảng ô kho + nút Sửa (US-13)", () => {
     const { user } = await renderPanel({ allRows: false })
     const nav = screen.getByRole("navigation", { name: "Phân trang" })
     expect(screen.getAllByRole("row").slice(1)).toHaveLength(10)
-    expect(nav).toHaveTextContent(/Hiển thị 1 – 10 trong tổng số \d+ ô kho/)
+    expect(within(nav).getByRole("button", { name: "Trang 1" })).toHaveAttribute("aria-current", "page")
     await user.click(within(nav).getByRole("button", { name: "Trang 2" }))
-    expect(nav).toHaveTextContent(/Hiển thị 11 –/)
+    expect(within(nav).getByRole("button", { name: "Trang 2" })).toHaveAttribute("aria-current", "page")
     await user.click(screen.getByRole("button", { name: /^Bảo trì \(2\)$/ }))
     expect(screen.getAllByRole("row").slice(1)).toHaveLength(2)
-    expect(screen.getByRole("navigation", { name: "Phân trang" })).toHaveTextContent("Hiển thị 1 – 2 trong tổng số 2 ô kho")
+    const after = screen.getByRole("navigation", { name: "Phân trang" })
+    expect(within(after).getByRole("button", { name: "Trang 1" })).toHaveAttribute("aria-current", "page")
+    expect(within(after).queryByRole("button", { name: "Trang 2" })).not.toBeInTheDocument()
   })
 
   test("chạy thật mà tài khoản chưa gắn cơ sở → báo rõ, không tự đoán cơ sở", async () => {
