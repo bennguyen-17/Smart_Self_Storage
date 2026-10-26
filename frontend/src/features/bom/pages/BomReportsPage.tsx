@@ -1,10 +1,8 @@
 import { useState } from "react"
 import {
-  Download,
   Warehouse,
   TrendingUp,
 } from "lucide-react"
-import { toast } from "sonner"
 import { useBomContext } from "@/features/bom/context/BomContext"
 
 export default function BomReportsPage() {
@@ -85,54 +83,6 @@ export default function BomReportsPage() {
 
   const revenueAreaPath = `${revenueLinePath} L ${chartPoints[chartPoints.length - 1].x} 130 L ${chartPoints[0].x} 130 Z`
 
-  // Xuất file báo cáo
-  const handleExportCSV = () => {
-    const headers = ["Chỉ Tiêu Quản Trị Hệ Thống", "Số Liệu Thực Tế", "Chi Tiết Bóc Tách & Tình Trạng"]
-    const rows = [
-      [
-        "Hàng 1 - Tổng Doanh Thu Thực Thu",
-        `₫${netRevenue.toLocaleString("vi-VN")}`,
-        `Gồm: Tiền thuê kho ban đầu ₫${totalInitialRevenue.toLocaleString("vi-VN")} • Gia hạn hàng tháng ₫${totalExtensionRevenue.toLocaleString("vi-VN")}`,
-      ],
-      [
-        "Hàng 2 - Tiền Cọc Ký Quỹ Đang Giữ",
-        `₫${depositHolding.toLocaleString("vi-VN")}`,
-        `Bảo chứng 100% nguồn vốn an toàn • Tiền cọc đã cấn trừ vi phạm ₫${totalForfeitedDeposit.toLocaleString("vi-VN")}`,
-      ],
-      [
-        "Hàng 3 - Tổng Tiền Hoàn Trả Khách Hàng",
-        `₫${totalRefunds.toLocaleString("vi-VN")}`,
-        `Tiền đã thanh toán hoàn trả cọc và tiền thừa khi kết thúc ${totalTerminatedContracts} hợp đồng thuê`,
-      ],
-      [
-        "Hàng 4 - Khách Nợ & Hợp Đồng Quá Hạn",
-        `${totalOverdueContracts} HĐ Quá Hạn`,
-        `Phạt quá hạn & phụ phí chế tài: ₫${totalDebtAndPenalty.toLocaleString("vi-VN")} • Hệ thống đã khóa mã PIN tạm dừng quyền ra vào để đôn đốc thu nợ`,
-      ],
-      [
-        "Tổng Quy Mô & Khai Thác Ô Kho",
-        `${totalUnits} Ô Kho`,
-        `Đang cho thuê: ${totalOccupiedUnits} kho (${avgOccupancy}%) • Còn trống: ${totalAvailableUnits} kho • Bảo trì: ${totalMaintenanceUnits} kho • HĐ hoạt động: ${totalActiveContracts} HĐ`,
-      ],
-    ]
-
-    const csvContent =
-      "\uFEFF" +
-      [headers.join(","), ...rows.map((r) => r.map((c) => `"${c}"`).join(","))].join("\r\n")
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.setAttribute("download", `Bao_Cao_Tong_Quan_He_Thong_${new Date().toISOString().slice(0, 10)}.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-
-    toast.success("Đã xuất file báo cáo Excel (.CSV) thành công!")
-  }
-
   return (
     <div className="space-y-5">
       {/* HEADER ĐƠN GIẢN GỌN GÀNG */}
@@ -141,17 +91,6 @@ export default function BomReportsPage() {
           <h2 className="text-lg sm:text-xl font-black text-white tracking-tight uppercase">
             Báo Cáo Tổng Quan Hệ Thống Thuê Kho
           </h2>
-        </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
-          <button
-            type="button"
-            onClick={handleExportCSV}
-            className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-sky-500/20"
-          >
-            <Download className="size-3.5" />
-            <span>Xuất Báo Cáo</span>
-          </button>
         </div>
       </div>
 
