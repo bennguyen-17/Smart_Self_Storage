@@ -165,7 +165,8 @@ describe("AuditLogPanel: phân trang khi có nhiều log", () => {
     await renderMany()
     expect(bodyRows()).toHaveLength(10)
     const nav = screen.getByRole("navigation", { name: "Phân trang" })
-    expect(nav).toHaveTextContent("Hiển thị 1 – 10 trong tổng số 45 bản ghi")
+    expect(within(nav).getByRole("button", { name: "Trang 5" })).toBeInTheDocument()
+    expect(within(nav).queryByRole("button", { name: "Trang 6" })).not.toBeInTheDocument()
     expect(
       within(nav).getByRole("button", { name: "Trang 1" })
     ).toHaveAttribute("aria-current", "page")
@@ -180,7 +181,7 @@ describe("AuditLogPanel: phân trang khi có nhiều log", () => {
     await user.click(within(nav).getByRole("button", { name: "Trang 5" }))
     expect(bodyRows()).toHaveLength(5)
     expect(screen.getByText("Người dùng 1")).toBeInTheDocument()
-    expect(nav).toHaveTextContent("Hiển thị 41 – 45")
+    expect(within(nav).getByRole("button", { name: "Trang 5" })).toHaveAttribute("aria-current", "page")
     expect(
       within(nav).getByRole("button", { name: "Trang sau" })
     ).toBeDisabled()
@@ -195,8 +196,8 @@ describe("AuditLogPanel: phân trang khi có nhiều log", () => {
     )
     expect(bodyRows()).toHaveLength(45)
     expect(
-      screen.getByRole("navigation", { name: "Phân trang" })
-    ).toHaveTextContent("Hiển thị 1 – 45")
+      within(screen.getByRole("navigation", { name: "Phân trang" })).getAllByRole("button", { name: /^Trang \d+$/ })
+    ).toHaveLength(1)
   })
 
   test("đang ở trang cuối mà lọc lại → quay về trang 1 của kết quả lọc", async () => {
@@ -210,8 +211,8 @@ describe("AuditLogPanel: phân trang khi có nhiều log", () => {
     expect(bodyRows()).toHaveLength(10)
     expect(screen.getByText("Người dùng 45")).toBeInTheDocument()
     expect(
-      screen.getByRole("navigation", { name: "Phân trang" })
-    ).toHaveTextContent("Hiển thị 1 – 10 trong tổng số 44")
+      within(screen.getByRole("navigation", { name: "Phân trang" })).getByRole("button", { name: "Trang 1" })
+    ).toHaveAttribute("aria-current", "page")
   })
 
   test("Xuất CSV xuất toàn bộ kết quả lọc, không chỉ trang đang xem", async () => {

@@ -3,11 +3,13 @@
 
 import type { ComponentType } from "react"
 import {
+  ActivityIcon,
   BanknoteIcon,
   ChartColumnIcon,
   ClipboardListIcon,
   DoorOpenIcon,
   HeadphonesIcon,
+  ListChecksIcon,
   UserCheckIcon,
   UsersRoundIcon,
   WarehouseIcon,
@@ -22,6 +24,8 @@ import RefundsPanel from "@/features/manager/refunds/components/RefundsPanel"
 import ShiftsPanel from "@/features/manager/shifts/components/ShiftsPanel"
 import UnitManagementPanel from "@/features/manager/units/components/UnitManagementPanel"
 import ManagerTicketPanel from "@/features/manager/tickets/components/ManagerTicketPanel"
+import TasksPanel from "@/features/manager/tasks/components/TasksPanel"
+import StaffActivityPanel from "@/features/manager/activity/components/StaffActivityPanel"
 
 export type ManagerTabKey =
   | "units"
@@ -30,6 +34,8 @@ export type ManagerTabKey =
   | "workflow"
   | "refunds"
   | "staff"
+  | "tasks"
+  | "activity"
   | "gate-logs"
   | "tickets"
 
@@ -115,6 +121,28 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     owner: "Vỹ",
     description: "Phân ca và phân công nhân viên hỗ trợ bàn giao, kiểm tra, xử lý sự cố.",
     component: ShiftsPanel,
+  },
+  {
+    key: "tasks",
+    label: "Giao việc",
+    title: "Giao việc cho nhân viên",
+    hint: "Bảo trì, nghiệm thu trả kho",
+    icon: ListChecksIcon,
+    stories: "US-32",
+    owner: "Vỹ",
+    description: "Giao việc cụ thể cho nhân viên đang trực ca và theo dõi việc đã xong.",
+    component: TasksPanel,
+  },
+  {
+    key: "activity",
+    label: "Hoạt động nhân viên",
+    title: "Hoạt động nhân viên & nhật ký cơ sở",
+    hint: "Vào ca, việc đã làm, nhật ký",
+    icon: ActivityIcon,
+    stories: "US-30, US-32",
+    owner: "Vỹ",
+    description: "Theo từng ca: ai đã vào ca, làm được bao nhiêu việc; nhật ký thao tác nội bộ của cơ sở.",
+    component: StaffActivityPanel,
   },
   {
     key: "gate-logs",

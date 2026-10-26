@@ -3,13 +3,14 @@
 // Từ 14/10 cả cổng Admin thuộc Vỹ (chia việc theo trang). Trang chưa có `component` hiện ô "Đang phát triển".
 
 import type { ComponentType } from "react"
-import { Building2Icon, ScrollTextIcon, UsersIcon, type LucideIcon } from "lucide-react"
+import { Building2Icon, ContactIcon, ScrollTextIcon, UsersIcon, type LucideIcon } from "lucide-react"
 
 import AuditLogPanel from "@/features/admin/audit-logs/components/AuditLogPanel"
 import BranchesPanel from "@/features/admin/branches/components/BranchesPanel"
 import AccountsPanel from "@/features/admin/accounts/components/AccountsPanel"
+import CustomersPanel from "@/features/admin/customers/components/CustomersPanel"
 
-export type AdminTabKey = "users" | "facilities" | "audit"
+export type AdminTabKey = "users" | "customers" | "facilities" | "audit"
 
 export interface AdminTab {
   key: AdminTabKey
@@ -37,6 +38,17 @@ export const ADMIN_TABS: readonly AdminTab[] = [
     owner: "Vỹ",
     description: "Tạo tài khoản nội bộ, gán vai trò và cơ sở, khóa / mở khóa.",
     component: AccountsPanel,
+  },
+  {
+    key: "customers",
+    label: "Khách hàng",
+    title: "Tài khoản khách hàng",
+    hint: "Tra cứu & mở khóa",
+    icon: ContactIcon,
+    stories: "US-03, US-29",
+    owner: "Vỹ",
+    description: "Tra cứu tài khoản khách, mở khóa sớm tài khoản bị khóa do nhập sai mật khẩu.",
+    component: CustomersPanel,
   },
   {
     key: "facilities",
