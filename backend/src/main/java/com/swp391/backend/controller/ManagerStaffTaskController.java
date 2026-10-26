@@ -1,20 +1,13 @@
 package com.swp391.backend.controller;
 
+import com.swp391.backend.config.SecurityContextHelper;
 import com.swp391.backend.dto.StaffTaskCreateRequest;
 import com.swp391.backend.dto.StaffTaskResponse;
 import com.swp391.backend.service.StaffTaskService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,32 +17,37 @@ import java.util.List;
 public class ManagerStaffTaskController {
 
     private final StaffTaskService staffTaskService;
+    private final SecurityContextHelper securityContextHelper;
 
-    public ManagerStaffTaskController(StaffTaskService staffTaskService) {
+    public ManagerStaffTaskController(StaffTaskService staffTaskService, SecurityContextHelper securityContextHelper) {
         this.staffTaskService = staffTaskService;
+        this.securityContextHelper = securityContextHelper;
     }
 
     @PostMapping
     public ResponseEntity<StaffTaskResponse> createTask(
             @RequestBody StaffTaskCreateRequest request,
-            @RequestHeader(value = "X-Facility-Id", required = false) Integer facilityId,
-            @AuthenticationPrincipal Integer managerAccountId) {
-        return ResponseEntity.ok(staffTaskService.createTask(managerAccountId, facilityId, request));
+            @AuthenticationPrincipal Integer managerAccountId,
+            @RequestHeader(value = "X-Facility-Id", required = false) Integer facilityId) {
+        Integer effectiveFacilityId = securityContextHelper.requireCurrentFacilityId(managerAccountId, facilityId);
+        return ResponseEntity.ok(staffTaskService.createTask(managerAccountId, effectiveFacilityId, request));
     }
 
     @GetMapping
     public ResponseEntity<List<StaffTaskResponse>> getTasks(
+            @AuthenticationPrincipal Integer managerAccountId,
             @RequestHeader(value = "X-Facility-Id", required = false) Integer facilityId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @AuthenticationPrincipal Integer managerAccountId) {
-        return ResponseEntity.ok(staffTaskService.getFacilityTasks(managerAccountId, facilityId, date));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        Integer effectiveFacilityId = securityContextHelper.requireCurrentFacilityId(managerAccountId, facilityId);
+        return ResponseEntity.ok(staffTaskService.getFacilityTasks(managerAccountId, effectiveFacilityId, date));
     }
 
     @PatchMapping("/{taskId}/cancel")
     public ResponseEntity<StaffTaskResponse> cancelTask(
             @PathVariable Integer taskId,
-            @RequestHeader(value = "X-Facility-Id", required = false) Integer facilityId,
-            @AuthenticationPrincipal Integer managerAccountId) {
-        return ResponseEntity.ok(staffTaskService.cancelTask(managerAccountId, facilityId, taskId));
+            @AuthenticationPrincipal Integer managerAccountId,
+            @RequestHeader(value = "X-Facility-Id", required = false) Integer facilityId) {
+        Integer effectiveFacilityId = securityContextHelper.requireCurrentFacilityId(managerAccountId, facilityId);
+        return ResponseEntity.ok(staffTaskService.cancelTask(managerAccountId, effectiveFacilityId, taskId));
     }
 }

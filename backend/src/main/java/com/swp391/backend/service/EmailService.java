@@ -437,4 +437,50 @@ public class EmailService {
             return false;
         }
     }
+
+    public boolean sendRefundConfirmationEmail(String toEmail, String customerName, String contractCode, BigDecimal amount, String receiptUrl, String transactionCode) {
+        if (toEmail == null || toEmail.isBlank()) return false;
+        try {
+            String safeName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
+            String safeCode = (contractCode != null && !contractCode.isBlank()) ? contractCode.trim() : "---";
+            String safeAmount = (amount != null) ? NumberFormat.getInstance(new Locale("vi", "VN")).format(amount) + " VNĐ" : "0 VNĐ";
+            String safeTxn = (transactionCode != null && !transactionCode.isBlank()) ? transactionCode.trim() : "Đã chuyển khoản thành công";
+            String safeReceipt = (receiptUrl != null && !receiptUrl.isBlank()) ? receiptUrl.trim() : null;
+
+            String subject = "[Smart Self Storage] Xác nhận hoàn tất hoàn tiền cọc - HĐ: " + safeCode;
+            StringBuilder html = new StringBuilder();
+            html.append("<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">");
+            html.append("<div style=\"background-color: #2563eb; color: #ffffff; padding: 18px; border-radius: 8px; text-align: center;\">");
+            html.append("<h2 style=\"margin: 0; font-size: 20px;\">SMART SELF STORAGE</h2>");
+            html.append("<p style=\"margin: 4px 0 0 0; font-size: 14px;\">Biên lai xác nhận hoàn trả tiền cọc (BR-35)</p>");
+            html.append("</div>");
+            html.append("<div style=\"padding: 20px 0; color: #1e293b; line-height: 1.6;\">");
+            html.append("<p>Xin chào <strong>").append(escapeHtml(safeName)).append("</strong>,</p>");
+            html.append("<p>Bộ phận Quản lý / Kế toán Smart Self Storage đã hoàn tất đối soát và thực hiện lệnh chuyển khoản hoàn trả tiền cọc cho hợp đồng của Quý khách theo đúng quy định tại <strong>BR-35</strong>.</p>");
+            html.append("<div style=\"background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; margin: 16px 0;\">");
+            html.append("<p style=\"margin: 6px 0;\"><strong>Mã hợp đồng:</strong> <span style=\"color: #2563eb; font-weight: bold;\">").append(escapeHtml(safeCode)).append("</span></p>");
+            html.append("<p style=\"margin: 6px 0;\"><strong>Số tiền hoàn trả:</strong> <span style=\"color: #16a34a; font-weight: bold; font-size: 16px;\">").append(escapeHtml(safeAmount)).append("</span></p>");
+            html.append("<p style=\"margin: 6px 0;\"><strong>Mã tham chiếu / Giao dịch:</strong> ").append(escapeHtml(safeTxn)).append("</p>");
+            html.append("<p style=\"margin: 6px 0;\"><strong>Ngày quyết toán:</strong> ").append(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))).append("</p>");
+            html.append("</div>");
+            if (safeReceipt != null) {
+                html.append("<p style=\"margin: 16px 0 8px 0; font-weight: bold;\">Ảnh chứng từ / Biên lai chuyển khoản:</p>");
+                html.append("<p><a href=\"").append(escapeHtml(safeReceipt)).append("\" target=\"_blank\" style=\"display: inline-block; padding: 10px 18px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px;\">Xem ảnh chứng từ chuyển khoản</a></p>");
+            }
+            html.append("<p style=\"margin-top: 20px; font-size: 13px; color: #64748b;\">Tiền sẽ được ghi có vào tài khoản ngân hàng của Quý khách theo thời gian xử lý liên ngân hàng (thường trong vòng 24 giờ).</p>");
+            html.append("<p style=\"margin: 0; font-size: 13px; color: #64748b;\">Cảm ơn Quý khách đã tin tưởng và sử dụng dịch vụ của Smart Self Storage!</p>");
+            html.append("</div>");
+            html.append("<div style=\"border-top: 1px solid #e2e8f0; padding-top: 12px; font-size: 12px; color: #64748b; text-align: center;\">");
+            html.append("<p style=\"margin: 0;\">Smart Self Storage System - Hệ thống kho lưu trữ tự phục vụ thông minh 24/7</p>");
+            html.append("<p style=\"margin: 4px 0 0 0; font-size: 11px; color: #94a3b8;\">Hotline hỗ trợ: 1900 8899 | Email: hotro@smartstorage.vn</p>");
+            html.append("</div>");
+            html.append("</div>");
+
+            sendHtmlEmail(toEmail.trim(), subject, html.toString());
+            return true;
+        } catch (Exception e) {
+            log.error("Không thể gửi email xác nhận hoàn cọc tới {}: {}", toEmail, e.getMessage());
+            return false;
+        }
+    }
 }

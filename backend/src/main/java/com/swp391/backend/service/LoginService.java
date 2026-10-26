@@ -175,9 +175,6 @@ public class LoginService {
                 "Login successful",
                 ipAddress);
 
-        // create JWT
-        String token = jwtService.generateToken(account);
-
         String identityNumber = customerProfileRepository.findByAccountId(account.getAccountId())
                 .map(com.swp391.backend.entity.CustomerProfile::getIdentityNumber)
                 .orElse("Chưa cập nhật");
@@ -185,6 +182,9 @@ public class LoginService {
         Integer facilityId = employeeProfileRepository.findByAccountId(account.getAccountId())
                 .map(com.swp391.backend.entity.EmployeeProfile::getFacilityId)
                 .orElse(null);
+
+        // create JWT with facilityId
+        String token = jwtService.generateToken(account, facilityId);
 
         String facilityName = null;
         String facilityCode = null;

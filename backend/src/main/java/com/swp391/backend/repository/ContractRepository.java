@@ -16,6 +16,7 @@ import com.swp391.backend.entity.Contract;
 @Repository
 public interface ContractRepository extends JpaRepository<Contract, Integer> {
     Optional<Contract> findByReservationId(Integer reservationId);
+    List<Contract> findByReservationIdIn(List<Integer> reservationIds);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select contract from Contract contract where contract.reservationId = :reservationId")

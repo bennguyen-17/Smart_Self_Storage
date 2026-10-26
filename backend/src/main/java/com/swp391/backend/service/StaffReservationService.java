@@ -204,8 +204,6 @@ public class StaffReservationService {
         StaffReservationListItemResponse item = toListItem(reservation.get());
         copyListItem(item, response);
         response.setUnitStatus(unit.get().getStatus());
-        contractRepository.findByReservationId(reservation.get().getReservationId())
-                .ifPresent(contract -> response.setContractPdfUrl(contract.getPdfUrl()));
         response.setSuccess(true);
         response.setMessage("Đã tìm thấy đặt chỗ.");
         return response;
