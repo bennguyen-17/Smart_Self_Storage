@@ -23,7 +23,7 @@ interface AuthContextValue {
   token: string | null
   isAuthenticated: boolean
   signIn: (session: AuthSession, remember: boolean) => void
-  signOut: () => void
+  signOut: () => Promise<void> | void
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -86,14 +86,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(nextSession)
   }, [])
 
-  const signOut = useCallback(() => {
+  const signOut = useCallback(async () => {
+    const currentToken = session?.token || localStorage.getItem("token") || sessionStorage.getItem("token")
+    if (currentToken) {
+      try {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${currentToken}`
+          }
+        })
+      } catch (e) {
+        console.error("Logout API call error:", e)
+      }
+    }
     clearStoredSession()
     localStorage.removeItem("token")
     sessionStorage.removeItem("token")
     localStorage.removeItem("user")
     sessionStorage.removeItem("user")
     setSession(undefined)
-  }, [])
+  }, [session?.token])
 
   const value = useMemo<AuthContextValue>(
     () => ({

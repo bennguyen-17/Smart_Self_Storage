@@ -9,10 +9,10 @@ export const ACTION_LABEL: Record<string, string> = {
   LOGIN_SUCCESS: "Đăng nhập",
   LOGIN_FAILED: "Đăng nhập thất bại",
   CLICKWRAP_E_CONTRACT_SIGNED: "Khách ký hợp đồng điện tử",
-  STAFF_RESERVATION_CHECK_IN: "Nhận kho (check-in)",
+  STAFF_RESERVATION_CHECK_IN: "Nhận kho",
   STAFF_CHANGE_UNIT: "Đổi ô kho cho khách",
   STAFF_CANCEL_RESERVATION: "Nhân viên hủy đặt chỗ",
-  NO_SHOW_CANCELED: "Tự hủy do khách không đến",
+  NO_SHOW_CANCELLED: "Tự hủy do khách không đến",
   CUSTOMER_CANCEL_DEPOSIT_REFUND: "Khách hủy cọc, hoàn toàn bộ",
   CUSTOMER_CANCEL_DEPOSIT_PARTIAL_REFUND: "Khách hủy cọc, hoàn một phần",
   CONFIRM_REFUND_EXECUTED: "Xác nhận đã hoàn tiền",
@@ -25,6 +25,21 @@ export const ACTION_LABEL: Record<string, string> = {
   PUT_MAINTENANCE: "Đưa ô kho vào bảo trì",
   COMPLETE_MAINTENANCE: "Hoàn tất bảo trì",
   CHANGE_UNIT_TYPE: "Đổi loại ô kho",
+  LOGOUT: "Đăng xuất",
+  CREATE_INTERNAL_ACCOUNT: "Tạo tài khoản nội bộ",
+  ADMIN_ACCOUNT_ASSIGNMENT_CHANGED: "Đổi vai trò / cơ sở tài khoản",
+  ADMIN_CUSTOMER_UNLOCKED: "Mở khóa tài khoản khách",
+  CUSTOMER_DEPOSIT_PAID: "Khách đặt cọc",
+  CUSTOMER_GATE_PIN_ISSUED: "Khách lấy mã PIN cổng",
+  CUSTOMER_TICKET_CREATED: "Khách gửi yêu cầu hỗ trợ",
+  GATE_ACCESS_GRANTED: "Mở cổng bằng mã PIN",
+  MANUAL_GATE_OPEN: "Mở cổng thủ công (thẻ Master)",
+  HOLD_EXPIRED: "Hết hạn giữ chỗ 5 phút",
+  EXTEND_CONTRACT_VNPAY: "Gia hạn hợp đồng (VNPay)",
+  UPDATE_CUSTOMER_CCCD: "Cập nhật CCCD khách",
+  MANAGER_ACCEPT_TICKET: "Quản lý nhận ticket",
+  MANAGER_RESOLVE_TICKET: "Quản lý xử lý ticket",
+  FORFEIT_ASSET_PROCESSED: "Xác nhận đã xử lý tài sản (thanh lý)",
 }
 
 /** Gộp các mã có hậu tố số về một nhóm: "EXPIRY_REMINDER_T7" → "EXPIRY_REMINDER" */
@@ -48,7 +63,7 @@ export function isSensitive(action: string): boolean {
     "APPROVE_FEE_DISCOUNT",
     "CONFIRM_REFUND_EXECUTED",
     "STAFF_CANCEL_RESERVATION",
-    "NO_SHOW_CANCELED",
+    "NO_SHOW_CANCELLED",
   ].includes(action)
 }
 

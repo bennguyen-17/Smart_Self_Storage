@@ -62,8 +62,8 @@ public class NoShowCronService {
 
             // Nếu đến 00:00 ngày hôm sau mà khách vẫn chưa đến Check-in (startDate < today)
             if (reservation.getStartDate() != null && reservation.getStartDate().isBefore(today)) {
-                // 1. Chuyển hợp đồng sang CANCELED
-                contract.setStatus("CANCELED");
+                // 1. Chuyển hợp đồng sang CANCELLED
+                contract.setStatus("CANCELLED");
                 contract.setCancelReason("NO_SHOW");
                 contractRepository.save(contract);
 
@@ -74,7 +74,7 @@ public class NoShowCronService {
                 // 3. Giải phóng ô kho về AVAILABLE
                 if (reservation.getUnitCode() != null) {
                     StorageUnit unit = storageUnitRepository.findById(reservation.getUnitCode()).orElse(null);
-                    if (unit != null && !"OCCUPIED".equalsIgnoreCase(unit.getStatus())) {
+                    if (unit != null && !"RENTED".equalsIgnoreCase(unit.getStatus())) {
                         unit.setStatus("AVAILABLE");
                         storageUnitRepository.save(unit);
                     }
@@ -93,7 +93,7 @@ public class NoShowCronService {
                 if (activityLogRepository != null) {
                     ActivityLog activityLog = new ActivityLog();
                     activityLog.setAccountId(reservation.getAccountId());
-                    activityLog.setAction("NO_SHOW_CANCELED");
+                    activityLog.setAction("NO_SHOW_CANCELLED");
                     activityLog.setDescription(String.format("Tự động hủy do No-Show hợp đồng #%d, ô %s (ngày hẹn: %s). Tịch thu 100%% tiền cọc do quá hạn check-in.",
                             contract.getContractId(), reservation.getUnitCode(), reservation.getStartDate()));
                     activityLog.setCreatedAt(LocalDateTime.now());
@@ -148,6 +148,52 @@ public class NoShowCronService {
                 log.info("Sent expiry reminder for contract #{} (unit {}, daysLeft={})", contract.getContractId(), reservation.getUnitCode(), daysLeft);
                 count++;
             }
+        }
+        return count;
+    }
+
+    // --- BR-14: Quét và giải phóng các ô kho HOLD quá 5 phút chưa thanh toán ---
+    @Scheduled(fixedRate = 60000)
+    @Transactional
+    public int processExpiredHolds() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Reservation> expiredHolds = reservationRepository.findAll().stream()
+                .filter(r -> "PENDING".equalsIgnoreCase(r.getStatus())
+                        && r.getHoldExpiresAt() != null
+                        && r.getHoldExpiresAt().isBefore(now))
+                .toList();
+
+        int count = 0;
+        for (Reservation reservation : expiredHolds) {
+            reservation.setStatus("CANCELLED");
+            reservationRepository.save(reservation);
+
+            if (reservation.getUnitCode() != null) {
+                storageUnitRepository.findById(reservation.getUnitCode()).ifPresent(unit -> {
+                    if ("HOLD".equalsIgnoreCase(unit.getStatus())) {
+                        unit.setStatus("AVAILABLE");
+                        storageUnitRepository.save(unit);
+                    }
+                });
+            }
+
+            contractRepository.findByReservationId(reservation.getReservationId()).ifPresent(contract -> {
+                if ("INITIATED".equalsIgnoreCase(contract.getStatus()) || "PENDING".equalsIgnoreCase(contract.getStatus())) {
+                    contract.setStatus("CANCELLED");
+                    contract.setCancelReason("HOLD_EXPIRED");
+                    contractRepository.save(contract);
+                }
+            });
+
+            if (activityLogRepository != null) {
+                ActivityLog log = new ActivityLog();
+                log.setAccountId(reservation.getAccountId());
+                log.setAction("HOLD_EXPIRED");
+                log.setDescription("Hết thời gian giữ chỗ (5 phút). Đơn đặt " + reservation.getReservationCode() + " đã tự động hủy và giải phóng ô kho " + reservation.getUnitCode() + ".");
+                log.setCreatedAt(now);
+                activityLogRepository.save(log);
+            }
+            count++;
         }
         return count;
     }

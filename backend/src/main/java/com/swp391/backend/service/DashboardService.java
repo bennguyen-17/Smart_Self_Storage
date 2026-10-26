@@ -91,9 +91,9 @@ public class DashboardService {
 
         long totalUnits = allUnits.size();
         long availableUnits = allUnits.stream().filter(u -> "AVAILABLE".equalsIgnoreCase(u.getStatus())).count();
-        long occupiedUnits = allUnits.stream().filter(u -> "OCCUPIED".equalsIgnoreCase(u.getStatus()) || "RENTED".equalsIgnoreCase(u.getStatus())).count();
+        long occupiedUnits = allUnits.stream().filter(u -> "RENTED".equalsIgnoreCase(u.getStatus())).count();
         long reservedUnits = allUnits.stream().filter(u -> "RESERVED".equalsIgnoreCase(u.getStatus()) || "HOLD".equalsIgnoreCase(u.getStatus())).count();
-        long maintenanceUnits = allUnits.stream().filter(u -> "UNDER_MAINTENANCE".equalsIgnoreCase(u.getStatus()) || "MAINTENANCE".equalsIgnoreCase(u.getStatus())).count();
+        long maintenanceUnits = allUnits.stream().filter(u -> "MAINTENANCE".equalsIgnoreCase(u.getStatus())).count();
 
         double occupancyRate = totalUnits > 0 ? ((double) occupiedUnits / totalUnits) * 100.0 : 0.0;
 
@@ -175,7 +175,7 @@ public class DashboardService {
                     if (r.getDepositAmount() != null) {
                         depositHolding = depositHolding.add(r.getDepositAmount());
                     }
-                } else if ("CANCELED".equalsIgnoreCase(cStatus) || "FORFEITED".equalsIgnoreCase(cStatus)) {
+                } else if ("CANCELLED".equalsIgnoreCase(cStatus) || "FORFEITED".equalsIgnoreCase(cStatus)) {
                     if (r.getDepositAmount() != null) {
                         Integer cId = cOpt.get().getContractId();
                         BigDecimal refundedForContract = payments.stream()

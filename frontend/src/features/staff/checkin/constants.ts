@@ -31,7 +31,7 @@ export const CANCEL_FORFEIT_RATE = 0.5
 export const CANCEL_POLICY_TEXT = [
   "Hủy tại quầy: khách chịu phí hủy 50% tiền cọc đã nộp theo chính sách bàn giao.",
   "Hệ thống hoàn lại 50% tiền cọc cho khách và ghi nhận 50% còn lại vào quỹ phạt giữ chỗ.",
-  "Hợp đồng chuyển sang CANCELED và ô kho được trả về AVAILABLE ngay lập tức.",
+  "Hợp đồng chuyển sang CANCELLED và ô kho được trả về AVAILABLE ngay lập tức.",
 ]
 
 export type CheckinDateStatus = "before" | "on" | "after"

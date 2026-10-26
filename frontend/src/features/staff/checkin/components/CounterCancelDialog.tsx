@@ -8,7 +8,7 @@ import { checkinErrorMessage, counterCancel } from "../api/checkinApi"
 import { CANCEL_FORFEIT_RATE, CANCEL_POLICY_TEXT } from "../constants"
 import type { StaffCancelReservationResponse } from "../types"
 import type { CheckinTarget } from "./StaffCustomerDetailModal"
-import ProtoModal from "./ProtoModal"
+import ProtoModal from "@/features/staff/components/ProtoModal"
 
 interface CounterCancelDialogProps {
   contract: CheckinTarget | null

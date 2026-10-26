@@ -1,9 +1,9 @@
 import { Outlet } from "react-router-dom"
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useTheme } from "@/components/common/theme-provider"
 
-import StaffSidebar from "@/features/staff/checkin/components/StaffSidebar"
+import StaffSidebar from "@/features/staff/components/StaffSidebar"
 
 function resolveIsDark(theme: string): boolean {
   if (theme === "dark") return true
@@ -14,16 +14,12 @@ function resolveIsDark(theme: string): boolean {
   )
 }
 
-/**
- * Khung cổng nhân viên vận hành
- */
 function StaffPortalLayout() {
   const { theme, setTheme } = useTheme()
   const isDark = resolveIsDark(theme)
 
   return (
     <div className="staff-portal relative min-h-screen bg-[#eef5fc] text-slate-900 dark:bg-[#0b1120] dark:text-slate-100 antialiased">
-      {/* Vầng sáng xanh mờ phía trên vùng nội dung, đồng bộ với Manager và Cổng Khách */}
       <div
         aria-hidden="true"
         className="pointer-events-none fixed top-0 left-1/2 -z-0 h-64 w-full max-w-4xl -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-500/20 via-cyan-400/25 to-indigo-500/20 blur-3xl lg:left-[calc(50%+8rem)] dark:from-blue-500/10 dark:via-cyan-400/10 dark:to-indigo-500/10"
@@ -37,11 +33,9 @@ function StaffPortalLayout() {
           />
 
           <SidebarInset className="relative z-10 flex min-h-screen flex-1 flex-col bg-transparent">
-            {/* Top mobile navigation bar (đồng bộ header với Manager) */}
             <div className="flex items-center gap-3 border-b border-slate-200/80 bg-slate-50/95 px-4 py-2.5 shadow-xs backdrop-blur-xl md:hidden dark:border-slate-800 dark:bg-slate-950/95">
-              <SidebarTrigger className="shrink-0 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" />
               <span className="text-xs font-black tracking-wide uppercase text-slate-900 dark:text-white">
-                Smart Storage • Cổng Nhân Viên
+                Smart Storage
               </span>
             </div>
 

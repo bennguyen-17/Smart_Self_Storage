@@ -8,7 +8,7 @@ import { checkinErrorMessage, collectPenalty } from "../api/checkinApi"
 import { OVERDUE_PENALTY_PER_DAY, penaltyTotal } from "../lib/overdueRules"
 import type { CollectPenaltyResponse } from "../types"
 import type { CheckinTarget } from "./StaffCustomerDetailModal"
-import ProtoModal from "./ProtoModal"
+import ProtoModal from "@/features/staff/components/ProtoModal"
 
 interface CollectPenaltyDialogProps {
   contract: CheckinTarget | null

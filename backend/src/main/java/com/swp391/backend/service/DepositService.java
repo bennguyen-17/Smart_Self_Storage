@@ -138,8 +138,7 @@ public class DepositService {
         // Tạo Hợp đồng dự thảo với trạng thái PENDING_CHECKIN
         Contract contract = new Contract();
         contract.setReservationId(reservation.getReservationId());
-        contract.setPdfUrl("/contracts/" + contractCode + ".pdf");
-        contract.setStatus("PENDING_CHECKIN");
+        contract.setStatus("INITIATED");
         contract = contractRepository.save(contract);
 
         // Tạo Hóa đơn tiền cọc (Payment): DEP-[Mã Hợp Đồng]
@@ -186,7 +185,7 @@ public class DepositService {
         response.setReservationId(reservation.getReservationId());
         response.setReservationCode(contractCode);
         response.setContractId(contract.getContractId());
-        response.setContractDraftUrl(contract.getPdfUrl());
+        response.setContractDraftUrl(null);
         response.setPaymentId(payment.getPaymentId());
         response.setInvoiceNumber(invoiceNumber);
         response.setDepositAmount(priceRes.getDepositAmount());

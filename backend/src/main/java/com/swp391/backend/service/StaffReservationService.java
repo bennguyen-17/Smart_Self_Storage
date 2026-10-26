@@ -138,11 +138,15 @@ public class StaffReservationService {
             return new StaffReservationListResponse(false, ex.getMessage(), List.of());
         }
 
+        LocalDate today = LocalDate.now();
         List<StaffReservationListItemResponse> reservations = reservationRepository
                 .findByFacilityId(employee.get().getFacilityId()).stream()
                 .map(this::toListItem)
                 .filter(item -> item.getContractStatus() != null &&
                         List.of(CONTRACT_PENDING_CHECKIN, CONTRACT_ACTIVE, CONTRACT_OVERDUE).contains(item.getContractStatus()))
+                .filter(item -> !CONTRACT_PENDING_CHECKIN.equals(item.getContractStatus())
+                        || item.getCheckInDate() == null
+                        || !item.getCheckInDate().isBefore(today))
                 .sorted(Comparator
                         .comparing((StaffReservationListItemResponse item) -> {
                             if (CONTRACT_PENDING_CHECKIN.equals(item.getContractStatus())) return 0;
@@ -200,8 +204,6 @@ public class StaffReservationService {
         StaffReservationListItemResponse item = toListItem(reservation.get());
         copyListItem(item, response);
         response.setUnitStatus(unit.get().getStatus());
-        contractRepository.findByReservationId(reservation.get().getReservationId())
-                .ifPresent(contract -> response.setContractPdfUrl(contract.getPdfUrl()));
         response.setSuccess(true);
         response.setMessage("Đã tìm thấy đặt chỗ.");
         return response;
@@ -380,7 +382,7 @@ public class StaffReservationService {
 
         reservation.setPenaltyAmount(penaltyAmount);
         reservation.setStatus("CANCELLED");
-        contract.setStatus("CANCELED");
+        contract.setStatus("CANCELLED");
         contract.setCancelReason("COUNTER_CANCEL");
         contract.setTerminatedAt(LocalDateTime.now());
         unit.setStatus("AVAILABLE");
@@ -946,7 +948,7 @@ public class StaffReservationService {
         resp.setReservationId(reservation.getReservationId());
         resp.setReservationCode(reservation.getReservationCode());
         resp.setContractStatus("ACTIVE");
-        resp.setUnitStatus(unitOpt.map(StorageUnit::getStatus).orElse("OCCUPIED"));
+        resp.setUnitStatus(unitOpt.map(StorageUnit::getStatus).orElse("RENTED"));
         resp.setInvoiceNumber(invoiceNumber);
         resp.setAmount(finalAmount);
         resp.setDiscountPercent(discountPercent);

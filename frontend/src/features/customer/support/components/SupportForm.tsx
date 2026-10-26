@@ -339,7 +339,7 @@ export default function SupportForm() {
                   <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 space-y-2">
                     <div className="flex items-center space-x-2.5 font-bold text-amber-700 dark:text-amber-200 text-sm">
                       <AlertTriangle className="size-5 text-amber-500 dark:text-amber-400 shrink-0" />
-                      <span>YÊU CẦU HỢP ĐỒNG ĐANG HOẠT ĐỘNG (ACTIVE)</span>
+                      <span>YÊU CẦU HỢP ĐỒNG ĐANG HOẠT ĐỘNG</span>
                     </div>
                     <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                       Tài khoản của bạn hiện chưa có hợp đồng thuê kho nào ở trạng thái <strong className="text-emerald-600 dark:text-emerald-400">đang có hiệu lực</strong> . Chức năng gửi ticket hỗ trợ kỹ thuật và mở khóa khẩn cấp chỉ áp dụng cho khách hàng đang có hợp đồng hoạt động tại cơ sở.

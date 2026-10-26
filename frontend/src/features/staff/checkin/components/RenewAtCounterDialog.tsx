@@ -20,7 +20,7 @@ import {
 } from "../lib/overdueRules"
 import type { RenewAtCounterResponse } from "../types"
 import type { CheckinTarget } from "./StaffCustomerDetailModal"
-import ProtoModal from "./ProtoModal"
+import ProtoModal from "@/features/staff/components/ProtoModal"
 
 interface RenewAtCounterDialogProps {
   contract: CheckinTarget | null

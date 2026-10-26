@@ -223,7 +223,7 @@ public class StaffCheckInService {
         // Chuyển đổi trạng thái hợp đồng sang CÓ HIỆU LỰC (ACTIVE)
         contract.setStatus("ACTIVE");
         contract.setActivatedAt(now);
-        unit.setStatus("OCCUPIED");
+        unit.setStatus("RENTED");
         reservation.setStatus("CONFIRMED");
 
         reservationRepository.save(reservation);

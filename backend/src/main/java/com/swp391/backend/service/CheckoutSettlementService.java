@@ -35,6 +35,8 @@ public class CheckoutSettlementService {
     private final StaffTaskService staffTaskService;
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private EmailService emailService;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private CustomerProfileRepository customerProfileRepository;
 
     public CheckoutSettlementService(ContractRepository contractRepository,
                                    ReservationRepository reservationRepository,
@@ -311,8 +313,8 @@ public class CheckoutSettlementService {
         contract.setTerminatedAt(LocalDateTime.now());
         contractRepository.save(contract);
 
-        // Ô kho chuyển ngay sang UNDER_MAINTENANCE để Staff dọn dẹp
-        unit.setStatus("UNDER_MAINTENANCE");
+        // Ô kho chuyển ngay sang MAINTENANCE để Staff dọn dẹp
+        unit.setStatus("MAINTENANCE");
         storageUnitRepository.save(unit);
 
         // Vô hiệu hóa toàn bộ mã PIN của khách tại cơ sở này ngay lập tức
@@ -405,7 +407,7 @@ public class CheckoutSettlementService {
             act.setAccountId(staffAccountId != null ? staffAccountId : res.getAccountId());
             act.setFacilityId(floorRepository.findById(unit.getFloorId()).map(Floor::getFacilityId).orElse(null));
             act.setAction("CONFIRM_CHECKOUT_TERMINATED");
-            act.setDescription(String.format("Xác nhận bàn giao trả kho #%d (ô %s). HĐ -> TERMINATED, ô -> UNDER_MAINTENANCE, PIN vô hiệu hóa. Quyết toán: %s (Hóa đơn hoàn: %s).",
+            act.setDescription(String.format("Xác nhận bàn giao trả kho #%d (ô %s). HĐ -> TERMINATED, ô -> MAINTENANCE, PIN vô hiệu hóa. Quyết toán: %s (Hóa đơn hoàn: %s).",
                     contract.getContractId(), unit.getUnitCode(), netAmount, refInvoice != null ? refInvoice : "0 VNĐ"));
             act.setCreatedAt(LocalDateTime.now());
             activityLogRepository.save(act);
@@ -417,12 +419,12 @@ public class CheckoutSettlementService {
 
         CheckoutConfirmResponse resp = new CheckoutConfirmResponse();
         resp.setSuccess(true);
-        resp.setMessage(String.format("Nhận bàn giao thành công! Hợp đồng đã chuyển TERMINATED, ô kho chuyển UNDER_MAINTENANCE, mã PIN bị vô hiệu. Lệnh hoàn cọc: %s.",
+        resp.setMessage(String.format("Nhận bàn giao thành công! Hợp đồng đã chuyển TERMINATED, ô kho chuyển MAINTENANCE, mã PIN bị vô hiệu. Lệnh hoàn cọc: %s.",
                 refInvoice != null ? refInvoice + " (" + netAmount + " VNĐ)" : "0 VNĐ"));
         resp.setContractId(contract.getContractId());
         resp.setContractStatus("TERMINATED");
         resp.setUnitCode(unit.getUnitCode());
-        resp.setUnitStatus("UNDER_MAINTENANCE");
+        resp.setUnitStatus("MAINTENANCE");
         resp.setGatePinDisabled(true);
         resp.setInvoiceNumber(refInvoice);
         resp.setInvoiceType("REFUND");
@@ -460,7 +462,7 @@ public class CheckoutSettlementService {
         p.setPaymentStatus("SUCCESS");
         p.setPaidAt(LocalDateTime.now());
         if (receiptUrl != null && !receiptUrl.isBlank()) {
-            p.setPdfUrl(receiptUrl.trim());
+            p.setReceiptUrl(receiptUrl.trim());
         }
         if (transactionRef != null && !transactionRef.isBlank()) {
             p.setTransactionCode(transactionRef.trim());
@@ -518,12 +520,42 @@ public class CheckoutSettlementService {
             activityLogRepository.save(act);
         }
 
+        // Tự động gửi Email xác nhận hoàn cọc kèm ảnh biên lai (BR-35)
+        if (emailService != null && p.getContractId() != null) {
+            try {
+                contractRepository.findById(p.getContractId()).ifPresent(c -> {
+                    if (c.getReservationId() != null) {
+                        reservationRepository.findById(c.getReservationId()).ifPresent(r -> {
+                            if (r.getAccountId() != null) {
+                                accountRepository.findById(Long.valueOf(r.getAccountId())).ifPresent(acc -> {
+                                    if (acc.getEmail() != null && !acc.getEmail().isBlank()) {
+                                        String contractCode = (r.getReservationCode() != null && !r.getReservationCode().isBlank())
+                                                ? r.getReservationCode() : ("CTR-" + c.getContractId());
+                                        emailService.sendRefundConfirmationEmail(
+                                                acc.getEmail(),
+                                                acc.getFullName(),
+                                                contractCode,
+                                                p.getAmount(),
+                                                receiptUrl,
+                                                transactionRef
+                                        );
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            } catch (Exception ex) {
+                System.err.println("Lỗi gửi email xác nhận hoàn cọc BR-35: " + ex.getMessage());
+            }
+        }
+
         return true;
     }
 
     /**
      * US-31: Miễn / Giảm phí (Facility Manager duyệt)
-     * BR-48: Mức giảm tối đa theo chính sách BOM, vượt mức báo lỗi 400. Miễn 100% chuyển CANCELED và gửi email.
+     * BR-48: Mức giảm tối đa theo chính sách BOM, vượt mức báo lỗi 400. Miễn 100% chuyển CANCELLED và gửi email.
      */
     @Transactional
     public Payment applyFeeDiscount(Integer paymentId, FeeDiscountRequest request, Integer managerAccountId, Integer managerFacilityId) {
@@ -573,7 +605,7 @@ public class CheckoutSettlementService {
         }
 
         if (request.getDiscountPercent() != null && request.getDiscountPercent() >= 100) {
-            // Miễn 100% -> Khoản phí chuyển sang CANCELED
+            // Miễn 100% -> Khoản phí chuyển sang CANCELLED
             p.setStatus("CANCELLED");
             p.setPaymentStatus("FAILED");
             p.setAmount(BigDecimal.ZERO);
@@ -690,6 +722,16 @@ public class CheckoutSettlementService {
             String bankName = (c != null) ? c.getRefundBankName() : null;
             String accNumber = (c != null) ? c.getRefundAccountNumber() : null;
             String accName = (c != null) ? c.getRefundAccountName() : null;
+
+            // Fallback lấy từ CustomerProfile nếu hợp đồng chưa lưu thông tin ngân hàng
+            if ((bankName == null || accNumber == null || accName == null) && r != null && r.getAccountId() != null && customerProfileRepository != null) {
+                CustomerProfile cp = customerProfileRepository.findByAccountId(r.getAccountId()).orElse(null);
+                if (cp != null) {
+                    if (bankName == null) bankName = cp.getBankName();
+                    if (accNumber == null) accNumber = cp.getBankAccountNumber();
+                    if (accName == null) accName = cp.getBankAccountName();
+                }
+            }
             String cancelReason = (c != null) ? c.getCancelReason() : null;
 
             String refundType = "CHECKOUT_SETTLEMENT";
@@ -699,7 +741,7 @@ public class CheckoutSettlementService {
                 refundType = "COUNTER_CANCEL";
             } else if (c != null && ("CUSTOMER_REQUEST".equalsIgnoreCase(c.getCancelReason()) || "NO_SHOW".equalsIgnoreCase(c.getCancelReason()))) {
                 refundType = "CANCEL_DEPOSIT";
-            } else if (c != null && "CANCELED".equalsIgnoreCase(c.getStatus())) {
+            } else if (c != null && "CANCELLED".equalsIgnoreCase(c.getStatus())) {
                 refundType = "CANCEL_DEPOSIT";
             }
 
@@ -728,7 +770,7 @@ public class CheckoutSettlementService {
             item.setRefundType(refundType);
             item.setRefundedAt(p.getPaidAt());
             item.setTransactionCode(p.getTransactionCode());
-            item.setEvidenceUrl(p.getPdfUrl());
+            item.setEvidenceUrl(p.getReceiptUrl());
 
             result.add(item);
         }

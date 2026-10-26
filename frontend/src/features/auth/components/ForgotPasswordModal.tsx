@@ -27,7 +27,7 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group"
 import { Spinner } from "@/components/ui/spinner"
-import { passwordRules } from "@/utils/validation"
+import { passwordRules } from "@/lib/validation"
 import { requestForgotPasswordOtp, resetPassword } from "../authApi"
 
 interface ForgotPasswordModalProps {

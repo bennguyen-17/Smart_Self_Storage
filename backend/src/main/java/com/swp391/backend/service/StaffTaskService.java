@@ -38,6 +38,8 @@ public class StaffTaskService {
     private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
     private static final String MAINTENANCE = "MAINTENANCE";
     private static final String CHECKOUT_INSPECTION = "CHECKOUT_INSPECTION";
+    private static final String CHECKIN_HANDOVER = "CHECKIN_HANDOVER";
+    private static final String INCIDENT = "INCIDENT";
 
     private final StaffTaskRepository taskRepository;
     private final AccountRepository accountRepository;
@@ -126,7 +128,7 @@ public class StaffTaskService {
             if (!facilityId.equals(getUnitFacilityId(unit))) {
                 throw new AccessDeniedException("Ô kho không thuộc cơ sở của Manager.");
             }
-            if (!"UNDER_MAINTENANCE".equalsIgnoreCase(unit.getStatus())
+            if (!"MAINTENANCE".equalsIgnoreCase(unit.getStatus())
                     && !"MAINTENANCE".equalsIgnoreCase(unit.getStatus())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Ô kho chưa ở trạng thái bảo trì.");
             }
@@ -135,7 +137,7 @@ public class StaffTaskService {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
                         "Ô kho đã có task bảo trì đang được giao trong ca này.");
             }
-        } else {
+        } else if (CHECKOUT_INSPECTION.equals(taskType)) {
             if (contractId == null || unitCode != null) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "Task CHECKOUT_INSPECTION cần contractId và không nhận unitCode riêng.");
@@ -160,6 +162,47 @@ public class StaffTaskService {
                         "Hợp đồng đã có task nghiệm thu trả kho đang được giao.");
             }
             unitCode = unit.getUnitCode();
+        } else if (CHECKIN_HANDOVER.equals(taskType)) {
+            if (unitCode != null) {
+                StorageUnit unit = storageUnitRepository.findById(unitCode)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy ô kho."));
+                if (!facilityId.equals(getUnitFacilityId(unit))) {
+                    throw new AccessDeniedException("Ô kho không thuộc cơ sở của Manager.");
+                }
+            }
+            if (contractId != null) {
+                Contract contract = contractRepository.findById(contractId)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy hợp đồng."));
+                Reservation reservation = reservationRepository.findById(contract.getReservationId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy đặt chỗ."));
+                StorageUnit unit = storageUnitRepository.findById(reservation.getUnitCode())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy ô kho."));
+                if (!facilityId.equals(getUnitFacilityId(unit))) {
+                    throw new AccessDeniedException("Hợp đồng không thuộc cơ sở của Manager.");
+                }
+                if (unitCode == null) {
+                    unitCode = unit.getUnitCode();
+                }
+            }
+        } else if (INCIDENT.equals(taskType)) {
+            if (unitCode != null) {
+                StorageUnit unit = storageUnitRepository.findById(unitCode)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy ô kho."));
+                if (!facilityId.equals(getUnitFacilityId(unit))) {
+                    throw new AccessDeniedException("Ô kho không thuộc cơ sở của Manager.");
+                }
+            }
+            if (contractId != null) {
+                Contract contract = contractRepository.findById(contractId)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy hợp đồng."));
+                Reservation reservation = reservationRepository.findById(contract.getReservationId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy đặt chỗ."));
+                StorageUnit unit = storageUnitRepository.findById(reservation.getUnitCode())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy ô kho."));
+                if (!facilityId.equals(getUnitFacilityId(unit))) {
+                    throw new AccessDeniedException("Hợp đồng không thuộc cơ sở của Manager.");
+                }
+            }
         }
 
         StaffTask task = new StaffTask();
@@ -203,7 +246,7 @@ public class StaffTaskService {
         if (!"ASSIGNED".equalsIgnoreCase(task.getStatus())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Chỉ task ASSIGNED mới được hủy.");
         }
-        task.setStatus("CANCELED");
+        task.setStatus("CANCELLED");
         return toResponse(taskRepository.save(task));
     }
 
@@ -306,9 +349,10 @@ public class StaffTaskService {
 
     private String normalizeTaskType(String value) {
         String taskType = value == null ? "" : value.trim().toUpperCase(Locale.ROOT);
-        if (!MAINTENANCE.equals(taskType) && !CHECKOUT_INSPECTION.equals(taskType)) {
+        if (!MAINTENANCE.equals(taskType) && !CHECKOUT_INSPECTION.equals(taskType)
+                && !CHECKIN_HANDOVER.equals(taskType) && !INCIDENT.equals(taskType)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "taskType phải là MAINTENANCE hoặc CHECKOUT_INSPECTION.");
+                    "taskType phải là MAINTENANCE, CHECKOUT_INSPECTION, CHECKIN_HANDOVER hoặc INCIDENT.");
         }
         return taskType;
     }

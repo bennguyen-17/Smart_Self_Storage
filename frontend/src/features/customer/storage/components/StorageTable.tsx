@@ -39,7 +39,7 @@ export default function StorageTable({
             const isActive = item.status === 'ACTIVE';
             const isCompleted = item.status === 'COMPLETED';
             const isTerminated = item.status === 'TERMINATED';
-            const isCanceled = item.status === 'CANCELED';
+            const isCanceled = item.status === 'CANCELLED';
             const isReturnRequested = isActive && Boolean(item.returnRequested || item.cancelReason === 'EARLY_TERMINATION');
 
             return (
@@ -49,7 +49,7 @@ export default function StorageTable({
                     type="button"
                     onClick={() => onViewContract(item)}
                     title="Bấm để xem chi tiết hợp đồng"
-                    className="inline-block px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-600 font-mono font-semibold text-xs transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer text-center"
+                    className="inline-flex items-center justify-center w-[185px] py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-600 font-mono font-semibold text-xs transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer text-center"
                   >
                     {item.reservationCode || item.bookingCode || item.contractId}
                   </button>
@@ -76,6 +76,8 @@ export default function StorageTable({
                       ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                       : isPending
                       ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                      : item.status === 'OVERDUE'
+                      ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
                       : isCompleted
                       ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
                       : isTerminated
@@ -89,6 +91,8 @@ export default function StorageTable({
                         ? 'bg-emerald-500'
                         : isPending
                         ? 'bg-amber-500'
+                        : item.status === 'OVERDUE'
+                        ? 'bg-rose-500'
                         : isCompleted
                         ? 'bg-emerald-500'
                         : isTerminated
@@ -99,10 +103,16 @@ export default function StorageTable({
                       ? 'Chờ trả kho'
                       : isPending
                       ? 'Chờ check-in'
+                      : isActive
+                      ? 'Đang hiệu lực'
+                      : item.status === 'OVERDUE'
+                      ? 'Quá hạn'
                       : isCompleted
                       ? 'Đã hoàn tất'
                       : isTerminated
                       ? 'Đã thanh lý'
+                      : isCanceled
+                      ? 'Đã hủy cọc'
                       : (item.statusLabel || item.status)}
                   </span>
                 </td>
@@ -132,42 +142,20 @@ export default function StorageTable({
                       </button>
                     )}
 
-                    {isCompleted && (
-                      <span className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">
-                        Đã hoàn tất
-                      </span>
-                    )}
-
-                    {isTerminated && (
-                      <span className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">
-                        Đã thanh lý &amp; hoàn cọc
-                      </span>
-                    )}
-
-                    {isCanceled && (
-                      <span className="text-sm text-rose-500/90 dark:text-rose-400 font-medium italic" title={getCancelReasonLabel(item.cancelReason)}>
-                        {getCancelReasonLabel(item.cancelReason)}
+                    {(isCompleted || isTerminated || isCanceled) && (
+                      <span className="text-slate-400 dark:text-slate-600 font-mono text-base select-none" title="Không có hành động khả dụng">
+                        —
                       </span>
                     )}
 
                     {/* HĐ OVERDUE */}
                     {extendModeOf(item.status) === 'AT_COUNTER' && (
-                      <div className="flex flex-col items-end gap-1">
-                        <button
-                          type="button"
-                          disabled
-                          className="px-3.5 py-1.5 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 cursor-not-allowed flex items-center justify-center gap-1.5 whitespace-nowrap"
-                        >
-                          <i className="fa-solid fa-arrows-rotate text-sm"></i> Gia Hạn
-                        </button>
-                        <span
-                          title={AT_COUNTER_NOTE}
-                          className="text-xs leading-tight font-semibold text-amber-700 dark:text-amber-300 whitespace-nowrap"
-                        >
-                          <i className="fa-solid fa-store text-xs mr-1" aria-hidden="true"></i>
-                          <span>Gia hạn tại quầy (Tiền mặt)</span>
-                        </span>
-                      </div>
+                      <span
+                        title={AT_COUNTER_NOTE}
+                        className="text-xs text-amber-700 dark:text-amber-300 font-medium italic whitespace-nowrap"
+                      >
+                        Gia hạn tại quầy
+                      </span>
                     )}
                   </div>
                 </td>

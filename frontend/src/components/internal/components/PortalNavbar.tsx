@@ -60,14 +60,14 @@ function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, 
       {/* Vầng sáng xanh mờ phía trên vùng nội dung, như cổng khách */}
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed top-0 left-1/2 -z-0 h-64 w-full max-w-4xl -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-500/20 via-cyan-400/25 to-indigo-500/20 blur-3xl lg:left-[calc(50%+8rem)] dark:from-blue-500/10 dark:via-cyan-400/10 dark:to-indigo-500/10"
+        className="pointer-events-none fixed top-0 left-1/2 -z-0 h-64 w-full max-w-4xl -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-500/20 via-cyan-400/25 to-indigo-500/20 blur-3xl md:left-[calc(50%+8rem)] dark:from-blue-500/10 dark:via-cyan-400/10 dark:to-indigo-500/10"
       />
 
       {sidebarOpen && (
         <div
           aria-hidden="true"
           onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs md:hidden"
         />
       )}
 
@@ -76,7 +76,7 @@ function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, 
         id="portal-sidebar"
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200/80 bg-white/95 text-slate-900 shadow-sm backdrop-blur-xl transition-transform duration-200 ease-out motion-reduce:transition-none dark:border-slate-800 dark:bg-slate-950/95 dark:text-white",
-          sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
+          sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full md:translate-x-0"
         )}
       >
         {/* Header ở đỉnh sidebar chứa Brand Logo & Slogan */}
@@ -90,7 +90,7 @@ function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, 
                 Smart Storage
               </span>
               <span className="block truncate text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                Hệ thống cho thuê kho tự quản thông minh 24/7
+                {portalName || "Hệ thống nội bộ"}
               </span>
             </div>
           </div>
@@ -180,9 +180,9 @@ function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, 
       </aside>
 
       {/* Vùng nội dung chính: Trên desktop bắt đầu từ mép trên không bị header cắt ngang */}
-      <main className="relative z-10 flex min-h-screen flex-col lg:pl-64">
-        {/* Thanh bar mobile (chỉ hiện trên màn hình hẹp lg:hidden, giống Staff md:hidden) */}
-        <div className="flex h-[52px] items-center justify-between border-b border-slate-200/80 bg-slate-50/95 px-4 shadow-xs backdrop-blur-xl lg:hidden dark:border-slate-800 dark:bg-slate-950/95">
+      <main className="relative z-10 flex min-h-screen flex-col md:pl-64">
+        {/* Thanh bar mobile (chỉ hiện trên màn hình hẹp md:hidden, giống Staff md:hidden) */}
+        <div className="flex h-[52px] items-center justify-between border-b border-slate-200/80 bg-slate-50/95 px-4 shadow-xs backdrop-blur-xl md:hidden dark:border-slate-800 dark:bg-slate-950/95">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -210,8 +210,7 @@ function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, 
           </button>
         </div>
 
-        <div className="mx-auto w-full max-w-7xl flex-1 space-y-4 px-4 py-6 sm:px-6 lg:px-8">{children}</div>
-        <SiteFooter />
+        <div className="mx-auto w-full max-w-7xl flex-1 space-y-4 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">{children}</div>
       </main>
 
       {profileOpen && (

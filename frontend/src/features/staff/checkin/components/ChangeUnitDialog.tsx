@@ -14,7 +14,7 @@ import {
 } from "../api/checkinApi"
 import type { StaffChangeUnitResponse } from "../types"
 import type { CheckinTarget } from "./StaffCustomerDetailModal"
-import ProtoModal from "./ProtoModal"
+import ProtoModal from "@/features/staff/components/ProtoModal"
 
 interface ChangeUnitDialogProps {
   contract: CheckinTarget | null

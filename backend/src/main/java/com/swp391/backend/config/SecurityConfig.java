@@ -1,9 +1,12 @@
 package com.swp391.backend.config;
 
+import com.swp391.backend.service.JwtService;
+import com.swp391.backend.service.TokenBlacklistService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -11,7 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import com.swp391.backend.service.JwtService;
 
 @Configuration
 public class SecurityConfig {
@@ -19,9 +21,11 @@ public class SecurityConfig {
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     private final JwtService jwtService;
+    private final TokenBlacklistService tokenBlacklistService;
 
-    public SecurityConfig(JwtService jwtService) {
+    public SecurityConfig(JwtService jwtService, TokenBlacklistService tokenBlacklistService) {
         this.jwtService = jwtService;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @Bean
@@ -34,54 +38,51 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/customer/contracts/overdue-alerts")
-                        .hasRole("AUTHENTICATED")
+                        // 1. Các API công khai không cần đăng nhập
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/facilities", "/api/facilities/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/units/**", "/api/units/filter").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/prices", "/api/prices/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/fee-policies", "/api/fee-policies/**").permitAll()
+                        .requestMatchers("/api/admin/dashboard/**").permitAll()
+                        .requestMatchers("/api/pricing/calculate").permitAll()
+                        .requestMatchers("/api/deposits/webhook").permitAll()
+                        .requestMatchers("/api/payment/vnpay/callback", "/api/payment/vnpay/ipn").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
+                        .requestMatchers("/error").permitAll()
 
-                        .requestMatchers("/api/staff/contracts/overdue-alerts")
-                        .hasRole("STAFF")
+                        // 2. Quyền Ban Giám Đốc (BOM) & Quản Trị Hệ Thống (ADMIN)
+                        .requestMatchers("/api/bom/**").hasAnyRole("BOM", "ADMIN")
+                        .requestMatchers("/api/dashboard/chain").hasAnyRole("BOM", "ADMIN")
+                        .requestMatchers("/api/deposits/mock-pay").hasAnyRole("BOM", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/facilities/**").hasAnyRole("BOM", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/facilities/**").hasAnyRole("BOM", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/facilities/**").hasAnyRole("BOM", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/prices/**").hasAnyRole("BOM", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/prices/**").hasAnyRole("BOM", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/prices/**").hasAnyRole("BOM", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/fee-policies/**").hasAnyRole("BOM", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/fee-policies/**").hasAnyRole("BOM", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/fee-policies/**").hasAnyRole("BOM", "ADMIN")
 
-                        .requestMatchers("/api/staff/shifts/current", "/api/staff/shifts/current/start")
-                        .hasRole("STAFF")
+                        // 3. Quyền Quản trị viên (ADMIN)
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        .requestMatchers("/api/staff/tickets/**")
-                        .hasRole("STAFF")
+                        // 4. Quyền Quản lý cơ sở (MANAGER)
+                        .requestMatchers("/api/manager/**").hasAnyRole("MANAGER", "ADMIN")
 
-                        .requestMatchers("/api/staff/tasks/**")
-                        .hasRole("STAFF")
+                        // 5. Quyền Nhân viên quầy (STAFF)
+                        .requestMatchers("/api/staff/**").hasAnyRole("STAFF", "MANAGER", "ADMIN")
 
-                        .requestMatchers("/api/staff/units/**")
-                        .hasRole("STAFF")
+                        // 6. Quyền Khách hàng & Người dùng đã đăng nhập (AUTHENTICATED)
+                        .requestMatchers("/api/customer/**").authenticated()
+                        .requestMatchers("/api/contracts/**").authenticated()
+                        .requestMatchers("/api/deposits/**").authenticated()
+                        .requestMatchers("/api/payment/**").authenticated()
+                        .requestMatchers("/api/gate-pin/**").authenticated()
 
-                        .requestMatchers("/api/staff/checkout/**")
-                        .hasRole("STAFF")
-
-                        .requestMatchers("/api/manager/contracts/overdue-alerts")
-                        .hasRole("MANAGER")
-
-                        .requestMatchers("/api/contracts/*/cancel-deposit")
-                        .hasRole("AUTHENTICATED")
-
-                        .requestMatchers(
-                                "/api/staff/reservations",
-                                "/api/staff/reservations/lookup",
-                                "/api/staff/reservations/*/check-in")
-                        .hasAnyRole("STAFF", "MANAGER", "ADMIN")
-
-                        .requestMatchers(
-                                "/api/staff/audit-logs/manual-gate-open")
-                        .hasRole("STAFF")
-
-                        .requestMatchers("/api/admin/dashboard/**")
-                        .permitAll()
-
-                        // B3: Chặn quyền API: /api/admin/** chỉ ADMIN, /api/manager/** chỉ MANAGER
-                        .requestMatchers("/api/admin/**")
-                        .hasRole("ADMIN")
-
-                        .requestMatchers("/api/manager/**")
-                        .hasRole("MANAGER")
-
-                        .anyRequest().permitAll())
+                        .anyRequest().permitAll()
+                )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
@@ -92,10 +93,9 @@ public class SecurityConfig {
                             response.getWriter().write("{\"success\":false,\"message\":\"Bạn không có quyền truy cập chức năng này (403 Forbidden)!\"}");
                         }))
                 .addFilterBefore(
-                        new JwtAuthenticationFilter(jwtService),
+                        new JwtAuthenticationFilter(jwtService, tokenBlacklistService),
                         UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
 }

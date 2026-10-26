@@ -86,7 +86,7 @@ public class AdminAccountController {
                 roleName,
                 facilityId,
                 status,
-                false,
+                Boolean.TRUE.equals(account.getMustChangePassword()),
                 lastLogin
         );
     }
@@ -141,6 +141,7 @@ public class AdminAccountController {
         account.setRoleId(roleId);
         account.setStatus("ACTIVE");
         account.setPassword(passwordEncoder.encode("123456"));
+        account.setMustChangePassword(true);
         account.setCreatedAt(LocalDateTime.now());
         account.setUpdatedAt(LocalDateTime.now());
 

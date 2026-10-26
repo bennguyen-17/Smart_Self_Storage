@@ -8,7 +8,7 @@ describe("extendModeOf: hiện nút Gia hạn theo trạng thái hợp đồng",
     { status: "TERMINATED", expected: "NONE" }, // ẩn hẳn nút
     { status: "COMPLETED", expected: "NONE" },
     { status: "FORFEITED", expected: "NONE" },
-    { status: "CANCELED", expected: "NONE" },
+    { status: "CANCELLED", expected: "NONE" },
     { status: "PENDING_CHECKIN", expected: "NONE" },
     { status: "SUSPENDED", expected: "NONE" },
     { status: "", expected: "NONE" },
@@ -26,7 +26,7 @@ describe("canExtendOnline: chỉ hợp đồng ACTIVE mới được gia hạn o
     { status: "TERMINATED", expected: false },
     { status: "COMPLETED", expected: false },
     { status: "FORFEITED", expected: false },
-    { status: "CANCELED", expected: false },
+    { status: "CANCELLED", expected: false },
     { status: "SUSPENDED", expected: false },
     // Dữ liệu bẩn: rỗng hoặc sai hoa/thường cũng không được gia hạn
     { status: "", expected: false },

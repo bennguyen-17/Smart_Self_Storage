@@ -10,7 +10,7 @@ import { toast } from "sonner"
 import apiClient from "@/lib/apiClient"
 import { formatVnd } from "@/lib/format"
 
-import ProtoModal from "./ProtoModal"
+import ProtoModal from "@/features/staff/components/ProtoModal"
 
 export interface InspectionTarget {
   contractId?: number | null
@@ -38,7 +38,6 @@ const DAMAGE_ITEMS = [
   { id: "door", label: "6. Hư hỏng cửa/khóa chính", fee: 1_000_000 },
 ]
 
-/** Modal Nghiệm thu hiện trạng trả kho & Quyết toán cọc — bám prototype staff_portal.html */
 function StaffInspectionModal({ target, onClose, onConfirmed }: StaffInspectionModalProps) {
   return (
     <ProtoModal

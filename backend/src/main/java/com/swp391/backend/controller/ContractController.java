@@ -73,11 +73,10 @@ public class ContractController {
 
     @GetMapping("/contracts/my-contracts")
     public ResponseEntity<List<Map<String, Object>>> getMyContracts(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestParam(required = false) Integer accountId) {
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
-        Integer targetId = accountId;
-        if (targetId == null && authHeader != null && authHeader.startsWith("Bearer ")) {
+        Integer targetId = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
             try {
                 String token = authHeader.substring(7);
                 Claims claims = jwtService.validateTokenAndGetClaims(token);
@@ -90,7 +89,7 @@ public class ContractController {
             } catch (Exception ignored) {}
         }
         if (targetId == null) {
-            targetId = 7;
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
         }
 
         List<Reservation> reservations = reservationRepository.findByAccountId(targetId);
@@ -101,6 +100,9 @@ public class ContractController {
             if (contractOpt.isEmpty()) continue;
 
             Contract c = contractOpt.get();
+            if ("INITIATED".equalsIgnoreCase(c.getStatus())) {
+                continue; // Bỏ qua đơn giữ chỗ chưa thanh toán cọc
+            }
             Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitCode());
             if (unitOpt.isEmpty()) continue;
 
@@ -130,21 +132,21 @@ public class ContractController {
 
             String statusLabel;
             if ("PENDING_CHECKIN".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "CHỜ CHECK-IN";
+                statusLabel = "Chờ check-in";
             } else if ("ACTIVE".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "HIỆU LỰC";
+                statusLabel = "Đang hiệu lực";
             } else if ("INITIATED".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "KHỞI TẠO";
+                statusLabel = "Khởi tạo";
             } else if ("OVERDUE".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "QUÁ HẠN";
+                statusLabel = "Quá hạn";
             } else if ("TERMINATED".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "ĐÃ THANH LÝ";
+                statusLabel = "Đã thanh lý";
             } else if ("COMPLETED".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "ĐÃ HOÀN TẤT";
-            } else if ("CANCELED".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "ĐÃ HỦY CỌC";
+                statusLabel = "Đã hoàn tất";
+            } else if ("CANCELLED".equalsIgnoreCase(c.getStatus())) {
+                statusLabel = "Đã hủy cọc";
             } else if ("FORFEITED".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "MẤT CỌC";
+                statusLabel = "Mất cọc";
             } else {
                 statusLabel = c.getStatus();
             }
@@ -190,6 +192,20 @@ public class ContractController {
 
             result.add(map);
         }
+
+        result.sort((a, b) -> {
+            int prioA = getContractStatusPriority((String) a.get("status"));
+            int prioB = getContractStatusPriority((String) b.get("status"));
+            if (prioA != prioB) {
+                return Integer.compare(prioA, prioB);
+            }
+            Integer idA = (Integer) a.get("rawContractId");
+            Integer idB = (Integer) b.get("rawContractId");
+            if (idA != null && idB != null) {
+                return idB.compareTo(idA);
+            }
+            return 0;
+        });
 
         return ResponseEntity.ok(result);
     }
@@ -259,11 +275,10 @@ public class ContractController {
     @GetMapping("/gate-pins/live")
     public ResponseEntity<Map<String, Object>> getLiveGatePin(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestParam(required = false) Integer accountId,
             @RequestParam(required = false) String branchCode) {
 
-        Integer targetId = accountId;
-        if (targetId == null && authHeader != null && authHeader.startsWith("Bearer ")) {
+        Integer targetId = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
             try {
                 String token = authHeader.substring(7);
                 Claims claims = jwtService.validateTokenAndGetClaims(token);
@@ -276,7 +291,7 @@ public class ContractController {
             } catch (Exception ignored) {}
         }
         if (targetId == null) {
-            targetId = 7;
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
         }
 
         String targetBranch = branchCode != null ? branchCode.trim().replace("-", "").toUpperCase() : "HN01";
@@ -546,5 +561,23 @@ public class ContractController {
         resp.put("amount", finalTotal);
 
         return ResponseEntity.ok(resp);
+    }
+
+    private int getContractStatusPriority(String status) {
+        if (status == null) return 99;
+        switch (status.toUpperCase()) {
+            case "PENDING_CHECKIN":
+                return 0;
+            case "ACTIVE":
+                return 1;
+            case "OVERDUE":
+                return 2;
+            case "CANCELLED":
+            case "TERMINATED":
+            case "COMPLETED":
+            case "FORFEITED":
+            default:
+                return 3;
+        }
     }
 }

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Warehouse, Boxes, KeyRound, Headset } from 'lucide-react';
 import CustomerLayout from '@/components/layouts/CustomerLayout';
-import { getCurrentCustomerProfile } from '@/lib/customerService';
+import { getCurrentCustomerProfile } from '@/features/customer/api/customerService';
 
 interface CustNavItem {
   id: string;

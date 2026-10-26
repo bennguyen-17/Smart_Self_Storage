@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getCurrentCustomerProfile, updateCustomerProfile, sendEmailOtp } from '@/lib/customerService';
+import { getCurrentCustomerProfile, updateCustomerProfile, sendEmailOtp } from '@/features/customer/api/customerService';
 import { toast } from 'sonner';
 
 const getInitials = (name: string) => {

@@ -30,4 +30,11 @@ public class StaffShiftController {
             @AuthenticationPrincipal Integer accountId) {
         return ResponseEntity.ok(staffShiftService.startCurrentShift(accountId));
     }
+
+    @PostMapping("/end")
+    public ResponseEntity<Void> endCurrentShift(
+            @AuthenticationPrincipal Integer accountId) {
+        staffShiftService.endCurrentShift(accountId);
+        return ResponseEntity.noContent().build();
+    }
 }

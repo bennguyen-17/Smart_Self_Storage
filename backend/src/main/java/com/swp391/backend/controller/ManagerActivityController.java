@@ -1,5 +1,6 @@
 package com.swp391.backend.controller;
 
+import com.swp391.backend.config.SecurityContextHelper;
 import com.swp391.backend.dto.AdminActivityLogResponse;
 import com.swp391.backend.dto.ManagerStaffActivityResponse;
 import com.swp391.backend.service.ManagerActivityService;
@@ -20,26 +21,30 @@ import java.util.List;
 public class ManagerActivityController {
 
     private final ManagerActivityService managerActivityService;
+    private final SecurityContextHelper securityContextHelper;
 
-    public ManagerActivityController(ManagerActivityService managerActivityService) {
+    public ManagerActivityController(ManagerActivityService managerActivityService, SecurityContextHelper securityContextHelper) {
         this.managerActivityService = managerActivityService;
+        this.securityContextHelper = securityContextHelper;
     }
 
     @GetMapping("/staff-activity")
     public ResponseEntity<ManagerStaffActivityResponse> getStaffActivity(
-            @RequestHeader("X-Facility-Id") Integer facilityId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @AuthenticationPrincipal Integer managerAccountId) {
-        return ResponseEntity.ok(managerActivityService.getStaffActivity(managerAccountId, facilityId, date));
+            @AuthenticationPrincipal Integer managerAccountId,
+            @RequestHeader(value = "X-Facility-Id", required = false) Integer facilityId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        Integer effectiveFacilityId = securityContextHelper.requireCurrentFacilityId(managerAccountId, facilityId);
+        return ResponseEntity.ok(managerActivityService.getStaffActivity(managerAccountId, effectiveFacilityId, date));
     }
 
     @GetMapping("/activity-logs")
     public ResponseEntity<List<AdminActivityLogResponse>> getActivityLogs(
-            @RequestHeader("X-Facility-Id") Integer facilityId,
+            @AuthenticationPrincipal Integer managerAccountId,
+            @RequestHeader(value = "X-Facility-Id", required = false) Integer facilityId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(required = false) Integer accountId,
-            @AuthenticationPrincipal Integer managerAccountId) {
+            @RequestParam(required = false) Integer accountId) {
+        Integer effectiveFacilityId = securityContextHelper.requireCurrentFacilityId(managerAccountId, facilityId);
         return ResponseEntity.ok(managerActivityService.getActivityLogs(
-                managerAccountId, facilityId, date, accountId));
+                managerAccountId, effectiveFacilityId, date, accountId));
     }
 }

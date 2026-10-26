@@ -32,8 +32,8 @@ public class Payment {
     @Column(precision = 12, scale = 2)
     private BigDecimal remainingAmount;
 
-    @Column(length = 255)
-    private String pdfUrl;
+    @Column(name = "receiptUrl", length = 500)
+    private String receiptUrl;
 
     @Column(nullable = false)
     private LocalDateTime issuedAt = LocalDateTime.now();
@@ -61,13 +61,13 @@ public class Payment {
     public Payment() {
     }
 
-    public Payment(Integer paymentId, Integer contractId, String invoiceNumber, String invoiceType, BigDecimal amount, String pdfUrl, LocalDateTime issuedAt, LocalDateTime dueAt, String status, String paymentMethod, String transactionCode, String paymentStatus, String gatewayTransactionId, LocalDateTime paidAt) {
+    public Payment(Integer paymentId, Integer contractId, String invoiceNumber, String invoiceType, BigDecimal amount, String receiptUrl, LocalDateTime issuedAt, LocalDateTime dueAt, String status, String paymentMethod, String transactionCode, String paymentStatus, String gatewayTransactionId, LocalDateTime paidAt) {
         this.paymentId = paymentId;
         this.contractId = contractId;
         this.invoiceNumber = invoiceNumber;
         this.invoiceType = invoiceType;
         this.amount = amount;
-        this.pdfUrl = pdfUrl;
+        this.receiptUrl = receiptUrl;
         this.issuedAt = issuedAt;
         this.dueAt = dueAt;
         this.status = status;
@@ -134,12 +134,12 @@ public class Payment {
         this.remainingAmount = remainingAmount;
     }
 
-    public String getPdfUrl() {
-        return pdfUrl;
+    public String getReceiptUrl() {
+        return receiptUrl;
     }
 
-    public void setPdfUrl(String pdfUrl) {
-        this.pdfUrl = pdfUrl;
+    public void setReceiptUrl(String receiptUrl) {
+        this.receiptUrl = receiptUrl;
     }
 
     public LocalDateTime getIssuedAt() {

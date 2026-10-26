@@ -3,25 +3,29 @@
 
 import type { ComponentType } from "react"
 import {
+  ActivityIcon,
   BanknoteIcon,
   ChartColumnIcon,
   ClipboardListIcon,
   DoorOpenIcon,
   HeadphonesIcon,
+  ListChecksIcon,
   UserCheckIcon,
   UsersRoundIcon,
   WarehouseIcon,
   type LucideIcon,
 } from "lucide-react"
 
-import CheckoutDebtPanel from "@/features/manager/facility-contracts/components/CheckoutDebtPanel"
-import CustomersContractsPanel from "@/features/manager/facility-contracts/components/CustomersContractsPanel"
-import FacilityReportPanel from "@/features/manager/facility-report/components/FacilityReportPanel"
+import CheckoutDebtPanel from "@/features/manager/contracts/components/CheckoutDebtPanel"
+import CustomersContractsPanel from "@/features/manager/contracts/components/CustomersContractsPanel"
+import FacilityReportPanel from "@/features/manager/reports/components/FacilityReportPanel"
 import GateLogPanel from "@/features/manager/gate-logs/components/GateLogPanel"
 import RefundsPanel from "@/features/manager/refunds/components/RefundsPanel"
-import ShiftsPanel from "@/features/manager/staff-shifts/components/ShiftsPanel"
-import UnitManagementPanel from "@/features/manager/unit-management/components/UnitManagementPanel"
-import ManagerTicketPanel from "@/features/manager/ticket-escalation/components/ManagerTicketPanel"
+import ShiftsPanel from "@/features/manager/shifts/components/ShiftsPanel"
+import UnitManagementPanel from "@/features/manager/units/components/UnitManagementPanel"
+import ManagerTicketPanel from "@/features/manager/tickets/components/ManagerTicketPanel"
+import TasksPanel from "@/features/manager/tasks/components/TasksPanel"
+import StaffActivityPanel from "@/features/manager/activity/components/StaffActivityPanel"
 
 export type ManagerTabKey =
   | "units"
@@ -30,6 +34,8 @@ export type ManagerTabKey =
   | "workflow"
   | "refunds"
   | "staff"
+  | "tasks"
+  | "activity"
   | "gate-logs"
   | "tickets"
 
@@ -117,6 +123,28 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     component: ShiftsPanel,
   },
   {
+    key: "tasks",
+    label: "Giao việc",
+    title: "Giao việc cho nhân viên",
+    hint: "Bảo trì, nghiệm thu trả kho",
+    icon: ListChecksIcon,
+    stories: "US-32",
+    owner: "Vỹ",
+    description: "Giao việc cụ thể cho nhân viên đang trực ca và theo dõi việc đã xong.",
+    component: TasksPanel,
+  },
+  {
+    key: "activity",
+    label: "Hoạt động nhân viên",
+    title: "Hoạt động nhân viên & nhật ký cơ sở",
+    hint: "Vào ca, việc đã làm, nhật ký",
+    icon: ActivityIcon,
+    stories: "US-30, US-32",
+    owner: "Vỹ",
+    description: "Theo từng ca: ai đã vào ca, làm được bao nhiêu việc; nhật ký thao tác nội bộ của cơ sở.",
+    component: StaffActivityPanel,
+  },
+  {
     key: "gate-logs",
     label: "Nhật ký cổng",
     title: "Nhật ký kiểm soát ra vào cổng",
@@ -129,20 +157,19 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
   },
   {
     key: "tickets",
-    label: "Sự cố & Escalation",
-    title: "Xử lý sự cố & Ticket quá hạn (Escalation)",
-    hint: "Tiếp nhận & xử lý SLA quá hạn",
+    label: "Sự cố cơ sở",
+    title: "Theo dõi & Hỗ trợ sự cố cơ sở",
+    hint: "Giám sát & xử lý ticket",
     icon: HeadphonesIcon,
     stories: "US-22, US-33",
     owner: "Tâm",
-    description: "Tiếp nhận và giải quyết trực tiếp các ticket hỗ trợ / sự cố quá hạn 15 phút chưa có nhân viên nhận.",
+    description: "Theo dõi và trực tiếp hỗ trợ giải quyết các ticket hỗ trợ / sự cố của cơ sở.",
     component: ManagerTicketPanel,
   },
 ]
 
 export const DEFAULT_MANAGER_TAB: ManagerTabKey = "units"
 
-/** Tìm trang theo key; key lạ hoặc trống thì trả undefined để trang tự chuyển về mặc định */
 export function findManagerTab(key: string | null | undefined): ManagerTab | undefined {
   return MANAGER_TABS.find((t) => t.key === key)
 }

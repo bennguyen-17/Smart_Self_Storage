@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { SearchIcon, UsersIcon } from "lucide-react"
 import { cn } from "cn"
@@ -15,6 +15,7 @@ import {
 import { CHECKIN_TABS, findCheckinTab, type CheckinTabKey } from "../constants"
 import type { StaffReservationItem } from "../types"
 import CheckinContractTable from "./CheckinContractTable"
+import StaffShiftBadge from "@/features/staff/components/StaffShiftBadge"
 import ChangeUnitDialog from "./ChangeUnitDialog"
 import CollectPenaltyDialog from "./CollectPenaltyDialog"
 import ConfirmCheckinDialog from "./ConfirmCheckinDialog"
@@ -26,7 +27,6 @@ import StaffCustomerDetailModal, {
 import StaffInspectionModal, {
   type InspectionTarget,
 } from "./StaffInspectionModal"
-import StaffShiftBadge from "./StaffShiftBadge"
 
 const TAB_COLORS: Record<CheckinTabKey, string> = {
   all: "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300",
@@ -43,7 +43,7 @@ const STATUS_LABEL: Record<string, string> = {
   ACTIVE: "ĐANG THUÊ",
   OVERDUE: "QUÁ HẠN",
   TERMINATED: "ĐÃ TRẢ KHO",
-  CANCELED: "ĐÃ HỦY",
+  CANCELLED: "ĐÃ HỦY",
 }
 
 function matches(item: StaffReservationItem, keyword: string): boolean {
@@ -63,6 +63,12 @@ function CheckinPanel() {
 
   const [reload, setReload] = useState(0)
   const [query, setQuery] = useState("")
+
+  useEffect(() => {
+    const handleShiftChange = () => setReload((n) => n + 1)
+    window.addEventListener("staff-shift-changed", handleShiftChange)
+    return () => window.removeEventListener("staff-shift-changed", handleShiftChange)
+  }, [])
   const [lookupError, setLookupError] = useState<string | null>(null)
   const [isLookingUp, setIsLookingUp] = useState(false)
 

@@ -17,11 +17,28 @@ public class CustomerProfile {
     @Column(name = "identityNumber", nullable = false, unique = true, length = 20)
     private String identityNumber;
 
+    @Column(name = "bankName", length = 100)
+    private String bankName;
+
+    @Column(name = "bankAccountNumber", length = 50)
+    private String bankAccountNumber;
+
+    @Column(name = "bankAccountName", length = 100)
+    private String bankAccountName;
+
     public CustomerProfile() {}
 
     public CustomerProfile(Integer accountId, String identityNumber) {
         this.accountId = accountId;
         this.identityNumber = identityNumber;
+    }
+
+    public CustomerProfile(Integer accountId, String identityNumber, String bankName, String bankAccountNumber, String bankAccountName) {
+        this.accountId = accountId;
+        this.identityNumber = identityNumber;
+        this.bankName = bankName;
+        this.bankAccountNumber = bankAccountNumber;
+        this.bankAccountName = bankAccountName;
     }
 
     public Integer getCustomerId() {
@@ -46,5 +63,29 @@ public class CustomerProfile {
 
     public void setIdentityNumber(String identityNumber) {
         this.identityNumber = identityNumber;
+    }
+
+    public String getBankName() {
+        return bankName;
+    }
+
+    public void setBankName(String bankName) {
+        this.bankName = bankName;
+    }
+
+    public String getBankAccountNumber() {
+        return bankAccountNumber;
+    }
+
+    public void setBankAccountNumber(String bankAccountNumber) {
+        this.bankAccountNumber = bankAccountNumber;
+    }
+
+    public String getBankAccountName() {
+        return bankAccountName;
+    }
+
+    public void setBankAccountName(String bankAccountName) {
+        this.bankAccountName = bankAccountName;
     }
 }

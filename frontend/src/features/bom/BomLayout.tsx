@@ -156,7 +156,7 @@ function BomLayoutContent() {
                 <span>Smart Storage</span>
               </div>
               <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden xl:block leading-none mt-0.5">
-                Hệ thống cho thuê kho tự quản thông minh 24/7
+                Cổng Ban giám đốc
               </div>
             </div>
           </div>

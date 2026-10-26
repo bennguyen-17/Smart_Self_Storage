@@ -79,7 +79,7 @@ public class ForfeitProcessingService {
         }
 
         LocalDateTime processedAt = LocalDateTime.now(VIETNAM_ZONE);
-        unit.setStatus("UNDER_MAINTENANCE");
+        unit.setStatus("MAINTENANCE");
         storageUnitRepository.save(unit);
 
         contract.setForfeitProcessed(true);

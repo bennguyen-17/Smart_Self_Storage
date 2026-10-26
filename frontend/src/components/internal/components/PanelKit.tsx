@@ -233,11 +233,6 @@ export function Pagination({
   const { page, totalPages, from, to } = slice
   return (
     <nav aria-label="Phân trang" className="flex flex-wrap items-center justify-between gap-3 text-xs">
-      <p className="text-muted" aria-live="polite">
-        Hiển thị <span className="text-title font-bold tabular-nums">{from}</span> –{" "}
-        <span className="text-title font-bold tabular-nums">{to}</span> trong tổng số{" "}
-        <span className="font-bold text-blue-600 tabular-nums dark:text-blue-400">{total}</span> {unit}
-      </p>
       <div className="flex flex-wrap items-center gap-3">
         <label className="text-muted flex items-center gap-2">
           Số dòng mỗi trang

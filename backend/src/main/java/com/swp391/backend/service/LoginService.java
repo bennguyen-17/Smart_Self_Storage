@@ -162,7 +162,7 @@ public class LoginService {
         }
 
         // login successfully
- 
+
         account.setLockUntil(null);
         account.setStatus("ACTIVE");
 
@@ -175,9 +175,6 @@ public class LoginService {
                 "Login successful",
                 ipAddress);
 
-        // create JWT
-        String token = jwtService.generateToken(account);
-
         String identityNumber = customerProfileRepository.findByAccountId(account.getAccountId())
                 .map(com.swp391.backend.entity.CustomerProfile::getIdentityNumber)
                 .orElse("Chưa cập nhật");
@@ -185,6 +182,9 @@ public class LoginService {
         Integer facilityId = employeeProfileRepository.findByAccountId(account.getAccountId())
                 .map(com.swp391.backend.entity.EmployeeProfile::getFacilityId)
                 .orElse(null);
+
+        // create JWT with facilityId
+        String token = jwtService.generateToken(account, facilityId);
 
         String facilityName = null;
         String facilityCode = null;
@@ -198,20 +198,20 @@ public class LoginService {
 
         String roleName = resolveRoleName(account.getRoleId());
 
-        return LoginResult.success(
-                new LoginResponse(
-                        token,
-                        new LoginResponse.UserInfo(
-                                account.getAccountId(),
-                                account.getFullName(),
-                                roleName,
-                                account.getPhone(),
-                                account.getEmail(),
-                                identityNumber,
-                                account.getStatus(),
-                                facilityId,
-                                facilityName,
-                                facilityCode)));
+        LoginResponse.UserInfo userInfo = new LoginResponse.UserInfo(
+                account.getAccountId(),
+                account.getFullName(),
+                roleName,
+                account.getPhone(),
+                account.getEmail(),
+                identityNumber,
+                account.getStatus(),
+                facilityId,
+                facilityName,
+                facilityCode);
+        userInfo.setMustChangePassword(Boolean.TRUE.equals(account.getMustChangePassword()));
+
+        return LoginResult.success(new LoginResponse(token, userInfo));
     }
 
     private String resolveRoleName(Long roleId) {
@@ -221,6 +221,46 @@ public class LoginService {
         if (roleId == 3L) return "MANAGER";
         if (roleId == 4L) return "STAFF";
         return "CUSTOMER";
+    }
+
+    public ApiResponse changePassword(Integer accountId, String oldPassword, String newPassword) {
+        if (accountId == null) {
+            return new ApiResponse(false, "Chưa xác thực danh tính!");
+        }
+        Optional<Account> accOpt = accountRepository.findAccountByAccountId(accountId);
+        if (accOpt.isEmpty()) {
+            return new ApiResponse(false, "Không tìm thấy tài khoản!");
+        }
+        Account account = accOpt.get();
+        if (newPassword == null || newPassword.trim().length() < 6) {
+            return new ApiResponse(false, "Mật khẩu mới phải có ít nhất 6 ký tự!");
+        }
+        if (oldPassword != null && !oldPassword.isBlank()) {
+            boolean matches = false;
+            try {
+                matches = passwordEncoder.matches(oldPassword, account.getPassword()) || oldPassword.equals(account.getPassword());
+            } catch (Exception e) {
+                matches = oldPassword.equals(account.getPassword());
+            }
+            if (!matches) {
+                return new ApiResponse(false, "Mật khẩu hiện tại không chính xác!");
+            }
+        }
+        account.setPassword(passwordEncoder.encode(newPassword.trim()));
+        account.setMustChangePassword(false);
+        account.setUpdatedAt(LocalDateTime.now());
+        accountRepository.save(account);
+
+        try {
+            ActivityLog log = new ActivityLog();
+            log.setAccountId(accountId);
+            log.setAction("CHANGE_PASSWORD");
+            log.setDescription("Đổi mật khẩu thành công");
+            log.setCreatedAt(LocalDateTime.now());
+            activityLogRepository.save(log);
+        } catch (Exception ignored) {}
+
+        return new ApiResponse(true, "Đổi mật khẩu thành công!");
     }
 
     public ApiResponse forgotPassword(ResendOtpRequest request) {
@@ -284,6 +324,7 @@ public class LoginService {
         account.setPassword(passwordEncoder.encode(request.getNewPassword()));
         account.setOtpCode(null);
         account.setOtpExpiryTime(null);
+        account.setMustChangePassword(false);
         accountRepository.save(account);
 
         return new ApiResponse(true, "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay.");

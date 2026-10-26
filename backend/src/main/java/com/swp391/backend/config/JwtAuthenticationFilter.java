@@ -1,6 +1,7 @@
 package com.swp391.backend.config;
 
 import com.swp391.backend.service.JwtService;
+import com.swp391.backend.service.TokenBlacklistService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -18,9 +19,11 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final TokenBlacklistService tokenBlacklistService;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(JwtService jwtService, TokenBlacklistService tokenBlacklistService) {
         this.jwtService = jwtService;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @Override
@@ -34,6 +37,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 && authorizationHeader.startsWith("Bearer ")
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
             String token = authorizationHeader.substring(7);
+
+            if (tokenBlacklistService != null && tokenBlacklistService.isBlacklisted(token)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
             try {
                 Claims claims = jwtService.validateTokenAndGetClaims(token);
