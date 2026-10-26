@@ -86,9 +86,8 @@ public class FeePolicyService {
     public void deleteFeePolicy(Integer policyId) {
         FeePolicy policy = feePolicyRepository.findById(policyId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy biểu phí có ID: " + policyId));
-        // Soft delete: status = INACTIVE
-        policy.setStatus("INACTIVE");
-        feePolicyRepository.save(policy);
+        // Xóa hoàn toàn khỏi Database
+        feePolicyRepository.delete(policy);
     }
 
     private FeePolicyDto mapToDto(FeePolicy entity) {
