@@ -25,6 +25,21 @@ export const ACTION_LABEL: Record<string, string> = {
   PUT_MAINTENANCE: "Đưa ô kho vào bảo trì",
   COMPLETE_MAINTENANCE: "Hoàn tất bảo trì",
   CHANGE_UNIT_TYPE: "Đổi loại ô kho",
+  LOGOUT: "Đăng xuất",
+  CREATE_INTERNAL_ACCOUNT: "Tạo tài khoản nội bộ",
+  ADMIN_ACCOUNT_ASSIGNMENT_CHANGED: "Đổi vai trò / cơ sở tài khoản",
+  ADMIN_CUSTOMER_UNLOCKED: "Mở khóa tài khoản khách",
+  CUSTOMER_DEPOSIT_PAID: "Khách đặt cọc",
+  CUSTOMER_GATE_PIN_ISSUED: "Khách lấy mã PIN cổng",
+  CUSTOMER_TICKET_CREATED: "Khách gửi yêu cầu hỗ trợ",
+  GATE_ACCESS_GRANTED: "Mở cổng bằng mã PIN",
+  MANUAL_GATE_OPEN: "Mở cổng thủ công (thẻ Master)",
+  HOLD_EXPIRED: "Hết hạn giữ chỗ 5 phút",
+  EXTEND_CONTRACT_VNPAY: "Gia hạn hợp đồng (VNPay)",
+  UPDATE_CUSTOMER_CCCD: "Cập nhật CCCD khách",
+  MANAGER_ACCEPT_TICKET: "Quản lý nhận ticket",
+  MANAGER_RESOLVE_TICKET: "Quản lý xử lý ticket",
+  FORFEIT_ASSET_PROCESSED: "Xác nhận đã xử lý tài sản (thanh lý)",
 }
 
 /** Gộp các mã có hậu tố số về một nhóm: "EXPIRY_REMINDER_T7" → "EXPIRY_REMINDER" */
