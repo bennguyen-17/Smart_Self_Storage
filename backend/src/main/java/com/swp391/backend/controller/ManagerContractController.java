@@ -1,5 +1,6 @@
 package com.swp391.backend.controller;
 
+import com.swp391.backend.config.SecurityContextHelper;
 import com.swp391.backend.dto.FacilityContractResponse;
 import com.swp391.backend.dto.FacilityContractResponse.FeeInvoiceResponse;
 import com.swp391.backend.dto.ForfeitProcessedRequest;
@@ -11,7 +12,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/manager")
@@ -25,15 +29,17 @@ public class ManagerContractController {
     private final AccountRepository accountRepository;
     private final PaymentRepository paymentRepository;
     private final ForfeitProcessingService forfeitProcessingService;
+    private final SecurityContextHelper securityContextHelper;
 
     public ManagerContractController(ContractRepository contractRepository,
-                                     ReservationRepository reservationRepository,
-                                     StorageUnitRepository storageUnitRepository,
-                                     FloorRepository floorRepository,
-                                     FacilityRepository facilityRepository,
-                                     AccountRepository accountRepository,
-                                     PaymentRepository paymentRepository,
-                                     ForfeitProcessingService forfeitProcessingService) {
+                                      ReservationRepository reservationRepository,
+                                      StorageUnitRepository storageUnitRepository,
+                                      FloorRepository floorRepository,
+                                      FacilityRepository facilityRepository,
+                                      AccountRepository accountRepository,
+                                      PaymentRepository paymentRepository,
+                                      ForfeitProcessingService forfeitProcessingService,
+                                      SecurityContextHelper securityContextHelper) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -42,6 +48,7 @@ public class ManagerContractController {
         this.accountRepository = accountRepository;
         this.paymentRepository = paymentRepository;
         this.forfeitProcessingService = forfeitProcessingService;
+        this.securityContextHelper = securityContextHelper;
     }
 
     /**
@@ -50,10 +57,12 @@ public class ManagerContractController {
      */
     @GetMapping("/contracts")
     public ResponseEntity<List<FacilityContractResponse>> getFacilityContracts(
+            @AuthenticationPrincipal Integer managerAccountId,
             @RequestHeader(value = "X-Facility-Id", required = false) Integer headerFacilityId,
             @RequestParam(value = "facilityId", required = false) Integer queryFacilityId) {
 
-        Integer targetFacilityId = (headerFacilityId != null) ? headerFacilityId : queryFacilityId;
+        Integer fallback = (headerFacilityId != null) ? headerFacilityId : queryFacilityId;
+        Integer targetFacilityId = securityContextHelper.requireCurrentFacilityId(managerAccountId, fallback);
 
         List<FacilityContractResponse> result = new ArrayList<>();
         List<Contract> contracts = contractRepository.findAll();
@@ -73,49 +82,55 @@ public class ManagerContractController {
             if (floorOpt.isEmpty()) continue;
             Floor floor = floorOpt.get();
 
-            // Nếu chỉ định cơ sở, lọc theo facilityId
-            if (targetFacilityId != null && targetFacilityId > 0 && !targetFacilityId.equals(floor.getFacilityId())) {
+            // Lọc chính xác theo cơ sở của Manager
+            if (targetFacilityId != null && !targetFacilityId.equals(floor.getFacilityId())) {
                 continue;
             }
 
-            // Lấy thông tin khách hàng từ Account
-            String customerName = "Khách hàng " + res.getAccountId();
+            String contractCode = (res.getReservationCode() != null && !res.getReservationCode().isBlank())
+                    ? res.getReservationCode()
+                    : "CTR-" + c.getContractId();
+
+            String customerName = "Khách hàng #" + res.getAccountId();
             String customerPhone = "0900000000";
             if (res.getAccountId() != null) {
-                Optional<Account> accOpt = accountRepository.findAccountByAccountId(res.getAccountId());
+                Optional<Account> accOpt = accountRepository.findById(Long.valueOf(res.getAccountId()));
                 if (accOpt.isPresent()) {
                     Account acc = accOpt.get();
-                    if (acc.getFullName() != null && !acc.getFullName().isBlank()) {
-                        customerName = acc.getFullName();
-                    }
-                    if (acc.getPhone() != null && !acc.getPhone().isBlank()) {
-                        customerPhone = acc.getPhone();
-                    }
+                    if (acc.getFullName() != null) customerName = acc.getFullName();
+                    if (acc.getPhone() != null) customerPhone = acc.getPhone();
                 }
             }
 
-            // Chuẩn hóa trạng thái
-            // Trả đúng trạng thái thật: PENDING_CHECKIN | ACTIVE | OVERDUE | TERMINATED | COMPLETED | FORFEITED | CANCELLED
-            String rawStatus = c.getStatus() != null ? c.getStatus().toUpperCase() : "ACTIVE";
-            String status = rawStatus;
+            String startDate = (res.getStartDate() != null) ? res.getStartDate().toString() : LocalDate.now().toString();
+            String endDate = (res.getEndDate() != null) ? res.getEndDate().toString() : LocalDate.now().plusMonths(1).toString();
+            String status = (c.getStatus() != null) ? c.getStatus().toUpperCase() : "ACTIVE";
+            double deposit = (res.getDepositAmount() != null) ? res.getDepositAmount().doubleValue() : 1000000.0;
 
-            String checkoutStage = "NONE";
-            if ("TERMINATED".equals(status) || "COMPLETED".equals(status)) {
-                checkoutStage = "HANDED_OVER";
+            String checkoutStage = "INSPECTED";
+            if ("TERMINATED".equals(status)) {
+                checkoutStage = "SETTLED";
+            } else if ("FORFEITED".equals(status)) {
+                checkoutStage = "FORFEITED";
             }
-            Double deposit = (res.getDepositAmount() != null) ? res.getDepositAmount().doubleValue() : 1000000.0;
-            String startDate = (res.getStartDate() != null) ? res.getStartDate().toString() : LocalDate.now().minusDays(30).toString();
-            String endDate = (res.getEndDate() != null) ? res.getEndDate().toString() : LocalDate.now().plusDays(30).toString();
-            String contractCode = (res.getReservationCode() != null) ? res.getReservationCode() : "CTR-" + c.getContractId();
 
-            // Lấy danh sách phí nợ / phạt (nếu có trong bảng payment)
             List<FeeInvoiceResponse> fees = new ArrayList<>();
             try {
                 List<Payment> payments = paymentRepository.findByContractId(c.getContractId());
                 for (Payment p : payments) {
                     String invType = p.getInvoiceType();
-                    if (invType != null && (invType.contains("PEN") || invType.contains("CMP") || "OVERDUE_FEE".equalsIgnoreCase(invType) || "INSPECTION_DAMAGE".equalsIgnoreCase(invType))) {
-                        String feeType = (invType.contains("CMP") || "INSPECTION_DAMAGE".equalsIgnoreCase(invType)) ? "CMP" : "PEN";
+                    boolean isFee = "PEN".equalsIgnoreCase(invType)
+                            || "OVERDUE_FEE".equalsIgnoreCase(invType)
+                            || "CMP".equalsIgnoreCase(invType)
+                            || "INSPECTION_DAMAGE".equalsIgnoreCase(invType)
+                            || (p.getInvoiceNumber() != null && (p.getInvoiceNumber().startsWith("PEN-") || p.getInvoiceNumber().startsWith("CMP-")));
+
+                    if (isFee) {
+                        String feeType = "PEN";
+                        if ("CMP".equalsIgnoreCase(invType) || "INSPECTION_DAMAGE".equalsIgnoreCase(invType)
+                                || (p.getInvoiceNumber() != null && p.getInvoiceNumber().startsWith("CMP-"))) {
+                            feeType = "CMP";
+                        }
                         String feeStatus = "UNPAID";
                         if ("PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus())) {
                             feeStatus = "PAID";

@@ -14,9 +14,6 @@ public class Contract {
     @Column(nullable = false, unique = true)
     private Integer reservationId;
 
-    @Column(length = 255)
-    private String pdfUrl;
-
     private LocalDateTime activatedAt;
 
     private LocalDateTime terminatedAt;
@@ -42,10 +39,9 @@ public class Contract {
     public Contract() {
     }
 
-    public Contract(Integer contractId, Integer reservationId, String pdfUrl, LocalDateTime activatedAt, LocalDateTime terminatedAt, String status) {
+    public Contract(Integer contractId, Integer reservationId, LocalDateTime activatedAt, LocalDateTime terminatedAt, String status) {
         this.contractId = contractId;
         this.reservationId = reservationId;
-        this.pdfUrl = pdfUrl;
         this.activatedAt = activatedAt;
         this.terminatedAt = terminatedAt;
         this.status = status;
@@ -67,13 +63,7 @@ public class Contract {
         this.reservationId = reservationId;
     }
 
-    public String getPdfUrl() {
-        return pdfUrl;
-    }
 
-    public void setPdfUrl(String pdfUrl) {
-        this.pdfUrl = pdfUrl;
-    }
 
     public LocalDateTime getActivatedAt() {
         return activatedAt;

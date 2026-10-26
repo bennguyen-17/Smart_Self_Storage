@@ -47,8 +47,35 @@ public class AuthService {
 
     // --- US-01: Đăng ký & OTP ---
     public ApiResponse register(RegisterRequest request) {
+        if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
+            return new ApiResponse(false, "Họ và tên không được để trống!");
+        }
         if (request.getPhone() == null || request.getPhone().trim().isEmpty()) {
             return new ApiResponse(false, "Số điện thoại không được để trống!");
+        }
+        if (!request.getPhone().trim().matches("^0\\d{9}$")) {
+            return new ApiResponse(false, "Số điện thoại phải bắt đầu bằng số 0 và gồm đúng 10 chữ số!");
+        }
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            return new ApiResponse(false, "Email không được để trống!");
+        }
+        if (!request.getEmail().trim().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            return new ApiResponse(false, "Địa chỉ email không hợp lệ!");
+        }
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+            return new ApiResponse(false, "Mật khẩu không được để trống!");
+        }
+        if (request.getCccd() == null || request.getCccd().trim().isEmpty()) {
+            return new ApiResponse(false, "Số CCCD không được để trống!");
+        }
+        if (!request.getCccd().trim().matches("^\\d{12}$")) {
+            return new ApiResponse(false, "Số CCCD phải bao gồm đúng 12 chữ số!");
+        }
+
+        // Kiểm tra email trùng với tài khoản ACTIVE khác
+        Optional<Account> existingEmailOpt = accountRepository.findByEmail(request.getEmail().trim());
+        if (existingEmailOpt.isPresent() && !existingEmailOpt.get().getPhone().equals(request.getPhone().trim()) && "ACTIVE".equalsIgnoreCase(existingEmailOpt.get().getStatus())) {
+            return new ApiResponse(false, "Địa chỉ Email này đã được đăng ký cho tài khoản khác!");
         }
 
         Optional<Account> existingAccountOpt = accountRepository.findByPhone(request.getPhone().trim());
@@ -63,22 +90,16 @@ public class AuthService {
             // Nếu CHƯA kích hoạt (UNVERIFIED), cho phép cập nhật lại thông tin & cấp OTP mới
             account.setStatus("UNVERIFIED");
             account.setPassword(passwordEncoder.encode(request.getPassword()));
-            account.setFullName(request.getFullName());
-            if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
-                account.setEmail(request.getEmail().trim());
-            }
+            account.setFullName(request.getFullName().trim());
+            account.setEmail(request.getEmail().trim());
         } else {
             account = new Account();
             account.setPhone(request.getPhone().trim());
             account.setPassword(passwordEncoder.encode(request.getPassword()));
-            account.setFullName(request.getFullName());
+            account.setFullName(request.getFullName().trim());
             account.setRoleId(5L); // Khách hàng
             account.setStatus("UNVERIFIED");
-
-            String email = (request.getEmail() != null && !request.getEmail().trim().isEmpty())
-                    ? request.getEmail().trim()
-                    : request.getPhone().trim() + "@smartstorage.vn";
-            account.setEmail(email);
+            account.setEmail(request.getEmail().trim());
         }
 
         // Sinh mã OTP 6 số ngẫu nhiên mới
@@ -88,7 +109,7 @@ public class AuthService {
 
         Account savedAccount = accountRepository.save(account);
 
-        // Lưu thông tin khách hàng vào CustomerProfile (CCCD & Tài khoản ngân hàng nhận hoàn tiền)
+        // Lưu thông tin khách hàng vào CustomerProfile (CCCD & Tài khoản ngân hàng nếu FE có gửi)
         String cccd = (request.getCccd() != null && !request.getCccd().trim().isEmpty()) ? request.getCccd().trim() : null;
         String bankName = (request.getBankName() != null && !request.getBankName().trim().isEmpty()) ? request.getBankName().trim() : null;
         String bankAccountNumber = (request.getBankAccountNumber() != null && !request.getBankAccountNumber().trim().isEmpty()) ? request.getBankAccountNumber().trim() : null;
@@ -104,7 +125,6 @@ public class AuthService {
             customerProfileRepository.save(profile);
         }
 
-        // Gửi mã OTP xác thực qua Email
         if (savedAccount.getEmail() != null && !savedAccount.getEmail().isBlank()) {
             emailService.sendOtpEmail(savedAccount.getEmail(), savedAccount.getFullName(), otpCode, "Đăng ký tài khoản");
         }

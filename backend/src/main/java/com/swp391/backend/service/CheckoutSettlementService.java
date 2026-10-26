@@ -462,7 +462,7 @@ public class CheckoutSettlementService {
         p.setPaymentStatus("SUCCESS");
         p.setPaidAt(LocalDateTime.now());
         if (receiptUrl != null && !receiptUrl.isBlank()) {
-            p.setPdfUrl(receiptUrl.trim());
+            p.setReceiptUrl(receiptUrl.trim());
         }
         if (transactionRef != null && !transactionRef.isBlank()) {
             p.setTransactionCode(transactionRef.trim());
@@ -518,6 +518,36 @@ public class CheckoutSettlementService {
             act.setDescription(desc.toString());
             act.setCreatedAt(LocalDateTime.now());
             activityLogRepository.save(act);
+        }
+
+        // Tự động gửi Email xác nhận hoàn cọc kèm ảnh biên lai (BR-35)
+        if (emailService != null && p.getContractId() != null) {
+            try {
+                contractRepository.findById(p.getContractId()).ifPresent(c -> {
+                    if (c.getReservationId() != null) {
+                        reservationRepository.findById(c.getReservationId()).ifPresent(r -> {
+                            if (r.getAccountId() != null) {
+                                accountRepository.findById(Long.valueOf(r.getAccountId())).ifPresent(acc -> {
+                                    if (acc.getEmail() != null && !acc.getEmail().isBlank()) {
+                                        String contractCode = (r.getReservationCode() != null && !r.getReservationCode().isBlank())
+                                                ? r.getReservationCode() : ("CTR-" + c.getContractId());
+                                        emailService.sendRefundConfirmationEmail(
+                                                acc.getEmail(),
+                                                acc.getFullName(),
+                                                contractCode,
+                                                p.getAmount(),
+                                                receiptUrl,
+                                                transactionRef
+                                        );
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            } catch (Exception ex) {
+                System.err.println("Lỗi gửi email xác nhận hoàn cọc BR-35: " + ex.getMessage());
+            }
         }
 
         return true;
@@ -740,7 +770,7 @@ public class CheckoutSettlementService {
             item.setRefundType(refundType);
             item.setRefundedAt(p.getPaidAt());
             item.setTransactionCode(p.getTransactionCode());
-            item.setEvidenceUrl(p.getPdfUrl());
+            item.setEvidenceUrl(p.getReceiptUrl());
 
             result.add(item);
         }

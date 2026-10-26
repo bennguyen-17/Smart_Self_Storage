@@ -1,5 +1,6 @@
 package com.swp391.backend.controller;
 
+import com.swp391.backend.config.SecurityContextHelper;
 import com.swp391.backend.dto.CalculatePriceRequest;
 import com.swp391.backend.dto.CalculatePriceResponse;
 import com.swp391.backend.dto.UnitDetailResponse;
@@ -18,10 +19,12 @@ public class StorageUnitController {
 
     private final StorageService storageService;
     private final StaffTaskService staffTaskService;
+    private final SecurityContextHelper securityContextHelper;
 
-    public StorageUnitController(StorageService storageService, StaffTaskService staffTaskService) {
+    public StorageUnitController(StorageService storageService, StaffTaskService staffTaskService, SecurityContextHelper securityContextHelper) {
         this.storageService = storageService;
         this.staffTaskService = staffTaskService;
+        this.securityContextHelper = securityContextHelper;
     }
 
     // --- US-03: Lấy danh sách ô kho theo tầng (để vẽ bản đồ 2D) ---
@@ -54,17 +57,16 @@ public class StorageUnitController {
     // --- US-13: Lấy danh sách ô kho của cơ sở cho Facility Manager ---
     @GetMapping("/manager/units")
     public ResponseEntity<?> getManagerUnits(
+            @AuthenticationPrincipal Integer managerAccountId,
             @RequestHeader(value = "X-Facility-Id", required = false) Integer managerFacilityId,
             @RequestParam(required = false) Integer floorId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String size,
             @RequestParam(required = false) String storageCondition
     ) {
-        if (managerFacilityId == null) {
-            return ResponseEntity.status(403).body("Vui lòng cung cấp Header X-Facility-Id của Quản lý!");
-        }
         try {
-            return ResponseEntity.ok(storageService.getManagerUnits(managerFacilityId, floorId, status, size, storageCondition));
+            Integer effectiveFacilityId = securityContextHelper.requireCurrentFacilityId(managerAccountId, managerFacilityId);
+            return ResponseEntity.ok(storageService.getManagerUnits(effectiveFacilityId, floorId, status, size, storageCondition));
         } catch (org.springframework.security.access.AccessDeniedException e) {
             return ResponseEntity.status(403).body(e.getMessage());
         } catch (Exception e) {
@@ -77,15 +79,18 @@ public class StorageUnitController {
     public ResponseEntity<?> updateUnitType(
             @PathVariable String unitCode,
             @RequestBody java.util.Map<String, Integer> requestBody,
+            @AuthenticationPrincipal Integer managerAccountId,
             @RequestHeader(value = "X-Facility-Id", required = false) Integer managerFacilityId,
             @RequestHeader(value = "X-Account-Id", required = false) Integer accountId
     ) {
+        Integer effectiveAccountId = managerAccountId != null ? managerAccountId : accountId;
         Integer newUnitTypeId = requestBody != null ? requestBody.get("unitTypeId") : null;
         if (newUnitTypeId == null) {
             return ResponseEntity.badRequest().body("Vui lòng cung cấp unitTypeId mới!");
         }
         try {
-            StorageUnit updated = storageService.changeUnitType(unitCode, newUnitTypeId, managerFacilityId, accountId);
+            Integer effectiveFacilityId = securityContextHelper.requireCurrentFacilityId(effectiveAccountId, managerFacilityId);
+            StorageUnit updated = storageService.changeUnitType(unitCode, newUnitTypeId, effectiveFacilityId, effectiveAccountId);
             return ResponseEntity.ok(updated);
         } catch (org.springframework.security.access.AccessDeniedException e) {
             return ResponseEntity.status(403).body(e.getMessage());
@@ -99,12 +104,15 @@ public class StorageUnitController {
     public ResponseEntity<?> putUnderMaintenance(
             @PathVariable String unitCode,
             @RequestBody(required = false) java.util.Map<String, String> body,
+            @AuthenticationPrincipal Integer managerAccountId,
             @RequestHeader(value = "X-Facility-Id", required = false) Integer managerFacilityId,
             @RequestHeader(value = "X-Account-Id", required = false) Integer accountId
     ) {
+        Integer effectiveAccountId = managerAccountId != null ? managerAccountId : accountId;
         try {
+            Integer effectiveFacilityId = securityContextHelper.requireCurrentFacilityId(effectiveAccountId, managerFacilityId);
             String note = (body != null) ? body.get("note") : null;
-            StorageUnit updated = storageService.putUnderMaintenance(unitCode, managerFacilityId, accountId, note);
+            StorageUnit updated = storageService.putUnderMaintenance(unitCode, effectiveFacilityId, effectiveAccountId, note);
             return ResponseEntity.ok(updated);
         } catch (org.springframework.security.access.AccessDeniedException e) {
             return ResponseEntity.status(403).body(e.getMessage());
@@ -132,11 +140,14 @@ public class StorageUnitController {
     // --- US-14: Lấy danh sách ô kho đang bảo trì tại cơ sở của Staff ---
     @GetMapping("/staff/units/maintenance")
     public ResponseEntity<?> getMaintenanceUnits(
+            @AuthenticationPrincipal Integer staffAccountId,
             @RequestHeader(value = "X-Facility-Id", required = false) Integer staffFacilityId
     ) {
-        if (staffFacilityId == null) {
-            return ResponseEntity.status(403).body("Vui lòng cung cấp Header X-Facility-Id của Nhân viên!");
+        try {
+            Integer effectiveFacilityId = securityContextHelper.requireCurrentFacilityId(staffAccountId, staffFacilityId);
+            return ResponseEntity.ok(storageService.getMaintenanceUnits(effectiveFacilityId));
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
         }
-        return ResponseEntity.ok(storageService.getMaintenanceUnits(staffFacilityId));
     }
 }

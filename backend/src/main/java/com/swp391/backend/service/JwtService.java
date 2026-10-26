@@ -25,11 +25,18 @@ public class JwtService {
     }
 
     public String generateToken(Account account) {
+        return generateToken(account, null);
+    }
+
+    public String generateToken(Account account, Integer facilityId) {
         long now = System.currentTimeMillis();
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", account.getAccountId());
         claims.put("phone", account.getPhone());
         claims.put("role", account.getRoleId() == null ? null : account.getRoleId().toString());
+        if (facilityId != null) {
+            claims.put("facilityId", facilityId);
+        }
 
         return Jwts.builder()
                 .claims(claims)
@@ -57,5 +64,11 @@ public class JwtService {
         Claims claims = validateTokenAndGetClaims(token);
 
         return claims.get("role", String.class);
+    }
+
+    public Integer extractFacilityId(String token) {
+        Claims claims = validateTokenAndGetClaims(token);
+
+        return claims.get("facilityId", Integer.class);
     }
 }
