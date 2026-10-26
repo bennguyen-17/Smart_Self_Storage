@@ -51,6 +51,9 @@ public class Account {
     @Column(name = "otpExpiryTime")
     private LocalDateTime otpExpiryTime;
 
+    @Column(name = "mustChangePassword")
+    private Boolean mustChangePassword = false;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) createdAt = LocalDateTime.now();
@@ -193,5 +196,13 @@ public class Account {
 
     public void setOtpExpiryTime(LocalDateTime otpExpiryTime) {
         this.otpExpiryTime = otpExpiryTime;
+    }
+
+    public Boolean getMustChangePassword() {
+        return mustChangePassword;
+    }
+
+    public void setMustChangePassword(Boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
     }
 }
