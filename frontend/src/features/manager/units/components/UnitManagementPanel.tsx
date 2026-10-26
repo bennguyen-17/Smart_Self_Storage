@@ -14,7 +14,8 @@ import type { StorageCondition } from "@/types"
 import { getManagerFloors, getManagerUnits } from "../api/unitManagementApi"
 import { getManagerContext } from "@/features/manager/managerContext"
 import type { ManagerUnit, PhysicalUnitStatus } from "../types"
-import { normalizeUnitStatus, UNIT_STATUS_META } from "../unitRules"
+import { normalizeUnitStatus, UNIT_STATUS_META, unitPrice } from "../unitRules"
+import { formatVnd } from "@/lib/format"
 import UnitEditSheet from "./UnitEditSheet"
 
 const STATUS_ORDER: PhysicalUnitStatus[] = ["AVAILABLE", "HOLD", "RESERVED", "OCCUPIED", "UNDER_MAINTENANCE"]
@@ -143,26 +144,27 @@ function UnitManagementPanel() {
               <caption className="sr-only">Danh sách ô kho của cơ sở</caption>
               <thead className="border-b border-slate-200/80 bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400">
                 <tr>
-                  <th scope="col" className="w-[16%] px-4 py-3 text-center font-bold">Mã ô</th>
-                  <th scope="col" className="w-[17%] px-4 py-3 text-center font-bold">Vị trí tầng</th>
-                  <th scope="col" className="w-[16%] px-4 py-3 text-center font-bold">Kích thước</th>
-                  <th scope="col" className="w-[17%] px-4 py-3 text-center font-bold">Loại kho</th>
-                  <th scope="col" className="w-[18%] px-4 py-3 text-center font-bold">Trạng thái</th>
-                  <th scope="col" className="w-[16%] px-4 py-3 text-center font-bold">Thao tác</th>
+                  <th scope="col" className="w-[13%] px-4 py-3 text-center font-bold">Mã ô</th>
+                  <th scope="col" className="w-[13%] px-4 py-3 text-center font-bold">Vị trí tầng</th>
+                  <th scope="col" className="w-[12%] px-4 py-3 text-center font-bold">Kích thước</th>
+                  <th scope="col" className="w-[14%] px-4 py-3 text-center font-bold">Loại kho</th>
+                  <th scope="col" className="w-[18%] px-4 py-3 text-center font-bold">Giá thuê</th>
+                  <th scope="col" className="w-[16%] px-4 py-3 text-center font-bold">Trạng thái</th>
+                  <th scope="col" className="w-[14%] px-4 py-3 text-center font-bold">Thao tác</th>
                 </tr>
               </thead>
               <tbody aria-busy={units.isLoading} className="divide-y divide-slate-200/80 dark:divide-slate-800">
                 {units.isLoading &&
                   Array.from({ length: 5 }, (_, i) => (
                     <tr key={i} className="border-b last:border-0">
-                      <td colSpan={6} className="px-4 py-3.5 text-center">
+                      <td colSpan={7} className="px-4 py-3.5 text-center">
                         <div className="mx-auto h-4 w-24 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
                       </td>
                     </tr>
                   ))}
                 {!units.isLoading && rows.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center">
+                    <td colSpan={7} className="px-4 py-12 text-center">
                       <InboxIcon aria-hidden="true" className="mx-auto mb-2 size-8 text-slate-400 dark:text-slate-500" />
                       <p className="font-semibold text-slate-600 dark:text-slate-400">Không có ô kho phù hợp bộ lọc</p>
                     </td>
@@ -208,6 +210,7 @@ function UnitRow({ unit, floorLabel, onEdit }: { unit: ManagerUnit; floorLabel: 
     .replace(/\s*\([^)]*\)/g, "")
     .trim()
   const sizeLabel = size ? `Size ${size}` : cleanTypeName
+  const price = unitPrice(unit)
 
   return (
     <tr className="transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
@@ -247,7 +250,25 @@ function UnitRow({ unit, floorLabel, onEdit }: { unit: ManagerUnit; floorLabel: 
         </div>
       </td>
 
-      {/* Cột 5: Trạng thái */}
+      {/* Cột 5: Giá thuê (chỉ xem; giá do BOM đặt theo loại kho, đã gồm phụ phí kho điều hòa) */}
+      <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
+        {price ? (
+          <div className="text-sm">
+            <p className="font-semibold text-slate-900 tabular-nums dark:text-white">{formatVnd(price.monthly)}/tháng</p>
+            <p className="text-[11px] text-slate-500 tabular-nums dark:text-slate-400">
+              {formatVnd(price.daily)}/ngày
+              {price.deposit !== null && ` · cọc ${formatVnd(price.deposit)}`}
+            </p>
+            {price.surchargePercent > 0 && (
+              <p className="text-[11px] text-cyan-700 dark:text-cyan-400">Đã gồm +{price.surchargePercent}% kho điều hòa</p>
+            )}
+          </div>
+        ) : (
+          <span className="text-xs text-slate-500 dark:text-slate-400">Chưa có giá</span>
+        )}
+      </td>
+
+      {/* Cột 6: Trạng thái */}
       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
         <div className="flex items-center justify-center">
           <span
@@ -261,7 +282,7 @@ function UnitRow({ unit, floorLabel, onEdit }: { unit: ManagerUnit; floorLabel: 
         </div>
       </td>
 
-      {/* Cột 6: Thao tác */}
+      {/* Cột 7: Thao tác */}
       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
         <div className="flex items-center justify-center">
           <button

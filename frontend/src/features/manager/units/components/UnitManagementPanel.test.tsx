@@ -60,6 +60,13 @@ describe("UnitManagementPanel: bảng ô kho + nút Sửa (US-13)", () => {
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
   })
 
+  test("cột Giá thuê: chỉ xem giá tháng, giá ngày, cọc theo bảng giá", async () => {
+    await renderPanel()
+    expect(screen.getByRole("columnheader", { name: "Giá thuê" })).toBeInTheDocument()
+    expect(within(row("HN01-F1-M01")).getByText(/\/tháng$/)).toBeInTheDocument()
+    expect(within(row("HN01-F1-M01")).getByText(/\/ngày · cọc/)).toBeInTheDocument()
+  })
+
   test("mở Sửa mà chưa đổi gì → nút Lưu bị khóa", async () => {
     const { user } = await renderPanel()
     const sheet = await openEdit(user, "HN01-F1-M01")

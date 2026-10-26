@@ -56,6 +56,43 @@ export function changeTypeBlockReason(status: string, unitTypeId: number | null 
   return null
 }
 
+/** BE mặc định phụ phí kho điều hòa 20% khi bảng giá chưa đặt (StorageService.calculateRentalPrice) */
+export const DEFAULT_CLIMATE_SURCHARGE_PERCENT = 20
+
+export interface UnitPrice {
+  daily: number
+  monthly: number
+  deposit: number | null
+  /** % phụ phí đã cộng vào giá ngày / tháng (0 với kho thường) */
+  surchargePercent: number
+}
+
+/**
+ * Giá khách thực trả của ô (chỉ xem, giá do BOM đặt theo loại kho): kho điều hòa cộng phụ phí giống cách BE tính tiền.
+ * Thiếu giá trong bảng giá thì trả null để giao diện ghi "Chưa có giá".
+ */
+export function unitPrice(unit: {
+  dailyPrice?: number | null
+  monthlyPrice?: number | null
+  depositAmount?: number | null
+  isClimate?: boolean | null
+  climateSurchargePercent?: number | null
+}): UnitPrice | null {
+  if (unit.dailyPrice == null || unit.monthlyPrice == null) return null
+  const surchargePercent = unit.isClimate
+    ? unit.climateSurchargePercent && unit.climateSurchargePercent > 0
+      ? unit.climateSurchargePercent
+      : DEFAULT_CLIMATE_SURCHARGE_PERCENT
+    : 0
+  const factor = 1 + surchargePercent / 100
+  return {
+    daily: Math.round(Number(unit.dailyPrice) * factor),
+    monthly: Math.round(Number(unit.monthlyPrice) * factor),
+    deposit: unit.depositAmount ?? null,
+    surchargePercent,
+  }
+}
+
 /** Ghi chú sự cố khi đưa ô vào bảo trì: không bắt buộc, tối đa 500 ký tự nếu có nhập */
 export const MAINTENANCE_NOTE_MAX = 500
 
