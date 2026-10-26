@@ -39,13 +39,13 @@ const desktopNav = () => screen.getByRole("navigation", { name: /^các trang c�
 beforeEach(() => auth.signOut.mockReset())
 
 describe("AdminPortalPage: navbar riêng của Admin + mỗi trang một link", () => {
-  test("/admin → /admin/users; navbar có đúng 3 trang của Admin, không có trang của Manager", async () => {
+  test("/admin → /admin/users; navbar có đúng 4 trang của Admin, không có trang của Manager", async () => {
     renderAt("/admin")
     expect(screen.getByTestId("location")).toHaveTextContent("/admin/users")
     expect(screen.getByRole("heading", { level: 1, name: "Tài khoản & phân quyền" })).toBeInTheDocument()
     const links = within(desktopNav()).getAllByRole("link")
-    expect(links).toHaveLength(3)
-    for (const [i, label] of ["Tài khoản", "Chi nhánh", "Nhật ký hoạt động"].entries()) {
+    expect(links).toHaveLength(4)
+    for (const [i, label] of ["Tài khoản", "Khách hàng", "Chi nhánh", "Nhật ký hoạt động"].entries()) {
       expect(links[i]).toHaveTextContent(new RegExp(`^${label}`))
     }
     expect(screen.queryByRole("link", { name: /^Ô kho/ })).not.toBeInTheDocument()
