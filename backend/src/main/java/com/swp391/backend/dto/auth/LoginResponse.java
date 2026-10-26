@@ -39,6 +39,7 @@ public class LoginResponse {
         private Integer facilityId;
         private String facilityName;
         private String facilityCode;
+        private Boolean mustChangePassword;
 
         public UserInfo() {
         }
@@ -148,6 +149,14 @@ public class LoginResponse {
 
         public void setFacilityCode(String facilityCode) {
             this.facilityCode = facilityCode;
+        }
+
+        public Boolean getMustChangePassword() {
+            return mustChangePassword;
+        }
+
+        public void setMustChangePassword(Boolean mustChangePassword) {
+            this.mustChangePassword = mustChangePassword;
         }
     }
 }

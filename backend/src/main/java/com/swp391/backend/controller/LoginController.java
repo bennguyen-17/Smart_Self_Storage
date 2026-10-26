@@ -7,6 +7,7 @@ import com.swp391.backend.dto.ResetPasswordRequest;
 import com.swp391.backend.service.LoginService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,6 +50,19 @@ public class LoginController {
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse> resetPassword(@RequestBody ResetPasswordRequest request) {
         ApiResponse response = authService.resetPassword(request);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse> changePassword(
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal Integer accountId) {
+        String oldPassword = body.get("oldPassword");
+        String newPassword = body.get("newPassword");
+        ApiResponse response = authService.changePassword(accountId, oldPassword, newPassword);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         }

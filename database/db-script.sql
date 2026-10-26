@@ -58,6 +58,7 @@ CREATE TABLE Account (
     failedAttempts INT NOT NULL DEFAULT 0,
     firstFailedAt DATETIME NULL,
     lockUntil DATETIME NULL,
+    mustChangePassword BOOLEAN NOT NULL DEFAULT FALSE,
     createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_account_role FOREIGN KEY (roleId) REFERENCES Role (roleId) ON UPDATE CASCADE
@@ -304,7 +305,7 @@ CREATE TABLE StaffTask (
     facilityId INT NOT NULL,
     assignedEmployeeId INT NOT NULL,
     assignedByAccountId INT NOT NULL,
-    taskType ENUM('MAINTENANCE', 'CHECKOUT_INSPECTION') NOT NULL,
+    taskType ENUM('MAINTENANCE', 'CHECKOUT_INSPECTION', 'CHECKIN_HANDOVER', 'INCIDENT') NOT NULL,
     unitCode VARCHAR(50),
     contractId INT,
     note TEXT,
@@ -404,6 +405,19 @@ CREATE TABLE SupportTicket (
     CONSTRAINT fk_ticket_customer FOREIGN KEY (customerId) REFERENCES CustomerProfile (customerId) ON UPDATE CASCADE,
     CONSTRAINT fk_ticket_facility FOREIGN KEY (facilityId) REFERENCES Facility (facilityId) ON UPDATE CASCADE,
     CONSTRAINT fk_ticket_contract FOREIGN KEY (contractId) REFERENCES Contract (contractId) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------------------------------------------
+-- 25. TABLE: SystemPolicy (Cấu hình chính sách vận hành của BOM)
+-- ----------------------------------------------------------------------------
+DROP TABLE IF EXISTS SystemPolicy;
+CREATE TABLE SystemPolicy (
+    policyKey VARCHAR(100) PRIMARY KEY,
+    policyValue TEXT NOT NULL,
+    description VARCHAR(255) NULL,
+    updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updatedBy INT NULL,
+    CONSTRAINT fk_policy_updater FOREIGN KEY (updatedBy) REFERENCES Account (accountId) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Bật lại ràng buộc khóa ngoại
@@ -1013,5 +1027,15 @@ INSERT INTO SupportTicket (id, ticketCode, type, status, customerId, facilityId,
 -- (Không có biên bản vi phạm phát sinh)
 
 -- ============================================================================
+-- 21. Cấu hình chính sách hệ thống (SystemPolicies)
+INSERT INTO SystemPolicy (policyKey, policyValue, description) VALUES
+('DEPOSIT_RATE', '0.3', 'Tỷ lệ tiền đặt cọc giữ chỗ (30% giá thuê)'),
+('DAILY_OVERDUE_FEE', '50000', 'Phí phạt trễ hạn trả kho mỗi ngày (50.000 VNĐ/ngày)'),
+('OVERDUE_LIQUIDATION_DAYS', '30', 'Thời hạn tối đa quá hạn trước khi tiến hành thanh lý (30 ngày)'),
+('REFUND_EARLY_CANCEL_RATE', '1.0', 'Tỷ lệ hoàn cọc khi hủy trước 24h giờ nhận kho (100%)'),
+('REFUND_LATE_CANCEL_RATE', '0.5', 'Tỷ lệ hoàn cọc khi hủy trong vòng 24h giờ nhận kho (50%)'),
+('MAX_FAILED_LOGIN_ATTEMPTS', '5', 'Số lần đăng nhập sai tối đa trước khi tạm khóa (5 lần)'),
+('ACCOUNT_LOCK_MINUTES', '15', 'Thời gian tạm khóa tài khoản do sai mật khẩu (15 phút)');
+
 -- HOÀN TẤT KHỞI TẠO CƠ SỞ DỮ LIỆU SMART STORAGE SYSTEM
 -- ============================================================================
