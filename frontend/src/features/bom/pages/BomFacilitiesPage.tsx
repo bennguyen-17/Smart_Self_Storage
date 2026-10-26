@@ -77,6 +77,9 @@ export default function BomFacilitiesPage() {
     deleteFacilityInDb,
   } = useBomContext()
 
+  // State bộ lọc thời gian doanh thu bảng cơ sở: "this_month" (mặc định), "last_3_months", "all_time"
+  const [revenuePeriod, setRevenuePeriod] = useState<"this_month" | "last_3_months" | "all_time">("this_month")
+
   // Modal State Cấu hình cơ sở
   const [isFacilityModalOpen, setIsFacilityModalOpen] = useState(false)
   const [selectedFacility, setSelectedFacility] = useState<FacilityPerformance | null>(null)
@@ -330,14 +333,57 @@ export default function BomFacilitiesPage() {
               Quản lý danh sách chi nhánh, mã cơ sở tự động, cấu hình mô hình kiến trúc chuẩn &amp; đồng bộ sơ đồ 2D
             </p>
           </div>
-          {/* NÚT THÊM CƠ SỞ KHO MỚI */}
-          <button
-            onClick={handleOpenAddModal}
-            className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-sky-500/20 shrink-0"
-          >
-            <Plus className="size-4" />
-            <span>Thêm Cơ Sở Kho Mới</span>
-          </button>
+
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+            {/* BỘ LỌC KHOẢNG THỜI GIAN DOANH THU */}
+            <div className="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800 shadow-inner">
+              <button
+                type="button"
+                onClick={() => setRevenuePeriod("this_month")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  revenuePeriod === "this_month"
+                    ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="Xem doanh thu tháng hiện tại"
+              >
+                Tháng Này
+              </button>
+              <button
+                type="button"
+                onClick={() => setRevenuePeriod("last_3_months")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  revenuePeriod === "last_3_months"
+                    ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="Xem doanh thu 3 tháng gần nhất"
+              >
+                3 Tháng Gần Nhất
+              </button>
+              <button
+                type="button"
+                onClick={() => setRevenuePeriod("all_time")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  revenuePeriod === "all_time"
+                    ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="Xem tổng doanh thu toàn thời gian"
+              >
+                Toàn Thời Gian
+              </button>
+            </div>
+
+            {/* NÚT THÊM CƠ SỞ KHO MỚI */}
+            <button
+              onClick={handleOpenAddModal}
+              className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-sky-500/20 shrink-0"
+            >
+              <Plus className="size-4" />
+              <span>Thêm Cơ Sở Kho Mới</span>
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto rounded-xl border border-slate-800 shadow-md">
@@ -349,7 +395,13 @@ export default function BomFacilitiesPage() {
                 <th className="py-3 px-4 text-center whitespace-nowrap">QUẢN LÝ CHI NHÁNH</th>
                 <th className="py-3 px-4 text-center whitespace-nowrap">KHO THUÊ</th>
                 <th className="py-3 px-4 text-center whitespace-nowrap">TỶ LỆ LẤP ĐẦY</th>
-                <th className="py-3 px-4 text-center whitespace-nowrap">DOANH THU</th>
+                <th className="py-3 px-4 text-center whitespace-nowrap">
+                  {revenuePeriod === "this_month"
+                    ? "DOANH THU (THÁNG NÀY)"
+                    : revenuePeriod === "last_3_months"
+                      ? "DOANH THU (3 THÁNG GẦN NHẤT)"
+                      : "DOANH THU (TOÀN THỜI GIAN)"}
+                </th>
                 <th className="py-3 px-4 text-center whitespace-nowrap">THAO TÁC</th>
               </tr>
             </thead>
@@ -370,6 +422,13 @@ export default function BomFacilitiesPage() {
                       : stdUnits > 0
                         ? String(Math.round((rented / stdUnits) * 100))
                         : "0"
+
+                  const displayRevenue =
+                    revenuePeriod === "this_month"
+                      ? (fac.thisMonthRevenue || "₫0")
+                      : revenuePeriod === "last_3_months"
+                        ? (fac.last3MonthsRevenue || "₫0")
+                        : (fac.allTimeRevenue || fac.monthlyRevenue || "₫0")
 
                   return (
                     <tr key={fac.id} className="hover:bg-slate-900/60 transition">
@@ -414,9 +473,9 @@ export default function BomFacilitiesPage() {
                         </span>
                       </td>
 
-                      {/* CỘT 6: DOANH THU */}
+                      {/* CỘT 6: DOANH THU THEO KHOẢNG THỜI GIAN ĐƯỢC CHỌN */}
                       <td className="py-4 px-4 text-center whitespace-nowrap font-bold text-slate-200 font-mono text-xs sm:text-sm">
-                        {fac.monthlyRevenue || "₫0"}
+                        {displayRevenue}
                       </td>
 
                       {/* CỘT 7: THAO TÁC */}

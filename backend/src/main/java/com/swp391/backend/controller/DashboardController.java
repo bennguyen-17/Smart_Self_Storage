@@ -42,8 +42,11 @@ public class DashboardController {
     }
 
     @GetMapping("/admin/dashboard/chain-overview")
-    public ResponseEntity<ChainDashboardResponse> getChainDashboardOverview() {
-        ChainDashboardResponse response = dashboardService.getChainDashboard();
+    public ResponseEntity<ChainDashboardResponse> getChainDashboardOverview(
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
+            @RequestParam(required = false) String period) {
+        ChainDashboardResponse response = dashboardService.getChainDashboard(from, to, period);
         return ResponseEntity.ok(response);
     }
 }

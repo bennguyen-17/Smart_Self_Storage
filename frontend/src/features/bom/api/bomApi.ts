@@ -20,6 +20,9 @@ export interface FacilityBreakdownItem {
   compensationRevenue?: number
   totalRefunds?: number
   netRevenue: number
+  thisMonthRevenue?: number
+  last3MonthsRevenue?: number
+  allTimeRevenue?: number
   depositHolding: number
   forfeitedDeposit?: number
   waivedAmount?: number
@@ -65,8 +68,10 @@ export interface FacilityApiItem {
 }
 
 export const bomApi = {
-  getChainDashboard: async (): Promise<ChainDashboardData> => {
-    return apiClient.get('/admin/dashboard/chain-overview')
+  getChainDashboard: async (period?: string): Promise<ChainDashboardData> => {
+    return apiClient.get('/admin/dashboard/chain-overview', {
+      params: period ? { period } : undefined,
+    })
   },
   getFacilities: async (): Promise<FacilityApiItem[]> => {
     return apiClient.get('/facilities')

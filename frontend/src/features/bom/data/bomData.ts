@@ -13,6 +13,9 @@ export interface FacilityPerformance {
   maintenance?: number
   floorArea: number
   monthlyRevenue: number | string
+  thisMonthRevenue?: string
+  last3MonthsRevenue?: string
+  allTimeRevenue?: string
   overdueUnits: number
   occupancyRate?: number
   priceMultiplier?: number

@@ -248,10 +248,16 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
           const maintenance = breakdown?.maintenanceUnits ?? fUnits.filter((u) => u.status === "MAINTENANCE").length
           const calcOccRate = totalUnits > 0 ? Number(((occupied / totalUnits) * 100).toFixed(1)) : 0
           const realOccRate = breakdown?.occupancyRate ?? calcOccRate
-          const rawRevenue = (breakdown?.netRevenue != null && Number(breakdown.netRevenue) > 0)
-            ? breakdown.netRevenue
-            : (breakdown?.rentalRevenue ?? 0)
-          const realRevenue = Number(rawRevenue) > 0 ? `₫${Number(rawRevenue).toLocaleString("vi-VN")}` : "₫0"
+          const thisMonthRevVal = Number(breakdown?.thisMonthRevenue ?? 0)
+          const last3MonthsRevVal = Number(breakdown?.last3MonthsRevenue ?? 0)
+          const allTimeRevVal = Number(
+            breakdown?.allTimeRevenue ?? 
+            (breakdown?.netRevenue != null && Number(breakdown.netRevenue) > 0 ? breakdown.netRevenue : (breakdown?.rentalRevenue ?? 0))
+          )
+
+          const fmtThisMonth = thisMonthRevVal > 0 ? `₫${thisMonthRevVal.toLocaleString("vi-VN")}` : "₫0"
+          const fmtLast3Months = last3MonthsRevVal > 0 ? `₫${last3MonthsRevVal.toLocaleString("vi-VN")}` : "₫0"
+          const fmtAllTime = allTimeRevVal > 0 ? `₫${allTimeRevVal.toLocaleString("vi-VN")}` : "₫0"
 
           const rawName = f.facilityName || breakdown?.facilityName || `Cơ sở ${facId}`
           const fixedName = fixMojibake(rawName)
@@ -280,7 +286,10 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
             available: available,
             maintenance: maintenance,
             occupancyRate: realOccRate,
-            monthlyRevenue: realRevenue,
+            monthlyRevenue: fmtThisMonth,
+            thisMonthRevenue: fmtThisMonth,
+            last3MonthsRevenue: fmtLast3Months,
+            allTimeRevenue: fmtAllTime,
             floorArea: totalUnits * 12,
             overdueUnits: breakdown?.overdueContracts || 0,
             status: f.status || "ACTIVE",
@@ -296,9 +305,17 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
       } else if (overview && overview.facilityBreakdown && overview.facilityBreakdown.length > 0) {
         setIsApiConnected(true)
         const mappedFromBreakdown: FacilityPerformance[] = overview.facilityBreakdown.map((b, idx) => {
-          const rawRev = (b.netRevenue != null && Number(b.netRevenue) > 0)
-            ? b.netRevenue
-            : (b.rentalRevenue ?? 0)
+          const thisMonthRevVal = Number(b.thisMonthRevenue ?? 0)
+          const last3MonthsRevVal = Number(b.last3MonthsRevenue ?? 0)
+          const allTimeRevVal = Number(
+            b.allTimeRevenue ?? 
+            (b.netRevenue != null && Number(b.netRevenue) > 0 ? b.netRevenue : (b.rentalRevenue ?? 0))
+          )
+
+          const fmtThisMonth = thisMonthRevVal > 0 ? `₫${thisMonthRevVal.toLocaleString("vi-VN")}` : "₫0"
+          const fmtLast3Months = last3MonthsRevVal > 0 ? `₫${last3MonthsRevVal.toLocaleString("vi-VN")}` : "₫0"
+          const fmtAllTime = allTimeRevVal > 0 ? `₫${allTimeRevVal.toLocaleString("vi-VN")}` : "₫0"
+
           const rawName = b.facilityName || `Cơ sở ${b.facilityId}`
           const cleanName = rawName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
           const rawMgr = b.managerName || "Chưa phân công"
@@ -319,7 +336,10 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
             available: b.availableUnits || 0,
             maintenance: b.maintenanceUnits || 0,
             occupancyRate: b.occupancyRate || 0,
-            monthlyRevenue: rawRev > 0 ? `₫${Number(rawRev).toLocaleString("vi-VN")}` : "₫0",
+            monthlyRevenue: fmtThisMonth,
+            thisMonthRevenue: fmtThisMonth,
+            last3MonthsRevenue: fmtLast3Months,
+            allTimeRevenue: fmtAllTime,
             floorArea: (b.totalUnits || 10) * 12,
             overdueUnits: b.overdueContracts || 0,
             status: "ACTIVE",

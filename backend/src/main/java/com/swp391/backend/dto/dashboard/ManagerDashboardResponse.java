@@ -31,6 +31,9 @@ public class ManagerDashboardResponse {
     private BigDecimal compensationRevenue = BigDecimal.ZERO;
     private BigDecimal totalRefunds = BigDecimal.ZERO;
     private BigDecimal netRevenue = BigDecimal.ZERO; // (Rental + Ext + Penalty + CMP) - TotalRefunds
+    private BigDecimal thisMonthRevenue = BigDecimal.ZERO; // Doanh thu tháng này
+    private BigDecimal last3MonthsRevenue = BigDecimal.ZERO; // Doanh thu 3 tháng gần nhất
+    private BigDecimal allTimeRevenue = BigDecimal.ZERO; // Doanh thu toàn thời gian
 
     // Các dòng báo cáo riêng
     private BigDecimal depositHolding = BigDecimal.ZERO; // Tiền cọc đang bảo lưu
@@ -285,5 +288,29 @@ public class ManagerDashboardResponse {
 
     public void setSlaBreachedTickets(long slaBreachedTickets) {
         this.slaBreachedTickets = slaBreachedTickets;
+    }
+
+    public BigDecimal getThisMonthRevenue() {
+        return thisMonthRevenue;
+    }
+
+    public void setThisMonthRevenue(BigDecimal thisMonthRevenue) {
+        this.thisMonthRevenue = thisMonthRevenue;
+    }
+
+    public BigDecimal getLast3MonthsRevenue() {
+        return last3MonthsRevenue;
+    }
+
+    public void setLast3MonthsRevenue(BigDecimal last3MonthsRevenue) {
+        this.last3MonthsRevenue = last3MonthsRevenue;
+    }
+
+    public BigDecimal getAllTimeRevenue() {
+        return allTimeRevenue;
+    }
+
+    public void setAllTimeRevenue(BigDecimal allTimeRevenue) {
+        this.allTimeRevenue = allTimeRevenue;
     }
 }

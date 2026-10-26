@@ -128,11 +128,70 @@ public class DashboardService {
         BigDecimal forfeitedDeposit = BigDecimal.ZERO;
         BigDecimal waivedAmount = BigDecimal.ZERO;
 
+        // Xác định mốc thời gian: Tháng hiện tại & 3 tháng gần nhất
+        java.time.YearMonth currentYm = java.time.YearMonth.now();
+        java.time.YearMonth maxDataYm = payments.stream()
+                .map(p -> p.getPaidAt() != null ? p.getPaidAt() : p.getIssuedAt())
+                .filter(Objects::nonNull)
+                .map(java.time.YearMonth::from)
+                .max(Comparator.naturalOrder())
+                .orElse(currentYm);
+        if (maxDataYm.isAfter(currentYm)) {
+            currentYm = maxDataYm;
+        }
+
+        LocalDateTime startOfThisMonth = currentYm.atDay(1).atStartOfDay();
+        LocalDateTime endOfThisMonth = currentYm.atEndOfMonth().atTime(23, 59, 59);
+
+        LocalDateTime startOf3Months = currentYm.minusMonths(2).atDay(1).atStartOfDay();
+        LocalDateTime endOf3Months = endOfThisMonth;
+
+        BigDecimal thisMonthRental = BigDecimal.ZERO;
+        BigDecimal thisMonthRefunds = BigDecimal.ZERO;
+        BigDecimal last3MRental = BigDecimal.ZERO;
+        BigDecimal last3MRefunds = BigDecimal.ZERO;
+        BigDecimal allTimeRentalRev = BigDecimal.ZERO;
+        BigDecimal allTimeRefundsRev = BigDecimal.ZERO;
+
         for (Payment p : payments) {
             String invNum = p.getInvoiceNumber() != null ? p.getInvoiceNumber() : "";
-            boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()) || "REFUNDED".equalsIgnoreCase(p.getStatus());
+            boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus()) 
+                    || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()) 
+                    || "REFUNDED".equalsIgnoreCase(p.getStatus())
+                    || "PARTIALLY_PAID".equalsIgnoreCase(p.getStatus());
 
             LocalDateTime paymentTime = p.getPaidAt() != null ? p.getPaidAt() : p.getIssuedAt();
+
+            // Tính phần tiền thuê thực thu (trừ tiền cọc bảo lưu)
+            BigDecimal rentPart = BigDecimal.ZERO;
+            if ("DEP".equalsIgnoreCase(p.getInvoiceType()) && ("PAID".equalsIgnoreCase(p.getStatus()) || "PARTIALLY_PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()))) {
+                BigDecimal depAmt = contracts.stream()
+                        .filter(c -> c.getContractId().equals(p.getContractId()))
+                        .findFirst()
+                        .flatMap(c -> reservations.stream().filter(r -> r.getReservationId().equals(c.getReservationId())).findFirst())
+                        .map(r -> r.getDepositAmount() != null ? r.getDepositAmount() : BigDecimal.ZERO)
+                        .orElse(BigDecimal.ZERO);
+                rentPart = (p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO).subtract(depAmt).max(BigDecimal.ZERO);
+            } else if (("INITIAL_RENTAL".equalsIgnoreCase(p.getInvoiceType()) || "MONTHLY_RENEWAL".equalsIgnoreCase(p.getInvoiceType()) || "EXT".equalsIgnoreCase(p.getInvoiceType()) || "OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType()) || "CMP".equalsIgnoreCase(p.getInvoiceType()) || "INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
+                rentPart = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+            }
+
+            boolean isRefund = (invNum.startsWith("REF-") || "REF".equalsIgnoreCase(p.getInvoiceType())) && isPaid;
+            BigDecimal refAmt = isRefund ? (p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO) : BigDecimal.ZERO;
+
+            if (paymentTime != null) {
+                if (!paymentTime.isBefore(startOfThisMonth) && !paymentTime.isAfter(endOfThisMonth)) {
+                    thisMonthRental = thisMonthRental.add(rentPart);
+                    thisMonthRefunds = thisMonthRefunds.add(refAmt);
+                }
+                if (!paymentTime.isBefore(startOf3Months) && !paymentTime.isAfter(endOf3Months)) {
+                    last3MRental = last3MRental.add(rentPart);
+                    last3MRefunds = last3MRefunds.add(refAmt);
+                }
+            }
+            allTimeRentalRev = allTimeRentalRev.add(rentPart);
+            allTimeRefundsRev = allTimeRefundsRev.add(refAmt);
+
             if (fromLdt != null && paymentTime != null && paymentTime.isBefore(fromLdt)) {
                 continue;
             }
@@ -140,7 +199,7 @@ public class DashboardService {
                 continue;
             }
 
-            if ((invNum.startsWith("REF-") || "REF".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
+            if (isRefund) {
                 totalRefunds = totalRefunds.add(p.getAmount());
             } else if ((invNum.startsWith("CMP-") || "CMP".equalsIgnoreCase(p.getInvoiceType()) || "INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                 compensationRevenue = compensationRevenue.add(p.getAmount());
@@ -148,7 +207,7 @@ public class DashboardService {
                 penaltyRevenue = penaltyRevenue.add(p.getAmount());
             } else if (("MONTHLY_RENEWAL".equalsIgnoreCase(p.getInvoiceType()) || "EXT".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                 extensionRevenue = extensionRevenue.add(p.getAmount());
-            } else if ("DEP".equalsIgnoreCase(p.getInvoiceType()) && "PAID".equalsIgnoreCase(p.getStatus())) {
+            } else if ("DEP".equalsIgnoreCase(p.getInvoiceType()) && ("PAID".equalsIgnoreCase(p.getStatus()) || "PARTIALLY_PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()))) {
                 BigDecimal depAmt = contracts.stream()
                         .filter(c -> c.getContractId().equals(p.getContractId()))
                         .findFirst()
@@ -263,6 +322,18 @@ public class DashboardService {
         resp.setTotalRefunds(totalRefunds);
         resp.setNetRevenue(netRevenue);
 
+        BigDecimal thisMonthNet = thisMonthRental.subtract(thisMonthRefunds);
+        BigDecimal thisMonthDisplay = thisMonthNet.compareTo(BigDecimal.ZERO) > 0 ? thisMonthNet : thisMonthRental;
+        resp.setThisMonthRevenue(thisMonthDisplay);
+
+        BigDecimal last3MNet = last3MRental.subtract(last3MRefunds);
+        BigDecimal last3MDisplay = last3MNet.compareTo(BigDecimal.ZERO) > 0 ? last3MNet : last3MRental;
+        resp.setLast3MonthsRevenue(last3MDisplay);
+
+        BigDecimal allTimeNetRev = allTimeRentalRev.subtract(allTimeRefundsRev);
+        BigDecimal allTimeDisplay = allTimeNetRev.compareTo(BigDecimal.ZERO) > 0 ? allTimeNetRev : allTimeRentalRev;
+        resp.setAllTimeRevenue(allTimeDisplay);
+
         resp.setDepositHolding(depositHolding);
         resp.setForfeitedDeposit(forfeitedDeposit);
         resp.setWaivedAmount(waivedAmount);
@@ -280,8 +351,37 @@ public class DashboardService {
      * US-33: Báo cáo toàn chuỗi 7 cơ sở cho Ban Giám Đốc (BOM / Admin)
      */
     public ChainDashboardResponse getChainDashboard() {
+        return getChainDashboard(null, null, null);
+    }
+
+    public ChainDashboardResponse getChainDashboard(String fromStr, String toStr, String period) {
         List<Facility> facilities = facilityRepository.findAll();
         List<ManagerDashboardResponse> breakdown = new ArrayList<>();
+
+        String effectiveFrom = fromStr;
+        String effectiveTo = toStr;
+
+        List<Payment> allPayments = paymentRepository.findAll();
+        java.time.YearMonth currentYm = java.time.YearMonth.now();
+        java.time.YearMonth maxPaymentYm = allPayments.stream()
+                .map(p -> p.getPaidAt() != null ? p.getPaidAt() : p.getIssuedAt())
+                .filter(Objects::nonNull)
+                .map(java.time.YearMonth::from)
+                .max(Comparator.naturalOrder())
+                .orElse(currentYm);
+        if (maxPaymentYm.isAfter(currentYm)) {
+            currentYm = maxPaymentYm;
+        }
+
+        if (period != null && !period.isBlank()) {
+            if ("this_month".equalsIgnoreCase(period.trim())) {
+                effectiveFrom = currentYm.atDay(1).toString();
+                effectiveTo = currentYm.atEndOfMonth().toString();
+            } else if ("last_3_months".equalsIgnoreCase(period.trim())) {
+                effectiveFrom = currentYm.minusMonths(2).atDay(1).toString();
+                effectiveTo = currentYm.atEndOfMonth().toString();
+            }
+        }
 
         long chainTotalUnits = 0;
         long chainOccupiedUnits = 0;
@@ -293,7 +393,7 @@ public class DashboardService {
 
         for (Facility f : facilities) {
             try {
-                ManagerDashboardResponse mResp = getManagerDashboard(f.getFacilityId());
+                ManagerDashboardResponse mResp = getManagerDashboard(f.getFacilityId(), effectiveFrom, effectiveTo);
                 breakdown.add(mResp);
 
                 chainTotalUnits += mResp.getTotalUnits();
@@ -309,18 +409,10 @@ public class DashboardService {
         double chainOccupancy = chainTotalUnits > 0 ? ((double) chainOccupiedUnits / chainTotalUnits) * 100.0 : 0.0;
 
         // 4. Tính toán doanh thu thực tế từng tháng từ Database cho Biểu đồ
-        List<Payment> allPayments = paymentRepository.findAll();
         List<Contract> allContracts = contractRepository.findAll();
         List<Reservation> allReservations = reservationRepository.findAll();
 
-        java.time.YearMonth maxPaymentYm = allPayments.stream()
-                .map(p -> p.getPaidAt() != null ? p.getPaidAt() : p.getIssuedAt())
-                .filter(Objects::nonNull)
-                .map(java.time.YearMonth::from)
-                .max(Comparator.naturalOrder())
-                .orElse(java.time.YearMonth.now());
-
-        java.time.YearMonth endYm = maxPaymentYm.isAfter(java.time.YearMonth.now()) ? maxPaymentYm : java.time.YearMonth.now();
+        java.time.YearMonth endYm = currentYm;
         List<java.time.YearMonth> targetMonths = new ArrayList<>();
         for (int i = 5; i >= 0; i--) {
             targetMonths.add(endYm.minusMonths(i));
@@ -341,7 +433,10 @@ public class DashboardService {
                 }
 
                 String invNum = p.getInvoiceNumber() != null ? p.getInvoiceNumber() : "";
-                boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()) || "REFUNDED".equalsIgnoreCase(p.getStatus());
+                boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus()) 
+                        || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()) 
+                        || "REFUNDED".equalsIgnoreCase(p.getStatus())
+                        || "PARTIALLY_PAID".equalsIgnoreCase(p.getStatus());
 
                 if ((invNum.startsWith("REF-") || "REF".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                     mRefunds = mRefunds.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
@@ -351,7 +446,7 @@ public class DashboardService {
                     mPenalty = mPenalty.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
                 } else if (("MONTHLY_RENEWAL".equalsIgnoreCase(p.getInvoiceType()) || "EXT".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                     mExtension = mExtension.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
-                } else if ("DEP".equalsIgnoreCase(p.getInvoiceType()) && "PAID".equalsIgnoreCase(p.getStatus())) {
+                } else if ("DEP".equalsIgnoreCase(p.getInvoiceType()) && ("PAID".equalsIgnoreCase(p.getStatus()) || "PARTIALLY_PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()))) {
                     BigDecimal depAmt = allContracts.stream()
                             .filter(c -> c.getContractId().equals(p.getContractId()))
                             .findFirst()
