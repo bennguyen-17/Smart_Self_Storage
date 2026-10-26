@@ -131,20 +131,21 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
       // 0. Cập nhật biểu phí (Fee Policies) từ Database
       if (apiFeePolicies && Array.isArray(apiFeePolicies) && apiFeePolicies.length > 0) {
         setIsApiConnected(true)
-        const mappedSurcharges: SurchargeItem[] = apiFeePolicies.map((fp) => {
-          const cat = (fp.category || "SURCHARGE").toLowerCase() as "surcharge" | "penalty" | "discount" | "damage"
-          const catLabels: Record<string, string> = {
-            surcharge: "Biểu Phí Phụ Thu (Surcharges)",
-            penalty: "Phí Phạt Quá Hạn (Penalties & Overdue Fees)",
-            discount: "Chính Sách Miễn Giảm Giá (Discount Policy & Waivers)",
-            damage: "Biểu Phí Bồi Thường Hư Hỏng & Vệ Sinh",
-          }
-          const typeLabels: Record<string, string> = {
-            surcharge: "Phụ Thu Dịch Vụ",
-            penalty: "Chế Tài / Phạt Hợp Đồng",
-            discount: "Ưu Đãi / Khuyến Mãi",
-            damage: "Bồi Thường Hư Hỏng",
-          }
+        const mappedSurcharges: SurchargeItem[] = apiFeePolicies
+          .filter((fp) => fp.category !== "SURCHARGE")
+          .map((fp) => {
+            const rawCat = (fp.category || "PENALTY").toLowerCase()
+            const cat = (rawCat === "discount" || rawCat === "damage" ? rawCat : "penalty") as "penalty" | "discount" | "damage"
+            const catLabels: Record<string, string> = {
+              penalty: "Phí Phạt Quá Hạn (Penalties & Overdue Fees)",
+              discount: "Chính Sách Miễn Giảm Giá (Discount Policy & Waivers)",
+              damage: "Biểu Phí Bồi Thường Hư Hỏng & Vệ Sinh",
+            }
+            const typeLabels: Record<string, string> = {
+              penalty: "Chế Tài / Phạt Hợp Đồng",
+              discount: "Ưu Đãi / Khuyến Mãi",
+              damage: "Bồi Thường Hư Hỏng",
+            }
           let rateStr = ""
           if (fp.calcType === "PERCENT") {
             const unitSuffix =
@@ -169,7 +170,7 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
             policyId: fp.policyId,
             policyCode: fp.policyCode,
             category: cat,
-            categoryLabel: catLabels[cat] || catLabels.surcharge,
+            categoryLabel: catLabels[cat] || catLabels.penalty,
             type: typeLabels[cat] || "Chính Sách Biểu Phí",
             name: fixMojibake(fp.policyName),
             rate: rateStr,

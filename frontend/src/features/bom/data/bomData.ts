@@ -44,7 +44,7 @@ export interface SurchargeItem {
   id: string
   policyId?: number
   policyCode?: string
-  category: "surcharge" | "penalty" | "discount" | "damage"
+  category: "penalty" | "discount" | "damage"
   categoryLabel: string
   type: string
   name: string
@@ -205,36 +205,6 @@ export const INITIAL_PRICING: UnitPricing[] = [
 ]
 
 export const INITIAL_SURCHARGES: SurchargeItem[] = [
-  {
-    id: "sc-1",
-    category: "surcharge",
-    categoryLabel: "Biểu Phí Phụ Thu (Surcharges)",
-    type: "Dịch vụ bổ sung 24/7",
-    name: "Phí Điện Kho Lạnh 24/7",
-    rate: "₫300,000 / tháng",
-    isActive: true,
-    note: "Áp dụng cho kho điều hòa nhiệt độ AC",
-  },
-  {
-    id: "sc-2",
-    category: "surcharge",
-    categoryLabel: "Biểu Phí Phụ Thu (Surcharges)",
-    type: "Dịch vụ bốc xếp",
-    name: "Phí Hỗ Trợ Bốc Xếp",
-    rate: "₫150,000 / giờ",
-    isActive: true,
-    note: "Theo yêu cầu nhân công thực tế",
-  },
-  {
-    id: "sc-3",
-    category: "surcharge",
-    categoryLabel: "Biểu Phí Phụ Thu (Surcharges)",
-    type: "Quản lý thiết bị PIN",
-    name: "Phí Cấp Lại Mã PIN Thẻ Từ",
-    rate: "₫50,000 / lần",
-    isActive: true,
-    note: "Khi người dùng làm mất/reset mã PIN",
-  },
   {
     id: "pn-1",
     category: "penalty",

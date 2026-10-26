@@ -36,7 +36,7 @@ public class FeePolicyService {
         }
         policy.setPolicyCode(code);
         policy.setPolicyName(req.getPolicyName() != null ? req.getPolicyName() : "Khoản phí");
-        policy.setCategory(req.getCategory() != null ? req.getCategory().toUpperCase() : "SURCHARGE");
+        policy.setCategory(req.getCategory() != null ? req.getCategory().toUpperCase() : "PENALTY");
         policy.setCalcType(req.getCalcType() != null ? req.getCalcType().toUpperCase() : "FIXED");
         policy.setFeeValue(req.getFeeValue() != null ? req.getFeeValue() : BigDecimal.ZERO);
         policy.setUnitBasis(req.getUnitBasis() != null ? req.getUnitBasis() : "TOTAL_BILL");

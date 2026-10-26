@@ -62,7 +62,7 @@ export default function BomPricingPage() {
 
   // Search & Filter state for surcharges
   const [searchSurcharge, setSearchSurcharge] = useState("")
-  const [surchargeFilter, setSurchargeFilter] = useState<"all" | "surcharge" | "penalty" | "discount" | "damage">("all")
+  const [surchargeFilter, setSurchargeFilter] = useState<"all" | "penalty" | "discount" | "damage">("all")
 
   // Modal 1: Pricing edit modal
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false)
@@ -181,7 +181,7 @@ export default function BomPricingPage() {
   // Modal 2: Surcharge add/edit modal
   const [isSurchargeModalOpen, setIsSurchargeModalOpen] = useState(false)
   const [editingSurcharge, setEditingSurcharge] = useState<SurchargeItem | null>(null)
-  const [surchargeCat, setSurchargeCat] = useState<"surcharge" | "penalty" | "discount" | "damage">("surcharge")
+  const [surchargeCat, setSurchargeCat] = useState<"penalty" | "discount" | "damage">("penalty")
   const [surchargeName, setSurchargeName] = useState("")
   const [surchargeCalcType, setSurchargeCalcType] = useState<"FIXED" | "PERCENT">("FIXED")
   const [surchargeFeeValue, setSurchargeFeeValue] = useState<number>(100000)
@@ -275,7 +275,7 @@ export default function BomPricingPage() {
 
   const handleOpenAddSurcharge = () => {
     setEditingSurcharge(null)
-    setSurchargeCat("surcharge")
+    setSurchargeCat("penalty")
     setSurchargeName("")
     setSurchargeCalcType("FIXED")
     setSurchargeFeeValue(150000)
@@ -360,7 +360,6 @@ export default function BomPricingPage() {
     }
 
     const categoryMap: Record<string, string> = {
-      surcharge: "SURCHARGE",
       penalty: "PENALTY",
       discount: "DISCOUNT",
       damage: "DAMAGE",
@@ -370,7 +369,7 @@ export default function BomPricingPage() {
     if (editingSurcharge && editingSurcharge.policyId) {
       const ok = await updateFeePolicyInDb(editingSurcharge.policyId, {
         policyName: surchargeName.trim(),
-        category: categoryMap[surchargeCat] || "SURCHARGE",
+        category: categoryMap[surchargeCat] || "PENALTY",
         calcType: surchargeCalcType,
         feeValue: Number(surchargeFeeValue) || 0,
         unitBasis: surchargeUnitBasis,
@@ -386,7 +385,7 @@ export default function BomPricingPage() {
     } else if (!editingSurcharge) {
       const ok = await createFeePolicyInDb({
         policyName: surchargeName.trim(),
-        category: categoryMap[surchargeCat] || "SURCHARGE",
+        category: categoryMap[surchargeCat] || "PENALTY",
         calcType: surchargeCalcType,
         feeValue: Number(surchargeFeeValue) || 0,
         unitBasis: surchargeUnitBasis,
@@ -401,14 +400,12 @@ export default function BomPricingPage() {
     }
 
     const categoryLabels = {
-      surcharge: "Biểu Phí Phụ Thu (Surcharges)",
       penalty: "Phí Phạt Quá Hạn (Penalties & Overdue Fees)",
       discount: "Chính Sách Miễn Giảm Giá (Discount Policy)",
       damage: "Biểu Phí Bồi Thường Hư Hỏng & Vệ Sinh",
     }
 
     const typeLabels = {
-      surcharge: "Phụ Thu Dịch Vụ",
       penalty: "Chế Tài / Phạt Hợp Đồng",
       discount: "Ưu Đãi / Khuyến Mãi",
       damage: "Bồi Thường Hư Hỏng",
@@ -573,13 +570,13 @@ export default function BomPricingPage() {
           </div>
         </div>
 
-        {/* 2. BIỂU PHÍ PHỤ THU, PHẠT QUÁ HẠN & GIẢM GIÁ */}
+        {/* 2. BIỂU PHÍ PHẠT QUÁ HẠN, GIẢM GIÁ & BỒI THƯỜNG */}
         <div className="space-y-4 pt-6 border-t border-slate-800">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <h4 className="font-black text-xs uppercase text-slate-200 tracking-wider flex items-center gap-2">
                 <Tag className="size-3.5 text-sky-400" />
-                <span>2. Biểu Phí Phụ Thu, Phí Phạt Quá Hạn &amp; Chính Sách Miễn Giảm Giá</span>
+                <span>2. Phí Phạt Quá Hạn, Chính Sách Miễn Giảm &amp; Bồi Thường Hư Hỏng</span>
               </h4>
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -599,14 +596,14 @@ export default function BomPricingPage() {
                 className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-3.5 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm whitespace-nowrap"
               >
                 <Plus className="size-3.5" />
-                <span>Thêm Phụ Thu</span>
+                <span>Thêm Biểu Phí</span>
               </button>
             </div>
           </div>
 
           {/* Thanh phân loại tab */}
           <div className="flex items-center gap-2 overflow-x-auto text-xs pb-1">
-            {(["all", "surcharge", "penalty", "discount", "damage"] as const).map((filterKey) => (
+            {(["all", "penalty", "discount", "damage"] as const).map((filterKey) => (
               <button
                 key={filterKey}
                 onClick={() => setSurchargeFilter(filterKey)}
@@ -618,8 +615,6 @@ export default function BomPricingPage() {
               >
                 {filterKey === "all"
                   ? "Tất Cả Hạng Mục"
-                  : filterKey === "surcharge"
-                  ? "Biểu Phí Phụ Thu"
                   : filterKey === "penalty"
                   ? "Phí Phạt Quá Hạn"
                   : filterKey === "discount"
@@ -644,10 +639,6 @@ export default function BomPricingPage() {
               <tbody className="divide-y divide-slate-800 font-semibold text-slate-300">
                 {filteredSurcharges.map((sc) => {
                   const badgeConfig = {
-                    surcharge: {
-                      label: "Phụ Thu Dịch Vụ",
-                      style: "bg-sky-950/60 text-sky-400 border-sky-800/60",
-                    },
                     penalty: {
                       label: "Phí Phạt Quá Hạn",
                       style: "bg-amber-950/60 text-amber-400 border-amber-800/60",
@@ -896,10 +887,9 @@ export default function BomPricingPage() {
                   onChange={(e) => setSurchargeCat(e.target.value as any)}
                   className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
                 >
-                  <option value="surcharge">1. Biểu Phí Phụ Thu (Surcharges)</option>
-                  <option value="penalty">2. Phí Phạt Quá Hạn (Penalties)</option>
-                  <option value="discount">3. Chính Sách Miễn Giảm Giá (Discount Policy)</option>
-                  <option value="damage">4. Bồi Thường Hư Hỏng &amp; Vệ Sinh (Damages)</option>
+                  <option value="penalty">1. Phí Phạt Quá Hạn (Penalties)</option>
+                  <option value="discount">2. Chính Sách Miễn Giảm Giá (Discount Policy)</option>
+                  <option value="damage">3. Bồi Thường Hư Hỏng &amp; Vệ Sinh (Damages)</option>
                 </select>
               </div>
 
@@ -910,7 +900,7 @@ export default function BomPricingPage() {
                 <input
                   type="text"
                   required
-                  placeholder="Ví dụ: Phí Điện Kho Lạnh 24/7"
+                  placeholder="Ví dụ: Phí Phạt Quá Hạn Thanh Toán"
                   value={surchargeName}
                   onChange={(e) => setSurchargeName(e.target.value)}
                   className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"

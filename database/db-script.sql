@@ -179,7 +179,7 @@ CREATE TABLE Price (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 11.1. TABLE: FeeItem (Danh mục biểu phí phụ thu, phí phạt, ưu đãi & bồi thường hư hỏng)
+-- 11.1. TABLE: FeeItem (Danh mục biểu phí phạt, ưu đãi & bồi thường hư hỏng)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS FeePolicy;
 DROP TABLE IF EXISTS FeeItem;
@@ -187,7 +187,7 @@ CREATE TABLE FeeItem (
     feeItemId INT AUTO_INCREMENT PRIMARY KEY,
     feeCode VARCHAR(50) NOT NULL UNIQUE,
     feeName VARCHAR(150) NOT NULL,
-    category ENUM('SURCHARGE', 'PENALTY', 'DISCOUNT', 'DAMAGE') NOT NULL DEFAULT 'SURCHARGE',
+    category ENUM('PENALTY', 'DISCOUNT', 'DAMAGE') NOT NULL DEFAULT 'PENALTY',
     calcType ENUM('PERCENT', 'FIXED') NOT NULL DEFAULT 'FIXED',
     feeValue DECIMAL(12, 2) NOT NULL,
     unitBasis VARCHAR(50) NOT NULL DEFAULT 'TOTAL_BILL',
@@ -611,11 +611,8 @@ INSERT INTO Price (priceId, unitTypeId, dailyPrice, monthlyPrice, depositAmount,
 (6, 6, 120000.00, 2400000.00, 2000000.00, 20.00, '2026-01-01', NULL, 'ACTIVE'),
 (7, 7, 200000.00, 4000000.00, 3000000.00, 20.00, '2026-01-01', NULL, 'ACTIVE');
 
--- 8.1. Biểu phí phụ thu, phạt, chiết khấu & bồi thường hư hỏng (FeeItems)
+-- 8.1. Biểu phí phạt quá hạn, chiết khấu & bồi thường hư hỏng (FeeItems)
 INSERT INTO FeeItem (feeItemId, feeCode, feeName, category, calcType, feeValue, unitBasis, description, isWaiveDeposit, status) VALUES
-(1, 'ELEC_247', 'Phí Điện Kho Lạnh 24/7', 'SURCHARGE', 'FIXED', 300000.00, 'PER_MONTH', 'Cấp nguồn điện liên tục cho kho mát bảo quản thực phẩm, mỹ phẩm', FALSE, 'ACTIVE'),
-(2, 'PORTER_SERVICE', 'Phí Hỗ Trợ Bốc Xếp', 'SURCHARGE', 'FIXED', 150000.00, 'PER_REQUEST', 'Đội bốc vác hỗ trợ vận chuyển hàng lên tầng và vào ô kho', FALSE, 'ACTIVE'),
-(3, 'PIN_REISSUE', 'Phí Cấp Lại Mã PIN Thẻ Từ', 'SURCHARGE', 'FIXED', 50000.00, 'PER_REQUEST', 'Cấp lại mã PIN hoặc thẻ từ vật lý khi khách hàng đánh mất', FALSE, 'ACTIVE'),
 (4, 'OVERDUE_DAILY_RATE', 'Mức Phạt Theo Ngày Quá Hạn', 'PENALTY', 'FIXED', 50000.00, 'PER_DAY', 'Phạt 50.000 VNĐ mỗi ngày quá hạn thanh toán', FALSE, 'ACTIVE'),
 (5, 'PIN_UNBLOCK', 'Phí Mở Phong Tỏa PIN Động', 'PENALTY', 'FIXED', 100000.00, 'PER_REQUEST', 'Phí mở khóa sau khi hệ thống tự động ngắt mã PIN do nợ quá hạn', FALSE, 'ACTIVE'),
 (6, 'ASSET_SEAL', 'Phí Kiểm Kê Niêm Phong Tài Sản', 'PENALTY', 'FIXED', 500000.00, 'PER_REQUEST', 'Chi phí niêm phong, lập biên bản tài sản khi nợ quá 15 ngày', FALSE, 'ACTIVE'),
