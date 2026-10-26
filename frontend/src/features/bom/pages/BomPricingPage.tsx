@@ -202,7 +202,7 @@ export default function BomPricingPage() {
       text = `₫${Number(surchargeFeeValue || 0).toLocaleString("vi-VN")}`
       if (surchargeUnitBasis === "PER_MONTH") text += " / tháng"
       else if (surchargeUnitBasis === "PER_HOUR") text += " / giờ"
-      else if (surchargeUnitBasis === "PER_DAY") text += " / ngày"
+      else if (surchargeUnitBasis === "PER_DAY") text += " / ngày trễ"
       else if (surchargeUnitBasis === "TOTAL_BILL") text += " / đơn"
       else text += " / lần"
     }
@@ -999,6 +999,20 @@ export default function BomPricingPage() {
                   </label>
                 </div>
               )}
+
+              {/* Mô tả / Ghi chú chính sách */}
+              <div>
+                <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                  Mô Tả / Hình Thức Áp Dụng:
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Ví dụ: Phạt 50.000 VNĐ mỗi ngày quá hạn thanh toán tiền kho..."
+                  value={surchargeNote}
+                  onChange={(e) => setSurchargeNote(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-medium text-xs text-white outline-none focus:border-sky-400 resize-none"
+                />
+              </div>
 
               {/* Dòng Xem Trước (Preview) */}
               <div className="p-3 bg-slate-950/80 rounded-xl border border-sky-500/30 flex items-center justify-between">

@@ -145,12 +145,18 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
           }
           let rateStr = ""
           if (fp.calcType === "PERCENT") {
-            rateStr = `${fp.feeValue}% ${fp.unitBasis === "PER_DAY" ? "/ ngày trễ" : "Tổng Đơn"}`
-          } else {
-            rateStr = `₫${Number(fp.feeValue).toLocaleString("vi-VN")} ${
+            const unitSuffix =
+              fp.unitBasis === "PER_DAY" ? "/ ngày trễ" :
               fp.unitBasis === "PER_MONTH" ? "/ tháng" :
-              fp.unitBasis === "PER_HOUR" ? "/ giờ" : "/ lần"
-            }`
+              fp.unitBasis === "TOTAL_BILL" || fp.unitBasis === "CONTRACT_TOTAL" ? "Tổng Đơn" : ""
+            rateStr = `${fp.feeValue}% ${unitSuffix}`.trim()
+          } else {
+            const unitLabel =
+              fp.unitBasis === "PER_DAY" ? "/ ngày trễ" :
+              fp.unitBasis === "PER_MONTH" ? "/ tháng" :
+              fp.unitBasis === "PER_HOUR" ? "/ giờ" :
+              fp.unitBasis === "TOTAL_BILL" ? "/ đơn" : "/ lần"
+            rateStr = `₫${Number(fp.feeValue).toLocaleString("vi-VN")} ${unitLabel}`
           }
           if (fp.isWaiveDeposit) {
             rateStr += " + Miễn Cọc"
@@ -162,7 +168,7 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
             policyCode: fp.policyCode,
             category: cat,
             categoryLabel: catLabels[cat] || catLabels.surcharge,
-            type: fp.description ? fp.description.split(" - ")[0] : (typeLabels[cat] || "Chính Sách Biểu Phí"),
+            type: typeLabels[cat] || "Chính Sách Biểu Phí",
             name: fixMojibake(fp.policyName),
             rate: rateStr,
             calcType: fp.calcType as any,
