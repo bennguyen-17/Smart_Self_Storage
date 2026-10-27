@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
-import { Building2, Layers, ArrowLeft } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import apiClient from "@/lib/apiClient"
 import { getStorageUnits } from "@/features/customer/rent/rentApi"
 import { useBomContext } from "@/features/bom/context/BomContext"
@@ -28,16 +28,6 @@ export default function BomReportsPage() {
       setSelectedFacilityId("ALL")
     }
   }, [searchParams])
-
-  const handleSelectFacility = (id: string) => {
-    setSelectedFacilityId(id)
-    if (id === "ALL") {
-      searchParams.delete("facilityId")
-      setSearchParams(searchParams, { replace: true })
-    } else {
-      setSearchParams({ facilityId: id }, { replace: true })
-    }
-  }
 
   const isAll = selectedFacilityId === "ALL"
 
@@ -181,22 +171,6 @@ export default function BomReportsPage() {
     }
   }, [isAll, currentFac, selectedFacilityId, chainOverview, breakdownList, facilities])
 
-  // Danh sách cơ sở để render thanh filter chọn nhanh
-  const facilityFilterButtons = useMemo(() => {
-    if (breakdownList.length > 0) {
-      return breakdownList.map((b) => ({
-        id: String(b.facilityId),
-        code: b.facilityCode || `FAC-${b.facilityId}`,
-        name: (b.facilityName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, ""),
-      }))
-    }
-    return facilities.map((f) => ({
-      id: String(f.id),
-      code: f.code || `FAC-${f.id}`,
-      name: (f.name || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, ""),
-    }))
-  }, [breakdownList, facilities])
-
   const currentFacName = currentFac
     ? ((currentFac as any).facilityName || (currentFac as any).name || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "")
     : ""
@@ -204,65 +178,24 @@ export default function BomReportsPage() {
 
   return (
     <div className="space-y-5">
-      {/* HEADER BÁO CÁO & BỘ CHỌN CƠ SỞ NHANH */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white/90 dark:bg-slate-900/60 border border-slate-200/90 dark:border-slate-800 shadow-sm dark:shadow-md transition-colors">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            {!isAll && (
-              <button
-                type="button"
-                onClick={() => navigate("/bom/facilities")}
-                className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition cursor-pointer shrink-0"
-                title="Quay lại danh sách cơ sở kho"
-              >
-                <ArrowLeft className="size-4" />
-              </button>
-            )}
-            <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
-              {isAll
-                ? "Báo Cáo Tổng Quan Hệ Thống Thuê Kho"
-                : `Báo Cáo Cơ Sở: ${currentFacName} (${currentFacCode})`}
-            </h2>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+      {/* HEADER BÁO CÁO */}
+      <div className="flex items-center justify-between p-5 rounded-2xl bg-white/90 dark:bg-slate-900/60 border border-slate-200/90 dark:border-slate-800 shadow-sm dark:shadow-md transition-colors">
+        <div className="flex items-center gap-2">
+          {!isAll && (
+            <button
+              type="button"
+              onClick={() => navigate("/bom/facilities")}
+              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition cursor-pointer shrink-0"
+              title="Quay lại danh sách cơ sở kho"
+            >
+              <ArrowLeft className="size-4" />
+            </button>
+          )}
+          <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
             {isAll
-              ? "Giám sát dòng tiền thực thu và quy mô vận hành toàn chuỗi kho"
-              : `Giám sát dòng tiền thực thu 6 tháng gần nhất và hiệu suất vận hành tại ${currentFacName}`}
-          </p>
-        </div>
-
-        {/* Nút lọc chuyển đổi nhanh giữa Toàn Hệ Thống và từng Cơ sở */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <button
-            onClick={() => handleSelectFacility("ALL")}
-            className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
-              selectedFacilityId === "ALL"
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25 border border-blue-500"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 border border-slate-200 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:border-slate-700/60"
-            }`}
-          >
-            <Layers className="size-3.5" />
-            Toàn Hệ Thống
-          </button>
-
-          {facilityFilterButtons.map((f) => {
-            const isSelected = selectedFacilityId === f.id
-            return (
-              <button
-                key={f.id}
-                onClick={() => handleSelectFacility(f.id)}
-                className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
-                  isSelected
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25 border border-blue-500"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 border border-slate-200 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:border-slate-700/60"
-                }`}
-                title={f.name}
-              >
-                <Building2 className="size-3.5" />
-                {f.code}
-              </button>
-            )
-          })}
+              ? "Báo Cáo Tổng Quan Hệ Thống Thuê Kho"
+              : `Báo Cáo Cơ Sở: ${currentFacName} (${currentFacCode})`}
+          </h2>
         </div>
       </div>
 
@@ -304,7 +237,6 @@ export default function BomReportsPage() {
                     <th className="p-3 text-center whitespace-nowrap">Giữ Chỗ</th>
                     <th className="p-3 text-center whitespace-nowrap">Bảo Trì</th>
                     <th className="p-3 text-center whitespace-nowrap">Tỷ Lệ Lấp Đầy</th>
-                    <th className="p-3 text-right whitespace-nowrap">Doanh Thu / Tháng</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80 font-semibold text-slate-700 dark:text-slate-300">
@@ -321,7 +253,6 @@ export default function BomReportsPage() {
                     let grandAvailable = 0
                     let grandHold = 0
                     let grandMaintenance = 0
-                    let grandRevenue = 0
 
                     const rows = SIZES.map((cfg) => {
                       const list = facilityUnits.filter((u) => {
@@ -347,19 +278,12 @@ export default function BomReportsPage() {
                       }).length
                       const maintenance = list.filter((u) => (u.status || "").toUpperCase() === "MAINTENANCE").length
                       const occRate = total > 0 ? Math.round((occupied / total) * 100) : 0
-                      const revenue = list
-                        .filter((u) => {
-                          const st = (u.status || "").toUpperCase()
-                          return st === "OCCUPIED" || st === "RENTED"
-                        })
-                        .reduce((sum, u) => sum + Number(u.monthlyPrice || cfg.defaultNorm), 0)
 
                       grandTotal += total
                       grandOccupied += occupied
                       grandAvailable += available
                       grandHold += hold
                       grandMaintenance += maintenance
-                      grandRevenue += revenue
 
                       return (
                         <tr key={cfg.size} className="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
@@ -383,9 +307,6 @@ export default function BomReportsPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="p-3 text-right font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
-                            ₫{revenue.toLocaleString("vi-VN")}
-                          </td>
                         </tr>
                       )
                     })
@@ -406,9 +327,6 @@ export default function BomReportsPage() {
                           <td className="p-3 text-center text-amber-600 dark:text-amber-400 font-mono whitespace-nowrap">{grandHold}</td>
                           <td className="p-3 text-center text-rose-600 dark:text-rose-400 font-mono whitespace-nowrap">{grandMaintenance}</td>
                           <td className="p-3 text-center text-blue-600 dark:text-blue-400 font-mono whitespace-nowrap">{grandRate}%</td>
-                          <td className="p-3 text-right text-emerald-600 dark:text-emerald-400 font-mono whitespace-nowrap">
-                            ₫{grandRevenue.toLocaleString("vi-VN")}
-                          </td>
                         </tr>
                       </>
                     )

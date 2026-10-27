@@ -548,7 +548,6 @@ export default function BomFacilitiesPage() {
                           <th className="p-3 text-center whitespace-nowrap">Giữ Chỗ</th>
                           <th className="p-3 text-center whitespace-nowrap">Bảo Trì</th>
                           <th className="p-3 text-center whitespace-nowrap">Tỷ Lệ Lấp Đầy</th>
-                          <th className="p-3 text-right whitespace-nowrap">Doanh Thu / Tháng</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80 font-semibold text-slate-700 dark:text-slate-300">
@@ -565,7 +564,6 @@ export default function BomFacilitiesPage() {
                           let grandAvailable = 0
                           let grandHold = 0
                           let grandMaintenance = 0
-                          let grandRevenue = 0
 
                           const rows = SIZES.map((cfg) => {
                             const list = selectedFacilityUnits.filter((u) => {
@@ -591,19 +589,12 @@ export default function BomFacilitiesPage() {
                             }).length
                             const maintenance = list.filter((u) => (u.status || "").toUpperCase() === "MAINTENANCE").length
                             const occRate = total > 0 ? Math.round((occupied / total) * 100) : 0
-                            const revenue = list
-                              .filter((u) => {
-                                const st = (u.status || "").toUpperCase()
-                                return st === "OCCUPIED" || st === "RENTED"
-                              })
-                              .reduce((sum, u) => sum + Number(u.monthlyPrice || cfg.defaultNorm), 0)
 
                             grandTotal += total
                             grandOccupied += occupied
                             grandAvailable += available
                             grandHold += hold
                             grandMaintenance += maintenance
-                            grandRevenue += revenue
 
                             return (
                               <tr key={cfg.size} className="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
@@ -627,9 +618,6 @@ export default function BomFacilitiesPage() {
                                     </div>
                                   </div>
                                 </td>
-                                <td className="p-3 text-right font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
-                                  ₫{revenue.toLocaleString("vi-VN")}
-                                </td>
                               </tr>
                             )
                           })
@@ -650,9 +638,6 @@ export default function BomFacilitiesPage() {
                                 <td className="p-3 text-center text-amber-600 dark:text-amber-400 font-mono whitespace-nowrap">{grandHold}</td>
                                 <td className="p-3 text-center text-rose-600 dark:text-rose-400 font-mono whitespace-nowrap">{grandMaintenance}</td>
                                 <td className="p-3 text-center text-blue-600 dark:text-blue-400 font-mono whitespace-nowrap">{grandRate}%</td>
-                                <td className="p-3 text-right text-emerald-600 dark:text-emerald-400 font-mono whitespace-nowrap">
-                                  ₫{grandRevenue.toLocaleString("vi-VN")}
-                                </td>
                               </tr>
                             </>
                           )
