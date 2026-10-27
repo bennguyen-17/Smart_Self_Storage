@@ -17,28 +17,28 @@ import { type UnitPricing, type SurchargeItem } from "@/features/bom/data/bomDat
 
 const SIZE_THEMES: Record<string, { badge: string; border: string; glow: string; text: string; lightBg: string }> = {
   S: {
-    badge: "bg-slate-800 text-sky-300 border-slate-700",
+    badge: "bg-slate-800 text-blue-300 border-slate-700",
     border: "border-slate-800 hover:border-slate-700",
     glow: "from-slate-700/20",
     text: "text-white",
     lightBg: "bg-slate-900/60",
   },
   M: {
-    badge: "bg-slate-800 text-sky-300 border-slate-700",
+    badge: "bg-slate-800 text-blue-300 border-slate-700",
     border: "border-slate-800 hover:border-slate-700",
     glow: "from-slate-700/20",
     text: "text-white",
     lightBg: "bg-slate-900/60",
   },
   L: {
-    badge: "bg-slate-800 text-sky-300 border-slate-700",
+    badge: "bg-slate-800 text-blue-300 border-slate-700",
     border: "border-slate-800 hover:border-slate-700",
     glow: "from-slate-700/20",
     text: "text-white",
     lightBg: "bg-slate-900/60",
   },
   XL: {
-    badge: "bg-slate-800 text-sky-300 border-slate-700",
+    badge: "bg-slate-800 text-blue-300 border-slate-700",
     border: "border-slate-800 hover:border-slate-700",
     glow: "from-slate-700/20",
     text: "text-white",
@@ -472,12 +472,12 @@ export default function BomPricingPage() {
   return (
     <div className="space-y-6">
       {/* Khung Bảng Giá & Phụ Phí Điều Hành */}
-      <div className="bg-white/90 dark:bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-slate-200/90 dark:border-sky-500/20 shadow-sm dark:shadow-xl space-y-6 transition-colors">
+      <div className="bg-white/90 dark:bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-slate-200/90 dark:border-blue-500/20 shadow-sm dark:shadow-xl space-y-6 transition-colors">
         {/* Header điều phối */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800/80 pb-5">
           <div>
             <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400">
+              <span className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400">
                 <SlidersHorizontal className="size-5" />
               </span>
               <h3 className="font-black text-base uppercase text-slate-900 dark:text-white tracking-wide">
@@ -492,7 +492,7 @@ export default function BomPricingPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h4 className="font-black text-xs uppercase text-slate-800 dark:text-slate-200 tracking-wider flex items-center gap-2">
-                <Sparkles className="size-3.5 text-sky-600 dark:text-sky-400" />
+                <Sparkles className="size-3.5 text-blue-600 dark:text-blue-400" />
                 <span>1. Khung Giá Thuê Tiêu Chuẩn &amp; Mức Cọc Theo Các Size Kho</span>
               </h4>
             </div>
@@ -502,7 +502,7 @@ export default function BomPricingPage() {
           <div className="rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-md overflow-hidden">
             <table className="w-full text-left text-xs border-collapse table-auto">
               <thead>
-                <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 dark:bg-slate-900 dark:border-sky-500/30 dark:text-sky-400 uppercase font-bold text-[11px] sm:text-xs tracking-wider">
+                <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 dark:bg-slate-900 dark:border-blue-500/30 dark:text-blue-400 uppercase font-bold text-[11px] sm:text-xs tracking-wider">
                   <th className="py-3 px-3 sm:px-4 text-left">LOẠI KHO / SIZE</th>
                   <th className="py-3 px-2 sm:px-3 text-center">GIÁ THEO NGÀY</th>
                   <th className="py-3 px-2 sm:px-3 text-center">GIÁ THEO THÁNG</th>
@@ -555,7 +555,7 @@ export default function BomPricingPage() {
                         <button
                           type="button"
                           onClick={() => handleOpenPricingModal(item)}
-                          className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-sky-500 text-slate-800 hover:text-slate-950 font-bold text-xs transition cursor-pointer inline-flex items-center gap-1.5 border border-slate-200 dark:bg-slate-800 dark:hover:bg-sky-500 dark:text-slate-200 dark:hover:text-slate-950 dark:border-slate-700 shadow-xs"
+                          className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-600 text-slate-800 hover:text-white font-bold text-xs transition cursor-pointer inline-flex items-center gap-1.5 border border-slate-200 dark:bg-slate-800 dark:hover:bg-blue-600 dark:text-slate-200 dark:hover:text-white dark:border-slate-700 shadow-xs"
                           title="Sửa khung giá & mức cọc"
                         >
                           <Edit3 className="size-3.5" />
@@ -575,7 +575,7 @@ export default function BomPricingPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <h4 className="font-black text-xs uppercase text-slate-800 dark:text-slate-200 tracking-wider flex items-center gap-2">
-                <Tag className="size-3.5 text-sky-600 dark:text-sky-400" />
+                <Tag className="size-3.5 text-blue-600 dark:text-blue-400" />
                 <span>2. Phí Phạt Quá Hạn, Chính Sách Miễn Giảm &amp; Bồi Thường Hư Hỏng</span>
               </h4>
             </div>
@@ -593,7 +593,7 @@ export default function BomPricingPage() {
               <button
                 type="button"
                 onClick={handleOpenAddSurcharge}
-                className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-3.5 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm whitespace-nowrap"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/20 whitespace-nowrap"
               >
                 <Plus className="size-3.5" />
                 <span>Thêm Biểu Phí</span>
@@ -609,7 +609,7 @@ export default function BomPricingPage() {
                 onClick={() => setSurchargeFilter(filterKey)}
                 className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer border ${
                   surchargeFilter === filterKey
-                    ? "bg-sky-500 text-slate-950 border-sky-500 font-black shadow-sm"
+                    ? "bg-blue-600 text-white border-blue-600 font-bold shadow-md shadow-blue-500/20"
                     : "bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:text-white"
                 }`}
               >
@@ -694,7 +694,7 @@ export default function BomPricingPage() {
                           <button
                             type="button"
                             onClick={() => handleOpenEditSurcharge(sc)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-sky-500 text-slate-700 hover:text-slate-950 border border-slate-200 dark:bg-slate-800 dark:hover:bg-sky-500 dark:text-slate-200 dark:hover:text-slate-950 dark:border-slate-700 font-bold transition cursor-pointer text-xs"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-600 text-slate-700 hover:text-white border border-slate-200 dark:bg-slate-800 dark:hover:bg-blue-600 dark:text-slate-200 dark:hover:text-white dark:border-slate-700 font-bold transition cursor-pointer text-xs"
                             title="Chỉnh sửa biểu phí"
                           >
                             <Edit3 className="size-3.5" />
@@ -723,7 +723,7 @@ export default function BomPricingPage() {
           <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 max-w-lg w-full space-y-5 shadow-2xl animate-in fade-in zoom-in duration-150 text-white my-auto">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
-                <h3 className="font-black text-sm uppercase text-sky-400">
+                <h3 className="font-black text-sm uppercase text-blue-400">
                   CẬP NHẬT BIỂU GIÁ &amp; MỨC CỌC CHUẨN - {selectedPricingItem.name}
                 </h3>
               </div>
@@ -752,7 +752,7 @@ export default function BomPricingPage() {
                     }}
                     className={`flex-1 py-1.5 rounded-xl font-black text-xs transition cursor-pointer ${
                       isCurrent
-                        ? "bg-sky-500 text-slate-950 shadow-md font-black"
+                        ? "bg-blue-600 text-white shadow-md font-bold shadow-blue-500/20"
                         : "text-slate-400 hover:text-white hover:bg-slate-900"
                     }`}
                   >
@@ -773,7 +773,7 @@ export default function BomPricingPage() {
                       type="number"
                       value={editDailyPrice}
                       onChange={(e) => setEditDailyPrice(Number(e.target.value))}
-                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">VNĐ/ngày</span>
                   </div>
@@ -787,7 +787,7 @@ export default function BomPricingPage() {
                       type="number"
                       value={editNormPrice}
                       onChange={(e) => setEditNormPrice(Number(e.target.value))}
-                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">VNĐ/tháng</span>
                   </div>
@@ -806,7 +806,7 @@ export default function BomPricingPage() {
                       max={100}
                       value={editClimatePercent}
                       onChange={(e) => setEditClimatePercent(Number(e.target.value))}
-                      className="w-full p-2.5 pr-8 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                      className="w-full p-2.5 pr-8 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">%</span>
                   </div>
@@ -820,7 +820,7 @@ export default function BomPricingPage() {
                       type="number"
                       value={editDepositAmount}
                       onChange={(e) => setEditDepositAmount(Number(e.target.value))}
-                      className="w-full p-2.5 pr-12 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                      className="w-full p-2.5 pr-12 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">VNĐ</span>
                   </div>
@@ -837,7 +837,7 @@ export default function BomPricingPage() {
               </button>
               <button
                 onClick={handleSavePricingModal}
-                className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs shadow-md shadow-sky-500/20 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer"
               >
                 Lưu Thay Đổi
               </button>
@@ -856,7 +856,7 @@ export default function BomPricingPage() {
           >
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
-                <h3 className="font-black text-sm uppercase text-sky-400">
+                <h3 className="font-black text-sm uppercase text-blue-400">
                   {editingSurcharge ? "CẬP NHẬT BIỂU PHÍ & PHỤ THU" : "THÊM PHỤ THU / BIỂU PHÍ MỚI"}
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
@@ -885,7 +885,7 @@ export default function BomPricingPage() {
                 <select
                   value={surchargeCat}
                   onChange={(e) => setSurchargeCat(e.target.value as any)}
-                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
                 >
                   <option value="penalty">1. Phí Phạt Quá Hạn (Penalties)</option>
                   <option value="discount">2. Chính Sách Miễn Giảm Giá (Discount Policy)</option>
@@ -903,7 +903,7 @@ export default function BomPricingPage() {
                   placeholder="Ví dụ: Phí Phạt Quá Hạn Thanh Toán"
                   value={surchargeName}
                   onChange={(e) => setSurchargeName(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -921,7 +921,7 @@ export default function BomPricingPage() {
                     }}
                     className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                       surchargeCalcType === "FIXED"
-                        ? "bg-sky-500 text-slate-950 border-sky-400 shadow-sm font-black"
+                        ? "bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-500/20 font-bold"
                         : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                     }`}
                   >
@@ -935,7 +935,7 @@ export default function BomPricingPage() {
                     }}
                     className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                       surchargeCalcType === "PERCENT"
-                        ? "bg-sky-500 text-slate-950 border-sky-400 shadow-sm font-black"
+                        ? "bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-500/20 font-bold"
                         : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                     }`}
                   >
@@ -958,7 +958,7 @@ export default function BomPricingPage() {
                       step={surchargeCalcType === "PERCENT" ? "0.1" : "1000"}
                       value={surchargeFeeValue}
                       onChange={(e) => setSurchargeFeeValue(parseFloat(e.target.value) || 0)}
-                      className="w-full p-2.5 pr-10 rounded-xl border border-slate-700 bg-slate-950 font-mono font-bold text-xs text-white outline-none focus:border-sky-400"
+                      className="w-full p-2.5 pr-10 rounded-xl border border-slate-700 bg-slate-950 font-mono font-bold text-xs text-white outline-none focus:border-blue-500"
                     />
                     <span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400 pointer-events-none">
                       {surchargeCalcType === "PERCENT" ? "%" : "₫"}
@@ -973,7 +973,7 @@ export default function BomPricingPage() {
                   <select
                     value={surchargeUnitBasis}
                     onChange={(e) => setSurchargeUnitBasis(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
                   >
                     <option value="PER_REQUEST">Theo Lần (/ lần)</option>
                     <option value="PER_MONTH">Theo Tháng (/ tháng)</option>
@@ -992,7 +992,7 @@ export default function BomPricingPage() {
                     id="waiveDepositPolicy"
                     checked={surchargeWaiveDeposit}
                     onChange={(e) => setSurchargeWaiveDeposit(e.target.checked)}
-                    className="rounded border-slate-700 text-sky-500 focus:ring-sky-500 w-4 h-4 cursor-pointer"
+                    className="rounded border-slate-700 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
                   />
                   <label htmlFor="waiveDepositPolicy" className="text-xs text-slate-300 font-bold cursor-pointer select-none">
                     Miễn thu tiền cọc phòng khi áp dụng chính sách này
@@ -1010,14 +1010,14 @@ export default function BomPricingPage() {
                   placeholder="Ví dụ: Phạt 50.000 VNĐ mỗi ngày quá hạn thanh toán tiền kho..."
                   value={surchargeNote}
                   onChange={(e) => setSurchargeNote(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-medium text-xs text-white outline-none focus:border-sky-400 resize-none"
+                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-medium text-xs text-white outline-none focus:border-blue-500 resize-none"
                 />
               </div>
 
               {/* Dòng Xem Trước (Preview) */}
-              <div className="p-3 bg-slate-950/80 rounded-xl border border-sky-500/30 flex items-center justify-between">
+              <div className="p-3 bg-slate-950/80 rounded-xl border border-blue-500/30 flex items-center justify-between">
                 <span className="text-[11px] text-slate-400 font-medium">Mức phí áp dụng vào hóa đơn:</span>
-                <span className="font-mono font-black text-xs text-sky-400">
+                <span className="font-mono font-black text-xs text-blue-400">
                   {previewRateString}
                 </span>
               </div>
@@ -1048,7 +1048,7 @@ export default function BomPricingPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs shadow-md shadow-sky-500/20 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer"
                 >
                   {editingSurcharge ? "Lưu Thay Đổi" : "Lưu Hạng Mục"}
                 </button>
@@ -1068,7 +1068,7 @@ export default function BomPricingPage() {
           >
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
-                <h3 className="font-black text-sm uppercase text-sky-400">
+                <h3 className="font-black text-sm uppercase text-blue-400">
                   THÊM LOẠI KHO MỚI &amp; KHUNG GIÁ
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
@@ -1096,7 +1096,7 @@ export default function BomPricingPage() {
                     placeholder="Ví dụ: Kho VIP Siêu Lớn"
                     value={newTypeName}
                     onChange={(e) => setNewTypeName(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
@@ -1106,7 +1106,7 @@ export default function BomPricingPage() {
                   <select
                     value={newSizeCode}
                     onChange={(e) => setNewSizeCode(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
                   >
                     <option value="S">Size S (Nhỏ / Tủ đồ cá nhân)</option>
                     <option value="M">Size M (Vừa / Căn hộ mini)</option>
@@ -1128,7 +1128,7 @@ export default function BomPricingPage() {
                   placeholder="Ví dụ: 3.5m x 3.0m x 2.8m"
                   value={newDimensions}
                   onChange={(e) => setNewDimensions(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -1144,7 +1144,7 @@ export default function BomPricingPage() {
                       min={0}
                       value={newDailyPrice}
                       onChange={(e) => setNewDailyPrice(Number(e.target.value))}
-                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">VNĐ/ngày</span>
                   </div>
@@ -1160,7 +1160,7 @@ export default function BomPricingPage() {
                       min={0}
                       value={newMonthlyPrice}
                       onChange={(e) => setNewMonthlyPrice(Number(e.target.value))}
-                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">VNĐ/tháng</span>
                   </div>
@@ -1179,7 +1179,7 @@ export default function BomPricingPage() {
                       max={100}
                       value={newClimatePercent}
                       onChange={(e) => setNewClimatePercent(Number(e.target.value))}
-                      className="w-full p-2.5 pr-8 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                      className="w-full p-2.5 pr-8 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">%</span>
                   </div>
@@ -1195,7 +1195,7 @@ export default function BomPricingPage() {
                       min={0}
                       value={newDepositAmount}
                       onChange={(e) => setNewDepositAmount(Number(e.target.value))}
-                      className="w-full p-2.5 pr-12 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                      className="w-full p-2.5 pr-12 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">VNĐ</span>
                   </div>
@@ -1214,7 +1214,7 @@ export default function BomPricingPage() {
               <button
                 type="submit"
                 disabled={isCreatingPricing}
-                className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs shadow-md shadow-sky-500/20 cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer disabled:opacity-50"
               >
                 {isCreatingPricing ? "Đang Lưu..." : "Thêm Loại Kho Mới"}
               </button>

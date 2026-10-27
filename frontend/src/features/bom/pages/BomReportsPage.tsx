@@ -237,7 +237,7 @@ export default function BomReportsPage() {
             onClick={() => handleSelectFacility("ALL")}
             className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
               selectedFacilityId === "ALL"
-                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 border border-sky-400"
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25 border border-blue-500"
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 border border-slate-200 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:border-slate-700/60"
             }`}
           >
@@ -253,7 +253,7 @@ export default function BomReportsPage() {
                 onClick={() => handleSelectFacility(f.id)}
                 className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
                   isSelected
-                    ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 border border-sky-400"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25 border border-blue-500"
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 border border-slate-200 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:border-slate-700/60"
                 }`}
                 title={f.name}
@@ -276,7 +276,7 @@ export default function BomReportsPage() {
             <div>
               <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white tracking-wider flex items-center gap-2">
                 <span>BÁO CÁO CƠ CẤU Ô KHO THEO SIZE &amp; LOẠI HÌNH</span>
-                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30">
+                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200 dark:border-blue-900">
                   {currentFacCode}
                 </span>
               </h3>
@@ -288,7 +288,7 @@ export default function BomReportsPage() {
 
           {isLoadingUnits ? (
             <div className="p-8 text-center text-slate-500 dark:text-slate-400 font-bold space-y-2">
-              <div className="size-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto" />
+              <div className="size-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
               <p className="text-xs">Đang tổng hợp cơ cấu ô kho...</p>
             </div>
           ) : (
@@ -377,7 +377,7 @@ export default function BomReportsPage() {
                               <span className="font-mono font-bold text-slate-900 dark:text-white">{occRate}%</span>
                               <div className="w-14 bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
                                 <div
-                                  className="h-full bg-sky-500 dark:bg-slate-300 rounded-full"
+                                  className="h-full bg-blue-600 dark:bg-slate-300 rounded-full"
                                   style={{ width: `${Math.min(occRate, 100)}%` }}
                                 />
                               </div>
@@ -400,12 +400,12 @@ export default function BomReportsPage() {
                             TỔNG CỘNG CƠ CẤU
                           </td>
                           <td className="p-3 text-center text-slate-400 font-mono whitespace-nowrap">—</td>
-                          <td className="p-3 text-center text-sky-600 dark:text-sky-400 font-mono whitespace-nowrap">{grandTotal} ô</td>
+                          <td className="p-3 text-center text-blue-600 dark:text-blue-400 font-mono whitespace-nowrap">{grandTotal} ô</td>
                           <td className="p-3 text-center text-emerald-600 dark:text-emerald-400 font-mono whitespace-nowrap">{grandOccupied}</td>
                           <td className="p-3 text-center text-slate-600 dark:text-slate-300 font-mono whitespace-nowrap">{grandAvailable}</td>
                           <td className="p-3 text-center text-amber-600 dark:text-amber-400 font-mono whitespace-nowrap">{grandHold}</td>
                           <td className="p-3 text-center text-rose-600 dark:text-rose-400 font-mono whitespace-nowrap">{grandMaintenance}</td>
-                          <td className="p-3 text-center text-sky-600 dark:text-sky-400 font-mono whitespace-nowrap">{grandRate}%</td>
+                          <td className="p-3 text-center text-blue-600 dark:text-blue-400 font-mono whitespace-nowrap">{grandRate}%</td>
                           <td className="p-3 text-right text-emerald-600 dark:text-emerald-400 font-mono whitespace-nowrap">
                             ₫{grandRevenue.toLocaleString("vi-VN")}
                           </td>

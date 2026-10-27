@@ -72,7 +72,7 @@ export default function BomDashboardPage() {
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-wider uppercase drop-shadow-xs dark:drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]">
           QUẢN LÝ VẬN HÀNH TOÀN HỆ THỐNG
         </h1>
-        <p className="text-sky-600 dark:text-sky-300 font-semibold text-base sm:text-lg max-w-2xl mx-auto drop-shadow-xs dark:drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
+        <p className="text-blue-600 dark:text-blue-400 font-semibold text-base sm:text-lg max-w-2xl mx-auto drop-shadow-xs dark:drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
           Trung tâm điều hành cấp cao &amp; giám sát cụm cơ sở kho thông minh 24/7
         </p>
       </div>
@@ -99,20 +99,20 @@ export default function BomDashboardPage() {
               whileHover={{ y: -6, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate(item.path)}
-              className="group p-6 rounded-3xl min-h-[230px] flex flex-col justify-between items-start text-left cursor-pointer border-2 border-slate-200/90 hover:border-sky-400 bg-white/90 hover:bg-white dark:border-sky-400/80 dark:hover:border-sky-300 dark:bg-slate-950/80 dark:hover:bg-slate-900/90 shadow-sm hover:shadow-lg dark:shadow-[0_0_25px_rgba(56,189,248,0.2)] dark:hover:shadow-[0_0_35px_rgba(56,189,248,0.45)] backdrop-blur-md relative overflow-hidden transition-all"
+              className="group p-6 rounded-3xl min-h-[230px] flex flex-col justify-between items-start text-left cursor-pointer border-2 border-slate-200/90 hover:border-blue-500 bg-white/90 hover:bg-white dark:border-blue-500/80 dark:hover:border-blue-400 dark:bg-slate-950/80 dark:hover:bg-slate-900/90 shadow-sm hover:shadow-lg dark:shadow-[0_0_25px_rgba(37,99,235,0.2)] dark:hover:shadow-[0_0_35px_rgba(37,99,235,0.45)] backdrop-blur-md relative overflow-hidden transition-all"
             >
               {/* Lớp nền gradient ánh sáng nhẹ khi hover */}
-              <div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
               <div className="flex items-center justify-between w-full relative z-10">
                 <motion.div
                   layoutId={`bom-module-icon-${item.path}`}
                   transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                  className="p-3.5 rounded-2xl bg-sky-50 dark:bg-sky-500/15 border border-sky-200 dark:border-sky-400/30 text-sky-600 dark:text-sky-400 group-hover:bg-sky-500 group-hover:text-slate-950 transition-colors shadow-xs"
+                  className="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-xs"
                 >
                   <Icon className="size-7" />
                 </motion.div>
-                <span className="text-[10px] font-black tracking-wider uppercase px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-500/10 dark:border-sky-400/30 dark:text-sky-300">
+                <span className="text-[10px] font-black tracking-wider uppercase px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300">
                   {item.badge}
                 </span>
               </div>
@@ -122,11 +122,11 @@ export default function BomDashboardPage() {
                   <motion.span
                     layoutId={`bom-module-title-${item.path}`}
                     transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                    className="text-lg font-black text-slate-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-300 tracking-tight transition-colors"
+                    className="text-lg font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 tracking-tight transition-colors"
                   >
                     {item.label}
                   </motion.span>
-                  <ArrowUpRight className="size-5 text-slate-400 group-hover:text-sky-600 dark:group-hover:text-sky-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                  <ArrowUpRight className="size-5 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-400 font-medium line-clamp-2 leading-relaxed">
                   {item.shortDesc}

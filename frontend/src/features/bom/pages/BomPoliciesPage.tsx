@@ -49,7 +49,7 @@ export default function BomPoliciesPage() {
           <button
             type="button"
             onClick={handleSaveSettings}
-            className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs px-5 py-2.5 rounded-xl transition cursor-pointer shadow-sm shrink-0 flex items-center gap-2"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition cursor-pointer shadow-md shadow-blue-500/20 shrink-0 flex items-center gap-2"
           >
             <CheckCircle2 className="size-4" />
             <span>Lưu Thông Số</span>
@@ -209,7 +209,7 @@ export default function BomPoliciesPage() {
                     type="number"
                     value={pinDuration}
                     onChange={(e) => setPinDuration(Number(e.target.value))}
-                    className="w-16 p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 text-center font-bold font-mono text-slate-900 dark:text-white text-xs outline-none focus:border-sky-500"
+                    className="w-16 p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 text-center font-bold font-mono text-slate-900 dark:text-white text-xs outline-none focus:border-blue-600"
                   />
                   <span className="font-bold text-slate-500 dark:text-slate-400 text-xs">Giây</span>
                 </div>
@@ -291,7 +291,7 @@ export default function BomPoliciesPage() {
                 <span className="font-semibold text-slate-800 dark:text-slate-200">Vũ khí, vật liệu nổ, hàng cấm/lậu</span>
               </div>
               <div className="p-3 rounded-xl bg-white dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex items-center gap-2.5 shadow-xs dark:shadow-none">
-                <PackageX className="size-4 text-sky-500 shrink-0" />
+                <PackageX className="size-4 text-blue-500 shrink-0" />
                 <span className="font-semibold text-slate-800 dark:text-slate-200">Động vật sống &amp; hàng phân hủy mùi</span>
               </div>
             </div>

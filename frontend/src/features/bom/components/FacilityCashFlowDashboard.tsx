@@ -215,7 +215,7 @@ export default function FacilityCashFlowDashboard({
               ))}
 
               {/* Vùng đổ bóng Gradient bên dưới đường cong */}
-              <path d={revenueAreaPath} fill="url(#facilityRevenueGradient)" className="text-sky-500 dark:text-white" />
+              <path d={revenueAreaPath} fill="url(#facilityRevenueGradient)" className="text-blue-600 dark:text-white" />
 
               {/* Đường cong doanh thu chính */}
               <path
@@ -224,7 +224,7 @@ export default function FacilityCashFlowDashboard({
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="stroke-sky-600 dark:stroke-white"
+                className="stroke-blue-600 dark:stroke-white"
               />
 
               {/* Các điểm tròn dữ liệu trên từng tháng & Số tiền hiển thị trực tiếp */}
@@ -259,7 +259,7 @@ export default function FacilityCashFlowDashboard({
                       className={
                         isNeg
                           ? "fill-rose-500 stroke-white dark:stroke-slate-900 stroke-2"
-                          : "fill-sky-600 dark:fill-white stroke-white dark:stroke-slate-900 stroke-2"
+                          : "fill-blue-600 dark:fill-white stroke-white dark:stroke-slate-900 stroke-2"
                       }
                     />
 
@@ -271,7 +271,7 @@ export default function FacilityCashFlowDashboard({
                       fontSize="9.5"
                       fill="currentColor"
                       className={`font-mono font-bold select-none ${
-                        isNeg ? "text-rose-500 fill-rose-500" : "text-sky-600 dark:text-sky-300 fill-sky-600 dark:fill-sky-300"
+                        isNeg ? "text-rose-500 fill-rose-500" : "text-blue-600 dark:text-blue-400 fill-blue-600 dark:fill-blue-400"
                       }`}
                     >
                       {formatShortVnd(p.revenue)}
@@ -354,7 +354,7 @@ export default function FacilityCashFlowDashboard({
                     r="38"
                     stroke="currentColor"
                     strokeWidth="8"
-                    className="text-sky-500 dark:text-white transition-all duration-1000 ease-out"
+                    className="text-blue-600 dark:text-white transition-all duration-1000 ease-out"
                     fill="transparent"
                     strokeDasharray={2 * Math.PI * 38}
                     strokeDashoffset={

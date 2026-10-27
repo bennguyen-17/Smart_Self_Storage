@@ -488,7 +488,7 @@ export default function BomFacilitiesPage() {
                         onClick={() => navigate(`/bom/facilities/${f.id}`)}
                         className={`px-2.5 py-1 rounded-lg font-mono font-bold text-xs transition-all flex items-center gap-1 cursor-pointer shrink-0 ${
                           isSelected
-                            ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20 font-black"
+                            ? "bg-blue-600 text-white shadow-md shadow-blue-500/20 font-bold"
                             : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800/60"
                         }`}
                         title={f.name}
@@ -532,7 +532,7 @@ export default function BomFacilitiesPage() {
 
                 {isLoadingSelectedUnits ? (
                   <div className="p-8 text-center text-slate-500 dark:text-slate-400 font-bold space-y-2">
-                    <div className="size-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                    <div className="size-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
                     <p className="text-xs">Đang tổng hợp cơ cấu ô kho...</p>
                   </div>
                 ) : (
@@ -621,7 +621,7 @@ export default function BomFacilitiesPage() {
                                     <span className="font-mono font-bold text-slate-900 dark:text-white">{occRate}%</span>
                                     <div className="w-14 bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
                                       <div
-                                        className="h-full bg-sky-500 dark:bg-slate-300 rounded-full"
+                                        className="h-full bg-blue-600 dark:bg-slate-300 rounded-full"
                                         style={{ width: `${Math.min(occRate, 100)}%` }}
                                       />
                                     </div>
@@ -644,12 +644,12 @@ export default function BomFacilitiesPage() {
                                   TỔNG CỘNG CƠ CẤU
                                 </td>
                                 <td className="p-3 text-center text-slate-400 font-mono whitespace-nowrap">—</td>
-                                <td className="p-3 text-center text-sky-600 dark:text-sky-400 font-mono whitespace-nowrap">{grandTotal} ô</td>
+                                <td className="p-3 text-center text-blue-600 dark:text-blue-400 font-mono whitespace-nowrap">{grandTotal} ô</td>
                                 <td className="p-3 text-center text-emerald-600 dark:text-emerald-400 font-mono whitespace-nowrap">{grandOccupied}</td>
                                 <td className="p-3 text-center text-slate-600 dark:text-slate-300 font-mono whitespace-nowrap">{grandAvailable}</td>
                                 <td className="p-3 text-center text-amber-600 dark:text-amber-400 font-mono whitespace-nowrap">{grandHold}</td>
                                 <td className="p-3 text-center text-rose-600 dark:text-rose-400 font-mono whitespace-nowrap">{grandMaintenance}</td>
-                                <td className="p-3 text-center text-sky-600 dark:text-sky-400 font-mono whitespace-nowrap">{grandRate}%</td>
+                                <td className="p-3 text-center text-blue-600 dark:text-blue-400 font-mono whitespace-nowrap">{grandRate}%</td>
                                 <td className="p-3 text-right text-emerald-600 dark:text-emerald-400 font-mono whitespace-nowrap">
                                   ₫{grandRevenue.toLocaleString("vi-VN")}
                                 </td>
@@ -667,11 +667,11 @@ export default function BomFacilitiesPage() {
         })()
       ) : (
         /* BẢNG GIÁM SÁT HOẠT ĐỘNG VÀ CƠ SỞ KHO TOÀN CHUỖI */
-        <div className="bg-white/90 dark:bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-slate-200/90 dark:border-sky-500/20 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+        <div className="bg-white/90 dark:bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-slate-200/90 dark:border-blue-500/20 shadow-sm dark:shadow-xl space-y-4 transition-colors">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-slate-800/80 pb-4">
             <div>
               <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-slate-900 dark:text-white">
-                <Warehouse className="size-4.5 text-sky-600 dark:text-sky-400" />
+                <Warehouse className="size-4.5 text-blue-600 dark:text-blue-400" />
                 <span>GIÁM SÁT HOẠT ĐỘNG VÀ CƠ SỞ KHO TOÀN CHUỖI</span>
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -687,7 +687,7 @@ export default function BomFacilitiesPage() {
                   onClick={() => setRevenuePeriod("this_month")}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     revenuePeriod === "this_month"
-                      ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20"
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                   }`}
                   title="Xem doanh thu tháng hiện tại"
@@ -699,7 +699,7 @@ export default function BomFacilitiesPage() {
                   onClick={() => setRevenuePeriod("last_3_months")}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     revenuePeriod === "last_3_months"
-                      ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20"
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                   }`}
                   title="Xem doanh thu 3 tháng gần nhất"
@@ -711,7 +711,7 @@ export default function BomFacilitiesPage() {
                   onClick={() => setRevenuePeriod("all_time")}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     revenuePeriod === "all_time"
-                      ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20"
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                   }`}
                   title="Xem tổng doanh thu toàn thời gian"
@@ -723,7 +723,7 @@ export default function BomFacilitiesPage() {
               {/* NÚT THÊM CƠ SỞ KHO MỚI */}
               <button
                 onClick={handleOpenAddModal}
-                className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-sky-500/20 shrink-0"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/20 shrink-0"
               >
                 <Plus className="size-4" />
                 <span>Thêm Cơ Sở Kho Mới</span>
@@ -734,7 +734,7 @@ export default function BomFacilitiesPage() {
           <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-md">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 dark:bg-slate-900 dark:border-sky-500/30 dark:text-sky-400 uppercase font-bold text-[11px] sm:text-xs tracking-wider">
+                <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 dark:bg-slate-900 dark:border-blue-500/30 dark:text-blue-400 uppercase font-bold text-[11px] sm:text-xs tracking-wider">
                   <th className="py-3 px-4 text-center whitespace-nowrap">MÃ CƠ SỞ</th>
                   <th className="py-3 px-4 text-left whitespace-nowrap">CƠ SỞ KHO</th>
                   <th className="py-3 px-4 text-center whitespace-nowrap">QUẢN LÝ CHI NHÁNH</th>
@@ -782,7 +782,7 @@ export default function BomFacilitiesPage() {
                           <button
                             type="button"
                             onClick={() => navigate(`/bom/facilities/${fac.id}`)}
-                            className="font-mono font-bold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:underline text-xs sm:text-[13px] cursor-pointer"
+                            className="font-mono font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline text-xs sm:text-[13px] cursor-pointer"
                             title="Bấm để xem báo cáo dòng tiền & thông số cơ sở"
                           >
                             {fac.code}
@@ -794,7 +794,7 @@ export default function BomFacilitiesPage() {
                           <button
                             type="button"
                             onClick={() => navigate(`/bom/facilities/${fac.id}`)}
-                            className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm hover:text-sky-600 dark:hover:text-sky-400 hover:underline transition-colors text-left cursor-pointer"
+                            className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors text-left cursor-pointer"
                             title="Bấm để xem báo cáo dòng tiền & thông số cơ sở"
                           >
                             {cleanName}
@@ -833,7 +833,7 @@ export default function BomFacilitiesPage() {
                           <div className="flex items-center justify-center gap-1.5">
                             <button
                               onClick={() => navigate(`/bom/facilities/${fac.id}`)}
-                              className="bg-sky-500/15 hover:bg-sky-500 text-sky-600 dark:text-sky-400 hover:text-slate-950 border border-sky-500/30 font-bold text-xs px-2.5 py-1.5 rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1"
+                              className="bg-blue-50 hover:bg-blue-600 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 hover:text-white dark:hover:text-white border border-blue-200 dark:border-blue-800 font-bold text-xs px-2.5 py-1.5 rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1"
                               title="Xem biểu đồ dòng tiền & thông số cơ sở"
                             >
                               <TrendingUp className="size-3.5" />
@@ -877,7 +877,7 @@ export default function BomFacilitiesPage() {
           <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 max-w-lg w-full space-y-5 shadow-2xl animate-in fade-in zoom-in duration-150 text-white my-auto">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
-                <h3 className="font-black text-sm uppercase text-sky-400">
+                <h3 className="font-black text-sm uppercase text-blue-400">
                   CHI TIẾT CẤU HÌNH CƠ SỞ KHO
                 </h3>
                 <p className="text-xs text-slate-400 font-bold mt-0.5">
@@ -897,7 +897,7 @@ export default function BomFacilitiesPage() {
               <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <UserCheck className="size-4 text-sky-400" />
+                    <UserCheck className="size-4 text-blue-400" />
                     <span className="text-[11px] text-slate-300 uppercase font-black tracking-wider">
                       Phân công Quản Lý Cơ Sở (Facility Manager)
                     </span>
@@ -965,7 +965,7 @@ export default function BomFacilitiesPage() {
                           }
                         }
                       }}
-                      className="w-full appearance-none px-3.5 py-2.5 pr-10 rounded-xl border border-slate-700 bg-slate-900 font-bold text-xs text-white outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition cursor-pointer shadow-inner"
+                      className="w-full appearance-none px-3.5 py-2.5 pr-10 rounded-xl border border-slate-700 bg-slate-900 font-bold text-xs text-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition cursor-pointer shadow-inner"
                     >
                       <option value="" className="bg-slate-900 text-slate-400 font-normal">
                         -- Chọn quản lý từ danh sách nhân sự --
@@ -979,7 +979,7 @@ export default function BomFacilitiesPage() {
                         !availableManagers.some(
                           (p) => p.name.trim().toLowerCase() === editManagerName.trim().toLowerCase()
                         ) && (
-                          <option value="__CUSTOM__" className="bg-slate-900 text-sky-300 font-medium">
+                          <option value="__CUSTOM__" className="bg-slate-900 text-blue-300 font-medium">
                             ✍️ Tùy chỉnh: {editManagerName}
                           </option>
                         )}
@@ -1001,7 +1001,7 @@ export default function BomFacilitiesPage() {
                         value={editManagerName}
                         onChange={(e) => setEditManagerName(e.target.value)}
                         placeholder="VD: Trần Văn Quản Lý..."
-                        className="w-full px-3 py-2 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white placeholder-slate-500 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                       />
                     </div>
 
@@ -1016,7 +1016,7 @@ export default function BomFacilitiesPage() {
                           value={editManagerPhone}
                           onChange={(e) => setEditManagerPhone(e.target.value)}
                           placeholder="VD: 0912 345 678"
-                          className="w-full px-2.5 py-2 rounded-lg border border-slate-700 bg-slate-950 font-medium text-xs text-white placeholder-slate-500 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition"
+                          className="w-full px-2.5 py-2 rounded-lg border border-slate-700 bg-slate-950 font-medium text-xs text-white placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                         />
                       </div>
                       <div>
@@ -1029,7 +1029,7 @@ export default function BomFacilitiesPage() {
                           value={editManagerEmail}
                           onChange={(e) => setEditManagerEmail(e.target.value)}
                           placeholder="VD: manager@smartstorage.vn"
-                          className="w-full px-2.5 py-2 rounded-lg border border-slate-700 bg-slate-950 font-medium text-xs text-white placeholder-slate-500 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition"
+                          className="w-full px-2.5 py-2 rounded-lg border border-slate-700 bg-slate-950 font-medium text-xs text-white placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                         />
                       </div>
                     </div>
@@ -1048,7 +1048,7 @@ export default function BomFacilitiesPage() {
                   <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
                     Quy Mô Ô Kho:
                   </label>
-                  <div className="p-2.5 rounded-xl border border-slate-800 bg-slate-950/80 font-bold text-xs text-sky-300 flex items-center justify-between">
+                  <div className="p-2.5 rounded-xl border border-slate-800 bg-slate-950/80 font-bold text-xs text-blue-300 flex items-center justify-between">
                     <span>
                       {selectedFacility.layoutType === "Layout B" ||
                       selectedFacility.layoutType === "B" ||
@@ -1068,7 +1068,7 @@ export default function BomFacilitiesPage() {
                     step="0.05"
                     value={facilityMultiplier}
                     onChange={(e) => setFacilityMultiplier(Number(e.target.value))}
-                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400"
+                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -1083,7 +1083,7 @@ export default function BomFacilitiesPage() {
               </button>
               <button
                 onClick={handleSaveFacilityModal}
-                className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs shadow-md cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer"
               >
                 Lưu Cấu Hình
               </button>
@@ -1100,7 +1100,7 @@ export default function BomFacilitiesPage() {
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
-                <h3 className="font-black text-sm uppercase text-sky-400 flex items-center gap-2">
+                <h3 className="font-black text-sm uppercase text-blue-400 flex items-center gap-2">
                   <Warehouse className="size-4.5" />
                   <span>THÊM CƠ SỞ KHO MỚI</span>
                 </h3>
@@ -1125,7 +1125,7 @@ export default function BomFacilitiesPage() {
                   value={newFacName}
                   onChange={(e) => setNewFacName(e.target.value)}
                   placeholder="VD: SmartStorage Cầu Giấy hoặc SmartStorage Bình Thạnh"
-                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400 placeholder:text-slate-600"
+                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
                 />
               </div>
 
@@ -1138,7 +1138,7 @@ export default function BomFacilitiesPage() {
                   <select
                     value={newFacCity}
                     onChange={(e) => handleCityChange(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-sky-400 cursor-pointer"
+                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500 cursor-pointer"
                   >
                     {CITY_REGIONS.map((city) => (
                       <option key={city.prefix} value={city.prefix}>
@@ -1157,7 +1157,7 @@ export default function BomFacilitiesPage() {
                       type="text"
                       value={newFacCode}
                       onChange={(e) => setNewFacCode(e.target.value.toUpperCase())}
-                      className="w-full p-2.5 pl-3 rounded-xl border border-sky-500/40 bg-sky-950/20 font-mono font-black text-xs text-sky-300 outline-none focus:border-sky-400 uppercase tracking-wider"
+                      className="w-full p-2.5 pl-3 rounded-xl border border-blue-500/40 bg-blue-950/20 font-mono font-black text-xs text-blue-300 outline-none focus:border-blue-500 uppercase tracking-wider"
                     />
                   </div>
                 </div>
@@ -1175,18 +1175,18 @@ export default function BomFacilitiesPage() {
                     onClick={() => setNewFacLayout("A")}
                     className={`p-3.5 rounded-2xl border transition-all cursor-pointer relative ${
                       newFacLayout === "A"
-                        ? "bg-sky-500/10 border-sky-400 shadow-md shadow-sky-500/10 ring-1 ring-sky-400"
+                        ? "bg-blue-500/10 border-blue-500 shadow-md shadow-blue-500/10 ring-1 ring-blue-500"
                         : "bg-slate-950/60 border-slate-800 hover:border-slate-700"
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-extrabold text-xs text-sky-400">Layout A</span>
-                      {newFacLayout === "A" && <CheckCircle2 className="size-4 text-sky-400" />}
+                      <span className="font-extrabold text-xs text-blue-400">Layout A</span>
+                      {newFacLayout === "A" && <CheckCircle2 className="size-4 text-blue-400" />}
                     </div>
                     <div className="space-y-1.5 text-[10px] bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
                       <div className="flex items-center justify-between">
                         <span className="text-slate-400 shrink-0">Quy mô:</span>
-                        <span className="font-black text-sky-300 font-mono">46 Ô Kho (3 Tầng)</span>
+                        <span className="font-bold text-blue-300 font-mono">46 Ô Kho (3 Tầng)</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-slate-400 shrink-0">Kích thước:</span>
@@ -1247,7 +1247,7 @@ export default function BomFacilitiesPage() {
                     CITY_REGIONS.find((c) => c.prefix === newFacCity)?.hint ||
                     "Số nhà, tên đường, phường/xã, quận/huyện..."
                   }
-                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-semibold text-xs text-white outline-none focus:border-sky-400 placeholder:text-slate-600"
+                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-semibold text-xs text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
                 />
               </div>
 
@@ -1262,7 +1262,7 @@ export default function BomFacilitiesPage() {
                     value={newFacManager}
                     onChange={(e) => setNewFacManager(e.target.value)}
                     placeholder="VD: Nguyễn Văn Quản Lý"
-                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-semibold text-xs text-white outline-none focus:border-sky-400 placeholder:text-slate-600"
+                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-semibold text-xs text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
                   />
                 </div>
                 <div>
@@ -1274,7 +1274,7 @@ export default function BomFacilitiesPage() {
                     value={newFacPhone}
                     onChange={(e) => setNewFacPhone(e.target.value)}
                     placeholder="VD: 0901234567"
-                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-semibold text-xs text-white outline-none focus:border-sky-400 placeholder:text-slate-600"
+                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-semibold text-xs text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
                   />
                 </div>
               </div>
@@ -1293,7 +1293,7 @@ export default function BomFacilitiesPage() {
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleCreateFacility}
-                className="px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-slate-950 font-extrabold text-xs shadow-md cursor-pointer flex items-center gap-1.5 transition"
+                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer flex items-center gap-1.5 transition"
               >
                 <Plus className="size-4" />
                 <span>{isSubmitting ? "Đang Đồng Bộ..." : "Tạo & Đồng Bộ Cơ Sở Lên 2D"}</span>
