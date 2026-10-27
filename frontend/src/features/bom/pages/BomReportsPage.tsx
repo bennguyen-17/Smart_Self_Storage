@@ -130,6 +130,7 @@ export default function BomReportsPage() {
         overdueContracts: breakdownList.reduce((acc, r) => acc + Number(r.overdueContracts || 0), 0),
         totalUnits: Number(chainOverview?.chainTotalUnits || 0),
         occupiedUnits: breakdownList.reduce((acc, r) => acc + Number(r.occupiedUnits || 0), 0),
+        reservedUnits: breakdownList.reduce((acc, r) => acc + Number(r.reservedUnits || 0), 0),
         availableUnits: breakdownList.reduce((acc, r) => acc + Number(r.availableUnits || 0), 0),
         maintenanceUnits: breakdownList.reduce((acc, r) => acc + Number(r.maintenanceUnits || 0), 0),
         occupancyRate: Number(chainOverview?.chainAverageOccupancyRate || 0),
@@ -152,6 +153,7 @@ export default function BomReportsPage() {
     const overdue = Number(facBreakdown?.overdueContracts ?? facPerformance?.overdueUnits ?? 0)
     const tUnits = Number(facBreakdown?.totalUnits ?? facPerformance?.totalUnits ?? 46)
     const occUnits = Number(facBreakdown?.occupiedUnits ?? facPerformance?.occupied ?? 0)
+    const resUnits = Number(facBreakdown?.reservedUnits ?? (facPerformance as any)?.reservedUnits ?? 0)
     const availUnits = Number(facBreakdown?.availableUnits ?? facPerformance?.available ?? 0)
     const maintUnits = Number(facBreakdown?.maintenanceUnits ?? facPerformance?.maintenance ?? 0)
     const occRate = Number(
@@ -172,6 +174,7 @@ export default function BomReportsPage() {
       overdueContracts: overdue,
       totalUnits: tUnits,
       occupiedUnits: occUnits,
+      reservedUnits: resUnits,
       availableUnits: availUnits,
       maintenanceUnits: maintUnits,
       occupancyRate: occRate,

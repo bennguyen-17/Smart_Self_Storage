@@ -19,6 +19,7 @@ export interface FacilityCashFlowDashboardProps {
   penaltyRevenue?: number
   totalUnits?: number
   occupiedUnits?: number
+  reservedUnits?: number
   availableUnits?: number
   maintenanceUnits?: number
   occupancyRate?: number
@@ -36,6 +37,7 @@ export default function FacilityCashFlowDashboard({
   penaltyRevenue = 0,
   totalUnits = 0,
   occupiedUnits = 0,
+  reservedUnits = 0,
   availableUnits = 0,
   maintenanceUnits = 0,
   occupancyRate = 0,
@@ -331,8 +333,8 @@ export default function FacilityCashFlowDashboard({
           </div>
 
           <div className="grid grid-cols-2 gap-3.5">
-            {/* Ô 1 (Donut Chart - Chiếm 2 hàng): Tỷ Lệ Lấp Đầy */}
-            <div className="row-span-2 rounded-xl bg-slate-950/70 border border-slate-800/80 p-4 flex flex-col items-center justify-center text-center relative">
+            {/* Ô 1 (Donut Chart - Chiếm 3 hàng): Tỷ Lệ Lấp Đầy */}
+            <div className="row-span-3 rounded-xl bg-slate-950/70 border border-slate-800/80 p-4 flex flex-col items-center justify-center text-center relative">
               <div className="relative size-32 sm:size-36 flex items-center justify-center">
                 <svg className="size-full -rotate-90" viewBox="0 0 100 100">
                   <circle
@@ -363,38 +365,47 @@ export default function FacilityCashFlowDashboard({
                   <span className="text-2xl sm:text-3xl font-mono font-black text-white tracking-tight">
                     {displayOcc}%
                   </span>
+                  <span className="text-[10px] text-slate-400 font-semibold mt-0.5">Lấp Đầy</span>
                 </div>
               </div>
             </div>
 
             {/* Ô 2: Tổng Số Ô Kho */}
-            <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-4 flex flex-col justify-center">
+            <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-3.5 flex flex-col justify-center">
               <span className="text-xs font-semibold text-slate-400">Tổng Số Ô Kho</span>
-              <span className="font-mono font-black text-white text-xl sm:text-2xl mt-1">
+              <span className="font-mono font-black text-white text-xl sm:text-2xl mt-0.5">
                 {totalUnits.toLocaleString("vi-VN")}
               </span>
             </div>
 
             {/* Ô 3: Kho Đang Cho Thuê */}
-            <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-4 flex flex-col justify-center">
+            <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-3.5 flex flex-col justify-center">
               <span className="text-xs font-semibold text-slate-400">Kho Đang Cho Thuê</span>
-              <span className="font-mono font-black text-white text-xl sm:text-2xl mt-1">
+              <span className="font-mono font-black text-white text-xl sm:text-2xl mt-0.5">
                 {occupiedUnits.toLocaleString("vi-VN")}
               </span>
             </div>
 
-            {/* Ô 4: Kho Còn Trống */}
-            <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-4 flex flex-col justify-center">
+            {/* Ô 4: Kho Đang Giữ Chỗ / Đặt Trước */}
+            <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-3.5 flex flex-col justify-center">
+              <span className="text-xs font-semibold text-slate-400">Đang Giữ Chỗ</span>
+              <span className="font-mono font-black text-white text-xl sm:text-2xl mt-0.5">
+                {reservedUnits.toLocaleString("vi-VN")}
+              </span>
+            </div>
+
+            {/* Ô 5: Kho Còn Trống */}
+            <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-3.5 flex flex-col justify-center">
               <span className="text-xs font-semibold text-slate-400">Kho Còn Trống</span>
-              <span className="font-mono font-black text-white text-xl sm:text-2xl mt-1">
+              <span className="font-mono font-black text-white text-xl sm:text-2xl mt-0.5">
                 {availableUnits.toLocaleString("vi-VN")}
               </span>
             </div>
 
-            {/* Ô 5: Kho Đang Bảo Trì */}
-            <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-4 flex flex-col justify-center">
+            {/* Ô 6: Kho Đang Bảo Trì */}
+            <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-3.5 flex flex-col justify-center">
               <span className="text-xs font-semibold text-slate-400">Đang Bảo Trì</span>
-              <span className="font-mono font-black text-white text-xl sm:text-2xl mt-1">
+              <span className="font-mono font-black text-white text-xl sm:text-2xl mt-0.5">
                 {maintenanceUnits.toLocaleString("vi-VN")}
               </span>
             </div>

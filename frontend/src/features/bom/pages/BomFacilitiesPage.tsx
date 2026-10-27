@@ -451,6 +451,7 @@ export default function BomFacilitiesPage() {
           const overdue = Number(fAny.overdueContracts ?? fAny.overdueUnits ?? 0)
           const tUnits = Number(fAny.totalUnits ?? 46)
           const occUnits = Number(fAny.occupiedUnits ?? fAny.occupied ?? 0)
+          const resUnits = Number(fAny.reservedUnits ?? fAny.reserved ?? 0)
           const availUnits = Number(fAny.availableUnits ?? fAny.available ?? 0)
           const maintUnits = Number(fAny.maintenanceUnits ?? fAny.maintenance ?? 0)
           const occRate = Number(
@@ -513,6 +514,7 @@ export default function BomFacilitiesPage() {
                 overdueContracts={overdue}
                 totalUnits={tUnits}
                 occupiedUnits={occUnits}
+                reservedUnits={resUnits}
                 availableUnits={availUnits}
                 maintenanceUnits={maintUnits}
                 occupancyRate={occRate}
