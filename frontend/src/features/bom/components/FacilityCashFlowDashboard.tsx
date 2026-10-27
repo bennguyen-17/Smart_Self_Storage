@@ -349,12 +349,12 @@ export default function FacilityCashFlowDashboard({
           </div>
         </div>
 
-        {/* 3 THẺ TÀI CHÍNH DƯỚI BIỂU ĐỒ: DOANH THU THỰC THU, TIỀN THUÊ KHO, TIỀN PHẠT */}
+        {/* 3 THẺ TÀI CHÍNH DƯỚI BIỂU ĐỒ: TIỀN CỌC, TIỀN THUÊ KHO, TIỀN PHẠT */}
         <div className="grid grid-cols-3 gap-2.5 pt-4 mt-2 border-t border-slate-200/80 dark:border-slate-800/80">
-          <div className="p-3 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/60 shadow-xs dark:shadow-none">
-            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold block truncate">Doanh Thu Thực Thu</span>
-            <span className="font-mono font-bold text-blue-700 dark:text-blue-300 text-xs sm:text-sm mt-0.5 block truncate">
-              ₫{((rentalRevenue + penaltyRevenue > 0) ? (rentalRevenue + penaltyRevenue) : netRevenue).toLocaleString("vi-VN")}
+          <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs dark:shadow-none">
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Cọc</span>
+            <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">
+              ₫{depositHolding.toLocaleString("vi-VN")}
             </span>
           </div>
 
