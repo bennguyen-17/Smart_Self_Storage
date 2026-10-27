@@ -335,7 +335,7 @@ export default function BomReportsPage() {
                         return false
                       })
 
-                      const total = list.length || (cfg.size === "S" ? 10 : cfg.size === "M" ? 20 : cfg.size === "L" ? 12 : 4)
+                      const total = list.length
                       const occupied = list.filter((u) => {
                         const st = (u.status || "").toUpperCase()
                         return st === "OCCUPIED" || st === "RENTED"
