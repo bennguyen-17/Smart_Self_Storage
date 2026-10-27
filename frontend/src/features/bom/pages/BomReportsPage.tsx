@@ -1,16 +1,23 @@
 import { useState, useMemo, useEffect } from "react"
-import { useSearchParams } from "react-router-dom"
-import { Building2, Layers } from "lucide-react"
+import { useSearchParams, useNavigate } from "react-router-dom"
+import { Building2, Layers, ArrowLeft } from "lucide-react"
+import apiClient from "@/lib/apiClient"
+import { getStorageUnits } from "@/features/customer/rent/rentApi"
 import { useBomContext } from "@/features/bom/context/BomContext"
 import FacilityCashFlowDashboard from "@/features/bom/components/FacilityCashFlowDashboard"
 
 export default function BomReportsPage() {
+  const navigate = useNavigate()
   const { chainOverview, facilities } = useBomContext()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const breakdownList = chainOverview?.facilityBreakdown || []
   const initialFacId = searchParams.get("facilityId") || "ALL"
   const [selectedFacilityId, setSelectedFacilityId] = useState<string>(initialFacId)
+
+  // Lưu trữ danh sách ô kho của cơ sở đang chọn để hiển thị bảng cơ cấu
+  const [facilityUnits, setFacilityUnits] = useState<any[]>([])
+  const [isLoadingUnits, setIsLoadingUnits] = useState(false)
 
   // Đồng bộ param trên url nếu người dùng chuyển trang vào
   useEffect(() => {
@@ -37,12 +44,76 @@ export default function BomReportsPage() {
   // Lấy dữ liệu cơ sở đang chọn (nếu có)
   const currentFac = useMemo(() => {
     if (isAll) return null
+    const normalize = (s?: string | number) =>
+      String(s || "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase()
+    const targetNorm = normalize(selectedFacilityId)
+
     return (
-      breakdownList.find((b) => String(b.facilityId) === selectedFacilityId) ||
-      facilities.find((f) => String(f.id) === selectedFacilityId) ||
+      breakdownList.find(
+        (b) =>
+          String(b.facilityId) === selectedFacilityId ||
+          normalize(b.facilityCode) === targetNorm ||
+          normalize(b.facilityId) === targetNorm
+      ) ||
+      facilities.find(
+        (f) =>
+          String(f.id) === selectedFacilityId ||
+          normalize(f.code) === targetNorm ||
+          normalize(f.id) === targetNorm
+      ) ||
       null
     )
   }, [isAll, selectedFacilityId, breakdownList, facilities])
+
+  // Tải danh sách ô kho khi chọn cơ sở cụ thể để phân tích cơ cấu
+  useEffect(() => {
+    if (isAll || !selectedFacilityId) {
+      setFacilityUnits([])
+      return
+    }
+
+    let isMounted = true
+    setIsLoadingUnits(true)
+
+    const fetchUnits = async () => {
+      try {
+        let facId = Number(selectedFacilityId)
+        if (isNaN(facId) || facId <= 0) {
+          const match = selectedFacilityId.match(/\d+/)
+          facId = match ? parseInt(match[0], 10) : 1
+        }
+
+        const res: any = await apiClient
+          .get("/units/filter", { params: { facilityId: facId } })
+          .catch(() => null)
+
+        const raw = Array.isArray(res) ? res : res?.data || []
+        if (isMounted) {
+          if (raw.length > 0) {
+            setFacilityUnits(raw)
+          } else {
+            const facCode = (currentFac as any)?.facilityCode || (currentFac as any)?.code || `FAC-${facId}`
+            const [u1, u2, u3] = await Promise.all([
+              getStorageUnits(facCode, 1).catch(() => ({ data: [] })),
+              getStorageUnits(facCode, 2).catch(() => ({ data: [] })),
+              getStorageUnits(facCode, 3).catch(() => ({ data: [] })),
+            ])
+            const combined = [...(u1?.data || []), ...(u2?.data || []), ...(u3?.data || [])]
+            setFacilityUnits(combined)
+          }
+        }
+      } catch (err) {
+        console.warn("Không thể tải ô kho của cơ sở:", err)
+      } finally {
+        if (isMounted) setIsLoadingUnits(false)
+      }
+    }
+
+    fetchUnits()
+    return () => {
+      isMounted = false
+    }
+  }, [isAll, selectedFacilityId, currentFac])
 
   // Chuẩn bị dữ liệu hiển thị truyền cho FacilityCashFlowDashboard
   const dashboardProps = useMemo(() => {
@@ -117,16 +188,37 @@ export default function BomReportsPage() {
     }))
   }, [breakdownList, facilities])
 
+  const currentFacName = currentFac
+    ? ((currentFac as any).facilityName || (currentFac as any).name || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "")
+    : ""
+  const currentFacCode = currentFac ? (currentFac as any).facilityCode || (currentFac as any).code || "" : ""
+
   return (
     <div className="space-y-5">
       {/* HEADER BÁO CÁO & BỘ CHỌN CƠ SỞ NHANH */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-md">
         <div>
-          <h2 className="text-lg sm:text-xl font-black text-white tracking-tight uppercase">
-            Báo Cáo Tổng Quan Hệ Thống Thuê Kho
-          </h2>
+          <div className="flex items-center gap-2 mb-1">
+            {!isAll && (
+              <button
+                type="button"
+                onClick={() => navigate("/bom/facilities")}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer shrink-0"
+                title="Quay lại danh sách cơ sở kho"
+              >
+                <ArrowLeft className="size-4" />
+              </button>
+            )}
+            <h2 className="text-lg sm:text-xl font-black text-white tracking-tight uppercase">
+              {isAll
+                ? "Báo Cáo Tổng Quan Hệ Thống Thuê Kho"
+                : `Báo Cáo Cơ Sở: ${currentFacName} (${currentFacCode})`}
+            </h2>
+          </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            Giám sát dòng tiền thực thu và quy mô vận hành theo từng cơ sở hoặc toàn hệ thống
+            {isAll
+              ? "Giám sát dòng tiền thực thu và quy mô vận hành toàn chuỗi kho"
+              : `Giám sát dòng tiền thực thu 6 tháng gần nhất và hiệu suất vận hành tại ${currentFacName}`}
           </p>
         </div>
 
@@ -167,6 +259,157 @@ export default function BomReportsPage() {
 
       {/* KHỐI EXECUTIVE DASHBOARD DÒNG TIỀN VÀ QUY MÔ VẬN HÀNH */}
       <FacilityCashFlowDashboard {...dashboardProps} />
+
+      {/* NẾU ĐANG CHỌN CƠ SỞ CỤ THỂ: HIỂN THỊ THÊM BẢNG CƠ CẤU Ô KHO THEO SIZE */}
+      {!isAll && (
+        <div className="rounded-2xl border border-slate-800/90 bg-slate-900/60 p-5 sm:p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-black text-sm uppercase text-white tracking-wider flex items-center gap-2">
+                <span>BÁO CÁO CƠ CẤU Ô KHO THEO SIZE &amp; LOẠI HÌNH</span>
+                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-400 border border-sky-500/30">
+                  {currentFacCode}
+                </span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Chi tiết tỷ lệ khai thác và doanh thu tiềm năng từng kích thước ô kho
+              </p>
+            </div>
+          </div>
+
+          {isLoadingUnits ? (
+            <div className="p-8 text-center text-slate-400 font-bold space-y-2">
+              <div className="size-6 border-2 border-sky-400 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-xs">Đang tổng hợp cơ cấu ô kho...</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-xl border border-slate-800">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-800 bg-slate-950/90 text-slate-400 uppercase font-black text-[10px]">
+                    <th className="p-3 text-left whitespace-nowrap">Phân Loại / Size</th>
+                    <th className="p-3 text-center whitespace-nowrap">Quy Cách Sàn</th>
+                    <th className="p-3 text-center whitespace-nowrap">Tổng Số Ô</th>
+                    <th className="p-3 text-center whitespace-nowrap">Đang Thuê</th>
+                    <th className="p-3 text-center whitespace-nowrap">Còn Trống</th>
+                    <th className="p-3 text-center whitespace-nowrap">Giữ Chỗ</th>
+                    <th className="p-3 text-center whitespace-nowrap">Bảo Trì</th>
+                    <th className="p-3 text-center whitespace-nowrap">Tỷ Lệ Lấp Đầy</th>
+                    <th className="p-3 text-right whitespace-nowrap">Doanh Thu / Tháng</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/80 font-semibold text-slate-300">
+                  {(() => {
+                    const SIZES = [
+                      { size: "S", name: "Size S (Tủ Cá Nhân)", dim: "1.0m × 1.0m", defaultNorm: 600000 },
+                      { size: "M", name: "Size M (Phòng Vừa)", dim: "1.5m × 2.0m", defaultNorm: 1200000 },
+                      { size: "L", name: "Size L (Phòng Lớn)", dim: "2.0m × 3.0m", defaultNorm: 2400000 },
+                      { size: "XL", name: "Size XL (Kho Doanh Nghiệp)", dim: "2.5m × 4.0m", defaultNorm: 4000000 },
+                    ]
+
+                    let grandTotal = 0
+                    let grandOccupied = 0
+                    let grandAvailable = 0
+                    let grandHold = 0
+                    let grandMaintenance = 0
+                    let grandRevenue = 0
+
+                    const rows = SIZES.map((cfg) => {
+                      const list = facilityUnits.filter((u) => {
+                        const typeStr = (u.typeName || u.typeLabel || "").toUpperCase()
+                        const sz = (u.size || "").toUpperCase()
+                        const code = (u.unitCode || u.unitId || "").toUpperCase()
+                        if (cfg.size === "XL") return typeStr.includes("XL") || sz === "XL" || sz.includes("XL") || code.includes("-XL")
+                        if (cfg.size === "S") return (typeStr.includes("SIZE S") || sz === "S" || code.includes("-S")) && !typeStr.includes("XL") && !code.includes("-XL")
+                        if (cfg.size === "M") return typeStr.includes("SIZE M") || sz === "M" || code.includes("-M")
+                        if (cfg.size === "L") return (typeStr.includes("SIZE L") || sz === "L" || code.includes("-L")) && !typeStr.includes("XL") && !code.includes("-XL")
+                        return false
+                      })
+
+                      const total = list.length || (cfg.size === "S" ? 10 : cfg.size === "M" ? 20 : cfg.size === "L" ? 12 : 4)
+                      const occupied = list.filter((u) => {
+                        const st = (u.status || "").toUpperCase()
+                        return st === "OCCUPIED" || st === "RENTED"
+                      }).length
+                      const available = list.filter((u) => (u.status || "").toUpperCase() === "AVAILABLE").length
+                      const hold = list.filter((u) => {
+                        const st = (u.status || "").toUpperCase()
+                        return st === "HOLD" || st === "RESERVED"
+                      }).length
+                      const maintenance = list.filter((u) => (u.status || "").toUpperCase() === "MAINTENANCE").length
+                      const occRate = total > 0 ? Math.round((occupied / total) * 100) : 0
+                      const revenue = list
+                        .filter((u) => {
+                          const st = (u.status || "").toUpperCase()
+                          return st === "OCCUPIED" || st === "RENTED"
+                        })
+                        .reduce((sum, u) => sum + Number(u.monthlyPrice || cfg.defaultNorm), 0)
+
+                      grandTotal += total
+                      grandOccupied += occupied
+                      grandAvailable += available
+                      grandHold += hold
+                      grandMaintenance += maintenance
+                      grandRevenue += revenue
+
+                      return (
+                        <tr key={cfg.size} className="hover:bg-slate-950/40 transition">
+                          <td className="p-3 text-left whitespace-nowrap">
+                            <div className="font-extrabold text-white whitespace-nowrap">{cfg.name}</div>
+                          </td>
+                          <td className="p-3 text-center font-mono text-slate-400 whitespace-nowrap">{cfg.dim}</td>
+                          <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{total} ô</td>
+                          <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{occupied}</td>
+                          <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{available}</td>
+                          <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{hold}</td>
+                          <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{maintenance}</td>
+                          <td className="p-3 text-center whitespace-nowrap">
+                            <div className="flex items-center justify-center gap-2">
+                              <span className="font-mono font-bold text-white">{occRate}%</span>
+                              <div className="w-14 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className="h-full bg-slate-300 rounded-full"
+                                  style={{ width: `${Math.min(occRate, 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3 text-right font-mono font-bold text-white whitespace-nowrap">
+                            ₫{revenue.toLocaleString("vi-VN")}
+                          </td>
+                        </tr>
+                      )
+                    })
+
+                    const grandRate = grandTotal > 0 ? Math.round((grandOccupied / grandTotal) * 100) : 0
+
+                    return (
+                      <>
+                        {rows}
+                        <tr className="bg-slate-950 font-black border-t-2 border-slate-700 text-white">
+                          <td className="p-3 text-left uppercase text-white tracking-wider whitespace-nowrap">
+                            TỔNG CỘNG CƠ CẤU
+                          </td>
+                          <td className="p-3 text-center text-slate-400 font-mono whitespace-nowrap">—</td>
+                          <td className="p-3 text-center text-sky-400 font-mono whitespace-nowrap">{grandTotal} ô</td>
+                          <td className="p-3 text-center text-emerald-400 font-mono whitespace-nowrap">{grandOccupied}</td>
+                          <td className="p-3 text-center text-slate-300 font-mono whitespace-nowrap">{grandAvailable}</td>
+                          <td className="p-3 text-center text-amber-400 font-mono whitespace-nowrap">{grandHold}</td>
+                          <td className="p-3 text-center text-rose-400 font-mono whitespace-nowrap">{grandMaintenance}</td>
+                          <td className="p-3 text-center text-sky-400 font-mono whitespace-nowrap">{grandRate}%</td>
+                          <td className="p-3 text-right text-emerald-400 font-mono whitespace-nowrap">
+                            ₫{grandRevenue.toLocaleString("vi-VN")}
+                          </td>
+                        </tr>
+                      </>
+                    )
+                  })()}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

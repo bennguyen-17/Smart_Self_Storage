@@ -464,25 +464,25 @@ export default function BomFacilitiesPage() {
 
                   return (
                     <tr key={fac.id} className="hover:bg-slate-900/60 transition">
-                      {/* CỘT 1: MÃ CƠ SỞ (Tối giản, bấm vào xem biểu đồ dòng tiền) */}
+                      {/* CỘT 1: MÃ CƠ SỞ (Bấm vào xem báo cáo dòng tiền & thông số cơ sở ở trang riêng) */}
                       <td className="py-4 px-4 text-center whitespace-nowrap">
                         <button
                           type="button"
-                          onClick={() => handleOpenFacilityDetail(fac)}
+                          onClick={() => navigate(`/bom/reports?facilityId=${fac.id}`)}
                           className="font-mono font-bold text-sky-400 hover:text-sky-300 hover:underline text-xs sm:text-[13px] cursor-pointer"
-                          title="Bấm để xem biểu đồ dòng tiền & báo cáo cơ sở"
+                          title="Bấm để xem báo cáo dòng tiền & thông số cơ sở"
                         >
                           {fac.code}
                         </button>
                       </td>
 
-                      {/* CỘT 2: TÊN CƠ SỞ KHO */}
+                      {/* CỘT 2: TÊN CƠ SỞ KHO (Bấm vào chuyển sang trang báo cáo thông số cơ sở) */}
                       <td className="py-4 px-4 text-left whitespace-nowrap">
                         <button
                           type="button"
-                          onClick={() => handleOpenFacilityDetail(fac)}
+                          onClick={() => navigate(`/bom/reports?facilityId=${fac.id}`)}
                           className="font-extrabold text-white text-xs sm:text-sm hover:text-sky-400 hover:underline transition-colors text-left cursor-pointer"
-                          title="Bấm để xem biểu đồ dòng tiền & chi tiết cơ sở"
+                          title="Bấm để xem báo cáo dòng tiền & thông số cơ sở"
                         >
                           {cleanName}
                         </button>
@@ -519,9 +519,9 @@ export default function BomFacilitiesPage() {
                       <td className="py-4 px-4 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
-                            onClick={() => handleOpenFacilityDetail(fac)}
+                            onClick={() => navigate(`/bom/reports?facilityId=${fac.id}`)}
                             className="bg-sky-500/15 hover:bg-sky-500 text-sky-400 hover:text-slate-950 border border-sky-500/30 font-bold text-xs px-2.5 py-1.5 rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1"
-                            title="Xem biểu đồ dòng tiền & hiệu suất cơ sở"
+                            title="Xem biểu đồ dòng tiền & thông số cơ sở"
                           >
                             <TrendingUp className="size-3.5" />
                             <span className="hidden sm:inline">Dòng tiền</span>
