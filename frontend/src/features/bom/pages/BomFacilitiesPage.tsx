@@ -520,7 +520,7 @@ export default function BomFacilitiesPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex flex-col items-end gap-2 shrink-0">
                   {/* BỘ LỌC 3 NÚT: THÁNG NÀY | 3 THÁNG GẦN NHẤT | TOÀN THỜI GIAN */}
                   <div className="flex items-center bg-slate-100 dark:bg-slate-950/80 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-inner">
                     <button
