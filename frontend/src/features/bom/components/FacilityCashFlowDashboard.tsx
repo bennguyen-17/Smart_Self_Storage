@@ -83,9 +83,9 @@ export default function FacilityCashFlowDashboard({
       { month: "T7", label: "Tháng 07", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
       { month: "T8", label: "Tháng 08", revenue: 4200000, rentalRevenue: 4200000, penaltyRevenue: 0 },
       { month: "T9", label: "Tháng 09", revenue: 18600000, rentalRevenue: 18600000, penaltyRevenue: 0 },
-      { month: "T10", label: "Tháng 10", revenue: penaltyRevenue || 4800000, rentalRevenue: 0, penaltyRevenue: penaltyRevenue || 4800000 },
+      { month: "T10", label: "Tháng 10", revenue: penaltyRevenue || netRevenue || 0, rentalRevenue: rentalRevenue || 0, penaltyRevenue: penaltyRevenue || 0 },
     ]
-  }, [monthlyRevenues, penaltyRevenue])
+  }, [monthlyRevenues, penaltyRevenue, netRevenue, rentalRevenue])
 
   const activeMonth = useMemo(() => {
     if (selectedMonthIndex !== null && monthlyData[selectedMonthIndex]) {
@@ -94,11 +94,11 @@ export default function FacilityCashFlowDashboard({
     return monthlyData[monthlyData.length - 1] || {
       month: "T10",
       label: "Tháng 10",
-      revenue: 4800000,
-      rentalRevenue: 0,
-      penaltyRevenue: 4800000,
+      revenue: netRevenue || 0,
+      rentalRevenue: rentalRevenue || 0,
+      penaltyRevenue: penaltyRevenue || 0,
     }
-  }, [selectedMonthIndex, monthlyData])
+  }, [selectedMonthIndex, monthlyData, netRevenue, rentalRevenue, penaltyRevenue])
 
   // Xác định mốc min và max để vẽ đồ thị đường cong chuẩn xác
   const allRevenues = monthlyData.map((d) => d.revenue)

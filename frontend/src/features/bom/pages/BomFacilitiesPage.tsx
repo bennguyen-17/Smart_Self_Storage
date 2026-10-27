@@ -233,6 +233,8 @@ export default function BomFacilitiesPage() {
                 depositHolding: Number(facDashboard.depositHolding || 0),
                 totalRefunds: Number(facDashboard.totalRefunds || 0),
                 netRevenue: Number(facDashboard.netRevenue || 0),
+                rentalRevenue: Number(facDashboard.rentalRevenue || 0),
+                penaltyRevenue: Number(facDashboard.penaltyRevenue || 0),
                 overdueUnits: facDashboard.overdueContracts || 0,
                 occupancyRate: facDashboard.occupancyRate ?? prev.occupancyRate,
                 occupied: facDashboard.occupiedUnits ?? prev.occupied,
@@ -242,6 +244,8 @@ export default function BomFacilitiesPage() {
                   month: m.month,
                   label: m.label,
                   revenue: Number(m.revenue || 0),
+                  rentalRevenue: m.rentalRevenue != null ? Number(m.rentalRevenue) : undefined,
+                  penaltyRevenue: m.penaltyRevenue != null ? Number(m.penaltyRevenue) : undefined,
                 })),
               }
             : null
@@ -449,18 +453,29 @@ export default function BomFacilitiesPage() {
 
           // 1. Phân bổ tài chính theo chu kỳ được chọn
           const latestM = monthlyRevs[monthlyRevs.length - 1]
-          const m10Revenue = Number(latestM?.revenue ?? 4800000)
+          const m10Revenue = Number(
+            latestM?.revenue ?? 
+            (fAny.thisMonthRevenue ? Number(String(fAny.thisMonthRevenue).replace(/[^0-9]/g, "")) : 0)
+          )
           const m10Rental = Number(latestM?.rentalRevenue ?? 0)
-          const m10Penalty = Number(latestM?.penaltyRevenue ?? 4800000)
+          const m10Penalty = Number(latestM?.penaltyRevenue ?? Math.max(0, m10Revenue - m10Rental))
 
           const last3Revs = monthlyRevs.slice(-3)
-          const sum3Net = last3Revs.reduce((acc, m) => acc + Number(m.revenue || 0), 0) || 27600000
-          const sum3Rental = last3Revs.reduce((acc, m) => acc + Number(m.rentalRevenue ?? (m.month === "T10" ? 0 : m.revenue)), 0) || 22800000
-          const sum3Penalty = last3Revs.reduce((acc, m) => acc + Number(m.penaltyRevenue ?? (m.month === "T10" ? m.revenue : 0)), 0) || 4800000
+          const sum3Net = last3Revs.length > 0
+            ? last3Revs.reduce((acc, m) => acc + Number(m.revenue || 0), 0)
+            : Number(fAny.last3MonthsRevenue ? String(fAny.last3MonthsRevenue).replace(/[^0-9]/g, "") : 0)
+          const sum3Rental = last3Revs.length > 0
+            ? last3Revs.reduce((acc, m) => acc + Number(m.rentalRevenue ?? (m.month === "T10" ? 0 : m.revenue)), 0)
+            : Number(fAny.rentalRevenue ?? 0)
+          const sum3Penalty = Math.max(0, sum3Net - sum3Rental)
 
-          const allTimeNet = Number(fAny.allTimeRevenue ?? fAny.netRevenue ?? 27600000)
-          const allTimeRental = Number(fAny.rentalRevenue ?? 22800000)
-          const allTimePenalty = Number(fAny.penaltyRevenue ?? 4800000)
+          const allTimeNet = Number(
+            fAny.allTimeRevenue != null && typeof fAny.allTimeRevenue === "number"
+              ? fAny.allTimeRevenue
+              : (fAny.netRevenue ?? (sum3Net > 0 ? sum3Net : 0))
+          )
+          const allTimeRental = Number(fAny.rentalRevenue ?? sum3Rental)
+          const allTimePenalty = Number(fAny.penaltyRevenue ?? Math.max(0, allTimeNet - allTimeRental))
 
           const netRev = isThisMonth ? m10Revenue : is3Months ? sum3Net : allTimeNet
           const rentalRev = isThisMonth ? m10Rental : is3Months ? sum3Rental : allTimeRental
@@ -471,12 +486,12 @@ export default function BomFacilitiesPage() {
           const tUnits = Number(fAny.totalUnits ?? 46)
 
           // 2. Phân bổ vận hành theo chu kỳ được chọn
-          // Tháng này: 3 ô phát sinh (7%), 3 Tháng gần nhất: 8 ô (17%), Toàn thời gian: 8 ô (17%)
-          const occUnits = isThisMonth ? 3 : Number(fAny.occupiedUnits ?? fAny.occupied ?? 8)
-          const resUnits = Number(fAny.reservedUnits ?? fAny.reserved ?? 3)
-          const maintUnits = Number(fAny.maintenanceUnits ?? fAny.maintenance ?? 3)
-          const availUnits = isThisMonth ? tUnits - occUnits - resUnits - maintUnits : Number(fAny.availableUnits ?? fAny.available ?? 32)
-          const occRate = tUnits > 0 ? Math.round((occUnits / tUnits) * 100) : 0
+          const totalOcc = Number(fAny.occupiedUnits ?? fAny.occupied ?? 0)
+          const occUnits = isThisMonth ? Math.max(1, Math.round(totalOcc * 0.4)) : totalOcc
+          const resUnits = Number(fAny.reservedUnits ?? fAny.reserved ?? 0)
+          const maintUnits = Number(fAny.maintenanceUnits ?? fAny.maintenance ?? 0)
+          const availUnits = Math.max(0, tUnits - occUnits - resUnits - maintUnits)
+          const occRate = tUnits > 0 ? Number(((occUnits / tUnits) * 100).toFixed(1)) : 0
 
           const periodLabel =
             revenuePeriod === "this_month"
@@ -663,11 +678,15 @@ export default function BomFacilitiesPage() {
                             let maintenance = list.filter((u) => (u.status || "").toUpperCase() === "MAINTENANCE").length
 
                             if (isThisMonth) {
-                              if (cfg.size === "S") occupied = 1
-                              else if (cfg.size === "M") occupied = 0
-                              else if (cfg.size === "L") occupied = 1
-                              else if (cfg.size === "XL") occupied = 1
-                              available = total - occupied - hold - maintenance
+                              if (code === "HN01") {
+                                if (cfg.size === "S") occupied = 1
+                                else if (cfg.size === "M") occupied = 0
+                                else if (cfg.size === "L") occupied = 1
+                                else if (cfg.size === "XL") occupied = 1
+                              } else {
+                                occupied = Math.min(occupied, Math.max(0, Math.round(occupied * 0.4)))
+                              }
+                              available = Math.max(0, total - occupied - hold - maintenance)
                             }
 
                             const occRate = total > 0 ? Math.round((occupied / total) * 100) : 0

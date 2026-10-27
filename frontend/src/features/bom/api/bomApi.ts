@@ -40,6 +40,8 @@ export interface MonthlyRevenueItem {
   month: string
   label: string
   revenue: number
+  rentalRevenue?: number
+  penaltyRevenue?: number
 }
 
 export interface ChainDashboardData {

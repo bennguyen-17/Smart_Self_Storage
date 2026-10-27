@@ -26,7 +26,9 @@ export interface FacilityPerformance {
   depositHolding?: number
   totalRefunds?: number
   netRevenue?: number
-  monthlyRevenues?: { month: string; label: string; revenue: number }[]
+  rentalRevenue?: number
+  penaltyRevenue?: number
+  monthlyRevenues?: { month: string; label: string; revenue: number; rentalRevenue?: number; penaltyRevenue?: number }[]
 }
 
 export interface UnitPricing {
