@@ -457,7 +457,7 @@ export default function BomFacilitiesPage() {
               {/* HEADER BÁO CÁO CƠ SỞ & BỘ CHỌN NHANH */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-md">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => navigate("/bom/facilities")}
@@ -467,12 +467,9 @@ export default function BomFacilitiesPage() {
                       <ArrowLeft className="size-4" />
                     </button>
                     <h2 className="text-lg sm:text-xl font-black text-white tracking-tight uppercase">
-                      Báo Cáo Cơ Sở: {name} ({code})
+                      Báo Cáo Cơ Sở: {name}
                     </h2>
                   </div>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Giám sát dòng tiền thực thu 6 tháng gần nhất và hiệu suất vận hành tại {name}
-                  </p>
                 </div>
 
                 {/* Thanh chuyển đổi nhanh các cơ sở - Gọn gàng trên 1 hàng */}
@@ -501,7 +498,7 @@ export default function BomFacilitiesPage() {
               {/* KHỐI EXECUTIVE DASHBOARD DÒNG TIỀN VÀ QUY MÔ VẬN HÀNH */}
               <FacilityCashFlowDashboard
                 title={`Doanh Thu Thực Thu - ${code}`}
-                subtitle={`Xu hướng dòng tiền thực thu 6 tháng gần nhất tại ${name}`}
+                subtitle=""
                 monthlyRevenues={monthlyRevs}
                 netRevenue={netRev}
                 depositHolding={depHold}
@@ -520,13 +517,7 @@ export default function BomFacilitiesPage() {
                   <div>
                     <h3 className="font-black text-sm uppercase text-white tracking-wider flex items-center gap-2">
                       <span>BÁO CÁO CƠ CẤU Ô KHO THEO SIZE &amp; LOẠI HÌNH</span>
-                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-400 border border-sky-500/30">
-                        {code}
-                      </span>
                     </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Chi tiết tỷ lệ khai thác và doanh thu tiềm năng từng kích thước ô kho
-                    </p>
                   </div>
                 </div>
 

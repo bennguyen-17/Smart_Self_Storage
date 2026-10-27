@@ -176,7 +176,7 @@ export default function FacilityCashFlowDashboard({
                 <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
                   {title}
                 </h3>
-                <div className="text-[11px] text-slate-400">{subtitle}</div>
+                {subtitle && <div className="text-[11px] text-slate-400">{subtitle}</div>}
               </div>
             </div>
             <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs font-bold">
