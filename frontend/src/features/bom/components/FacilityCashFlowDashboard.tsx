@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react"
-import { TrendingUp, TrendingDown, Warehouse } from "lucide-react"
+import { TrendingUp, Warehouse } from "lucide-react"
 
 export interface MonthlyRevenuePoint {
   month: string
@@ -59,15 +59,7 @@ export default function FacilityCashFlowDashboard({
   }, [monthlyRevenues, netRevenue])
 
   const latestMonth = monthlyData[monthlyData.length - 1]
-  const prevMonthRevenue =
-    monthlyData.length >= 2 ? monthlyData[monthlyData.length - 2].revenue : 0
   const currentMonthRevenue = latestMonth ? latestMonth.revenue : netRevenue
-  const growthPercent =
-    prevMonthRevenue > 0
-      ? Math.round(((currentMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 1000) / 10
-      : currentMonthRevenue > 0
-        ? 100
-        : 0
 
   // Xác định mốc min và max để vẽ đồ thị đường cong chuẩn xác
   const allRevenues = monthlyData.map((d) => d.revenue)
@@ -178,16 +170,6 @@ export default function FacilityCashFlowDashboard({
                 </h3>
                 {subtitle && <div className="text-[11px] text-slate-400">{subtitle}</div>}
               </div>
-            </div>
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs font-bold">
-              {growthPercent >= 0 ? (
-                <TrendingUp className="size-3.5 text-emerald-400" />
-              ) : (
-                <TrendingDown className="size-3.5 text-rose-400" />
-              )}
-              <span className={growthPercent >= 0 ? "text-emerald-400" : "text-rose-400"}>
-                {growthPercent >= 0 ? `+${growthPercent}%` : `${growthPercent}%`}
-              </span>
             </div>
           </div>
 
