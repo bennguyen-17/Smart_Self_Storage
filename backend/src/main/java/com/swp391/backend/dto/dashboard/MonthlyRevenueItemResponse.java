@@ -7,6 +7,9 @@ public class MonthlyRevenueItemResponse {
     private String label;
     private BigDecimal revenue;
 
+    private BigDecimal rentalRevenue = BigDecimal.ZERO;
+    private BigDecimal penaltyRevenue = BigDecimal.ZERO;
+
     public MonthlyRevenueItemResponse() {
     }
 
@@ -14,6 +17,14 @@ public class MonthlyRevenueItemResponse {
         this.month = month;
         this.label = label;
         this.revenue = revenue;
+    }
+
+    public MonthlyRevenueItemResponse(String month, String label, BigDecimal revenue, BigDecimal rentalRevenue, BigDecimal penaltyRevenue) {
+        this.month = month;
+        this.label = label;
+        this.revenue = revenue;
+        this.rentalRevenue = rentalRevenue;
+        this.penaltyRevenue = penaltyRevenue;
     }
 
     public String getMonth() {
@@ -38,5 +49,21 @@ public class MonthlyRevenueItemResponse {
 
     public void setRevenue(BigDecimal revenue) {
         this.revenue = revenue;
+    }
+
+    public BigDecimal getRentalRevenue() {
+        return rentalRevenue;
+    }
+
+    public void setRentalRevenue(BigDecimal rentalRevenue) {
+        this.rentalRevenue = rentalRevenue;
+    }
+
+    public BigDecimal getPenaltyRevenue() {
+        return penaltyRevenue;
+    }
+
+    public void setPenaltyRevenue(BigDecimal penaltyRevenue) {
+        this.penaltyRevenue = penaltyRevenue;
     }
 }

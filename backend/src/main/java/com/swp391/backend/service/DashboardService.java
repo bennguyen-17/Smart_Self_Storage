@@ -453,7 +453,7 @@ public class DashboardService {
             BigDecimal mNet = mRental.add(mExtension).add(mPenalty);
             String monthCode = "T" + ym.getMonthValue();
             String monthLabel = String.format("Tháng %02d/%d", ym.getMonthValue(), ym.getYear());
-            facilityMonthlyRevenues.add(new com.swp391.backend.dto.dashboard.MonthlyRevenueItemResponse(monthCode, monthLabel, mNet));
+            facilityMonthlyRevenues.add(new com.swp391.backend.dto.dashboard.MonthlyRevenueItemResponse(monthCode, monthLabel, mNet, mRental.add(mExtension), mPenalty));
         }
         resp.setMonthlyRevenues(facilityMonthlyRevenues);
         resp.setTotalTickets(totalTickets);
@@ -627,7 +627,7 @@ public class DashboardService {
             BigDecimal mNet = mRental.add(mExtension).add(mPenalty);
             String monthCode = "T" + ym.getMonthValue();
             String monthLabel = String.format("Tháng %02d/%d", ym.getMonthValue(), ym.getYear());
-            monthlyRevenueList.add(new com.swp391.backend.dto.dashboard.MonthlyRevenueItemResponse(monthCode, monthLabel, mNet));
+            monthlyRevenueList.add(new com.swp391.backend.dto.dashboard.MonthlyRevenueItemResponse(monthCode, monthLabel, mNet, mRental.add(mExtension), mPenalty));
         }
 
         ChainDashboardResponse resp = new ChainDashboardResponse();

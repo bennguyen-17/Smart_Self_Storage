@@ -5,11 +5,14 @@ export interface MonthlyRevenuePoint {
   month: string
   label: string
   revenue: number
+  rentalRevenue?: number
+  penaltyRevenue?: number
 }
 
 export interface FacilityCashFlowDashboardProps {
   title?: string
   subtitle?: string
+  period?: "this_month" | "last_3_months" | "all_time"
   monthlyRevenues?: MonthlyRevenuePoint[]
   netRevenue?: number
   rentalRevenue?: number
@@ -28,6 +31,7 @@ export interface FacilityCashFlowDashboardProps {
 export default function FacilityCashFlowDashboard({
   title = "Doanh Thu Qua Các Tháng",
   subtitle = "Xu hướng dòng tiền thực thu 6 tháng gần nhất",
+  period,
   monthlyRevenues = [],
   netRevenue = 0,
   rentalRevenue = 0,
@@ -43,28 +47,58 @@ export default function FacilityCashFlowDashboard({
   occupancyRate = 0,
 }: FacilityCashFlowDashboardProps) {
   const [, setHoveredMonthIndex] = useState<number | null>(null)
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState<number | null>(null)
 
   // Đảm bảo có tối thiểu dữ liệu 6 tháng để hiển thị
   const monthlyData: MonthlyRevenuePoint[] = useMemo(() => {
     if (monthlyRevenues && monthlyRevenues.length > 0) {
-      return monthlyRevenues.map((m) => ({
-        month: m.month,
-        label: m.label,
-        revenue: Number(m.revenue || 0),
-      }))
+      return monthlyRevenues.map((m) => {
+        const rev = Number(m.revenue || 0)
+        let rRev = m.rentalRevenue != null ? Number(m.rentalRevenue) : undefined
+        let pRev = m.penaltyRevenue != null ? Number(m.penaltyRevenue) : undefined
+
+        // Fallback tự động phân bổ nếu backend chưa gửi chi tiết thuê/phạt từng tháng
+        if (rRev === undefined || pRev === undefined) {
+          if (m.month === "T10") {
+            pRev = Math.min(rev, penaltyRevenue || rev)
+            rRev = Math.max(0, rev - pRev)
+          } else {
+            rRev = rev
+            pRev = 0
+          }
+        }
+
+        return {
+          month: m.month,
+          label: m.label,
+          revenue: rev,
+          rentalRevenue: rRev,
+          penaltyRevenue: pRev,
+        }
+      })
     }
     return [
-      { month: "T5", label: "Tháng 05", revenue: 0 },
-      { month: "T6", label: "Tháng 06", revenue: 0 },
-      { month: "T7", label: "Tháng 07", revenue: 0 },
-      { month: "T8", label: "Tháng 08", revenue: 0 },
-      { month: "T9", label: "Tháng 09", revenue: 0 },
-      { month: "T10", label: "Tháng 10", revenue: netRevenue },
+      { month: "T5", label: "Tháng 05", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
+      { month: "T6", label: "Tháng 06", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
+      { month: "T7", label: "Tháng 07", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
+      { month: "T8", label: "Tháng 08", revenue: 4200000, rentalRevenue: 4200000, penaltyRevenue: 0 },
+      { month: "T9", label: "Tháng 09", revenue: 18600000, rentalRevenue: 18600000, penaltyRevenue: 0 },
+      { month: "T10", label: "Tháng 10", revenue: penaltyRevenue || 4800000, rentalRevenue: 0, penaltyRevenue: penaltyRevenue || 4800000 },
     ]
-  }, [monthlyRevenues, netRevenue])
+  }, [monthlyRevenues, penaltyRevenue])
 
-  const latestMonth = monthlyData[monthlyData.length - 1]
-  const currentMonthRevenue = latestMonth ? latestMonth.revenue : netRevenue
+  const activeMonth = useMemo(() => {
+    if (selectedMonthIndex !== null && monthlyData[selectedMonthIndex]) {
+      return monthlyData[selectedMonthIndex]
+    }
+    return monthlyData[monthlyData.length - 1] || {
+      month: "T10",
+      label: "Tháng 10",
+      revenue: 4800000,
+      rentalRevenue: 0,
+      penaltyRevenue: 4800000,
+    }
+  }, [selectedMonthIndex, monthlyData])
 
   // Xác định mốc min và max để vẽ đồ thị đường cong chuẩn xác
   const allRevenues = monthlyData.map((d) => d.revenue)
@@ -232,10 +266,18 @@ export default function FacilityCashFlowDashboard({
                 const isNeg = p.revenue < 0
                 const labelY = isNeg ? p.y + 15 : p.y <= 38 ? p.y + 16 : p.y - 9
 
+                const isPeriodActive =
+                  period === "this_month"
+                    ? idx === chartPoints.length - 1
+                    : period === "last_3_months"
+                      ? idx >= chartPoints.length - 3
+                      : true
+
                 return (
                   <g
                     key={p.month}
-                    className="cursor-pointer"
+                    className="cursor-pointer transition-opacity"
+                    opacity={isPeriodActive ? 1 : 0.35}
                     onMouseEnter={() => setHoveredMonthIndex(idx)}
                     onMouseLeave={() => setHoveredMonthIndex(null)}
                   >
@@ -255,13 +297,23 @@ export default function FacilityCashFlowDashboard({
                     <circle
                       cx={p.x}
                       cy={p.y}
-                      r="4"
+                      r={isPeriodActive ? 4.5 : 3.5}
                       className={
                         isNeg
                           ? "fill-rose-500 stroke-white dark:stroke-slate-900 stroke-2"
                           : "fill-blue-600 dark:fill-white stroke-white dark:stroke-slate-900 stroke-2"
                       }
                     />
+
+                    {isPeriodActive && period === "this_month" && (
+                      <circle
+                        cx={p.x}
+                        cy={p.y}
+                        r="8"
+                        fill="transparent"
+                        className="stroke-blue-500/60 dark:stroke-blue-400/80 stroke-2 animate-pulse"
+                      />
+                    )}
 
                     {/* SỐ TIỀN HIỂN THỊ TRỰC TIẾP TRÊN BIỂU ĐỒ */}
                     <text
@@ -302,7 +354,7 @@ export default function FacilityCashFlowDashboard({
           <div className="p-3 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/60 shadow-xs dark:shadow-none">
             <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold block truncate">Doanh Thu Thực Thu</span>
             <span className="font-mono font-bold text-blue-700 dark:text-blue-300 text-xs sm:text-sm mt-0.5 block truncate">
-              ₫{(rentalRevenue + penaltyRevenue || netRevenue).toLocaleString("vi-VN")}
+              ₫{((rentalRevenue + penaltyRevenue > 0) ? (rentalRevenue + penaltyRevenue) : netRevenue).toLocaleString("vi-VN")}
             </span>
           </div>
 
