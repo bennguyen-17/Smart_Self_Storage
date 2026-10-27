@@ -918,14 +918,6 @@ export default function BomFacilitiesPage() {
                         <td className="py-4 px-4 text-center whitespace-nowrap">
                           <div className="flex items-center justify-center gap-1.5">
                             <button
-                              onClick={() => navigate(`/bom/facilities/${fac.id}`)}
-                              className="bg-blue-50 hover:bg-blue-600 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 hover:text-white dark:hover:text-white border border-blue-200 dark:border-blue-800 font-bold text-xs px-2.5 py-1.5 rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1"
-                              title="Xem biểu đồ dòng tiền & thông số cơ sở"
-                            >
-                              <TrendingUp className="size-3.5" />
-                              <span className="hidden sm:inline">Dòng tiền</span>
-                            </button>
-                            <button
                               onClick={() => handleOpenFacilityModal(fac)}
                               className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs transition cursor-pointer"
                               title="Cấu hình cơ sở"
