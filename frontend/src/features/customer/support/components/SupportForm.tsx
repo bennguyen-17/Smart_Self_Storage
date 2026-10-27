@@ -563,7 +563,7 @@ export default function SupportForm() {
                 <ul className="text-xs text-emerald-800/90 dark:text-emerald-300/90 leading-relaxed space-y-1">
                   <li>- Báo trước tối thiểu 1 ngày (chọn ngày hẹn từ ngày mai trở đi).</li>
                   <li>- Đến cơ sở trong khung giờ trực (<strong>08:00 – 20:00</strong>) ngày đã hẹn để cùng nhân viên nghiệm thu ô kho.</li>
-                  <li>- Hệ thống hoàn lại <strong>100% tiền cọc gốc + 50% tiền thuê chưa sử dụng</strong> (sau khi cấn trừ hư hại nếu có).</li>
+                  <li>- Hệ thống hoàn lại <strong>100% tiền cọc gốc</strong> (sau khi cấn trừ hư hại nếu có; không hoàn lại tiền thuê chưa sử dụng).</li>
                 </ul>
               </div>
             </div>
