@@ -155,6 +155,13 @@ public class DashboardService {
         BigDecimal allTimeRefundsRev = BigDecimal.ZERO;
 
         for (Payment p : payments) {
+            Optional<Contract> cOpt = contracts.stream().filter(c -> c.getContractId().equals(p.getContractId())).findFirst();
+            if (cOpt.isEmpty()) continue;
+            String cStatus = cOpt.get().getStatus();
+            if ("PENDING_CHECKIN".equalsIgnoreCase(cStatus) || "CANCELLED".equalsIgnoreCase(cStatus) || "INITIATED".equalsIgnoreCase(cStatus)) {
+                continue; // Chỉ tính những hợp đồng đã hoàn tất
+            }
+
             String invNum = p.getInvoiceNumber() != null ? p.getInvoiceNumber() : "";
             boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus()) 
                     || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()) 
@@ -364,6 +371,13 @@ public class DashboardService {
                     continue;
                 }
 
+                Optional<Contract> cOpt = contracts.stream().filter(c -> c.getContractId().equals(p.getContractId())).findFirst();
+                if (cOpt.isEmpty()) continue;
+                String cStatus = cOpt.get().getStatus();
+                if ("PENDING_CHECKIN".equalsIgnoreCase(cStatus) || "CANCELLED".equalsIgnoreCase(cStatus) || "INITIATED".equalsIgnoreCase(cStatus)) {
+                    continue; // Chỉ tính những hợp đồng đã hoàn tất
+                }
+
                 String invNum = p.getInvoiceNumber() != null ? p.getInvoiceNumber() : "";
                 boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus()) 
                         || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()) 
@@ -495,6 +509,13 @@ public class DashboardService {
                 LocalDateTime pTime = p.getPaidAt() != null ? p.getPaidAt() : p.getIssuedAt();
                 if (pTime == null || !ym.equals(java.time.YearMonth.from(pTime))) {
                     continue;
+                }
+
+                Optional<Contract> cOpt = allContracts.stream().filter(c -> c.getContractId().equals(p.getContractId())).findFirst();
+                if (cOpt.isEmpty()) continue;
+                String cStatus = cOpt.get().getStatus();
+                if ("PENDING_CHECKIN".equalsIgnoreCase(cStatus) || "CANCELLED".equalsIgnoreCase(cStatus) || "INITIATED".equalsIgnoreCase(cStatus)) {
+                    continue; // Chỉ tính những hợp đồng đã hoàn tất
                 }
 
                 String invNum = p.getInvoiceNumber() != null ? p.getInvoiceNumber() : "";
