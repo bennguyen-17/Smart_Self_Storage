@@ -284,8 +284,8 @@ public class DashboardService {
             }
         }
 
-        BigDecimal grossRevenue = rentalRevenue.add(extensionRevenue).add(penaltyRevenue).add(compensationRevenue);
-        // Doanh thu thực thu = Tiền thuê + Tiền phạt (bỏ hoàn tiền thuê 50% khi trả kho sớm)
+        BigDecimal grossRevenue = rentalRevenue.add(extensionRevenue).add(penaltyRevenue);
+        // Doanh thu thực thu = Tiền thuê + Tiền phạt
         BigDecimal netRevenue = grossRevenue;
 
         // 4. Thống kê Support Ticket & SLA
@@ -450,7 +450,7 @@ public class DashboardService {
                 }
             }
 
-            BigDecimal mNet = mRental.add(mExtension).add(mPenalty).add(mCompensation);
+            BigDecimal mNet = mRental.add(mExtension).add(mPenalty);
             String monthCode = "T" + ym.getMonthValue();
             String monthLabel = String.format("Tháng %02d/%d", ym.getMonthValue(), ym.getYear());
             facilityMonthlyRevenues.add(new com.swp391.backend.dto.dashboard.MonthlyRevenueItemResponse(monthCode, monthLabel, mNet));
@@ -528,7 +528,7 @@ public class DashboardService {
                 chainTotalUnits += mResp.getTotalUnits();
                 chainOccupiedUnits += mResp.getOccupiedUnits();
                 chainTotalActive += mResp.getActiveContracts();
-                chainGross = chainGross.add(mResp.getRentalRevenue().add(mResp.getExtensionRevenue()).add(mResp.getPenaltyRevenue()).add(mResp.getCompensationRevenue()));
+                chainGross = chainGross.add(mResp.getRentalRevenue().add(mResp.getExtensionRevenue()).add(mResp.getPenaltyRevenue()));
                 chainRefunds = chainRefunds.add(mResp.getTotalRefunds());
                 chainNet = chainNet.add(mResp.getNetRevenue());
                 chainDeposit = chainDeposit.add(mResp.getDepositHolding());
@@ -624,7 +624,7 @@ public class DashboardService {
                 }
             }
 
-            BigDecimal mNet = mRental.add(mExtension).add(mPenalty).add(mCompensation);
+            BigDecimal mNet = mRental.add(mExtension).add(mPenalty);
             String monthCode = "T" + ym.getMonthValue();
             String monthLabel = String.format("Tháng %02d/%d", ym.getMonthValue(), ym.getYear());
             monthlyRevenueList.add(new com.swp391.backend.dto.dashboard.MonthlyRevenueItemResponse(monthCode, monthLabel, mNet));
