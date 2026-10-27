@@ -23,6 +23,10 @@ export interface FacilityPerformance {
   rating: string
   layoutType?: string
   floorCount?: number
+  depositHolding?: number
+  totalRefunds?: number
+  netRevenue?: number
+  monthlyRevenues?: { month: string; label: string; revenue: number }[]
 }
 
 export interface UnitPricing {

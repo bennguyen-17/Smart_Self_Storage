@@ -33,6 +33,7 @@ export interface FacilityBreakdownItem {
   inProgressTickets?: number
   resolvedTickets?: number
   slaBreachedTickets?: number
+  monthlyRevenues?: MonthlyRevenueItem[]
 }
 
 export interface MonthlyRevenueItem {
@@ -71,6 +72,11 @@ export const bomApi = {
   getChainDashboard: async (period?: string): Promise<ChainDashboardData> => {
     return apiClient.get('/admin/dashboard/chain-overview', {
       params: period ? { period } : undefined,
+    })
+  },
+  getFacilityDashboard: async (facilityId: number): Promise<FacilityBreakdownItem> => {
+    return apiClient.get('/manager/dashboard/overview', {
+      params: { facilityId },
     })
   },
   getFacilities: async (): Promise<FacilityApiItem[]> => {

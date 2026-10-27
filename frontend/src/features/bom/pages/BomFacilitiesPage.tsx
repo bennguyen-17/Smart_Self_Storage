@@ -23,11 +23,15 @@ import {
   Filter,
   Eye,
   Info,
+  TrendingUp,
+  BarChart3,
 } from "lucide-react"
 import apiClient from "@/lib/apiClient"
 import { getStorageUnits } from "@/features/customer/rent/rentApi"
 import { useBomContext } from "@/features/bom/context/BomContext"
 import { type FacilityPerformance } from "@/features/bom/data/bomData"
+import { bomApi } from "@/features/bom/api/bomApi"
+import FacilityCashFlowDashboard from "@/features/bom/components/FacilityCashFlowDashboard"
 
 const MANAGER_PRESETS = [
   { name: "Trần Văn Quản Lý", phone: "0912 345 678", email: "quanly.tran@smartstorage.vn" },
@@ -121,9 +125,14 @@ export default function BomFacilitiesPage() {
         const match = (fac.code || "").match(/\d+/)
         facId = match ? parseInt(match[0], 10) : 1
       }
-      const res: any = await apiClient.get("/units/filter", {
-        params: { facilityId: facId }
-      })
+
+      const [unitsPromise, facDashboardPromise] = [
+        apiClient.get("/units/filter", { params: { facilityId: facId } }).catch(() => null),
+        bomApi.getFacilityDashboard(facId).catch(() => null),
+      ]
+
+      const [res, facDashboard] = await Promise.all([unitsPromise, facDashboardPromise])
+
       const raw = Array.isArray(res) ? res : (res?.data || [])
       if (raw.length > 0) {
         setFacilityUnits(raw)
@@ -133,8 +142,31 @@ export default function BomFacilitiesPage() {
         const u3 = (await getStorageUnits(fac.code, 3))?.data || []
         setFacilityUnits([...u1, ...u2, ...u3])
       }
+
+      if (facDashboard) {
+        setDetailFacility((prev) =>
+          prev
+            ? {
+                ...prev,
+                depositHolding: Number(facDashboard.depositHolding || 0),
+                totalRefunds: Number(facDashboard.totalRefunds || 0),
+                netRevenue: Number(facDashboard.netRevenue || 0),
+                overdueUnits: facDashboard.overdueContracts || 0,
+                occupancyRate: facDashboard.occupancyRate ?? prev.occupancyRate,
+                occupied: facDashboard.occupiedUnits ?? prev.occupied,
+                available: facDashboard.availableUnits ?? prev.available,
+                maintenance: facDashboard.maintenanceUnits ?? prev.maintenance,
+                monthlyRevenues: (facDashboard.monthlyRevenues || []).map((m: any) => ({
+                  month: m.month,
+                  label: m.label,
+                  revenue: Number(m.revenue || 0),
+                })),
+              }
+            : null
+        )
+      }
     } catch (err) {
-      console.warn("Lỗi tải ô kho cơ sở:", err)
+      console.warn("Lỗi tải thông tin chi tiết cơ sở:", err)
       try {
         const u1 = (await getStorageUnits(fac.code, 1))?.data || []
         const u2 = (await getStorageUnits(fac.code, 2))?.data || []
@@ -432,11 +464,16 @@ export default function BomFacilitiesPage() {
 
                   return (
                     <tr key={fac.id} className="hover:bg-slate-900/60 transition">
-                      {/* CỘT 1: MÃ CƠ SỞ (Tối giản, không màu mè, không badge layout) */}
+                      {/* CỘT 1: MÃ CƠ SỞ (Tối giản, bấm vào xem biểu đồ dòng tiền) */}
                       <td className="py-4 px-4 text-center whitespace-nowrap">
-                        <span className="font-mono font-bold text-slate-200 text-xs sm:text-[13px]">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenFacilityDetail(fac)}
+                          className="font-mono font-bold text-sky-400 hover:text-sky-300 hover:underline text-xs sm:text-[13px] cursor-pointer"
+                          title="Bấm để xem biểu đồ dòng tiền & báo cáo cơ sở"
+                        >
                           {fac.code}
-                        </span>
+                        </button>
                       </td>
 
                       {/* CỘT 2: TÊN CƠ SỞ KHO */}
@@ -445,7 +482,7 @@ export default function BomFacilitiesPage() {
                           type="button"
                           onClick={() => handleOpenFacilityDetail(fac)}
                           className="font-extrabold text-white text-xs sm:text-sm hover:text-sky-400 hover:underline transition-colors text-left cursor-pointer"
-                          title="Bấm để xem chi tiết cơ sở & danh sách ô kho"
+                          title="Bấm để xem biểu đồ dòng tiền & chi tiết cơ sở"
                         >
                           {cleanName}
                         </button>
@@ -482,8 +519,16 @@ export default function BomFacilitiesPage() {
                       <td className="py-4 px-4 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
+                            onClick={() => handleOpenFacilityDetail(fac)}
+                            className="bg-sky-500/15 hover:bg-sky-500 text-sky-400 hover:text-slate-950 border border-sky-500/30 font-bold text-xs px-2.5 py-1.5 rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1"
+                            title="Xem biểu đồ dòng tiền & hiệu suất cơ sở"
+                          >
+                            <TrendingUp className="size-3.5" />
+                            <span className="hidden sm:inline">Dòng tiền</span>
+                          </button>
+                          <button
                             onClick={() => handleOpenFacilityModal(fac)}
-                            className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-xl shadow-xs transition cursor-pointer"
+                            className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-2.5 py-1.5 rounded-xl border border-slate-700 shadow-xs transition cursor-pointer"
                             title="Cấu hình cơ sở"
                           >
                             Cấu hình
@@ -990,7 +1035,7 @@ export default function BomFacilitiesPage() {
       {/* MODAL 4: XEM CHI TIẾT CƠ SỞ KHO & TÌNH TRẠNG Ô KHO - PORTAL RA BODY */}
       {isDetailModalOpen && detailFacility && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[999] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-slate-900 rounded-3xl border border-sky-500/30 p-5 sm:p-6 max-w-5xl w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-white my-auto max-h-[92vh] flex flex-col">
+          <div className="bg-slate-900 rounded-3xl border border-sky-500/30 p-5 sm:p-6 max-w-6xl w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-white my-auto max-h-[92vh] flex flex-col">
             
             {/* Modal Header */}
             <div className="flex items-start justify-between border-b border-slate-800 pb-3">
@@ -1020,78 +1065,51 @@ export default function BomFacilitiesPage() {
                   )}
                 </div>
               </div>
-              <button
-                onClick={() => setIsDetailModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer shrink-0"
-              >
-                <X className="size-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setIsDetailModalOpen(false)
+                    navigate(`/bom/reports?facilityId=${detailFacility.id}`)
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                  title="Mở toàn màn hình tại trang Báo Cáo"
+                >
+                  <BarChart3 className="size-3.5" />
+                  <span>Trang Báo Cáo</span>
+                </button>
+                <button
+                  onClick={() => setIsDetailModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer shrink-0"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
             </div>
 
-            {/* Thống kê 5 thẻ KPI nhanh - ĐỒNG BỘ 1 MÀU DUY NHẤT */}
+            {/* BIỂU ĐỒ DÒNG TIỀN & QUY MÔ VẬN HÀNH CHO RIÊNG CƠ SỞ */}
             {(() => {
               const all = facilityUnits
               const total = all.length || (detailFacility.totalUnits || 46)
-              const occupied = all.filter(u => (u.status || '').toUpperCase() === 'OCCUPIED' || (u.status || '').toUpperCase() === 'RENTED').length
-              const available = all.filter(u => (u.status || '').toUpperCase() === 'AVAILABLE').length
-              const hold = all.filter(u => {
-                const st = (u.status || '').toUpperCase()
-                return st === 'HOLD' || st === 'RESERVED'
-              }).length
-              const maintenance = all.filter(u => (u.status || '').toUpperCase() === 'MAINTENANCE').length
+              const occupied = all.filter(u => (u.status || '').toUpperCase() === 'OCCUPIED' || (u.status || '').toUpperCase() === 'RENTED').length || (detailFacility.occupied || 0)
+              const available = all.filter(u => (u.status || '').toUpperCase() === 'AVAILABLE').length || (detailFacility.available || 0)
+              const maintenance = all.filter(u => (u.status || '').toUpperCase() === 'MAINTENANCE').length || (detailFacility.maintenance || 0)
+              const occRate = total > 0 ? Math.round((occupied / total) * 100) : (detailFacility.occupancyRate || 0)
 
               return (
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                  <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
-                    <div>
-                      <div className="text-[10px] uppercase font-bold text-slate-400">Tổng Số Ô Kho</div>
-                      <div className="text-xl font-black font-mono text-white mt-0.5">{total}</div>
-                    </div>
-                    <div className="size-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs">
-                      🏢
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
-                    <div>
-                      <div className="text-[10px] uppercase font-bold text-slate-400">Còn Trống</div>
-                      <div className="text-xl font-black font-mono text-white mt-0.5">{available}</div>
-                    </div>
-                    <div className="size-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs">
-                      📦
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
-                    <div>
-                      <div className="text-[10px] uppercase font-bold text-slate-400">Đang Thuê</div>
-                      <div className="text-xl font-black font-mono text-white mt-0.5">{occupied}</div>
-                    </div>
-                    <div className="size-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs">
-                      🔑
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
-                    <div>
-                      <div className="text-[10px] uppercase font-bold text-slate-400">Đang Giữ Chỗ</div>
-                      <div className="text-xl font-black font-mono text-white mt-0.5">{hold}</div>
-                    </div>
-                    <div className="size-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs">
-                      ⏳
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
-                    <div>
-                      <div className="text-[10px] uppercase font-bold text-slate-400">Đang Bảo Trì</div>
-                      <div className="text-xl font-black font-mono text-white mt-0.5">{maintenance}</div>
-                    </div>
-                    <div className="size-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs">
-                      🛠️
-                    </div>
-                  </div>
-                </div>
+                <FacilityCashFlowDashboard
+                  title={`Dòng Tiền Thực Thu - ${detailFacility.code}`}
+                  subtitle={`Xu hướng dòng tiền thực thu 6 tháng gần nhất tại ${detailFacility.name.replace(/\s*\([A-Z0-9-]+\)\s*$/, "")}`}
+                  monthlyRevenues={detailFacility.monthlyRevenues}
+                  netRevenue={Number(detailFacility.netRevenue ?? detailFacility.monthlyRevenue ?? 0)}
+                  depositHolding={Number(detailFacility.depositHolding || 0)}
+                  totalRefunds={Number(detailFacility.totalRefunds || 0)}
+                  overdueContracts={Number(detailFacility.overdueUnits || 0)}
+                  totalUnits={total}
+                  occupiedUnits={occupied}
+                  availableUnits={available}
+                  maintenanceUnits={maintenance}
+                  occupancyRate={occRate}
+                />
               )
             })()}
 

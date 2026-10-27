@@ -1,6 +1,7 @@
 package com.swp391.backend.dto.dashboard;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public class ManagerDashboardResponse {
     private Integer facilityId;
@@ -46,6 +47,7 @@ public class ManagerDashboardResponse {
     private long inProgressTickets;
     private long resolvedTickets;
     private long slaBreachedTickets;
+    private List<MonthlyRevenueItemResponse> monthlyRevenues;
 
     public ManagerDashboardResponse() {
     }
@@ -312,5 +314,13 @@ public class ManagerDashboardResponse {
 
     public void setAllTimeRevenue(BigDecimal allTimeRevenue) {
         this.allTimeRevenue = allTimeRevenue;
+    }
+
+    public List<MonthlyRevenueItemResponse> getMonthlyRevenues() {
+        return monthlyRevenues;
+    }
+
+    public void setMonthlyRevenues(List<MonthlyRevenueItemResponse> monthlyRevenues) {
+        this.monthlyRevenues = monthlyRevenues;
     }
 }
