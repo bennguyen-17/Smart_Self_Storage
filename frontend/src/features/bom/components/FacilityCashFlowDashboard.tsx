@@ -357,13 +357,9 @@ export default function FacilityCashFlowDashboard({
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                    Lấp Đầy
-                  </span>
                   <span className="text-2xl sm:text-3xl font-mono font-black text-white tracking-tight">
                     {displayOcc}%
                   </span>
-                  <span className="text-[10px] text-slate-400 font-medium">Đang Khai Thác</span>
                 </div>
               </div>
             </div>
