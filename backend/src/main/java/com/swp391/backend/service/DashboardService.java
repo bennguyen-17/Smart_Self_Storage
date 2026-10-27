@@ -255,8 +255,8 @@ public class DashboardService {
             }
         }
 
-        BigDecimal grossRevenue = rentalRevenue.add(extensionRevenue).add(paidPenalty).add(compensationRevenue);
-        BigDecimal netRevenue = grossRevenue.subtract(totalRefunds);
+        BigDecimal grossRevenue = rentalRevenue.add(extensionRevenue).add(penaltyRevenue).add(compensationRevenue);
+        BigDecimal netRevenue = grossRevenue; // Doanh thu thực thu = Tiền thuê + Tiền phạt
 
         // 4. Thống kê Support Ticket & SLA
         List<SupportTicket> allFacilityTickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
@@ -374,7 +374,7 @@ public class DashboardService {
                     mRefunds = mRefunds.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
                 } else if ((invNum.startsWith("CMP-") || "CMP".equalsIgnoreCase(p.getInvoiceType()) || "INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                     mCompensation = mCompensation.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
-                } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
+                } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && !"CANCELLED".equalsIgnoreCase(p.getStatus())) {
                     mPenalty = mPenalty.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
                 } else if (("MONTHLY_RENEWAL".equalsIgnoreCase(p.getInvoiceType()) || "EXT".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                     mExtension = mExtension.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
@@ -392,7 +392,7 @@ public class DashboardService {
             }
 
             BigDecimal mGross = mRental.add(mExtension).add(mPenalty).add(mCompensation);
-            BigDecimal mNet = mGross.subtract(mRefunds);
+            BigDecimal mNet = mGross; // Doanh thu thực thu = Tiền thuê + Tiền phạt
 
             String monthCode = "T" + ym.getMonthValue();
             String monthLabel = String.format("Tháng %02d/%d", ym.getMonthValue(), ym.getYear());
@@ -507,7 +507,7 @@ public class DashboardService {
                     mRefunds = mRefunds.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
                 } else if ((invNum.startsWith("CMP-") || "CMP".equalsIgnoreCase(p.getInvoiceType()) || "INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                     mCompensation = mCompensation.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
-                } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
+                } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && !"CANCELLED".equalsIgnoreCase(p.getStatus())) {
                     mPenalty = mPenalty.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
                 } else if (("MONTHLY_RENEWAL".equalsIgnoreCase(p.getInvoiceType()) || "EXT".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                     mExtension = mExtension.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
@@ -525,7 +525,7 @@ public class DashboardService {
             }
 
             BigDecimal mGross = mRental.add(mExtension).add(mPenalty).add(mCompensation);
-            BigDecimal mNet = mGross.subtract(mRefunds);
+            BigDecimal mNet = mGross; // Doanh thu thực thu toàn chuỗi = Tiền thuê + Tiền phạt
 
             String monthCode = "T" + ym.getMonthValue();
             String monthLabel = String.format("Tháng %02d/%d", ym.getMonthValue(), ym.getYear());
