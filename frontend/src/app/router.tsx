@@ -32,11 +32,6 @@ import BomFacilitiesPage from "@/features/bom/pages/BomFacilitiesPage"
 import BomPricingPage from "@/features/bom/pages/BomPricingPage"
 import BomReportsPage from "@/features/bom/pages/BomReportsPage"
 
-function FacilityReportRedirect() {
-  const { facilityId } = useParams()
-  return <Navigate to={`/bom/reports?facilityId=${facilityId}`} replace />
-}
-
 import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
 import { isTokenValid } from "@/lib/http"
 
@@ -155,7 +150,7 @@ export function AppRouter() {
       >
         <Route index element={<Navigate to="/bom/facilities" replace />} />
         <Route path="facilities" element={<BomFacilitiesPage />} />
-        <Route path="facilities/:facilityId" element={<FacilityReportRedirect />} />
+        <Route path="facilities/:facilityId" element={<BomFacilitiesPage />} />
         <Route path="pricing" element={<BomPricingPage />} />
         <Route path="policies" element={<Navigate to="/bom/facilities" replace />} />
         <Route path="reports" element={<BomReportsPage />} />

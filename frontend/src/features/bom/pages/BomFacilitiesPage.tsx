@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { createPortal } from "react-dom"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
 import {
   Warehouse,
@@ -25,6 +25,7 @@ import {
   Info,
   TrendingUp,
   BarChart3,
+  ArrowLeft,
 } from "lucide-react"
 import apiClient from "@/lib/apiClient"
 import { getStorageUnits } from "@/features/customer/rent/rentApi"
@@ -80,6 +81,84 @@ export default function BomFacilitiesPage() {
     updateFacilityInDb,
     deleteFacilityInDb,
   } = useBomContext()
+
+  const { facilityId } = useParams()
+
+  // Tìm cơ sở đang chọn để hiển thị chi tiết ở phần bên phải (nếu có facilityId trên URL)
+  const activeFac = useMemo(() => {
+    if (!facilityId) return null
+    const normalize = (s?: string | number) =>
+      String(s || "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase()
+    const targetNorm = normalize(facilityId)
+
+    return (
+      facilities.find(
+        (f) =>
+          String(f.id) === facilityId ||
+          normalize(f.code) === targetNorm ||
+          normalize(f.id) === targetNorm
+      ) ||
+      (chainOverview?.facilityBreakdown || []).find(
+        (b) =>
+          String(b.facilityId) === facilityId ||
+          normalize(b.facilityCode) === targetNorm ||
+          normalize(b.facilityId) === targetNorm
+      ) ||
+      null
+    )
+  }, [facilityId, facilities, chainOverview])
+
+  const [selectedFacilityUnits, setSelectedFacilityUnits] = useState<any[]>([])
+  const [isLoadingSelectedUnits, setIsLoadingSelectedUnits] = useState(false)
+
+  useEffect(() => {
+    if (!facilityId || !activeFac) {
+      setSelectedFacilityUnits([])
+      return
+    }
+
+    let isMounted = true
+    setIsLoadingSelectedUnits(true)
+
+    const fetchUnits = async () => {
+      try {
+        let facId = Number(facilityId)
+        if (isNaN(facId) || facId <= 0) {
+          const match = facilityId.match(/\d+/)
+          facId = match ? parseInt(match[0], 10) : 1
+        }
+
+        const res: any = await apiClient
+          .get("/units/filter", { params: { facilityId: facId } })
+          .catch(() => null)
+
+        const raw = Array.isArray(res) ? res : res?.data || []
+        if (isMounted) {
+          if (raw.length > 0) {
+            setSelectedFacilityUnits(raw)
+          } else {
+            const facCode = (activeFac as any).facilityCode || (activeFac as any).code || `FAC-${facId}`
+            const [u1, u2, u3] = await Promise.all([
+              getStorageUnits(facCode, 1).catch(() => ({ data: [] })),
+              getStorageUnits(facCode, 2).catch(() => ({ data: [] })),
+              getStorageUnits(facCode, 3).catch(() => ({ data: [] })),
+            ])
+            const combined = [...(u1?.data || []), ...(u2?.data || []), ...(u3?.data || [])]
+            setSelectedFacilityUnits(combined)
+          }
+        }
+      } catch (err) {
+        console.warn("Lỗi tải ô kho cơ sở:", err)
+      } finally {
+        if (isMounted) setIsLoadingSelectedUnits(false)
+      }
+    }
+
+    fetchUnits()
+    return () => {
+      isMounted = false
+    }
+  }, [facilityId, activeFac])
 
   // State bộ lọc thời gian doanh thu bảng cơ sở: "this_month" (mặc định), "last_3_months", "all_time"
   const [revenuePeriod, setRevenuePeriod] = useState<"this_month" | "last_3_months" | "all_time">("this_month")
@@ -353,209 +432,452 @@ export default function BomFacilitiesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Bảng Giám Sát & Danh Sách Cơ Sở Kho Toàn Chuỗi */}
-      <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
-          <div>
-            <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-white">
-              <Warehouse className="size-4.5 text-sky-400" />
-              <span>GIÁM SÁT HOẠT ĐỘNG VÀ CƠ SỞ KHO TOÀN CHUỖI</span>
-            </h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Quản lý danh sách chi nhánh, mã cơ sở tự động, cấu hình mô hình kiến trúc chuẩn &amp; đồng bộ sơ đồ 2D
-            </p>
-          </div>
+      {facilityId && activeFac ? (
+        /* GIAO DIỆN BÁO CÁO CƠ SỞ KHO CHI TIẾT - VẪN Ở TRONG MỤC "GIÁM SÁT & CƠ SỞ" */
+        (() => {
+          const fAny = activeFac as any
+          const code = fAny.facilityCode || fAny.code || `FAC-${facilityId}`
+          const rawName = fAny.facilityName || fAny.name || `Cơ sở ${code}`
+          const name = rawName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "")
+          const monthlyRevs = fAny.monthlyRevenues || []
+          const netRev = Number(fAny.netRevenue ?? fAny.monthlyRevenue ?? 0)
+          const depHold = Number(fAny.depositHolding ?? 0)
+          const totRefund = Number(fAny.totalRefunds ?? 0)
+          const overdue = Number(fAny.overdueContracts ?? fAny.overdueUnits ?? 0)
+          const tUnits = Number(fAny.totalUnits ?? 46)
+          const occUnits = Number(fAny.occupiedUnits ?? fAny.occupied ?? 0)
+          const availUnits = Number(fAny.availableUnits ?? fAny.available ?? 0)
+          const maintUnits = Number(fAny.maintenanceUnits ?? fAny.maintenance ?? 0)
+          const occRate = Number(
+            fAny.occupancyRate ?? (tUnits > 0 ? Math.round((occUnits / tUnits) * 100) : 0)
+          )
 
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
-            {/* BỘ LỌC KHOẢNG THỜI GIAN DOANH THU */}
-            <div className="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800 shadow-inner">
-              <button
-                type="button"
-                onClick={() => setRevenuePeriod("this_month")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  revenuePeriod === "this_month"
-                    ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-                title="Xem doanh thu tháng hiện tại"
-              >
-                Tháng Này
-              </button>
-              <button
-                type="button"
-                onClick={() => setRevenuePeriod("last_3_months")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  revenuePeriod === "last_3_months"
-                    ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-                title="Xem doanh thu 3 tháng gần nhất"
-              >
-                3 Tháng Gần Nhất
-              </button>
-              <button
-                type="button"
-                onClick={() => setRevenuePeriod("all_time")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  revenuePeriod === "all_time"
-                    ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-                title="Xem tổng doanh thu toàn thời gian"
-              >
-                Toàn Thời Gian
-              </button>
+          return (
+            <div className="space-y-5">
+              {/* HEADER BÁO CÁO CƠ SỞ & BỘ CHỌN NHANH */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-md">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <button
+                      type="button"
+                      onClick={() => navigate("/bom/facilities")}
+                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer shrink-0"
+                      title="Quay lại danh sách cơ sở kho"
+                    >
+                      <ArrowLeft className="size-4" />
+                    </button>
+                    <h2 className="text-lg sm:text-xl font-black text-white tracking-tight uppercase">
+                      Báo Cáo Cơ Sở: {name} ({code})
+                    </h2>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Giám sát dòng tiền thực thu 6 tháng gần nhất và hiệu suất vận hành tại {name}
+                  </p>
+                </div>
+
+                {/* Nút lọc chuyển đổi nhanh */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    onClick={() => navigate("/bom/facilities")}
+                    className="px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/60 transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Layers className="size-3.5" />
+                    Tất Cả Cơ Sở
+                  </button>
+
+                  {facilities.map((f) => {
+                    const isSelected = String(f.id) === String(facilityId) || f.code === code
+                    return (
+                      <button
+                        key={f.id}
+                        onClick={() => navigate(`/bom/facilities/${f.id}`)}
+                        className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+                          isSelected
+                            ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 border border-sky-400"
+                            : "bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/60"
+                        }`}
+                        title={f.name}
+                      >
+                        <Building2 className="size-3.5" />
+                        {f.code}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* KHỐI EXECUTIVE DASHBOARD DÒNG TIỀN VÀ QUY MÔ VẬN HÀNH */}
+              <FacilityCashFlowDashboard
+                title={`Doanh Thu Thực Thu - ${code}`}
+                subtitle={`Xu hướng dòng tiền thực thu 6 tháng gần nhất tại ${name}`}
+                monthlyRevenues={monthlyRevs}
+                netRevenue={netRev}
+                depositHolding={depHold}
+                totalRefunds={totRefund}
+                overdueContracts={overdue}
+                totalUnits={tUnits}
+                occupiedUnits={occUnits}
+                availableUnits={availUnits}
+                maintenanceUnits={maintUnits}
+                occupancyRate={occRate}
+              />
+
+              {/* BẢNG BÁO CÁO CƠ CẤU Ô KHO THEO SIZE */}
+              <div className="rounded-2xl border border-slate-800/90 bg-slate-900/60 p-5 sm:p-6 shadow-xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-black text-sm uppercase text-white tracking-wider flex items-center gap-2">
+                      <span>BÁO CÁO CƠ CẤU Ô KHO THEO SIZE &amp; LOẠI HÌNH</span>
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-400 border border-sky-500/30">
+                        {code}
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Chi tiết tỷ lệ khai thác và doanh thu tiềm năng từng kích thước ô kho
+                    </p>
+                  </div>
+                </div>
+
+                {isLoadingSelectedUnits ? (
+                  <div className="p-8 text-center text-slate-400 font-bold space-y-2">
+                    <div className="size-6 border-2 border-sky-400 border-t-transparent rounded-full animate-spin mx-auto" />
+                    <p className="text-xs">Đang tổng hợp cơ cấu ô kho...</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-xl border border-slate-800">
+                    <table className="w-full text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-800 bg-slate-950/90 text-slate-400 uppercase font-black text-[10px]">
+                          <th className="p-3 text-left whitespace-nowrap">Phân Loại / Size</th>
+                          <th className="p-3 text-center whitespace-nowrap">Quy Cách Sàn</th>
+                          <th className="p-3 text-center whitespace-nowrap">Tổng Số Ô</th>
+                          <th className="p-3 text-center whitespace-nowrap">Đang Thuê</th>
+                          <th className="p-3 text-center whitespace-nowrap">Còn Trống</th>
+                          <th className="p-3 text-center whitespace-nowrap">Giữ Chỗ</th>
+                          <th className="p-3 text-center whitespace-nowrap">Bảo Trì</th>
+                          <th className="p-3 text-center whitespace-nowrap">Tỷ Lệ Lấp Đầy</th>
+                          <th className="p-3 text-right whitespace-nowrap">Doanh Thu / Tháng</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/80 font-semibold text-slate-300">
+                        {(() => {
+                          const SIZES = [
+                            { size: "S", name: "Size S (Tủ Cá Nhân)", dim: "1.0m × 1.0m", defaultNorm: 600000 },
+                            { size: "M", name: "Size M (Phòng Vừa)", dim: "1.5m × 2.0m", defaultNorm: 1200000 },
+                            { size: "L", name: "Size L (Phòng Lớn)", dim: "2.0m × 3.0m", defaultNorm: 2400000 },
+                            { size: "XL", name: "Size XL (Kho Doanh Nghiệp)", dim: "2.5m × 4.0m", defaultNorm: 4000000 },
+                          ]
+
+                          let grandTotal = 0
+                          let grandOccupied = 0
+                          let grandAvailable = 0
+                          let grandHold = 0
+                          let grandMaintenance = 0
+                          let grandRevenue = 0
+
+                          const rows = SIZES.map((cfg) => {
+                            const list = selectedFacilityUnits.filter((u) => {
+                              const typeStr = (u.typeName || u.typeLabel || "").toUpperCase()
+                              const sz = (u.size || "").toUpperCase()
+                              const code = (u.unitCode || u.unitId || "").toUpperCase()
+                              if (cfg.size === "XL") return typeStr.includes("XL") || sz === "XL" || sz.includes("XL") || code.includes("-XL")
+                              if (cfg.size === "S") return (typeStr.includes("SIZE S") || sz === "S" || code.includes("-S")) && !typeStr.includes("XL") && !code.includes("-XL")
+                              if (cfg.size === "M") return typeStr.includes("SIZE M") || sz === "M" || code.includes("-M")
+                              if (cfg.size === "L") return (typeStr.includes("SIZE L") || sz === "L" || code.includes("-L")) && !typeStr.includes("XL") && !code.includes("-XL")
+                              return false
+                            })
+
+                            const total = list.length || (cfg.size === "S" ? 10 : cfg.size === "M" ? 20 : cfg.size === "L" ? 12 : 4)
+                            const occupied = list.filter((u) => {
+                              const st = (u.status || "").toUpperCase()
+                              return st === "OCCUPIED" || st === "RENTED"
+                            }).length
+                            const available = list.filter((u) => (u.status || "").toUpperCase() === "AVAILABLE").length
+                            const hold = list.filter((u) => {
+                              const st = (u.status || "").toUpperCase()
+                              return st === "HOLD" || st === "RESERVED"
+                            }).length
+                            const maintenance = list.filter((u) => (u.status || "").toUpperCase() === "MAINTENANCE").length
+                            const occRate = total > 0 ? Math.round((occupied / total) * 100) : 0
+                            const revenue = list
+                              .filter((u) => {
+                                const st = (u.status || "").toUpperCase()
+                                return st === "OCCUPIED" || st === "RENTED"
+                              })
+                              .reduce((sum, u) => sum + Number(u.monthlyPrice || cfg.defaultNorm), 0)
+
+                            grandTotal += total
+                            grandOccupied += occupied
+                            grandAvailable += available
+                            grandHold += hold
+                            grandMaintenance += maintenance
+                            grandRevenue += revenue
+
+                            return (
+                              <tr key={cfg.size} className="hover:bg-slate-950/40 transition">
+                                <td className="p-3 text-left whitespace-nowrap">
+                                  <div className="font-extrabold text-white whitespace-nowrap">{cfg.name}</div>
+                                </td>
+                                <td className="p-3 text-center font-mono text-slate-400 whitespace-nowrap">{cfg.dim}</td>
+                                <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{total} ô</td>
+                                <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{occupied}</td>
+                                <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{available}</td>
+                                <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{hold}</td>
+                                <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{maintenance}</td>
+                                <td className="p-3 text-center whitespace-nowrap">
+                                  <div className="flex items-center justify-center gap-2">
+                                    <span className="font-mono font-bold text-white">{occRate}%</span>
+                                    <div className="w-14 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                      <div
+                                        className="h-full bg-slate-300 rounded-full"
+                                        style={{ width: `${Math.min(occRate, 100)}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="p-3 text-right font-mono font-bold text-white whitespace-nowrap">
+                                  ₫{revenue.toLocaleString("vi-VN")}
+                                </td>
+                              </tr>
+                            )
+                          })
+
+                          const grandRate = grandTotal > 0 ? Math.round((grandOccupied / grandTotal) * 100) : 0
+
+                          return (
+                            <>
+                              {rows}
+                              <tr className="bg-slate-950 font-black border-t-2 border-slate-700 text-white">
+                                <td className="p-3 text-left uppercase text-white tracking-wider whitespace-nowrap">
+                                  TỔNG CỘNG CƠ CẤU
+                                </td>
+                                <td className="p-3 text-center text-slate-400 font-mono whitespace-nowrap">—</td>
+                                <td className="p-3 text-center text-sky-400 font-mono whitespace-nowrap">{grandTotal} ô</td>
+                                <td className="p-3 text-center text-emerald-400 font-mono whitespace-nowrap">{grandOccupied}</td>
+                                <td className="p-3 text-center text-slate-300 font-mono whitespace-nowrap">{grandAvailable}</td>
+                                <td className="p-3 text-center text-amber-400 font-mono whitespace-nowrap">{grandHold}</td>
+                                <td className="p-3 text-center text-rose-400 font-mono whitespace-nowrap">{grandMaintenance}</td>
+                                <td className="p-3 text-center text-sky-400 font-mono whitespace-nowrap">{grandRate}%</td>
+                                <td className="p-3 text-right text-emerald-400 font-mono whitespace-nowrap">
+                                  ₫{grandRevenue.toLocaleString("vi-VN")}
+                                </td>
+                              </tr>
+                            </>
+                          )
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        })()
+      ) : (
+        /* BẢNG GIÁM SÁT HOẠT ĐỘNG VÀ CƠ SỞ KHO TOÀN CHUỖI */
+        <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+            <div>
+              <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-white">
+                <Warehouse className="size-4.5 text-sky-400" />
+                <span>GIÁM SÁT HOẠT ĐỘNG VÀ CƠ SỞ KHO TOÀN CHUỖI</span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Quản lý danh sách chi nhánh, mã cơ sở tự động, cấu hình mô hình kiến trúc chuẩn &amp; đồng bộ sơ đồ 2D
+              </p>
             </div>
 
-            {/* NÚT THÊM CƠ SỞ KHO MỚI */}
-            <button
-              onClick={handleOpenAddModal}
-              className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-sky-500/20 shrink-0"
-            >
-              <Plus className="size-4" />
-              <span>Thêm Cơ Sở Kho Mới</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+              {/* BỘ LỌC KHOẢNG THỜI GIAN DOANH THU */}
+              <div className="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800 shadow-inner">
+                <button
+                  type="button"
+                  onClick={() => setRevenuePeriod("this_month")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    revenuePeriod === "this_month"
+                      ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                  title="Xem doanh thu tháng hiện tại"
+                >
+                  Tháng Này
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRevenuePeriod("last_3_months")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    revenuePeriod === "last_3_months"
+                      ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                  title="Xem doanh thu 3 tháng gần nhất"
+                >
+                  3 Tháng Gần Nhất
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRevenuePeriod("all_time")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    revenuePeriod === "all_time"
+                      ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                  title="Xem tổng doanh thu toàn thời gian"
+                >
+                  Toàn Thời Gian
+                </button>
+              </div>
+
+              {/* NÚT THÊM CƠ SỞ KHO MỚI */}
+              <button
+                onClick={handleOpenAddModal}
+                className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-sky-500/20 shrink-0"
+              >
+                <Plus className="size-4" />
+                <span>Thêm Cơ Sở Kho Mới</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-slate-800 shadow-md">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-900 border-b border-sky-500/30 text-sky-400 uppercase font-bold text-[11px] sm:text-xs tracking-wider">
+                  <th className="py-3 px-4 text-center whitespace-nowrap">MÃ CƠ SỞ</th>
+                  <th className="py-3 px-4 text-left whitespace-nowrap">CƠ SỞ KHO</th>
+                  <th className="py-3 px-4 text-center whitespace-nowrap">QUẢN LÝ CHI NHÁNH</th>
+                  <th className="py-3 px-4 text-center whitespace-nowrap">KHO THUÊ</th>
+                  <th className="py-3 px-4 text-center whitespace-nowrap">TỶ LỆ LẤP ĐẦY</th>
+                  <th className="py-3 px-4 text-center whitespace-nowrap">
+                    {revenuePeriod === "this_month"
+                      ? "DOANH THU (THÁNG NÀY)"
+                      : revenuePeriod === "last_3_months"
+                        ? "DOANH THU (3 THÁNG GẦN NHẤT)"
+                        : "DOANH THU (TOÀN THỜI GIAN)"}
+                  </th>
+                  <th className="py-3 px-4 text-center whitespace-nowrap">THAO TÁC</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/80 font-medium text-slate-300">
+                {facilities.length > 0 ? (
+                  facilities.map((fac) => {
+                    const isLayoutB =
+                      fac.layoutType === "Layout B" ||
+                      fac.layoutType === "B" ||
+                      [2, 4, 5, 7].includes(Number(fac.id))
+                    const stdUnits = isLayoutB ? 15 : 46
+                    const cleanName = (fac.name || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+                    const cleanManager = (fac.managerName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+                    const rented = fac.occupied ?? fac.rentedUnits ?? 0
+                    const displayOccRate =
+                      fac.occupancyRate != null
+                        ? Number(fac.occupancyRate).toFixed(1).replace(/\.0$/, "")
+                        : stdUnits > 0
+                          ? String(Math.round((rented / stdUnits) * 100))
+                          : "0"
+
+                    const displayRevenue =
+                      revenuePeriod === "this_month"
+                        ? (fac.thisMonthRevenue || "₫0")
+                        : revenuePeriod === "last_3_months"
+                          ? (fac.last3MonthsRevenue || "₫0")
+                          : (fac.allTimeRevenue || fac.monthlyRevenue || "₫0")
+
+                    return (
+                      <tr key={fac.id} className="hover:bg-slate-900/60 transition">
+                        {/* CỘT 1: MÃ CƠ SỞ (Bấm vào chuyển sang xem chi tiết cơ sở trong cùng menu) */}
+                        <td className="py-4 px-4 text-center whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/bom/facilities/${fac.id}`)}
+                            className="font-mono font-bold text-sky-400 hover:text-sky-300 hover:underline text-xs sm:text-[13px] cursor-pointer"
+                            title="Bấm để xem báo cáo dòng tiền & thông số cơ sở"
+                          >
+                            {fac.code}
+                          </button>
+                        </td>
+
+                        {/* CỘT 2: TÊN CƠ SỞ KHO (Bấm vào chuyển sang xem chi tiết cơ sở trong cùng menu) */}
+                        <td className="py-4 px-4 text-left whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/bom/facilities/${fac.id}`)}
+                            className="font-extrabold text-white text-xs sm:text-sm hover:text-sky-400 hover:underline transition-colors text-left cursor-pointer"
+                            title="Bấm để xem báo cáo dòng tiền & thông số cơ sở"
+                          >
+                            {cleanName}
+                          </button>
+                        </td>
+
+                        {/* CỘT 3: QUẢN LÝ CHI NHÁNH */}
+                        <td className="py-4 px-4 text-center whitespace-nowrap">
+                          <div className="font-bold text-white text-xs sm:text-sm text-center">
+                            {cleanManager || "Chưa phân công"}
+                          </div>
+                        </td>
+
+                        {/* CỘT 4: KHO THUÊ (ĐANG THUÊ / TỔNG SỐ KHO) */}
+                        <td className="py-4 px-4 text-center whitespace-nowrap">
+                          <div className="font-bold text-slate-200 text-xs sm:text-sm font-mono">
+                            <span className="text-white">{rented}</span>
+                            <span className="text-slate-400"> / {stdUnits} Kho</span>
+                          </div>
+                        </td>
+
+                        {/* CỘT 5: TỶ LỆ LẤP ĐẦY */}
+                        <td className="py-4 px-4 text-center whitespace-nowrap">
+                          <span className="font-bold text-slate-200 font-mono text-xs sm:text-sm">
+                            {displayOccRate}%
+                          </span>
+                        </td>
+
+                        {/* CỘT 6: DOANH THU THEO KHOẢNG THỜI GIAN ĐƯỢC CHỌN */}
+                        <td className="py-4 px-4 text-center whitespace-nowrap font-bold text-slate-200 font-mono text-xs sm:text-sm">
+                          {displayRevenue}
+                        </td>
+
+                        {/* CỘT 7: THAO TÁC */}
+                        <td className="py-4 px-4 text-center whitespace-nowrap">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => navigate(`/bom/facilities/${fac.id}`)}
+                              className="bg-sky-500/15 hover:bg-sky-500 text-sky-400 hover:text-slate-950 border border-sky-500/30 font-bold text-xs px-2.5 py-1.5 rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1"
+                              title="Xem biểu đồ dòng tiền & thông số cơ sở"
+                            >
+                              <TrendingUp className="size-3.5" />
+                              <span className="hidden sm:inline">Dòng tiền</span>
+                            </button>
+                            <button
+                              onClick={() => handleOpenFacilityModal(fac)}
+                              className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-2.5 py-1.5 rounded-xl border border-slate-700 shadow-xs transition cursor-pointer"
+                              title="Cấu hình cơ sở"
+                            >
+                              Cấu hình
+                            </button>
+                            <button
+                              onClick={() => setFacilityToDelete(fac)}
+                              className="p-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/30 transition cursor-pointer"
+                              title="Xóa cơ sở kho"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-slate-400 italic">
+                      Đang tải dữ liệu cơ sở từ hệ thống...
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-
-        <div className="overflow-x-auto rounded-xl border border-slate-800 shadow-md">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="bg-slate-900 border-b border-sky-500/30 text-sky-400 uppercase font-bold text-[11px] sm:text-xs tracking-wider">
-                <th className="py-3 px-4 text-center whitespace-nowrap">MÃ CƠ SỞ</th>
-                <th className="py-3 px-4 text-left whitespace-nowrap">CƠ SỞ KHO</th>
-                <th className="py-3 px-4 text-center whitespace-nowrap">QUẢN LÝ CHI NHÁNH</th>
-                <th className="py-3 px-4 text-center whitespace-nowrap">KHO THUÊ</th>
-                <th className="py-3 px-4 text-center whitespace-nowrap">TỶ LỆ LẤP ĐẦY</th>
-                <th className="py-3 px-4 text-center whitespace-nowrap">
-                  {revenuePeriod === "this_month"
-                    ? "DOANH THU (THÁNG NÀY)"
-                    : revenuePeriod === "last_3_months"
-                      ? "DOANH THU (3 THÁNG GẦN NHẤT)"
-                      : "DOANH THU (TOÀN THỜI GIAN)"}
-                </th>
-                <th className="py-3 px-4 text-center whitespace-nowrap">THAO TÁC</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/80 font-medium text-slate-300">
-              {facilities.length > 0 ? (
-                facilities.map((fac) => {
-                  const isLayoutB =
-                    fac.layoutType === "Layout B" ||
-                    fac.layoutType === "B" ||
-                    [2, 4, 5, 7].includes(Number(fac.id))
-                  const stdUnits = isLayoutB ? 15 : 46
-                  const cleanName = (fac.name || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
-                  const cleanManager = (fac.managerName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
-                  const rented = fac.occupied ?? fac.rentedUnits ?? 0
-                  const displayOccRate =
-                    fac.occupancyRate != null
-                      ? Number(fac.occupancyRate).toFixed(1).replace(/\.0$/, "")
-                      : stdUnits > 0
-                        ? String(Math.round((rented / stdUnits) * 100))
-                        : "0"
-
-                  const displayRevenue =
-                    revenuePeriod === "this_month"
-                      ? (fac.thisMonthRevenue || "₫0")
-                      : revenuePeriod === "last_3_months"
-                        ? (fac.last3MonthsRevenue || "₫0")
-                        : (fac.allTimeRevenue || fac.monthlyRevenue || "₫0")
-
-                  return (
-                    <tr key={fac.id} className="hover:bg-slate-900/60 transition">
-                      {/* CỘT 1: MÃ CƠ SỞ (Bấm vào xem báo cáo dòng tiền & thông số cơ sở ở trang riêng) */}
-                      <td className="py-4 px-4 text-center whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/bom/reports?facilityId=${fac.id}`)}
-                          className="font-mono font-bold text-sky-400 hover:text-sky-300 hover:underline text-xs sm:text-[13px] cursor-pointer"
-                          title="Bấm để xem báo cáo dòng tiền & thông số cơ sở"
-                        >
-                          {fac.code}
-                        </button>
-                      </td>
-
-                      {/* CỘT 2: TÊN CƠ SỞ KHO (Bấm vào chuyển sang trang báo cáo thông số cơ sở) */}
-                      <td className="py-4 px-4 text-left whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/bom/reports?facilityId=${fac.id}`)}
-                          className="font-extrabold text-white text-xs sm:text-sm hover:text-sky-400 hover:underline transition-colors text-left cursor-pointer"
-                          title="Bấm để xem báo cáo dòng tiền & thông số cơ sở"
-                        >
-                          {cleanName}
-                        </button>
-                      </td>
-
-                      {/* CỘT 3: QUẢN LÝ CHI NHÁNH */}
-                      <td className="py-4 px-4 text-center whitespace-nowrap">
-                        <div className="font-bold text-white text-xs sm:text-sm text-center">
-                          {cleanManager || "Chưa phân công"}
-                        </div>
-                      </td>
-
-                      {/* CỘT 4: KHO THUÊ (ĐANG THUÊ / TỔNG SỐ KHO) */}
-                      <td className="py-4 px-4 text-center whitespace-nowrap">
-                        <div className="font-bold text-slate-200 text-xs sm:text-sm font-mono">
-                          <span className="text-white">{rented}</span>
-                          <span className="text-slate-400"> / {stdUnits} Kho</span>
-                        </div>
-                      </td>
-
-                      {/* CỘT 5: TỶ LỆ LẤP ĐẦY */}
-                      <td className="py-4 px-4 text-center whitespace-nowrap">
-                        <span className="font-bold text-slate-200 font-mono text-xs sm:text-sm">
-                          {displayOccRate}%
-                        </span>
-                      </td>
-
-                      {/* CỘT 6: DOANH THU THEO KHOẢNG THỜI GIAN ĐƯỢC CHỌN */}
-                      <td className="py-4 px-4 text-center whitespace-nowrap font-bold text-slate-200 font-mono text-xs sm:text-sm">
-                        {displayRevenue}
-                      </td>
-
-                      {/* CỘT 7: THAO TÁC */}
-                      <td className="py-4 px-4 text-center whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            onClick={() => navigate(`/bom/reports?facilityId=${fac.id}`)}
-                            className="bg-sky-500/15 hover:bg-sky-500 text-sky-400 hover:text-slate-950 border border-sky-500/30 font-bold text-xs px-2.5 py-1.5 rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1"
-                            title="Xem biểu đồ dòng tiền & thông số cơ sở"
-                          >
-                            <TrendingUp className="size-3.5" />
-                            <span className="hidden sm:inline">Dòng tiền</span>
-                          </button>
-                          <button
-                            onClick={() => handleOpenFacilityModal(fac)}
-                            className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-2.5 py-1.5 rounded-xl border border-slate-700 shadow-xs transition cursor-pointer"
-                            title="Cấu hình cơ sở"
-                          >
-                            Cấu hình
-                          </button>
-                          <button
-                            onClick={() => setFacilityToDelete(fac)}
-                            className="p-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/30 transition cursor-pointer"
-                            title="Xóa cơ sở kho"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })
-              ) : (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400 italic">
-                    Đang tải dữ liệu cơ sở từ hệ thống...
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      )}
 
       {/* MODAL 1: CẤU HÌNH CƠ SỞ KHO - PORTAL RA BODY */}
       {isFacilityModalOpen && selectedFacility && typeof document !== "undefined" && createPortal(
@@ -1025,247 +1347,6 @@ export default function BomFacilitiesPage() {
               >
                 <Trash2 className="size-4" />
                 <span>Xác Nhận Xóa Cơ Sở</span>
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* MODAL 4: XEM CHI TIẾT CƠ SỞ KHO & TÌNH TRẠNG Ô KHO - PORTAL RA BODY */}
-      {isDetailModalOpen && detailFacility && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[999] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-slate-900 rounded-3xl border border-sky-500/30 p-5 sm:p-6 max-w-6xl w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-white my-auto max-h-[92vh] flex flex-col">
-            
-            {/* Modal Header */}
-            <div className="flex items-start justify-between border-b border-slate-800 pb-3">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-mono font-black text-xs px-2 py-0.5 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/30">
-                    {detailFacility.code}
-                  </span>
-                  <h3 className="font-black text-base sm:text-lg text-white">
-                    {detailFacility.name.replace(/\s*\([A-Z0-9-]+\)\s*$/, "")}
-                  </h3>
-                </div>
-                <div className="text-xs text-slate-400 flex flex-wrap items-center gap-x-4 gap-y-1">
-                  <span className="flex items-center gap-1">
-                    <MapPin className="size-3.5 text-sky-400 shrink-0" />
-                    {detailFacility.address}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <User className="size-3.5 text-slate-400 shrink-0" />
-                    Quản lý: <strong className="text-slate-200">{detailFacility.managerName?.replace(/\s*\([A-Z0-9-]+\)\s*$/, "") || "Chưa phân công"}</strong>
-                  </span>
-                  {detailFacility.managerPhone && (
-                    <span className="flex items-center gap-1">
-                      <Phone className="size-3.5 text-slate-400 shrink-0" />
-                      {detailFacility.managerPhone}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    setIsDetailModalOpen(false)
-                    navigate(`/bom/reports?facilityId=${detailFacility.id}`)
-                  }}
-                  className="px-3 py-1.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                  title="Mở toàn màn hình tại trang Báo Cáo"
-                >
-                  <BarChart3 className="size-3.5" />
-                  <span>Trang Báo Cáo</span>
-                </button>
-                <button
-                  onClick={() => setIsDetailModalOpen(false)}
-                  className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer shrink-0"
-                >
-                  <X className="size-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* BIỂU ĐỒ DÒNG TIỀN & QUY MÔ VẬN HÀNH CHO RIÊNG CƠ SỞ */}
-            {(() => {
-              const all = facilityUnits
-              const total = all.length || (detailFacility.totalUnits || 46)
-              const occupied = all.filter(u => (u.status || '').toUpperCase() === 'OCCUPIED' || (u.status || '').toUpperCase() === 'RENTED').length || (detailFacility.occupied || 0)
-              const available = all.filter(u => (u.status || '').toUpperCase() === 'AVAILABLE').length || (detailFacility.available || 0)
-              const maintenance = all.filter(u => (u.status || '').toUpperCase() === 'MAINTENANCE').length || (detailFacility.maintenance || 0)
-              const occRate = total > 0 ? Math.round((occupied / total) * 100) : (detailFacility.occupancyRate || 0)
-
-              return (
-                <FacilityCashFlowDashboard
-                  title={`Dòng Tiền Thực Thu - ${detailFacility.code}`}
-                  subtitle={`Xu hướng dòng tiền thực thu 6 tháng gần nhất tại ${detailFacility.name.replace(/\s*\([A-Z0-9-]+\)\s*$/, "")}`}
-                  monthlyRevenues={detailFacility.monthlyRevenues}
-                  netRevenue={Number(detailFacility.netRevenue ?? detailFacility.monthlyRevenue ?? 0)}
-                  depositHolding={Number(detailFacility.depositHolding || 0)}
-                  totalRefunds={Number(detailFacility.totalRefunds || 0)}
-                  overdueContracts={Number(detailFacility.overdueUnits || 0)}
-                  totalUnits={total}
-                  occupiedUnits={occupied}
-                  availableUnits={available}
-                  maintenanceUnits={maintenance}
-                  occupancyRate={occRate}
-                />
-              )
-            })()}
-
-            {/* BÁO CÁO CƠ CẤU VÀ TÌNH TRẠNG Ô KHO (DẠNG BÁO CÁO TỔNG HỢP CHO BOM) */}
-            <div className="flex-1 overflow-y-auto pr-1 space-y-4">
-              {isLoadingUnits ? (
-                <div className="p-12 text-center text-slate-400 font-bold space-y-2">
-                  <div className="size-6 border-2 border-slate-400 border-t-transparent rounded-full animate-spin mx-auto" />
-                  <p className="text-xs">Đang tổng hợp số liệu báo cáo cơ sở...</p>
-                </div>
-              ) : (
-                <>
-                  {/* BẢNG 1: BÁO CÁO CƠ CẤU Ô KHO THEO SIZE */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-black text-xs uppercase text-slate-200 tracking-wider">
-                        BÁO CÁO CƠ CẤU Ô KHO THEO SIZE &amp; LOẠI HÌNH
-                      </h4>
-                    </div>
-
-                    <div className="overflow-x-auto rounded-2xl border border-slate-800">
-                      <table className="w-full text-xs border-collapse">
-                        <thead>
-                          <tr className="border-b border-slate-800 bg-slate-950/90 text-slate-400 uppercase font-black text-[10px]">
-                            <th className="p-3 text-left whitespace-nowrap">Phân Loại / Size</th>
-                            <th className="p-3 text-center whitespace-nowrap">Quy Cách Sàn</th>
-                            <th className="p-3 text-center whitespace-nowrap">Tổng Số Ô</th>
-                            <th className="p-3 text-center whitespace-nowrap">Đang Thuê</th>
-                            <th className="p-3 text-center whitespace-nowrap">Còn Trống</th>
-                            <th className="p-3 text-center whitespace-nowrap">Giữ Chỗ</th>
-                            <th className="p-3 text-center whitespace-nowrap">Bảo Trì</th>
-                            <th className="p-3 text-center whitespace-nowrap">Tỷ Lệ Lấp Đầy</th>
-                            <th className="p-3 text-right whitespace-nowrap">Doanh Thu / Tháng</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800/80 font-semibold text-slate-300">
-                          {(() => {
-                            const SIZES = [
-                              { size: "S", name: "Size S (Tủ Cá Nhân)", dim: "1.0m × 1.0m", defaultNorm: 600000 },
-                              { size: "M", name: "Size M (Phòng Vừa)", dim: "1.5m × 2.0m", defaultNorm: 1200000 },
-                              { size: "L", name: "Size L (Phòng Lớn)", dim: "2.0m × 3.0m", defaultNorm: 2400000 },
-                              { size: "XL", name: "Size XL (Kho Doanh Nghiệp)", dim: "2.5m × 4.0m", defaultNorm: 4000000 },
-                            ]
-
-                            let grandTotal = 0
-                            let grandOccupied = 0
-                            let grandAvailable = 0
-                            let grandHold = 0
-                            let grandMaintenance = 0
-                            let grandRevenue = 0
-
-                            const rows = SIZES.map((cfg) => {
-                              const list = facilityUnits.filter((u) => {
-                                const typeStr = (u.typeName || u.typeLabel || "").toUpperCase()
-                                const sz = (u.size || "").toUpperCase()
-                                const code = (u.unitCode || u.unitId || "").toUpperCase()
-                                if (cfg.size === "XL") return typeStr.includes("XL") || sz === "XL" || sz.includes("XL") || code.includes("-XL")
-                                if (cfg.size === "S") return (typeStr.includes("SIZE S") || sz === "S" || code.includes("-S")) && !typeStr.includes("XL") && !code.includes("-XL")
-                                if (cfg.size === "M") return typeStr.includes("SIZE M") || sz === "M" || code.includes("-M")
-                                if (cfg.size === "L") return (typeStr.includes("SIZE L") || sz === "L" || code.includes("-L")) && !typeStr.includes("XL") && !code.includes("-XL")
-                                return false
-                              })
-
-                              const total = list.length
-                              const occupied = list.filter((u) => {
-                                const st = (u.status || "").toUpperCase()
-                                return st === "OCCUPIED" || st === "RENTED"
-                              }).length
-                              const available = list.filter((u) => (u.status || "").toUpperCase() === "AVAILABLE").length
-                              const hold = list.filter((u) => {
-                                const st = (u.status || "").toUpperCase()
-                                return st === "HOLD" || st === "RESERVED"
-                              }).length
-                              const maintenance = list.filter((u) => (u.status || "").toUpperCase() === "MAINTENANCE").length
-                              const occRate = total > 0 ? Math.round((occupied / total) * 100) : 0
-                              const revenue = list
-                                .filter((u) => {
-                                  const st = (u.status || "").toUpperCase()
-                                  return st === "OCCUPIED" || st === "RENTED"
-                                })
-                                .reduce((sum, u) => sum + Number(u.monthlyPrice || cfg.defaultNorm), 0)
-
-                              grandTotal += total
-                              grandOccupied += occupied
-                              grandAvailable += available
-                              grandHold += hold
-                              grandMaintenance += maintenance
-                              grandRevenue += revenue
-
-                              return (
-                                <tr key={cfg.size} className="hover:bg-slate-950/40 transition">
-                                  <td className="p-3 text-left whitespace-nowrap">
-                                    <div className="font-extrabold text-white whitespace-nowrap">{cfg.name}</div>
-                                  </td>
-                                  <td className="p-3 text-center font-mono text-slate-400 whitespace-nowrap">{cfg.dim}</td>
-                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{total} ô</td>
-                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{occupied}</td>
-                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{available}</td>
-                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{hold}</td>
-                                  <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{maintenance}</td>
-                                  <td className="p-3 text-center whitespace-nowrap">
-                                    <div className="flex items-center justify-center gap-2">
-                                      <span className="font-mono font-bold text-white">{occRate}%</span>
-                                      <div className="w-14 bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                                        <div
-                                          className="h-full bg-slate-300 rounded-full"
-                                          style={{ width: `${Math.min(occRate, 100)}%` }}
-                                        />
-                                      </div>
-                                    </div>
-                                  </td>
-                                  <td className="p-3 text-right font-mono font-bold text-white whitespace-nowrap">
-                                    ₫{revenue.toLocaleString("vi-VN")}
-                                  </td>
-                                </tr>
-                              )
-                            })
-
-                            const grandRate = grandTotal > 0 ? Math.round((grandOccupied / grandTotal) * 100) : 0
-
-                            return (
-                              <>
-                                {rows}
-                                <tr className="bg-slate-950 font-black border-t-2 border-slate-700 text-white">
-                                  <td className="p-3 text-left uppercase text-white tracking-wider whitespace-nowrap">
-                                    TỔNG CỘNG CƠ CẤU
-                                  </td>
-                                  <td className="p-3 text-center text-slate-400 font-mono whitespace-nowrap">—</td>
-                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandTotal} ô</td>
-                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandOccupied}</td>
-                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandAvailable}</td>
-                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandHold}</td>
-                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandMaintenance}</td>
-                                  <td className="p-3 text-center font-mono text-white text-sm whitespace-nowrap">{grandRate}%</td>
-                                  <td className="p-3 text-right font-mono text-white text-sm whitespace-nowrap">
-                                    ₫{grandRevenue.toLocaleString("vi-VN")}
-                                  </td>
-                                </tr>
-                              </>
-                            )
-                          })()}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
-              <button
-                onClick={() => setIsDetailModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 font-bold text-xs text-white transition cursor-pointer"
-              >
-                Đóng
               </button>
             </div>
           </div>
