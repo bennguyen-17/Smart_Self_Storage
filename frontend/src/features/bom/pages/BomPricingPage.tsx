@@ -472,15 +472,15 @@ export default function BomPricingPage() {
   return (
     <div className="space-y-6">
       {/* Khung Bảng Giá & Phụ Phí Điều Hành */}
-      <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-6">
+      <div className="bg-white/90 dark:bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-slate-200/90 dark:border-sky-500/20 shadow-sm dark:shadow-xl space-y-6 transition-colors">
         {/* Header điều phối */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800/80 pb-5">
           <div>
             <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400">
+              <span className="p-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400">
                 <SlidersHorizontal className="size-5" />
               </span>
-              <h3 className="font-black text-base uppercase text-white tracking-wide">
+              <h3 className="font-black text-base uppercase text-slate-900 dark:text-white tracking-wide">
                 BẢNG GIÁ THUÊ &amp; BIỂU PHÍ HỆ THỐNG
               </h3>
             </div>
@@ -491,18 +491,18 @@ export default function BomPricingPage() {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h4 className="font-black text-xs uppercase text-slate-200 tracking-wider flex items-center gap-2">
-                <Sparkles className="size-3.5 text-sky-400" />
+              <h4 className="font-black text-xs uppercase text-slate-800 dark:text-slate-200 tracking-wider flex items-center gap-2">
+                <Sparkles className="size-3.5 text-sky-600 dark:text-sky-400" />
                 <span>1. Khung Giá Thuê Tiêu Chuẩn &amp; Mức Cọc Theo Các Size Kho</span>
               </h4>
             </div>
           </div>
 
           {/* GIAO DIỆN DẠNG BẢNG NGANG (HORIZONTAL TABLE FORMAT - VỪA VẶN 100% KHÔNG CUỘN) */}
-          <div className="rounded-xl border border-slate-800 shadow-md overflow-hidden">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-md overflow-hidden">
             <table className="w-full text-left text-xs border-collapse table-auto">
               <thead>
-                <tr className="bg-slate-900 border-b border-sky-500/30 text-sky-400 uppercase font-bold text-[11px] sm:text-xs tracking-wider">
+                <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 dark:bg-slate-900 dark:border-sky-500/30 dark:text-sky-400 uppercase font-bold text-[11px] sm:text-xs tracking-wider">
                   <th className="py-3 px-3 sm:px-4 text-left">LOẠI KHO / SIZE</th>
                   <th className="py-3 px-2 sm:px-3 text-center">GIÁ THEO NGÀY</th>
                   <th className="py-3 px-2 sm:px-3 text-center">GIÁ THEO THÁNG</th>
@@ -511,41 +511,41 @@ export default function BomPricingPage() {
                   <th className="py-3 px-2 sm:px-3 text-center">THAO TÁC</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/80 font-medium text-slate-300">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80 font-medium text-slate-700 dark:text-slate-300">
                 {pricingList.map((item) => {
                   return (
-                    <tr key={item.id} className="hover:bg-slate-900/60 transition">
+                    <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/60 transition">
                       {/* CỘT 1: SIZE & TÊN LOẠI KHO */}
                       <td className="py-3 px-3 sm:px-4 text-left">
-                        <span className="font-extrabold text-white text-xs sm:text-sm">
+                        <span className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm">
                           {item.name}
                         </span>
                       </td>
 
                       {/* CỘT 2: GIÁ THEO NGÀY */}
                       <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
-                        <span className="font-mono font-bold text-slate-200 text-xs sm:text-sm">
+                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
                           ₫{item.dailyPrice.toLocaleString("vi-VN")}
                         </span>
                       </td>
 
                       {/* CỘT 4: GIÁ THEO THÁNG */}
                       <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
-                        <span className="font-mono font-bold text-slate-200 text-xs sm:text-sm">
+                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
                           ₫{item.normPrice.toLocaleString("vi-VN")}
                         </span>
                       </td>
 
                       {/* CỘT 5: PHỤ PHÍ KHO MÁT */}
                       <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
-                        <span className="font-mono font-bold text-slate-200 text-xs sm:text-sm">
+                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
                           +{item.climateSurchargePercent ?? 20}%
                         </span>
                       </td>
 
                       {/* CỘT 6: TIỀN CỌC CHUẨN */}
                       <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
-                        <span className="font-mono font-bold text-slate-200 text-xs sm:text-sm">
+                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
                           ₫{item.depositAmount.toLocaleString("vi-VN")}
                         </span>
                       </td>
@@ -555,7 +555,7 @@ export default function BomPricingPage() {
                         <button
                           type="button"
                           onClick={() => handleOpenPricingModal(item)}
-                          className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-sky-500 text-slate-200 hover:text-slate-950 font-bold text-xs transition cursor-pointer inline-flex items-center gap-1.5 border border-slate-700 shadow-xs"
+                          className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-sky-500 text-slate-800 hover:text-slate-950 font-bold text-xs transition cursor-pointer inline-flex items-center gap-1.5 border border-slate-200 dark:bg-slate-800 dark:hover:bg-sky-500 dark:text-slate-200 dark:hover:text-slate-950 dark:border-slate-700 shadow-xs"
                           title="Sửa khung giá & mức cọc"
                         >
                           <Edit3 className="size-3.5" />
@@ -571,11 +571,11 @@ export default function BomPricingPage() {
         </div>
 
         {/* 2. BIỂU PHÍ PHẠT QUÁ HẠN, GIẢM GIÁ & BỒI THƯỜNG */}
-        <div className="space-y-4 pt-6 border-t border-slate-800">
+        <div className="space-y-4 pt-6 border-t border-slate-200/80 dark:border-slate-800">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
-              <h4 className="font-black text-xs uppercase text-slate-200 tracking-wider flex items-center gap-2">
-                <Tag className="size-3.5 text-sky-400" />
+              <h4 className="font-black text-xs uppercase text-slate-800 dark:text-slate-200 tracking-wider flex items-center gap-2">
+                <Tag className="size-3.5 text-sky-600 dark:text-sky-400" />
                 <span>2. Phí Phạt Quá Hạn, Chính Sách Miễn Giảm &amp; Bồi Thường Hư Hỏng</span>
               </h4>
             </div>
@@ -587,7 +587,7 @@ export default function BomPricingPage() {
                   placeholder="Tìm kiếm khoản phí..."
                   value={searchSurcharge}
                   onChange={(e) => setSearchSurcharge(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-700 bg-slate-950 text-xs font-bold text-white placeholder-slate-500"
+                  className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 dark:border-slate-700 dark:bg-slate-950 text-xs font-bold dark:text-white dark:placeholder-slate-500"
                 />
               </div>
               <button
@@ -610,7 +610,7 @@ export default function BomPricingPage() {
                 className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer border ${
                   surchargeFilter === filterKey
                     ? "bg-sky-500 text-slate-950 border-sky-500 font-black shadow-sm"
-                    : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+                    : "bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:text-white"
                 }`}
               >
                 {filterKey === "all"
@@ -625,10 +625,10 @@ export default function BomPricingPage() {
           </div>
 
           {/* Dạng bảng cột cho từng khoản phí */}
-          <div className="overflow-x-auto rounded-2xl border border-slate-800">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-md">
             <table className="w-full text-xs border-collapse">
               <thead>
-                <tr className="border-b border-slate-800 bg-slate-900/90 uppercase font-black text-slate-300 text-[10px]">
+                <tr className="border-b border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-800 dark:bg-slate-900/90 uppercase font-black dark:text-slate-300 text-[10px]">
                   <th className="p-3.5 text-left">Tên Biểu Phí &amp; Chính Sách</th>
                   <th className="p-3.5 text-center">Phân Loại Danh Mục</th>
                   <th className="p-3.5 text-center">Hình Thức Áp Dụng</th>
@@ -636,36 +636,36 @@ export default function BomPricingPage() {
                   <th className="p-3.5 text-center">Thao Tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800 font-semibold text-slate-300">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-semibold text-slate-700 dark:text-slate-300">
                 {filteredSurcharges.map((sc) => {
                   const badgeConfig = {
                     penalty: {
                       label: "Phí Phạt Quá Hạn",
-                      style: "bg-amber-950/60 text-amber-400 border-amber-800/60",
+                      style: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800/60",
                     },
                     discount: {
                       label: "Chính Sách Miễn Giảm",
-                      style: "bg-emerald-950/60 text-emerald-400 border-emerald-800/60",
+                      style: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800/60",
                     },
                     damage: {
                       label: "Bồi Thường Hư Hỏng",
-                      style: "bg-rose-950/60 text-rose-400 border-rose-800/60",
+                      style: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-400 dark:border-rose-800/60",
                     },
                   }[sc.category] || {
                     label: "Khác",
-                    style: "bg-slate-800 text-slate-300 border-slate-700",
+                    style: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
                   }
 
                   return (
                     <tr
                       key={sc.id}
-                      className="hover:bg-slate-900/50 transition"
+                      className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition"
                     >
                       {/* Tên biểu phí */}
                       <td className="p-3.5 text-left">
-                        <div className="font-extrabold text-white text-xs">{sc.name}</div>
+                        <div className="font-extrabold text-slate-900 dark:text-white text-xs">{sc.name}</div>
                         {sc.note && (
-                          <div className="text-[11px] text-slate-400 mt-0.5 font-normal">
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-normal">
                             {sc.note}
                           </div>
                         )}
@@ -679,12 +679,12 @@ export default function BomPricingPage() {
                       </td>
 
                       {/* Hình thức */}
-                      <td className="p-3.5 text-center text-slate-400 font-medium text-xs">
+                      <td className="p-3.5 text-center text-slate-500 dark:text-slate-400 font-medium text-xs">
                         {sc.type}
                       </td>
 
                       {/* Mức phí áp dụng */}
-                      <td className="p-3.5 text-right font-mono font-bold text-slate-200 text-xs sm:text-sm">
+                      <td className="p-3.5 text-right font-mono font-bold text-slate-900 dark:text-slate-200 text-xs sm:text-sm">
                         {sc.rate}
                       </td>
 
@@ -694,7 +694,7 @@ export default function BomPricingPage() {
                           <button
                             type="button"
                             onClick={() => handleOpenEditSurcharge(sc)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-sky-500 text-slate-200 hover:text-slate-950 border border-slate-700 font-bold transition cursor-pointer text-xs"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-sky-500 text-slate-700 hover:text-slate-950 border border-slate-200 dark:bg-slate-800 dark:hover:bg-sky-500 dark:text-slate-200 dark:hover:text-slate-950 dark:border-slate-700 font-bold transition cursor-pointer text-xs"
                             title="Chỉnh sửa biểu phí"
                           >
                             <Edit3 className="size-3.5" />
@@ -710,7 +710,7 @@ export default function BomPricingPage() {
           </div>
 
           {filteredSurcharges.length === 0 && (
-            <div className="p-8 text-center text-slate-500 font-bold rounded-2xl bg-slate-900/30 border border-slate-800">
+            <div className="p-8 text-center text-slate-500 font-bold rounded-2xl bg-slate-50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800">
               Không tìm thấy biểu phí hoặc phụ thu nào phù hợp.
             </div>
           )}

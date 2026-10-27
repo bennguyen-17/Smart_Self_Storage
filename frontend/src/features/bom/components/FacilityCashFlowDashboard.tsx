@@ -161,19 +161,19 @@ export default function FacilityCashFlowDashboard({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
       {/* CỘT TRÁI: BIỂU ĐỒ ĐƯỜNG DOANH THU QUA CÁC THÁNG */}
-      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/60 p-5 sm:p-6 shadow-xl flex flex-col justify-between">
+      <div className="rounded-2xl border border-slate-200/90 bg-white/90 dark:border-slate-800/90 dark:bg-slate-900/60 p-5 sm:p-6 shadow-sm dark:shadow-xl backdrop-blur-xl flex flex-col justify-between transition-colors">
         <div>
           {/* Tiêu đề & Tỷ lệ tăng trưởng */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <span className="p-2.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700/80 shadow-inner">
+              <span className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 shadow-xs dark:shadow-inner">
                 <TrendingUp className="size-5" />
               </span>
               <div>
-                <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
                   {title}
                 </h3>
-                {subtitle && <div className="text-[11px] text-slate-400">{subtitle}</div>}
+                {subtitle && <div className="text-[11px] text-slate-500 dark:text-slate-400">{subtitle}</div>}
               </div>
             </div>
           </div>
@@ -183,8 +183,8 @@ export default function FacilityCashFlowDashboard({
             <svg viewBox={svgViewBox} className="w-full h-auto overflow-visible">
               <defs>
                 <linearGradient id="facilityRevenueGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.18" />
-                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
+                  <stop offset="0%" stopColor="currentColor" stopOpacity="0.18" />
+                  <stop offset="100%" stopColor="currentColor" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
 
@@ -196,18 +196,18 @@ export default function FacilityCashFlowDashboard({
                     y1={line.y}
                     x2="435"
                     y2={line.y}
-                    stroke={line.isZero ? "#64748b" : line.isNegative ? "#f43f5e" : "#334155"}
+                    stroke={line.isZero ? "currentColor" : line.isNegative ? "#f43f5e" : "currentColor"}
                     strokeDasharray={line.isZero ? "4 4" : "3 3"}
                     strokeWidth={line.isZero ? "1.2" : "1"}
-                    opacity={line.isZero ? "0.7" : line.isNegative ? "0.4" : "0.45"}
+                    className={line.isZero ? "text-slate-400 dark:text-slate-600 opacity-70" : line.isNegative ? "opacity-40" : "text-slate-200 dark:text-slate-800 opacity-60"}
                   />
                   <text
                     x="26"
                     y={line.y + 3}
                     textAnchor="end"
                     fontSize="9"
-                    fill={line.isZero ? "#94a3b8" : line.isNegative ? "#f87171" : "#64748b"}
-                    className={`font-mono ${line.isZero ? "font-bold" : ""}`}
+                    fill="currentColor"
+                    className={`font-mono ${line.isZero ? "font-bold text-slate-600 dark:text-slate-400" : line.isNegative ? "text-rose-500" : "text-slate-400 dark:text-slate-500"}`}
                   >
                     {line.label}
                   </text>
@@ -215,16 +215,16 @@ export default function FacilityCashFlowDashboard({
               ))}
 
               {/* Vùng đổ bóng Gradient bên dưới đường cong */}
-              <path d={revenueAreaPath} fill="url(#facilityRevenueGradient)" />
+              <path d={revenueAreaPath} fill="url(#facilityRevenueGradient)" className="text-sky-500 dark:text-white" />
 
               {/* Đường cong doanh thu chính */}
               <path
                 d={revenueLinePath}
                 fill="none"
-                stroke="#ffffff"
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                className="stroke-sky-600 dark:stroke-white"
               />
 
               {/* Các điểm tròn dữ liệu trên từng tháng & Số tiền hiển thị trực tiếp */}
@@ -246,10 +246,10 @@ export default function FacilityCashFlowDashboard({
                       y1={plotTop}
                       x2={p.x}
                       y2={hasNegative ? plotBottom : 130}
-                      stroke="#475569"
+                      stroke="currentColor"
                       strokeDasharray="2 2"
                       strokeWidth="1"
-                      opacity="0.3"
+                      className="text-slate-300 dark:text-slate-600 opacity-30"
                     />
 
                     <circle
@@ -258,8 +258,8 @@ export default function FacilityCashFlowDashboard({
                       r="4"
                       className={
                         isNeg
-                          ? "fill-rose-500 stroke-slate-900 stroke-2"
-                          : "fill-white stroke-slate-900 stroke-2"
+                          ? "fill-rose-500 stroke-white dark:stroke-slate-900 stroke-2"
+                          : "fill-sky-600 dark:fill-white stroke-white dark:stroke-slate-900 stroke-2"
                       }
                     />
 
@@ -269,8 +269,9 @@ export default function FacilityCashFlowDashboard({
                       y={labelY}
                       textAnchor="middle"
                       fontSize="9.5"
+                      fill="currentColor"
                       className={`font-mono font-bold select-none ${
-                        isNeg ? "fill-rose-400" : "fill-sky-300"
+                        isNeg ? "text-rose-500 fill-rose-500" : "text-sky-600 dark:text-sky-300 fill-sky-600 dark:fill-sky-300"
                       }`}
                     >
                       {formatShortVnd(p.revenue)}
@@ -282,8 +283,9 @@ export default function FacilityCashFlowDashboard({
                       y={hasNegative ? "198" : "152"}
                       textAnchor="middle"
                       fontSize="10"
+                      fill="currentColor"
                       className={`font-mono font-bold ${
-                        isNeg ? "fill-rose-300" : "fill-slate-300"
+                        isNeg ? "text-rose-500 fill-rose-500" : "text-slate-600 dark:text-slate-300 fill-slate-600 dark:fill-slate-300"
                       }`}
                     >
                       {p.month}
@@ -296,24 +298,24 @@ export default function FacilityCashFlowDashboard({
         </div>
 
         {/* 3 THẺ TÀI CHÍNH BỔ TRỢ DƯỚI BIỂU ĐỒ: TIỀN CỌC, TIỀN THUÊ KHO, TIỀN PHẠT */}
-        <div className="grid grid-cols-3 gap-2.5 pt-4 mt-2 border-t border-slate-800/80">
-          <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80">
-            <span className="text-[10px] text-slate-400 font-semibold block truncate">Tiền Cọc</span>
-            <span className="font-mono font-bold text-white text-xs sm:text-sm mt-0.5 block truncate">
+        <div className="grid grid-cols-3 gap-2.5 pt-4 mt-2 border-t border-slate-200/80 dark:border-slate-800/80">
+          <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs dark:shadow-none">
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Cọc</span>
+            <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">
               ₫{depositHolding.toLocaleString("vi-VN")}
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80">
-            <span className="text-[10px] text-slate-400 font-semibold block truncate">Tiền Thuê Kho</span>
-            <span className="font-mono font-bold text-white text-xs sm:text-sm mt-0.5 block truncate">
+          <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs dark:shadow-none">
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Thuê Kho</span>
+            <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">
               ₫{(rentalRevenue || netRevenue).toLocaleString("vi-VN")}
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80">
-            <span className="text-[10px] text-slate-400 font-semibold block truncate">Tiền Phạt</span>
-            <span className="font-mono font-bold text-white text-xs sm:text-sm mt-0.5 block truncate">
+          <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs dark:shadow-none">
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Phạt</span>
+            <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">
               ₫{penaltyRevenue.toLocaleString("vi-VN")}
             </span>
           </div>
@@ -321,20 +323,20 @@ export default function FacilityCashFlowDashboard({
       </div>
 
       {/* CỘT PHẢI: QUY MÔ KHAI THÁC & VẬN HÀNH KHO */}
-      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/60 p-5 sm:p-6 shadow-xl flex flex-col justify-between">
+      <div className="rounded-2xl border border-slate-200/90 bg-white/90 dark:border-slate-800/90 dark:bg-slate-900/60 p-5 sm:p-6 shadow-sm dark:shadow-xl backdrop-blur-xl flex flex-col justify-between transition-colors">
         <div>
           <div className="flex items-center gap-3 mb-5">
-            <span className="p-2.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700/80 shadow-inner">
+            <span className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 shadow-xs dark:shadow-inner">
               <Warehouse className="size-5" />
             </span>
-            <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
               Quy Mô Khai Thác &amp; Vận Hành
             </h3>
           </div>
 
           <div className="grid grid-cols-2 gap-3.5">
             {/* Ô 1 (Donut Chart - Chiếm 3 hàng): Tỷ Lệ Lấp Đầy */}
-            <div className="row-span-3 rounded-xl bg-slate-950/70 border border-slate-800/80 p-4 flex flex-col items-center justify-center text-center relative">
+            <div className="row-span-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-4 flex flex-col items-center justify-center text-center relative shadow-xs dark:shadow-none">
               <div className="relative size-32 sm:size-36 flex items-center justify-center">
                 <svg className="size-full -rotate-90" viewBox="0 0 100 100">
                   <circle
@@ -343,7 +345,7 @@ export default function FacilityCashFlowDashboard({
                     r="38"
                     stroke="currentColor"
                     strokeWidth="8"
-                    className="text-slate-800"
+                    className="text-slate-200 dark:text-slate-800"
                     fill="transparent"
                   />
                   <circle
@@ -352,7 +354,7 @@ export default function FacilityCashFlowDashboard({
                     r="38"
                     stroke="currentColor"
                     strokeWidth="8"
-                    className="text-white transition-all duration-1000 ease-out"
+                    className="text-sky-500 dark:text-white transition-all duration-1000 ease-out"
                     fill="transparent"
                     strokeDasharray={2 * Math.PI * 38}
                     strokeDashoffset={
@@ -362,50 +364,50 @@ export default function FacilityCashFlowDashboard({
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl sm:text-3xl font-mono font-black text-white tracking-tight">
+                  <span className="text-2xl sm:text-3xl font-mono font-black text-slate-900 dark:text-white tracking-tight">
                     {displayOcc}%
                   </span>
-                  <span className="text-[10px] text-slate-400 font-semibold mt-0.5">Lấp Đầy</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Lấp Đầy</span>
                 </div>
               </div>
             </div>
 
             {/* Ô 2: Tổng Số Ô Kho */}
-            <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-3.5 flex flex-col justify-center">
-              <span className="text-xs font-semibold text-slate-400">Tổng Số Ô Kho</span>
-              <span className="font-mono font-black text-white text-xl sm:text-2xl mt-0.5">
+            <div className="rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-3.5 flex flex-col justify-center shadow-xs dark:shadow-none">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Tổng Số Ô Kho</span>
+              <span className="font-mono font-black text-slate-900 dark:text-white text-xl sm:text-2xl mt-0.5">
                 {totalUnits.toLocaleString("vi-VN")}
               </span>
             </div>
 
             {/* Ô 3: Kho Đang Cho Thuê */}
-            <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-3.5 flex flex-col justify-center">
-              <span className="text-xs font-semibold text-slate-400">Kho Đang Cho Thuê</span>
-              <span className="font-mono font-black text-white text-xl sm:text-2xl mt-0.5">
+            <div className="rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-3.5 flex flex-col justify-center shadow-xs dark:shadow-none">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Kho Đang Cho Thuê</span>
+              <span className="font-mono font-black text-slate-900 dark:text-white text-xl sm:text-2xl mt-0.5">
                 {occupiedUnits.toLocaleString("vi-VN")}
               </span>
             </div>
 
             {/* Ô 4: Kho Đang Giữ Chỗ / Đặt Trước */}
-            <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-3.5 flex flex-col justify-center">
-              <span className="text-xs font-semibold text-slate-400">Đang Giữ Chỗ</span>
-              <span className="font-mono font-black text-white text-xl sm:text-2xl mt-0.5">
+            <div className="rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-3.5 flex flex-col justify-center shadow-xs dark:shadow-none">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Đang Giữ Chỗ</span>
+              <span className="font-mono font-black text-slate-900 dark:text-white text-xl sm:text-2xl mt-0.5">
                 {reservedUnits.toLocaleString("vi-VN")}
               </span>
             </div>
 
             {/* Ô 5: Kho Còn Trống */}
-            <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-3.5 flex flex-col justify-center">
-              <span className="text-xs font-semibold text-slate-400">Kho Còn Trống</span>
-              <span className="font-mono font-black text-white text-xl sm:text-2xl mt-0.5">
+            <div className="rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-3.5 flex flex-col justify-center shadow-xs dark:shadow-none">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Kho Còn Trống</span>
+              <span className="font-mono font-black text-slate-900 dark:text-white text-xl sm:text-2xl mt-0.5">
                 {availableUnits.toLocaleString("vi-VN")}
               </span>
             </div>
 
             {/* Ô 6: Kho Đang Bảo Trì */}
-            <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-3.5 flex flex-col justify-center">
-              <span className="text-xs font-semibold text-slate-400">Đang Bảo Trì</span>
-              <span className="font-mono font-black text-white text-xl sm:text-2xl mt-0.5">
+            <div className="rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-3.5 flex flex-col justify-center shadow-xs dark:shadow-none">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Đang Bảo Trì</span>
+              <span className="font-mono font-black text-slate-900 dark:text-white text-xl sm:text-2xl mt-0.5">
                 {maintenanceUnits.toLocaleString("vi-VN")}
               </span>
             </div>

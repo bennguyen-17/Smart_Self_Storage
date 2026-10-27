@@ -461,25 +461,25 @@ export default function BomFacilitiesPage() {
           return (
             <div className="space-y-5">
               {/* HEADER BÁO CÁO CƠ SỞ & BỘ CHỌN NHANH */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-md">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white/90 dark:bg-slate-900/60 border border-slate-200/90 dark:border-slate-800 shadow-sm dark:shadow-md transition-colors">
                 <div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => navigate("/bom/facilities")}
-                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer shrink-0"
+                      className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition cursor-pointer shrink-0"
                       title="Quay lại danh sách cơ sở kho"
                     >
                       <ArrowLeft className="size-4" />
                     </button>
-                    <h2 className="text-lg sm:text-xl font-black text-white tracking-tight uppercase">
+                    <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
                       Báo Cáo Cơ Sở: {name}
                     </h2>
                   </div>
                 </div>
 
                 {/* Thanh chuyển đổi nhanh các cơ sở - Gọn gàng trên 1 hàng */}
-                <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 shadow-inner overflow-x-auto shrink-0">
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950/80 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-x-auto shrink-0">
                   {facilities.map((f) => {
                     const isSelected = String(f.id) === String(facilityId) || f.code === code
                     return (
@@ -489,7 +489,7 @@ export default function BomFacilitiesPage() {
                         className={`px-2.5 py-1 rounded-lg font-mono font-bold text-xs transition-all flex items-center gap-1 cursor-pointer shrink-0 ${
                           isSelected
                             ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20 font-black"
-                            : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800/60"
                         }`}
                         title={f.name}
                       >
@@ -521,25 +521,25 @@ export default function BomFacilitiesPage() {
               />
 
               {/* BẢNG BÁO CÁO CƠ CẤU Ô KHO THEO SIZE */}
-              <div className="rounded-2xl border border-slate-800/90 bg-slate-900/60 p-5 sm:p-6 shadow-xl space-y-4">
+              <div className="rounded-2xl border border-slate-200/90 bg-white/90 dark:border-slate-800/90 dark:bg-slate-900/60 p-5 sm:p-6 shadow-sm dark:shadow-xl space-y-4 transition-colors">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-black text-sm uppercase text-white tracking-wider flex items-center gap-2">
+                    <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white tracking-wider flex items-center gap-2">
                       <span>BÁO CÁO CƠ CẤU Ô KHO THEO SIZE &amp; LOẠI HÌNH</span>
                     </h3>
                   </div>
                 </div>
 
                 {isLoadingSelectedUnits ? (
-                  <div className="p-8 text-center text-slate-400 font-bold space-y-2">
-                    <div className="size-6 border-2 border-sky-400 border-t-transparent rounded-full animate-spin mx-auto" />
+                  <div className="p-8 text-center text-slate-500 dark:text-slate-400 font-bold space-y-2">
+                    <div className="size-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto" />
                     <p className="text-xs">Đang tổng hợp cơ cấu ô kho...</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto rounded-xl border border-slate-800">
+                  <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
                     <table className="w-full text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-slate-800 bg-slate-950/90 text-slate-400 uppercase font-black text-[10px]">
+                        <tr className="border-b border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-800 dark:bg-slate-950/90 dark:text-slate-400 uppercase font-black text-[10px]">
                           <th className="p-3 text-left whitespace-nowrap">Phân Loại / Size</th>
                           <th className="p-3 text-center whitespace-nowrap">Quy Cách Sàn</th>
                           <th className="p-3 text-center whitespace-nowrap">Tổng Số Ô</th>
@@ -551,7 +551,7 @@ export default function BomFacilitiesPage() {
                           <th className="p-3 text-right whitespace-nowrap">Doanh Thu / Tháng</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/80 font-semibold text-slate-300">
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80 font-semibold text-slate-700 dark:text-slate-300">
                         {(() => {
                           const SIZES = [
                             { size: "S", name: "Size S (Tủ Cá Nhân)", dim: "1.0m × 1.0m", defaultNorm: 600000 },
@@ -606,28 +606,28 @@ export default function BomFacilitiesPage() {
                             grandRevenue += revenue
 
                             return (
-                              <tr key={cfg.size} className="hover:bg-slate-950/40 transition">
+                              <tr key={cfg.size} className="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
                                 <td className="p-3 text-left whitespace-nowrap">
-                                  <div className="font-extrabold text-white whitespace-nowrap">{cfg.name}</div>
+                                  <div className="font-extrabold text-slate-900 dark:text-white whitespace-nowrap">{cfg.name}</div>
                                 </td>
-                                <td className="p-3 text-center font-mono text-slate-400 whitespace-nowrap">{cfg.dim}</td>
-                                <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{total} ô</td>
-                                <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{occupied}</td>
-                                <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{available}</td>
-                                <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{hold}</td>
-                                <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{maintenance}</td>
+                                <td className="p-3 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{cfg.dim}</td>
+                                <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{total} ô</td>
+                                <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{occupied}</td>
+                                <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{available}</td>
+                                <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{hold}</td>
+                                <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{maintenance}</td>
                                 <td className="p-3 text-center whitespace-nowrap">
                                   <div className="flex items-center justify-center gap-2">
-                                    <span className="font-mono font-bold text-white">{occRate}%</span>
-                                    <div className="w-14 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                    <span className="font-mono font-bold text-slate-900 dark:text-white">{occRate}%</span>
+                                    <div className="w-14 bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
                                       <div
-                                        className="h-full bg-slate-300 rounded-full"
+                                        className="h-full bg-sky-500 dark:bg-slate-300 rounded-full"
                                         style={{ width: `${Math.min(occRate, 100)}%` }}
                                       />
                                     </div>
                                   </div>
                                 </td>
-                                <td className="p-3 text-right font-mono font-bold text-white whitespace-nowrap">
+                                <td className="p-3 text-right font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
                                   ₫{revenue.toLocaleString("vi-VN")}
                                 </td>
                               </tr>
@@ -639,18 +639,18 @@ export default function BomFacilitiesPage() {
                           return (
                             <>
                               {rows}
-                              <tr className="bg-slate-950 font-black border-t-2 border-slate-700 text-white">
-                                <td className="p-3 text-left uppercase text-white tracking-wider whitespace-nowrap">
+                              <tr className="bg-slate-100 dark:bg-slate-950 font-black border-t-2 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
+                                <td className="p-3 text-left uppercase text-slate-900 dark:text-white tracking-wider whitespace-nowrap">
                                   TỔNG CỘNG CƠ CẤU
                                 </td>
                                 <td className="p-3 text-center text-slate-400 font-mono whitespace-nowrap">—</td>
-                                <td className="p-3 text-center text-sky-400 font-mono whitespace-nowrap">{grandTotal} ô</td>
-                                <td className="p-3 text-center text-emerald-400 font-mono whitespace-nowrap">{grandOccupied}</td>
-                                <td className="p-3 text-center text-slate-300 font-mono whitespace-nowrap">{grandAvailable}</td>
-                                <td className="p-3 text-center text-amber-400 font-mono whitespace-nowrap">{grandHold}</td>
-                                <td className="p-3 text-center text-rose-400 font-mono whitespace-nowrap">{grandMaintenance}</td>
-                                <td className="p-3 text-center text-sky-400 font-mono whitespace-nowrap">{grandRate}%</td>
-                                <td className="p-3 text-right text-emerald-400 font-mono whitespace-nowrap">
+                                <td className="p-3 text-center text-sky-600 dark:text-sky-400 font-mono whitespace-nowrap">{grandTotal} ô</td>
+                                <td className="p-3 text-center text-emerald-600 dark:text-emerald-400 font-mono whitespace-nowrap">{grandOccupied}</td>
+                                <td className="p-3 text-center text-slate-600 dark:text-slate-300 font-mono whitespace-nowrap">{grandAvailable}</td>
+                                <td className="p-3 text-center text-amber-600 dark:text-amber-400 font-mono whitespace-nowrap">{grandHold}</td>
+                                <td className="p-3 text-center text-rose-600 dark:text-rose-400 font-mono whitespace-nowrap">{grandMaintenance}</td>
+                                <td className="p-3 text-center text-sky-600 dark:text-sky-400 font-mono whitespace-nowrap">{grandRate}%</td>
+                                <td className="p-3 text-right text-emerald-600 dark:text-emerald-400 font-mono whitespace-nowrap">
                                   ₫{grandRevenue.toLocaleString("vi-VN")}
                                 </td>
                               </tr>
@@ -667,28 +667,28 @@ export default function BomFacilitiesPage() {
         })()
       ) : (
         /* BẢNG GIÁM SÁT HOẠT ĐỘNG VÀ CƠ SỞ KHO TOÀN CHUỖI */
-        <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+        <div className="bg-white/90 dark:bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-slate-200/90 dark:border-sky-500/20 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-slate-800/80 pb-4">
             <div>
-              <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-white">
-                <Warehouse className="size-4.5 text-sky-400" />
+              <h3 className="font-black text-sm uppercase flex items-center space-x-2 text-slate-900 dark:text-white">
+                <Warehouse className="size-4.5 text-sky-600 dark:text-sky-400" />
                 <span>GIÁM SÁT HOẠT ĐỘNG VÀ CƠ SỞ KHO TOÀN CHUỖI</span>
               </h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Quản lý danh sách chi nhánh, mã cơ sở tự động, cấu hình mô hình kiến trúc chuẩn &amp; đồng bộ sơ đồ 2D
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
               {/* BỘ LỌC KHOẢNG THỜI GIAN DOANH THU */}
-              <div className="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800 shadow-inner">
+              <div className="flex items-center bg-slate-100 dark:bg-slate-900/90 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-inner">
                 <button
                   type="button"
                   onClick={() => setRevenuePeriod("this_month")}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     revenuePeriod === "this_month"
                       ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20"
-                      : "text-slate-400 hover:text-slate-200"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                   }`}
                   title="Xem doanh thu tháng hiện tại"
                 >
@@ -700,7 +700,7 @@ export default function BomFacilitiesPage() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     revenuePeriod === "last_3_months"
                       ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20"
-                      : "text-slate-400 hover:text-slate-200"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                   }`}
                   title="Xem doanh thu 3 tháng gần nhất"
                 >
@@ -712,7 +712,7 @@ export default function BomFacilitiesPage() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     revenuePeriod === "all_time"
                       ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20"
-                      : "text-slate-400 hover:text-slate-200"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                   }`}
                   title="Xem tổng doanh thu toàn thời gian"
                 >
@@ -731,10 +731,10 @@ export default function BomFacilitiesPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-slate-800 shadow-md">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-md">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-slate-900 border-b border-sky-500/30 text-sky-400 uppercase font-bold text-[11px] sm:text-xs tracking-wider">
+                <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 dark:bg-slate-900 dark:border-sky-500/30 dark:text-sky-400 uppercase font-bold text-[11px] sm:text-xs tracking-wider">
                   <th className="py-3 px-4 text-center whitespace-nowrap">MÃ CƠ SỞ</th>
                   <th className="py-3 px-4 text-left whitespace-nowrap">CƠ SỞ KHO</th>
                   <th className="py-3 px-4 text-center whitespace-nowrap">QUẢN LÝ CHI NHÁNH</th>
@@ -750,7 +750,7 @@ export default function BomFacilitiesPage() {
                   <th className="py-3 px-4 text-center whitespace-nowrap">THAO TÁC</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/80 font-medium text-slate-300">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80 font-medium text-slate-700 dark:text-slate-300">
                 {facilities.length > 0 ? (
                   facilities.map((fac) => {
                     const isLayoutB =
@@ -776,13 +776,13 @@ export default function BomFacilitiesPage() {
                           : (fac.allTimeRevenue || fac.monthlyRevenue || "₫0")
 
                     return (
-                      <tr key={fac.id} className="hover:bg-slate-900/60 transition">
+                      <tr key={fac.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/60 transition">
                         {/* CỘT 1: MÃ CƠ SỞ (Bấm vào chuyển sang xem chi tiết cơ sở trong cùng menu) */}
                         <td className="py-4 px-4 text-center whitespace-nowrap">
                           <button
                             type="button"
                             onClick={() => navigate(`/bom/facilities/${fac.id}`)}
-                            className="font-mono font-bold text-sky-400 hover:text-sky-300 hover:underline text-xs sm:text-[13px] cursor-pointer"
+                            className="font-mono font-bold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:underline text-xs sm:text-[13px] cursor-pointer"
                             title="Bấm để xem báo cáo dòng tiền & thông số cơ sở"
                           >
                             {fac.code}
@@ -794,7 +794,7 @@ export default function BomFacilitiesPage() {
                           <button
                             type="button"
                             onClick={() => navigate(`/bom/facilities/${fac.id}`)}
-                            className="font-extrabold text-white text-xs sm:text-sm hover:text-sky-400 hover:underline transition-colors text-left cursor-pointer"
+                            className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm hover:text-sky-600 dark:hover:text-sky-400 hover:underline transition-colors text-left cursor-pointer"
                             title="Bấm để xem báo cáo dòng tiền & thông số cơ sở"
                           >
                             {cleanName}
@@ -803,28 +803,28 @@ export default function BomFacilitiesPage() {
 
                         {/* CỘT 3: QUẢN LÝ CHI NHÁNH */}
                         <td className="py-4 px-4 text-center whitespace-nowrap">
-                          <div className="font-bold text-white text-xs sm:text-sm text-center">
+                          <div className="font-bold text-slate-800 dark:text-white text-xs sm:text-sm text-center">
                             {cleanManager || "Chưa phân công"}
                           </div>
                         </td>
 
                         {/* CỘT 4: KHO THUÊ (ĐANG THUÊ / TỔNG SỐ KHO) */}
                         <td className="py-4 px-4 text-center whitespace-nowrap">
-                          <div className="font-bold text-slate-200 text-xs sm:text-sm font-mono">
-                            <span className="text-white">{rented}</span>
-                            <span className="text-slate-400"> / {stdUnits} Kho</span>
+                          <div className="font-bold text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-mono">
+                            <span className="text-slate-900 dark:text-white">{rented}</span>
+                            <span className="text-slate-500 dark:text-slate-400"> / {stdUnits} Kho</span>
                           </div>
                         </td>
 
                         {/* CỘT 5: TỶ LỆ LẤP ĐẦY */}
                         <td className="py-4 px-4 text-center whitespace-nowrap">
-                          <span className="font-bold text-slate-200 font-mono text-xs sm:text-sm">
+                          <span className="font-bold text-slate-800 dark:text-slate-200 font-mono text-xs sm:text-sm">
                             {displayOccRate}%
                           </span>
                         </td>
 
                         {/* CỘT 6: DOANH THU THEO KHOẢNG THỜI GIAN ĐƯỢC CHỌN */}
-                        <td className="py-4 px-4 text-center whitespace-nowrap font-bold text-slate-200 font-mono text-xs sm:text-sm">
+                        <td className="py-4 px-4 text-center whitespace-nowrap font-bold text-slate-900 dark:text-slate-200 font-mono text-xs sm:text-sm">
                           {displayRevenue}
                         </td>
 
@@ -833,7 +833,7 @@ export default function BomFacilitiesPage() {
                           <div className="flex items-center justify-center gap-1.5">
                             <button
                               onClick={() => navigate(`/bom/facilities/${fac.id}`)}
-                              className="bg-sky-500/15 hover:bg-sky-500 text-sky-400 hover:text-slate-950 border border-sky-500/30 font-bold text-xs px-2.5 py-1.5 rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1"
+                              className="bg-sky-500/15 hover:bg-sky-500 text-sky-600 dark:text-sky-400 hover:text-slate-950 border border-sky-500/30 font-bold text-xs px-2.5 py-1.5 rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1"
                               title="Xem biểu đồ dòng tiền & thông số cơ sở"
                             >
                               <TrendingUp className="size-3.5" />
@@ -841,14 +841,14 @@ export default function BomFacilitiesPage() {
                             </button>
                             <button
                               onClick={() => handleOpenFacilityModal(fac)}
-                              className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-2.5 py-1.5 rounded-xl border border-slate-700 shadow-xs transition cursor-pointer"
+                              className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs transition cursor-pointer"
                               title="Cấu hình cơ sở"
                             >
                               Cấu hình
                             </button>
                             <button
                               onClick={() => setFacilityToDelete(fac)}
-                              className="p-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/30 transition cursor-pointer"
+                              className="p-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500 text-rose-600 dark:text-rose-400 hover:text-white border border-rose-500/30 transition cursor-pointer"
                               title="Xóa cơ sở kho"
                             >
                               <Trash2 className="size-3.5" />

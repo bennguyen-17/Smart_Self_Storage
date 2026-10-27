@@ -205,26 +205,26 @@ export default function BomReportsPage() {
   return (
     <div className="space-y-5">
       {/* HEADER BÁO CÁO & BỘ CHỌN CƠ SỞ NHANH */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-md">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white/90 dark:bg-slate-900/60 border border-slate-200/90 dark:border-slate-800 shadow-sm dark:shadow-md transition-colors">
         <div>
           <div className="flex items-center gap-2 mb-1">
             {!isAll && (
               <button
                 type="button"
                 onClick={() => navigate("/bom/facilities")}
-                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer shrink-0"
+                className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition cursor-pointer shrink-0"
                 title="Quay lại danh sách cơ sở kho"
               >
                 <ArrowLeft className="size-4" />
               </button>
             )}
-            <h2 className="text-lg sm:text-xl font-black text-white tracking-tight uppercase">
+            <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
               {isAll
                 ? "Báo Cáo Tổng Quan Hệ Thống Thuê Kho"
                 : `Báo Cáo Cơ Sở: ${currentFacName} (${currentFacCode})`}
             </h2>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             {isAll
               ? "Giám sát dòng tiền thực thu và quy mô vận hành toàn chuỗi kho"
               : `Giám sát dòng tiền thực thu 6 tháng gần nhất và hiệu suất vận hành tại ${currentFacName}`}
@@ -238,7 +238,7 @@ export default function BomReportsPage() {
             className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
               selectedFacilityId === "ALL"
                 ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 border border-sky-400"
-                : "bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/60"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 border border-slate-200 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:border-slate-700/60"
             }`}
           >
             <Layers className="size-3.5" />
@@ -254,7 +254,7 @@ export default function BomReportsPage() {
                 className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
                   isSelected
                     ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 border border-sky-400"
-                    : "bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/60"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 border border-slate-200 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:border-slate-700/60"
                 }`}
                 title={f.name}
               >
@@ -271,31 +271,31 @@ export default function BomReportsPage() {
 
       {/* NẾU ĐANG CHỌN CƠ SỞ CỤ THỂ: HIỂN THỊ THÊM BẢNG CƠ CẤU Ô KHO THEO SIZE */}
       {!isAll && (
-        <div className="rounded-2xl border border-slate-800/90 bg-slate-900/60 p-5 sm:p-6 shadow-xl space-y-4">
+        <div className="rounded-2xl border border-slate-200/90 bg-white/90 dark:border-slate-800/90 dark:bg-slate-900/60 p-5 sm:p-6 shadow-sm dark:shadow-xl space-y-4 transition-colors">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-black text-sm uppercase text-white tracking-wider flex items-center gap-2">
+              <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white tracking-wider flex items-center gap-2">
                 <span>BÁO CÁO CƠ CẤU Ô KHO THEO SIZE &amp; LOẠI HÌNH</span>
-                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-400 border border-sky-500/30">
+                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30">
                   {currentFacCode}
                 </span>
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Chi tiết tỷ lệ khai thác và doanh thu tiềm năng từng kích thước ô kho
               </p>
             </div>
           </div>
 
           {isLoadingUnits ? (
-            <div className="p-8 text-center text-slate-400 font-bold space-y-2">
-              <div className="size-6 border-2 border-sky-400 border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="p-8 text-center text-slate-500 dark:text-slate-400 font-bold space-y-2">
+              <div className="size-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto" />
               <p className="text-xs">Đang tổng hợp cơ cấu ô kho...</p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-slate-800">
+            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
               <table className="w-full text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 bg-slate-950/90 text-slate-400 uppercase font-black text-[10px]">
+                  <tr className="border-b border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-800 dark:bg-slate-950/90 dark:text-slate-400 uppercase font-black text-[10px]">
                     <th className="p-3 text-left whitespace-nowrap">Phân Loại / Size</th>
                     <th className="p-3 text-center whitespace-nowrap">Quy Cách Sàn</th>
                     <th className="p-3 text-center whitespace-nowrap">Tổng Số Ô</th>
@@ -307,7 +307,7 @@ export default function BomReportsPage() {
                     <th className="p-3 text-right whitespace-nowrap">Doanh Thu / Tháng</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/80 font-semibold text-slate-300">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80 font-semibold text-slate-700 dark:text-slate-300">
                   {(() => {
                     const SIZES = [
                       { size: "S", name: "Size S (Tủ Cá Nhân)", dim: "1.0m × 1.0m", defaultNorm: 600000 },
@@ -362,28 +362,28 @@ export default function BomReportsPage() {
                       grandRevenue += revenue
 
                       return (
-                        <tr key={cfg.size} className="hover:bg-slate-950/40 transition">
+                        <tr key={cfg.size} className="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
                           <td className="p-3 text-left whitespace-nowrap">
-                            <div className="font-extrabold text-white whitespace-nowrap">{cfg.name}</div>
+                            <div className="font-extrabold text-slate-900 dark:text-white whitespace-nowrap">{cfg.name}</div>
                           </td>
-                          <td className="p-3 text-center font-mono text-slate-400 whitespace-nowrap">{cfg.dim}</td>
-                          <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{total} ô</td>
-                          <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{occupied}</td>
-                          <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{available}</td>
-                          <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{hold}</td>
-                          <td className="p-3 text-center font-bold text-white font-mono whitespace-nowrap">{maintenance}</td>
+                          <td className="p-3 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{cfg.dim}</td>
+                          <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{total} ô</td>
+                          <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{occupied}</td>
+                          <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{available}</td>
+                          <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{hold}</td>
+                          <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{maintenance}</td>
                           <td className="p-3 text-center whitespace-nowrap">
                             <div className="flex items-center justify-center gap-2">
-                              <span className="font-mono font-bold text-white">{occRate}%</span>
-                              <div className="w-14 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                              <span className="font-mono font-bold text-slate-900 dark:text-white">{occRate}%</span>
+                              <div className="w-14 bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
                                 <div
-                                  className="h-full bg-slate-300 rounded-full"
+                                  className="h-full bg-sky-500 dark:bg-slate-300 rounded-full"
                                   style={{ width: `${Math.min(occRate, 100)}%` }}
                                 />
                               </div>
                             </div>
                           </td>
-                          <td className="p-3 text-right font-mono font-bold text-white whitespace-nowrap">
+                          <td className="p-3 text-right font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
                             ₫{revenue.toLocaleString("vi-VN")}
                           </td>
                         </tr>
@@ -395,18 +395,18 @@ export default function BomReportsPage() {
                     return (
                       <>
                         {rows}
-                        <tr className="bg-slate-950 font-black border-t-2 border-slate-700 text-white">
-                          <td className="p-3 text-left uppercase text-white tracking-wider whitespace-nowrap">
+                        <tr className="bg-slate-100 dark:bg-slate-950 font-black border-t-2 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
+                          <td className="p-3 text-left uppercase text-slate-900 dark:text-white tracking-wider whitespace-nowrap">
                             TỔNG CỘNG CƠ CẤU
                           </td>
                           <td className="p-3 text-center text-slate-400 font-mono whitespace-nowrap">—</td>
-                          <td className="p-3 text-center text-sky-400 font-mono whitespace-nowrap">{grandTotal} ô</td>
-                          <td className="p-3 text-center text-emerald-400 font-mono whitespace-nowrap">{grandOccupied}</td>
-                          <td className="p-3 text-center text-slate-300 font-mono whitespace-nowrap">{grandAvailable}</td>
-                          <td className="p-3 text-center text-amber-400 font-mono whitespace-nowrap">{grandHold}</td>
-                          <td className="p-3 text-center text-rose-400 font-mono whitespace-nowrap">{grandMaintenance}</td>
-                          <td className="p-3 text-center text-sky-400 font-mono whitespace-nowrap">{grandRate}%</td>
-                          <td className="p-3 text-right text-emerald-400 font-mono whitespace-nowrap">
+                          <td className="p-3 text-center text-sky-600 dark:text-sky-400 font-mono whitespace-nowrap">{grandTotal} ô</td>
+                          <td className="p-3 text-center text-emerald-600 dark:text-emerald-400 font-mono whitespace-nowrap">{grandOccupied}</td>
+                          <td className="p-3 text-center text-slate-600 dark:text-slate-300 font-mono whitespace-nowrap">{grandAvailable}</td>
+                          <td className="p-3 text-center text-amber-600 dark:text-amber-400 font-mono whitespace-nowrap">{grandHold}</td>
+                          <td className="p-3 text-center text-rose-600 dark:text-rose-400 font-mono whitespace-nowrap">{grandMaintenance}</td>
+                          <td className="p-3 text-center text-sky-600 dark:text-sky-400 font-mono whitespace-nowrap">{grandRate}%</td>
+                          <td className="p-3 text-right text-emerald-600 dark:text-emerald-400 font-mono whitespace-nowrap">
                             ₫{grandRevenue.toLocaleString("vi-VN")}
                           </td>
                         </tr>
