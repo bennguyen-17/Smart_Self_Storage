@@ -87,6 +87,11 @@ describe("filterActivityLogs: Admin lọc theo người, thời gian, loại hà
       expected: [1],
     },
     {
+      name: "lịch sử đăng nhập gộp đăng nhập thành công và thất bại",
+      filter: { ...ALL, action: "LOGIN_HISTORY" },
+      expected: [3, 1],
+    },
+    {
       name: "nhắc hạn gộp mọi mốc ngày",
       filter: { ...ALL, action: "EXPIRY_REMINDER" },
       expected: [5, 4],

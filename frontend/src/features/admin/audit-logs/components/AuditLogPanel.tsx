@@ -23,6 +23,7 @@ import {
   ACTION_LABEL,
   ACTIVITY_CSV_HEADER,
   AUDIENCE_LABEL,
+  LOGIN_HISTORY_FILTER,
   logAudience,
   type LogAudience,
   activityCsvRows,
@@ -108,6 +109,7 @@ function AuditLogPanel() {
           onChange={(action) => update({ action })}
           options={[
             { value: "ALL", label: "Tất cả hành động" },
+            { value: LOGIN_HISTORY_FILTER, label: "Lịch sử đăng nhập (đăng nhập, sai mật khẩu, đăng xuất)" },
             ...Object.entries(ACTION_LABEL).map(([value, label]) => ({
               value,
               label,

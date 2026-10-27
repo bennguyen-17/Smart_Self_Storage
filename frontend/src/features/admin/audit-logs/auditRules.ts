@@ -91,15 +91,23 @@ export function isRangeValid(from: string, to: string): boolean {
 }
 
 /** Lọc theo người (tên, vai trò), mô tả, IP; nhóm hành động; khoảng ngày (gồm 2 đầu). Mới nhất lên đầu */
+/** Giá trị bộ lọc "Lịch sử đăng nhập": gộp các mã đăng nhập / đăng xuất (đề: "Track login history") */
+export const LOGIN_HISTORY_FILTER = "LOGIN_HISTORY"
+export const LOGIN_HISTORY_ACTIONS = ["LOGIN_SUCCESS", "LOGIN_FAILED", "LOGOUT"]
+
+function matchesAction(action: string, filterAction: string): boolean {
+  if (filterAction === "ALL") return true
+  if (filterAction === LOGIN_HISTORY_FILTER) return LOGIN_HISTORY_ACTIONS.includes(action)
+  return actionGroup(action) === filterAction
+}
+
 export function filterActivityLogs(
   logs: readonly ActivityLogEntry[],
   filter: ActivityFilter
 ): ActivityLogEntry[] {
   if (!isRangeValid(filter.from, filter.to)) return []
   return logs
-    .filter(
-      (l) => filter.action === "ALL" || actionGroup(l.action) === filter.action
-    )
+    .filter((l) => matchesAction(l.action, filter.action))
     .filter((l) => {
       const day = l.createdAt.slice(0, 10)
       return (

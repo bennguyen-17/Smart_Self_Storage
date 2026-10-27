@@ -15,11 +15,18 @@ import { useAsyncData } from "@/hooks/useAsyncData"
 import { formatDate, todayInVietnam } from "@/lib/format"
 
 import { listFacilityContracts } from "../api/contractApi"
-import { CONTRACT_STATUS_LABEL, filterContracts, type ContractFilter, type PaymentFilter } from "../contractRules"
+import {
+  CONTRACT_STATUS_LABEL,
+  filterContracts,
+  isExpiringSoon,
+  RENEWAL_WINDOW_DAYS,
+  type ContractFilter,
+  type PaymentFilter,
+} from "../contractRules"
 import type { ContractStatus } from "../types"
 import { ContractStatusBadge, DaysLeft, PaymentState } from "./ContractBadges"
 
-const EMPTY_FILTER: ContractFilter = { query: "", status: "ALL", payment: "ALL" }
+const EMPTY_FILTER: ContractFilter = { query: "", status: "ALL", payment: "ALL", expiringSoon: false }
 
 /** Manager › Khách & hợp đồng: theo dõi khách, hợp đồng, thời hạn thuê và công nợ của cơ sở (chỉ xem) */
 function CustomersContractsPanel() {
@@ -29,7 +36,8 @@ function CustomersContractsPanel() {
   const [filter, setFilter] = useState<ContractFilter>(EMPTY_FILTER)
   const { data, error, isLoading } = useAsyncData(`contracts#${reloadCount}`, () => listFacilityContracts(ctx))
   const all = data ?? []
-  const rows = filterContracts(all, filter)
+  const rows = filterContracts(all, filter, today)
+  const expiringCount = all.filter((c) => isExpiringSoon(c, today)).length
   const { slice, pagination } = usePagedRows(rows, JSON.stringify(filter))
   const update = (patch: Partial<ContractFilter>) => setFilter((f) => ({ ...f, ...patch }))
 
@@ -60,7 +68,34 @@ function CustomersContractsPanel() {
             { value: "CLEAR", label: "Đã thanh toán đủ" },
           ]}
         />
+        <SelectFilter
+          label="Thời hạn"
+          value={filter.expiringSoon ? "SOON" : "ALL"}
+          onChange={(v) => update({ expiringSoon: v === "SOON" })}
+          options={[
+            { value: "ALL", label: "Tất cả" },
+            { value: "SOON", label: `Sắp hết hạn (≤ ${RENEWAL_WINDOW_DAYS} ngày)` },
+          ]}
+        />
       </FilterBar>
+
+      {!isLoading && expiringCount > 0 && (
+        <p role="status" className="card-box flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border px-4 py-3 text-xs">
+          <span className="font-bold text-amber-700 dark:text-amber-300">
+            {expiringCount} hợp đồng hết hạn trong {RENEWAL_WINDOW_DAYS} ngày tới
+          </span>
+          <span className="text-muted">Hệ thống đã gửi email nhắc gia hạn trước 7, 3 và 1 ngày; khách chưa gia hạn sẽ chuyển quá hạn.</span>
+          {!filter.expiringSoon && (
+            <button
+              type="button"
+              onClick={() => update({ expiringSoon: true })}
+              className="font-semibold text-blue-600 hover:underline dark:text-blue-400"
+            >
+              Xem danh sách
+            </button>
+          )}
+        </p>
+      )}
 
       <ResultCount shown={rows.length} total={all.length} unit="hợp đồng" isLoading={isLoading} />
 
@@ -78,7 +113,13 @@ function CustomersContractsPanel() {
         minWidth={980}
         isLoading={isLoading}
         isEmpty={rows.length === 0}
-        emptyText={all.length === 0 ? "Cơ sở chưa có hợp đồng nào" : "Không có hợp đồng phù hợp bộ lọc"}
+        emptyText={
+          all.length === 0
+            ? "Cơ sở chưa có hợp đồng nào"
+            : filter.expiringSoon
+              ? `Không có hợp đồng nào hết hạn trong ${RENEWAL_WINDOW_DAYS} ngày tới`
+              : "Không có hợp đồng phù hợp bộ lọc"
+        }
       >
         {slice.rows.map((c) => (
           <tr key={c.contractId} className="border-b last:border-0">

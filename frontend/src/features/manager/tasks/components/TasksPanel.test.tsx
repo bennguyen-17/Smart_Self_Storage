@@ -15,6 +15,8 @@ vi.mock("../api/taskApi", () => api)
 vi.mock("@/features/manager/shifts/api/shiftApi", () => shifts)
 vi.mock("@/features/manager/units/api/unitManagementApi", () => units)
 vi.mock("@/features/manager/contracts/api/contractApi", () => contracts)
+const tickets = vi.hoisted(() => ({ listManagerTickets: vi.fn() }))
+vi.mock("@/features/manager/tickets/api/ticketApi", () => tickets)
 vi.mock("@/lib/apiClient", () => ({ default: {}, isMockMode: () => false }))
 vi.mock("@/hooks/useAuthSession", () => ({ getStoredUser: () => ({ id: 3, facilityId: 1, fullName: "Trần Văn Quản" }) }))
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
@@ -65,6 +67,7 @@ beforeEach(() => {
     { unitCode: "HN01-G-XL01", status: "AVAILABLE" },
   ])
   contracts.listFacilityContracts.mockReset().mockResolvedValue([])
+  tickets.listManagerTickets.mockReset().mockResolvedValue([])
   vi.mocked(toast.success).mockReset()
 })
 
@@ -98,7 +101,9 @@ describe("TasksPanel: Manager giao việc cho nhân viên", () => {
 
     await user.selectOptions(within(sheet).getByLabelText(/Ca làm việc/), "1")
     await user.selectOptions(within(sheet).getByLabelText(/Nhân viên/), "8")
+    await user.click(within(sheet).getByRole("radio", { name: "Bảo trì / vệ sinh ô kho" }))
     // Chỉ ô đang bảo trì mới chọn được
+    await within(sheet).findByRole("option", { name: /HN01-G-XL07/ })
     expect(within(sheet).queryByRole("option", { name: /HN01-G-XL01/ })).not.toBeInTheDocument()
     await user.selectOptions(within(sheet).getByLabelText(/Ô kho cần bảo trì/), "HN01-G-XL07")
     await user.type(within(sheet).getByLabelText(/Ghi chú/), "Kiểm tra ray cửa")
@@ -123,8 +128,61 @@ describe("TasksPanel: Manager giao việc cho nhân viên", () => {
     await user.click(within(sheet).getByRole("button", { name: "Giao việc" }))
     expect(within(sheet).getByText("Chọn ca làm việc")).toBeInTheDocument()
     expect(within(sheet).getByText("Chọn nhân viên trong ca")).toBeInTheDocument()
-    expect(within(sheet).getByText("Chọn ô kho cần bảo trì")).toBeInTheDocument()
+    // Loại mặc định là hỗ trợ bàn giao (đầu vòng đời ô kho)
+    expect(within(sheet).getByText("Chọn hợp đồng chờ nhận kho")).toBeInTheDocument()
     expect(api.createTask).not.toHaveBeenCalled()
+  })
+
+  test("hỗ trợ bàn giao: chỉ hiện hợp đồng chờ nhận kho, gửi contractId", async () => {
+    contracts.listFacilityContracts.mockResolvedValue([
+      { contractId: 19, contractCode: "CTR-19", customerName: "Nguyễn Thành Long", unitCode: "HN01-F1-S02", status: "PENDING_CHECKIN", startDate: "2026-10-26", endDate: "2026-11-25" },
+      { contractId: 7, contractCode: "CTR-7", customerName: "Trần Thu Hà", unitCode: "HN01-G-XL02", status: "ACTIVE", startDate: "2026-09-01", endDate: "2026-11-01" },
+    ])
+    const user = await renderPanel()
+    await user.click(screen.getByRole("button", { name: /Giao việc mới/ }))
+    const sheet = await screen.findByRole("dialog")
+    await within(sheet).findByRole("option", { name: /Ca Sáng/ })
+    await user.selectOptions(within(sheet).getByLabelText(/Ca làm việc/), "1")
+    await user.selectOptions(within(sheet).getByLabelText(/Nhân viên/), "8")
+    await within(sheet).findByRole("option", { name: /CTR-19/ })
+    expect(within(sheet).queryByRole("option", { name: /CTR-7/ })).not.toBeInTheDocument()
+    await user.selectOptions(within(sheet).getByLabelText(/Khách chờ nhận kho/), "19")
+    await user.click(within(sheet).getByRole("button", { name: "Giao việc" }))
+    expect(api.createTask).toHaveBeenCalledWith(expect.anything(), {
+      taskType: "CHECKIN_HANDOVER",
+      employeeId: 8,
+      date: "2026-10-26",
+      shiftId: 1,
+      contractId: 19,
+    })
+  })
+
+  test("xử lý sự cố: chỉ hiện ticket chưa đóng, gửi ô của ticket, ghi mã ticket vào ghi chú", async () => {
+    tickets.listManagerTickets.mockResolvedValue([
+      { id: 6, ticketCode: "TCK-202610-006", title: "Bảo trì / Sửa chữa", unitCode: "HN01-G-XL02", status: "SUBMITTED", type: "MAINTENANCE" },
+      { id: 1, ticketCode: "TCK-202610-001", title: "Báo sự cố", unitCode: "HN01-G-XL01", status: "RESOLVED", type: "INCIDENT" },
+    ])
+    const user = await renderPanel()
+    await user.click(screen.getByRole("button", { name: /Giao việc mới/ }))
+    const sheet = await screen.findByRole("dialog")
+    await within(sheet).findByRole("option", { name: /Ca Sáng/ })
+    await user.selectOptions(within(sheet).getByLabelText(/Ca làm việc/), "1")
+    await user.selectOptions(within(sheet).getByLabelText(/Nhân viên/), "8")
+    await user.click(within(sheet).getByRole("radio", { name: "Xử lý sự cố" }))
+    await within(sheet).findByRole("option", { name: /TCK-202610-006/ })
+    expect(within(sheet).queryByRole("option", { name: /TCK-202610-001/ })).not.toBeInTheDocument()
+    expect(tickets.listManagerTickets).toHaveBeenCalledWith(1)
+    await user.selectOptions(within(sheet).getByLabelText(/Ticket cần xử lý/), "6")
+    await user.type(within(sheet).getByLabelText(/Ghi chú/), "Mang thang và bóng đèn")
+    await user.click(within(sheet).getByRole("button", { name: "Giao việc" }))
+    expect(api.createTask).toHaveBeenCalledWith(expect.anything(), {
+      taskType: "INCIDENT",
+      employeeId: 8,
+      date: "2026-10-26",
+      shiftId: 1,
+      unitCode: "HN01-G-XL02",
+      note: "Ticket TCK-202610-006: Mang thang và bóng đèn",
+    })
   })
 
   test("BE từ chối thì hiện nguyên câu lỗi trong ngăn, giữ ngăn mở", async () => {
@@ -140,6 +198,8 @@ describe("TasksPanel: Manager giao việc cho nhân viên", () => {
     await within(sheet).findByRole("option", { name: /Ca Sáng/ })
     await user.selectOptions(within(sheet).getByLabelText(/Ca làm việc/), "1")
     await user.selectOptions(within(sheet).getByLabelText(/Nhân viên/), "8")
+    await user.click(within(sheet).getByRole("radio", { name: "Bảo trì / vệ sinh ô kho" }))
+    await within(sheet).findByRole("option", { name: /HN01-G-XL07/ })
     await user.selectOptions(within(sheet).getByLabelText(/Ô kho cần bảo trì/), "HN01-G-XL07")
     await user.click(within(sheet).getByRole("button", { name: "Giao việc" }))
     expect(await within(sheet).findByRole("alert")).toHaveTextContent("Nhân viên chưa được xếp vào ca này.")

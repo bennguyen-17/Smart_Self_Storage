@@ -10,7 +10,23 @@ import {
   maintenanceNoteError,
   normalizeUnitStatus,
   planUnitEdit,
+  unitPrice,
 } from "./unitRules"
+
+describe("unitPrice: giá khách thực trả, giống cách BE tính", () => {
+  test.each([
+    ["kho thường: giữ nguyên giá", { dailyPrice: 30000, monthlyPrice: 600000, depositAmount: 500000, isClimate: false }, { daily: 30000, monthly: 600000, deposit: 500000, surchargePercent: 0 }],
+    ["kho điều hòa, bảng giá chưa đặt phụ phí: mặc định +20%", { dailyPrice: 60000, monthlyPrice: 1200000, isClimate: true, climateSurchargePercent: 0 }, { daily: 72000, monthly: 1440000, deposit: null, surchargePercent: 20 }],
+    ["kho điều hòa, bảng giá đặt 25%", { dailyPrice: 100000, monthlyPrice: 2000000, isClimate: true, climateSurchargePercent: 25 }, { daily: 125000, monthly: 2500000, deposit: null, surchargePercent: 25 }],
+    ["kho thường có phụ phí trong bảng giá: không cộng", { dailyPrice: 30000, monthlyPrice: 600000, isClimate: false, climateSurchargePercent: 20 }, { daily: 30000, monthly: 600000, deposit: null, surchargePercent: 0 }],
+  ])("%s", (_, unit, expected) => {
+    expect(unitPrice(unit)).toEqual(expected)
+  })
+
+  test("thiếu giá thì trả null (giao diện ghi Chưa có giá)", () => {
+    expect(unitPrice({ dailyPrice: null, monthlyPrice: 600000 })).toBeNull()
+  })
+})
 
 describe("normalizeUnitStatus: đọc được cả bộ trạng thái mới và cũ của DB", () => {
   test.each([

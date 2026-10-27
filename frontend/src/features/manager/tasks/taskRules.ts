@@ -7,7 +7,7 @@ import type { FacilityContract } from "@/features/manager/contracts/types"
 import { normalizeUnitStatus } from "@/features/manager/units/unitRules"
 import type { ManagerUnit } from "@/features/manager/units/types"
 
-import type { CreateTaskRequest, StaffTask, TaskFilter, TaskForm, TaskStatus } from "./types"
+import type { CreateTaskRequest, IncidentTicket, StaffTask, TaskFilter, TaskForm, TaskStatus, TaskType } from "./types"
 
 export const TASK_TYPE_LABEL: Record<string, string> = {
   MAINTENANCE: "Bảo trì / vệ sinh ô kho",
@@ -16,8 +16,32 @@ export const TASK_TYPE_LABEL: Record<string, string> = {
   INCIDENT: "Xử lý sự cố",
 }
 
-/** Loại BE đang nhận khi tạo việc; thêm loại mới ở đây khi BE hỗ trợ */
-export const CREATABLE_TASK_TYPES = ["MAINTENANCE", "CHECKOUT_INSPECTION"] as const
+/** Thứ tự hiện trong form giao việc: theo vòng đời ô kho (nhận kho → sự cố → trả kho → bảo trì) */
+export const CREATABLE_TASK_TYPES: readonly TaskType[] = ["CHECKIN_HANDOVER", "INCIDENT", "CHECKOUT_INSPECTION", "MAINTENANCE"]
+
+/** Nhãn ô chọn đối tượng và lỗi khi chưa chọn, theo loại việc */
+export const TASK_TARGET: Record<TaskType, { label: string; missing: string; hint: string }> = {
+  MAINTENANCE: {
+    label: "Ô kho cần bảo trì",
+    missing: "Chọn ô kho cần bảo trì",
+    hint: "Chỉ hiện ô đang ở trạng thái bảo trì và chưa có việc bảo trì trong ca này.",
+  },
+  CHECKOUT_INSPECTION: {
+    label: "Hợp đồng cần nghiệm thu trả kho",
+    missing: "Chọn hợp đồng cần nghiệm thu",
+    hint: "Chỉ hiện hợp đồng đang thuê hoặc quá hạn, chưa có ai được giao nghiệm thu.",
+  },
+  CHECKIN_HANDOVER: {
+    label: "Khách chờ nhận kho",
+    missing: "Chọn hợp đồng chờ nhận kho",
+    hint: "Chỉ hiện hợp đồng chờ nhận kho, chưa có ai được giao hỗ trợ bàn giao.",
+  },
+  INCIDENT: {
+    label: "Ticket cần xử lý",
+    missing: "Chọn ticket cần xử lý",
+    hint: "Chỉ hiện ticket chưa đóng, chưa giao cho ai. Mã ticket được ghi kèm vào ghi chú cho nhân viên.",
+  },
+}
 
 export function taskTypeLabel(type: string): string {
   return TASK_TYPE_LABEL[type] ?? type
@@ -108,6 +132,44 @@ export function inspectionTargets(
     .sort((a, b) => a.endDate.localeCompare(b.endDate))
 }
 
+/**
+ * Hợp đồng giao hỗ trợ bàn giao được: chờ nhận kho, chưa có việc bàn giao đang chờ.
+ * Ngày bắt đầu thuê sớm nhất lên trước (khách sắp tới nhận kho).
+ */
+export function handoverTargets(
+  contracts: readonly FacilityContract[],
+  tasks: readonly StaffTask[]
+): FacilityContract[] {
+  const busy = new Set(
+    tasks
+      .filter((t) => t.taskType === "CHECKIN_HANDOVER" && taskStatus(t.status) === "ASSIGNED")
+      .map((t) => t.contractId)
+  )
+  return contracts
+    .filter((c) => c.status === "PENDING_CHECKIN" && !busy.has(c.contractId))
+    .sort((a, b) => a.startDate.localeCompare(b.startDate))
+}
+
+/** Ghi chú của việc sự cố bắt đầu bằng mã ticket, để nhân viên tra lại ticket và để FE biết ticket đã được giao */
+export function incidentNotePrefix(ticketCode: string): string {
+  return `Ticket ${ticketCode}`
+}
+
+/**
+ * Ticket giao xử lý được: chưa đóng, chưa có việc sự cố đang chờ ghi đúng mã ticket đó.
+ * Ticket đã chuyển lên Quản lý (quá SLA) lên đầu, rồi theo mã.
+ */
+export function incidentTargets(tickets: readonly IncidentTicket[], tasks: readonly StaffTask[]): IncidentTicket[] {
+  const assignedNotes = tasks
+    .filter((t) => t.taskType === "INCIDENT" && taskStatus(t.status) === "ASSIGNED")
+    .map((t) => t.note ?? "")
+  const rank = (t: IncidentTicket) => (t.status === "ESCALATED" ? 0 : 1)
+  return tickets
+    .filter((t) => t.status !== "RESOLVED")
+    .filter((t) => !assignedNotes.some((n) => n.startsWith(incidentNotePrefix(t.ticketCode))))
+    .sort((a, b) => rank(a) - rank(b) || a.ticketCode.localeCompare(b.ticketCode))
+}
+
 export const TASK_NOTE_MAX = 500
 
 export type TaskFormErrors = Partial<Record<keyof TaskForm, string>>
@@ -116,21 +178,27 @@ export function taskFormErrors(form: TaskForm): TaskFormErrors {
   const errors: TaskFormErrors = {}
   if (!form.shiftId) errors.shiftId = "Chọn ca làm việc"
   if (!form.employeeId) errors.employeeId = "Chọn nhân viên trong ca"
-  if (!form.target) {
-    errors.target = form.taskType === "MAINTENANCE" ? "Chọn ô kho cần bảo trì" : "Chọn hợp đồng cần nghiệm thu"
-  }
+  if (!form.target) errors.target = TASK_TARGET[form.taskType].missing
   if (form.note.trim().length > TASK_NOTE_MAX) errors.note = `Ghi chú tối đa ${TASK_NOTE_MAX} ký tự`
   return errors
 }
 
-/** Đổi dữ liệu form sang body BE: bảo trì gửi unitCode, nghiệm thu gửi contractId (BE từ chối nếu gửi cả hai) */
-export function toCreateRequest(form: TaskForm, date: string): CreateTaskRequest {
+/**
+ * Đổi dữ liệu form sang body BE:
+ * - bảo trì gửi unitCode; nghiệm thu, bàn giao gửi contractId (BE báo lỗi nếu bảo trì / nghiệm thu gửi cả hai);
+ * - sự cố gửi unitCode của ticket (nếu có) và ghi mã ticket vào đầu ghi chú.
+ */
+export function toCreateRequest(form: TaskForm, date: string, ticket?: IncidentTicket): CreateTaskRequest {
   const note = form.note.trim()
+  const base = { taskType: form.taskType, employeeId: Number(form.employeeId), date, shiftId: Number(form.shiftId) }
+
+  if (form.taskType === "INCIDENT") {
+    const prefix = ticket ? incidentNotePrefix(ticket.ticketCode) : ""
+    const fullNote = [prefix, note].filter(Boolean).join(": ")
+    return { ...base, ...(ticket?.unitCode ? { unitCode: ticket.unitCode } : {}), ...(fullNote ? { note: fullNote } : {}) }
+  }
   return {
-    taskType: form.taskType,
-    employeeId: Number(form.employeeId),
-    date,
-    shiftId: Number(form.shiftId),
+    ...base,
     ...(form.taskType === "MAINTENANCE" ? { unitCode: form.target } : { contractId: Number(form.target) }),
     ...(note ? { note } : {}),
   }

@@ -5,6 +5,8 @@ import type { ManagerUnit } from "@/features/manager/units/types"
 
 import {
   filterTasks,
+  handoverTargets,
+  incidentTargets,
   inspectionTargets,
   maintenanceTargets,
   staffedShifts,
@@ -13,7 +15,7 @@ import {
   taskSummary,
   toCreateRequest,
 } from "./taskRules"
-import type { StaffTask, TaskForm } from "./types"
+import type { IncidentTicket, StaffTask, TaskForm } from "./types"
 
 function task(over: Partial<StaffTask>): StaffTask {
   return {
@@ -133,6 +135,40 @@ describe("inspectionTargets", () => {
   })
 })
 
+describe("handoverTargets", () => {
+  const pending = (contractId: number, startDate: string) =>
+    ({ contractId, status: "PENDING_CHECKIN", startDate, endDate: "2026-12-01" }) as unknown as FacilityContract
+
+  test("chỉ hợp đồng chờ nhận kho, ngày nhận sớm nhất lên trước; ẩn hợp đồng đã giao bàn giao", () => {
+    const list = [pending(5, "2026-10-28"), pending(6, "2026-10-26"), contract(1, "ACTIVE", "2026-11-20")]
+    expect(handoverTargets(list, []).map((c) => c.contractId)).toEqual([6, 5])
+    const busy = [task({ taskType: "CHECKIN_HANDOVER", contractId: 6, unitCode: null })]
+    expect(handoverTargets(list, busy).map((c) => c.contractId)).toEqual([5])
+  })
+})
+
+describe("incidentTargets", () => {
+  const ticket = (id: number, ticketCode: string, status: string): IncidentTicket => ({ id, ticketCode, status })
+  const tickets = [
+    ticket(1, "TCK-001", "IN_PROGRESS"),
+    ticket(2, "TCK-002", "RESOLVED"),
+    ticket(3, "TCK-003", "ESCALATED"),
+    ticket(4, "TCK-004", "SUBMITTED"),
+  ]
+
+  test("bỏ ticket đã đóng; ticket quá SLA (chuyển lên Quản lý) lên đầu", () => {
+    expect(incidentTargets(tickets, []).map((t) => t.id)).toEqual([3, 1, 4])
+  })
+
+  test("ẩn ticket đã có việc sự cố đang chờ ghi đúng mã; việc đã xong thì không chặn", () => {
+    const busy = [
+      task({ taskType: "INCIDENT", note: "Ticket TCK-004: mang thang", unitCode: null }),
+      task({ taskType: "INCIDENT", note: "Ticket TCK-001", status: "DONE", unitCode: null }),
+    ]
+    expect(incidentTargets(tickets, busy).map((t) => t.id)).toEqual([3, 1])
+  })
+})
+
 describe("form giao việc", () => {
   const ok: TaskForm = { shiftId: "1", employeeId: "8", taskType: "MAINTENANCE", target: "HN01-G-XL05", note: "" }
 
@@ -142,6 +178,8 @@ describe("form giao việc", () => {
     [{ employeeId: "" }, { employeeId: "Chọn nhân viên trong ca" }],
     [{ target: "" }, { target: "Chọn ô kho cần bảo trì" }],
     [{ taskType: "CHECKOUT_INSPECTION" as const, target: "" }, { target: "Chọn hợp đồng cần nghiệm thu" }],
+    [{ taskType: "CHECKIN_HANDOVER" as const, target: "" }, { target: "Chọn hợp đồng chờ nhận kho" }],
+    [{ taskType: "INCIDENT" as const, target: "" }, { target: "Chọn ticket cần xử lý" }],
     [{ note: "x".repeat(501) }, { note: "Ghi chú tối đa 500 ký tự" }],
   ])("%o → lỗi %o", (patch, expected) => {
     expect(taskFormErrors({ ...ok, ...patch })).toEqual(expected)
@@ -167,6 +205,28 @@ describe("form giao việc", () => {
       shiftId: 1,
       contractId: 7,
       note: "Khách hẹn 15:00",
+    })
+  })
+
+  test("bàn giao gửi contractId như nghiệm thu", () => {
+    expect(toCreateRequest({ ...ok, taskType: "CHECKIN_HANDOVER", target: "19" }, "2026-10-26")).toMatchObject({
+      taskType: "CHECKIN_HANDOVER",
+      contractId: 19,
+    })
+  })
+
+  test.each([
+    ["có ô, có ghi chú", { unitCode: "HN01-G-XL02" }, " Mang thang ", { unitCode: "HN01-G-XL02", note: "Ticket TCK-006: Mang thang" }],
+    ["có ô, không ghi chú", { unitCode: "HN01-G-XL02" }, "", { unitCode: "HN01-G-XL02", note: "Ticket TCK-006" }],
+    ["ticket cổng không có ô", { unitCode: null }, "", { note: "Ticket TCK-006" }],
+  ])("sự cố, %s: gửi ô của ticket, ghi mã ticket đầu ghi chú", (_, ticketPart, note, expected) => {
+    const ticket: IncidentTicket = { id: 6, ticketCode: "TCK-006", status: "SUBMITTED", ...ticketPart }
+    expect(toCreateRequest({ ...ok, taskType: "INCIDENT", target: "6", note }, "2026-10-26", ticket)).toEqual({
+      taskType: "INCIDENT",
+      employeeId: 8,
+      date: "2026-10-26",
+      shiftId: 1,
+      ...expected,
     })
   })
 })

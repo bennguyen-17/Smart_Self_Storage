@@ -13,20 +13,25 @@ import { useAsyncData } from "@/hooks/useAsyncData"
 import { getErrorMessage } from "@/lib/api"
 import { formatDate } from "@/lib/format"
 
+import { listManagerTickets } from "@/features/manager/tickets/api/ticketApi"
+
 import { createTask } from "../api/taskApi"
 import {
   CREATABLE_TASK_TYPES,
+  handoverTargets,
+  incidentTargets,
   inspectionTargets,
   maintenanceTargets,
   staffedShifts,
   TASK_NOTE_MAX,
+  TASK_TARGET,
   TASK_TYPE_LABEL,
   taskFormErrors,
   toCreateRequest,
 } from "../taskRules"
-import type { StaffTask, TaskForm } from "../types"
+import type { StaffTask, TaskForm, TaskType } from "../types"
 
-const EMPTY_FORM: TaskForm = { shiftId: "", employeeId: "", taskType: "MAINTENANCE", target: "", note: "" }
+const EMPTY_FORM: TaskForm = { shiftId: "", employeeId: "", taskType: "CHECKIN_HANDOVER", target: "", note: "" }
 
 const SELECT_CLASS =
   "inner-box text-title w-full cursor-pointer rounded-lg border px-2.5 py-2 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-rose-500"
@@ -64,22 +69,49 @@ function AssignTaskSheet({
   const [serverError, setServerError] = useState<string | null>(null)
 
   const schedule = useAsyncData(`task-shifts:${date}`, () => getDaySchedule(ctx, date))
-  const units = useAsyncData(
-    form.taskType === "MAINTENANCE" ? "task-units" : null,
-    () => getManagerUnits(ctx, {})
-  )
-  const contracts = useAsyncData(
-    form.taskType === "CHECKOUT_INSPECTION" ? "task-contracts" : null,
-    () => listFacilityContracts(ctx)
+  // Chỉ tải dữ liệu loại việc đang chọn cần (key null = chưa tải)
+  const needsContracts = form.taskType === "CHECKOUT_INSPECTION" || form.taskType === "CHECKIN_HANDOVER"
+  const units = useAsyncData(form.taskType === "MAINTENANCE" ? "task-units" : null, () => getManagerUnits(ctx, {}))
+  const contracts = useAsyncData(needsContracts ? "task-contracts" : null, () => listFacilityContracts(ctx))
+  const tickets = useAsyncData(form.taskType === "INCIDENT" ? "task-tickets" : null, () =>
+    listManagerTickets(ctx.facilityId)
   )
 
   const shifts = staffedShifts(schedule.data)
   const shift = shifts.find((s) => String(s.shiftId) === form.shiftId)
-  const unitOptions = maintenanceTargets(units.data ?? [], tasks, shift?.shiftId ?? null)
-  const contractOptions = inspectionTargets(contracts.data ?? [], tasks)
-  const targetsLoading = form.taskType === "MAINTENANCE" ? units.isLoading : contracts.isLoading
-  const targetsError = form.taskType === "MAINTENANCE" ? units.error : contracts.error
+  const options = targetOptions(form.taskType)
+  const source = form.taskType === "MAINTENANCE" ? units : form.taskType === "INCIDENT" ? tickets : contracts
+  const selectedTicket = form.taskType === "INCIDENT" ? tickets.data?.find((t) => String(t.id) === form.target) : undefined
+  const target = TASK_TARGET[form.taskType]
   const errors = showErrors ? taskFormErrors(form) : {}
+
+  /** Danh sách đối tượng hợp lệ của loại việc đang chọn, dạng { value, label } cho ô chọn */
+  function targetOptions(type: TaskType): { value: string; label: string }[] {
+    switch (type) {
+      case "MAINTENANCE":
+        return maintenanceTargets(units.data ?? [], tasks, shift?.shiftId ?? null).map((u) => ({
+          value: u.unitCode,
+          label: `${u.unitCode}${u.floorName ? ` · ${u.floorName}` : ""}`,
+        }))
+      case "CHECKOUT_INSPECTION":
+        return inspectionTargets(contracts.data ?? [], tasks).map((c) => ({
+          value: String(c.contractId),
+          label: `${c.contractCode} · ${c.customerName} · Ô ${c.unitCode} · hết hạn ${formatDate(c.endDate)}`,
+        }))
+      case "CHECKIN_HANDOVER":
+        return handoverTargets(contracts.data ?? [], tasks).map((c) => ({
+          value: String(c.contractId),
+          label: `${c.contractCode} · ${c.customerName} · Ô ${c.unitCode} · nhận từ ${formatDate(c.startDate)}`,
+        }))
+      case "INCIDENT":
+        return incidentTargets(tickets.data ?? [], tasks).map((t) => ({
+          value: String(t.id),
+          label: `${t.ticketCode} · ${t.title ?? "Sự cố"}${t.unitCode ? ` · Ô ${t.unitCode}` : ""}${
+            t.status === "ESCALATED" ? " · đã quá SLA" : ""
+          }`,
+        }))
+    }
+  }
 
   const update = (patch: Partial<TaskForm>) => {
     setForm((f) => ({ ...f, ...patch }))
@@ -92,7 +124,7 @@ function AssignTaskSheet({
     setSubmitting(true)
     setServerError(null)
     try {
-      const task = await createTask(ctx, toCreateRequest(form, date))
+      const task = await createTask(ctx, toCreateRequest(form, date, selectedTicket))
       onDone(`Đã giao "${TASK_TYPE_LABEL[form.taskType]}" cho ${task.employeeName ?? "nhân viên"}`)
     } catch (err) {
       setServerError(getErrorMessage(err))
@@ -194,46 +226,34 @@ function AssignTaskSheet({
 
           <div className="space-y-1.5">
             <label htmlFor="task-target" className="font-bold">
-              {form.taskType === "MAINTENANCE" ? "Ô kho cần bảo trì" : "Hợp đồng cần nghiệm thu trả kho"}{" "}
-              <span className="text-rose-500">*</span>
+              {target.label} <span className="text-rose-500">*</span>
             </label>
             <select
               id="task-target"
               value={form.target}
-              disabled={submitting || targetsLoading}
+              disabled={submitting || source.isLoading}
               onChange={(e) => update({ target: e.target.value })}
               aria-invalid={Boolean(errors.target)}
               aria-describedby="task-target-hint"
               className={SELECT_CLASS}
             >
-              <option value="">{targetsLoading ? "Đang tải…" : "Chọn"}</option>
-              {form.taskType === "MAINTENANCE"
-                ? unitOptions.map((u) => (
-                    <option key={u.unitCode} value={u.unitCode}>
-                      {u.unitCode}
-                      {u.floorName ? ` · ${u.floorName}` : ""}
-                    </option>
-                  ))
-                : contractOptions.map((c) => (
-                    <option key={c.contractId} value={c.contractId}>
-                      {c.contractCode} · {c.customerName} · Ô {c.unitCode} · hết hạn {formatDate(c.endDate)}
-                    </option>
-                  ))}
+              <option value="">{source.isLoading ? "Đang tải…" : "Chọn"}</option>
+              {options.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
             </select>
-            {targetsError ? (
+            {source.error ? (
               <p id="task-target-hint" role="alert" className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">
-                Không tải được danh sách: {targetsError}
+                Không tải được danh sách: {source.error}
               </p>
             ) : errors.target ? (
               <FieldError id="task-target-hint" message={errors.target} />
             ) : (
               <p id="task-target-hint" className="text-muted-foreground text-[11px]">
-                {form.taskType === "MAINTENANCE"
-                  ? "Chỉ hiện ô đang ở trạng thái bảo trì và chưa có việc bảo trì trong ca này."
-                  : "Chỉ hiện hợp đồng đang thuê hoặc quá hạn, chưa có ai được giao nghiệm thu."}
-                {!targetsLoading &&
-                  (form.taskType === "MAINTENANCE" ? unitOptions : contractOptions).length === 0 &&
-                  " Hiện không có mục nào phù hợp."}
+                {target.hint}
+                {!source.isLoading && options.length === 0 && " Hiện không có mục nào phù hợp."}
               </p>
             )}
           </div>
