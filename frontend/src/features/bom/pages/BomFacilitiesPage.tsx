@@ -475,30 +475,22 @@ export default function BomFacilitiesPage() {
                   </p>
                 </div>
 
-                {/* Nút lọc chuyển đổi nhanh */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <button
-                    onClick={() => navigate("/bom/facilities")}
-                    className="px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/60 transition-all flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Layers className="size-3.5" />
-                    Tất Cả Cơ Sở
-                  </button>
-
+                {/* Thanh chuyển đổi nhanh các cơ sở - Gọn gàng trên 1 hàng */}
+                <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 shadow-inner overflow-x-auto shrink-0">
                   {facilities.map((f) => {
                     const isSelected = String(f.id) === String(facilityId) || f.code === code
                     return (
                       <button
                         key={f.id}
                         onClick={() => navigate(`/bom/facilities/${f.id}`)}
-                        className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+                        className={`px-2.5 py-1 rounded-lg font-mono font-bold text-xs transition-all flex items-center gap-1 cursor-pointer shrink-0 ${
                           isSelected
-                            ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 border border-sky-400"
-                            : "bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/60"
+                            ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20 font-black"
+                            : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                         }`}
                         title={f.name}
                       >
-                        <Building2 className="size-3.5" />
+                        <Building2 className="size-3" />
                         {f.code}
                       </button>
                     )
