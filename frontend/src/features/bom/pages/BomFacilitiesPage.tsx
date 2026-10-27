@@ -444,7 +444,9 @@ export default function BomFacilitiesPage() {
           const name = rawName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "")
           const monthlyRevs = fAny.monthlyRevenues || []
           const netRev = Number(fAny.netRevenue ?? fAny.monthlyRevenue ?? 0)
+          const rentalRev = Number(fAny.rentalRevenue ?? fAny.thisMonthRevenue ?? fAny.netRevenue ?? 0)
           const depHold = Number(fAny.depositHolding ?? 0)
+          const penaltyRev = Number(fAny.penaltyRevenue ?? fAny.penaltyAmount ?? 0)
           const totRefund = Number(fAny.totalRefunds ?? 0)
           const overdue = Number(fAny.overdueContracts ?? fAny.overdueUnits ?? 0)
           const tUnits = Number(fAny.totalUnits ?? 46)
@@ -504,7 +506,9 @@ export default function BomFacilitiesPage() {
                 subtitle=""
                 monthlyRevenues={monthlyRevs}
                 netRevenue={netRev}
+                rentalRevenue={rentalRev}
                 depositHolding={depHold}
+                penaltyRevenue={penaltyRev}
                 totalRefunds={totRefund}
                 overdueContracts={overdue}
                 totalUnits={tUnits}

@@ -12,6 +12,7 @@ export interface FacilityCashFlowDashboardProps {
   subtitle?: string
   monthlyRevenues?: MonthlyRevenuePoint[]
   netRevenue?: number
+  rentalRevenue?: number
   depositHolding?: number
   totalRefunds?: number
   overdueContracts?: number
@@ -28,9 +29,11 @@ export default function FacilityCashFlowDashboard({
   subtitle = "Xu hướng dòng tiền thực thu 6 tháng gần nhất",
   monthlyRevenues = [],
   netRevenue = 0,
+  rentalRevenue = 0,
   depositHolding = 0,
   totalRefunds = 0,
   overdueContracts = 0,
+  penaltyRevenue = 0,
   totalUnits = 0,
   occupiedUnits = 0,
   availableUnits = 0,
@@ -290,26 +293,26 @@ export default function FacilityCashFlowDashboard({
           </div>
         </div>
 
-        {/* 3 THẺ TÀI CHÍNH BỔ TRỢ DƯỚI BIỂU ĐỒ (KÝ QUỸ, HOÀN TIỀN, NỢ) */}
+        {/* 3 THẺ TÀI CHÍNH BỔ TRỢ DƯỚI BIỂU ĐỒ: TIỀN CỌC, TIỀN THUÊ KHO, TIỀN PHẠT */}
         <div className="grid grid-cols-3 gap-2.5 pt-4 mt-2 border-t border-slate-800/80">
           <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80">
-            <span className="text-[10px] text-slate-400 font-semibold block truncate">Tiền Cọc Ký Quỹ</span>
+            <span className="text-[10px] text-slate-400 font-semibold block truncate">Tiền Cọc</span>
             <span className="font-mono font-bold text-white text-xs sm:text-sm mt-0.5 block truncate">
               ₫{depositHolding.toLocaleString("vi-VN")}
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80">
-            <span className="text-[10px] text-slate-400 font-semibold block truncate">Hoàn Trả Khách</span>
+            <span className="text-[10px] text-slate-400 font-semibold block truncate">Tiền Thuê Kho</span>
             <span className="font-mono font-bold text-white text-xs sm:text-sm mt-0.5 block truncate">
-              ₫{totalRefunds.toLocaleString("vi-VN")}
+              ₫{(rentalRevenue || netRevenue).toLocaleString("vi-VN")}
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80">
-            <span className="text-[10px] text-slate-400 font-semibold block truncate">Nợ &amp; Chế Tài</span>
+            <span className="text-[10px] text-slate-400 font-semibold block truncate">Tiền Phạt</span>
             <span className="font-mono font-bold text-white text-xs sm:text-sm mt-0.5 block truncate">
-              {overdueContracts} HĐ Quá Hạn
+              ₫{penaltyRevenue.toLocaleString("vi-VN")}
             </span>
           </div>
         </div>

@@ -12,6 +12,8 @@ public class ChainDashboardResponse {
     private BigDecimal chainTotalRefunds = BigDecimal.ZERO;
     private BigDecimal chainNetRevenue = BigDecimal.ZERO;
     private BigDecimal chainDepositHolding = BigDecimal.ZERO;
+    private BigDecimal chainRentalRevenue = BigDecimal.ZERO;
+    private BigDecimal chainPenaltyRevenue = BigDecimal.ZERO;
 
     private List<ManagerDashboardResponse> facilityBreakdown;
 
@@ -80,6 +82,22 @@ public class ChainDashboardResponse {
 
     public void setChainDepositHolding(BigDecimal chainDepositHolding) {
         this.chainDepositHolding = chainDepositHolding;
+    }
+
+    public BigDecimal getChainRentalRevenue() {
+        return chainRentalRevenue;
+    }
+
+    public void setChainRentalRevenue(BigDecimal chainRentalRevenue) {
+        this.chainRentalRevenue = chainRentalRevenue;
+    }
+
+    public BigDecimal getChainPenaltyRevenue() {
+        return chainPenaltyRevenue;
+    }
+
+    public void setChainPenaltyRevenue(BigDecimal chainPenaltyRevenue) {
+        this.chainPenaltyRevenue = chainPenaltyRevenue;
     }
 
     private List<MonthlyRevenueItemResponse> monthlyRevenues;

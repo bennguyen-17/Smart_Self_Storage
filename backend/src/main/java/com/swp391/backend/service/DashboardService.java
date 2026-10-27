@@ -122,6 +122,7 @@ public class DashboardService {
         BigDecimal rentalRevenue = BigDecimal.ZERO;
         BigDecimal extensionRevenue = BigDecimal.ZERO;
         BigDecimal penaltyRevenue = BigDecimal.ZERO;
+        BigDecimal paidPenalty = BigDecimal.ZERO;
         BigDecimal compensationRevenue = BigDecimal.ZERO;
         BigDecimal totalRefunds = BigDecimal.ZERO;
         BigDecimal depositHolding = BigDecimal.ZERO;
@@ -203,8 +204,12 @@ public class DashboardService {
                 totalRefunds = totalRefunds.add(p.getAmount());
             } else if ((invNum.startsWith("CMP-") || "CMP".equalsIgnoreCase(p.getInvoiceType()) || "INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                 compensationRevenue = compensationRevenue.add(p.getAmount());
-            } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
-                penaltyRevenue = penaltyRevenue.add(p.getAmount());
+            } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && !"CANCELLED".equalsIgnoreCase(p.getStatus())) {
+                BigDecimal penAmt = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+                penaltyRevenue = penaltyRevenue.add(penAmt);
+                if (isPaid) {
+                    paidPenalty = paidPenalty.add(penAmt);
+                }
             } else if (("MONTHLY_RENEWAL".equalsIgnoreCase(p.getInvoiceType()) || "EXT".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                 extensionRevenue = extensionRevenue.add(p.getAmount());
             } else if ("DEP".equalsIgnoreCase(p.getInvoiceType()) && ("PAID".equalsIgnoreCase(p.getStatus()) || "PARTIALLY_PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()))) {
@@ -250,7 +255,7 @@ public class DashboardService {
             }
         }
 
-        BigDecimal grossRevenue = rentalRevenue.add(extensionRevenue).add(penaltyRevenue).add(compensationRevenue);
+        BigDecimal grossRevenue = rentalRevenue.add(extensionRevenue).add(paidPenalty).add(compensationRevenue);
         BigDecimal netRevenue = grossRevenue.subtract(totalRefunds);
 
         // 4. Thống kê Support Ticket & SLA
@@ -446,6 +451,8 @@ public class DashboardService {
         BigDecimal chainRefunds = BigDecimal.ZERO;
         BigDecimal chainNet = BigDecimal.ZERO;
         BigDecimal chainDeposit = BigDecimal.ZERO;
+        BigDecimal chainRental = BigDecimal.ZERO;
+        BigDecimal chainPenalty = BigDecimal.ZERO;
 
         for (Facility f : facilities) {
             try {
@@ -459,6 +466,8 @@ public class DashboardService {
                 chainRefunds = chainRefunds.add(mResp.getTotalRefunds());
                 chainNet = chainNet.add(mResp.getNetRevenue());
                 chainDeposit = chainDeposit.add(mResp.getDepositHolding());
+                chainRental = chainRental.add(mResp.getRentalRevenue());
+                chainPenalty = chainPenalty.add(mResp.getPenaltyRevenue());
             } catch (Exception ignored) {}
         }
 
@@ -532,6 +541,8 @@ public class DashboardService {
         resp.setChainTotalRefunds(chainRefunds);
         resp.setChainNetRevenue(chainNet);
         resp.setChainDepositHolding(chainDeposit);
+        resp.setChainRentalRevenue(chainRental);
+        resp.setChainPenaltyRevenue(chainPenalty);
         resp.setFacilityBreakdown(breakdown);
         resp.setMonthlyRevenues(monthlyRevenueList);
 

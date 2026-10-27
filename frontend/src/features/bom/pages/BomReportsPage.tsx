@@ -123,7 +123,9 @@ export default function BomReportsPage() {
         subtitle: "Xu hướng dòng tiền thực thu 6 tháng gần nhất toàn chuỗi kho",
         monthlyRevenues: chainOverview?.monthlyRevenues || [],
         netRevenue: Number(chainOverview?.chainNetRevenue || 0),
+        rentalRevenue: Number((chainOverview as any)?.chainRentalRevenue || breakdownList.reduce((acc, r) => acc + Number(r.rentalRevenue || 0), 0) || chainOverview?.chainTotalRevenue || 0),
         depositHolding: Number(chainOverview?.chainDepositHolding || 0),
+        penaltyRevenue: Number((chainOverview as any)?.chainPenaltyRevenue || breakdownList.reduce((acc, r) => acc + Number(r.penaltyRevenue || 0), 0)),
         totalRefunds: Number(chainOverview?.chainTotalRefunds || 0),
         overdueContracts: breakdownList.reduce((acc, r) => acc + Number(r.overdueContracts || 0), 0),
         totalUnits: Number(chainOverview?.chainTotalUnits || 0),
@@ -143,7 +145,9 @@ export default function BomReportsPage() {
 
     const monthlyRevs = facBreakdown?.monthlyRevenues || facPerformance?.monthlyRevenues || []
     const netRev = Number(facBreakdown?.netRevenue ?? facPerformance?.netRevenue ?? facPerformance?.monthlyRevenue ?? 0)
+    const rentalRev = Number(facBreakdown?.rentalRevenue ?? (facPerformance as any)?.rentalRevenue ?? 0)
     const depHold = Number(facBreakdown?.depositHolding ?? facPerformance?.depositHolding ?? 0)
+    const penaltyRev = Number(facBreakdown?.penaltyRevenue ?? (facPerformance as any)?.penaltyRevenue ?? 0)
     const totRefund = Number(facBreakdown?.totalRefunds ?? facPerformance?.totalRefunds ?? 0)
     const overdue = Number(facBreakdown?.overdueContracts ?? facPerformance?.overdueUnits ?? 0)
     const tUnits = Number(facBreakdown?.totalUnits ?? facPerformance?.totalUnits ?? 46)
@@ -161,7 +165,9 @@ export default function BomReportsPage() {
       subtitle: `Xu hướng dòng tiền thực thu 6 tháng gần nhất tại ${name}`,
       monthlyRevenues: monthlyRevs,
       netRevenue: netRev,
+      rentalRevenue: rentalRev,
       depositHolding: depHold,
+      penaltyRevenue: penaltyRev,
       totalRefunds: totRefund,
       overdueContracts: overdue,
       totalUnits: tUnits,
