@@ -91,21 +91,24 @@ export default function BomFacilitiesPage() {
       String(s || "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase()
     const targetNorm = normalize(facilityId)
 
-    return (
-      facilities.find(
-        (f) =>
-          String(f.id) === facilityId ||
-          normalize(f.code) === targetNorm ||
-          normalize(f.id) === targetNorm
-      ) ||
-      (chainOverview?.facilityBreakdown || []).find(
-        (b) =>
-          String(b.facilityId) === facilityId ||
-          normalize(b.facilityCode) === targetNorm ||
-          normalize(b.facilityId) === targetNorm
-      ) ||
-      null
+    const fromBreakdown = (chainOverview?.facilityBreakdown || []).find(
+      (b) =>
+        String(b.facilityId) === facilityId ||
+        normalize(b.facilityCode) === targetNorm ||
+        normalize(b.facilityId) === targetNorm
     )
+
+    const fromFacList = facilities.find(
+      (f) =>
+        String(f.id) === facilityId ||
+        normalize(f.code) === targetNorm ||
+        normalize(f.id) === targetNorm
+    )
+
+    if (fromBreakdown && fromFacList) {
+      return { ...fromFacList, ...fromBreakdown }
+    }
+    return fromBreakdown || fromFacList || null
   }, [facilityId, facilities, chainOverview])
 
   const [selectedFacilityUnits, setSelectedFacilityUnits] = useState<any[]>([])
