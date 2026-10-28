@@ -44,6 +44,9 @@ import jakarta.transaction.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.swp391.backend.entity.FeePolicy;
+import com.swp391.backend.repository.FeePolicyRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -86,6 +89,33 @@ public class StaffReservationService {
     private final FacilityRepository facilityRepository;
     private final GatePinRepository gatePinRepository;
     private final StaffShiftService staffShiftService;
+
+    @Autowired(required = false)
+    private FeePolicyRepository feePolicyRepository;
+
+    private BigDecimal getDailyOverdueFee() {
+        try {
+            if (feePolicyRepository != null) {
+                Optional<FeePolicy> fp = feePolicyRepository.findByPolicyCode("OVERDUE_DAILY_RATE");
+                if (fp.isPresent() && fp.get().getFeeValue() != null) {
+                    return fp.get().getFeeValue();
+                }
+            }
+        } catch (Exception ignored) {}
+        return DAILY_OVERDUE_FEE;
+    }
+
+    private int getDiscountRate(String code, int defaultPercent) {
+        try {
+            if (feePolicyRepository != null) {
+                Optional<FeePolicy> fp = feePolicyRepository.findByPolicyCode(code);
+                if (fp.isPresent() && fp.get().getFeeValue() != null) {
+                    return fp.get().getFeeValue().intValue();
+                }
+            }
+        } catch (Exception ignored) {}
+        return defaultPercent;
+    }
 
     public StaffReservationService(
             ReservationRepository reservationRepository,
@@ -598,7 +628,7 @@ public class StaffReservationService {
         item.setOverdueDays(overdueDays);
 
         // 3. Tính tiền phạt quá hạn: Chuẩn 50.000 VNĐ / ngày quá hạn
-        BigDecimal expectedPenalty = DAILY_OVERDUE_FEE.multiply(BigDecimal.valueOf(overdueDays));
+        BigDecimal expectedPenalty = getDailyOverdueFee().multiply(BigDecimal.valueOf(overdueDays));
         BigDecimal paidPenalty = BigDecimal.ZERO;
 
         if (item.getContractId() != null) {
@@ -749,7 +779,7 @@ public class StaffReservationService {
                         ChronoUnit.DAYS.between(endDate, today), MAX_CHARGEABLE_OVERDUE_DAYS)
                 : 0;
 
-        BigDecimal totalExpected = DAILY_OVERDUE_FEE.multiply(BigDecimal.valueOf(overdueDays));
+        BigDecimal totalExpected = getDailyOverdueFee().multiply(BigDecimal.valueOf(overdueDays));
         List<Payment> penPayments = paymentRepository.findByContractId(contract.getContractId()).stream()
                 .filter(p -> "OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType())
                         || (p.getInvoiceNumber() != null && (p.getInvoiceNumber().startsWith("PEN-") || p.getInvoiceNumber().startsWith("OVD-"))))
@@ -839,7 +869,7 @@ public class StaffReservationService {
                 ? (int) Math.min(
                         ChronoUnit.DAYS.between(endDate, today), MAX_CHARGEABLE_OVERDUE_DAYS)
                 : 0;
-        BigDecimal expectedPenalty = DAILY_OVERDUE_FEE.multiply(BigDecimal.valueOf(overdueDays));
+        BigDecimal expectedPenalty = getDailyOverdueFee().multiply(BigDecimal.valueOf(overdueDays));
 
         List<Payment> penPayments = paymentRepository.findByContractId(contract.getContractId()).stream()
                 .filter(p -> "OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType())
@@ -888,9 +918,9 @@ public class StaffReservationService {
         } else {
             addedDays = months * 30;
             // Chiết khấu: 12 tháng -> 15%, 6 tháng -> 10%, 3 tháng -> 5%, khác -> 0%
-            if (months >= 12) discountPercent = 15;
-            else if (months >= 6) discountPercent = 10;
-            else if (months >= 3) discountPercent = 5;
+            if (months >= 12) discountPercent = getDiscountRate("DISCOUNT_12M", 15);
+            else if (months >= 6) discountPercent = getDiscountRate("DISCOUNT_6M", 10);
+            else if (months >= 3) discountPercent = getDiscountRate("DISCOUNT_3M", 5);
 
             BigDecimal rawTotal = monthlyPrice.multiply(BigDecimal.valueOf(months));
             BigDecimal discountFactor = BigDecimal.valueOf(100 - discountPercent).divide(BigDecimal.valueOf(100));

@@ -419,18 +419,7 @@ CREATE TABLE SupportTicket (
     CONSTRAINT fk_ticket_contract FOREIGN KEY (contractId) REFERENCES Contract (contractId) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ----------------------------------------------------------------------------
--- 25. TABLE: SystemPolicy (Cấu hình chính sách vận hành của BOM)
--- ----------------------------------------------------------------------------
-DROP TABLE IF EXISTS SystemPolicy;
-CREATE TABLE SystemPolicy (
-    policyKey VARCHAR(100) PRIMARY KEY,
-    policyValue TEXT NOT NULL,
-    description VARCHAR(255) NULL,
-    updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    updatedBy INT NULL,
-    CONSTRAINT fk_policy_updater FOREIGN KEY (updatedBy) REFERENCES Account (accountId) ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 -- Bật lại ràng buộc khóa ngoại
 SET FOREIGN_KEY_CHECKS = 1;
@@ -618,13 +607,15 @@ INSERT INTO FeeItem (feeItemId, feeCode, feeName, category, calcType, feeValue, 
 (6, 'ASSET_SEAL', 'Phí Kiểm Kê Niêm Phong Tài Sản', 'PENALTY', 'FIXED', 500000.00, 'PER_REQUEST', 'Chi phí niêm phong, lập biên bản tài sản khi nợ quá 15 ngày', FALSE, 'ACTIVE'),
 (7, 'DISCOUNT_6M', 'Ưu Đãi Thuê Khách Hàng 6 Tháng', 'DISCOUNT', 'PERCENT', 10.00, 'CONTRACT_TOTAL', 'Chiết khấu 10% tổng tiền thuê cho hợp đồng từ 6 tháng', FALSE, 'ACTIVE'),
 (8, 'DISCOUNT_12M', 'Ưu Đãi Thuê Khách Hàng 12 Tháng', 'DISCOUNT', 'PERCENT', 15.00, 'CONTRACT_TOTAL', 'Chiết khấu 15% tổng tiền thuê cho hợp đồng dài hạn từ 12 tháng', FALSE, 'ACTIVE'),
-(9, 'DISCOUNT_MANAGER_CAP', 'Hạn Mức Duyệt Giảm Giá Manager', 'DISCOUNT', 'PERCENT', 10.00, 'CONTRACT_TOTAL', 'Hạn mức tối đa Quản lý cơ sở được phép chủ động giảm giá cho khách', FALSE, 'ACTIVE'),
 (10, 'DMG_CLEANING', 'Phí vệ sinh kho', 'DAMAGE', 'FIXED', 150000.00, 'PER_REQUEST', 'Dọn dẹp rác cơ bản hoặc vệ sinh kho sau khi trả kho', FALSE, 'ACTIVE'),
 (11, 'DMG_LOST_KEY', 'Mất chìa khóa cơ mở tủ', 'DAMAGE', 'FIXED', 200000.00, 'PER_REQUEST', 'Đền bù làm lại chìa khóa cơ / thay ổ khóa tủ cá nhân', FALSE, 'ACTIVE'),
 (12, 'DMG_WALL_SCRATCH', 'Phí sơn lại / vá điểm trầy xước', 'DAMAGE', 'FIXED', 300000.00, 'PER_REQUEST', 'Xử lý trầy xước, dặm vá sơn bề mặt vách ngăn', FALSE, 'ACTIVE'),
 (13, 'DMG_ELECTRIC_BROKEN', 'Hư hỏng bóng đèn / ổ cắm', 'DAMAGE', 'FIXED', 300000.00, 'PER_REQUEST', 'Thay thế bóng đèn LED hoặc ổ cắm điện bị cháy hỏng', FALSE, 'ACTIVE'),
 (14, 'DMG_WALL_DENT', 'Vách ngăn ô kho bị móp / thủng', 'DAMAGE', 'FIXED', 500000.00, 'PER_REQUEST', 'Gia cố hoặc thay tấm vách panel ngăn ô kho bị va đập móp méo', FALSE, 'ACTIVE'),
-(15, 'DMG_DOOR_BROKEN', 'Hư hỏng cửa kho / khóa cửa chính', 'DAMAGE', 'FIXED', 1000000.00, 'PER_REQUEST', 'Sửa chữa cửa cuốn, thay thế khóa cửa chính ô kho', FALSE, 'ACTIVE');
+(15, 'DMG_DOOR_BROKEN', 'Hư hỏng cửa kho / khóa cửa chính', 'DAMAGE', 'FIXED', 1000000.00, 'PER_REQUEST', 'Sửa chữa cửa cuốn, thay thế khóa cửa chính ô kho', FALSE, 'ACTIVE'),
+(16, 'DISCOUNT_3M', 'Ưu Đãi Thuê Khách Hàng 3 Tháng', 'DISCOUNT', 'PERCENT', 5.00, 'CONTRACT_TOTAL', 'Chiết khấu 5% tổng tiền thuê cho hợp đồng từ 3 tháng', FALSE, 'ACTIVE'),
+(17, 'OVERDUE_LIQUIDATION_DAYS', 'Mốc Ngày Quá Hạn Chuyển Thanh Lý', 'PENALTY', 'FIXED', 30.00, 'DAYS', 'Thời hạn tối đa quá hạn trước khi tiến hành thanh lý ô kho (30 ngày)', FALSE, 'ACTIVE'),
+(18, 'DEPOSIT_RATE', 'Tỷ lệ tiền cọc giữ chỗ', 'SURCHARGE', 'PERCENT', 30.00, 'RENTAL_TOTAL', 'Tỷ lệ tiền đặt cọc giữ chỗ mặc định (30% giá thuê)', FALSE, 'ACTIVE');
 
 -- 9. Danh mục Ngăn kho thực tế (StorageUnits) phân bổ trên cả 7 cơ sở
 INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
@@ -1047,16 +1038,7 @@ INSERT INTO SupportTicket (id, ticketCode, type, status, customerId, facilityId,
 -- 20. Biên bản nghiệm thu kiểm tra trả kho (Inspections & InspectionItems)
 -- (Không có biên bản vi phạm phát sinh)
 
--- ============================================================================
--- 21. Cấu hình chính sách hệ thống (SystemPolicies)
-INSERT INTO SystemPolicy (policyKey, policyValue, description) VALUES
-('DEPOSIT_RATE', '0.3', 'Tỷ lệ tiền đặt cọc giữ chỗ (30% giá thuê)'),
-('DAILY_OVERDUE_FEE', '50000', 'Phí phạt trễ hạn trả kho mỗi ngày (50.000 VNĐ/ngày)'),
-('OVERDUE_LIQUIDATION_DAYS', '30', 'Thời hạn tối đa quá hạn trước khi tiến hành thanh lý (30 ngày)'),
-('REFUND_EARLY_CANCEL_RATE', '1.0', 'Tỷ lệ hoàn cọc khi hủy trước 24h giờ nhận kho (100%)'),
-('REFUND_LATE_CANCEL_RATE', '0.5', 'Tỷ lệ hoàn cọc khi hủy trong vòng 24h giờ nhận kho (50%)'),
-('MAX_FAILED_LOGIN_ATTEMPTS', '5', 'Số lần đăng nhập sai tối đa trước khi tạm khóa (5 lần)'),
-('ACCOUNT_LOCK_MINUTES', '15', 'Thời gian tạm khóa tài khoản do sai mật khẩu (15 phút)');
+
 
 -- HOÀN TẤT KHỞI TẠO CƠ SỞ DỮ LIỆU SMART STORAGE SYSTEM
 -- ============================================================================
