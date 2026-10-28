@@ -33,8 +33,20 @@ public class StaffReservationListItemResponse {
     private BigDecimal unpaidPenaltyAmount;
     private BigDecimal monthlyPrice;
     private LocalDate desiredReturnDate;
+    private String unitTypeName;
+    private String unitSize;
+    private LocalDate depositDate;
 
     public StaffReservationListItemResponse() {}
+
+    public String getUnitTypeName() { return unitTypeName; }
+    public void setUnitTypeName(String unitTypeName) { this.unitTypeName = unitTypeName; }
+
+    public String getUnitSize() { return unitSize; }
+    public void setUnitSize(String unitSize) { this.unitSize = unitSize; }
+
+    public LocalDate getDepositDate() { return depositDate; }
+    public void setDepositDate(LocalDate depositDate) { this.depositDate = depositDate; }
 
     public LocalDate getDesiredReturnDate() { return desiredReturnDate; }
     public void setDesiredReturnDate(LocalDate desiredReturnDate) { this.desiredReturnDate = desiredReturnDate; }

@@ -36,6 +36,14 @@ export async function lookupContract(
   return unwrapApiData<StaffReservationLookup>(body)
 }
 
+/** GET /api/staff/reservations/{id} — Lấy chi tiết hợp đồng theo reservationId */
+export async function getReservationDetail(
+  reservationId: number
+): Promise<StaffReservationLookup> {
+  const body = await apiClient.get(`/staff/reservations/${reservationId}`)
+  return unwrapApiData<StaffReservationLookup>(body)
+}
+
 /** POST /api/staff/reservations/{id}/check-in — thu tiền, HĐ → ACTIVE, ô → RENTED. */
 export async function confirmCheckin(
   reservationId: number,
@@ -58,6 +66,22 @@ export async function changeUnit(
     payload
   )
   return unwrapApiData<StaffChangeUnitResponse>(body)
+}
+
+/** POST /api/units/pricing/calculate — Tính giá thuê và cọc động theo loại kho */
+export async function calculateRentalPrice(payload: {
+  unitTypeId: number
+  rentalType: string
+  duration: number
+}): Promise<{
+  success: boolean
+  message?: string
+  finalRentalAmount: number
+  depositAmount: number
+  totalInitialPayment: number
+}> {
+  const body = await apiClient.post("/units/pricing/calculate", payload)
+  return unwrapApiData(body)
 }
 
 /** POST /api/staff/reservations/{id}/cancel — hủy tại quầy. */

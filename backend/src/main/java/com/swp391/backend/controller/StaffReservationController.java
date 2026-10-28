@@ -58,6 +58,15 @@ public class StaffReservationController {
                 : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
     }
 
+    @GetMapping("/{reservationId}")
+    public ResponseEntity<StaffReservationLookupResponse> getReservationById(
+            @PathVariable Integer reservationId) {
+        StaffReservationLookupResponse response = staffReservationService.getReservationDetail(reservationId);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
+    }
+
     @PostMapping("/{reservationId}/check-in")
     public ResponseEntity<StaffCheckInResponse> checkIn(
             @PathVariable Integer reservationId,

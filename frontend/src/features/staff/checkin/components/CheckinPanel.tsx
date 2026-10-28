@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { useSearchParams } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { SearchIcon, UsersIcon } from "lucide-react"
 import { cn } from "cn"
 
@@ -58,6 +58,7 @@ function matches(item: StaffReservationItem, keyword: string): boolean {
 
 /** TAB 1: Dịch vụ khách hàng & hợp đồng — tra cứu, check-in, đổi ô, hủy (US-16/17) */
 function CheckinPanel() {
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const tab = findCheckinTab(searchParams.get("tab"))
 
@@ -247,7 +248,7 @@ function CheckinPanel() {
         error={error}
         onRetry={refresh}
         onOpenDetail={setDetailContract}
-        onCheckin={setCheckinContract}
+        onCheckin={(item) => navigate(`/staff/checkin/${item.reservationId}`)}
         onCheckout={(item) =>
           setInspection({
             contractId: item.contractId,
