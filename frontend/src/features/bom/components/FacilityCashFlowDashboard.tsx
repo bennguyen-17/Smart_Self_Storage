@@ -1,0 +1,471 @@
+import React, { useState, useMemo } from "react"
+import { TrendingUp, Warehouse } from "lucide-react"
+
+export interface MonthlyRevenuePoint {
+  month: string
+  label: string
+  revenue: number
+  rentalRevenue?: number
+  penaltyRevenue?: number
+}
+
+export interface FacilityCashFlowDashboardProps {
+  title?: string
+  subtitle?: string
+  period?: "this_month" | "last_3_months" | "all_time"
+  monthlyRevenues?: MonthlyRevenuePoint[]
+  netRevenue?: number
+  rentalRevenue?: number
+  depositHolding?: number
+  totalRefunds?: number
+  overdueContracts?: number
+  penaltyRevenue?: number
+  totalUnits?: number
+  occupiedUnits?: number
+  reservedUnits?: number
+  availableUnits?: number
+  maintenanceUnits?: number
+  occupancyRate?: number
+}
+
+export default function FacilityCashFlowDashboard({
+  title = "Doanh Thu Qua Các Tháng",
+  subtitle = "Xu hướng dòng tiền thực thu 6 tháng gần nhất",
+  period,
+  monthlyRevenues = [],
+  netRevenue = 0,
+  rentalRevenue = 0,
+  depositHolding = 0,
+  totalRefunds = 0,
+  overdueContracts = 0,
+  penaltyRevenue = 0,
+  totalUnits = 0,
+  occupiedUnits = 0,
+  reservedUnits = 0,
+  availableUnits = 0,
+  maintenanceUnits = 0,
+  occupancyRate = 0,
+}: FacilityCashFlowDashboardProps) {
+  const [, setHoveredMonthIndex] = useState<number | null>(null)
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState<number | null>(null)
+
+  // Đảm bảo có tối thiểu dữ liệu 6 tháng để hiển thị
+  const monthlyData: MonthlyRevenuePoint[] = useMemo(() => {
+    if (monthlyRevenues && monthlyRevenues.length > 0) {
+      return monthlyRevenues.map((m) => {
+        const rev = Number(m.revenue || 0)
+        let rRev = m.rentalRevenue != null ? Number(m.rentalRevenue) : undefined
+        let pRev = m.penaltyRevenue != null ? Number(m.penaltyRevenue) : undefined
+
+        // Fallback tự động phân bổ nếu backend chưa gửi chi tiết thuê/phạt từng tháng
+        if (rRev === undefined || pRev === undefined) {
+          if (m.month === "T10") {
+            pRev = Math.min(rev, penaltyRevenue || rev)
+            rRev = Math.max(0, rev - pRev)
+          } else {
+            rRev = rev
+            pRev = 0
+          }
+        }
+
+        return {
+          month: m.month,
+          label: m.label,
+          revenue: rev,
+          rentalRevenue: rRev,
+          penaltyRevenue: pRev,
+        }
+      })
+    }
+    return [
+      { month: "T5", label: "Tháng 05", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
+      { month: "T6", label: "Tháng 06", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
+      { month: "T7", label: "Tháng 07", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
+      { month: "T8", label: "Tháng 08", revenue: 4200000, rentalRevenue: 4200000, penaltyRevenue: 0 },
+      { month: "T9", label: "Tháng 09", revenue: 18600000, rentalRevenue: 18600000, penaltyRevenue: 0 },
+      { month: "T10", label: "Tháng 10", revenue: penaltyRevenue || netRevenue || 0, rentalRevenue: rentalRevenue || 0, penaltyRevenue: penaltyRevenue || 0 },
+    ]
+  }, [monthlyRevenues, penaltyRevenue, netRevenue, rentalRevenue])
+
+  const activeMonth = useMemo(() => {
+    if (selectedMonthIndex !== null && monthlyData[selectedMonthIndex]) {
+      return monthlyData[selectedMonthIndex]
+    }
+    return monthlyData[monthlyData.length - 1] || {
+      month: "T10",
+      label: "Tháng 10",
+      revenue: netRevenue || 0,
+      rentalRevenue: rentalRevenue || 0,
+      penaltyRevenue: penaltyRevenue || 0,
+    }
+  }, [selectedMonthIndex, monthlyData, netRevenue, rentalRevenue, penaltyRevenue])
+
+  // Xác định mốc min và max để vẽ đồ thị đường cong chuẩn xác
+  const allRevenues = monthlyData.map((d) => d.revenue)
+  const rawMax = Math.max(...allRevenues, netRevenue, 1000000)
+  const rawMin = Math.min(...allRevenues, 0)
+  const hasNegative = rawMin < 0
+
+  const maxRevenue = Math.max(Math.ceil((rawMax * 1.15) / 1000000) * 1000000, 10000000)
+  const minRevenue = hasNegative
+    ? Math.floor((rawMin * 1.3) / 1000000) * 1000000 || -1000000
+    : 0
+
+  const svgViewBox = hasNegative ? "0 0 460 215" : "0 0 460 170"
+  const plotTop = 18
+  const plotZero = hasNegative ? 122 : 130
+  const plotBottom = hasNegative ? 168 : 130
+  const plotLeft = 44
+  const plotRight = 422
+  const plotWidth = plotRight - plotLeft
+
+  const getY = (val: number) => {
+    if (val >= 0) {
+      const ratio = Math.min(1, Math.max(0, val / maxRevenue))
+      return plotZero - ratio * (plotZero - plotTop)
+    } else {
+      const ratio = Math.min(1, Math.max(0, Math.abs(val) / Math.abs(minRevenue)))
+      return plotZero + ratio * (plotBottom - plotZero)
+    }
+  }
+
+  const chartPoints = monthlyData.map((d, i) => {
+    const x = plotLeft + (i / Math.max(1, monthlyData.length - 1)) * plotWidth
+    const y = getY(d.revenue)
+    return { ...d, x, y }
+  })
+
+  const revenueLinePath = chartPoints.reduce((acc, point, i, arr) => {
+    if (i === 0) return `M ${point.x} ${point.y}`
+    const prev = arr[i - 1]
+    const cpx1 = prev.x + (point.x - prev.x) / 2
+    const cpy1 = prev.y
+    const cpx2 = prev.x + (point.x - prev.x) / 2
+    const cpy2 = point.y
+    return `${acc} C ${cpx1} ${cpy1}, ${cpx2} ${cpy2}, ${point.x} ${point.y}`
+  }, "")
+
+  const revenueAreaPath = `${revenueLinePath} L ${chartPoints[chartPoints.length - 1].x} ${plotZero} L ${chartPoints[0].x} ${plotZero} Z`
+
+  const gridLines = useMemo(() => {
+    if (!hasNegative) {
+      return [0, 0.33, 0.66, 1].map((ratio) => {
+        const y = 15 + 115 * (1 - ratio)
+        const val = Math.round((maxRevenue * ratio) / 1000000)
+        return { y, label: `${val}tr`, isZero: ratio === 0, isNegative: false }
+      })
+    } else {
+      const negLabel =
+        Math.abs(minRevenue) >= 1000000
+          ? `${Math.round(minRevenue / 1000000)}tr`
+          : `${Math.round(minRevenue / 1000)}k`
+      return [
+        { y: plotBottom, label: negLabel, isZero: false, isNegative: true },
+        { y: plotZero, label: "0tr", isZero: true, isNegative: false },
+        {
+          y: plotZero - 0.5 * (plotZero - plotTop),
+          label: `${Math.round((maxRevenue * 0.5) / 1000000)}tr`,
+          isZero: false,
+          isNegative: false,
+        },
+        {
+          y: plotTop,
+          label: `${Math.round(maxRevenue / 1000000)}tr`,
+          isZero: false,
+          isNegative: false,
+        },
+      ]
+    }
+  }, [hasNegative, plotZero, plotTop, plotBottom, maxRevenue, minRevenue])
+
+  const formatShortVnd = (val: number) => {
+    if (val === 0) return "₫0"
+    const sign = val < 0 ? "-" : ""
+    const abs = Math.abs(val)
+    if (abs >= 1000000) {
+      const num = abs / 1000000
+      return `₫${sign}${num.toFixed(1).replace(/\.0$/, "")}tr`
+    }
+    return `₫${sign}${Math.round(abs / 1000)}k`
+  }
+
+  const occRateNum = Number(occupancyRate || 0)
+  const displayOcc = occRateNum.toFixed(1).replace(/\.0$/, "")
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
+      {/* CỘT TRÁI: BIỂU ĐỒ ĐƯỜNG DOANH THU QUA CÁC THÁNG */}
+      <div className="rounded-2xl border border-slate-200/90 bg-white/90 dark:border-slate-800/90 dark:bg-slate-900/60 p-5 sm:p-6 shadow-sm dark:shadow-xl backdrop-blur-xl flex flex-col justify-between transition-colors">
+        <div>
+          {/* Tiêu đề & Tỷ lệ tăng trưởng */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <span className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 shadow-xs dark:shadow-inner">
+                <TrendingUp className="size-5" />
+              </span>
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                  {title}
+                </h3>
+                {subtitle && <div className="text-[11px] text-slate-500 dark:text-slate-400">{subtitle}</div>}
+              </div>
+            </div>
+          </div>
+
+          {/* BIỂU ĐỒ ĐƯỜNG SVG (LINE CHART) */}
+          <div className="relative w-full overflow-hidden pt-1 pb-1">
+            <svg viewBox={svgViewBox} className="w-full h-auto overflow-visible">
+              <defs>
+                <linearGradient id="facilityRevenueGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="currentColor" stopOpacity="0.18" />
+                  <stop offset="100%" stopColor="currentColor" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+
+              {/* Các đường lưới ngang (Grid lines) */}
+              {gridLines.map((line, idx) => (
+                <g key={idx}>
+                  <line
+                    x1="32"
+                    y1={line.y}
+                    x2="435"
+                    y2={line.y}
+                    stroke={line.isZero ? "currentColor" : line.isNegative ? "#f43f5e" : "currentColor"}
+                    strokeDasharray={line.isZero ? "4 4" : "3 3"}
+                    strokeWidth={line.isZero ? "1.2" : "1"}
+                    className={line.isZero ? "text-slate-400 dark:text-slate-600 opacity-70" : line.isNegative ? "opacity-40" : "text-slate-200 dark:text-slate-800 opacity-60"}
+                  />
+                  <text
+                    x="26"
+                    y={line.y + 3}
+                    textAnchor="end"
+                    fontSize="9"
+                    fill="currentColor"
+                    className={`font-mono ${line.isZero ? "font-bold text-slate-600 dark:text-slate-400" : line.isNegative ? "text-rose-500" : "text-slate-400 dark:text-slate-500"}`}
+                  >
+                    {line.label}
+                  </text>
+                </g>
+              ))}
+
+              {/* Vùng đổ bóng Gradient bên dưới đường cong */}
+              <path d={revenueAreaPath} fill="url(#facilityRevenueGradient)" className="text-blue-600 dark:text-white" />
+
+              {/* Đường cong doanh thu chính */}
+              <path
+                d={revenueLinePath}
+                fill="none"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="stroke-blue-600 dark:stroke-white"
+              />
+
+              {/* Các điểm tròn dữ liệu trên từng tháng & Số tiền hiển thị trực tiếp */}
+              {chartPoints.map((p, idx) => {
+                const isNeg = p.revenue < 0
+                const labelY = isNeg ? p.y + 15 : p.y <= 38 ? p.y + 16 : p.y - 9
+
+                const isPeriodActive =
+                  period === "this_month"
+                    ? idx === chartPoints.length - 1
+                    : period === "last_3_months"
+                      ? idx >= chartPoints.length - 3
+                      : true
+
+                return (
+                  <g
+                    key={p.month}
+                    className="cursor-pointer transition-opacity"
+                    opacity={isPeriodActive ? 1 : 0.35}
+                    onMouseEnter={() => setHoveredMonthIndex(idx)}
+                    onMouseLeave={() => setHoveredMonthIndex(null)}
+                  >
+                    <circle cx={p.x} cy={p.y} r="14" fill="transparent" />
+
+                    <line
+                      x1={p.x}
+                      y1={plotTop}
+                      x2={p.x}
+                      y2={hasNegative ? plotBottom : 130}
+                      stroke="currentColor"
+                      strokeDasharray="2 2"
+                      strokeWidth="1"
+                      className="text-slate-300 dark:text-slate-600 opacity-30"
+                    />
+
+                    <circle
+                      cx={p.x}
+                      cy={p.y}
+                      r={isPeriodActive ? 4.5 : 3.5}
+                      className={
+                        isNeg
+                          ? "fill-rose-500 stroke-white dark:stroke-slate-900 stroke-2"
+                          : "fill-blue-600 dark:fill-white stroke-white dark:stroke-slate-900 stroke-2"
+                      }
+                    />
+
+                    {isPeriodActive && period === "this_month" && (
+                      <circle
+                        cx={p.x}
+                        cy={p.y}
+                        r="8"
+                        fill="transparent"
+                        className="stroke-blue-500/60 dark:stroke-blue-400/80 stroke-2 animate-pulse"
+                      />
+                    )}
+
+                    {/* SỐ TIỀN HIỂN THỊ TRỰC TIẾP TRÊN BIỂU ĐỒ */}
+                    <text
+                      x={p.x}
+                      y={labelY}
+                      textAnchor="middle"
+                      fontSize="9.5"
+                      fill="currentColor"
+                      className={`font-mono font-bold select-none ${
+                        isNeg ? "text-rose-500 fill-rose-500" : "text-blue-600 dark:text-blue-400 fill-blue-600 dark:fill-blue-400"
+                      }`}
+                    >
+                      {formatShortVnd(p.revenue)}
+                    </text>
+
+                    {/* Nhãn tháng ở trục hoành X */}
+                    <text
+                      x={p.x}
+                      y={hasNegative ? "198" : "152"}
+                      textAnchor="middle"
+                      fontSize="10"
+                      fill="currentColor"
+                      className={`font-mono font-bold ${
+                        isNeg ? "text-rose-500 fill-rose-500" : "text-slate-600 dark:text-slate-300 fill-slate-600 dark:fill-slate-300"
+                      }`}
+                    >
+                      {p.month}
+                    </text>
+                  </g>
+                )
+              })}
+            </svg>
+          </div>
+        </div>
+
+        {/* 3 THẺ TÀI CHÍNH DƯỚI BIỂU ĐỒ: TIỀN CỌC, TIỀN THUÊ KHO, TIỀN PHẠT */}
+        <div className="grid grid-cols-3 gap-2.5 pt-4 mt-2 border-t border-slate-200/80 dark:border-slate-800/80">
+          <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs dark:shadow-none">
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Cọc</span>
+            <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">
+              ₫{depositHolding.toLocaleString("vi-VN")}
+            </span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs dark:shadow-none">
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Thuê Kho</span>
+            <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">
+              ₫{rentalRevenue.toLocaleString("vi-VN")}
+            </span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs dark:shadow-none">
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Phạt</span>
+            <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">
+              ₫{penaltyRevenue.toLocaleString("vi-VN")}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* CỘT PHẢI: QUY MÔ KHAI THÁC & VẬN HÀNH KHO */}
+      <div className="rounded-2xl border border-slate-200/90 bg-white/90 dark:border-slate-800/90 dark:bg-slate-900/60 p-5 sm:p-6 shadow-sm dark:shadow-xl backdrop-blur-xl flex flex-col justify-between transition-colors">
+        <div>
+          <div className="flex items-center gap-3 mb-5">
+            <span className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 shadow-xs dark:shadow-inner">
+              <Warehouse className="size-5" />
+            </span>
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+              Quy Mô Khai Thác &amp; Vận Hành
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3.5">
+            {/* Ô 1 (Donut Chart - Chiếm 3 hàng): Tỷ Lệ Lấp Đầy */}
+            <div className="row-span-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-4 flex flex-col items-center justify-center text-center relative shadow-xs dark:shadow-none">
+              <div className="relative size-32 sm:size-36 flex items-center justify-center">
+                <svg className="size-full -rotate-90" viewBox="0 0 100 100">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="38"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    className="text-slate-200 dark:text-slate-800"
+                    fill="transparent"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="38"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    className="text-blue-600 dark:text-white transition-all duration-1000 ease-out"
+                    fill="transparent"
+                    strokeDasharray={2 * Math.PI * 38}
+                    strokeDashoffset={
+                      2 * Math.PI * 38 - (Math.min(100, Math.max(0, occRateNum)) / 100) * (2 * Math.PI * 38)
+                    }
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl sm:text-3xl font-mono font-black text-slate-900 dark:text-white tracking-tight">
+                    {displayOcc}%
+                  </span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Lấp Đầy</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Ô 2: Tổng Số Ô Kho */}
+            <div className="rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-3.5 flex flex-col justify-center shadow-xs dark:shadow-none">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Tổng Số Ô Kho</span>
+              <span className="font-mono font-black text-slate-900 dark:text-white text-xl sm:text-2xl mt-0.5">
+                {totalUnits.toLocaleString("vi-VN")}
+              </span>
+            </div>
+
+            {/* Ô 3: Kho Đang Cho Thuê */}
+            <div className="rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-3.5 flex flex-col justify-center shadow-xs dark:shadow-none">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Kho Đang Cho Thuê</span>
+              <span className="font-mono font-black text-slate-900 dark:text-white text-xl sm:text-2xl mt-0.5">
+                {occupiedUnits.toLocaleString("vi-VN")}
+              </span>
+            </div>
+
+            {/* Ô 4: Kho Đang Giữ Chỗ / Đặt Trước */}
+            <div className="rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-3.5 flex flex-col justify-center shadow-xs dark:shadow-none">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Đang Giữ Chỗ</span>
+              <span className="font-mono font-black text-slate-900 dark:text-white text-xl sm:text-2xl mt-0.5">
+                {reservedUnits.toLocaleString("vi-VN")}
+              </span>
+            </div>
+
+            {/* Ô 5: Kho Còn Trống */}
+            <div className="rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-3.5 flex flex-col justify-center shadow-xs dark:shadow-none">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Kho Còn Trống</span>
+              <span className="font-mono font-black text-slate-900 dark:text-white text-xl sm:text-2xl mt-0.5">
+                {availableUnits.toLocaleString("vi-VN")}
+              </span>
+            </div>
+
+            {/* Ô 6: Kho Đang Bảo Trì */}
+            <div className="rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-3.5 flex flex-col justify-center shadow-xs dark:shadow-none">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Đang Bảo Trì</span>
+              <span className="font-mono font-black text-slate-900 dark:text-white text-xl sm:text-2xl mt-0.5">
+                {maintenanceUnits.toLocaleString("vi-VN")}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

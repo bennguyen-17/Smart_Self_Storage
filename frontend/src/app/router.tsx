@@ -1,5 +1,5 @@
 import React from "react"
-import { Navigate, Route, Routes } from "react-router-dom"
+import { Navigate, Route, Routes, useParams } from "react-router-dom"
 
 // Public & Landing pages
 import LandingPage from "@/features/landing/LandingPage"
@@ -28,10 +28,8 @@ import AdminPortalPage from "@/features/admin/AdminPortalPage"
 
 // BOM pages
 import BomLayout from "@/features/bom/BomLayout"
-import BomDashboardPage from "@/features/bom/pages/BomDashboardPage"
 import BomFacilitiesPage from "@/features/bom/pages/BomFacilitiesPage"
 import BomPricingPage from "@/features/bom/pages/BomPricingPage"
-import BomPoliciesPage from "@/features/bom/pages/BomPoliciesPage"
 import BomReportsPage from "@/features/bom/pages/BomReportsPage"
 
 import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
@@ -150,10 +148,11 @@ export function AppRouter() {
           </RoleProtectedRoute>
         }
       >
-        <Route index element={<BomDashboardPage />} />
+        <Route index element={<Navigate to="/bom/facilities" replace />} />
         <Route path="facilities" element={<BomFacilitiesPage />} />
+        <Route path="facilities/:facilityId" element={<BomFacilitiesPage />} />
         <Route path="pricing" element={<BomPricingPage />} />
-        <Route path="policies" element={<BomPoliciesPage />} />
+        <Route path="policies" element={<Navigate to="/bom/facilities" replace />} />
         <Route path="reports" element={<BomReportsPage />} />
       </Route>
 

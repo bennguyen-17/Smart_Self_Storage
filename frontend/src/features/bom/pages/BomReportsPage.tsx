@@ -1,352 +1,342 @@
-import { useState } from "react"
-import {
-  FileSpreadsheet,
-  Download,
-  DollarSign,
-  Shield,
-  Percent,
-  Warehouse,
-  TrendingUp,
-  Filter,
-  CheckCircle2,
-  Sparkles,
-} from "lucide-react"
-import { toast } from "sonner"
+import { useState, useMemo, useEffect } from "react"
+import { useSearchParams, useNavigate } from "react-router-dom"
+import { ArrowLeft } from "lucide-react"
+import apiClient from "@/lib/apiClient"
+import { getStorageUnits } from "@/features/customer/rent/rentApi"
 import { useBomContext } from "@/features/bom/context/BomContext"
+import FacilityCashFlowDashboard from "@/features/bom/components/FacilityCashFlowDashboard"
 
 export default function BomReportsPage() {
-  const { chainOverview, facilities, totalOverdueCount } = useBomContext()
-
-  const [selectedFacilityCode, setSelectedFacilityCode] = useState("all")
-  const [selectedUnitType, setSelectedUnitType] = useState("all")
-  const [selectedStatus, setSelectedStatus] = useState("all")
-  const [selectedPeriod, setSelectedPeriod] = useState("current")
-
-  const handleExportExcel = () => {
-    toast.success("Đang tạo và tải xuống báo cáo tổng hợp doanh thu Excel (.xlsx)...")
-  }
+  const navigate = useNavigate()
+  const { chainOverview, facilities } = useBomContext()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const breakdownList = chainOverview?.facilityBreakdown || []
-  const filteredBreakdown = breakdownList.filter((row) => {
-    if (selectedFacilityCode !== "all" && row.facilityCode !== selectedFacilityCode) return false
-    return true
-  })
+  const initialFacId = searchParams.get("facilityId") || "ALL"
+  const [selectedFacilityId, setSelectedFacilityId] = useState<string>(initialFacId)
 
-  // Tính toán tổng số liệu nhanh
-  const totalRevenue = chainOverview?.chainNetRevenue || chainOverview?.chainTotalRevenue || 0
-  const totalDeposit = chainOverview?.chainDepositHolding || 0
-  const avgOccupancy = chainOverview?.chainAverageOccupancyRate || 0
-  const totalUnits = chainOverview?.chainTotalUnits || 0
-  const totalActive = chainOverview?.chainTotalActiveContracts || 0
+  // Lưu trữ danh sách ô kho của cơ sở đang chọn để hiển thị bảng cơ cấu
+  const [facilityUnits, setFacilityUnits] = useState<any[]>([])
+  const [isLoadingUnits, setIsLoadingUnits] = useState(false)
+
+  // Đồng bộ param trên url nếu người dùng chuyển trang vào
+  useEffect(() => {
+    const p = searchParams.get("facilityId")
+    if (p) {
+      setSelectedFacilityId(p)
+    } else {
+      setSelectedFacilityId("ALL")
+    }
+  }, [searchParams])
+
+  const isAll = selectedFacilityId === "ALL"
+
+  // Lấy dữ liệu cơ sở đang chọn (nếu có)
+  const currentFac = useMemo(() => {
+    if (isAll) return null
+    const normalize = (s?: string | number) =>
+      String(s || "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase()
+    const targetNorm = normalize(selectedFacilityId)
+
+    return (
+      breakdownList.find(
+        (b) =>
+          String(b.facilityId) === selectedFacilityId ||
+          normalize(b.facilityCode) === targetNorm ||
+          normalize(b.facilityId) === targetNorm
+      ) ||
+      facilities.find(
+        (f) =>
+          String(f.id) === selectedFacilityId ||
+          normalize(f.code) === targetNorm ||
+          normalize(f.id) === targetNorm
+      ) ||
+      null
+    )
+  }, [isAll, selectedFacilityId, breakdownList, facilities])
+
+  // Tải danh sách ô kho khi chọn cơ sở cụ thể để phân tích cơ cấu
+  useEffect(() => {
+    if (isAll || !selectedFacilityId) {
+      setFacilityUnits([])
+      return
+    }
+
+    let isMounted = true
+    setIsLoadingUnits(true)
+
+    const fetchUnits = async () => {
+      try {
+        let facId = Number(selectedFacilityId)
+        if (isNaN(facId) || facId <= 0) {
+          const match = selectedFacilityId.match(/\d+/)
+          facId = match ? parseInt(match[0], 10) : 1
+        }
+
+        const res: any = await apiClient
+          .get("/units/filter", { params: { facilityId: facId } })
+          .catch(() => null)
+
+        const raw = Array.isArray(res) ? res : res?.data || []
+        if (isMounted) {
+          if (raw.length > 0) {
+            setFacilityUnits(raw)
+          } else {
+            const facCode = (currentFac as any)?.facilityCode || (currentFac as any)?.code || `FAC-${facId}`
+            const [u1, u2, u3] = await Promise.all([
+              getStorageUnits(facCode, 1).catch(() => ({ data: [] })),
+              getStorageUnits(facCode, 2).catch(() => ({ data: [] })),
+              getStorageUnits(facCode, 3).catch(() => ({ data: [] })),
+            ])
+            const combined = [...(u1?.data || []), ...(u2?.data || []), ...(u3?.data || [])]
+            setFacilityUnits(combined)
+          }
+        }
+      } catch (err) {
+        console.warn("Không thể tải ô kho của cơ sở:", err)
+      } finally {
+        if (isMounted) setIsLoadingUnits(false)
+      }
+    }
+
+    fetchUnits()
+    return () => {
+      isMounted = false
+    }
+  }, [isAll, selectedFacilityId, currentFac])
+
+  // Chuẩn bị dữ liệu hiển thị truyền cho FacilityCashFlowDashboard
+  const dashboardProps = useMemo(() => {
+    if (isAll || !currentFac) {
+      return {
+        title: "Doanh Thu Toàn Hệ Thống",
+        subtitle: "Xu hướng dòng tiền thực thu 6 tháng gần nhất toàn chuỗi kho",
+        monthlyRevenues: chainOverview?.monthlyRevenues || [],
+        netRevenue: Number(chainOverview?.chainNetRevenue || 0),
+        rentalRevenue: Number((chainOverview as any)?.chainRentalRevenue || breakdownList.reduce((acc, r) => acc + Number(r.rentalRevenue || 0), 0) || chainOverview?.chainTotalRevenue || 0),
+        depositHolding: Number(chainOverview?.chainDepositHolding || 0),
+        penaltyRevenue: Number((chainOverview as any)?.chainPenaltyRevenue || breakdownList.reduce((acc, r) => acc + Number(r.penaltyRevenue || 0), 0)),
+        totalRefunds: Number(chainOverview?.chainTotalRefunds || 0),
+        overdueContracts: breakdownList.reduce((acc, r) => acc + Number(r.overdueContracts || 0), 0),
+        totalUnits: Number(chainOverview?.chainTotalUnits || 0),
+        occupiedUnits: breakdownList.reduce((acc, r) => acc + Number(r.occupiedUnits || 0), 0),
+        reservedUnits: breakdownList.reduce((acc, r) => acc + Number(r.reservedUnits || 0), 0),
+        availableUnits: breakdownList.reduce((acc, r) => acc + Number(r.availableUnits || 0), 0),
+        maintenanceUnits: breakdownList.reduce((acc, r) => acc + Number(r.maintenanceUnits || 0), 0),
+        occupancyRate: Number(chainOverview?.chainAverageOccupancyRate || 0),
+      }
+    }
+
+    const facBreakdown = breakdownList.find((b) => String(b.facilityId) === selectedFacilityId)
+    const facPerformance = facilities.find((f) => String(f.id) === selectedFacilityId)
+
+    const code = facBreakdown?.facilityCode || facPerformance?.code || `FAC-${selectedFacilityId}`
+    const rawName = facBreakdown?.facilityName || facPerformance?.name || `Cơ sở ${code}`
+    const name = rawName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "")
+
+    const monthlyRevs = facBreakdown?.monthlyRevenues || facPerformance?.monthlyRevenues || []
+    const netRev = Number(facBreakdown?.netRevenue ?? facPerformance?.netRevenue ?? facPerformance?.monthlyRevenue ?? 0)
+    const rentalRev = Number(facBreakdown?.rentalRevenue ?? (facPerformance as any)?.rentalRevenue ?? 0)
+    const depHold = Number(facBreakdown?.depositHolding ?? facPerformance?.depositHolding ?? 0)
+    const penaltyRev = Number(facBreakdown?.penaltyRevenue ?? (facPerformance as any)?.penaltyRevenue ?? 0)
+    const totRefund = Number(facBreakdown?.totalRefunds ?? facPerformance?.totalRefunds ?? 0)
+    const overdue = Number(facBreakdown?.overdueContracts ?? facPerformance?.overdueUnits ?? 0)
+    const tUnits = Number(facBreakdown?.totalUnits ?? facPerformance?.totalUnits ?? 46)
+    const occUnits = Number(facBreakdown?.occupiedUnits ?? facPerformance?.occupied ?? 0)
+    const resUnits = Number(facBreakdown?.reservedUnits ?? (facPerformance as any)?.reservedUnits ?? 0)
+    const availUnits = Number(facBreakdown?.availableUnits ?? facPerformance?.available ?? 0)
+    const maintUnits = Number(facBreakdown?.maintenanceUnits ?? facPerformance?.maintenance ?? 0)
+    const occRate = Number(
+      facBreakdown?.occupancyRate ??
+      facPerformance?.occupancyRate ??
+      (tUnits > 0 ? Math.round((occUnits / tUnits) * 100) : 0)
+    )
+
+    return {
+      title: `Doanh Thu Thực Thu - ${code}`,
+      subtitle: `Xu hướng dòng tiền thực thu 6 tháng gần nhất tại ${name}`,
+      monthlyRevenues: monthlyRevs,
+      netRevenue: netRev,
+      rentalRevenue: rentalRev,
+      depositHolding: depHold,
+      penaltyRevenue: penaltyRev,
+      totalRefunds: totRefund,
+      overdueContracts: overdue,
+      totalUnits: tUnits,
+      occupiedUnits: occUnits,
+      reservedUnits: resUnits,
+      availableUnits: availUnits,
+      maintenanceUnits: maintUnits,
+      occupancyRate: occRate,
+    }
+  }, [isAll, currentFac, selectedFacilityId, chainOverview, breakdownList, facilities])
+
+  const currentFacName = currentFac
+    ? ((currentFac as any).facilityName || (currentFac as any).name || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "")
+    : ""
+  const currentFacCode = currentFac ? (currentFac as any).facilityCode || (currentFac as any).code || "" : ""
 
   return (
-    <div className="space-y-6">
-      {/* KHỐI 1: 4 THẺ TỔNG HỢP CHỈ SỐ NHANH (EXECUTIVE SUMMARY METRICS) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Metric 1: Tổng Doanh Thu */}
-        <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 shadow-xl space-y-2 backdrop-blur-md transition">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase text-slate-400">Doanh Thu Thực Thu</span>
-            <span className="p-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
-              <DollarSign className="size-4" />
-            </span>
-          </div>
-          <div className="text-2xl font-black font-mono text-sky-400">
-            ₫{Number(totalRevenue).toLocaleString("vi-VN")}
-          </div>
-          <div className="text-[11px] text-slate-400 flex items-center gap-1">
-            <TrendingUp className="size-3 text-sky-400" />
-            <span className="text-sky-300 font-bold">+8.4%</span>
-            <span>so với tháng trước</span>
-          </div>
-        </div>
-
-        {/* Metric 2: Tiền Cọc Holding */}
-        <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 shadow-xl space-y-2 backdrop-blur-md transition">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase text-slate-400">Tiền Cọc Holding</span>
-            <span className="p-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
-              <Shield className="size-4" />
-            </span>
-          </div>
-          <div className="text-2xl font-black font-mono text-white">
-            ₫{Number(totalDeposit).toLocaleString("vi-VN")}
-          </div>
-          <div className="text-[11px] text-slate-400">
-            Ký quỹ bảo chứng an toàn vốn 100%
-          </div>
-        </div>
-
-        {/* Metric 3: Tỷ Lệ Lấp Đầy Trung Bình */}
-        <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 shadow-xl space-y-2 backdrop-blur-md transition">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase text-slate-400">Tỷ Lệ Lấp Đầy TB</span>
-            <span className="p-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
-              <Percent className="size-4" />
-            </span>
-          </div>
-          <div className="text-2xl font-black font-mono text-sky-400">
-            {avgOccupancy}%
-          </div>
-          <div className="text-[11px] text-slate-400">
-            {totalOverdueCount > 0 ? (
-              <span className="text-slate-300 font-semibold">{totalOverdueCount} hợp đồng quá hạn</span>
-            ) : (
-              <span className="text-slate-400">Không có nợ xấu phát sinh</span>
-            )}
-          </div>
-        </div>
-
-        {/* Metric 4: Quy Mô Toàn Chuỗi */}
-        <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 shadow-xl space-y-2 backdrop-blur-md transition">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase text-slate-400">Quy Mô Khai Thác</span>
-            <span className="p-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
-              <Warehouse className="size-4" />
-            </span>
-          </div>
-          <div className="text-2xl font-black font-mono text-white">
-            {totalActive} <span className="text-sm font-sans text-slate-400">/ {totalUnits} Kho</span>
-          </div>
-          <div className="text-[11px] text-slate-400">
-            Đang vận hành trên {facilities.length} cụm cơ sở
-          </div>
+    <div className="space-y-5">
+      {/* HEADER BÁO CÁO */}
+      <div className="flex items-center justify-between p-5 rounded-2xl bg-white/90 dark:bg-slate-900/60 border border-slate-200/90 dark:border-slate-800 shadow-sm dark:shadow-md transition-colors">
+        <div className="flex items-center gap-2">
+          {!isAll && (
+            <button
+              type="button"
+              onClick={() => navigate("/bom/facilities")}
+              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition cursor-pointer shrink-0"
+              title="Quay lại danh sách cơ sở kho"
+            >
+              <ArrowLeft className="size-4" />
+            </button>
+          )}
+          <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
+            {isAll
+              ? "Báo Cáo Tổng Quan Hệ Thống Thuê Kho"
+              : `Báo Cáo Cơ Sở: ${currentFacName} (${currentFacCode})`}
+          </h2>
         </div>
       </div>
 
-      {/* KHỐI 2: BẢNG BÁO CÁO CHI TIẾT & BỘ LỌC ĐIỀU HÀNH */}
-      <div className="bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-sky-500/20 shadow-xl space-y-5">
-        {/* Header điều phối */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <span className="p-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400">
-                <FileSpreadsheet className="size-5" />
-              </span>
-              <h3 className="font-black text-base uppercase text-white tracking-wide">
-                BÁO CÁO HIỆU SUẤT &amp; DÒNG TIỀN TỪNG CƠ SỞ
+      {/* KHỐI EXECUTIVE DASHBOARD DÒNG TIỀN VÀ QUY MÔ VẬN HÀNH */}
+      <FacilityCashFlowDashboard {...dashboardProps} />
+
+      {/* NẾU ĐANG CHỌN CƠ SỞ CỤ THỂ: HIỂN THỊ THÊM BẢNG CƠ CẤU Ô KHO THEO SIZE */}
+      {!isAll && (
+        <div className="rounded-2xl border border-slate-200/90 bg-white/90 dark:border-slate-800/90 dark:bg-slate-900/60 p-5 sm:p-6 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white tracking-wider flex items-center gap-2">
+                <span>BÁO CÁO CƠ CẤU Ô KHO THEO SIZE &amp; LOẠI HÌNH</span>
+                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200 dark:border-blue-900">
+                  {currentFacCode}
+                </span>
               </h3>
-            </div>
-            <p className="text-xs text-slate-400 mt-1">
-              Phân tích doanh thu thực thu, tiền cọc holding và tỷ lệ khai thác từng chi nhánh
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleExportExcel}
-            className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-2 cursor-pointer shadow-md shadow-sky-500/20 self-start sm:self-auto shrink-0"
-          >
-            <Download className="size-4" />
-            <span>Xuất Báo Cáo Excel</span>
-          </button>
-        </div>
-
-        {/* Thanh Bộ Lọc Toolbar Hiện Đại */}
-        <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-3">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
-            <Filter className="size-3.5 text-sky-400" />
-            <span>BỘ LỌC DỮ LIỆU BÁO CÁO:</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-            {/* Lọc 1: Cơ sở kho */}
-            <div>
-              <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Cơ Sở Kho:</label>
-              <select
-                value={selectedFacilityCode}
-                onChange={(e) => setSelectedFacilityCode(e.target.value)}
-                className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 text-white font-bold outline-none cursor-pointer focus:border-sky-400"
-              >
-                <option value="all">Tất Cả Các Cơ Sở ({facilities.length} Cơ Sở)</option>
-                {facilities.map((f) => (
-                  <option key={f.id} value={f.code}>{f.name} ({f.code})</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Lọc 2: Loại kho */}
-            <div>
-              <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Loại / Size Kho:</label>
-              <select
-                value={selectedUnitType}
-                onChange={(e) => setSelectedUnitType(e.target.value)}
-                className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 text-white font-bold outline-none cursor-pointer focus:border-sky-400"
-              >
-                <option value="all">Tất Cả Loại Kho (S, M, L, XL)</option>
-                <option value="S">Size S (Tủ cá nhân)</option>
-                <option value="M">Size M (Phòng vừa)</option>
-                <option value="L">Size L (Phòng lớn)</option>
-                <option value="XL">Size XL (Kho Doanh nghiệp)</option>
-              </select>
-            </div>
-
-            {/* Lọc 3: Trạng thái */}
-            <div>
-              <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Trạng Thái Thuê:</label>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 text-white font-bold outline-none cursor-pointer focus:border-sky-400"
-              >
-                <option value="all">Tất Cả Trạng Thái</option>
-                <option value="occupied">Đang Thuê</option>
-                <option value="available">Còn Trống</option>
-                <option value="overdue">Quá Hạn</option>
-              </select>
-            </div>
-
-            {/* Lọc 4: Kỳ báo cáo */}
-            <div>
-              <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Kỳ Báo Cáo:</label>
-              <select
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 text-white font-bold outline-none cursor-pointer focus:border-sky-400"
-              >
-                <option value="current">Tháng Hiện Tại (T09/2026)</option>
-                <option value="prev">Tháng Trước (T08/2026)</option>
-                <option value="q3">Quý 3 / 2026</option>
-              </select>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Chi tiết tỷ lệ khai thác và doanh thu tiềm năng từng kích thước ô kho
+              </p>
             </div>
           </div>
+
+          {isLoadingUnits ? (
+            <div className="p-8 text-center text-slate-500 dark:text-slate-400 font-bold space-y-2">
+              <div className="size-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-xs">Đang tổng hợp cơ cấu ô kho...</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-800 dark:bg-slate-950/90 dark:text-slate-400 uppercase font-black text-[10px]">
+                    <th className="p-3 text-left whitespace-nowrap">Phân Loại / Size</th>
+                    <th className="p-3 text-center whitespace-nowrap">Quy Cách Sàn</th>
+                    <th className="p-3 text-center whitespace-nowrap">Tổng Số Ô</th>
+                    <th className="p-3 text-center whitespace-nowrap">Đang Thuê</th>
+                    <th className="p-3 text-center whitespace-nowrap">Còn Trống</th>
+                    <th className="p-3 text-center whitespace-nowrap">Giữ Chỗ</th>
+                    <th className="p-3 text-center whitespace-nowrap">Bảo Trì</th>
+                    <th className="p-3 text-center whitespace-nowrap">Tỷ Lệ Lấp Đầy</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80 font-semibold text-slate-700 dark:text-slate-300">
+                  {(() => {
+                    const SIZES = [
+                      { size: "S", name: "Size S (Tủ Cá Nhân)", dim: "1.0m × 1.0m", defaultNorm: 600000 },
+                      { size: "M", name: "Size M (Phòng Vừa)", dim: "1.5m × 2.0m", defaultNorm: 1200000 },
+                      { size: "L", name: "Size L (Phòng Lớn)", dim: "2.0m × 3.0m", defaultNorm: 2400000 },
+                      { size: "XL", name: "Size XL (Kho Doanh Nghiệp)", dim: "2.5m × 4.0m", defaultNorm: 4000000 },
+                    ]
+
+                    let grandTotal = 0
+                    let grandOccupied = 0
+                    let grandAvailable = 0
+                    let grandHold = 0
+                    let grandMaintenance = 0
+
+                    const rows = SIZES.map((cfg) => {
+                      const list = facilityUnits.filter((u) => {
+                        const typeStr = (u.typeName || u.typeLabel || "").toUpperCase()
+                        const sz = (u.size || "").toUpperCase()
+                        const code = (u.unitCode || u.unitId || "").toUpperCase()
+                        if (cfg.size === "XL") return typeStr.includes("XL") || sz === "XL" || sz.includes("XL") || code.includes("-XL")
+                        if (cfg.size === "S") return (typeStr.includes("SIZE S") || sz === "S" || code.includes("-S")) && !typeStr.includes("XL") && !code.includes("-XL")
+                        if (cfg.size === "M") return typeStr.includes("SIZE M") || sz === "M" || code.includes("-M")
+                        if (cfg.size === "L") return (typeStr.includes("SIZE L") || sz === "L" || code.includes("-L")) && !typeStr.includes("XL") && !code.includes("-XL")
+                        return false
+                      })
+
+                      const total = list.length
+                      const occupied = list.filter((u) => {
+                        const st = (u.status || "").toUpperCase()
+                        return st === "OCCUPIED" || st === "RENTED"
+                      }).length
+                      const available = list.filter((u) => (u.status || "").toUpperCase() === "AVAILABLE").length
+                      const hold = list.filter((u) => {
+                        const st = (u.status || "").toUpperCase()
+                        return st === "HOLD" || st === "RESERVED"
+                      }).length
+                      const maintenance = list.filter((u) => (u.status || "").toUpperCase() === "MAINTENANCE").length
+                      const occRate = total > 0 ? Math.round((occupied / total) * 100) : 0
+
+                      grandTotal += total
+                      grandOccupied += occupied
+                      grandAvailable += available
+                      grandHold += hold
+                      grandMaintenance += maintenance
+
+                      return (
+                        <tr key={cfg.size} className="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
+                          <td className="p-3 text-left whitespace-nowrap">
+                            <div className="font-extrabold text-slate-900 dark:text-white whitespace-nowrap">{cfg.name}</div>
+                          </td>
+                          <td className="p-3 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{cfg.dim}</td>
+                          <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{total} ô</td>
+                          <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{occupied}</td>
+                          <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{available}</td>
+                          <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{hold}</td>
+                          <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{maintenance}</td>
+                          <td className="p-3 text-center whitespace-nowrap">
+                            <div className="flex items-center justify-center gap-2">
+                              <span className="font-mono font-bold text-slate-900 dark:text-white">{occRate}%</span>
+                              <div className="w-14 bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className="h-full bg-blue-600 dark:bg-slate-300 rounded-full"
+                                  style={{ width: `${Math.min(occRate, 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })
+
+                    const grandRate = grandTotal > 0 ? Math.round((grandOccupied / grandTotal) * 100) : 0
+
+                    return (
+                      <>
+                        {rows}
+                        <tr className="bg-slate-100 dark:bg-slate-950 font-black border-t-2 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
+                          <td className="p-3 text-left uppercase text-slate-900 dark:text-white tracking-wider whitespace-nowrap">
+                            TỔNG CỘNG CƠ CẤU
+                          </td>
+                          <td className="p-3 text-center text-slate-400 font-mono whitespace-nowrap">—</td>
+                          <td className="p-3 text-center text-blue-600 dark:text-blue-400 font-mono whitespace-nowrap">{grandTotal} ô</td>
+                          <td className="p-3 text-center text-emerald-600 dark:text-emerald-400 font-mono whitespace-nowrap">{grandOccupied}</td>
+                          <td className="p-3 text-center text-slate-600 dark:text-slate-300 font-mono whitespace-nowrap">{grandAvailable}</td>
+                          <td className="p-3 text-center text-amber-600 dark:text-amber-400 font-mono whitespace-nowrap">{grandHold}</td>
+                          <td className="p-3 text-center text-rose-600 dark:text-rose-400 font-mono whitespace-nowrap">{grandMaintenance}</td>
+                          <td className="p-3 text-center text-blue-600 dark:text-blue-400 font-mono whitespace-nowrap">{grandRate}%</td>
+                        </tr>
+                      </>
+                    )
+                  })()}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-
-        {/* BẢNG BÁO CÁO DOANH THU & HIỆU SUẤT */}
-        <div className="overflow-x-auto rounded-2xl border border-slate-800">
-          <table className="w-full text-xs border-collapse">
-            <thead>
-              <tr className="border-b border-slate-800 bg-slate-900/80 uppercase font-black text-slate-300 text-[10px]">
-                <th className="p-3.5 text-center">Cơ Sở Kho</th>
-                <th className="p-3.5 text-center">Phân Loại Kho</th>
-                <th className="p-3.5 text-center">Công Suất Khai Thác</th>
-                <th className="p-3.5 text-center">Tỷ Lệ Lấp Đầy</th>
-                <th className="p-3.5 text-center">Doanh Thu Thuê</th>
-                <th className="p-3.5 text-center">Tiền Cọc Holding</th>
-                <th className="p-3.5 text-center">Doanh Thu Thực Thu</th>
-                <th className="p-3.5 text-center">Hiệu Suất</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800 font-semibold text-slate-300">
-              {filteredBreakdown.length > 0 ? (
-                filteredBreakdown.map((row) => {
-                  const matchedFacility = facilities.find(
-                    (f) => f.code === row.facilityCode || String(f.id) === String(row.facilityId)
-                  )
-                  const occRate = Number(row.occupancyRate || 0)
-
-                  return (
-                    <tr key={row.facilityCode || row.facilityId} className="hover:bg-slate-900/40 transition">
-                      {/* Cơ sở kho */}
-                      <td className="p-3.5 text-center">
-                        <div className="font-extrabold text-white text-xs">{row.facilityName}</div>
-                        <div className="text-[11px] text-slate-400 mt-0.5">
-                          {matchedFacility?.address || "Hệ thống cơ sở kho"} • Mã:{" "}
-                          <span className="font-mono text-sky-400 font-bold">{row.facilityCode}</span>
-                        </div>
-                      </td>
-
-                      {/* Loại kho */}
-                      <td className="p-3.5 text-center">
-                        <span className="font-bold text-white">Tất Cả Loại Kho</span>
-                        <span className="text-[10px] text-sky-400 block mt-0.5">Tiêu chuẩn &amp; Điều hòa</span>
-                      </td>
-
-                      {/* Quy mô */}
-                      <td className="p-3.5 text-center">
-                        <span className="font-mono font-bold text-white text-xs">{row.totalUnits} Kho</span>
-                        <span className="text-[10px] text-slate-400 block font-medium mt-0.5">
-                          {row.occupiedUnits} Đang thuê
-                        </span>
-                      </td>
-
-                      {/* Tỷ lệ lấp đầy kèm mini progress bar */}
-                      <td className="p-3.5 text-center">
-                        <div className="font-black text-sky-400 font-mono text-sm">
-                          {occRate}%
-                        </div>
-                        <div className="w-20 bg-slate-800 rounded-full h-1.5 mx-auto mt-1 overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-sky-500"
-                            style={{ width: `${Math.min(occRate, 100)}%` }}
-                          />
-                        </div>
-                        <div className="text-[10px] text-slate-400 mt-1">
-                          {row.availableUnits} trống • {row.overdueContracts} quá hạn
-                        </div>
-                      </td>
-
-                      {/* Doanh thu thuê */}
-                      <td className="p-3.5 text-center font-mono font-medium text-slate-300">
-                        ₫{Number(row.rentalRevenue || 0).toLocaleString("vi-VN")}
-                      </td>
-
-                      {/* Tiền cọc holding */}
-                      <td className="p-3.5 text-center font-mono font-medium text-slate-300">
-                        ₫{Number(row.depositHolding || 0).toLocaleString("vi-VN")}
-                      </td>
-
-                      {/* Thực thu */}
-                      <td className="p-3.5 text-center font-mono font-black text-sky-400 text-sm">
-                        ₫{Number(row.netRevenue || 0).toLocaleString("vi-VN")}
-                      </td>
-
-                      {/* Đánh giá hiệu suất */}
-                      <td className="p-3.5 text-center">
-                        <span className="font-bold px-2.5 py-1 rounded-full text-[10px] bg-slate-800 text-slate-300 border border-slate-700">
-                          {occRate >= 80
-                            ? "Tối Ưu"
-                            : occRate >= 30
-                            ? "Tiêu Chuẩn"
-                            : occRate > 0
-                            ? "Đang Lấp Đầy"
-                            : "Chưa Có Thuê"}
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                })
-              ) : (
-                <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-400 italic">
-                    Chưa có dữ liệu báo cáo từ API
-                  </td>
-                </tr>
-              )}
-
-              {/* DÒNG TỔNG KẾT TOÀN HỆ THỐNG */}
-              <tr className="bg-slate-900/90 font-bold border-t-2 border-slate-700 text-slate-100">
-                <td className="p-3.5 text-center text-sky-400 uppercase tracking-wider font-black">
-                  TỔNG CỘNG TOÀN CHUỖI
-                </td>
-                <td className="p-3.5 text-center text-slate-300">
-                  Toàn bộ 4 Size &amp; Điều hòa
-                </td>
-                <td className="p-3.5 text-center font-mono text-white text-xs">
-                  {totalUnits} Kho / {totalActive} Đang thuê
-                </td>
-                <td className="p-3.5 text-center text-sky-400 font-mono text-sm font-black">
-                  {avgOccupancy}% TB
-                </td>
-                <td className="p-3.5 text-center font-mono font-bold text-slate-200">
-                  ₫{Number(chainOverview?.chainTotalRevenue || 0).toLocaleString("vi-VN")}
-                </td>
-                <td className="p-3.5 text-center font-mono font-bold text-slate-200">
-                  ₫{Number(totalDeposit).toLocaleString("vi-VN")}
-                </td>
-                <td className="p-3.5 text-center font-mono font-black text-sky-400 text-base">
-                  ₫{Number(totalRevenue).toLocaleString("vi-VN")}
-                </td>
-                <td className="p-3.5 text-center">
-                  <span className="bg-slate-800 text-sky-300 font-bold px-3 py-1 rounded-full text-[10px] border border-slate-700 shadow-sm">
-                    {avgOccupancy}% Lấp Đầy
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      )}
     </div>
   )
 }

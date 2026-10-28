@@ -43,6 +43,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/facilities", "/api/facilities/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/units/**", "/api/units/filter").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/prices", "/api/prices/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/fee-policies", "/api/fee-policies/**", "/api/fee-items", "/api/fee-items/**").permitAll()
+                        .requestMatchers("/api/admin/dashboard/**").permitAll()
                         .requestMatchers("/api/pricing/calculate").permitAll()
                         .requestMatchers("/api/deposits/webhook").permitAll()
                         .requestMatchers("/api/payment/vnpay/callback", "/api/payment/vnpay/ipn").permitAll()
@@ -59,6 +61,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/prices/**").hasAnyRole("BOM", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/prices/**").hasAnyRole("BOM", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/prices/**").hasAnyRole("BOM", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/fee-policies/**", "/api/fee-items/**").hasAnyRole("BOM", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/fee-policies/**", "/api/fee-items/**").hasAnyRole("BOM", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/fee-policies/**", "/api/fee-items/**").hasAnyRole("BOM", "ADMIN")
 
                         // 3. Quyền Quản trị viên (ADMIN)
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -76,8 +81,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/payment/**").authenticated()
                         .requestMatchers("/api/gate-pin/**").authenticated()
 
-                        // 7. Bảo vệ mặc định: Mọi API chưa khai báo bắt buộc phải đăng nhập
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))

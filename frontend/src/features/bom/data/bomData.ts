@@ -13,6 +13,9 @@ export interface FacilityPerformance {
   maintenance?: number
   floorArea: number
   monthlyRevenue: number | string
+  thisMonthRevenue?: string
+  last3MonthsRevenue?: string
+  allTimeRevenue?: string
   overdueUnits: number
   occupancyRate?: number
   priceMultiplier?: number
@@ -20,12 +23,18 @@ export interface FacilityPerformance {
   rating: string
   layoutType?: string
   floorCount?: number
+  depositHolding?: number
+  totalRefunds?: number
+  netRevenue?: number
+  rentalRevenue?: number
+  penaltyRevenue?: number
+  monthlyRevenues?: { month: string; label: string; revenue: number; rentalRevenue?: number; penaltyRevenue?: number }[]
 }
 
 export interface UnitPricing {
   id: string
   unitTypeId?: number
-  size: "S" | "M" | "L" | "XL"
+  size: "S" | "M" | "L" | "XL" | string
   name: string
   description: string
   dimensions: string
@@ -34,6 +43,7 @@ export interface UnitPricing {
   dailyPrice: number
   normPrice: number
   acPrice: number
+  climateSurchargePercent?: number
   depositAmount: number
   depositText: string
   status: string
@@ -41,11 +51,17 @@ export interface UnitPricing {
 
 export interface SurchargeItem {
   id: string
-  category: "surcharge" | "penalty" | "discount"
+  policyId?: number
+  policyCode?: string
+  category: "penalty" | "discount" | "damage"
   categoryLabel: string
   type: string
   name: string
   rate: string
+  calcType?: "PERCENT" | "FIXED"
+  feeValue?: number
+  unitBasis?: string
+  isWaiveDeposit?: boolean
   isActive: boolean
   note: string
 }
@@ -198,36 +214,6 @@ export const INITIAL_PRICING: UnitPricing[] = [
 ]
 
 export const INITIAL_SURCHARGES: SurchargeItem[] = [
-  {
-    id: "sc-1",
-    category: "surcharge",
-    categoryLabel: "Biểu Phí Phụ Thu (Surcharges)",
-    type: "Dịch vụ bổ sung 24/7",
-    name: "Phí Điện Kho Lạnh 24/7",
-    rate: "₫300,000 / tháng",
-    isActive: true,
-    note: "Áp dụng cho kho điều hòa nhiệt độ AC",
-  },
-  {
-    id: "sc-2",
-    category: "surcharge",
-    categoryLabel: "Biểu Phí Phụ Thu (Surcharges)",
-    type: "Dịch vụ bốc xếp",
-    name: "Phí Hỗ Trợ Bốc Xếp",
-    rate: "₫150,000 / giờ",
-    isActive: true,
-    note: "Theo yêu cầu nhân công thực tế",
-  },
-  {
-    id: "sc-3",
-    category: "surcharge",
-    categoryLabel: "Biểu Phí Phụ Thu (Surcharges)",
-    type: "Quản lý thiết bị PIN",
-    name: "Phí Cấp Lại Mã PIN Thẻ Từ",
-    rate: "₫50,000 / lần",
-    isActive: true,
-    note: "Khi người dùng làm mất/reset mã PIN",
-  },
   {
     id: "pn-1",
     category: "penalty",

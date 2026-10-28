@@ -1,6 +1,7 @@
 package com.swp391.backend.dto.dashboard;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public class ManagerDashboardResponse {
     private Integer facilityId;
@@ -31,6 +32,9 @@ public class ManagerDashboardResponse {
     private BigDecimal compensationRevenue = BigDecimal.ZERO;
     private BigDecimal totalRefunds = BigDecimal.ZERO;
     private BigDecimal netRevenue = BigDecimal.ZERO; // (Rental + Ext + Penalty + CMP) - TotalRefunds
+    private BigDecimal thisMonthRevenue = BigDecimal.ZERO; // Doanh thu tháng này
+    private BigDecimal last3MonthsRevenue = BigDecimal.ZERO; // Doanh thu 3 tháng gần nhất
+    private BigDecimal allTimeRevenue = BigDecimal.ZERO; // Doanh thu toàn thời gian
 
     // Các dòng báo cáo riêng
     private BigDecimal depositHolding = BigDecimal.ZERO; // Tiền cọc đang bảo lưu
@@ -43,6 +47,7 @@ public class ManagerDashboardResponse {
     private long inProgressTickets;
     private long resolvedTickets;
     private long slaBreachedTickets;
+    private List<MonthlyRevenueItemResponse> monthlyRevenues;
 
     public ManagerDashboardResponse() {
     }
@@ -285,5 +290,37 @@ public class ManagerDashboardResponse {
 
     public void setSlaBreachedTickets(long slaBreachedTickets) {
         this.slaBreachedTickets = slaBreachedTickets;
+    }
+
+    public BigDecimal getThisMonthRevenue() {
+        return thisMonthRevenue;
+    }
+
+    public void setThisMonthRevenue(BigDecimal thisMonthRevenue) {
+        this.thisMonthRevenue = thisMonthRevenue;
+    }
+
+    public BigDecimal getLast3MonthsRevenue() {
+        return last3MonthsRevenue;
+    }
+
+    public void setLast3MonthsRevenue(BigDecimal last3MonthsRevenue) {
+        this.last3MonthsRevenue = last3MonthsRevenue;
+    }
+
+    public BigDecimal getAllTimeRevenue() {
+        return allTimeRevenue;
+    }
+
+    public void setAllTimeRevenue(BigDecimal allTimeRevenue) {
+        this.allTimeRevenue = allTimeRevenue;
+    }
+
+    public List<MonthlyRevenueItemResponse> getMonthlyRevenues() {
+        return monthlyRevenues;
+    }
+
+    public void setMonthlyRevenues(List<MonthlyRevenueItemResponse> monthlyRevenues) {
+        this.monthlyRevenues = monthlyRevenues;
     }
 }

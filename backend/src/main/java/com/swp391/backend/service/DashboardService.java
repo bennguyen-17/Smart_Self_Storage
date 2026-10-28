@@ -7,6 +7,7 @@ import com.swp391.backend.repository.*;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -122,42 +123,100 @@ public class DashboardService {
         BigDecimal rentalRevenue = BigDecimal.ZERO;
         BigDecimal extensionRevenue = BigDecimal.ZERO;
         BigDecimal penaltyRevenue = BigDecimal.ZERO;
+        BigDecimal paidPenalty = BigDecimal.ZERO;
         BigDecimal compensationRevenue = BigDecimal.ZERO;
         BigDecimal totalRefunds = BigDecimal.ZERO;
         BigDecimal depositHolding = BigDecimal.ZERO;
         BigDecimal forfeitedDeposit = BigDecimal.ZERO;
         BigDecimal waivedAmount = BigDecimal.ZERO;
 
+        // Xác định mốc thời gian: Tháng hiện tại & 3 tháng gần nhất
+        java.time.YearMonth currentYm = java.time.YearMonth.now();
+
         for (Payment p : payments) {
+            Optional<Contract> cOpt = contracts.stream().filter(c -> c.getContractId().equals(p.getContractId())).findFirst();
+            if (cOpt.isEmpty()) continue;
+            String cStatus = cOpt.get().getStatus();
+            if ("PENDING_CHECKIN".equalsIgnoreCase(cStatus) || "CANCELLED".equalsIgnoreCase(cStatus) || "INITIATED".equalsIgnoreCase(cStatus)) {
+                continue;
+            }
+            LocalDateTime pTime = p.getPaidAt() != null ? p.getPaidAt() : p.getIssuedAt();
+            if (pTime != null) {
+                java.time.YearMonth ym = java.time.YearMonth.from(pTime);
+                if (ym.isAfter(currentYm)) currentYm = ym;
+            }
+            Optional<Reservation> rOpt = reservations.stream().filter(r -> r.getReservationId().equals(cOpt.get().getReservationId())).findFirst();
+            if (rOpt.isPresent() && rOpt.get().getStartDate() != null) {
+                java.time.YearMonth ym = java.time.YearMonth.from(rOpt.get().getStartDate());
+                if (ym.isAfter(currentYm)) currentYm = ym;
+            }
+        }
+
+        LocalDateTime startOfThisMonth = currentYm.atDay(1).atStartOfDay();
+        LocalDateTime endOfThisMonth = currentYm.atEndOfMonth().atTime(23, 59, 59);
+
+        LocalDateTime startOf3Months = currentYm.minusMonths(2).atDay(1).atStartOfDay();
+        LocalDateTime endOf3Months = endOfThisMonth;
+
+        BigDecimal thisMonthRevenue = BigDecimal.ZERO;
+        BigDecimal last3MonthsRevenue = BigDecimal.ZERO;
+        BigDecimal allTimeRevenue = BigDecimal.ZERO;
+
+        for (Payment p : payments) {
+            Optional<Contract> cOpt = contracts.stream().filter(c -> c.getContractId().equals(p.getContractId())).findFirst();
+            if (cOpt.isEmpty()) continue;
+            Contract c = cOpt.get();
+            String cStatus = c.getStatus();
+            if ("PENDING_CHECKIN".equalsIgnoreCase(cStatus) || "CANCELLED".equalsIgnoreCase(cStatus) || "INITIATED".equalsIgnoreCase(cStatus)) {
+                continue; // Chỉ tính những hợp đồng đã hoàn tất / có hiệu lực
+            }
+
+            Optional<Reservation> rOpt = reservations.stream().filter(r -> r.getReservationId().equals(c.getReservationId())).findFirst();
             String invNum = p.getInvoiceNumber() != null ? p.getInvoiceNumber() : "";
-            boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()) || "REFUNDED".equalsIgnoreCase(p.getStatus());
+            boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus()) 
+                    || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()) 
+                    || "REFUNDED".equalsIgnoreCase(p.getStatus())
+                    || "PARTIALLY_PAID".equalsIgnoreCase(p.getStatus());
 
             LocalDateTime paymentTime = p.getPaidAt() != null ? p.getPaidAt() : p.getIssuedAt();
-            if (fromLdt != null && paymentTime != null && paymentTime.isBefore(fromLdt)) {
-                continue;
-            }
-            if (toLdt != null && paymentTime != null && paymentTime.isAfter(toLdt)) {
-                continue;
-            }
 
-            if ((invNum.startsWith("REF-") || "REF".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
-                totalRefunds = totalRefunds.add(p.getAmount());
-            } else if ((invNum.startsWith("CMP-") || "CMP".equalsIgnoreCase(p.getInvoiceType()) || "INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
-                compensationRevenue = compensationRevenue.add(p.getAmount());
-            } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
-                penaltyRevenue = penaltyRevenue.add(p.getAmount());
+            BigDecimal amount = BigDecimal.ZERO;
+            LocalDateTime effectiveTime = paymentTime;
+            String cat = "NONE";
+
+            if ((invNum.startsWith("CMP-") || "CMP".equalsIgnoreCase(p.getInvoiceType()) || "INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
+                cat = "CMP";
+                amount = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+                effectiveTime = paymentTime;
+            } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && !"CANCELLED".equalsIgnoreCase(p.getStatus())) {
+                cat = "PEN";
+                amount = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+                effectiveTime = paymentTime;
             } else if (("MONTHLY_RENEWAL".equalsIgnoreCase(p.getInvoiceType()) || "EXT".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
-                extensionRevenue = extensionRevenue.add(p.getAmount());
-            } else if ("DEP".equalsIgnoreCase(p.getInvoiceType()) && "PAID".equalsIgnoreCase(p.getStatus())) {
-                BigDecimal depAmt = contracts.stream()
-                        .filter(c -> c.getContractId().equals(p.getContractId()))
-                        .findFirst()
-                        .flatMap(c -> reservations.stream().filter(r -> r.getReservationId().equals(c.getReservationId())).findFirst())
-                        .map(r -> r.getDepositAmount() != null ? r.getDepositAmount() : BigDecimal.ZERO)
-                        .orElse(BigDecimal.ZERO);
-                rentalRevenue = rentalRevenue.add((p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO).subtract(depAmt).max(BigDecimal.ZERO));
+                cat = "EXT";
+                amount = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+                effectiveTime = paymentTime;
+            } else if ("DEP".equalsIgnoreCase(p.getInvoiceType()) && ("PAID".equalsIgnoreCase(p.getStatus()) || "PARTIALLY_PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()))) {
+                cat = "RENTAL";
+                BigDecimal depAmt = rOpt.map(r -> r.getDepositAmount() != null ? r.getDepositAmount() : BigDecimal.ZERO).orElse(BigDecimal.ZERO);
+                amount = (p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO).subtract(depAmt).max(BigDecimal.ZERO);
+                if (rOpt.isPresent() && rOpt.get().getStartDate() != null) {
+                    effectiveTime = rOpt.get().getStartDate().atStartOfDay();
+                } else if (c.getActivatedAt() != null) {
+                    effectiveTime = c.getActivatedAt();
+                } else {
+                    effectiveTime = paymentTime;
+                }
             } else if ("INITIAL_RENTAL".equalsIgnoreCase(p.getInvoiceType()) && isPaid) {
-                rentalRevenue = rentalRevenue.add(p.getAmount());
+                cat = "RENTAL";
+                amount = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+                if (rOpt.isPresent() && rOpt.get().getStartDate() != null) {
+                    effectiveTime = rOpt.get().getStartDate().atStartOfDay();
+                } else if (c.getActivatedAt() != null) {
+                    effectiveTime = c.getActivatedAt();
+                } else {
+                    effectiveTime = paymentTime;
+                }
             }
 
             if ("CANCELLED".equalsIgnoreCase(p.getStatus())) {
@@ -165,6 +224,40 @@ public class DashboardService {
                         || "PEN".equalsIgnoreCase(p.getInvoiceType()) || "CMP".equalsIgnoreCase(p.getInvoiceType())) {
                     waivedAmount = waivedAmount.add(p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO);
                 }
+            }
+
+            if ("NONE".equals(cat) || amount.compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
+
+            if (effectiveTime != null) {
+                if (!effectiveTime.isBefore(startOfThisMonth) && !effectiveTime.isAfter(endOfThisMonth)) {
+                    thisMonthRevenue = thisMonthRevenue.add(amount);
+                }
+                if (!effectiveTime.isBefore(startOf3Months) && !effectiveTime.isAfter(endOf3Months)) {
+                    last3MonthsRevenue = last3MonthsRevenue.add(amount);
+                }
+            }
+            allTimeRevenue = allTimeRevenue.add(amount);
+
+            if (fromLdt != null && effectiveTime != null && effectiveTime.isBefore(fromLdt)) {
+                continue;
+            }
+            if (toLdt != null && effectiveTime != null && effectiveTime.isAfter(toLdt)) {
+                continue;
+            }
+
+            if ("RENTAL".equals(cat)) {
+                rentalRevenue = rentalRevenue.add(amount);
+            } else if ("EXT".equals(cat)) {
+                extensionRevenue = extensionRevenue.add(amount);
+            } else if ("PEN".equals(cat)) {
+                penaltyRevenue = penaltyRevenue.add(amount);
+                if (isPaid) {
+                    paidPenalty = paidPenalty.add(amount);
+                }
+            } else if ("CMP".equals(cat)) {
+                compensationRevenue = compensationRevenue.add(amount);
             }
         }
         for (Reservation r : reservations) {
@@ -181,7 +274,7 @@ public class DashboardService {
                         BigDecimal refundedForContract = payments.stream()
                                 .filter(p -> cId.equals(p.getContractId()))
                                 .filter(p -> "REF".equalsIgnoreCase(p.getInvoiceType())
-                                        || (p.getInvoiceNumber() != null && p.getInvoiceNumber().startsWith("REF-")))
+                                         || (p.getInvoiceNumber() != null && p.getInvoiceNumber().startsWith("REF-")))
                                 .filter(p -> !"CANCELLED".equalsIgnoreCase(p.getStatus()))
                                 .map(p -> p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -191,8 +284,9 @@ public class DashboardService {
             }
         }
 
-        BigDecimal grossRevenue = rentalRevenue.add(extensionRevenue).add(penaltyRevenue).add(compensationRevenue);
-        BigDecimal netRevenue = grossRevenue.subtract(totalRefunds);
+        BigDecimal grossRevenue = rentalRevenue.add(extensionRevenue).add(penaltyRevenue);
+        // Doanh thu thực thu = Tiền thuê + Tiền phạt
+        BigDecimal netRevenue = grossRevenue;
 
         // 4. Thống kê Support Ticket & SLA
         List<SupportTicket> allFacilityTickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
@@ -260,13 +354,108 @@ public class DashboardService {
         resp.setExtensionRevenue(extensionRevenue);
         resp.setPenaltyRevenue(penaltyRevenue);
         resp.setCompensationRevenue(compensationRevenue);
-        resp.setTotalRefunds(totalRefunds);
+        resp.setTotalRefunds(BigDecimal.ZERO);
         resp.setNetRevenue(netRevenue);
+
+        resp.setThisMonthRevenue(thisMonthRevenue);
+        resp.setLast3MonthsRevenue(last3MonthsRevenue);
+        resp.setAllTimeRevenue(allTimeRevenue);
 
         resp.setDepositHolding(depositHolding);
         resp.setForfeitedDeposit(forfeitedDeposit);
         resp.setWaivedAmount(waivedAmount);
 
+        // 5. Tính toán doanh thu thực tế 6 tháng gần nhất cho riêng cơ sở này
+        java.time.YearMonth endFacYm = currentYm;
+        List<java.time.YearMonth> facTargetMonths = new ArrayList<>();
+        for (int i = 5; i >= 0; i--) {
+            facTargetMonths.add(endFacYm.minusMonths(i));
+        }
+
+        List<com.swp391.backend.dto.dashboard.MonthlyRevenueItemResponse> facilityMonthlyRevenues = new ArrayList<>();
+        for (java.time.YearMonth ym : facTargetMonths) {
+            BigDecimal mRental = BigDecimal.ZERO;
+            BigDecimal mExtension = BigDecimal.ZERO;
+            BigDecimal mPenalty = BigDecimal.ZERO;
+            BigDecimal mCompensation = BigDecimal.ZERO;
+
+            for (Payment p : payments) {
+                Optional<Contract> cOpt = contracts.stream().filter(c -> c.getContractId().equals(p.getContractId())).findFirst();
+                if (cOpt.isEmpty()) continue;
+                Contract c = cOpt.get();
+                String cStatus = c.getStatus();
+                if ("PENDING_CHECKIN".equalsIgnoreCase(cStatus) || "CANCELLED".equalsIgnoreCase(cStatus) || "INITIATED".equalsIgnoreCase(cStatus)) {
+                    continue; // Chỉ tính những hợp đồng đã hoàn tất / có hiệu lực
+                }
+
+                String invNum = p.getInvoiceNumber() != null ? p.getInvoiceNumber() : "";
+                boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus()) 
+                        || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()) 
+                        || "REFUNDED".equalsIgnoreCase(p.getStatus())
+                        || "PARTIALLY_PAID".equalsIgnoreCase(p.getStatus());
+                LocalDateTime paymentTime = p.getPaidAt() != null ? p.getPaidAt() : p.getIssuedAt();
+                Optional<Reservation> rOpt = reservations.stream().filter(r -> r.getReservationId().equals(c.getReservationId())).findFirst();
+
+                LocalDateTime effectiveTime = paymentTime;
+                BigDecimal amt = BigDecimal.ZERO;
+                String cat = "NONE";
+
+                if ((invNum.startsWith("CMP-") || "CMP".equalsIgnoreCase(p.getInvoiceType()) || "INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
+                    cat = "CMP";
+                    amt = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+                    effectiveTime = paymentTime;
+                } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && !"CANCELLED".equalsIgnoreCase(p.getStatus())) {
+                    cat = "PEN";
+                    amt = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+                    effectiveTime = paymentTime;
+                } else if (("MONTHLY_RENEWAL".equalsIgnoreCase(p.getInvoiceType()) || "EXT".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
+                    cat = "EXT";
+                    amt = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+                    effectiveTime = paymentTime;
+                } else if ("DEP".equalsIgnoreCase(p.getInvoiceType()) && ("PAID".equalsIgnoreCase(p.getStatus()) || "PARTIALLY_PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()))) {
+                    cat = "RENTAL";
+                    BigDecimal depAmt = rOpt.map(r -> r.getDepositAmount() != null ? r.getDepositAmount() : BigDecimal.ZERO).orElse(BigDecimal.ZERO);
+                    amt = (p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO).subtract(depAmt).max(BigDecimal.ZERO);
+                    if (rOpt.isPresent() && rOpt.get().getStartDate() != null) {
+                        effectiveTime = rOpt.get().getStartDate().atStartOfDay();
+                    } else if (c.getActivatedAt() != null) {
+                        effectiveTime = c.getActivatedAt();
+                    } else {
+                        effectiveTime = paymentTime;
+                    }
+                } else if ("INITIAL_RENTAL".equalsIgnoreCase(p.getInvoiceType()) && isPaid) {
+                    cat = "RENTAL";
+                    amt = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+                    if (rOpt.isPresent() && rOpt.get().getStartDate() != null) {
+                        effectiveTime = rOpt.get().getStartDate().atStartOfDay();
+                    } else if (c.getActivatedAt() != null) {
+                        effectiveTime = c.getActivatedAt();
+                    } else {
+                        effectiveTime = paymentTime;
+                    }
+                }
+
+                if (effectiveTime == null || !ym.equals(java.time.YearMonth.from(effectiveTime))) {
+                    continue;
+                }
+
+                if ("RENTAL".equals(cat)) {
+                    mRental = mRental.add(amt);
+                } else if ("EXT".equals(cat)) {
+                    mExtension = mExtension.add(amt);
+                } else if ("PEN".equals(cat)) {
+                    mPenalty = mPenalty.add(amt);
+                } else if ("CMP".equals(cat)) {
+                    mCompensation = mCompensation.add(amt);
+                }
+            }
+
+            BigDecimal mNet = mRental.add(mExtension).add(mPenalty);
+            String monthCode = "T" + ym.getMonthValue();
+            String monthLabel = String.format("Tháng %02d/%d", ym.getMonthValue(), ym.getYear());
+            facilityMonthlyRevenues.add(new com.swp391.backend.dto.dashboard.MonthlyRevenueItemResponse(monthCode, monthLabel, mNet, mRental.add(mExtension), mPenalty));
+        }
+        resp.setMonthlyRevenues(facilityMonthlyRevenues);
         resp.setTotalTickets(totalTickets);
         resp.setSubmittedTickets(submittedTickets);
         resp.setInProgressTickets(inProgressTickets);
@@ -280,8 +469,46 @@ public class DashboardService {
      * US-33: Báo cáo toàn chuỗi 7 cơ sở cho Ban Giám Đốc (BOM / Admin)
      */
     public ChainDashboardResponse getChainDashboard() {
+        return getChainDashboard(null, null, null);
+    }
+
+    public ChainDashboardResponse getChainDashboard(String fromStr, String toStr, String period) {
         List<Facility> facilities = facilityRepository.findAll();
         List<ManagerDashboardResponse> breakdown = new ArrayList<>();
+
+        String effectiveFrom = fromStr;
+        String effectiveTo = toStr;
+
+        List<Payment> allPayments = paymentRepository.findAll();
+        java.time.YearMonth currentYm = java.time.YearMonth.now();
+        List<Contract> allContracts = contractRepository.findAll();
+        List<Reservation> allReservations = reservationRepository.findAll();
+
+        for (Payment p : allPayments) {
+            LocalDateTime pTime = p.getPaidAt() != null ? p.getPaidAt() : p.getIssuedAt();
+            if (pTime != null) {
+                java.time.YearMonth ym = java.time.YearMonth.from(pTime);
+                if (ym.isAfter(currentYm)) currentYm = ym;
+            }
+            Optional<Contract> cOpt = allContracts.stream().filter(c -> c.getContractId().equals(p.getContractId())).findFirst();
+            if (cOpt.isPresent()) {
+                Optional<Reservation> rOpt = allReservations.stream().filter(r -> r.getReservationId().equals(cOpt.get().getReservationId())).findFirst();
+                if (rOpt.isPresent() && rOpt.get().getStartDate() != null) {
+                    java.time.YearMonth ym = java.time.YearMonth.from(rOpt.get().getStartDate());
+                    if (ym.isAfter(currentYm)) currentYm = ym;
+                }
+            }
+        }
+
+        if (period != null && !period.isBlank()) {
+            if ("this_month".equalsIgnoreCase(period.trim())) {
+                effectiveFrom = currentYm.atDay(1).toString();
+                effectiveTo = currentYm.atEndOfMonth().toString();
+            } else if ("last_3_months".equalsIgnoreCase(period.trim())) {
+                effectiveFrom = currentYm.minusMonths(2).atDay(1).toString();
+                effectiveTo = currentYm.atEndOfMonth().toString();
+            }
+        }
 
         long chainTotalUnits = 0;
         long chainOccupiedUnits = 0;
@@ -290,23 +517,118 @@ public class DashboardService {
         BigDecimal chainRefunds = BigDecimal.ZERO;
         BigDecimal chainNet = BigDecimal.ZERO;
         BigDecimal chainDeposit = BigDecimal.ZERO;
+        BigDecimal chainRental = BigDecimal.ZERO;
+        BigDecimal chainPenalty = BigDecimal.ZERO;
 
         for (Facility f : facilities) {
             try {
-                ManagerDashboardResponse mResp = getManagerDashboard(f.getFacilityId());
+                ManagerDashboardResponse mResp = getManagerDashboard(f.getFacilityId(), effectiveFrom, effectiveTo);
                 breakdown.add(mResp);
 
                 chainTotalUnits += mResp.getTotalUnits();
                 chainOccupiedUnits += mResp.getOccupiedUnits();
                 chainTotalActive += mResp.getActiveContracts();
-                chainGross = chainGross.add(mResp.getRentalRevenue().add(mResp.getExtensionRevenue()).add(mResp.getPenaltyRevenue()).add(mResp.getCompensationRevenue()));
+                chainGross = chainGross.add(mResp.getRentalRevenue().add(mResp.getExtensionRevenue()).add(mResp.getPenaltyRevenue()));
                 chainRefunds = chainRefunds.add(mResp.getTotalRefunds());
                 chainNet = chainNet.add(mResp.getNetRevenue());
                 chainDeposit = chainDeposit.add(mResp.getDepositHolding());
+                chainRental = chainRental.add(mResp.getRentalRevenue());
+                chainPenalty = chainPenalty.add(mResp.getPenaltyRevenue());
             } catch (Exception ignored) {}
         }
 
         double chainOccupancy = chainTotalUnits > 0 ? ((double) chainOccupiedUnits / chainTotalUnits) * 100.0 : 0.0;
+
+        // 4. Tính toán doanh thu thực tế từng tháng từ Database cho Biểu đồ
+        java.time.YearMonth endYm = currentYm;
+        List<java.time.YearMonth> targetMonths = new ArrayList<>();
+        for (int i = 5; i >= 0; i--) {
+            targetMonths.add(endYm.minusMonths(i));
+        }
+
+        List<com.swp391.backend.dto.dashboard.MonthlyRevenueItemResponse> monthlyRevenueList = new ArrayList<>();
+        for (java.time.YearMonth ym : targetMonths) {
+            BigDecimal mRental = BigDecimal.ZERO;
+            BigDecimal mExtension = BigDecimal.ZERO;
+            BigDecimal mPenalty = BigDecimal.ZERO;
+            BigDecimal mCompensation = BigDecimal.ZERO;
+
+            for (Payment p : allPayments) {
+                Optional<Contract> cOpt = allContracts.stream().filter(c -> c.getContractId().equals(p.getContractId())).findFirst();
+                if (cOpt.isEmpty()) continue;
+                Contract c = cOpt.get();
+                String cStatus = c.getStatus();
+                if ("PENDING_CHECKIN".equalsIgnoreCase(cStatus) || "CANCELLED".equalsIgnoreCase(cStatus) || "INITIATED".equalsIgnoreCase(cStatus)) {
+                    continue; // Chỉ tính những hợp đồng đã hoàn tất / có hiệu lực
+                }
+
+                String invNum = p.getInvoiceNumber() != null ? p.getInvoiceNumber() : "";
+                boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus()) 
+                        || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()) 
+                        || "REFUNDED".equalsIgnoreCase(p.getStatus())
+                        || "PARTIALLY_PAID".equalsIgnoreCase(p.getStatus());
+                LocalDateTime paymentTime = p.getPaidAt() != null ? p.getPaidAt() : p.getIssuedAt();
+                Optional<Reservation> rOpt = allReservations.stream().filter(r -> r.getReservationId().equals(c.getReservationId())).findFirst();
+
+                LocalDateTime effectiveTime = paymentTime;
+                BigDecimal amt = BigDecimal.ZERO;
+                String cat = "NONE";
+
+                if ((invNum.startsWith("CMP-") || "CMP".equalsIgnoreCase(p.getInvoiceType()) || "INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
+                    cat = "CMP";
+                    amt = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+                    effectiveTime = paymentTime;
+                } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && !"CANCELLED".equalsIgnoreCase(p.getStatus())) {
+                    cat = "PEN";
+                    amt = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+                    effectiveTime = paymentTime;
+                } else if (("MONTHLY_RENEWAL".equalsIgnoreCase(p.getInvoiceType()) || "EXT".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
+                    cat = "EXT";
+                    amt = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+                    effectiveTime = paymentTime;
+                } else if ("DEP".equalsIgnoreCase(p.getInvoiceType()) && ("PAID".equalsIgnoreCase(p.getStatus()) || "PARTIALLY_PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()))) {
+                    cat = "RENTAL";
+                    BigDecimal depAmt = rOpt.map(r -> r.getDepositAmount() != null ? r.getDepositAmount() : BigDecimal.ZERO).orElse(BigDecimal.ZERO);
+                    amt = (p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO).subtract(depAmt).max(BigDecimal.ZERO);
+                    if (rOpt.isPresent() && rOpt.get().getStartDate() != null) {
+                        effectiveTime = rOpt.get().getStartDate().atStartOfDay();
+                    } else if (c.getActivatedAt() != null) {
+                        effectiveTime = c.getActivatedAt();
+                    } else {
+                        effectiveTime = paymentTime;
+                    }
+                } else if ("INITIAL_RENTAL".equalsIgnoreCase(p.getInvoiceType()) && isPaid) {
+                    cat = "RENTAL";
+                    amt = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+                    if (rOpt.isPresent() && rOpt.get().getStartDate() != null) {
+                        effectiveTime = rOpt.get().getStartDate().atStartOfDay();
+                    } else if (c.getActivatedAt() != null) {
+                        effectiveTime = c.getActivatedAt();
+                    } else {
+                        effectiveTime = paymentTime;
+                    }
+                }
+
+                if (effectiveTime == null || !ym.equals(java.time.YearMonth.from(effectiveTime))) {
+                    continue;
+                }
+
+                if ("RENTAL".equals(cat)) {
+                    mRental = mRental.add(amt);
+                } else if ("EXT".equals(cat)) {
+                    mExtension = mExtension.add(amt);
+                } else if ("PEN".equals(cat)) {
+                    mPenalty = mPenalty.add(amt);
+                } else if ("CMP".equals(cat)) {
+                    mCompensation = mCompensation.add(amt);
+                }
+            }
+
+            BigDecimal mNet = mRental.add(mExtension).add(mPenalty);
+            String monthCode = "T" + ym.getMonthValue();
+            String monthLabel = String.format("Tháng %02d/%d", ym.getMonthValue(), ym.getYear());
+            monthlyRevenueList.add(new com.swp391.backend.dto.dashboard.MonthlyRevenueItemResponse(monthCode, monthLabel, mNet, mRental.add(mExtension), mPenalty));
+        }
 
         ChainDashboardResponse resp = new ChainDashboardResponse();
         resp.setChainTotalFacilities(facilities.size());
@@ -314,11 +636,36 @@ public class DashboardService {
         resp.setChainAverageOccupancyRate(Math.round(chainOccupancy * 10.0) / 10.0);
         resp.setChainTotalActiveContracts(chainTotalActive);
         resp.setChainTotalRevenue(chainGross);
-        resp.setChainTotalRefunds(chainRefunds);
+        resp.setChainTotalRefunds(BigDecimal.ZERO);
         resp.setChainNetRevenue(chainNet);
         resp.setChainDepositHolding(chainDeposit);
+        resp.setChainRentalRevenue(chainRental);
+        resp.setChainPenaltyRevenue(chainPenalty);
         resp.setFacilityBreakdown(breakdown);
+        resp.setMonthlyRevenues(monthlyRevenueList);
 
         return resp;
+    }
+
+    /**
+     * Bỏ hoàn trả 50% tiền thuê khi trả kho trước hạn (theo quy định mới của BOM)
+     */
+    public BigDecimal calculateEarlyTerminationRefund(Contract c, Reservation r, List<Payment> paymentList) {
+        return BigDecimal.ZERO;
+    }
+
+    private LocalDateTime getContractTerminationTime(Contract c, List<Payment> paymentList) {
+        if (c == null) return null;
+        if (c.getTerminatedAt() != null) return c.getTerminatedAt();
+        if (paymentList != null && c.getContractId() != null) {
+            return paymentList.stream()
+                    .filter(p -> c.getContractId().equals(p.getContractId()))
+                    .filter(p -> "REF".equalsIgnoreCase(p.getInvoiceType()) || (p.getInvoiceNumber() != null && p.getInvoiceNumber().startsWith("REF-")))
+                    .map(p -> p.getPaidAt() != null ? p.getPaidAt() : p.getIssuedAt())
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null);
+        }
+        return null;
     }
 }

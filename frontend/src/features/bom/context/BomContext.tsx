@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
-import { bomApi, type ChainDashboardData, type FacilityBreakdownItem } from "../api/bomApi"
+import { bomApi, type ChainDashboardData, type FacilityBreakdownItem, type FeePolicyItem } from "../api/bomApi"
 import {
   type FacilityPerformance,
   type UnitPricing,
@@ -23,6 +23,19 @@ interface BomContextType {
   formatShortCurrency: (val?: number) => string
   reloadData: () => Promise<void>
   updatePricingInDb: (unitTypeId: number, data: { dailyPrice?: number; monthlyPrice?: number; depositAmount?: number; climateSurchargePercent?: number }) => Promise<boolean>
+  createPricingInDb: (data: {
+    name: string
+    size?: string
+    dimensions: string
+    dailyPrice: number
+    monthlyPrice: number
+    depositAmount: number
+    climateSurchargePercent?: number
+  }) => Promise<boolean>
+  deletePricingInDb: (unitTypeId: number) => Promise<boolean>
+  createFeePolicyInDb: (data: Partial<FeePolicyItem>) => Promise<boolean>
+  updateFeePolicyInDb: (policyId: number, data: Partial<FeePolicyItem>) => Promise<boolean>
+  deleteFeePolicyInDb: (policyId: number) => Promise<boolean>
   createFacilityInDb: (data: {
     facilityName: string
     address: string
@@ -57,14 +70,37 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
   const [chainOverview, setChainOverview] = useState<ChainDashboardData | null>(null)
   const [facilities, setFacilities] = useState<FacilityPerformance[]>([])
   const [pricingList, setPricingList] = useState<UnitPricing[]>(INITIAL_PRICING)
-  const [surcharges, setSurcharges] = useState<SurchargeItem[]>(INITIAL_SURCHARGES)
+  const [surcharges, setSurcharges] = useState<SurchargeItem[]>(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("smart_storage_surcharges")
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          if (Array.isArray(parsed)) return parsed
+        }
+      }
+    } catch (e) {
+      console.warn("Lỗi đọc surcharges từ localStorage:", e)
+    }
+    return INITIAL_SURCHARGES
+  })
   const [isLoadingApi, setIsLoadingApi] = useState<boolean>(true)
   const [isApiConnected, setIsApiConnected] = useState<boolean>(false)
+
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("smart_storage_surcharges", JSON.stringify(surcharges))
+      }
+    } catch (e) {
+      console.warn("Lỗi lưu surcharges vào localStorage:", e)
+    }
+  }, [surcharges])
 
   const loadLiveData = useCallback(async () => {
     try {
       setIsLoadingApi(true)
-      const [overview, apiFacilities, apiUnits, apiPrices] = await Promise.all([
+      const [overview, apiFacilities, apiUnits, apiPrices, apiFeePolicies] = await Promise.all([
         bomApi.getChainDashboard().catch((err) => {
           console.warn("API /api/admin/dashboard/chain-overview lỗi:", err)
           return null
@@ -81,11 +117,72 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
           console.warn("API /api/prices lỗi:", err)
           return null
         }),
+        bomApi.getFeePolicies().catch((err) => {
+          console.warn("API /api/fee-policies lỗi:", err)
+          return null
+        }),
       ])
 
       if (overview) {
         setChainOverview(overview)
         setIsApiConnected(true)
+      }
+
+      // 0. Cập nhật biểu phí (Fee Policies) từ Database
+      if (apiFeePolicies && Array.isArray(apiFeePolicies) && apiFeePolicies.length > 0) {
+        setIsApiConnected(true)
+        const mappedSurcharges: SurchargeItem[] = apiFeePolicies
+          .filter((fp) => fp.category !== "SURCHARGE")
+          .map((fp) => {
+            const rawCat = (fp.category || "PENALTY").toLowerCase()
+            const cat = (rawCat === "discount" || rawCat === "damage" ? rawCat : "penalty") as "penalty" | "discount" | "damage"
+            const catLabels: Record<string, string> = {
+              penalty: "Phí Phạt Quá Hạn (Penalties & Overdue Fees)",
+              discount: "Chính Sách Miễn Giảm Giá (Discount Policy & Waivers)",
+              damage: "Biểu Phí Bồi Thường Hư Hỏng & Vệ Sinh",
+            }
+            const typeLabels: Record<string, string> = {
+              penalty: "Chế Tài / Phạt Hợp Đồng",
+              discount: "Ưu Đãi / Khuyến Mãi",
+              damage: "Bồi Thường Hư Hỏng",
+            }
+          let rateStr = ""
+          if (fp.calcType === "PERCENT") {
+            const unitSuffix =
+              fp.unitBasis === "PER_DAY" ? "/ ngày trễ" :
+              fp.unitBasis === "PER_MONTH" ? "/ tháng" :
+              fp.unitBasis === "TOTAL_BILL" || fp.unitBasis === "CONTRACT_TOTAL" ? "Tổng Đơn" : ""
+            rateStr = `${fp.feeValue}% ${unitSuffix}`.trim()
+          } else {
+            const unitLabel =
+              fp.unitBasis === "PER_DAY" ? "/ ngày trễ" :
+              fp.unitBasis === "PER_MONTH" ? "/ tháng" :
+              fp.unitBasis === "PER_HOUR" ? "/ giờ" :
+              fp.unitBasis === "TOTAL_BILL" ? "/ đơn" : "/ lần"
+            rateStr = `₫${Number(fp.feeValue).toLocaleString("vi-VN")} ${unitLabel}`
+          }
+          if (fp.isWaiveDeposit) {
+            rateStr += " + Miễn Cọc"
+          }
+
+          return {
+            id: `policy-${fp.policyId}`,
+            policyId: fp.policyId,
+            policyCode: fp.policyCode,
+            category: cat,
+            categoryLabel: catLabels[cat] || catLabels.penalty,
+            type: typeLabels[cat] || "Chính Sách Biểu Phí",
+            name: fixMojibake(fp.policyName),
+            rate: rateStr,
+            calcType: fp.calcType as any,
+            feeValue: Number(fp.feeValue),
+            unitBasis: fp.unitBasis,
+            isWaiveDeposit: fp.isWaiveDeposit,
+            isActive: fp.status === "ACTIVE",
+            note: fixMojibake(fp.description || ""),
+          }
+        })
+        setSurcharges(mappedSurcharges)
       }
 
       // 1. Cập nhật bảng giá từ Database (nếu API có dữ liệu)
@@ -102,7 +199,11 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
           height: p.height || "2.0m",
           dailyPrice: Number(p.dailyPrice || 0),
           normPrice: Number(p.monthlyPrice || 0),
-          acPrice: Number(p.acPrice || Math.round(Number(p.monthlyPrice || 0) * 1.2)),
+          acPrice:
+            Number(p.acPrice || 0) > Number(p.monthlyPrice || 0)
+              ? Number(p.acPrice)
+              : Math.round(Number(p.monthlyPrice || 0) * 1.2),
+          climateSurchargePercent: Number(p.climateSurchargePercent || 20),
           depositAmount: Number(p.depositAmount || 0),
           depositText: `₫${Number(p.depositAmount || 0).toLocaleString("vi-VN")}`,
           status: p.status === "ACTIVE" ? "Đang áp dụng" : (p.status || "Đang áp dụng"),
@@ -147,10 +248,16 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
           const maintenance = breakdown?.maintenanceUnits ?? fUnits.filter((u) => u.status === "MAINTENANCE").length
           const calcOccRate = totalUnits > 0 ? Number(((occupied / totalUnits) * 100).toFixed(1)) : 0
           const realOccRate = breakdown?.occupancyRate ?? calcOccRate
-          const rawRevenue = (breakdown?.netRevenue != null && Number(breakdown.netRevenue) > 0)
-            ? breakdown.netRevenue
-            : (breakdown?.rentalRevenue ?? 0)
-          const realRevenue = Number(rawRevenue) > 0 ? `₫${Number(rawRevenue).toLocaleString("vi-VN")}` : "₫0"
+          const thisMonthRevVal = Number(breakdown?.thisMonthRevenue ?? 0)
+          const last3MonthsRevVal = Number(breakdown?.last3MonthsRevenue ?? 0)
+          const allTimeRevVal = Number(
+            breakdown?.allTimeRevenue ?? 
+            (breakdown?.netRevenue != null && Number(breakdown.netRevenue) > 0 ? breakdown.netRevenue : (breakdown?.rentalRevenue ?? 0))
+          )
+
+          const fmtThisMonth = thisMonthRevVal > 0 ? `₫${thisMonthRevVal.toLocaleString("vi-VN")}` : "₫0"
+          const fmtLast3Months = last3MonthsRevVal > 0 ? `₫${last3MonthsRevVal.toLocaleString("vi-VN")}` : "₫0"
+          const fmtAllTime = allTimeRevVal > 0 ? `₫${allTimeRevVal.toLocaleString("vi-VN")}` : "₫0"
 
           const rawName = f.facilityName || breakdown?.facilityName || `Cơ sở ${facId}`
           const fixedName = fixMojibake(rawName)
@@ -179,9 +286,24 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
             available: available,
             maintenance: maintenance,
             occupancyRate: realOccRate,
-            monthlyRevenue: realRevenue,
+            monthlyRevenue: fmtThisMonth,
+            thisMonthRevenue: fmtThisMonth,
+            last3MonthsRevenue: fmtLast3Months,
+            allTimeRevenue: fmtAllTime,
             floorArea: totalUnits * 12,
             overdueUnits: breakdown?.overdueContracts || 0,
+            depositHolding: Number(breakdown?.depositHolding || 0),
+            totalRefunds: Number(breakdown?.totalRefunds || 0),
+            netRevenue: Number(breakdown?.netRevenue || 0),
+            rentalRevenue: Number(breakdown?.rentalRevenue || 0),
+            penaltyRevenue: Number(breakdown?.penaltyRevenue || 0),
+            monthlyRevenues: (breakdown?.monthlyRevenues || []).map((m: any) => ({
+              month: m.month,
+              label: m.label,
+              revenue: Number(m.revenue || 0),
+              rentalRevenue: m.rentalRevenue != null ? Number(m.rentalRevenue) : undefined,
+              penaltyRevenue: m.penaltyRevenue != null ? Number(m.penaltyRevenue) : undefined,
+            })),
             status: f.status || "ACTIVE",
             rating: "5.0 ★",
             priceMultiplier: savedMgr?.priceMultiplier || 1.0,
@@ -195,9 +317,17 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
       } else if (overview && overview.facilityBreakdown && overview.facilityBreakdown.length > 0) {
         setIsApiConnected(true)
         const mappedFromBreakdown: FacilityPerformance[] = overview.facilityBreakdown.map((b, idx) => {
-          const rawRev = (b.netRevenue != null && Number(b.netRevenue) > 0)
-            ? b.netRevenue
-            : (b.rentalRevenue ?? 0)
+          const thisMonthRevVal = Number(b.thisMonthRevenue ?? 0)
+          const last3MonthsRevVal = Number(b.last3MonthsRevenue ?? 0)
+          const allTimeRevVal = Number(
+            b.allTimeRevenue ?? 
+            (b.netRevenue != null && Number(b.netRevenue) > 0 ? b.netRevenue : (b.rentalRevenue ?? 0))
+          )
+
+          const fmtThisMonth = thisMonthRevVal > 0 ? `₫${thisMonthRevVal.toLocaleString("vi-VN")}` : "₫0"
+          const fmtLast3Months = last3MonthsRevVal > 0 ? `₫${last3MonthsRevVal.toLocaleString("vi-VN")}` : "₫0"
+          const fmtAllTime = allTimeRevVal > 0 ? `₫${allTimeRevVal.toLocaleString("vi-VN")}` : "₫0"
+
           const rawName = b.facilityName || `Cơ sở ${b.facilityId}`
           const cleanName = rawName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
           const rawMgr = b.managerName || "Chưa phân công"
@@ -218,9 +348,24 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
             available: b.availableUnits || 0,
             maintenance: b.maintenanceUnits || 0,
             occupancyRate: b.occupancyRate || 0,
-            monthlyRevenue: rawRev > 0 ? `₫${Number(rawRev).toLocaleString("vi-VN")}` : "₫0",
+            monthlyRevenue: fmtThisMonth,
+            thisMonthRevenue: fmtThisMonth,
+            last3MonthsRevenue: fmtLast3Months,
+            allTimeRevenue: fmtAllTime,
             floorArea: (b.totalUnits || 10) * 12,
             overdueUnits: b.overdueContracts || 0,
+            depositHolding: Number(b.depositHolding || 0),
+            totalRefunds: Number(b.totalRefunds || 0),
+            netRevenue: Number(b.netRevenue || 0),
+            rentalRevenue: Number(b.rentalRevenue || 0),
+            penaltyRevenue: Number(b.penaltyRevenue || 0),
+            monthlyRevenues: (b.monthlyRevenues || []).map((m: any) => ({
+              month: m.month,
+              label: m.label,
+              revenue: Number(m.revenue || 0),
+              rentalRevenue: m.rentalRevenue != null ? Number(m.rentalRevenue) : undefined,
+              penaltyRevenue: m.penaltyRevenue != null ? Number(m.penaltyRevenue) : undefined,
+            })),
             status: "ACTIVE",
             rating: "5.0 ★",
             priceMultiplier: 1.0,
@@ -273,6 +418,74 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
       return true
     } catch (err) {
       console.error("Lỗi cập nhật giá vào database:", err)
+      return false
+    }
+  }
+
+  // Thêm loại kho mới vào Database
+  const createPricingInDb = async (data: {
+    name: string
+    size?: string
+    dimensions: string
+    dailyPrice: number
+    monthlyPrice: number
+    depositAmount: number
+    climateSurchargePercent?: number
+  }): Promise<boolean> => {
+    try {
+      await bomApi.createPrice(data)
+      await loadLiveData()
+      return true
+    } catch (err) {
+      console.error("Lỗi thêm loại kho vào database:", err)
+      return false
+    }
+  }
+
+  // Xóa mềm loại kho khỏi Database
+  const deletePricingInDb = async (unitTypeId: number): Promise<boolean> => {
+    try {
+      await bomApi.deletePrice(unitTypeId)
+      await loadLiveData()
+      return true
+    } catch (err) {
+      console.error("Lỗi xóa loại kho khỏi database:", err)
+      return false
+    }
+  }
+
+  // Thêm biểu phí mới vào Database
+  const createFeePolicyInDb = async (data: Partial<FeePolicyItem>): Promise<boolean> => {
+    try {
+      await bomApi.createFeePolicy(data)
+      await loadLiveData()
+      return true
+    } catch (err) {
+      console.error("Lỗi thêm biểu phí vào database:", err)
+      return false
+    }
+  }
+
+  // Cập nhật biểu phí vào Database
+  const updateFeePolicyInDb = async (policyId: number, data: Partial<FeePolicyItem>): Promise<boolean> => {
+    try {
+      await bomApi.updateFeePolicy(policyId, data)
+      await loadLiveData()
+      return true
+    } catch (err) {
+      console.error("Lỗi cập nhật biểu phí vào database:", err)
+      return false
+    }
+  }
+
+  // Xóa mềm biểu phí khỏi Database (status = 'INACTIVE')
+  const deleteFeePolicyInDb = async (policyId: number): Promise<boolean> => {
+    try {
+      await bomApi.deleteFeePolicy(policyId)
+      await loadLiveData()
+      return true
+    } catch (err) {
+      console.error("Lỗi xóa biểu phí trong database:", err)
       return false
     }
   }
@@ -401,6 +614,11 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
         formatShortCurrency,
         reloadData: loadLiveData,
         updatePricingInDb,
+        createPricingInDb,
+        deletePricingInDb,
+        createFeePolicyInDb,
+        updateFeePolicyInDb,
+        deleteFeePolicyInDb,
         createFacilityInDb,
         updateFacilityInDb,
         deleteFacilityInDb,

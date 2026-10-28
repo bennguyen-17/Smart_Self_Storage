@@ -1,10 +1,10 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useLocation, useNavigate, useOutlet } from "react-router-dom"
 import { toast } from "sonner"
+import apiClient from "@/lib/apiClient"
 import {
   Warehouse,
   SlidersHorizontal,
-  ShieldAlert,
   FileSpreadsheet,
   Moon,
   Sun,
@@ -13,13 +13,10 @@ import {
   X,
   LogOut,
   PanelLeft,
-  LayoutGrid,
-  ChevronRight,
 } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 import { useTheme } from "@/components/common/theme-provider"
 import { useAuth } from "@/context/AuthContext"
-import ThreeBackground from "@/features/bom/components/ThreeBackground"
 import { BomProvider } from "@/features/bom/context/BomContext"
 
 const NAV_MODULES = [
@@ -36,13 +33,6 @@ const NAV_MODULES = [
     navLabel: "Khung Giá & Phí",
     subLabel: "Biểu giá thuê & Phí dịch vụ",
     icon: SlidersHorizontal,
-  },
-  {
-    path: "/bom/policies",
-    label: "Thông Số Vận Hành",
-    navLabel: "Quy Chuẩn",
-    subLabel: "Quy chuẩn an ninh & Chế tài",
-    icon: ShieldAlert,
   },
   {
     path: "/bom/reports",
@@ -69,12 +59,41 @@ function BomLayoutContent() {
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches)
 
-  // Thông tin người dùng lấy trực tiếp từ Auth / Session
+  // Thông tin người dùng lấy trực tiếp từ API / Database
+  const [profileData, setProfileData] = useState<{
+    fullName?: string
+    phone?: string
+    email?: string
+    role?: string
+    roleTitle?: string
+    staffCode?: string
+    facilityName?: string
+  } | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+    apiClient
+      .get("/staff/profile")
+      .then((res: any) => {
+        if (isMounted && res && (res.success || res.fullName)) {
+          setProfileData(res)
+        }
+      })
+      .catch((err) => {
+        console.warn("Không thể tải thông tin profile từ API:", err)
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   const storedUser = typeof window !== "undefined" ? localStorage.getItem("user") : null
   const parsedStoredUser = storedUser ? (() => { try { return JSON.parse(storedUser); } catch (e) { return null; } })() : null
-  const currentUserName = user?.fullName || parsedStoredUser?.fullName || "Quản Trị Viên"
-  const currentUserRole = user?.role ? (user.role === "BOM" ? "Ban Giám Đốc" : user.role) : "Chuyên viên Quản lý Vận hành"
-  const currentUserEmail = user?.email || parsedStoredUser?.email || "bom@smartstorage.vn"
+  const currentUserName = profileData?.fullName || user?.fullName || parsedStoredUser?.fullName || "Ban Điều Hành"
+  const currentUserRole = profileData?.roleTitle || (user?.role ? (user.role === "BOM" ? "Ban Điều Hành (BOM)" : user.role) : "Ban Điều Hành (BOM)")
+  const currentUserEmail = profileData?.email || user?.email || parsedStoredUser?.email || "bom@smartstorage.vn"
+  const currentUserPhone = profileData?.phone || user?.phone || "Chưa cập nhật"
+  const currentUserCode = profileData?.staffCode || (user?.id ? `BM-${String(user.id).padStart(4, "0")}` : "BM-0001")
   const userInitials = currentUserName
     .split(" ")
     .filter(Boolean)
@@ -95,35 +114,41 @@ function BomLayoutContent() {
   }
 
   return (
-    <div className="relative min-h-screen text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200 overflow-x-hidden">
-      {/* 3D Dynamic Waves Background */}
-      <ThreeBackground theme={theme} />
+    <div className="staff-portal relative min-h-screen bg-[#eef5fc] text-slate-900 dark:bg-[#0b1120] dark:text-slate-100 font-sans antialiased overflow-x-hidden transition-colors duration-200">
+      {/* Vầng sáng xanh mờ phía trên vùng nội dung, đồng bộ 100% chuẩn phong cách Staff & Manager */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed top-0 left-1/2 -z-0 h-80 w-full max-w-5xl -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-500/20 via-cyan-400/25 to-indigo-500/20 blur-3xl lg:left-[calc(50%+8rem)] dark:from-blue-500/10 dark:via-cyan-400/10 dark:to-indigo-500/10"
+      />
+      {/* Vầng sáng phụ lan tỏa góc dưới tạo chiều sâu màu loang mềm mại */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed -bottom-24 right-1/4 -z-0 size-96 rounded-full bg-indigo-500/15 blur-3xl dark:bg-indigo-600/10"
+      />
 
       {/* Top Header - Fixed cố định trên đỉnh */}
-      <header className="fixed top-0 left-0 right-0 z-50 w-full min-h-[58px] bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-sky-500/20 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4 shrink-0 shadow-xs text-slate-900 dark:text-white transition-colors">
+      <header className="fixed top-0 left-0 right-0 z-50 w-full min-h-[58px] bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-blue-500/20 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4 shrink-0 shadow-xs text-slate-900 dark:text-white transition-colors">
         {/* BRAND LOGO & NÚT MENU MOBILE */}
         <div className="shrink-0 flex items-center gap-2 sm:gap-3">
-          {/* Nút toggle mở sidebar trên mobile khi đang ở trang con */}
-          {!isHome && (
-            <button
-              type="button"
-              onClick={() => setIsMobileSidebarOpen((prev) => !prev)}
-              className="lg:hidden p-2 rounded-xl bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 cursor-pointer transition shadow-xs dark:bg-slate-800 dark:text-sky-400 dark:hover:text-white dark:hover:bg-slate-700 dark:border-slate-700/80"
-              title="Mở thanh điều hướng"
-            >
-              <PanelLeft className="size-4.5" />
-            </button>
-          )}
+          {/* Nút toggle mở sidebar trên mobile */}
+          <button
+            type="button"
+            onClick={() => setIsMobileSidebarOpen((prev) => !prev)}
+            className="lg:hidden p-2 rounded-xl bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 cursor-pointer transition shadow-xs dark:bg-slate-800 dark:text-blue-400 dark:hover:text-white dark:hover:bg-slate-700 dark:border-slate-700/80"
+            title="Mở thanh điều hướng"
+          >
+            <PanelLeft className="size-4.5" />
+          </button>
 
           <div
             className="flex items-center gap-2 sm:gap-3 cursor-pointer group"
             onClick={() => {
-              navigate("/bom")
+              navigate("/bom/facilities")
               setIsMobileSidebarOpen(false)
             }}
-            title="Về Trang Chủ Điều Hành"
+            title="Về Trang Giám Sát Cơ Sở Kho"
           >
-            <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20 group-hover:scale-105 transition-transform">
+            <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
               <Warehouse className="size-5" />
             </div>
             <div>
@@ -163,15 +188,15 @@ function BomLayoutContent() {
               title="Nhấn để xem Hồ sơ & Đăng xuất"
               type="button"
             >
-              <div className="w-7 h-7 rounded-full bg-sky-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+              <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
                 {userInitials}
               </div>
               <div className="text-left hidden md:block">
                 <div className="text-xs font-extrabold text-slate-900 dark:text-white leading-tight flex items-center space-x-1">
                   <span className="max-w-[130px] truncate">{currentUserName}</span>
-                  <ChevronDown className="size-3 text-slate-400 group-hover:text-sky-400 transition-colors ml-0.5 shrink-0" />
+                  <ChevronDown className="size-3 text-slate-400 group-hover:text-blue-500 transition-colors ml-0.5 shrink-0" />
                 </div>
-                <div className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 truncate max-w-[130px]">
+                <div className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 truncate max-w-[130px]">
                   {currentUserRole}
                 </div>
               </div>
@@ -203,36 +228,12 @@ function BomLayoutContent() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
-              className={`fixed top-[58px] bottom-0 left-0 z-40 w-64 bg-white/95 text-slate-900 shadow-sm backdrop-blur-2xl border-r border-slate-200/80 dark:border-sky-500/20 dark:bg-slate-950/95 dark:text-white flex flex-col justify-between p-4 transition-transform duration-300 lg:translate-x-0 ${isMobileSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
+              className={`fixed top-[58px] bottom-0 left-0 z-40 w-64 bg-white/95 text-slate-900 shadow-sm backdrop-blur-2xl border-r border-slate-200/80 dark:border-slate-800 dark:bg-slate-950/95 dark:text-white flex flex-col justify-between p-4 transition-transform duration-300 lg:translate-x-0 ${isMobileSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
                 }`}
             >
-              {/* Phần trên: Nút quay lại Tổng quan & Danh mục 4 Phân hệ */}
-              <div className="space-y-4">
-                {/* Nút Quay Về Tổng Quan (Hub 4 Cụm) */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigate("/bom")
-                    setIsMobileSidebarOpen(false)
-                  }}
-                  className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition cursor-pointer group shadow-xs dark:text-slate-300 dark:hover:text-white dark:bg-slate-800/70 dark:hover:bg-slate-800 dark:border-slate-700/60"
-                  title="Quay về trang Tổng quan 4 cụm chức năng"
-                >
-                  <div className="size-8 rounded-xl bg-sky-500/15 text-sky-600 group-hover:bg-sky-500 group-hover:text-slate-950 flex items-center justify-center transition-colors shrink-0 dark:text-sky-400">
-                    <LayoutGrid className="size-4.5" />
-                  </div>
-                  <div className="text-left flex-1 min-w-0">
-                    <div className="text-xs font-black text-slate-900 dark:text-white truncate">Tổng Quan</div>
-                  </div>
-                  <ChevronRight className="size-4 text-slate-400 group-hover:text-sky-600 group-hover:translate-x-0.5 transition shrink-0 dark:text-slate-500 dark:group-hover:text-sky-400" />
-                </button>
-
-                {/* Tiêu đề nhóm quản trị */}
-                <div className="pt-2">
-                  <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 px-2 pb-2">
-                    Danh Mục Quản Lý
-                  </div>
-                  <nav className="space-y-1.5">
+              {/* Phần trên: Danh mục Phân hệ */}
+              <div>
+                <nav className="space-y-1.5">
                     {NAV_MODULES.map((item) => {
                       const Icon = item.icon
                       const isActive = location.pathname.startsWith(item.path)
@@ -254,7 +255,7 @@ function BomLayoutContent() {
                           }}
                           className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl font-bold text-xs tracking-wide transition-colors cursor-pointer text-left ${
                             isActive
-                              ? "text-slate-950 font-black shadow-md shadow-sky-500/25"
+                              ? "text-white font-bold shadow-lg shadow-blue-600/25"
                               : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/60"
                           }`}
                         >
@@ -262,7 +263,7 @@ function BomLayoutContent() {
                             <motion.div
                               layoutId="bom-sidebar-active-indicator"
                               transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                              className="absolute inset-0 bg-sky-500 rounded-2xl -z-10"
+                              className="absolute inset-0 bg-blue-600 rounded-2xl -z-10"
                             />
                           )}
                           <motion.div
@@ -270,8 +271,8 @@ function BomLayoutContent() {
                             transition={{ type: "spring", stiffness: 300, damping: 28 }}
                             className={`size-8 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
                               isActive
-                                ? "bg-slate-950/20 text-slate-950"
-                                : "bg-slate-100 text-sky-600 dark:bg-slate-800/80 dark:text-sky-400"
+                                ? "bg-white/15 text-white"
+                                : "bg-slate-100 text-blue-600 group-hover:bg-blue-50 dark:bg-slate-800 dark:text-blue-300 dark:group-hover:text-white"
                             }`}
                           >
                             <Icon className="size-4" />
@@ -280,13 +281,13 @@ function BomLayoutContent() {
                             <motion.div
                               layoutId={`bom-module-title-${item.path}`}
                               transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                              className="text-xs truncate font-extrabold text-slate-900 dark:text-white"
+                              className={`text-xs truncate font-extrabold ${isActive ? "text-white" : "text-slate-900 dark:text-white"}`}
                             >
                               {item.label}
                             </motion.div>
                             <div
                               className={`text-[10.5px] truncate font-semibold mt-0.5 ${
-                                isActive ? "text-slate-950/90 font-bold" : "text-slate-500 dark:text-slate-400"
+                                isActive ? "text-blue-100" : "text-slate-500 dark:text-slate-400"
                               }`}
                             >
                               {item.subLabel}
@@ -297,7 +298,6 @@ function BomLayoutContent() {
                     })}
                   </nav>
                 </div>
-              </div>
 
               {/* Phần dưới cùng: User Profile và Nút Theme Toggle - Đồng bộ phong cách Staff */}
               <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800/80 shrink-0">
@@ -311,14 +311,14 @@ function BomLayoutContent() {
                     className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl p-1.5 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/70 text-left cursor-pointer group"
                     title="Nhấn để xem Hồ sơ & Đăng xuất"
                   >
-                    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sky-500 text-xs font-black text-slate-950 shadow-xs group-hover:scale-105 transition-transform">
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white shadow-xs group-hover:scale-105 transition-transform">
                       {userInitials}
                     </div>
                     <div className="min-w-0 flex-1 leading-tight">
                       <span className="block truncate text-xs font-extrabold text-slate-900 dark:text-white">
                         {currentUserName}
                       </span>
-                      <span className="block truncate text-[10px] font-semibold text-sky-600 dark:text-sky-400">
+                      <span className="block truncate text-[10px] font-semibold text-blue-600 dark:text-blue-400">
                         {currentUserRole}
                       </span>
                     </div>
@@ -338,9 +338,6 @@ function BomLayoutContent() {
                     )}
                   </button>
                 </div>
-                <p className="px-1 pt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-                  Cổng điều hành BOM
-                </p>
               </div>
             </motion.aside>
           </>
@@ -386,12 +383,12 @@ function BomLayoutContent() {
             </div>
 
             <div className="space-y-4 text-xs">
-              <div className="flex items-center space-x-3.5 p-3.5 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-900">
-                <div className="w-12 h-12 rounded-2xl bg-sky-600 text-white font-black text-lg flex items-center justify-center shadow-md">
+              <div className="flex items-center space-x-3.5 p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900">
+                <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white font-black text-lg flex items-center justify-center shadow-md">
                   {userInitials}
                 </div>
                 <div>
-                  <div className="font-black text-sm text-sky-950 dark:text-sky-200">
+                  <div className="font-black text-sm text-blue-950 dark:text-blue-200">
                     {currentUserName}
                   </div>
                   <div className="text-[10px] text-slate-500 mt-0.5">
@@ -401,33 +398,32 @@ function BomLayoutContent() {
               </div>
 
               <div className="space-y-2 pt-1">
-                <div className="text-[11px] font-black uppercase text-slate-400">
-                  1. Thông tin Định danh &amp; Công tác
-                </div>
-                <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 font-semibold">
-                  <div className="flex justify-between">
+                <div className="space-y-2 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 font-semibold text-xs">
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60 dark:border-slate-700/60">
+                    <span className="text-slate-500">Mã Định Danh:</span>
+                    <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{currentUserCode}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60 dark:border-slate-700/60">
                     <span className="text-slate-500">Họ và Tên:</span>
                     <span className="text-slate-900 dark:text-white font-bold">{currentUserName}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60 dark:border-slate-700/60">
                     <span className="text-slate-500">Vai Trò:</span>
-                    <span className="font-mono font-bold text-sky-600">{currentUserRole}</span>
+                    <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{currentUserRole}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60 dark:border-slate-700/60">
                     <span className="text-slate-500">Email:</span>
                     <span className="font-mono font-bold">{currentUserEmail}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5">
+                    <span className="text-slate-500">Số Điện Thoại:</span>
+                    <span className="font-mono font-bold">{currentUserPhone}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-slate-800">
-              <button
-                onClick={() => toast.info("Vui lòng liên hệ Admin để đổi mật khẩu tài khoản cấp cao.")}
-                className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-              >
-                Đổi Mật Khẩu
-              </button>
+            <div className="flex justify-end items-center pt-2 border-t border-slate-200 dark:border-slate-800">
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs flex items-center gap-1.5 cursor-pointer shadow-md"

@@ -15,11 +15,33 @@ export interface FacilityBreakdownItem {
   overdueContracts: number
   terminatedContracts: number
   rentalRevenue: number
+  extensionRevenue?: number
+  penaltyRevenue?: number
+  compensationRevenue?: number
+  totalRefunds?: number
   netRevenue: number
+  thisMonthRevenue?: number
+  last3MonthsRevenue?: number
+  allTimeRevenue?: number
   depositHolding: number
+  forfeitedDeposit?: number
+  waivedAmount?: number
   managerName?: string
   managerEmail?: string
   managerPhone?: string
+  totalTickets?: number
+  inProgressTickets?: number
+  resolvedTickets?: number
+  slaBreachedTickets?: number
+  monthlyRevenues?: MonthlyRevenueItem[]
+}
+
+export interface MonthlyRevenueItem {
+  month: string
+  label: string
+  revenue: number
+  rentalRevenue?: number
+  penaltyRevenue?: number
 }
 
 export interface ChainDashboardData {
@@ -32,6 +54,7 @@ export interface ChainDashboardData {
   chainNetRevenue: number
   chainDepositHolding: number
   facilityBreakdown: FacilityBreakdownItem[]
+  monthlyRevenues?: MonthlyRevenueItem[]
 }
 
 export interface FacilityApiItem {
@@ -48,8 +71,15 @@ export interface FacilityApiItem {
 }
 
 export const bomApi = {
-  getChainDashboard: async (): Promise<ChainDashboardData> => {
-    return apiClient.get('/admin/dashboard/chain-overview')
+  getChainDashboard: async (period?: string): Promise<ChainDashboardData> => {
+    return apiClient.get('/admin/dashboard/chain-overview', {
+      params: period ? { period } : undefined,
+    })
+  },
+  getFacilityDashboard: async (facilityId: number): Promise<FacilityBreakdownItem> => {
+    return apiClient.get('/manager/dashboard/overview', {
+      params: { facilityId },
+    })
   },
   getFacilities: async (): Promise<FacilityApiItem[]> => {
     return apiClient.get('/facilities')
@@ -81,4 +111,44 @@ export const bomApi = {
   updatePrice: async (unitTypeId: number, data: { dailyPrice?: number; monthlyPrice?: number; depositAmount?: number; climateSurchargePercent?: number }): Promise<any> => {
     return apiClient.put(`/prices/${unitTypeId}`, data)
   },
+  createPrice: async (data: {
+    name: string
+    size?: string
+    dimensions: string
+    dailyPrice: number
+    monthlyPrice: number
+    depositAmount: number
+    climateSurchargePercent?: number
+  }): Promise<any> => {
+    return apiClient.post('/prices', data)
+  },
+  deletePrice: async (unitTypeId: number): Promise<any> => {
+    return apiClient.delete(`/prices/${unitTypeId}`)
+  },
+  getFeePolicies: async (): Promise<FeePolicyItem[]> => {
+    return apiClient.get('/fee-policies')
+  },
+  createFeePolicy: async (data: Partial<FeePolicyItem>): Promise<FeePolicyItem> => {
+    return apiClient.post('/fee-policies', data)
+  },
+  updateFeePolicy: async (policyId: number, data: Partial<FeePolicyItem>): Promise<FeePolicyItem> => {
+    return apiClient.put(`/fee-policies/${policyId}`, data)
+  },
+  deleteFeePolicy: async (policyId: number): Promise<void> => {
+    return apiClient.delete(`/fee-policies/${policyId}`)
+  },
 }
+
+export interface FeePolicyItem {
+  policyId: number
+  policyCode: string
+  policyName: string
+  category: "SURCHARGE" | "PENALTY" | "DISCOUNT" | string
+  calcType: "PERCENT" | "FIXED" | string
+  feeValue: number
+  unitBasis: string
+  description?: string
+  isWaiveDeposit?: boolean
+  status: string
+}
+

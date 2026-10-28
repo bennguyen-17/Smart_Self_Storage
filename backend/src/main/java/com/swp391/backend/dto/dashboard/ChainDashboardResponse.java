@@ -12,6 +12,8 @@ public class ChainDashboardResponse {
     private BigDecimal chainTotalRefunds = BigDecimal.ZERO;
     private BigDecimal chainNetRevenue = BigDecimal.ZERO;
     private BigDecimal chainDepositHolding = BigDecimal.ZERO;
+    private BigDecimal chainRentalRevenue = BigDecimal.ZERO;
+    private BigDecimal chainPenaltyRevenue = BigDecimal.ZERO;
 
     private List<ManagerDashboardResponse> facilityBreakdown;
 
@@ -82,11 +84,37 @@ public class ChainDashboardResponse {
         this.chainDepositHolding = chainDepositHolding;
     }
 
+    public BigDecimal getChainRentalRevenue() {
+        return chainRentalRevenue;
+    }
+
+    public void setChainRentalRevenue(BigDecimal chainRentalRevenue) {
+        this.chainRentalRevenue = chainRentalRevenue;
+    }
+
+    public BigDecimal getChainPenaltyRevenue() {
+        return chainPenaltyRevenue;
+    }
+
+    public void setChainPenaltyRevenue(BigDecimal chainPenaltyRevenue) {
+        this.chainPenaltyRevenue = chainPenaltyRevenue;
+    }
+
+    private List<MonthlyRevenueItemResponse> monthlyRevenues;
+
     public List<ManagerDashboardResponse> getFacilityBreakdown() {
         return facilityBreakdown;
     }
 
     public void setFacilityBreakdown(List<ManagerDashboardResponse> facilityBreakdown) {
         this.facilityBreakdown = facilityBreakdown;
+    }
+
+    public List<MonthlyRevenueItemResponse> getMonthlyRevenues() {
+        return monthlyRevenues;
+    }
+
+    public void setMonthlyRevenues(List<MonthlyRevenueItemResponse> monthlyRevenues) {
+        this.monthlyRevenues = monthlyRevenues;
     }
 }
