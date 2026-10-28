@@ -77,10 +77,12 @@ public class StaffProfileResponse {
             this.endTime = endTime;
         }
 
+        @com.fasterxml.jackson.annotation.JsonProperty("isCurrent")
         public boolean isCurrent() {
             return isCurrent;
         }
 
+        @com.fasterxml.jackson.annotation.JsonProperty("isCurrent")
         public void setCurrent(boolean current) {
             isCurrent = current;
         }

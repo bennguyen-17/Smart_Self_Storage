@@ -5,7 +5,8 @@ export interface AssignedShift {
   shiftName: string
   startTime: string
   endTime: string
-  isCurrent: boolean
+  isCurrent?: boolean
+  current?: boolean
   status: string
 }
 

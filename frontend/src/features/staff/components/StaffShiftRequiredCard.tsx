@@ -63,13 +63,21 @@ export default function StaffShiftRequiredCard({
   if (profile) {
     if (shiftStatus === "IN_SHIFT") {
       const currentShift =
-        profile.assignedShifts.find((s) => s.isCurrent) ||
+        profile.assignedShifts.find((s) => s.isCurrent || (s as any).current) ||
         profile.assignedShifts[0]
-      displayTitle = "Bạn chưa tiếp nhận ca trực được phân công"
-      displaySubtitle = currentShift
-        ? `Bạn có lịch trực ${currentShift.shiftName} (${currentShift.startTime} - ${currentShift.endTime}). Vui lòng bắt đầu ca trực để kích hoạt quyền làm việc tại quầy.`
-        : "Vui lòng bắt đầu ca trực để kích hoạt quyền làm việc và xử lý nghiệp vụ tại quầy."
-      canStart = true
+      if (currentShift?.status === "ATTENDED") {
+        displayTitle = "Đang trong ca làm việc"
+        displaySubtitle = currentShift
+          ? `Bạn đang trong ca trực ${currentShift.shiftName} (${currentShift.startTime} - ${currentShift.endTime}). Bấm thử lại để tải dữ liệu hợp đồng.`
+          : "Bạn đang trong ca làm việc. Bấm thử lại để tải dữ liệu hợp đồng."
+        canStart = false
+      } else {
+        displayTitle = "Bạn chưa tiếp nhận ca trực được phân công"
+        displaySubtitle = currentShift
+          ? `Bạn có lịch trực ${currentShift.shiftName} (${currentShift.startTime} - ${currentShift.endTime}). Vui lòng bắt đầu ca trực để kích hoạt quyền làm việc tại quầy.`
+          : "Vui lòng bắt đầu ca trực để kích hoạt quyền làm việc và xử lý nghiệp vụ tại quầy."
+        canStart = true
+      }
     } else if (shiftStatus === "UPCOMING") {
       const nextShift = profile.assignedShifts[0]
       displayTitle = "Chưa đến giờ ca trực"
@@ -122,7 +130,7 @@ export default function StaffShiftRequiredCard({
         {displaySubtitle}
       </p>
 
-      {canStart && (
+      {canStart ? (
         <div className="mt-6 flex items-center justify-center">
           <button
             type="button"
@@ -134,7 +142,17 @@ export default function StaffShiftRequiredCard({
             <span>{loading ? "Đang bắt đầu…" : "Bắt Đầu Ca Ngay"}</span>
           </button>
         </div>
-      )}
+      ) : onStarted ? (
+        <div className="mt-6 flex items-center justify-center">
+          <button
+            type="button"
+            onClick={onStarted}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-slate-800 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-700 active:scale-[0.98] dark:bg-slate-700 dark:hover:bg-slate-600"
+          >
+            <span>Thử lại</span>
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }
