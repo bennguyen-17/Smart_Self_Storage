@@ -432,36 +432,25 @@ function RegisterForm() {
           )}
 
           {/* Thông tin nhận hoàn cọc (không bắt buộc) */}
-          <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 p-2.5 space-y-2">
-            <div>
-              <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                Thông tin nhận hoàn cọc
-              </p>
-              <p className="text-[10px] leading-snug text-muted-foreground">
-                Không bắt buộc · Điền đủ 3 ô để hệ thống tự động hoàn tiền cọc khi hủy hoặc thanh lý hợp đồng.
-              </p>
-            </div>
+          <div className="grid grid-cols-1 gap-2.5">
+            <BankNameField control={form.control} />
 
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-              <BankNameField control={form.control} />
+            <TextField
+              control={form.control}
+              name="bankAccountNumber"
+              label="Số tài khoản"
+              placeholder="VD: 1029384756"
+              maxLength={20}
+              digitsOnly
+            />
 
-              <TextField
-                control={form.control}
-                name="bankAccountNumber"
-                label="Số tài khoản"
-                placeholder="VD: 1029384756"
-                maxLength={20}
-                digitsOnly
-              />
-
-              <TextField
-                control={form.control}
-                name="bankAccountName"
-                label="Chủ tài khoản"
-                placeholder="NGUYEN VAN A"
-                maxLength={100}
-              />
-            </div>
+            <TextField
+              control={form.control}
+              name="bankAccountName"
+              label="Chủ tài khoản"
+              placeholder="NGUYEN VAN A"
+              maxLength={50}
+            />
           </div>
 
           {/* Điều khoản */}
@@ -476,13 +465,13 @@ function RegisterForm() {
                 className="mt-0.5"
               />
 
-              <span className="text-xs leading-normal text-muted-foreground">
+              <span className="text-[11px] leading-normal tracking-tight text-muted-foreground lg:whitespace-nowrap">
                 Tôi đồng ý với{" "}
                 <Button
                   type="button"
                   variant="link"
                   onClick={() => setPolicyTab("terms")}
-                  className="inline h-auto p-0 text-xs font-semibold text-blue-600 underline dark:text-blue-400"
+                  className="inline h-auto p-0 text-[11px] font-semibold text-blue-600 underline dark:text-blue-400"
                 >
                   Điều khoản dịch vụ
                 </Button>{" "}
@@ -491,11 +480,10 @@ function RegisterForm() {
                   type="button"
                   variant="link"
                   onClick={() => setPolicyTab("privacy")}
-                  className="inline h-auto p-0 text-xs font-semibold text-blue-600 underline dark:text-blue-400"
+                  className="inline h-auto p-0 text-[11px] font-semibold text-blue-600 underline dark:text-blue-400"
                 >
                   Chính sách bảo mật kho
-                </Button>
-                .
+                </Button>.
               </span>
             </label>
 
