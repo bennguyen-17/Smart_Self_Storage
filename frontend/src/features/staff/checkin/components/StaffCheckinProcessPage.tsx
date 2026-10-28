@@ -567,14 +567,28 @@ export default function StaffCheckinProcessPage() {
             </div>
           </div>
 
-          {/* CARD 2: CHI TIẾT Ô KHO & THỜI HẠN THUÊ BAN ĐẦU */}
+          {/* CARD 2: CHI TIẾT HỢP ĐỒNG THUÊ KHO */}
           <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-xs backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/90 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <PackageIcon className="size-4 text-blue-600 dark:text-blue-400" />
-                <span>Thông tin ô kho đang thuê trên hợp đồng</span>
-              </h2>
+            {/* Header hợp đồng: Tên HĐ + Mã HĐ + Nút xem sơ đồ 2D */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
               <div className="flex items-center gap-2.5">
+                <div className="size-8 rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 flex items-center justify-center font-bold">
+                  <PackageIcon className="size-4.5" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>Hợp đồng thuê kho tự quản</span>
+                  </h2>
+                  <p className="text-[11px] text-muted">
+                    Mã hợp đồng:{" "}
+                    <strong className="font-mono text-blue-600 dark:text-blue-400">
+                      {contract.reservationCode}
+                    </strong>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -587,82 +601,130 @@ export default function StaffCheckinProcessPage() {
                   <MapIcon className="size-3.5" />
                   <span>Xem sơ đồ 2D</span>
                 </button>
-                <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
-                  {contract.reservationCode}
-                </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 text-xs">
-              <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-3 dark:border-blue-900/40 dark:bg-blue-950/20 relative">
+            {/* 4 Cards Grid tiêu chuẩn hợp đồng */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {/* Card 1: Mã kho */}
+              <div className="bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 rounded-xl p-3 flex flex-col justify-between text-left shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted text-[11px]">Mã ô kho:</span>
+                  <span className="text-[11px] font-medium text-muted">Mã ô kho</span>
                   <button
                     type="button"
                     onClick={() => {
                       setModalFloorId(currentUnitFloorId ?? facilityFloors[0]?.floorId ?? 1)
                       setIsMapModalOpen(true)
                     }}
-                    className="cursor-pointer inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 hover:underline"
-                    title="Mở sơ đồ 2D xem vị trí ô kho"
+                    className="cursor-pointer text-[10.5px] font-bold text-blue-600 hover:underline dark:text-blue-400"
                   >
-                    <EyeIcon className="size-3" />
-                    <span>Xem 2D</span>
+                    Xem 2D
                   </button>
                 </div>
-                <p className="font-mono text-base font-black text-blue-700 dark:text-blue-300 mt-0.5">
-                  {contract.unitCode}
-                </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  {contract.floorName ?? "Tầng lưu trữ"}
-                </p>
+                <div className="mt-1">
+                  <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-sm block">
+                    {contract.unitCode}
+                  </span>
+                  <span className="text-[10px] text-muted block truncate mt-0.5">
+                    {contract.floorName ?? "Tầng lưu trữ"}
+                  </span>
+                </div>
               </div>
 
-              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-800/40">
-                <span className="text-muted text-[11px]">Loại &amp; Kích thước:</span>
-                <p className="font-bold text-slate-800 dark:text-slate-200 mt-0.5">
-                  {contract.unitTypeName ?? "Kho tiêu chuẩn"}
-                </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  {contract.unitSize ?? "Kích thước chuẩn"}
-                </p>
+              {/* Card 2: Ngày Check-in */}
+              <div className="bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 rounded-xl p-3 flex flex-col justify-between text-left shadow-2xs">
+                <span className="text-[11px] font-medium text-muted">Ngày Check-in</span>
+                <div className="mt-1">
+                  <span className="font-bold text-blue-600 dark:text-blue-400 text-sm block">
+                    {contract.reservationStartDate
+                      ? formatDate(contract.reservationStartDate)
+                      : "Hôm nay"}
+                  </span>
+                  <span className="text-[10px] text-muted block mt-0.5">
+                    Nhận kho
+                  </span>
+                </div>
               </div>
 
-              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-800/40 col-span-2 sm:col-span-1">
-                <span className="text-muted text-[11px]">Thời hạn thuê:</span>
-                <p className="font-bold text-slate-800 dark:text-slate-200 mt-0.5">
-                  {contract.rentalDuration ?? "1 tháng"}
-                </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  {contract.reservationStartDate ? formatDate(contract.reservationStartDate) : "—"} →{" "}
-                  {contract.reservationEndDate ? formatDate(contract.reservationEndDate) : "—"}
-                </p>
+              {/* Card 3: Hạn Check-out */}
+              <div className="bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 rounded-xl p-3 flex flex-col justify-between text-left shadow-2xs">
+                <span className="text-[11px] font-medium text-muted">Hạn Check-out</span>
+                <div className="mt-1">
+                  <span className="font-bold text-indigo-600 dark:text-indigo-400 text-sm block">
+                    {contract.reservationEndDate
+                      ? formatDate(contract.reservationEndDate)
+                      : "—"}
+                  </span>
+                  <span className="text-[10px] text-muted block mt-0.5">
+                    Hết hạn thuê
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 4: Thời hạn thuê */}
+              <div className="bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 rounded-xl p-3 flex flex-col justify-between text-left shadow-2xs">
+                <span className="text-[11px] font-medium text-muted">Thời hạn thuê</span>
+                <div className="mt-1">
+                  <span className="font-bold text-slate-800 dark:text-slate-200 text-sm block">
+                    {contract.rentalDuration ?? "1 tháng"}
+                  </span>
+                  <span className="text-[10px] text-muted block mt-0.5">
+                    Theo hợp đồng
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Chi tiết mốc thời gian */}
-            <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-800/70 dark:bg-slate-900/50 flex flex-wrap items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2">
-                <ClockIcon className="size-3.5 text-slate-400" />
-                <span className="text-muted">Ngày cọc giữ chỗ:</span>
-                <span className="font-bold text-slate-700 dark:text-slate-300">
-                  {contract.depositDate ? formatDate(contract.depositDate) : formatDate(contract.reservationStartDate)}
-                </span>
+            {/* Bảng chi tiết quy cách kho & Tài chính hợp đồng */}
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5 dark:border-slate-800 dark:bg-slate-850/60 space-y-2.5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-600 dark:text-slate-400">
+                <div>
+                  <span className="text-[11px] text-muted block">Loại kho &amp; Kích thước:</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 mt-0.5 block">
+                    {contract.unitTypeName ?? "Kho tiêu chuẩn"} ({contract.unitSize ?? "Chuẩn"})
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[11px] text-muted block">Ngày cọc giữ chỗ:</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 mt-0.5 block">
+                    {contract.depositDate
+                      ? formatDate(contract.depositDate)
+                      : formatDate(contract.reservationStartDate)}
+                  </span>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <CheckCircle2Icon className="size-3.5 text-emerald-500" />
-                <span className="text-muted">Ngày bắt đầu nhận kho:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">
-                  {contract.reservationStartDate ? formatDate(contract.reservationStartDate) : "Hôm nay"}
-                </span>
+              <div className="pt-2 border-t border-slate-200/70 dark:border-slate-700/60 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div>
+                  <span className="text-[11px] text-muted block">Tiền cọc giữ chỗ:</span>
+                  <span className="font-mono font-bold text-amber-600 dark:text-amber-400 text-xs sm:text-sm mt-0.5 block">
+                    {formatVnd(contract.depositAmount ?? 0)}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[11px] text-muted block">Tiền thuê kho:</span>
+                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm mt-0.5 block">
+                    {formatVnd(contract.rentalAmount ?? 0)}
+                  </span>
+                </div>
+
+                <div className="col-span-2 sm:col-span-1">
+                  <span className="text-[11px] text-muted block">Tổng giá trị hợp đồng:</span>
+                  <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-xs sm:text-sm mt-0.5 block">
+                    {formatVnd(
+                      (contract.depositAmount ?? 0) + (contract.rentalAmount ?? 0)
+                    )}
+                  </span>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <ClockIcon className="size-3.5 text-blue-500" />
-                <span className="text-muted">Ngày kết thúc dự kiến:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">
-                  {contract.reservationEndDate ? formatDate(contract.reservationEndDate) : "—"}
+              <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/50 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                <span className="text-muted">Tình trạng thanh toán:</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <CheckCircle2Icon className="size-3.5" />
+                  Đã cọc online {formatVnd(contract.depPaidAmount ?? contract.depositAmount ?? 0)} · Cần thu tại quầy {formatVnd(contract.depRemainingAmount ?? contract.rentalAmount ?? 0)}
                 </span>
               </div>
             </div>
