@@ -13,19 +13,18 @@ import {
   ChevronRightIcon,
   SparklesIcon,
   BanknoteIcon,
-  CreditCardIcon,
-  QrCodeIcon,
   InfoIcon,
   PrinterIcon,
   BuildingIcon,
   AlertCircleIcon,
   CheckIcon,
+  LayersIcon,
 } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "cn"
 
 import { formatDate, formatVnd } from "@/lib/format"
-import { unitAreaOf, unitSizeOf } from "@/features/floorplan/unitDisplay"
+import { unitAreaOf, unitSizeOf, unitSizeFromCode } from "@/features/floorplan/unitDisplay"
 import {
   calculateRentalPrice,
   changeUnit,
@@ -74,6 +73,7 @@ export default function StaffCheckinProcessPage() {
 
   // Lấy toàn bộ ô kho trong hệ thống để tìm ô trống cùng cơ sở
   const [units, setUnits] = useState<UnitDetailResponse[]>([])
+  const [selectedFloorId, setSelectedFloorId] = useState<number | null>(null)
 
   useEffect(() => {
     fetchAllUnits().then(setUnits).catch(() => {})
@@ -105,6 +105,56 @@ export default function StaffCheckinProcessPage() {
     if (!contract || !units.length) return null
     return units.find((u) => u.unitCode === contract.unitCode) ?? null
   }, [contract, units])
+
+  // Helper xác định size chuẩn ("S" | "M" | "L" | "XL") cho ô kho
+  const getUnitSize = (u: UnitDetailResponse): "S" | "M" | "L" | "XL" => {
+    const sz = unitSizeOf(u)
+    if (sz) return sz
+    const fromCode = unitSizeFromCode(u.unitCode)
+    if (fromCode) return fromCode
+    const t = `${u.typeName ?? ""} ${u.size ?? ""}`.toUpperCase()
+    if (t.includes("XL")) return "XL"
+    if (t.includes("SIZE L") || t.includes(" L") || t.includes("-L")) return "L"
+    if (t.includes("SIZE M") || t.includes(" M") || t.includes("-M")) return "M"
+    if (t.includes("SIZE S") || t.includes(" S") || t.includes("-S")) return "S"
+    return "M"
+  }
+
+  // Danh sách các tầng của cơ sở hiện tại
+  const facilityFloors = useMemo(() => {
+    if (!contract || !units.length) return []
+    const prefix = contract.unitCode?.split("-")[0] ?? ""
+    const facUnits = prefix ? units.filter((u) => u.unitCode.startsWith(prefix)) : units
+    const floorMap = new Map<number, string>()
+    facUnits.forEach((u) => {
+      if (u.floorId != null) {
+        floorMap.set(
+          u.floorId,
+          u.floorName || (u.floorId === 1 ? "Tầng trệt" : `Tầng ${u.floorId - 1}`)
+        )
+      }
+    })
+    return Array.from(floorMap.entries())
+      .map(([floorId, floorName]) => ({ floorId, floorName }))
+      .sort((a, b) => a.floorId - b.floorId)
+  }, [contract, units])
+
+  // Tầng đang xem (mặc định là tầng của ô đang cọc hoặc tầng đầu tiên)
+  const activeFloorId = useMemo(() => {
+    if (selectedFloorId != null) return selectedFloorId
+    if (currentUnit?.floorId != null) return currentUnit.floorId
+    return facilityFloors[0]?.floorId ?? 1
+  }, [selectedFloorId, currentUnit, facilityFloors])
+
+  // Tất cả các ô thuộc tầng đang chọn trong cơ sở
+  const floorUnits = useMemo(() => {
+    if (!contract || !units.length) return []
+    const prefix = contract.unitCode?.split("-")[0] ?? ""
+    return units.filter((u) => {
+      const matchPrefix = prefix ? u.unitCode.startsWith(prefix) : true
+      return matchPrefix && u.floorId === activeFloorId
+    })
+  }, [contract, units, activeFloorId])
 
   // Lọc ô AVAILABLE cùng cơ sở (dựa trên prefix mã ô ví dụ HCM02-...)
   const availableUnits = useMemo(() => {
@@ -411,9 +461,6 @@ export default function StaffCheckinProcessPage() {
             <KeyRoundIcon className="size-6 text-blue-600 dark:text-blue-400" />
             <span>Đối soát hợp đồng &amp; Xác nhận Check-in bàn giao kho</span>
           </h1>
-          <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-            Nhân viên đối chiếu thông tin cá nhân khách, hỗ trợ đổi ô kho (nâng/hạ size) nếu có nhu cầu, thu khoản còn lại và bấm Check-in.
-          </p>
         </div>
       </div>
 
@@ -612,10 +659,51 @@ export default function StaffCheckinProcessPage() {
 
             {isChangingUnit && (
               <div className="space-y-4 pt-3 border-t border-slate-100 dark:border-slate-800 animate-in fade-in duration-200">
-                {/* Thanh chọn bộ lọc Size */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-                  <span className="text-muted text-[11px] shrink-0 font-medium">Lọc theo kích thước:</span>
-                  {["ALL", "SIZE S", "SIZE M", "SIZE L", "SIZE XL"].map((sz) => (
+                {/* 1. THANH CHỌN TẦNG */}
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-800/50">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
+                    <LayersIcon className="size-4 text-indigo-600 dark:text-indigo-400" />
+                    <span>Tầng hiển thị sơ đồ:</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 overflow-x-auto">
+                    {facilityFloors.map((f) => {
+                      const isActive = f.floorId === activeFloorId
+                      const hasCurrentUnit = currentUnit?.floorId === f.floorId
+                      return (
+                        <button
+                          key={f.floorId}
+                          type="button"
+                          onClick={() => setSelectedFloorId(f.floorId)}
+                          className={cn(
+                            "cursor-pointer px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap",
+                            isActive
+                              ? "bg-indigo-600 text-white shadow-xs ring-2 ring-indigo-500/30"
+                              : "bg-white text-slate-700 hover:bg-slate-100 dark:bg-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-600"
+                          )}
+                        >
+                          <span>{f.floorName}</span>
+                          {hasCurrentUnit && (
+                            <span
+                              className={cn(
+                                "text-[9px] px-1.5 py-0.5 rounded-full font-black",
+                                isActive
+                                  ? "bg-white/20 text-white"
+                                  : "bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-200"
+                              )}
+                            >
+                              Ô hiện tại
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* 2. THANH LỌC KÍCH THƯỚC */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-0.5 text-xs">
+                  <span className="text-muted text-[11px] shrink-0 font-medium">Lọc kích thước:</span>
+                  {(["ALL", "S", "M", "L", "XL"] as const).map((sz) => (
                     <button
                       key={sz}
                       type="button"
@@ -627,74 +715,221 @@ export default function StaffCheckinProcessPage() {
                           : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
                       )}
                     >
-                      {sz === "ALL" ? "Tất cả size" : sz}
+                      {sz === "ALL" ? "Tất cả size" : `Size ${sz}`}
                     </button>
                   ))}
                 </div>
 
-                {/* Danh sách ô kho trống cùng cơ sở */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[11px] text-muted">
-                    <span>
-                      Danh sách ô kho <strong>TRỐNG (AVAILABLE)</strong> sẵn sàng bàn giao ({filteredAvailableUnits.length} ô):
+                {/* 3. CHÚ THÍCH TRẠNG THÁI SƠ ĐỒ 2D */}
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2 text-[11px] text-slate-600 dark:border-slate-800 dark:text-slate-400">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="flex items-center gap-1.5">
+                      <span className="size-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900" />
+                      Trống (Click đổi)
                     </span>
-                    {selectedUnit && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedUnit(null)
-                          setNewPricing(null)
-                        }}
-                        className="text-rose-600 hover:underline dark:text-rose-400 font-bold"
-                      >
-                        Bỏ chọn ô đổi
-                      </button>
-                    )}
+                    <span className="flex items-center gap-1.5">
+                      <span className="size-2.5 rounded-full bg-blue-500 ring-2 ring-blue-200 dark:ring-blue-900" />
+                      Ô đang cọc (Hiện tại)
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="size-2.5 rounded-full bg-indigo-600 ring-2 ring-indigo-300 dark:ring-indigo-800" />
+                      Đã chọn đổi mới
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="size-2.5 rounded-full bg-rose-400" />
+                      Đã thuê
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="size-2.5 rounded-full bg-amber-400" />
+                      Đang giữ
+                    </span>
                   </div>
 
-                  {filteredAvailableUnits.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-xs text-muted dark:border-slate-800">
-                      Không có ô kho trống phù hợp với bộ lọc size này trong cơ sở.
-                    </div>
-                  ) : (
-                    <div className="grid max-h-64 grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2 pr-1">
-                      {filteredAvailableUnits.map((u) => {
-                        const isSelected = selectedUnit?.unitCode === u.unitCode
-                        return (
-                          <div
-                            key={u.unitCode}
-                            onClick={() => handleSelectUnit(u)}
-                            className={cn(
-                              "cursor-pointer rounded-xl border p-3 transition text-xs relative",
-                              isSelected
-                                ? "border-indigo-600 bg-indigo-50/80 shadow-sm ring-2 ring-indigo-500/20 dark:border-indigo-500 dark:bg-indigo-950/40"
-                                : "border-slate-200/80 bg-white/70 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-850 dark:hover:bg-slate-800"
-                            )}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-mono font-black text-slate-900 dark:text-white">
-                                {u.unitCode}
-                              </span>
-                              <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                                {u.typeName ?? "Kho"}
-                              </span>
-                            </div>
-
-                            <p className="mt-1 text-[11px] text-muted">
-                              {u.floorName ?? "Tầng lưu trữ"} · {u.size ?? ""}
-                            </p>
-
-                            {isSelected && (
-                              <div className="absolute bottom-2 right-2 flex size-5 items-center justify-center rounded-full bg-indigo-600 text-white">
-                                <CheckIcon className="size-3 stroke-[3]" />
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
+                  {selectedUnit && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedUnit(null)
+                        setNewPricing(null)
+                      }}
+                      className="cursor-pointer font-bold text-rose-600 hover:underline dark:text-rose-400"
+                    >
+                      Bỏ chọn ô đổi
+                    </button>
                   )}
                 </div>
+
+                {/* 4. SƠ ĐỒ MẶT BẰNG 2D BLUEPRINT */}
+                {floorUnits.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-xs text-muted dark:border-slate-800">
+                    Không có dữ liệu ô kho trên tầng này.
+                  </div>
+                ) : (
+                  <div className="floor-blueprint-container p-3 sm:p-4 space-y-3.5 shadow-inner relative">
+                    {(["XL", "L", "M", "S"] as const).map((sz, rowIdx) => {
+                      const unitsInSize = floorUnits.filter((u) => getUnitSize(u) === sz)
+                      if (unitsInSize.length === 0) return null
+
+                      const isFilteredOut = sizeFilter !== "ALL" && sizeFilter !== sz
+                      const corridorTitle =
+                        sz === "XL"
+                          ? "HÀNH LANG TRỤC XE TẢI / XE NÂNG (TẦNG TRỆT)"
+                          : "HÀNH LANG LỐI ĐI NỘI BỘ 24/7"
+
+                      const gridColsClass =
+                        sz === "S"
+                          ? "grid grid-cols-3 sm:grid-cols-6 gap-2"
+                          : sz === "M"
+                          ? "grid grid-cols-2 sm:grid-cols-4 gap-2.5"
+                          : sz === "L"
+                          ? "grid grid-cols-2 sm:grid-cols-3 gap-2.5"
+                          : "grid grid-cols-2 sm:grid-cols-4 gap-2.5"
+
+                      const sectionTitle =
+                        sz === "XL"
+                          ? "Dãy Kho Lớn Mặt Bằng (XL - 10m²)"
+                          : sz === "L"
+                          ? "Khu Phòng Lớn (Size L - 6m²)"
+                          : sz === "M"
+                          ? "Khu Phòng Vừa (Size M - 3m²)"
+                          : "Cụm Tủ Cá Nhân (Size S - 1m²)"
+
+                      return (
+                        <div
+                          key={sz}
+                          className={cn(
+                            "space-y-2",
+                            isFilteredOut ? "opacity-25 grayscale pointer-events-none" : ""
+                          )}
+                        >
+                          {rowIdx > 0 && (
+                            <div className="floor-corridor-strip my-1">
+                              {corridorTitle}
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between text-[11px] font-extrabold uppercase text-slate-800 dark:text-slate-200">
+                            <span className="flex items-center gap-1.5">
+                              <span
+                                className={cn(
+                                  "size-2.5 rounded-full",
+                                  sz === "XL"
+                                    ? "bg-amber-500"
+                                    : sz === "L"
+                                    ? "bg-blue-500"
+                                    : sz === "M"
+                                    ? "bg-indigo-500"
+                                    : "bg-emerald-500"
+                                )}
+                              />
+                              {sectionTitle}
+                            </span>
+                            <span className="text-[10px] font-medium text-muted">
+                              {unitsInSize.length} ô
+                            </span>
+                          </div>
+
+                          <div className={gridColsClass}>
+                            {unitsInSize.map((u) => {
+                              const isCurrent = u.unitCode === contract.unitCode
+                              const isSelected = selectedUnit?.unitCode === u.unitCode
+                              const st = String(u.status)
+                              const isOccupied =
+                                st === "RENTED" ||
+                                st === "OCCUPIED" ||
+                                st === "OVERDUE"
+                              const isHold = st === "HOLD"
+                              const isReserved = st === "RESERVED" && !isCurrent
+                              const isAvailable = st === "AVAILABLE" && !isCurrent
+
+                              const heightClass =
+                                sz === "S"
+                                  ? "min-h-[58px]"
+                                  : sz === "M"
+                                  ? "min-h-[66px]"
+                                  : sz === "L"
+                                  ? "min-h-[76px]"
+                                  : "min-h-[86px]"
+
+                              return (
+                                <div
+                                  key={u.unitCode}
+                                  onClick={() => {
+                                    if (isAvailable || isSelected) {
+                                      handleSelectUnit(u)
+                                    }
+                                  }}
+                                  className={cn(
+                                    "relative flex flex-col justify-between rounded-xl border p-2 text-center transition-all duration-200 select-none",
+                                    heightClass,
+                                    isSelected
+                                      ? "border-indigo-600 bg-indigo-100 text-indigo-950 ring-3 ring-indigo-500/50 shadow-md font-bold scale-102 dark:border-indigo-400 dark:bg-indigo-950/80 dark:text-white cursor-pointer"
+                                      : isCurrent
+                                      ? "border-blue-500 bg-blue-100/90 text-blue-900 ring-2 ring-blue-400/40 shadow-xs dark:border-blue-500 dark:bg-blue-950/70 dark:text-blue-100"
+                                      : isAvailable
+                                      ? "border-emerald-500 bg-emerald-50/90 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/60 text-emerald-950 dark:text-emerald-100 cursor-pointer hover:shadow-md hover:scale-103"
+                                      : isHold
+                                      ? "border-amber-300 bg-amber-50/70 text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200 opacity-60 cursor-not-allowed"
+                                      : isOccupied || isReserved
+                                      ? "border-rose-200 bg-rose-50/70 text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-300 opacity-50 cursor-not-allowed"
+                                      : "border-slate-300 bg-slate-100 text-slate-500 opacity-50 cursor-not-allowed"
+                                  )}
+                                >
+                                  <div className="flex items-center justify-between gap-1">
+                                    <span className="font-mono font-black text-xs tracking-tight flex items-center gap-1">
+                                      {u.isClimate && (
+                                        <span
+                                          className="text-[10px] text-cyan-600 dark:text-blue-400"
+                                          title="Kho mát điều hòa 22-25°C"
+                                        >
+                                          ❄️
+                                        </span>
+                                      )}
+                                      {u.unitCode}
+                                    </span>
+                                    <span className="rounded bg-white/80 px-1 py-0.2 text-[9px] font-extrabold text-slate-700 shadow-2xs border border-slate-200/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                      {sz}
+                                    </span>
+                                  </div>
+
+                                  <div className="mt-1 flex items-center justify-between text-[10px] font-bold">
+                                    {isSelected ? (
+                                      <span className="text-indigo-700 dark:text-indigo-300 flex items-center gap-0.5">
+                                        <CheckIcon className="size-3 stroke-[3]" />
+                                        Đã chọn
+                                      </span>
+                                    ) : isCurrent ? (
+                                      <span className="text-blue-700 dark:text-blue-300">
+                                        Ô hiện tại
+                                      </span>
+                                    ) : isAvailable ? (
+                                      <span className="text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                                        <span className="size-1.5 rounded-full bg-emerald-500" />
+                                        Trống
+                                      </span>
+                                    ) : isHold ? (
+                                      <span className="text-amber-700 dark:text-amber-400">
+                                        Giữ chỗ
+                                      </span>
+                                    ) : (
+                                      <span className="text-rose-600 dark:text-rose-400">
+                                        Đã thuê
+                                      </span>
+                                    )}
+
+                                    <span className="text-[9px] font-normal text-muted">
+                                      {u.areaM2 ? `${u.areaM2}m²` : ""}
+                                    </span>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
 
                 {/* Kết quả so sánh ô cũ vs ô mới khi đã chọn */}
                 {calcLoading && (
@@ -839,9 +1074,6 @@ export default function StaffCheckinProcessPage() {
                     <div className="mt-1 font-mono text-3xl font-black text-blue-600 dark:text-blue-400">
                       {formatVnd(financialSummary.remainingDue)}
                     </div>
-                    <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                      Bao gồm tiền thuê kho và chênh lệch cọc mới (nếu có).
-                    </p>
                   </>
                 ) : (
                   <>
@@ -858,41 +1090,6 @@ export default function StaffCheckinProcessPage() {
                     )}
                   </>
                 )}
-              </div>
-            )}
-
-            {/* PHƯƠNG THỨC THANH TOÁN TẠI QUẦY */}
-            {financialSummary && financialSummary.remainingDue > 0 && (
-              <div className="space-y-2">
-                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Phương thức thanh toán khách chọn:
-                </span>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { id: "CASH", label: "Tiền mặt", icon: BanknoteIcon },
-                    { id: "VIETQR", label: "VietQR", icon: QrCodeIcon },
-                    { id: "POS", label: "Quẹt thẻ", icon: CreditCardIcon },
-                  ].map((m) => {
-                    const active = paymentMethod === m.id
-                    const Icon = m.icon
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => setPaymentMethod(m.id)}
-                        className={cn(
-                          "cursor-pointer rounded-xl border p-2.5 text-center transition text-xs font-bold flex flex-col items-center gap-1",
-                          active
-                            ? "border-blue-600 bg-blue-600 text-white shadow-xs"
-                            : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
-                        )}
-                      >
-                        <Icon className="size-4" />
-                        <span>{m.label}</span>
-                      </button>
-                    )
-                  })}
-                </div>
               </div>
             )}
 
