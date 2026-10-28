@@ -1,5 +1,4 @@
 import {
-  EyeIcon,
   InboxIcon,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -20,7 +19,7 @@ interface CheckinContractTableProps {
   isLoading: boolean
   error: string | undefined
   onRetry: () => void
-  onOpenDetail: (item: StaffReservationItem) => void
+  onOpenDetail?: (item: StaffReservationItem) => void
   onCheckin: (item: StaffReservationItem) => void
   onCheckout: (item: StaffReservationItem) => void
   /** US-20: mở dialog thu phạt quá hạn tại quầy */
@@ -48,13 +47,12 @@ function sizeMetaFromCode(unitCode: string): string | undefined {
   return size ? `Size ${size} (${SIZE_AREA_M2[size]}m²)` : undefined
 }
 
-/** Bảng hợp đồng 5 cột — bám prototype staff_portal.html */
+/** Bảng hợp đồng 4 cột */
 function CheckinContractTable({
   rows,
   isLoading,
   error,
   onRetry,
-  onOpenDetail,
   onCheckin,
   onCheckout,
   onCollectPenalty,
@@ -94,14 +92,13 @@ function CheckinContractTable({
             <th scope="col" className="px-4 py-3 text-center font-bold">Thông tin Khách hàng</th>
             <th scope="col" className="px-4 py-3 text-center font-bold">Mã kho</th>
             <th scope="col" className="px-4 py-3 text-center font-bold">Trạng thái</th>
-            <th scope="col" className="px-4 py-3 text-center font-bold">Thao tác</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800">
           {isLoading &&
             Array.from({ length: 4 }, (_, i) => (
               <tr key={i} className="border-b last:border-0">
-                {Array.from({ length: 5 }, (_, j) => (
+                {Array.from({ length: 4 }, (_, j) => (
                   <td key={j} className="px-4 py-3.5 text-center">
                     <div className="mx-auto h-4 w-24 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
                   </td>
@@ -111,7 +108,7 @@ function CheckinContractTable({
 
           {!isLoading && rows?.length === 0 && (
             <tr>
-              <td colSpan={5} className="px-4 py-12 text-center">
+              <td colSpan={4} className="px-4 py-12 text-center">
                 <InboxIcon className="mx-auto mb-2 size-8 text-slate-400 dark:text-slate-500" />
                 <p className="font-semibold text-slate-600 dark:text-slate-400">Không có hợp đồng nào</p>
               </td>
@@ -163,17 +160,6 @@ function CheckinContractTable({
                         onRenew={onRenew}
                       />
                     </div>
-                  </td>
-
-                  <td className="px-4 py-3.5 align-middle text-center">
-                    <button
-                      type="button"
-                      onClick={() => onOpenDetail(item)}
-                      className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                    >
-                      <EyeIcon className="size-3.5 text-slate-400 group-hover:text-slate-600 dark:text-slate-400" />
-                      <span>Xem chi tiết</span>
-                    </button>
                   </td>
                 </tr>
               )
