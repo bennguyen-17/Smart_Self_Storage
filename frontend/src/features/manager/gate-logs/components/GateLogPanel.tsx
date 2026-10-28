@@ -1,20 +1,16 @@
 import { useMemo, useState } from "react"
 import {
   CheckCircle2Icon,
-  CreditCardIcon,
-  FilterIcon,
   InboxIcon,
   KeyRoundIcon,
   RotateCwIcon,
   SearchIcon,
-  ShieldCheckIcon,
   SmartphoneIcon,
   UserCheckIcon,
   UsersIcon,
 } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Pagination } from "@/components/internal/components/PanelKit"
 import { usePagedRows } from "@/components/internal/usePagedRows"
@@ -23,7 +19,7 @@ import { formatDateTime } from "@/lib/format"
 
 import { listManualGateOpenLogs } from "../api/gateLogApi"
 import { filterGateLogs, isDateRangeValid } from "../gateLogRules"
-import type { GateLog, GateLogFilter } from "../types"
+import type { GateLogFilter } from "../types"
 
 const EMPTY_FILTER: GateLogFilter = {
   query: "",
@@ -42,7 +38,8 @@ function GateLogPanel() {
   const [filter, setFilter] = useState<GateLogFilter>(EMPTY_FILTER)
   const { data, error, isLoading } = useAsyncData(`gate-logs#${reloadCount}`, listManualGateOpenLogs)
 
-  const all = data ?? []
+  // Giữ cùng một mảng giữa các lần render để useMemo thống kê bên dưới chỉ tính lại khi dữ liệu đổi
+  const all = useMemo(() => data ?? [], [data])
   const rows = filterGateLogs(all, filter)
   const { slice, pagination } = usePagedRows(rows, JSON.stringify(filter))
   const rangeOk = isDateRangeValid(filter.from, filter.to)
