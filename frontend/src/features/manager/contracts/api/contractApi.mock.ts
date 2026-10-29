@@ -2,7 +2,7 @@
 
 import { addDays, todayInVietnam } from "@/lib/format"
 
-import type { FacilityContract, FeeDiscountRequest } from "../types"
+import type { FacilityContract } from "../types"
 
 const LATENCY = 300
 
@@ -28,23 +28,6 @@ let store = build()
 
 export function mockListFacilityContracts(): Promise<FacilityContract[]> {
   return new Promise((resolve) => setTimeout(() => resolve(structuredClone(store)), LATENCY))
-}
-
-/** Giả lập POST /api/manager/payments/{paymentId}/discount theo đúng luật BE */
-export function mockApplyFeeDiscount(paymentId: number, req: FeeDiscountRequest): Promise<{ success: true; message: string }> {
-  return new Promise((resolve, reject) =>
-    setTimeout(() => {
-      if (!req.reason?.trim()) return reject(new Error("Bắt buộc phải nhập lý do miễn / giảm phí theo quy định!"))
-      const contract = store.find((c) => c.fees.some((f) => f.paymentId === paymentId))
-      const fee = contract?.fees.find((f) => f.paymentId === paymentId)
-      if (!fee) return reject(new Error(`Không tìm thấy hóa đơn phí #${paymentId}`))
-      if (fee.status !== "UNPAID") return reject(new Error("Hóa đơn đã thanh toán xong, không thể miễn giảm!"))
-      const off = req.discountPercent != null ? Math.round((fee.amount * req.discountPercent) / 100) : (req.discountAmount ?? 0)
-      fee.amount = Math.max(0, fee.amount - off)
-      if (fee.amount === 0) fee.status = "CANCELLED"
-      resolve({ success: true, message: fee.status === "CANCELLED" ? "Đã miễn toàn bộ khoản phí" : "Đã giảm phí" })
-    }, LATENCY)
-  )
 }
 
 /** Chỉ dùng trong test */

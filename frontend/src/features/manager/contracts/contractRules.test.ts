@@ -2,7 +2,6 @@ import { describe, expect, test } from "vitest"
 
 import {
   daysRemaining,
-  discountValue,
   filterContracts,
   canConfirmForfeitProcessed,
   forfeitNoteError,
@@ -12,11 +11,8 @@ import {
   needsFollowUp,
   needsForfeitHandling,
   overdueDays,
-  toDiscountRequest,
   unpaidTotal,
-  validateDiscount,
   type ContractFilter,
-  type DiscountDraft,
 } from "./contractRules"
 import type { FacilityContract, FeeInvoice } from "./types"
 
@@ -109,44 +105,6 @@ describe("isExpiringSoon", () => {
     ["chờ nhận kho", "PENDING_CHECKIN", "2026-10-30", false],
   ] as const)("%s → %s", (_, status, endDate, expected) => {
     expect(isExpiringSoon({ status, endDate }, "2026-10-27")).toBe(expected)
-  })
-})
-
-describe("Miễn / giảm phí (US-31)", () => {
-  const REASON = "Khách gặp sự cố, quản lý đồng ý giảm"
-  const d = (mode: DiscountDraft["mode"], value: string, reason = REASON): DiscountDraft => ({ mode, value, reason })
-
-  test.each([
-    { name: "giảm 50%", draft: d("PERCENT", "50"), expected: 250_000 },
-    { name: "giảm 100%", draft: d("PERCENT", "100"), expected: 500_000 },
-    { name: "giảm 101%", draft: d("PERCENT", "101"), expected: null },
-    { name: "giảm 0%", draft: d("PERCENT", "0"), expected: null },
-    { name: "giảm 12.5% (không nguyên)", draft: d("PERCENT", "12,5"), expected: null },
-    { name: "giảm 200.000đ (có dấu chấm)", draft: d("AMOUNT", "200.000"), expected: 200_000 },
-    { name: "giảm đúng bằng khoản phí", draft: d("AMOUNT", "500000"), expected: 500_000 },
-    { name: "giảm vượt khoản phí", draft: d("AMOUNT", "500001"), expected: null },
-    { name: "chưa nhập", draft: d("AMOUNT", ""), expected: null },
-    { name: "miễn toàn bộ", draft: d("WAIVE", ""), expected: 500_000 },
-  ])("$name → $expected", ({ draft, expected }) => {
-    expect(discountValue(draft, 500_000)).toBe(expected)
-  })
-
-  test.each([
-    { name: "hợp lệ", draft: d("PERCENT", "50"), fields: [] },
-    { name: "thiếu lý do", draft: d("PERCENT", "50", "  "), fields: ["reason"] },
-    { name: "lý do quá ngắn", draft: d("WAIVE", "", "đồng ý"), fields: ["reason"] },
-    { name: "vượt mức", draft: d("AMOUNT", "900000"), fields: ["value"] },
-    { name: "thiếu cả hai", draft: d("PERCENT", "", ""), fields: ["reason", "value"] },
-  ])("validateDiscount: $name → lỗi $fields", ({ draft, fields }) => {
-    expect(Object.keys(validateDiscount(draft, 500_000)).sort()).toEqual(fields)
-  })
-
-  test.each([
-    { draft: d("WAIVE", ""), expected: { discountPercent: 100, reason: REASON } },
-    { draft: d("PERCENT", "30"), expected: { discountPercent: 30, reason: REASON } },
-    { draft: d("AMOUNT", "150.000", `  ${REASON}  `), expected: { discountAmount: 150_000, reason: REASON } },
-  ])("toDiscountRequest($draft.mode) → body gửi BE", ({ draft, expected }) => {
-    expect(toDiscountRequest(draft, 500_000)).toEqual(expected)
   })
 })
 

@@ -1,6 +1,5 @@
-// Hợp đồng của cơ sở cho Manager (US-24, 25, 26, 31).
-// - Danh sách: BE CHƯA có. Path dưới đây là contract FE đề xuất (qa-log), đang chạy mock.
-// - Miễn / giảm phí: BE ĐÃ có POST /api/manager/payments/{paymentId}/discount.
+// Hợp đồng của cơ sở cho Manager (US-24, 25, 26).
+// Miễn / giảm phí đã bỏ (nhóm chốt 28/10, BE xóa API ở PR #100).
 // VITE_USE_MOCK=true → mock; false → BE. Không tự fallback về mock khi lỗi.
 
 import { unwrapApiData } from "@/lib/api"
@@ -9,8 +8,8 @@ import { managerHeaders } from "@/features/manager/managerContext"
 import type { ManagerContext } from "@/features/manager/units/types"
 
 import { normalizeContractStatus } from "../contractRules"
-import type { FacilityContract, FeeDiscountRequest } from "../types"
-import { mockApplyFeeDiscount, mockListFacilityContracts } from "./contractApi.mock"
+import type { FacilityContract } from "../types"
+import { mockListFacilityContracts } from "./contractApi.mock"
 
 /** GET /api/manager/contracts (đề xuất): hợp đồng của cơ sở trong header X-Facility-Id, kèm các khoản phí PEN/CMP */
 export async function listFacilityContracts(ctx: ManagerContext): Promise<FacilityContract[]> {
@@ -18,15 +17,6 @@ export async function listFacilityContracts(ctx: ManagerContext): Promise<Facili
   const body = await apiClient.get("/manager/contracts", { headers: managerHeaders(ctx) })
   // DB có thể trả "CANCELLED" (2 chữ L): gộp về một cách viết trước khi tới giao diện
   return (unwrapApiData<FacilityContract[]>(body) ?? []).map((c) => ({ ...c, status: normalizeContractStatus(c.status) }))
-}
-
-/** POST /api/manager/payments/{paymentId}/discount  body { discountPercent | discountAmount, reason } */
-export async function applyFeeDiscount(ctx: ManagerContext, paymentId: number, req: FeeDiscountRequest): Promise<void> {
-  if (isMockMode()) {
-    await mockApplyFeeDiscount(paymentId, req)
-    return
-  }
-  await apiClient.post(`/manager/payments/${paymentId}/discount`, req, { headers: managerHeaders(ctx) })
 }
 
 /**

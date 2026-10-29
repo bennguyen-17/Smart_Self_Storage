@@ -63,13 +63,12 @@ export function buildReportSections(d: ManagerDashboard): ReportSection[] {
       ],
     },
     {
-      // Tách riêng theo AC: cọc đang giữ không phải doanh thu; cọc tịch thu và miễn/giảm là dòng riêng
+      // Tách riêng: cọc đang giữ không phải doanh thu; cọc tịch thu là dòng riêng (không còn miễn / giảm từ 28/10)
       key: "deposits",
-      title: "Tiền cọc & miễn giảm",
+      title: "Tiền cọc",
       rows: [
         { label: "Cọc đang giữ", value: d.depositHolding, kind: "money", note: "không tính vào doanh thu" },
         { label: "Cọc bị tịch thu", value: d.forfeitedDeposit, kind: "money" },
-        { label: "Đã miễn / giảm phí", value: d.waivedAmount, kind: "money" },
       ],
     },
     {

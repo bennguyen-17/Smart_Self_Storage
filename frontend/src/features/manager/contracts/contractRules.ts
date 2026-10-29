@@ -2,7 +2,7 @@
 
 import { matchesQuery } from "@/components/internal/textSearch"
 
-import type { CheckoutStage, ContractStatus, FacilityContract, FeeDiscountRequest, FeeType } from "./types"
+import type { CheckoutStage, ContractStatus, FacilityContract, FeeType } from "./types"
 
 export const CONTRACT_STATUS_LABEL: Record<ContractStatus, string> = {
   PENDING_CHECKIN: "Chờ nhận kho",
@@ -129,54 +129,4 @@ export function filterContracts(
     .filter((c) => !filter.expiringSoon || isExpiringSoon(c, today))
     .filter((c) => matchesQuery(filter.query, [c.customerName, c.customerPhone, c.contractCode, c.unitCode]))
     .sort((a, b) => a.endDate.localeCompare(b.endDate))
-}
-
-// ---- Miễn / giảm phí (US-31) ----
-
-export type DiscountMode = "PERCENT" | "AMOUNT" | "WAIVE"
-
-export interface DiscountDraft {
-  mode: DiscountMode
-  /** Chuỗi người dùng gõ, có thể rỗng */
-  value: string
-  reason: string
-}
-
-export type DiscountErrors = Partial<Record<"value" | "reason", string>>
-
-export const DISCOUNT_REASON_MIN = 10
-
-/** Số tiền được giảm (VND) theo bản nháp; trả null nếu chưa hợp lệ */
-export function discountValue(draft: DiscountDraft, feeAmount: number): number | null {
-  if (draft.mode === "WAIVE") return feeAmount
-  const n = Number(draft.value.replace(/[.\s]/g, ""))
-  if (!Number.isFinite(n) || n <= 0) return null
-  if (draft.mode === "PERCENT") return Number.isInteger(n) && n <= 100 ? Math.round((feeAmount * n) / 100) : null
-  return Number.isInteger(n) && n <= feeAmount ? n : null
-}
-
-/**
- * Kiểm form miễn/giảm: bắt buộc lý do; mức giảm không vượt quá số tiền của khoản phí.
- * Mức giảm tối đa theo chính sách (US-28) chưa có API đọc, nên tạm chặn ở 100% khoản phí (qa-log Q-23).
- */
-export function validateDiscount(draft: DiscountDraft, feeAmount: number): DiscountErrors {
-  const errors: DiscountErrors = {}
-  if (draft.reason.trim().length < DISCOUNT_REASON_MIN) {
-    errors.reason = `Nhập lý do miễn / giảm (ít nhất ${DISCOUNT_REASON_MIN} ký tự)`
-  }
-  if (discountValue(draft, feeAmount) === null) {
-    errors.value =
-      draft.mode === "PERCENT"
-        ? "Nhập phần trăm là số nguyên từ 1 đến 100"
-        : "Nhập số tiền là số nguyên dương, không vượt quá số tiền của khoản phí"
-  }
-  return errors
-}
-
-/** Body gửi BE: miễn toàn bộ = giảm 100% */
-export function toDiscountRequest(draft: DiscountDraft, feeAmount: number): FeeDiscountRequest {
-  const reason = draft.reason.trim()
-  if (draft.mode === "WAIVE") return { discountPercent: 100, reason }
-  if (draft.mode === "PERCENT") return { discountPercent: Number(draft.value), reason }
-  return { discountAmount: discountValue(draft, feeAmount) ?? 0, reason }
 }

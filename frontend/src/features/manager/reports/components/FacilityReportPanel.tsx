@@ -95,12 +95,11 @@ function Charts({ d }: { d: ManagerDashboard }) {
         />
       </ChartCard>
 
-      <ChartCard title="Tiền cọc & miễn giảm" className="lg:col-span-2">
-        <dl className="grid gap-4 sm:grid-cols-3">
+      <ChartCard title="Tiền cọc" className="lg:col-span-2">
+        <dl className="grid gap-4 sm:grid-cols-2">
           {[
             { label: "Cọc đang giữ", value: d.depositHolding, note: "Không tính vào doanh thu" },
             { label: "Cọc bị tịch thu", value: d.forfeitedDeposit, note: "Không đến nhận kho, quá hạn 30 ngày" },
-            { label: "Đã miễn / giảm phí", value: d.waivedAmount, note: "Theo duyệt của quản lý" },
           ].map((s) => (
             <div key={s.label}>
               <dt className="text-muted text-xs">{s.label}</dt>
@@ -228,7 +227,7 @@ function FacilityReportPanel() {
       {rangeOk ? (
         <p className="text-muted text-xs">
           <span className="text-title font-bold">{data ? data.facilityName : "Đang tải…"}</span> ·{" "}
-          <span className="text-title font-semibold">{rangeLabel(range)}</span>. Doanh thu, hoàn tiền, miễn giảm và yêu cầu hỗ trợ tính
+          <span className="text-title font-semibold">{rangeLabel(range)}</span>. Doanh thu, hoàn tiền và yêu cầu hỗ trợ tính
           trong khoảng này; số ô kho, hợp đồng và tiền cọc đang giữ là số hiện tại.
         </p>
       ) : (
