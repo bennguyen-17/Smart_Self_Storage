@@ -22,18 +22,30 @@ INSERT INTO Shift (shiftName, startTime, endTime, status)
 SELECT 'Ca Test', '00:00:00', '23:59:00', 'ACTIVE' FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM Shift WHERE shiftName = 'Ca Test');
 
--- 2. Tự động phân ca Test hôm nay (CURDATE()) cho tất cả Staff
+-- 2. Tự động phân ca Test hôm nay cho tất cả Staff
+-- Lưu ý: Docker MySQL thường chạy múi giờ UTC, trong khi máy tính và Backend chạy giờ Việt Nam (GMT+7).
+-- Do đó script này gán cho cả CURDATE() (giờ UTC) và ngày theo GMT+7 với trạng thái 'ATTENDED' để vào làm việc ngay.
 SET @test_shift_id = (SELECT shiftId FROM Shift WHERE shiftName = 'Ca Test' LIMIT 1);
+SET @today_vn = IFNULL(DATE(CONVERT_TZ(NOW(), @@session.time_zone, '+07:00')), CURDATE());
 
+-- Xóa ca test cũ của hôm nay để làm mới sạch sẽ
+DELETE FROM StaffShift 
+WHERE shiftId = @test_shift_id 
+  AND workDate IN (CURDATE(), @today_vn, DATE_ADD(CURDATE(), INTERVAL 1 DAY));
+
+-- Gán ca theo ngày giờ Việt Nam (trạng thái ATTENDED - đã nhận ca)
 INSERT INTO StaffShift (employeeId, facilityId, shiftId, workDate, status)
-SELECT ep.employeeId, ep.facilityId, @test_shift_id, CURDATE(), 'SCHEDULED'
+SELECT ep.employeeId, ep.facilityId, @test_shift_id, @today_vn, 'ATTENDED'
 FROM EmployeeProfile ep
 JOIN Account a ON ep.accountId = a.accountId
-WHERE a.roleId = 4
-  AND NOT EXISTS (
-    SELECT 1 FROM StaffShift ss
-    WHERE ss.employeeId = ep.employeeId AND ss.workDate = CURDATE()
-  );
+WHERE a.roleId = 4;
+
+-- Gán thêm ngày theo CURDATE() (UTC) nếu khác ngày GMT+7
+INSERT INTO StaffShift (employeeId, facilityId, shiftId, workDate, status)
+SELECT ep.employeeId, ep.facilityId, @test_shift_id, CURDATE(), 'ATTENDED'
+FROM EmployeeProfile ep
+JOIN Account a ON ep.accountId = a.accountId
+WHERE a.roleId = 4 AND @today_vn <> CURDATE();
 
 -- ---------------------------------------------------------------------
 -- PHẦN B: Dọn dẹp sau khi test xong. Bỏ dấu "-- " đầu các dòng dưới rồi chạy.

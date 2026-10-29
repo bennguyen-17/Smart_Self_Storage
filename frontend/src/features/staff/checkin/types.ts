@@ -39,6 +39,9 @@ export interface StaffReservationItem {
   returnRequested?: boolean | null
   desiredReturnDate?: string | null
   cancelReason?: string | null
+  unitTypeName?: string | null
+  unitSize?: string | null
+  depositDate?: string | null
 }
 
 /** Kết quả tra cứu (StaffReservationLookupResponse = item + unitStatus + contractPdfUrl). */

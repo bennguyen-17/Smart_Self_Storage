@@ -46,7 +46,7 @@ export default function StaffShiftBadge() {
   }, [])
 
   const shifts = profile?.assignedShifts || []
-  const currentShift = shifts.find((s) => s.isCurrent) || shifts[0]
+  const currentShift = shifts.find((s) => s.isCurrent || s.current) || shifts[0]
   const attended = currentShift?.status === "ATTENDED"
 
   // Cách 1: Chỉ khi nào nhân viên đang trong ca trực (attended) mới hiển thị

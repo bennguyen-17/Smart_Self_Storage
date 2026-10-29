@@ -40,6 +40,7 @@ import com.swp391.backend.repository.FacilityRepository;
 import com.swp391.backend.repository.GatePinRepository;
 import com.swp391.backend.entity.Price;
 import com.swp391.backend.repository.PriceRepository;
+import com.swp391.backend.repository.UnitTypeRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -88,6 +89,7 @@ public class StaffReservationService {
     private final GatePinService gatePinService;
     private final FacilityRepository facilityRepository;
     private final GatePinRepository gatePinRepository;
+    private final UnitTypeRepository unitTypeRepository;
     private final StaffShiftService staffShiftService;
 
     @Autowired(required = false)
@@ -133,6 +135,7 @@ public class StaffReservationService {
             GatePinService gatePinService,
             FacilityRepository facilityRepository,
             GatePinRepository gatePinRepository,
+            UnitTypeRepository unitTypeRepository,
             StaffShiftService staffShiftService) {
         this.reservationRepository = reservationRepository;
         this.accountRepository = accountRepository;
@@ -149,6 +152,7 @@ public class StaffReservationService {
         this.gatePinService = gatePinService;
         this.facilityRepository = facilityRepository;
         this.gatePinRepository = gatePinRepository;
+        this.unitTypeRepository = unitTypeRepository;
         this.staffShiftService = staffShiftService;
     }
 
@@ -219,6 +223,55 @@ public class StaffReservationService {
         }
 
         Optional<Reservation> reservation = reservationRepository.findByReservationCode(reservationCode.trim());
+        if (reservation.isEmpty()) {
+            response.setSuccess(false);
+            response.setMessage("Không tìm thấy đặt chỗ.");
+            return response;
+        }
+        Optional<StorageUnit> unit = storageUnitRepository.findById(reservation.get().getUnitCode());
+        if (unit.isEmpty() || !belongsToFacility(unit.get(), employee.get().getFacilityId())) {
+            response.setSuccess(false);
+            response.setMessage("Không tìm thấy đặt chỗ trong cơ sở của nhân viên.");
+            return response;
+        }
+
+        StaffReservationListItemResponse item = toListItem(reservation.get());
+        copyListItem(item, response);
+        response.setUnitStatus(unit.get().getStatus());
+        response.setSuccess(true);
+        response.setMessage("Đã tìm thấy đặt chỗ.");
+        return response;
+    }
+
+    public StaffReservationLookupResponse getReservationDetail(Integer reservationId) {
+        StaffReservationLookupResponse response = new StaffReservationLookupResponse();
+        if (reservationId == null) {
+            response.setSuccess(false);
+            response.setMessage("ID đặt chỗ là bắt buộc.");
+            return response;
+        }
+
+        Integer accountId = getAuthenticatedAccountId();
+        if (accountId == null) {
+            response.setSuccess(false);
+            response.setMessage("Không tìm thấy tài khoản nhân viên đã xác thực.");
+            return response;
+        }
+        Optional<EmployeeProfile> employee = employeeProfileRepository.findByAccountId(accountId);
+        if (employee.isEmpty()) {
+            response.setSuccess(false);
+            response.setMessage("Không tìm thấy hồ sơ nhân viên.");
+            return response;
+        }
+        try {
+            staffShiftService.requireOnDutyFacility(accountId);
+        } catch (AccessDeniedException ex) {
+            response.setSuccess(false);
+            response.setMessage(ex.getMessage());
+            return response;
+        }
+
+        Optional<Reservation> reservation = reservationRepository.findById(reservationId);
         if (reservation.isEmpty()) {
             response.setSuccess(false);
             response.setMessage("Không tìm thấy đặt chỗ.");
@@ -541,9 +594,17 @@ public class StaffReservationService {
             item.setCustomerIdNumber(customer.getIdentityNumber());
         });
 
+        if (reservation.getCreatedAt() != null) {
+            item.setDepositDate(reservation.getCreatedAt().toLocalDate());
+        }
+
         storageUnitRepository.findById(reservation.getUnitCode()).ifPresent(unit -> {
             item.setUnitCode(unit.getUnitCode());
             floorRepository.findById(unit.getFloorId()).ifPresent(floor -> item.setFloorName(floor.getFloorName()));
+            unitTypeRepository.findById(unit.getUnitTypeId()).ifPresent(ut -> {
+                item.setUnitTypeName(ut.getTypeName());
+                item.setUnitSize(ut.getSize());
+            });
         });
 
         item.setDepositAmount(reservation.getDepositAmount());
@@ -679,6 +740,9 @@ public class StaffReservationService {
         target.setUnpaidPenaltyAmount(source.getUnpaidPenaltyAmount());
         target.setMonthlyPrice(source.getMonthlyPrice());
         target.setDesiredReturnDate(source.getDesiredReturnDate());
+        target.setUnitTypeName(source.getUnitTypeName());
+        target.setUnitSize(source.getUnitSize());
+        target.setDepositDate(source.getDepositDate());
     }
 
     private Integer getAuthenticatedAccountId() {
