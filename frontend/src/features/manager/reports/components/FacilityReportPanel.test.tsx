@@ -52,14 +52,14 @@ describe("FacilityReportPanel: báo cáo cơ sở dạng biểu đồ (US-33)", 
     expect(within(revenue).getByText("(trừ ra)")).toBeInTheDocument()
     const items = within(revenue).getByRole("list", { name: "Cơ cấu doanh thu" })
     expect(within(items).queryByText(/cọc/i)).not.toBeInTheDocument()
-    const deposits = screen.getByRole("region", { name: "Tiền cọc & miễn giảm" })
+    const deposits = screen.getByRole("region", { name: "Tiền cọc" })
     expect(within(deposits).getByText(/không tính vào doanh thu/i)).toBeInTheDocument()
   })
 
   test("chuyển sang Bảng số liệu → đủ 5 bảng (cho người không đọc được biểu đồ / màu)", async () => {
     const user = await renderPanel()
     await user.click(screen.getByRole("button", { name: /bảng số liệu/i }))
-    for (const name of ["Ô kho", "Hợp đồng", "Doanh thu", "Tiền cọc & miễn giảm", "Yêu cầu hỗ trợ & SLA"]) {
+    for (const name of ["Ô kho", "Hợp đồng", "Doanh thu", "Tiền cọc", "Yêu cầu hỗ trợ & SLA"]) {
       expect(screen.getByRole("table", { name })).toBeInTheDocument()
     }
   })
@@ -82,7 +82,7 @@ describe("FacilityReportPanel: lọc theo khoảng thời gian", () => {
     const expected = presetRange("LAST_MONTH", todayInVietnam())!
     expect(vi.mocked(getManagerDashboard).mock.calls.at(-1)?.[1]).toEqual(expected)
     expect(screen.getByLabelText("Từ ngày")).toHaveValue(expected.from)
-    expect(screen.getByText(/doanh thu, hoàn tiền, miễn giảm và yêu cầu hỗ trợ tính trong khoảng này/i)).toBeInTheDocument()
+    expect(screen.getByText(/doanh thu, hoàn tiền và yêu cầu hỗ trợ tính trong khoảng này/i)).toBeInTheDocument()
   })
 
   test("tự sửa ngày → chuyển sang Tùy chọn", async () => {

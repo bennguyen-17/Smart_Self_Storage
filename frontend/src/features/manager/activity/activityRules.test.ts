@@ -56,7 +56,7 @@ describe("dayTotals", () => {
     expect(dayTotals(DAY)).toEqual({
       scheduled: 3,
       attended: 2,
-      counts: { checkIns: 2, checkouts: 1, ticketsResolved: 3, maintenanceDone: 2, tasksDone: 1 },
+      counts: { checkIns: 2, checkouts: 1, ticketsResolved: 3, maintenanceDone: 2 },
     })
   })
 

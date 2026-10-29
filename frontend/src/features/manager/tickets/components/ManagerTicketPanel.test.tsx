@@ -41,6 +41,32 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
+describe("ManagerTicketPanel: tải và làm mới danh sách", () => {
+  test("bấm Làm mới thì tải lại", async () => {
+    vi.mocked(listManagerTickets).mockResolvedValue([TICKET])
+    render(<ManagerTicketPanel />)
+    await screen.findByText(/TCK-202610-006/)
+    await userEvent.click(screen.getByRole("button", { name: /Làm mới/ }))
+    await waitFor(() => expect(listManagerTickets).toHaveBeenCalledTimes(2))
+  })
+
+  test("tự tải lại sau mỗi 30 giây; rời trang thì dừng", async () => {
+    vi.useFakeTimers()
+    try {
+      vi.mocked(listManagerTickets).mockResolvedValue([TICKET])
+      const { unmount } = render(<ManagerTicketPanel />)
+      expect(listManagerTickets).toHaveBeenCalledTimes(1)
+      await vi.advanceTimersByTimeAsync(30_000)
+      expect(listManagerTickets).toHaveBeenCalledTimes(2)
+      unmount()
+      await vi.advanceTimersByTimeAsync(60_000)
+      expect(listManagerTickets).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
 describe("ManagerTicketPanel: báo lỗi rõ lý do", () => {
   test("tải danh sách bị BE từ chối thì hiện câu lỗi của BE", async () => {
     vi.mocked(listManagerTickets).mockRejectedValue(

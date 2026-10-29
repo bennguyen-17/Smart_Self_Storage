@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { BadgePercentIcon, CheckCircle2Icon, TriangleAlertIcon } from "lucide-react"
+import { CheckCircle2Icon, TriangleAlertIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -29,9 +29,8 @@ import {
   overdueDays,
   unpaidTotal,
 } from "../contractRules"
-import type { FacilityContract, FeeInvoice } from "../types"
+import type { FacilityContract } from "../types"
 import { CheckoutStageBadge, ContractStatusBadge } from "./ContractBadges"
-import FeeDiscountSheet from "./FeeDiscountSheet"
 import ForfeitProcessedSheet from "./ForfeitProcessedSheet"
 
 type Focus = "ALL" | "OVERDUE" | "FORFEIT" | "CHECKOUT" | "DEBT"
@@ -45,8 +44,9 @@ function matchesFocus(c: FacilityContract, focus: Focus, today: string): boolean
 }
 
 /**
- * Manager › Trả kho & công nợ (US-24, 25, 26, 31): những hợp đồng cần theo dõi
- * (quá hạn, đang trả kho, còn phí chưa thu) và nút miễn / giảm từng khoản phí.
+ * Manager › Trả kho & công nợ (US-24, 25, 26): những hợp đồng cần theo dõi
+ * (quá hạn, đang trả kho, còn phí chưa thu, cần thanh lý tài sản).
+ * Không có miễn / giảm phí: nhóm chốt 28/10 thu đủ phí theo biểu phí niêm yết.
  */
 function CheckoutDebtPanel() {
   const ctx = useMemo(() => getManagerContext(), [])
@@ -54,7 +54,6 @@ function CheckoutDebtPanel() {
   const [reloadCount, setReloadCount] = useState(0)
   const [query, setQuery] = useState("")
   const [focus, setFocus] = useState<Focus>("ALL")
-  const [discounting, setDiscounting] = useState<{ contract: FacilityContract; fee: FeeInvoice } | null>(null)
   const [forfeiting, setForfeiting] = useState<FacilityContract | null>(null)
   const { data, error, isLoading } = useAsyncData(`debt#${reloadCount}`, () => listFacilityContracts(ctx))
 
@@ -152,19 +151,10 @@ function CheckoutDebtPanel() {
                 ) : (
                   <ul className="space-y-2">
                     {unpaid.map((f) => (
-                      <li key={f.paymentId} className="flex flex-wrap items-center justify-between gap-2">
-                        <span>
-                          <span className="text-title font-semibold">{FEE_TYPE_LABEL[f.type]}</span>
-                          <span className="ml-1.5 font-bold text-rose-600 tabular-nums dark:text-rose-400">{formatVnd(f.amount)}</span>
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          aria-label={`Miễn / giảm ${FEE_TYPE_LABEL[f.type].toLowerCase()} ${f.invoiceNumber}`}
-                          onClick={() => setDiscounting({ contract: c, fee: f })}
-                        >
-                          <BadgePercentIcon aria-hidden="true" /> Miễn / giảm
-                        </Button>
+                      <li key={f.paymentId}>
+                        <span className="text-title font-semibold">{FEE_TYPE_LABEL[f.type]}</span>
+                        <span className="ml-1.5 font-bold text-rose-600 tabular-nums dark:text-rose-400">{formatVnd(f.amount)}</span>
+                        <span className="text-muted ml-1.5 font-mono">{f.invoiceNumber}</span>
                       </li>
                     ))}
                   </ul>
@@ -186,21 +176,6 @@ function CheckoutDebtPanel() {
           onDone={(message) => {
             toast.success(message)
             setForfeiting(null)
-            setReloadCount((n) => n + 1)
-          }}
-        />
-      )}
-
-      {discounting && (
-        <FeeDiscountSheet
-          key={discounting.fee.paymentId}
-          contract={discounting.contract}
-          fee={discounting.fee}
-          ctx={ctx}
-          onClose={() => setDiscounting(null)}
-          onDone={(message) => {
-            toast.success(message)
-            setDiscounting(null)
             setReloadCount((n) => n + 1)
           }}
         />

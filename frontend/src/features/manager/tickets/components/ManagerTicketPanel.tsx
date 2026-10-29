@@ -1,16 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
-  AlertTriangleIcon,
   ArchiveIcon,
   CheckCircle2Icon,
   CircleCheckIcon,
-  ClockIcon,
-  HeadphonesIcon,
-  IdCardIcon,
   KeyRoundIcon,
   RefreshCwIcon,
   SearchIcon,
-  ShieldAlertIcon,
   UserCheckIcon,
   WrenchIcon,
 } from "lucide-react"
@@ -42,24 +37,38 @@ export default function ManagerTicketPanel() {
   const [searchQuery, setSearchQuery] = useState("")
   const [resolvingTicket, setResolvingTicket] = useState<ManagerTicketItem | null>(null)
 
-  const fetchTickets = useCallback(async () => {
-    try {
-      setLoading(true)
-      const data = await listManagerTickets(facilityId)
-      setTickets(data)
-    } catch (err) {
-      toast.error(`Không thể tải danh sách ticket của cơ sở: ${getErrorMessage(err)}`)
-    } finally {
-      setLoading(false)
-    }
-  }, [facilityId])
+  const [reloadCount, setReloadCount] = useState(0)
 
+  // Tải ngay và tự tải lại mỗi 30s. Chỉ đổi state trong callback khi API trả về (không setState ngay trong effect);
+  // `ignore` bỏ qua kết quả về muộn sau khi đã rời trang hoặc đổi cơ sở.
   useEffect(() => {
-    fetchTickets()
-    // Auto-refresh every 30s
-    const interval = setInterval(fetchTickets, 30000)
-    return () => clearInterval(interval)
-  }, [fetchTickets])
+    let ignore = false
+    const load = () =>
+      listManagerTickets(facilityId)
+        .then(
+          (data) => {
+            if (!ignore) setTickets(data)
+          },
+          (err: unknown) => {
+            if (!ignore) toast.error(`Không thể tải danh sách ticket của cơ sở: ${getErrorMessage(err)}`)
+          }
+        )
+        .finally(() => {
+          if (!ignore) setLoading(false)
+        })
+    void load()
+    const interval = setInterval(load, 30000)
+    return () => {
+      ignore = true
+      clearInterval(interval)
+    }
+  }, [facilityId, reloadCount])
+
+  // Nút "Làm mới": quay biểu tượng trong lúc tải; lần tải tự động 30s chạy ngầm, không quay
+  function refreshTickets() {
+    setLoading(true)
+    setReloadCount((n) => n + 1)
+  }
 
   // Manager trực tiếp bấm Tiếp nhận ticket
   async function handleAccept(ticket: ManagerTicketItem) {
@@ -127,20 +136,19 @@ export default function ManagerTicketPanel() {
     }
 
     if (ticket.createdAt) {
-      try {
-        const d = new Date(ticket.createdAt)
-        if (!isNaN(d.getTime())) {
-          const hh = String(d.getHours()).padStart(2, "0")
-          const mm = String(d.getMinutes()).padStart(2, "0")
-          const dd = String(d.getDate()).padStart(2, "0")
-          const MM = String(d.getMonth() + 1).padStart(2, "0")
-          return (
-            <span className="text-slate-600 dark:text-slate-300 text-xs font-medium">
-              {hh}:{mm} - {dd}/{MM}
-            </span>
-          )
-        }
-      } catch {}
+      // new Date không ném lỗi; chuỗi sai cho ra ngày không hợp lệ (NaN) thì rơi xuống "—"
+      const d = new Date(ticket.createdAt)
+      if (!isNaN(d.getTime())) {
+        const hh = String(d.getHours()).padStart(2, "0")
+        const mm = String(d.getMinutes()).padStart(2, "0")
+        const dd = String(d.getDate()).padStart(2, "0")
+        const MM = String(d.getMonth() + 1).padStart(2, "0")
+        return (
+          <span className="text-slate-600 dark:text-slate-300 text-xs font-medium">
+            {hh}:{mm} - {dd}/{MM}
+          </span>
+        )
+      }
     }
 
     return <span className="text-slate-400 text-xs">—</span>
@@ -256,7 +264,7 @@ export default function ManagerTicketPanel() {
           </select>
           <button
             type="button"
-            onClick={fetchTickets}
+            onClick={refreshTickets}
             className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             title="Làm mới danh sách"
           >

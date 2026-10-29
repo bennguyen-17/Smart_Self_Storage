@@ -40,9 +40,9 @@ describe("buildReportSections: đúng AC về doanh thu và tiền cọc", () =>
     expect(value("deposits", "Cọc đang giữ")).toBe(15_000_000)
   })
 
-  test("cọc bị tịch thu và miễn/giảm là dòng riêng", () => {
+  test("cọc bị tịch thu là dòng riêng; không còn dòng miễn / giảm", () => {
     expect(value("deposits", "Cọc bị tịch thu")).toBe(1_000_000)
-    expect(value("deposits", "Đã miễn / giảm phí")).toBe(500_000)
+    expect(value("deposits", "Đã miễn / giảm phí")).toBeUndefined()
   })
 
   test.each([

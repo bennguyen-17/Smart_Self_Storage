@@ -7,21 +7,15 @@ import { cn } from "@/lib/utils"
 
 import { PRICING_SECTION } from "../content/copy"
 import { CTA, ROUTES } from "../content/site"
-import { type UnitSize } from "../content/units"
 import { useLiveUnits } from "../hooks/useLiveLandingData"
 import { DURATION, EASE_OUT_QUART } from "../motion/presets"
 import { LandingLink } from "./LandingButton"
 import { RevealItem, RevealList } from "./Reveal"
 import { SectionHeading } from "./SectionHeading"
 
-interface PricingSectionProps {
-  /** Cỡ gợi ý (nếu có) */
-  suggested?: UnitSize | null
-}
-
 type ViewMode = "capacity" | "pricing"
 
-export function PricingSection({ suggested: _suggested }: PricingSectionProps) {
+export function PricingSection() {
   const [viewMode, setViewMode] = useState<ViewMode>("capacity")
   const units = useLiveUnits()
 

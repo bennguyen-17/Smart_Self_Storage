@@ -46,12 +46,12 @@ beforeEach(() => {
 })
 
 describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
-  test("/manager → chuyển tới trang mặc định /manager/units, navbar đủ 10 trang", async () => {
+  test("/manager → chuyển tới trang mặc định /manager/units, navbar đủ 9 trang", async () => {
     renderAt("/manager")
     expect(screen.getByTestId("location")).toHaveTextContent("/manager/units")
     expect(screen.getByRole("heading", { level: 1, name: "Quản lý ô kho" })).toBeInTheDocument()
-    expect(within(desktopNav()).getAllByRole("link")).toHaveLength(10)
-    expect(within(desktopNav()).getByRole("link", { name: /^Giao việc/ })).toHaveAttribute("href", "/manager/tasks")
+    expect(within(desktopNav()).getAllByRole("link")).toHaveLength(9)
+    expect(within(desktopNav()).queryByRole("link", { name: /^Giao việc/ })).not.toBeInTheDocument()
     expect(within(desktopNav()).getByRole("link", { name: /^Hoạt động nhân viên/ })).toHaveAttribute("href", "/manager/activity")
     // Trang sự cố cơ sở: theo dõi & hỗ trợ xử lý ticket
     expect(within(desktopNav()).getByRole("link", { name: /^Sự cố cơ sở/ })).toHaveAttribute("href", "/manager/tickets")

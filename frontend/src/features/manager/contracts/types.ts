@@ -48,10 +48,3 @@ export interface FacilityContract {
   forfeitProcessed?: boolean
   fees: FeeInvoice[]
 }
-
-/** Body của POST /api/manager/payments/{paymentId}/discount (BE đã có) */
-export interface FeeDiscountRequest {
-  discountPercent?: number
-  discountAmount?: number
-  reason: string
-}

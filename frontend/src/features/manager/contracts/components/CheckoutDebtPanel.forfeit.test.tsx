@@ -40,7 +40,6 @@ const CONTRACTS = [
 const api = vi.hoisted(() => ({ markForfeitProcessed: vi.fn() }))
 vi.mock("../api/contractApi", () => ({
   listFacilityContracts: vi.fn(async () => CONTRACTS),
-  applyFeeDiscount: vi.fn(),
   markForfeitProcessed: api.markForfeitProcessed,
 }))
 
