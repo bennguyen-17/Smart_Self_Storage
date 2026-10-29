@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams, Link } from "react-router-dom"
-import FloorPlanPage from "@/features/floorplan/FloorPlanPage"
 import {
   ArrowLeftIcon,
   CheckCircle2Icon,
@@ -19,8 +18,6 @@ import {
   BuildingIcon,
   AlertCircleIcon,
   CheckIcon,
-  MapIcon,
-  SearchXIcon,
   XIcon,
   EyeIcon,
   LayersIcon,
@@ -29,10 +26,7 @@ import { toast } from "sonner"
 import { cn } from "cn"
 
 import { formatDate, formatVnd } from "@/lib/format"
-import StatusLegend from "@/features/floorplan/components/StatusLegend"
-import UnitGrid from "@/features/floorplan/components/UnitGrid"
-import type { ClimateFilter, SizeFilter } from "@/features/floorplan/types"
-import { SIZE_AREA_M2, UNIT_SIZES, unitAreaOf, unitSizeOf, unitSizeFromCode } from "@/features/floorplan/unitDisplay"
+import { unitAreaOf, unitSizeOf, unitSizeFromCode } from "@/features/floorplan/unitDisplay"
 import {
   calculateRentalPrice,
   changeUnit,
@@ -44,26 +38,6 @@ import {
 } from "../api/checkinApi"
 import type { StaffCheckInResponse, StaffReservationLookup } from "../types"
 import type { UnitDetailResponse } from "@/types"
-
-
-function getChangeType(oldSizeStr?: string | null, newSizeStr?: string | null, oldClimate?: boolean, newClimate?: boolean) {
-  const getRank = (s?: string | null) => {
-    if (!s) return 1
-    const upper = s.toUpperCase()
-    if (upper.includes("XL")) return 4
-    if (upper.includes("L")) return 3
-    if (upper.includes("M")) return 2
-    return 1
-  }
-  const oldRank = getRank(oldSizeStr)
-  const newRank = getRank(newSizeStr)
-
-  if (newRank > oldRank) return { type: "UPSIZE", label: "NÂNG CẤP KHO (UPSIZE)", color: "indigo" }
-  if (newRank < oldRank) return { type: "DOWNSIZE", label: "HẠ KÍCH THƯỚC (DOWNSIZE)", color: "amber" }
-  if (newClimate && !oldClimate) return { type: "UPSIZE", label: "NÂNG LÊN KHO ĐIỀU HÒA (UPSIZE)", color: "indigo" }
-  if (!newClimate && oldClimate) return { type: "DOWNSIZE", label: "CHUYỂN SANG KHO THƯỜNG (DOWNSIZE)", color: "amber" }
-  return { type: "SAME_SIZE", label: "ĐỔI VỊ TRÍ CÙNG SIZE", color: "emerald" }
-}
 
 export default function StaffCheckinProcessPage() {
   const { reservationId } = useParams<{ reservationId: string }>()
@@ -101,18 +75,6 @@ export default function StaffCheckinProcessPage() {
 
   // Lấy toàn bộ ô kho trong hệ thống để tìm ô trống cùng cơ sở
   const [units, setUnits] = useState<UnitDetailResponse[]>([])
-
-  // Modal xem sơ đồ mặt bằng 2D cho khách (chỉ xem)
-  const [isMapModalOpen, setIsMapModalOpen] = useState(false)
-  const [confirmingUnit, setConfirmingUnit] = useState<UnitDetailResponse | null>(null)
-  const [confirmingPricing, setConfirmingPricing] = useState<{
-    finalRentalAmount: number
-    depositAmount: number
-    totalInitialPayment: number
-    message?: string
-  } | null>(null)
-  const [isCalculatingConfirm, setIsCalculatingConfirm] = useState(false)
-  const [modalFloorId, setModalFloorId] = useState<number | null>(null)
 
   useEffect(() => {
     fetchAllUnits().then(setUnits).catch(() => {})
@@ -166,61 +128,6 @@ export default function StaffCheckinProcessPage() {
     return "M"
   }
 
-  // Danh sách các tầng của cơ sở hiện tại
-  const facilityFloors = useMemo(() => {
-    if (!contract || !units.length) return []
-    const prefix = contract.unitCode?.split("-")[0] ?? ""
-    const facUnits = prefix ? units.filter((u) => u.unitCode.startsWith(prefix)) : units
-    const floorMap = new Map<number, string>()
-    facUnits.forEach((u) => {
-      if (u.floorId != null) {
-        floorMap.set(
-          u.floorId,
-          u.floorName || (u.floorId === 1 ? "Tầng trệt" : `Tầng ${u.floorId - 1}`)
-        )
-      }
-    })
-    return Array.from(floorMap.entries())
-      .map(([floorId, floorName]) => ({ floorId, floorName }))
-      .sort((a, b) => a.floorId - b.floorId)
-  }, [contract, units])
-
-  // Tầng đang active trên Modal sơ đồ 2D
-  const activeModalFloorId = useMemo(() => {
-    if (modalFloorId != null) return modalFloorId
-    if (currentUnitFloorId != null) return currentUnitFloorId
-    return facilityFloors[0]?.floorId ?? 1
-  }, [modalFloorId, currentUnitFloorId, facilityFloors])
-
-  // Danh sách ô kho hiển thị trên Modal theo tầng đang chọn
-  const [modalSizeFilter, setModalSizeFilter] = useState<SizeFilter>("ALL")
-  const [modalClimateFilter, setModalClimateFilter] = useState<ClimateFilter>("ALL")
-
-  const modalFloorUnits = useMemo(() => {
-    if (!contract || !units.length) return []
-    const prefix = contract.unitCode?.split("-")[0] ?? ""
-    return units.filter((u) => {
-      const matchPrefix = prefix ? u.unitCode.startsWith(prefix) : true
-      return matchPrefix && u.floorId === activeModalFloorId
-    })
-  }, [contract, units, activeModalFloorId])
-
-  // Lọc ô kho trên Modal theo Tầng + Kích thước + Loại kho (Y hệt Customer)
-  const visibleModalUnits = useMemo(() => {
-    return modalFloorUnits.filter((u) => {
-      if (modalSizeFilter !== "ALL" && unitSizeOf(u) !== modalSizeFilter) {
-        return false
-      }
-      if (modalClimateFilter === "NORMAL" && u.isClimate) {
-        return false
-      }
-      if (modalClimateFilter === "CLIMATE_CONTROLLED" && !u.isClimate) {
-        return false
-      }
-      return true
-    })
-  }, [modalFloorUnits, modalSizeFilter, modalClimateFilter])
-
   // Lọc ô AVAILABLE cùng cơ sở (dựa trên prefix mã ô ví dụ HCM02-...)
   const availableUnits = useMemo(() => {
     if (!contract || !units.length) return []
@@ -257,38 +164,6 @@ export default function StaffCheckinProcessPage() {
   }, [contract])
 
   // Khi chọn ô mới, gọi API tính giá thuê & cọc mới
-  const handleOpenConfirmUnitChange = async (u: UnitDetailResponse) => {
-    if (u.unitCode === contract?.unitCode) return
-    setConfirmingUnit(u)
-    setIsCalculatingConfirm(true)
-    try {
-      const res = await calculateRentalPrice({
-        unitTypeId: u.unitTypeId,
-        rentalType: rentalDurationInfo.rentalType,
-        duration: rentalDurationInfo.duration,
-      })
-      if (res && res.success) {
-        setConfirmingPricing(res)
-      } else {
-        toast.error(res?.message || "Không thể tính giá cho ô kho này.")
-      }
-    } catch (err) {
-      toast.error(checkinErrorMessage(err))
-    } finally {
-      setIsCalculatingConfirm(false)
-    }
-  }
-
-  const handleApplyUnitChange = () => {
-    if (!confirmingUnit || !confirmingPricing) return
-    setSelectedUnit(confirmingUnit)
-    setNewPricing(confirmingPricing)
-    setIsChangingUnit(true)
-    setConfirmingUnit(null)
-    setIsMapModalOpen(false)
-    toast.success(`Đã chọn đổi sang ô kho ${confirmingUnit.unitCode}!`)
-  }
-
   const handleSelectUnit = async (u: UnitDetailResponse) => {
     if (selectedUnit?.unitCode === u.unitCode) {
       setSelectedUnit(null)
@@ -653,24 +528,12 @@ export default function StaffCheckinProcessPage() {
 
           {/* CARD 2: CHI TIẾT HỢP ĐỒNG THUÊ KHO */}
           <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-xs backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/90 space-y-3">
-            {/* Header hợp đồng + Nút xem sơ đồ 2D */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+            {/* Header hợp đồng */}
+            <div className="border-b border-slate-100 pb-3 dark:border-slate-800">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <PackageIcon className="size-4 text-slate-600 dark:text-slate-400" />
                 <span>Thông tin hợp đồng thuê kho</span>
               </h2>
-              <button
-                type="button"
-                onClick={() => {
-                  setModalFloorId(currentUnitFloorId ?? facilityFloors[0]?.floorId ?? 1)
-                  setIsMapModalOpen(true)
-                }}
-                className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-750"
-                title="Mở sơ đồ 2D để hướng dẫn vị trí kho cho khách"
-              >
-                <MapIcon className="size-3.5 text-slate-500 dark:text-slate-400" />
-                <span>Xem sơ đồ 2D</span>
-              </button>
             </div>
 
             {/* Các dòng ngang thông tin hợp đồng */}
@@ -792,84 +655,127 @@ export default function StaffCheckinProcessPage() {
 
             {isChangingUnit && (
               <div className="space-y-4 pt-3 border-t border-slate-100 dark:border-slate-800 animate-in fade-in duration-200">
-                {!selectedUnit ? (
-                  <div className="rounded-xl border border-dashed border-indigo-300 bg-indigo-50/40 p-6 text-center dark:border-indigo-800 dark:bg-indigo-950/20 space-y-3">
-                    <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-900/60 dark:text-indigo-300">
-                      <MapIcon className="size-6" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-                        Mở sơ đồ mặt bằng 2D để chọn ô kho đổi
-                      </h3>
-                      <p className="text-xs text-muted mt-1 max-w-md mx-auto">
-                        Sơ đồ 2D trực quan thể hiện toàn bộ tầng kho, vị trí ô kho ban đầu và các ô trống (AVAILABLE) sẵn sàng bàn giao.
-                      </p>
-                    </div>
+                {/* Thanh chọn bộ lọc Size */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+                  <span className="text-muted text-[11px] shrink-0 font-medium">Lọc theo kích thước:</span>
+                  {["ALL", "SIZE S", "SIZE M", "SIZE L", "SIZE XL"].map((sz) => (
                     <button
+                      key={sz}
                       type="button"
-                      onClick={() => {
-                        setModalFloorId(currentUnitFloorId ?? facilityFloors[0]?.floorId ?? 1)
-                        setIsMapModalOpen(true)
-                      }}
-                      className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-indigo-700 transition active:scale-95"
+                      onClick={() => setSizeFilter(sz)}
+                      className={cn(
+                        "rounded-lg px-3 py-1 font-bold transition whitespace-nowrap cursor-pointer text-xs",
+                        sizeFilter === sz
+                          ? "bg-indigo-600 text-white shadow-xs"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                      )}
                     >
-                      <MapIcon className="size-4" />
-                      <span>Mở sơ đồ 2D chọn ô kho</span>
-                      <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px]">
-                        {availableUnits.length} ô trống
-                      </span>
+                      {sz === "ALL" ? "Tất cả size" : sz}
                     </button>
+                  ))}
+                </div>
+
+                {/* Danh sách ô kho trống cùng cơ sở */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[11px] text-muted">
+                    <span>
+                      Danh sách ô kho <strong>TRỐNG (AVAILABLE)</strong> sẵn sàng bàn giao ({filteredAvailableUnits.length} ô):
+                    </span>
+                    {selectedUnit && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedUnit(null)
+                          setNewPricing(null)
+                        }}
+                        className="text-rose-600 hover:underline dark:text-rose-400 font-bold cursor-pointer"
+                      >
+                        Bỏ chọn ô đổi
+                      </button>
+                    )}
                   </div>
-                ) : (
-                  <div className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-4 text-xs dark:border-indigo-900/60 dark:bg-indigo-950/30 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <SparklesIcon className="size-4 text-indigo-600 dark:text-indigo-400" />
-                        <span className="font-bold text-indigo-950 dark:text-indigo-100">
-                          Ô kho mới đã chọn: <span className="font-mono text-sm text-indigo-600 dark:text-indigo-400">{selectedUnit.unitCode}</span>
-                        </span>
-                      </div>
-                      {(() => {
-                        const change = getChangeType(
-                          contract.unitSize,
-                          selectedUnit.size,
-                          contract.unitTypeName?.includes("mát") || contract.unitTypeName?.includes("Climate"),
-                          selectedUnit.isClimate
-                        )
+
+                  {filteredAvailableUnits.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-xs text-muted dark:border-slate-800">
+                      Không có ô kho trống phù hợp với bộ lọc size này trong cơ sở.
+                    </div>
+                  ) : (
+                    <div className="grid max-h-64 grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2 pr-1">
+                      {filteredAvailableUnits.map((u) => {
+                        const isSelected = selectedUnit?.unitCode === u.unitCode
                         return (
-                          <span
+                          <div
+                            key={u.unitCode}
+                            onClick={() => handleSelectUnit(u)}
                             className={cn(
-                              "rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide",
-                              change.type === "UPSIZE"
-                                ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300"
-                                : change.type === "DOWNSIZE"
-                                ? "bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300"
-                                : "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300"
+                              "cursor-pointer rounded-xl border p-3 transition text-xs relative",
+                              isSelected
+                                ? "border-indigo-600 bg-indigo-50/80 shadow-sm ring-2 ring-indigo-500/20 dark:border-indigo-500 dark:bg-indigo-950/40"
+                                : "border-slate-200/80 bg-white/70 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-850 dark:hover:bg-slate-800"
                             )}
                           >
-                            {change.label}
-                          </span>
+                            <div className="flex items-center justify-between">
+                              <span className="font-mono font-black text-slate-900 dark:text-white">
+                                {u.unitCode}
+                              </span>
+                              <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                {u.typeName ?? "Kho"}
+                              </span>
+                            </div>
+
+                            <p className="mt-1 text-[11px] text-muted">
+                              {u.floorName ?? "Tầng lưu trữ"} · {u.size ?? ""}
+                            </p>
+
+                            {isSelected && (
+                              <div className="absolute bottom-2 right-2 flex size-5 items-center justify-center rounded-full bg-indigo-600 text-white">
+                                <CheckIcon className="size-3 stroke-[3]" />
+                              </div>
+                            )}
+                          </div>
                         )
-                      })()}
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Kết quả so sánh ô cũ vs ô mới khi đã chọn */}
+                {calcLoading && (
+                  <div className="py-2 text-center text-xs text-indigo-600 dark:text-indigo-400 font-bold animate-pulse">
+                    Đang tính lại giá thuê &amp; tiền cọc kho mới…
+                  </div>
+                )}
+
+                {selectedUnit && newPricing && (
+                  <div className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-3.5 text-xs dark:border-indigo-900/60 dark:bg-indigo-950/30 space-y-2.5">
+                    <div className="flex items-center gap-2 font-bold text-indigo-900 dark:text-indigo-200 text-xs">
+                      <SparklesIcon className="size-4 text-indigo-600 dark:text-indigo-400" />
+                      <span>Kết quả điều chỉnh kho mới:</span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-indigo-200/60 dark:border-indigo-900/60 text-xs">
+                    <div className="grid grid-cols-2 gap-3 pt-1 border-t border-indigo-200/60 dark:border-indigo-900/60">
                       <div>
-                        <span className="text-[11px] text-muted block">Ô kho ban đầu:</span>
-                        <p className="font-mono font-bold text-slate-700 dark:text-slate-300">
-                          {contract.unitCode} ({contract.unitTypeName} · {contract.unitSize})
+                        <span className="text-[11px] text-muted block">Ô kho chuyển đổi:</span>
+                        <div className="flex items-center gap-1.5 font-mono font-bold mt-0.5 text-xs">
+                          <span className="line-through text-slate-400">{contract.unitCode}</span>
+                          <span className="text-slate-400">→</span>
+                          <span className="text-indigo-700 dark:text-indigo-300 text-sm">
+                            {selectedUnit.unitCode}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-[11px] text-muted block">Loại kho mới:</span>
+                        <p className="font-bold text-slate-800 dark:text-slate-200 mt-0.5">
+                          {selectedUnit.typeName} ({selectedUnit.size})
                         </p>
                       </div>
-                      <div>
-                        <span className="text-[11px] text-muted block">Ô kho mới:</span>
-                        <p className="font-mono font-bold text-indigo-700 dark:text-indigo-300">
-                          {selectedUnit.unitCode} ({selectedUnit.typeName} · {selectedUnit.size} · {selectedUnit.floorName})
-                        </p>
-                      </div>
+
                       <div>
                         <span className="text-[11px] text-muted block">Tiền cọc quy định mới:</span>
-                        <p className="font-bold text-slate-800 dark:text-slate-200">
-                          {newPricing ? formatVnd(newPricing.depositAmount) : "—"}
+                        <p className="font-bold text-slate-800 dark:text-slate-200 mt-0.5">
+                          {formatVnd(newPricing.depositAmount)}
                           {financialSummary && financialSummary.diffDeposit !== 0 && (
                             <span className={cn(
                               "text-[10px] ml-1.5 font-bold",
@@ -880,10 +786,11 @@ export default function StaffCheckinProcessPage() {
                           )}
                         </p>
                       </div>
+
                       <div>
                         <span className="text-[11px] text-muted block">Tiền thuê mới ({contract.rentalDuration}):</span>
-                        <p className="font-bold text-slate-800 dark:text-slate-200">
-                          {newPricing ? formatVnd(newPricing.finalRentalAmount) : "—"}
+                        <p className="font-bold text-slate-800 dark:text-slate-200 mt-0.5">
+                          {formatVnd(newPricing.finalRentalAmount)}
                           {financialSummary && financialSummary.diffRental !== 0 && (
                             <span className={cn(
                               "text-[10px] ml-1.5 font-bold",
@@ -894,32 +801,6 @@ export default function StaffCheckinProcessPage() {
                           )}
                         </p>
                       </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-2 border-t border-indigo-200/60 dark:border-indigo-900/60">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setModalFloorId(currentUnitFloorId ?? facilityFloors[0]?.floorId ?? 1)
-                          setIsMapModalOpen(true)
-                        }}
-                        className="cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
-                      >
-                        <MapIcon className="size-3.5" />
-                        <span>Xem lại sơ đồ 2D / Đổi ô khác</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedUnit(null)
-                          setNewPricing(null)
-                          setIsChangingUnit(false)
-                        }}
-                        className="cursor-pointer text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400"
-                      >
-                        Bỏ chọn đổi ô (Giữ ô ban đầu)
-                      </button>
                     </div>
                   </div>
                 )}
@@ -1090,280 +971,6 @@ export default function StaffCheckinProcessPage() {
           </div>
         </div>
       </div>
-
-      {/* SƠ ĐỒ KHO 2D NGUYÊN BẢN CỦA CUSTOMER */}
-      {isMapModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 p-3 sm:p-6">
-          <div className="max-w-6xl mx-auto rounded-3xl bg-background shadow-2xl border overflow-hidden">
-            <FloorPlanPage
-              onSelectUnit={handleOpenConfirmUnitChange}
-              currentUnitCode={contract.unitCode}
-              selectedUnitCode={selectedUnit?.unitCode}
-              initialFacilityId={
-                contract.unitCode?.startsWith("HN01") ? 1 :
-                contract.unitCode?.startsWith("HN02") ? 2 :
-                contract.unitCode?.startsWith("SG01") ? 3 :
-                contract.unitCode?.startsWith("SG02") ? 4 :
-                contract.unitCode?.startsWith("SG03") ? 5 :
-                contract.unitCode?.startsWith("DN01") ? 6 :
-                contract.unitCode?.startsWith("CT01") ? 7 : 1
-              }
-              initialFloorId={currentUnitFloorId ?? undefined}
-              onClose={() => setIsMapModalOpen(false)}
-              title="Sơ đồ kho 2D"
-              subtitle={`Khách hàng: ${contract.customerName} · Mã hợp đồng: ${contract.reservationCode} · Ô kho ban đầu: ${contract.unitCode} (${contract.floorName ?? "Tầng lưu trữ"}) · Bấm vào ô màu xanh để đối soát & đổi ô kho`}
-            />
-          </div>
-        </div>
-      )}
-      {/* MODAL XÁC NHẬN ĐỔI Ô KHO CHO KHÁCH (POPUP KHI CLICK VÀO Ô TRÊN SƠ ĐỒ 2D) */}
-      {confirmingUnit && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 flex flex-col max-h-[92vh]">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/50">
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
-                  <RepeatIcon className="size-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    Xác nhận đổi ô kho bàn giao
-                  </h3>
-                  <p className="text-xs text-muted">
-                    Khách: <strong>{contract?.customerName}</strong> · HĐ: <span className="font-mono">{contract?.reservationCode}</span>
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setConfirmingUnit(null)}
-                className="cursor-pointer rounded-xl p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition"
-              >
-                <XIcon className="size-5" />
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-6 overflow-y-auto space-y-4">
-              {/* Phân loại biến động */}
-              {(() => {
-                const change = getChangeType(
-                  contract?.unitSize,
-                  confirmingUnit.size,
-                  contract?.unitTypeName?.includes("mát") || contract?.unitTypeName?.includes("Climate"),
-                  confirmingUnit.isClimate
-                )
-                return (
-                  <div className="flex items-center justify-between rounded-xl bg-slate-50 p-3 border border-slate-200/80 dark:bg-slate-800/40 dark:border-slate-700/80">
-                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Loại thay đổi hợp đồng:</span>
-                    <span
-                      className={cn(
-                        "rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide",
-                        change.type === "UPSIZE"
-                          ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300"
-                          : change.type === "DOWNSIZE"
-                          ? "bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300"
-                          : "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300"
-                      )}
-                    >
-                      {change.label}
-                    </span>
-                  </div>
-                )
-              })()}
-
-              {/* Bảng so sánh trực quan 2 ô kho */}
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                {/* Ô hiện tại */}
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-850/60 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase text-slate-500">Ô ban đầu đã cọc</span>
-                    <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                      Hiện tại
-                    </span>
-                  </div>
-                  <div className="font-mono text-lg font-black text-slate-900 dark:text-white">
-                    {contract?.unitCode}
-                  </div>
-                  <div className="space-y-1 text-slate-600 dark:text-slate-300 text-[11px]">
-                    <p>Loại: <strong>{contract?.unitTypeName ?? "Kho tiêu chuẩn"}</strong></p>
-                    <p>Kích thước: <strong>{contract?.unitSize ?? "Tiêu chuẩn"}</strong></p>
-                    <p>Vị trí: <strong>{contract?.floorName ?? "Tầng lưu trữ"}</strong></p>
-                  </div>
-                  <div className="pt-2 border-t border-slate-200 dark:border-slate-700 text-[11px] space-y-0.5">
-                    <div className="flex justify-between">
-                      <span className="text-muted">Cọc đã nộp:</span>
-                      <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                        {formatVnd(contract?.depPaidAmount ?? contract?.depositAmount ?? 0)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted">Tiền thuê gốc:</span>
-                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                        {formatVnd(contract?.rentalAmount ?? 0)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Ô mới muốn đổi */}
-                <div className="rounded-2xl border-2 border-indigo-400 bg-indigo-50/40 p-4 dark:border-indigo-600 dark:bg-indigo-950/30 space-y-2 shadow-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase text-indigo-700 dark:text-indigo-400">Ô mới muốn đổi</span>
-                    <span className="rounded bg-indigo-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                      Mới chọn
-                    </span>
-                  </div>
-                  <div className="font-mono text-lg font-black text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
-                    {confirmingUnit.isClimate && <span title="Kho mát điều hòa">❄️</span>}
-                    {confirmingUnit.unitCode}
-                  </div>
-                  <div className="space-y-1 text-slate-700 dark:text-slate-200 text-[11px]">
-                    <p>Loại: <strong>{confirmingUnit.typeName ?? "Kho"}</strong></p>
-                    <p>Kích thước: <strong>{confirmingUnit.size ?? ""} ({confirmingUnit.areaM2}m²)</strong></p>
-                    <p>Vị trí: <strong>{confirmingUnit.floorName ?? "Tầng lưu trữ"}</strong></p>
-                  </div>
-                  <div className="pt-2 border-t border-indigo-200 dark:border-indigo-900/60 text-[11px] space-y-0.5">
-                    <div className="flex justify-between">
-                      <span className="text-muted">Cọc quy định:</span>
-                      <span className="font-mono font-bold text-slate-900 dark:text-white">
-                        {isCalculatingConfirm ? "Đang tính..." : formatVnd(confirmingPricing?.depositAmount ?? 0)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted">Tiền thuê mới:</span>
-                      <span className="font-mono font-bold text-slate-900 dark:text-white">
-                        {isCalculatingConfirm ? "Đang tính..." : formatVnd(confirmingPricing?.finalRentalAmount ?? 0)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bảng hạch toán minh bạch tiền cọc & tiền thuê */}
-              {isCalculatingConfirm ? (
-                <div className="rounded-2xl border border-dashed border-indigo-200 p-6 text-center text-xs text-indigo-600 dark:text-indigo-400 font-bold animate-pulse">
-                  Đang đối soát biểu phí và tính toán chênh lệch tài chính…
-                </div>
-              ) : confirmingPricing && contract ? (
-                (() => {
-                  const oldDepositPaid = contract.depPaidAmount ?? contract.depositAmount ?? 0
-                  const newDeposit = confirmingPricing.depositAmount
-                  const newRental = confirmingPricing.finalRentalAmount
-                  const totalNew = newDeposit + newRental
-                  const balance = totalNew - oldDepositPaid
-                  const diffDeposit = newDeposit - (contract.depositAmount ?? 0)
-
-                  return (
-                    <div className="rounded-2xl border border-indigo-200/90 bg-indigo-50/50 p-4 dark:border-indigo-900/80 dark:bg-indigo-950/30 space-y-3 text-xs">
-                      <div className="flex items-center gap-1.5 font-bold text-indigo-950 dark:text-indigo-200 text-xs">
-                        <BanknoteIcon className="size-4 text-indigo-600 dark:text-indigo-400" />
-                        <span>Đối soát tài chính tại quầy tiếp đón:</span>
-                      </div>
-
-                      <div className="space-y-1.5 divide-y divide-indigo-100 dark:divide-indigo-900/50 text-[11px]">
-                        <div className="flex justify-between pt-1">
-                          <span className="text-slate-600 dark:text-slate-400">1. Tiền cọc giữ chỗ đã thanh toán online:</span>
-                          <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                            {formatVnd(oldDepositPaid)}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between pt-1">
-                          <span className="text-slate-600 dark:text-slate-400">2. Tiền cọc quy định kho mới:</span>
-                          <span className="font-mono font-bold text-slate-900 dark:text-white">
-                            {formatVnd(newDeposit)}
-                            {diffDeposit !== 0 && (
-                              <span className={cn(
-                                "ml-1.5 font-bold text-[10px]",
-                                diffDeposit > 0 ? "text-amber-600" : "text-emerald-600"
-                              )}>
-                                ({diffDeposit > 0 ? `Bù thêm +${formatVnd(diffDeposit)}` : `Cấn trừ -${formatVnd(Math.abs(diffDeposit))}`})
-                              </span>
-                            )}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between pt-1">
-                          <span className="text-slate-600 dark:text-slate-400">3. Tiền thuê mới ({contract.rentalDuration}):</span>
-                          <span className="font-mono font-bold text-slate-900 dark:text-white">
-                            {formatVnd(newRental)}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between pt-1 font-semibold text-slate-700 dark:text-slate-300">
-                          <span>Tổng giá trị hợp đồng mới (Cọc + Thuê):</span>
-                          <span className="font-mono font-bold text-slate-900 dark:text-white">
-                            {formatVnd(totalNew)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Hộp kết quả thanh toán tại quầy */}
-                      {balance > 0 ? (
-                        <div className="rounded-xl border border-blue-300 bg-white p-3 dark:border-blue-800 dark:bg-slate-900 text-xs space-y-1">
-                          <div className="flex items-center justify-between">
-                            <span className="font-bold text-blue-900 dark:text-blue-300">
-                              Khách thanh toán thêm tại quầy:
-                            </span>
-                            <span className="font-mono text-base font-black text-blue-600 dark:text-blue-400">
-                              {formatVnd(balance)}
-                            </span>
-                          </div>
-                          <p className="text-[10px] text-muted">
-                            💡 Số tiền trên đã khấu trừ toàn bộ tiền cọc cũ đã thanh toán online ({formatVnd(oldDepositPaid)}).
-                          </p>
-                        </div>
-                      ) : balance === 0 ? (
-                        <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/40 text-xs text-emerald-900 dark:text-emerald-200 font-bold">
-                          ✓ Tiền cọc đã đóng cấn trừ vừa đủ trọn gói kho mới. Khách không cần thanh toán thêm tại quầy.
-                        </div>
-                      ) : (
-                        <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/40 text-xs space-y-1">
-                          <div className="flex items-center justify-between">
-                            <span className="font-bold text-amber-900 dark:text-amber-200">
-                              Số tiền cọc dư hoàn lại cho khách:
-                            </span>
-                            <span className="font-mono text-base font-black text-amber-600 dark:text-amber-400">
-                              {formatVnd(Math.abs(balance))}
-                            </span>
-                          </div>
-                          <p className="text-[10px] text-amber-800 dark:text-amber-300">
-                            💡 Hệ thống sẽ tự động tạo yêu cầu hoàn tiền (RefundRequest) để kế toán chuyển khoản hoàn trả về tài khoản ngân hàng của khách theo quy định.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })()
-              ) : null}
-            </div>
-
-            {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-6 py-4 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/50">
-              <button
-                type="button"
-                onClick={() => setConfirmingUnit(null)}
-                className="cursor-pointer rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 transition"
-              >
-                Chọn ô khác trên sơ đồ
-              </button>
-
-              <button
-                type="button"
-                onClick={handleApplyUnitChange}
-                disabled={isCalculatingConfirm || !confirmingPricing}
-                className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-indigo-700 transition disabled:opacity-50"
-              >
-                <CheckIcon className="size-4 stroke-[3]" />
-                <span>Xác nhận đổi sang ô {confirmingUnit.unitCode}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
