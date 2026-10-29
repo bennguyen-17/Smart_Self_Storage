@@ -3,7 +3,6 @@ package com.swp391.backend.service;
 import com.swp391.backend.dto.checkout.CheckoutConfirmRequest;
 import com.swp391.backend.dto.checkout.CheckoutConfirmResponse;
 import com.swp391.backend.dto.checkout.CheckoutPreviewResponse;
-import com.swp391.backend.dto.checkout.FeeDiscountRequest;
 import com.swp391.backend.dto.checkout.RefundListItemResponse;
 import com.swp391.backend.entity.*;
 import com.swp391.backend.repository.*;
@@ -33,10 +32,8 @@ public class CheckoutSettlementService {
     private final AccountRepository accountRepository;
     private final StaffShiftService staffShiftService;
     private final StaffTaskService staffTaskService;
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    private EmailService emailService;
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    private CustomerProfileRepository customerProfileRepository;
+    private final EmailService emailService;
+    private final CustomerProfileRepository customerProfileRepository;
 
     public CheckoutSettlementService(ContractRepository contractRepository,
                                    ReservationRepository reservationRepository,
@@ -50,7 +47,9 @@ public class CheckoutSettlementService {
                                    StorageService storageService,
                                    AccountRepository accountRepository,
                                    StaffShiftService staffShiftService,
-                                   StaffTaskService staffTaskService) {
+                                   StaffTaskService staffTaskService,
+                                   EmailService emailService,
+                                   CustomerProfileRepository customerProfileRepository) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -64,6 +63,8 @@ public class CheckoutSettlementService {
         this.accountRepository = accountRepository;
         this.staffShiftService = staffShiftService;
         this.staffTaskService = staffTaskService;
+        this.emailService = emailService;
+        this.customerProfileRepository = customerProfileRepository;
     }
 
     /**
@@ -234,7 +235,6 @@ public class CheckoutSettlementService {
         long daysRemaining = ChronoUnit.DAYS.between(returnDate, originalEndDate);
         if (daysRemaining < 0) daysRemaining = 0;
 
-        BigDecimal rentalPaid = res.getRentalAmount() != null ? res.getRentalAmount() : BigDecimal.ZERO;
         BigDecimal depositAmount = res.getDepositAmount() != null ? res.getDepositAmount() : BigDecimal.ZERO;
 
         // Thong nhat nhom: Khong hoan lai tien thue chua dung khi tra kho som

@@ -6,13 +6,11 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface StaffShiftRepository extends JpaRepository<StaffShift, Integer> {
     List<StaffShift> findByFacilityIdAndWorkDateAndStatusNot(Integer facilityId, LocalDate workDate, String status);
     List<StaffShift> findByFacilityIdAndShiftIdAndWorkDate(Integer facilityId, Integer shiftId, LocalDate workDate);

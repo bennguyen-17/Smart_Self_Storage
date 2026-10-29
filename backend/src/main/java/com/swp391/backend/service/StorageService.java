@@ -8,10 +8,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.beans.factory.annotation.Autowired;
-import com.swp391.backend.entity.FeePolicy;
-import com.swp391.backend.repository.FeePolicyRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.swp391.backend.dto.CalculatePriceRequest;
 import com.swp391.backend.dto.CalculatePriceResponse;
@@ -21,17 +19,18 @@ import com.swp391.backend.dto.PriceDto;
 import com.swp391.backend.dto.UnitDetailResponse;
 import com.swp391.backend.entity.ActivityLog;
 import com.swp391.backend.entity.Facility;
+import com.swp391.backend.entity.FeePolicy;
 import com.swp391.backend.entity.Floor;
 import com.swp391.backend.entity.Price;
 import com.swp391.backend.entity.StorageUnit;
 import com.swp391.backend.entity.UnitType;
 import com.swp391.backend.repository.ActivityLogRepository;
 import com.swp391.backend.repository.FacilityRepository;
+import com.swp391.backend.repository.FeePolicyRepository;
 import com.swp391.backend.repository.FloorRepository;
 import com.swp391.backend.repository.PriceRepository;
 import com.swp391.backend.repository.StorageUnitRepository;
 import com.swp391.backend.repository.UnitTypeRepository;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class StorageService {
@@ -43,8 +42,7 @@ public class StorageService {
     private final PriceRepository priceRepository;
     private final ActivityLogRepository activityLogRepository;
 
-    @Autowired(required = false)
-    private FeePolicyRepository feePolicyRepository;
+    private final FeePolicyRepository feePolicyRepository;
 
     private BigDecimal getDiscountRate(String code, BigDecimal defaultRate) {
         try {
@@ -63,13 +61,15 @@ public class StorageService {
             UnitTypeRepository unitTypeRepository,
             StorageUnitRepository storageUnitRepository,
             PriceRepository priceRepository,
-            ActivityLogRepository activityLogRepository) {
+                          ActivityLogRepository activityLogRepository,
+                          FeePolicyRepository feePolicyRepository) {
         this.facilityRepository = facilityRepository;
         this.floorRepository = floorRepository;
         this.unitTypeRepository = unitTypeRepository;
         this.storageUnitRepository = storageUnitRepository;
         this.priceRepository = priceRepository;
         this.activityLogRepository = activityLogRepository;
+        this.feePolicyRepository = feePolicyRepository;
     }
 
     //Lấy danh sách Cơ sở kèm mã code, shortCode và layout
@@ -239,15 +239,16 @@ public class StorageService {
         String layout = f.getLayoutType();
 
         if (code == null || code.trim().isEmpty()) {
-            switch (f.getFacilityId()) {
-                case 1: code = "HN01"; layout = "A"; break;
-                case 2: code = "HN02"; layout = "B"; break;
-                case 3: code = "HCM01"; layout = "A"; break;
-                case 4: code = "HCM02"; layout = "B"; break;
-                case 5: code = "HCM03"; layout = "B"; break;
-                case 6: code = "DN01"; layout = "A"; break;
-                case 7: code = "CT01"; layout = "B"; break;
-                default: code = "FAC" + String.format("%02d", f.getFacilityId()); break;
+            int facId = (f.getFacilityId() != null) ? f.getFacilityId() : 0;
+            switch (facId) {
+                case 1 -> { code = "HN01"; layout = "A"; }
+                case 2 -> { code = "HN02"; layout = "B"; }
+                case 3 -> { code = "HCM01"; layout = "A"; }
+                case 4 -> { code = "HCM02"; layout = "B"; }
+                case 5 -> { code = "HCM03"; layout = "B"; }
+                case 6 -> { code = "DN01"; layout = "A"; }
+                case 7 -> { code = "CT01"; layout = "B"; }
+                default -> code = "FAC" + String.format("%02d", facId);
             }
         }
         if (layout == null || layout.trim().isEmpty()) {
@@ -410,32 +411,14 @@ public class StorageService {
         dto.setStatus(u.getStatus());
 
         // Lấy thông tin Tầng và Tải trọng sàn
-        String floorPrefix = "G";
-        String facCode = "HN01";
         Optional<Floor> floorOpt = floorRepository.findById(u.getFloorId());
         if (floorOpt.isPresent()) {
             Floor fl = floorOpt.get();
             dto.setFloorName(fl.getFloorName());
             dto.setMaxLoadKgM2(fl.getMaxLoadPerM2() != null ? fl.getMaxLoadPerM2() : BigDecimal.valueOf(500));
-
-            // Xác định tiền tố tầng cho unitCode (G = Trệt, 1 = Tầng 1, 2 = Tầng 2)
-            if (fl.getFloorName().toLowerCase().contains("trệt")) {
-                floorPrefix = "G";
-            } else if (fl.getFloorName().contains("1")) {
-                floorPrefix = "1";
-            } else if (fl.getFloorName().contains("2")) {
-                floorPrefix = "2";
-            }
-
-            Optional<Facility> facOpt = facilityRepository.findById(fl.getFacilityId());
-            if (facOpt.isPresent()) {
-                FacilityResponse fr = mapFacilityToResponse(facOpt.get());
-                facCode = fr.getFacilityCode().replace("-", "");
-            }
         }
 
         // Lấy thông tin Loại kho và Kích thước chuẩn
-        String sizeCode = "M";
         Optional<UnitType> unitTypeOpt = unitTypeRepository.findById(u.getUnitTypeId());
         if (unitTypeOpt.isPresent()) {
             UnitType ut = unitTypeOpt.get();
@@ -447,25 +430,21 @@ public class StorageService {
             // Gán kích thước chuẩn Dài x Rộng x Cao
             String lowerType = ut.getTypeName().toLowerCase();
             if (lowerType.contains("xl")) {
-                sizeCode = "XL";
                 dto.setLengthM(4.0);
                 dto.setWidthM(2.5);
                 dto.setHeightM(2.0);
                 dto.setAreaM2(10.0);
             } else if (lowerType.contains("size s") || lowerType.startsWith("s ") || lowerType.equals("s")) {
-                sizeCode = "S";
                 dto.setLengthM(1.0);
                 dto.setWidthM(1.0);
                 dto.setHeightM(2.0);
                 dto.setAreaM2(1.0);
             } else if (lowerType.contains("size l") || lowerType.startsWith("l ") || lowerType.equals("l")) {
-                sizeCode = "L";
                 dto.setLengthM(3.0);
                 dto.setWidthM(2.0);
                 dto.setHeightM(2.0);
                 dto.setAreaM2(6.0);
             } else {
-                sizeCode = "M";
                 dto.setLengthM(2.0);
                 dto.setWidthM(1.5);
                 dto.setHeightM(2.0);
@@ -570,8 +549,7 @@ public class StorageService {
     // --- Cập nhật Bảng giá và Mức cọc lưu vào Database ---
     @Transactional
     public PriceDto updatePrice(Integer unitTypeId, PriceDto req) {
-        UnitType ut = unitTypeRepository.findById(unitTypeId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy loại ô kho ID: " + unitTypeId));
+        if (!unitTypeRepository.existsById(unitTypeId)) throw new RuntimeException("Không tìm thấy loại ô kho ID: " + unitTypeId);
 
         Optional<Price> existingPriceOpt = priceRepository.findByUnitTypeIdAndStatus(unitTypeId, "ACTIVE");
         Price price;

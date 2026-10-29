@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/manager")
+@RequestMapping("/api/manager/tickets")
 public class ManagerTicketController {
 
     private final SupportTicketService supportTicketService;
@@ -26,7 +26,7 @@ public class ManagerTicketController {
     /**
      * GET /api/manager/tickets: Lấy danh sách ticket của cơ sở (ưu tiên ESCALATED quá hạn 15p lên đầu)
      */
-    @GetMapping("/tickets")
+    @GetMapping
     public ResponseEntity<?> getManagerTickets(
             @AuthenticationPrincipal Integer authAccountId,
             @RequestHeader(value = "X-Facility-Id", required = false) Integer headerFacilityId,
@@ -49,7 +49,7 @@ public class ManagerTicketController {
     /**
      * POST /api/manager/tickets/{id}/accept: Quản lý trực tiếp bấm tiếp nhận ticket (chuyển sang IN_PROGRESS)
      */
-    @PostMapping("/tickets/{id}/accept")
+    @PostMapping("/{id}/accept")
     public ResponseEntity<?> acceptTicket(
             @PathVariable Long id,
             @AuthenticationPrincipal Integer authAccountId,
@@ -73,7 +73,7 @@ public class ManagerTicketController {
     /**
      * POST /api/manager/tickets/{id}/resolve: Quản lý trực tiếp đóng / giải quyết ticket cho khách hàng
      */
-    @PostMapping("/tickets/{id}/resolve")
+    @PostMapping("/{id}/resolve")
     public ResponseEntity<?> resolveTicket(
             @PathVariable Long id,
             @RequestBody(required = false) Map<String, String> body,

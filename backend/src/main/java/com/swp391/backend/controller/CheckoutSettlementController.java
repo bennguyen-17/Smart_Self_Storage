@@ -3,7 +3,6 @@ package com.swp391.backend.controller;
 import com.swp391.backend.dto.checkout.CheckoutConfirmRequest;
 import com.swp391.backend.dto.checkout.CheckoutConfirmResponse;
 import com.swp391.backend.dto.checkout.CheckoutPreviewResponse;
-import com.swp391.backend.entity.Payment;
 import com.swp391.backend.service.CheckoutSettlementService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;

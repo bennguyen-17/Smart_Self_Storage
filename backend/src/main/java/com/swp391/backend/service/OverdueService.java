@@ -1,21 +1,5 @@
 package com.swp391.backend.service;
 
-import com.swp391.backend.entity.Contract;
-import com.swp391.backend.entity.Account;
-import com.swp391.backend.entity.ActivityLog;
-import com.swp391.backend.entity.Payment;
-import com.swp391.backend.entity.Reservation;
-import com.swp391.backend.repository.AccountRepository;
-import com.swp391.backend.repository.ActivityLogRepository;
-import com.swp391.backend.repository.ContractRepository;
-import com.swp391.backend.repository.PaymentRepository;
-import com.swp391.backend.repository.ReservationRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import com.swp391.backend.entity.FeePolicy;
-import com.swp391.backend.repository.FeePolicyRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -23,6 +7,22 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.swp391.backend.entity.Account;
+import com.swp391.backend.entity.ActivityLog;
+import com.swp391.backend.entity.Contract;
+import com.swp391.backend.entity.FeePolicy;
+import com.swp391.backend.entity.Payment;
+import com.swp391.backend.entity.Reservation;
+import com.swp391.backend.repository.AccountRepository;
+import com.swp391.backend.repository.ActivityLogRepository;
+import com.swp391.backend.repository.ContractRepository;
+import com.swp391.backend.repository.FeePolicyRepository;
+import com.swp391.backend.repository.PaymentRepository;
+import com.swp391.backend.repository.ReservationRepository;
 
 @Service
 public class OverdueService {
@@ -39,8 +39,7 @@ public class OverdueService {
     private final ActivityLogRepository activityLogRepository;
     private final EmailService emailService;
 
-    @Autowired(required = false)
-    private FeePolicyRepository feePolicyRepository;
+    private final FeePolicyRepository feePolicyRepository;
 
     private BigDecimal getDailyOverdueFee() {
         try {
@@ -71,13 +70,15 @@ public class OverdueService {
                           PaymentRepository paymentRepository,
                           AccountRepository accountRepository,
                           ActivityLogRepository activityLogRepository,
-                          EmailService emailService) {
+                           EmailService emailService,
+                           FeePolicyRepository feePolicyRepository) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.paymentRepository = paymentRepository;
         this.accountRepository = accountRepository;
         this.activityLogRepository = activityLogRepository;
         this.emailService = emailService;
+        this.feePolicyRepository = feePolicyRepository;
     }
 
     @Transactional

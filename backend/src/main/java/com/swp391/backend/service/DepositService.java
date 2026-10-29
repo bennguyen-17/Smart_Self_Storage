@@ -26,8 +26,6 @@ public class DepositService {
     private final StorageUnitRepository storageUnitRepository;
     private final FloorRepository floorRepository;
     private final FacilityRepository facilityRepository;
-    private final AccountRepository accountRepository;
-    private final EmailService emailService;
 
     public DepositService(StorageService storageService,
                           ReservationRepository reservationRepository,
@@ -36,9 +34,7 @@ public class DepositService {
                           ActivityLogRepository activityLogRepository,
                           StorageUnitRepository storageUnitRepository,
                           FloorRepository floorRepository,
-                          FacilityRepository facilityRepository,
-                          AccountRepository accountRepository,
-                          EmailService emailService) {
+                          FacilityRepository facilityRepository) {
         this.storageService = storageService;
         this.reservationRepository = reservationRepository;
         this.contractRepository = contractRepository;
@@ -47,8 +43,6 @@ public class DepositService {
         this.storageUnitRepository = storageUnitRepository;
         this.floorRepository = floorRepository;
         this.facilityRepository = facilityRepository;
-        this.accountRepository = accountRepository;
-        this.emailService = emailService;
     }
 
     // --- 1. Tạo đơn Đặt cọc 100% Online & Thỏa thuận Clickwrap ---
@@ -99,14 +93,6 @@ public class DepositService {
             if (facOpt.isPresent() && facOpt.get().getFacilityCode() != null && !facOpt.get().getFacilityCode().isBlank()) {
                 facilityCode = facOpt.get().getFacilityCode().replace("-", "").toUpperCase();
             }
-        }
-
-        // Lấy 4 số cuối SĐT khách hàng theo chuẩn BR-15
-        String phoneSuffix = "8899";
-        Optional<Account> accOpt = accountRepository.findAccountByAccountId(request.getAccountId());
-        if (accOpt.isPresent() && accOpt.get().getPhone() != null && accOpt.get().getPhone().length() >= 4) {
-            String fullPhone = accOpt.get().getPhone().trim();
-            phoneSuffix = fullPhone.substring(fullPhone.length() - 4);
         }
 
         // Khóa tạm ô kho sang HOLD

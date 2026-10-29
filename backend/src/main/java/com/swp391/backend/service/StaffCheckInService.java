@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.mail.MailException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -52,7 +51,6 @@ public class StaffCheckInService {
     private static final Logger log = LoggerFactory.getLogger(StaffCheckInService.class);
 
     private static final String CONTRACT_PENDING_CHECKIN = "PENDING_CHECKIN";
-    private static final String RESERVATION_CONFIRMED = "CONFIRMED";
     private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
     private static final DateTimeFormatter CHECKIN_DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -314,7 +312,7 @@ public class StaffCheckInService {
             String endStr = reservation.getEndDate() != null ? reservation.getEndDate().format(dtf)
                     : "Theo thời hạn đăng ký";
 
-            NumberFormat nf = NumberFormat.getInstance(new Locale("vi", "VN"));
+            NumberFormat nf = NumberFormat.getInstance(Locale.of("vi", "VN"));
             String depositStr = reservation.getDepositAmount() != null
                     ? nf.format(reservation.getDepositAmount()) + " VNĐ"
                     : "0 VNĐ";
@@ -372,10 +370,6 @@ public class StaffCheckInService {
         return floorRepository.findById(unit.getFloorId())
                 .map(floor -> facilityId.equals(floor.getFacilityId()))
                 .orElse(false);
-    }
-
-    private void writeActivityLog(Integer accountId, String action, String description) {
-        writeActivityLog(accountId, action, description, null);
     }
 
     private void writeActivityLog(Integer accountId, String action, String description, Integer facilityId) {
