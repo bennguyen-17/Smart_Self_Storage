@@ -44,7 +44,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/units/**", "/api/units/filter").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/prices", "/api/prices/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/fee-policies", "/api/fee-policies/**", "/api/fee-items", "/api/fee-items/**").permitAll()
-                        .requestMatchers("/api/admin/dashboard/**").permitAll()
                         .requestMatchers("/api/pricing/calculate").permitAll()
                         .requestMatchers("/api/deposits/webhook").permitAll()
                         .requestMatchers("/api/payment/vnpay/callback", "/api/payment/vnpay/ipn").permitAll()
@@ -54,6 +53,7 @@ public class SecurityConfig {
                         // 2. Quyền Ban Giám Đốc (BOM) & Quản Trị Hệ Thống (ADMIN)
                         .requestMatchers("/api/bom/**").hasAnyRole("BOM", "ADMIN")
                         .requestMatchers("/api/dashboard/chain").hasAnyRole("BOM", "ADMIN")
+                        .requestMatchers("/api/admin/dashboard/**").hasAnyRole("BOM", "ADMIN")
                         .requestMatchers("/api/deposits/mock-pay").hasAnyRole("BOM", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/facilities/**").hasAnyRole("BOM", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/facilities/**").hasAnyRole("BOM", "ADMIN")
@@ -81,7 +81,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/payment/**").authenticated()
                         .requestMatchers("/api/gate-pin/**").authenticated()
 
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))

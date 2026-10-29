@@ -114,7 +114,8 @@ public class CheckoutSettlementService {
             BigDecimal dailyRate = rentalPaid.divide(BigDecimal.valueOf(totalDays), 2, RoundingMode.HALF_UP);
             unusedRental = dailyRate.multiply(BigDecimal.valueOf(daysRemaining));
             // Hoàn 50% tiền thuê chưa dùng (50% còn lại là phí vi phạm hợp đồng trả sớm)
-            unusedRentalRefund = unusedRental.multiply(BigDecimal.valueOf(0.5)).setScale(0, RoundingMode.HALF_UP);
+            // Thong nhat nhom: Khong hoan lai tien thue chua dung khi tra kho som
+            unusedRentalRefund = BigDecimal.ZERO;
         }
 
         // Quét các khoản phạt còn nợ (UNPAID) của hợp đồng này
@@ -236,12 +237,8 @@ public class CheckoutSettlementService {
         BigDecimal rentalPaid = res.getRentalAmount() != null ? res.getRentalAmount() : BigDecimal.ZERO;
         BigDecimal depositAmount = res.getDepositAmount() != null ? res.getDepositAmount() : BigDecimal.ZERO;
 
+        // Thong nhat nhom: Khong hoan lai tien thue chua dung khi tra kho som
         BigDecimal unusedRentalRefund = BigDecimal.ZERO;
-        if (daysRemaining > 0 && totalDays > 0) {
-            BigDecimal dailyRate = rentalPaid.divide(BigDecimal.valueOf(totalDays), 2, RoundingMode.HALF_UP);
-            BigDecimal unusedRental = dailyRate.multiply(BigDecimal.valueOf(daysRemaining));
-            unusedRentalRefund = unusedRental.multiply(BigDecimal.valueOf(0.5)).setScale(0, RoundingMode.HALF_UP);
-        }
 
         // Lấy phạt quá hạn chưa nộp (UNPAID)
         List<Payment> payments = paymentRepository.findByContractId(contractId);
@@ -553,117 +550,7 @@ public class CheckoutSettlementService {
         return true;
     }
 
-    /**
-     * US-31: Miễn / Giảm phí (Facility Manager duyệt)
-     * BR-48: Mức giảm tối đa theo chính sách BOM, vượt mức báo lỗi 400. Miễn 100% chuyển CANCELLED và gửi email.
-     */
-    @Transactional
-    public Payment applyFeeDiscount(Integer paymentId, FeeDiscountRequest request, Integer managerAccountId, Integer managerFacilityId) {
-        if (request == null || request.getReason() == null || request.getReason().trim().isEmpty()) {
-            throw new IllegalArgumentException("Bắt buộc phải nhập lý do miễn / giảm phí theo quy định!");
-        }
 
-        if (request.getReason().trim().length() < 10) {
-            throw new IllegalArgumentException("Lý do miễn / giảm phí phải có ít nhất 10 ký tự!");
-        }
-
-        Optional<Payment> paymentOpt = paymentRepository.findById(paymentId);
-        if (paymentOpt.isEmpty()) {
-            throw new IllegalArgumentException("Không tìm thấy hóa đơn phí #" + paymentId);
-        }
-
-        Payment p = paymentOpt.get();
-        // Chỉ miễn giảm các khoản phí phạt OVERDUE_FEE hoặc phí bồi thường hư hại INSPECTION_DAMAGE
-        if (!"OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) && !"INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())
-                && !"PEN".equalsIgnoreCase(p.getInvoiceType()) && !"CMP".equalsIgnoreCase(p.getInvoiceType())) {
-            throw new IllegalArgumentException("Chỉ được miễn giảm các khoản phí phạt trễ hạn hoặc phí hư hại theo chính sách!");
-        }
-
-        if ("PAID".equalsIgnoreCase(p.getStatus())) {
-            throw new IllegalArgumentException("Hóa đơn đã thanh toán xong, không thể miễn giảm!");
-        }
-        if ("CANCELLED".equalsIgnoreCase(p.getStatus())) {
-            throw new IllegalArgumentException("Hóa đơn đã được miễn giảm toàn bộ trước đó, không thể miễn giảm thêm!");
-        }
-
-        BigDecimal originalAmount = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
-        BigDecimal newAmount = originalAmount;
-
-        // Kiểm tra vượt mức giảm tối đa theo chính sách (B4 / BR-48)
-        if (request.getDiscountPercent() != null) {
-            if (request.getDiscountPercent() < 1 || request.getDiscountPercent() > 100) {
-                throw new IllegalArgumentException("Phần trăm miễn giảm phải từ 1% đến 100% theo chính sách!");
-            }
-        }
-        if (request.getDiscountAmount() != null) {
-            if (request.getDiscountAmount().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Số tiền miễn giảm phải lớn hơn 0!");
-            }
-            if (request.getDiscountAmount().compareTo(originalAmount) > 0) {
-                throw new IllegalArgumentException("Mức giảm vượt quá số tiền của khoản phí (" + originalAmount + " VNĐ) theo chính sách!");
-            }
-        }
-
-        if (request.getDiscountPercent() != null && request.getDiscountPercent() >= 100) {
-            // Miễn 100% -> Khoản phí chuyển sang CANCELLED
-            p.setStatus("CANCELLED");
-            p.setPaymentStatus("FAILED");
-            p.setAmount(BigDecimal.ZERO);
-        } else if (request.getDiscountPercent() != null && request.getDiscountPercent() > 0) {
-            BigDecimal factor = BigDecimal.valueOf(100 - request.getDiscountPercent()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-            newAmount = originalAmount.multiply(factor).setScale(0, RoundingMode.HALF_UP);
-            p.setAmount(newAmount);
-        } else if (request.getDiscountAmount() != null && request.getDiscountAmount().compareTo(BigDecimal.ZERO) > 0) {
-            newAmount = originalAmount.subtract(request.getDiscountAmount());
-            if (newAmount.compareTo(BigDecimal.ZERO) <= 0) {
-                p.setStatus("CANCELLED");
-                p.setPaymentStatus("FAILED");
-                p.setAmount(BigDecimal.ZERO);
-            } else {
-                p.setAmount(newAmount);
-            }
-        }
-
-        paymentRepository.save(p);
-
-        // Ghi nhật ký kiểm toán
-        if (activityLogRepository != null) {
-            ActivityLog act = new ActivityLog();
-            act.setAccountId(managerAccountId != null ? managerAccountId : 1);
-            act.setFacilityId(contractRepository.findById(p.getContractId()).flatMap(c -> reservationRepository.findById(c.getReservationId()))
-                    .map(Reservation::getUnitCode).flatMap(storageUnitRepository::findById).map(StorageUnit::getFloorId)
-                    .flatMap(floorRepository::findById).map(Floor::getFacilityId).orElse(null));
-            act.setAction("APPROVE_FEE_DISCOUNT");
-            act.setDescription(String.format("Quản lý duyệt miễn giảm hóa đơn %s từ %s xuống %s VNĐ. Lý do: %s",
-                    p.getInvoiceNumber(), originalAmount, p.getAmount(), request.getReason().trim()));
-            act.setCreatedAt(LocalDateTime.now());
-            activityLogRepository.save(act);
-        }
-
-        // Gửi email thông báo cho khách hàng
-        try {
-            if (emailService != null && p.getContractId() != null) {
-                contractRepository.findById(p.getContractId()).ifPresent(c -> {
-                    if (c.getReservationId() != null) {
-                        reservationRepository.findById(c.getReservationId()).ifPresent(r -> {
-                            if (r.getAccountId() != null) {
-                                accountRepository.findAccountByAccountId(r.getAccountId()).ifPresent(acc -> {
-                                    if (acc.getEmail() != null && !acc.getEmail().isBlank()) {
-                                        String subj = "[Smart Self Storage] Thông báo miễn / giảm phí hóa đơn " + p.getInvoiceNumber();
-                                        String content = String.format("Kính gửi %s,\n\nKhoản phí %s ban đầu %s VNĐ đã được Quản lý duyệt miễn / giảm xuống %s VNĐ.\nLý do: %s\n\nTrân trọng,\nĐội ngũ Smart Self Storage",
-                                                acc.getFullName(), p.getInvoiceNumber(), originalAmount, p.getAmount(), request.getReason().trim());
-                                        emailService.sendTextEmail(acc.getEmail(), subj, content);
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
-            }
-        } catch (Exception ignored) {}
-
-        return p;
-    }
 
     /**
      * US-26 & B1: Lấy danh sách các đơn cọc chờ hoàn tiền (REF) cho Staff / Manager

@@ -8,6 +8,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.swp391.backend.entity.FeePolicy;
+import com.swp391.backend.repository.FeePolicyRepository;
 import org.springframework.stereotype.Service;
 
 import com.swp391.backend.dto.CalculatePriceRequest;
@@ -39,6 +42,21 @@ public class StorageService {
     private final StorageUnitRepository storageUnitRepository;
     private final PriceRepository priceRepository;
     private final ActivityLogRepository activityLogRepository;
+
+    @Autowired(required = false)
+    private FeePolicyRepository feePolicyRepository;
+
+    private BigDecimal getDiscountRate(String code, BigDecimal defaultRate) {
+        try {
+            if (feePolicyRepository != null) {
+                Optional<FeePolicy> fp = feePolicyRepository.findByPolicyCode(code);
+                if (fp.isPresent() && fp.get().getFeeValue() != null) {
+                    return fp.get().getFeeValue();
+                }
+            }
+        } catch (Exception ignored) {}
+        return defaultRate;
+    }
 
     public StorageService(FacilityRepository facilityRepository,
             FloorRepository floorRepository,
@@ -163,11 +181,11 @@ public class StorageService {
 
             // Chiết khấu gói tháng
             if (duration >= 12) {
-                discountPercent = BigDecimal.valueOf(15); // Giảm 15%
+                discountPercent = getDiscountRate("DISCOUNT_12M", BigDecimal.valueOf(15));
             } else if (duration >= 6) {
-                discountPercent = BigDecimal.valueOf(10); // Giảm 10%
+                discountPercent = getDiscountRate("DISCOUNT_6M", BigDecimal.valueOf(10));
             } else if (duration >= 3) {
-                discountPercent = BigDecimal.valueOf(5);  // Giảm 5%
+                discountPercent = getDiscountRate("DISCOUNT_3M", BigDecimal.valueOf(5));
             }
         }
 

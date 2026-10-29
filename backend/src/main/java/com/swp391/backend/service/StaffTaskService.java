@@ -163,27 +163,33 @@ public class StaffTaskService {
             }
             unitCode = unit.getUnitCode();
         } else if (CHECKIN_HANDOVER.equals(taskType)) {
-            if (unitCode != null) {
-                StorageUnit unit = storageUnitRepository.findById(unitCode)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy ô kho."));
-                if (!facilityId.equals(getUnitFacilityId(unit))) {
-                    throw new AccessDeniedException("Ô kho không thuộc cơ sở của Manager.");
-                }
+            if (contractId == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Task CHECKIN_HANDOVER cần contractId.");
             }
-            if (contractId != null) {
-                Contract contract = contractRepository.findById(contractId)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy hợp đồng."));
-                Reservation reservation = reservationRepository.findById(contract.getReservationId())
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy đặt chỗ."));
-                StorageUnit unit = storageUnitRepository.findById(reservation.getUnitCode())
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy ô kho."));
-                if (!facilityId.equals(getUnitFacilityId(unit))) {
-                    throw new AccessDeniedException("Hợp đồng không thuộc cơ sở của Manager.");
-                }
-                if (unitCode == null) {
-                    unitCode = unit.getUnitCode();
-                }
+            Contract contract = contractRepository.findById(contractId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy hợp đồng."));
+            Reservation reservation = reservationRepository.findById(contract.getReservationId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy đặt chỗ."));
+            StorageUnit unit = storageUnitRepository.findById(reservation.getUnitCode())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy ô kho."));
+            if (!facilityId.equals(getUnitFacilityId(unit))) {
+                throw new AccessDeniedException("Hợp đồng không thuộc cơ sở của Manager.");
             }
+            if (!"PENDING_CHECKIN".equalsIgnoreCase(contract.getStatus())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Chỉ có thể giao bàn giao cho hợp đồng đang chờ nhận kho (PENDING_CHECKIN).");
+            }
+            if (!taskRepository.findByContractIdAndTaskTypeAndStatus(
+                    contractId, CHECKIN_HANDOVER, "ASSIGNED").isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Hợp đồng đã có task bàn giao đang được giao.");
+            }
+            if (unitCode != null && !unitCode.equalsIgnoreCase(unit.getUnitCode())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Mã ô kho không khớp với hợp đồng.");
+            }
+            unitCode = unit.getUnitCode();
         } else if (INCIDENT.equals(taskType)) {
             if (unitCode != null) {
                 StorageUnit unit = storageUnitRepository.findById(unitCode)

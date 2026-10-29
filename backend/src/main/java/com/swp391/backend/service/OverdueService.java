@@ -10,6 +10,9 @@ import com.swp391.backend.repository.ActivityLogRepository;
 import com.swp391.backend.repository.ContractRepository;
 import com.swp391.backend.repository.PaymentRepository;
 import com.swp391.backend.repository.ReservationRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.swp391.backend.entity.FeePolicy;
+import com.swp391.backend.repository.FeePolicyRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +38,33 @@ public class OverdueService {
     private final AccountRepository accountRepository;
     private final ActivityLogRepository activityLogRepository;
     private final EmailService emailService;
+
+    @Autowired(required = false)
+    private FeePolicyRepository feePolicyRepository;
+
+    private BigDecimal getDailyOverdueFee() {
+        try {
+            if (feePolicyRepository != null) {
+                Optional<FeePolicy> fp = feePolicyRepository.findByPolicyCode("OVERDUE_DAILY_RATE");
+                if (fp.isPresent() && fp.get().getFeeValue() != null) {
+                    return fp.get().getFeeValue();
+                }
+            }
+        } catch (Exception ignored) {}
+        return DAILY_OVERDUE_FEE;
+    }
+
+    private int getOverdueLiquidationDays() {
+        try {
+            if (feePolicyRepository != null) {
+                Optional<FeePolicy> fp = feePolicyRepository.findByPolicyCode("OVERDUE_LIQUIDATION_DAYS");
+                if (fp.isPresent() && fp.get().getFeeValue() != null) {
+                    return fp.get().getFeeValue().intValue();
+                }
+            }
+        } catch (Exception ignored) {}
+        return 30;
+    }
 
     public OverdueService(ContractRepository contractRepository,
                           ReservationRepository reservationRepository,
@@ -88,7 +118,7 @@ public class OverdueService {
             sendMilestoneReminder(contract, reservation, overdueDays);
             createOrUpdateOverdueFine(contract, reservation.getEndDate(), today);
 
-            if (overdueDays >= 30) {
+            if (overdueDays >= getOverdueLiquidationDays()) {
                 contract.setStatus("FORFEITED");
                 contractRepository.save(contract);
                 recordForfeiture(contract, reservation);
@@ -105,7 +135,7 @@ public class OverdueService {
     private void createOrUpdateOverdueFine(Contract contract, LocalDate endDate, LocalDate today) {
         long overdueDays = Math.min(
                 ChronoUnit.DAYS.between(endDate, today), MAX_CHARGEABLE_OVERDUE_DAYS);
-        BigDecimal totalFine = DAILY_OVERDUE_FEE.multiply(BigDecimal.valueOf(overdueDays));
+        BigDecimal totalFine = getDailyOverdueFee().multiply(BigDecimal.valueOf(overdueDays));
         String contractCode = "CTR-" + contract.getContractId();
         Optional<Reservation> resOpt = reservationRepository.findById(contract.getReservationId());
         if (resOpt.isPresent() && resOpt.get().getReservationCode() != null && !resOpt.get().getReservationCode().isBlank()) {

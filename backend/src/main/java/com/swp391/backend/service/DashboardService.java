@@ -188,7 +188,7 @@ public class DashboardService {
                 cat = "CMP";
                 amount = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
                 effectiveTime = paymentTime;
-            } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && !"CANCELLED".equalsIgnoreCase(p.getStatus())) {
+            } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                 cat = "PEN";
                 amount = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
                 effectiveTime = paymentTime;
@@ -284,9 +284,21 @@ public class DashboardService {
             }
         }
 
-        BigDecimal grossRevenue = rentalRevenue.add(extensionRevenue).add(penaltyRevenue);
-        // Doanh thu thực thu = Tiền thuê + Tiền phạt
-        BigDecimal netRevenue = grossRevenue;
+        BigDecimal grossRevenue = rentalRevenue.add(extensionRevenue).add(penaltyRevenue).add(compensationRevenue);
+        totalRefunds = payments.stream()
+                .filter(p -> "REF".equalsIgnoreCase(p.getInvoiceType()) || (p.getInvoiceNumber() != null && p.getInvoiceNumber().startsWith("REF-")))
+                .filter(p -> "PAID".equalsIgnoreCase(p.getStatus()) || "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()) || "REFUNDED".equalsIgnoreCase(p.getStatus()))
+                .filter(p -> {
+                    LocalDateTime pTime = p.getPaidAt() != null ? p.getPaidAt() : p.getIssuedAt();
+                    if (fromLdt != null && pTime != null && pTime.isBefore(fromLdt)) return false;
+                    if (toLdt != null && pTime != null && pTime.isAfter(toLdt)) return false;
+                    return true;
+                })
+                .map(p -> p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Doanh thu thực thu = Doanh thu tổng (thuê + gia hạn + phạt + đền bù) - Hoàn tiền
+        BigDecimal netRevenue = grossRevenue.subtract(totalRefunds).max(BigDecimal.ZERO);
 
         // 4. Thống kê Support Ticket & SLA
         List<SupportTicket> allFacilityTickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
@@ -354,7 +366,7 @@ public class DashboardService {
         resp.setExtensionRevenue(extensionRevenue);
         resp.setPenaltyRevenue(penaltyRevenue);
         resp.setCompensationRevenue(compensationRevenue);
-        resp.setTotalRefunds(BigDecimal.ZERO);
+        resp.setTotalRefunds(totalRefunds);
         resp.setNetRevenue(netRevenue);
 
         resp.setThisMonthRevenue(thisMonthRevenue);
@@ -404,7 +416,7 @@ public class DashboardService {
                     cat = "CMP";
                     amt = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
                     effectiveTime = paymentTime;
-                } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && !"CANCELLED".equalsIgnoreCase(p.getStatus())) {
+                } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                     cat = "PEN";
                     amt = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
                     effectiveTime = paymentTime;
@@ -528,7 +540,7 @@ public class DashboardService {
                 chainTotalUnits += mResp.getTotalUnits();
                 chainOccupiedUnits += mResp.getOccupiedUnits();
                 chainTotalActive += mResp.getActiveContracts();
-                chainGross = chainGross.add(mResp.getRentalRevenue().add(mResp.getExtensionRevenue()).add(mResp.getPenaltyRevenue()));
+                chainGross = chainGross.add(mResp.getRentalRevenue().add(mResp.getExtensionRevenue()).add(mResp.getPenaltyRevenue()).add(mResp.getCompensationRevenue()));
                 chainRefunds = chainRefunds.add(mResp.getTotalRefunds());
                 chainNet = chainNet.add(mResp.getNetRevenue());
                 chainDeposit = chainDeposit.add(mResp.getDepositHolding());
@@ -578,7 +590,7 @@ public class DashboardService {
                     cat = "CMP";
                     amt = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
                     effectiveTime = paymentTime;
-                } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && !"CANCELLED".equalsIgnoreCase(p.getStatus())) {
+                } else if (("OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType()) || "PEN".equalsIgnoreCase(p.getInvoiceType())) && isPaid) {
                     cat = "PEN";
                     amt = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
                     effectiveTime = paymentTime;
@@ -636,7 +648,7 @@ public class DashboardService {
         resp.setChainAverageOccupancyRate(Math.round(chainOccupancy * 10.0) / 10.0);
         resp.setChainTotalActiveContracts(chainTotalActive);
         resp.setChainTotalRevenue(chainGross);
-        resp.setChainTotalRefunds(BigDecimal.ZERO);
+        resp.setChainTotalRefunds(chainRefunds);
         resp.setChainNetRevenue(chainNet);
         resp.setChainDepositHolding(chainDeposit);
         resp.setChainRentalRevenue(chainRental);
