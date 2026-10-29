@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -161,7 +160,6 @@ public class StaffProfileController {
         List<StaffProfileResponse.AssignedShiftDto> assignedList = new ArrayList<>();
         boolean isCurrentlyInShift = false;
         boolean hasUpcomingShift = false;
-        boolean allEnded = false;
 
         if (employeeId != null) {
             List<StaffShift> staffShifts = staffShiftRepository.findByEmployeeIdAndWorkDateAndStatusNot(employeeId, date, "CANCELLED");

@@ -18,7 +18,7 @@ import java.util.Optional;
 import java.util.Random;
 
 @RestController
-@RequestMapping("/api/customers")
+@RequestMapping("/api/customers/profile")
 public class CustomerController {
 
     private final AccountRepository accountRepository;
@@ -59,7 +59,7 @@ public class CustomerController {
         return null;
     }
 
-    @GetMapping("/profile")
+    @GetMapping
     public ResponseEntity<?> getProfile(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         
@@ -95,7 +95,7 @@ public class CustomerController {
         return ResponseEntity.ok(data);
     }
 
-    @PostMapping("/profile/send-email-otp")
+    @PostMapping("/send-email-otp")
     public ResponseEntity<ApiResponse> sendEmailOtp(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, Object> request) {
@@ -131,7 +131,7 @@ public class CustomerController {
         return ResponseEntity.ok(new ApiResponse(true, message));
     }
 
-    @PutMapping("/profile")
+    @PutMapping
     public ResponseEntity<?> updateProfile(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, Object> updateData) {

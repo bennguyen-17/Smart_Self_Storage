@@ -25,7 +25,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.UUID;
 
 @Service
 public class CustomerReservationService {
@@ -37,19 +36,20 @@ public class CustomerReservationService {
     private final ReservationRepository reservationRepository;
     private final StorageUnitRepository storageUnitRepository;
     private final PaymentRepository paymentRepository;
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    private CustomerProfileRepository customerProfileRepository;
+    private final CustomerProfileRepository customerProfileRepository;
 
     public CustomerReservationService(AccountRepository accountRepository,
                                       ContractRepository contractRepository,
                                       ReservationRepository reservationRepository,
                                       StorageUnitRepository storageUnitRepository,
-                                      PaymentRepository paymentRepository) {
+                                      PaymentRepository paymentRepository,
+                                      CustomerProfileRepository customerProfileRepository) {
         this.accountRepository = accountRepository;
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
         this.paymentRepository = paymentRepository;
+        this.customerProfileRepository = customerProfileRepository;
     }
 
     @Transactional

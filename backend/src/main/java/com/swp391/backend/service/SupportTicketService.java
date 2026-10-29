@@ -28,7 +28,6 @@ public class SupportTicketService {
     private final FacilityRepository facilityRepository;
     private final EmailService emailService;
     private final StaffShiftService staffShiftService;
-    private final EmployeeProfileRepository employeeProfileRepository;
 
     public SupportTicketService(SupportTicketRepository supportTicketRepository,
                                 ContractRepository contractRepository,
@@ -40,8 +39,7 @@ public class SupportTicketService {
                                 FloorRepository floorRepository,
                                 FacilityRepository facilityRepository,
                                 EmailService emailService,
-                                StaffShiftService staffShiftService,
-                                EmployeeProfileRepository employeeProfileRepository) {
+                                StaffShiftService staffShiftService) {
         this.supportTicketRepository = supportTicketRepository;
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
@@ -53,7 +51,6 @@ public class SupportTicketService {
         this.facilityRepository = facilityRepository;
         this.emailService = emailService;
         this.staffShiftService = staffShiftService;
-        this.employeeProfileRepository = employeeProfileRepository;
     }
 
     private Integer getFacilityIdByUnit(String unitCode) {

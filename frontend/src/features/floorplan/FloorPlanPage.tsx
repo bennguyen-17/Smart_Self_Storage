@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { MapIcon, RotateCwIcon, SearchXIcon } from "lucide-react"
+import { MapIcon, RotateCwIcon, SearchXIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
+import { cn } from "cn"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -18,28 +19,57 @@ import { UNIT_SIZES, unitSizeOf } from "@/features/floorplan/unitDisplay"
 
 const CLIMATE_VALUES: ClimateFilter[] = ["ALL", "NORMAL", "CLIMATE_CONTROLLED"]
 
-interface FloorPlanPageProps {
+export interface FloorPlanPageProps {
   /** Bước tiếp theo khi khách bấm đặt cọc (US-04). Mặc định: về trang chủ kèm ô đã chọn. */
   onReserve?: (unit: UnitDetailResponse) => void
+  /** Thao tác chọn ô (cho staff check-in hoặc custom flow) */
+  onSelectUnit?: (unit: UnitDetailResponse) => void
+  currentUnitCode?: string
+  selectedUnitCode?: string
+  initialFacilityId?: number
+  initialFloorId?: number
+  onClose?: () => void
+  title?: string
+  subtitle?: string
 }
 
 /** US-03: Sơ đồ 2D chọn ô kho theo cơ sở / tầng / size / loại kho */
-function FloorPlanPage({ onReserve }: FloorPlanPageProps) {
+function FloorPlanPage({
+  onReserve,
+  onSelectUnit,
+  currentUnitCode,
+  selectedUnitCode,
+  initialFacilityId,
+  initialFloorId,
+  onClose,
+  title,
+  subtitle,
+}: FloorPlanPageProps) {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const [reloadCount, setReloadCount] = useState(0)
-  const [selectedUnit, setSelectedUnit] = useState<UnitDetailResponse | null>(
-    null
-  )
+  const [selectedUnit, setSelectedUnit] = useState<UnitDetailResponse | null>(null)
 
-  const size = ([...UNIT_SIZES, "ALL"] as SizeFilter[]).includes(
-    params.get("size") as SizeFilter
-  )
+  const isEmbedded = Boolean(onSelectUnit || onClose)
+
+  const [localFacilityId, setLocalFacilityId] = useState<number | null>(initialFacilityId ?? null)
+  const [localFloorId, setLocalFloorId] = useState<number | null>(initialFloorId ?? null)
+  const [localSize, setLocalSize] = useState<SizeFilter>("ALL")
+  const [localClimate, setLocalClimate] = useState<ClimateFilter>("ALL")
+
+  const size = isEmbedded
+    ? localSize
+    : ([...UNIT_SIZES, "ALL"] as SizeFilter[]).includes(
+        params.get("size") as SizeFilter
+      )
     ? (params.get("size") as SizeFilter)
     : "ALL"
-  const climate = CLIMATE_VALUES.includes(
-    params.get("climate") as ClimateFilter
-  )
+
+  const climate = isEmbedded
+    ? localClimate
+    : CLIMATE_VALUES.includes(
+        params.get("climate") as ClimateFilter
+      )
     ? (params.get("climate") as ClimateFilter)
     : "ALL"
 
@@ -48,17 +78,25 @@ function FloorPlanPage({ onReserve }: FloorPlanPageProps) {
     getFacilities
   )
   const facilities = facilitiesQuery.data ?? []
-  const facility =
-    facilities.find((f) => String(f.facilityId) === params.get("facility")) ??
-    facilities[0]
+
+  const facility = isEmbedded
+    ? (localFacilityId != null ? facilities.find((f) => f.facilityId === localFacilityId) : null) ??
+      (initialFacilityId != null ? facilities.find((f) => f.facilityId === initialFacilityId) : null) ??
+      facilities[0]
+    : facilities.find((f) => String(f.facilityId) === params.get("facility")) ??
+      facilities[0]
 
   const floorsQuery = useAsyncData(
     facility ? `floors:${facility.facilityId}#${reloadCount}` : null,
     () => getFloors(facility!.facilityId)
   )
-  const floor =
-    floorsQuery.data?.find((f) => String(f.floorId) === params.get("floor")) ??
-    floorsQuery.data?.[0]
+
+  const floor = isEmbedded
+    ? (localFloorId != null ? floorsQuery.data?.find((f) => f.floorId === localFloorId) : null) ??
+      (initialFloorId != null ? floorsQuery.data?.find((f) => f.floorId === initialFloorId) : null) ??
+      floorsQuery.data?.[0]
+    : floorsQuery.data?.find((f) => String(f.floorId) === params.get("floor")) ??
+      floorsQuery.data?.[0]
 
   const unitsQuery = useAsyncData(
     facility && floor
@@ -84,10 +122,49 @@ function FloorPlanPage({ onReserve }: FloorPlanPageProps) {
     setParams(next, { replace: true })
   }
 
+  function handleFacilityChange(id: number) {
+    if (isEmbedded) {
+      setLocalFacilityId(id)
+      setLocalFloorId(null)
+    } else {
+      updateParams({ facility: String(id), floor: null })
+    }
+  }
+
+  function handleFloorChange(id: number) {
+    if (isEmbedded) {
+      setLocalFloorId(id)
+    } else {
+      updateParams({ floor: String(id) })
+    }
+  }
+
+  function handleSizeChange(s: SizeFilter) {
+    if (isEmbedded) {
+      setLocalSize(s)
+    } else {
+      updateParams({ size: s === "ALL" ? null : s })
+    }
+  }
+
+  function handleClimateChange(c: ClimateFilter) {
+    if (isEmbedded) {
+      setLocalClimate(c)
+    } else {
+      updateParams({ climate: c === "ALL" ? null : c })
+    }
+  }
+
+  function handleCellClick(unit: UnitDetailResponse) {
+    if (onSelectUnit) {
+      return onSelectUnit(unit)
+    }
+    setSelectedUnit(unit)
+  }
+
   function handleReserve(unit: UnitDetailResponse) {
     setSelectedUnit(null)
     if (onReserve) return onReserve(unit)
-    // Chờ chốt cách ghép với luồng đặt cọc US-04 của Tâm trong CustomerPortal
     toast.info(`Chuyển sang bước đặt cọc giữ chỗ cho ô ${unit.unitCode}`)
     navigate("/", { state: { reserveUnit: unit } })
   }
@@ -97,35 +174,42 @@ function FloorPlanPage({ onReserve }: FloorPlanPageProps) {
     facilitiesQuery.isLoading || floorsQuery.isLoading || unitsQuery.isLoading
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <main className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-        <header className="space-y-1">
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <MapIcon aria-hidden="true" className="size-6 text-primary" />
-            Sơ đồ kho 2D
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Chọn cơ sở, tầng và loại kho, sau đó bấm vào ô màu xanh để xem chi
-            tiết và đặt cọc giữ chỗ.
-          </p>
+    <div className={cn(isEmbedded ? "bg-background text-foreground py-6" : "min-h-screen bg-background text-foreground")}>
+      <main className="mx-auto max-w-6xl space-y-6 px-4 py-4 sm:py-8">
+        <header className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="flex items-center gap-2 text-2xl font-bold">
+              <MapIcon aria-hidden="true" className="size-6 text-primary" />
+              {title ?? "Sơ đồ kho 2D"}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {subtitle ?? "Chọn cơ sở, tầng và loại kho, sau đó bấm vào ô màu xanh để xem chi tiết và đặt cọc giữ chỗ."}
+            </p>
+          </div>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="cursor-pointer rounded-2xl border bg-card p-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition shadow-2xs"
+              title="Đóng sơ đồ"
+            >
+              <XIcon className="size-5" />
+            </button>
+          )}
         </header>
 
         {facilitiesQuery.data && (
           <FloorPlanFilters
             facilities={facilities}
             facilityId={facility?.facilityId ?? null}
-            onFacilityChange={(id) =>
-              updateParams({ facility: String(id), floor: null })
-            }
+            onFacilityChange={handleFacilityChange}
             floors={floorsQuery.data}
             floorId={floor?.floorId ?? null}
-            onFloorChange={(id) => updateParams({ floor: String(id) })}
+            onFloorChange={handleFloorChange}
             size={size}
-            onSizeChange={(s) => updateParams({ size: s === "ALL" ? null : s })}
+            onSizeChange={handleSizeChange}
             climate={climate}
-            onClimateChange={(c) =>
-              updateParams({ climate: c === "ALL" ? null : c })
-            }
+            onClimateChange={handleClimateChange}
           />
         )}
 
@@ -162,7 +246,12 @@ function FloorPlanPage({ onReserve }: FloorPlanPageProps) {
             </div>
 
             {visibleUnits.length > 0 ? (
-              <UnitGrid units={visibleUnits} onSelect={setSelectedUnit} />
+              <UnitGrid
+                units={visibleUnits}
+                onSelect={handleCellClick}
+                currentUnitCode={currentUnitCode}
+                selectedUnitCode={selectedUnitCode}
+              />
             ) : (
               <div className="rounded-xl border bg-card px-4 py-12 text-center">
                 <SearchXIcon
@@ -181,13 +270,23 @@ function FloorPlanPage({ onReserve }: FloorPlanPageProps) {
             )}
           </section>
         )}
+
+        {onClose && (
+          <div className="flex justify-end pt-4 border-t">
+            <Button variant="outline" onClick={onClose} className="cursor-pointer">
+              Đóng sơ đồ / Quay lại
+            </Button>
+          </div>
+        )}
       </main>
 
-      <UnitDetailDialog
-        unit={selectedUnit}
-        onClose={() => setSelectedUnit(null)}
-        onReserve={handleReserve}
-      />
+      {!onSelectUnit && (
+        <UnitDetailDialog
+          unit={selectedUnit}
+          onClose={() => setSelectedUnit(null)}
+          onReserve={handleReserve}
+        />
+      )}
     </div>
   )
 }

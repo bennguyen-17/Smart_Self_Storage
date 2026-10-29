@@ -18,7 +18,6 @@ import {
   BuildingIcon,
   AlertCircleIcon,
   CheckIcon,
-  MapIcon,
   XIcon,
   EyeIcon,
   LayersIcon,
@@ -77,10 +76,6 @@ export default function StaffCheckinProcessPage() {
   // Lấy toàn bộ ô kho trong hệ thống để tìm ô trống cùng cơ sở
   const [units, setUnits] = useState<UnitDetailResponse[]>([])
 
-  // Modal xem sơ đồ mặt bằng 2D cho khách (chỉ xem)
-  const [isMapModalOpen, setIsMapModalOpen] = useState(false)
-  const [modalFloorId, setModalFloorId] = useState<number | null>(null)
-
   useEffect(() => {
     fetchAllUnits().then(setUnits).catch(() => {})
   }, [])
@@ -132,42 +127,6 @@ export default function StaffCheckinProcessPage() {
     if (t.includes("SIZE S") || t.includes(" S") || t.includes("-S")) return "S"
     return "M"
   }
-
-  // Danh sách các tầng của cơ sở hiện tại
-  const facilityFloors = useMemo(() => {
-    if (!contract || !units.length) return []
-    const prefix = contract.unitCode?.split("-")[0] ?? ""
-    const facUnits = prefix ? units.filter((u) => u.unitCode.startsWith(prefix)) : units
-    const floorMap = new Map<number, string>()
-    facUnits.forEach((u) => {
-      if (u.floorId != null) {
-        floorMap.set(
-          u.floorId,
-          u.floorName || (u.floorId === 1 ? "Tầng trệt" : `Tầng ${u.floorId - 1}`)
-        )
-      }
-    })
-    return Array.from(floorMap.entries())
-      .map(([floorId, floorName]) => ({ floorId, floorName }))
-      .sort((a, b) => a.floorId - b.floorId)
-  }, [contract, units])
-
-  // Tầng đang active trên Modal sơ đồ 2D
-  const activeModalFloorId = useMemo(() => {
-    if (modalFloorId != null) return modalFloorId
-    if (currentUnitFloorId != null) return currentUnitFloorId
-    return facilityFloors[0]?.floorId ?? 1
-  }, [modalFloorId, currentUnitFloorId, facilityFloors])
-
-  // Danh sách ô kho hiển thị trên Modal theo tầng đang chọn
-  const modalFloorUnits = useMemo(() => {
-    if (!contract || !units.length) return []
-    const prefix = contract.unitCode?.split("-")[0] ?? ""
-    return units.filter((u) => {
-      const matchPrefix = prefix ? u.unitCode.startsWith(prefix) : true
-      return matchPrefix && u.floorId === activeModalFloorId
-    })
-  }, [contract, units, activeModalFloorId])
 
   // Lọc ô AVAILABLE cùng cơ sở (dựa trên prefix mã ô ví dụ HCM02-...)
   const availableUnits = useMemo(() => {
@@ -569,24 +528,12 @@ export default function StaffCheckinProcessPage() {
 
           {/* CARD 2: CHI TIẾT HỢP ĐỒNG THUÊ KHO */}
           <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-xs backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/90 space-y-3">
-            {/* Header hợp đồng + Nút xem sơ đồ 2D */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+            {/* Header hợp đồng */}
+            <div className="border-b border-slate-100 pb-3 dark:border-slate-800">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <PackageIcon className="size-4 text-slate-600 dark:text-slate-400" />
                 <span>Thông tin hợp đồng thuê kho</span>
               </h2>
-              <button
-                type="button"
-                onClick={() => {
-                  setModalFloorId(currentUnitFloorId ?? facilityFloors[0]?.floorId ?? 1)
-                  setIsMapModalOpen(true)
-                }}
-                className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-750"
-                title="Mở sơ đồ 2D để hướng dẫn vị trí kho cho khách"
-              >
-                <MapIcon className="size-3.5 text-slate-500 dark:text-slate-400" />
-                <span>Xem sơ đồ 2D</span>
-              </button>
             </div>
 
             {/* Các dòng ngang thông tin hợp đồng */}
@@ -1024,276 +971,6 @@ export default function StaffCheckinProcessPage() {
           </div>
         </div>
       </div>
-
-      {/* MODAL XEM SƠ ĐỒ MẶT BẰNG 2D CHO KHÁCH (CHỈ XEM) */}
-      {isMapModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/70 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            {/* MODAL HEADER */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-850">
-              <div className="flex items-center gap-3">
-                <div className="size-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
-                  <MapIcon className="size-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-base font-black text-slate-900 dark:text-white">
-                      Sơ đồ mặt bằng kho 2D
-                    </h3>
-                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800 dark:bg-blue-950 dark:text-blue-300">
-                      Chế độ chỉ xem cho khách
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted mt-0.5">
-                    Vị trí ô kho:{" "}
-                    <strong className="font-mono text-blue-600 dark:text-blue-400">
-                      {contract.unitCode}
-                    </strong>{" "}
-                    · {contract.floorName ?? "Tầng lưu trữ"}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsMapModalOpen(false)}
-                className="cursor-pointer rounded-xl p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition"
-              >
-                <XIcon className="size-5" />
-              </button>
-            </div>
-
-            {/* MODAL CONTROLS (FLOOR TABS & LEGEND) */}
-            <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-wrap items-center justify-between gap-3">
-              {/* THANH CHỌN TẦNG */}
-              <div className="flex items-center gap-1.5 overflow-x-auto">
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 mr-1 flex items-center gap-1">
-                  <LayersIcon className="size-3.5 text-blue-600 dark:text-blue-400" />
-                  Tầng:
-                </span>
-                {facilityFloors.map((f) => {
-                  const isActive = f.floorId === activeModalFloorId
-                  const isCurrentFloor = currentUnitFloorId === f.floorId
-                  return (
-                    <button
-                      key={f.floorId}
-                      type="button"
-                      onClick={() => setModalFloorId(f.floorId)}
-                      className={cn(
-                        "cursor-pointer px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap",
-                        isActive
-                          ? "bg-blue-600 text-white shadow-xs"
-                          : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
-                      )}
-                    >
-                      <span>{f.floorName}</span>
-                      {isCurrentFloor && (
-                        <span
-                          className={cn(
-                            "text-[9px] px-1.5 py-0.2 rounded-full font-black",
-                            isActive
-                              ? "bg-white/20 text-white"
-                              : "bg-blue-200 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200"
-                          )}
-                        >
-                          Ô của khách
-                        </span>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-
-              {/* CHÚ THÍCH */}
-              <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-600 dark:text-slate-400">
-                <span className="flex items-center gap-1.5 font-bold text-blue-600 dark:text-blue-400">
-                  <span className="size-2.5 rounded-full bg-blue-600 ring-2 ring-blue-300 dark:ring-blue-800 animate-pulse" />
-                  Ô của khách ({contract.unitCode})
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="size-2.5 rounded-full bg-emerald-500" />
-                  Còn trống
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="size-2.5 rounded-full bg-rose-400" />
-                  Đã thuê
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="size-2.5 rounded-full bg-amber-400" />
-                  Đang giữ chỗ
-                </span>
-              </div>
-            </div>
-
-            {/* MODAL BODY (BLUEPRINT 2D SCROLLABLE) */}
-            <div className="p-5 overflow-y-auto flex-1 space-y-4">
-              {modalFloorUnits.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 p-12 text-center text-xs text-muted dark:border-slate-800">
-                  Không có dữ liệu mặt bằng cho tầng này.
-                </div>
-              ) : (
-                <div className="floor-blueprint-container p-4 space-y-4 shadow-inner relative">
-                  {(["XL", "L", "M", "S"] as const).map((sz, rowIdx) => {
-                    const unitsInSize = modalFloorUnits.filter(
-                      (u) => getUnitSize(u) === sz
-                    )
-                    if (unitsInSize.length === 0) return null
-
-                    const corridorTitle =
-                      sz === "XL"
-                        ? "HÀNH LANG TRỤC XE TẢI / XE NÂNG (TẦNG TRỆT)"
-                        : "HÀNH LANG LỐI ĐI NỘI BỘ 24/7"
-
-                    const gridColsClass =
-                      sz === "S"
-                        ? "grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2"
-                        : sz === "M"
-                        ? "grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2.5"
-                        : sz === "L"
-                        ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5"
-                        : "grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2.5"
-
-                    const sectionTitle =
-                      sz === "XL"
-                        ? "Dãy Kho Lớn Mặt Bằng (XL - 10m²)"
-                        : sz === "L"
-                        ? "Khu Phòng Lớn (Size L - 6m²)"
-                        : sz === "M"
-                        ? "Khu Phòng Vừa (Size M - 3m²)"
-                        : "Cụm Tủ Cá Nhân (Size S - 1m²)"
-
-                    return (
-                      <div key={sz} className="space-y-2">
-                        {rowIdx > 0 && (
-                          <div className="floor-corridor-strip my-1">
-                            {corridorTitle}
-                          </div>
-                        )}
-
-                        <div className="flex items-center justify-between text-[11px] font-extrabold uppercase text-slate-800 dark:text-slate-200">
-                          <span className="flex items-center gap-1.5">
-                            <span
-                              className={cn(
-                                "size-2.5 rounded-full",
-                                sz === "XL"
-                                  ? "bg-amber-500"
-                                  : sz === "L"
-                                  ? "bg-blue-500"
-                                  : sz === "M"
-                                  ? "bg-indigo-500"
-                                  : "bg-emerald-500"
-                              )}
-                            />
-                            {sectionTitle}
-                          </span>
-                          <span className="text-[10px] font-medium text-muted">
-                            {unitsInSize.length} ô
-                          </span>
-                        </div>
-
-                        <div className={gridColsClass}>
-                          {unitsInSize.map((u) => {
-                            const isCurrent = u.unitCode === contract.unitCode
-                            const st = String(u.status)
-                            const isOccupied =
-                              st === "RENTED" ||
-                              st === "OCCUPIED" ||
-                              st === "OVERDUE"
-                            const isHold =
-                              st === "HOLD" || (st === "RESERVED" && !isCurrent)
-                            const isAvailable = st === "AVAILABLE" && !isCurrent
-
-                            const heightClass =
-                              sz === "S"
-                                ? "min-h-[58px]"
-                                : sz === "M"
-                                ? "min-h-[66px]"
-                                : sz === "L"
-                                ? "min-h-[76px]"
-                                : "min-h-[86px]"
-
-                            return (
-                              <div
-                                key={u.unitCode}
-                                className={cn(
-                                  "relative flex flex-col justify-between rounded-xl border p-2 text-center select-none transition",
-                                  heightClass,
-                                  isCurrent
-                                    ? "border-blue-600 bg-blue-100 text-blue-950 ring-4 ring-blue-500/50 shadow-lg scale-103 font-bold dark:border-blue-400 dark:bg-blue-950 dark:text-white"
-                                    : isAvailable
-                                    ? "border-emerald-300 bg-emerald-50/70 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200"
-                                    : isHold
-                                    ? "border-amber-300 bg-amber-50/60 text-amber-900 dark:border-amber-800 dark:bg-amber-950/20 dark:text-amber-200 opacity-70"
-                                    : "border-slate-200 bg-slate-100/70 text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400 opacity-60"
-                                )}
-                              >
-                                <div className="flex items-center justify-between gap-1">
-                                  <span className="font-mono font-black text-xs tracking-tight flex items-center gap-1">
-                                    {u.isClimate && (
-                                      <span
-                                        className="text-[10px] text-cyan-600 dark:text-blue-400"
-                                        title="Kho mát điều hòa 22-25°C"
-                                      >
-                                        ❄️
-                                      </span>
-                                    )}
-                                    {u.unitCode}
-                                  </span>
-                                  <span className="rounded bg-white/80 px-1 py-0.2 text-[9px] font-extrabold text-slate-700 border border-slate-200/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                                    {sz}
-                                  </span>
-                                </div>
-
-                                <div className="mt-1 flex items-center justify-between text-[10px] font-bold">
-                                  {isCurrent ? (
-                                    <span className="text-blue-700 dark:text-blue-300 flex items-center gap-0.5">
-                                      ⭐ Ô của khách
-                                    </span>
-                                  ) : isAvailable ? (
-                                    <span className="text-emerald-700 dark:text-emerald-400">
-                                      Trống
-                                    </span>
-                                  ) : isHold ? (
-                                    <span className="text-amber-700 dark:text-amber-400">
-                                      Giữ chỗ
-                                    </span>
-                                  ) : (
-                                    <span className="text-slate-500">
-                                      Đã thuê
-                                    </span>
-                                  )}
-
-                                  <span className="text-[9px] font-normal text-muted">
-                                    {u.areaM2 ? `${u.areaM2}m²` : ""}
-                                  </span>
-                                </div>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* MODAL FOOTER */}
-            <div className="flex items-center justify-between px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850">
-              <span className="text-xs text-muted">
-                💡 Sơ đồ trực quan giúp nhân viên hướng dẫn khách hàng vị trí ô kho và đường đi nhận kho.
-              </span>
-              <button
-                type="button"
-                onClick={() => setIsMapModalOpen(false)}
-                className="cursor-pointer rounded-xl bg-slate-200 px-5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition"
-              >
-                Đóng sơ đồ
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

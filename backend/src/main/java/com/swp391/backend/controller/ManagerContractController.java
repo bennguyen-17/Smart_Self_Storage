@@ -18,14 +18,13 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/manager")
+@RequestMapping("/api/manager/contracts")
 public class ManagerContractController {
 
     private final ContractRepository contractRepository;
     private final ReservationRepository reservationRepository;
     private final StorageUnitRepository storageUnitRepository;
     private final FloorRepository floorRepository;
-    private final FacilityRepository facilityRepository;
     private final AccountRepository accountRepository;
     private final PaymentRepository paymentRepository;
     private final ForfeitProcessingService forfeitProcessingService;
@@ -35,7 +34,6 @@ public class ManagerContractController {
                                       ReservationRepository reservationRepository,
                                       StorageUnitRepository storageUnitRepository,
                                       FloorRepository floorRepository,
-                                      FacilityRepository facilityRepository,
                                       AccountRepository accountRepository,
                                       PaymentRepository paymentRepository,
                                       ForfeitProcessingService forfeitProcessingService,
@@ -44,7 +42,6 @@ public class ManagerContractController {
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
         this.floorRepository = floorRepository;
-        this.facilityRepository = facilityRepository;
         this.accountRepository = accountRepository;
         this.paymentRepository = paymentRepository;
         this.forfeitProcessingService = forfeitProcessingService;
@@ -55,7 +52,7 @@ public class ManagerContractController {
      * GET /api/manager/contracts: Danh sách hợp đồng của cơ sở
      * Phục vụ 2 trang Manager: "Khách & hợp đồng" và "Trả kho & công nợ"
      */
-    @GetMapping("/contracts")
+    @GetMapping
     public ResponseEntity<List<FacilityContractResponse>> getFacilityContracts(
             @AuthenticationPrincipal Integer managerAccountId,
             @RequestHeader(value = "X-Facility-Id", required = false) Integer headerFacilityId,
@@ -181,7 +178,7 @@ public class ManagerContractController {
         return ResponseEntity.ok(result);
     }
 
-    @PostMapping("/contracts/{contractId}/forfeit-processed")
+    @PostMapping("/{contractId}/forfeit-processed")
     public ResponseEntity<?> markForfeitProcessed(
             @PathVariable Integer contractId,
             @RequestBody ForfeitProcessedRequest request,

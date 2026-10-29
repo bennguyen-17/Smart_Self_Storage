@@ -319,7 +319,7 @@ public class EmailService {
         String formattedStart = startDate != null ? startDate.format(dtf) : "Ngày hẹn nhận";
         String formattedEnd = endDate != null ? endDate.format(dtf) : "Theo thỏa thuận";
 
-        NumberFormat nf = NumberFormat.getInstance(new Locale("vi", "VN"));
+        NumberFormat nf = NumberFormat.getInstance(Locale.of("vi", "VN"));
         String formattedDeposit = depositAmount != null ? nf.format(depositAmount) + " VNĐ" : "0 VNĐ";
         String formattedRental = rentalAmount != null ? nf.format(rentalAmount) + " VNĐ" : "0 VNĐ";
 
@@ -443,7 +443,7 @@ public class EmailService {
         try {
             String safeName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
             String safeCode = (contractCode != null && !contractCode.isBlank()) ? contractCode.trim() : "---";
-            String safeAmount = (amount != null) ? NumberFormat.getInstance(new Locale("vi", "VN")).format(amount) + " VNĐ" : "0 VNĐ";
+            String safeAmount = (amount != null) ? NumberFormat.getInstance(Locale.of("vi", "VN")).format(amount) + " VNĐ" : "0 VNĐ";
             String safeTxn = (transactionCode != null && !transactionCode.isBlank()) ? transactionCode.trim() : "Đã chuyển khoản thành công";
             String safeReceipt = (receiptUrl != null && !receiptUrl.isBlank()) ? receiptUrl.trim() : null;
 

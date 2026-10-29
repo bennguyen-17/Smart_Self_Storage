@@ -2,8 +2,16 @@ package com.swp391.backend.controller;
 
 import com.swp391.backend.config.SecurityContextHelper;
 import com.swp391.backend.dto.checkout.RefundListItemResponse;
-import com.swp391.backend.entity.*;
-import com.swp391.backend.repository.*;
+import com.swp391.backend.entity.Contract;
+import com.swp391.backend.entity.Floor;
+import com.swp391.backend.entity.Payment;
+import com.swp391.backend.entity.Reservation;
+import com.swp391.backend.entity.StorageUnit;
+import com.swp391.backend.repository.ContractRepository;
+import com.swp391.backend.repository.FloorRepository;
+import com.swp391.backend.repository.PaymentRepository;
+import com.swp391.backend.repository.ReservationRepository;
+import com.swp391.backend.repository.StorageUnitRepository;
 import com.swp391.backend.service.CheckoutSettlementService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,7 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/manager")
+@RequestMapping("/api/manager/refunds")
 public class ManagerRefundController {
 
     private final CheckoutSettlementService checkoutSettlementService;
@@ -45,7 +53,7 @@ public class ManagerRefundController {
      * B1: GET /api/manager/refunds?status=PENDING|REFUNDED|ALL
      * Tự động lấy facilityId từ token/hồ sơ của Manager
      */
-    @GetMapping("/refunds")
+    @GetMapping
     public ResponseEntity<List<RefundListItemResponse>> getManagerRefunds(
             @AuthenticationPrincipal Integer authAccountId,
             @RequestHeader(value = "X-Facility-Id", required = false) Integer headerFacilityId,
@@ -62,7 +70,7 @@ public class ManagerRefundController {
      * B1: POST /api/manager/refunds/{paymentId}/confirm
      * Body: { evidenceUrl, transactionRef? }
      */
-    @PostMapping("/refunds/{paymentId}/confirm")
+    @PostMapping("/{paymentId}/confirm")
     public ResponseEntity<?> confirmRefund(
             @PathVariable Integer paymentId,
             @RequestBody(required = false) Map<String, String> body,

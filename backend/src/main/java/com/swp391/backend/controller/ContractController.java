@@ -16,7 +16,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -565,19 +564,12 @@ public class ContractController {
 
     private int getContractStatusPriority(String status) {
         if (status == null) return 99;
-        switch (status.toUpperCase()) {
-            case "PENDING_CHECKIN":
-                return 0;
-            case "ACTIVE":
-                return 1;
-            case "OVERDUE":
-                return 2;
-            case "CANCELLED":
-            case "TERMINATED":
-            case "COMPLETED":
-            case "FORFEITED":
-            default:
-                return 3;
-        }
+        return switch (status.toUpperCase()) {
+            case "PENDING_CHECKIN" -> 0;
+            case "ACTIVE" -> 1;
+            case "OVERDUE" -> 2;
+            case "CANCELLED", "TERMINATED", "COMPLETED", "FORFEITED" -> 3;
+            default -> 3;
+        };
     }
 }

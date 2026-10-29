@@ -45,7 +45,6 @@ import jakarta.transaction.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.beans.factory.annotation.Autowired;
 import com.swp391.backend.entity.FeePolicy;
 import com.swp391.backend.repository.FeePolicyRepository;
 import org.springframework.stereotype.Service;
@@ -61,7 +60,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
-import java.util.UUID;
 
 @Service
 public class StaffReservationService {
@@ -92,8 +90,7 @@ public class StaffReservationService {
     private final UnitTypeRepository unitTypeRepository;
     private final StaffShiftService staffShiftService;
 
-    @Autowired(required = false)
-    private FeePolicyRepository feePolicyRepository;
+    private final FeePolicyRepository feePolicyRepository;
 
     private BigDecimal getDailyOverdueFee() {
         try {
@@ -136,7 +133,8 @@ public class StaffReservationService {
             FacilityRepository facilityRepository,
             GatePinRepository gatePinRepository,
             UnitTypeRepository unitTypeRepository,
-            StaffShiftService staffShiftService) {
+                                   StaffShiftService staffShiftService,
+                                   FeePolicyRepository feePolicyRepository) {
         this.reservationRepository = reservationRepository;
         this.accountRepository = accountRepository;
         this.contractRepository = contractRepository;
@@ -154,6 +152,7 @@ public class StaffReservationService {
         this.gatePinRepository = gatePinRepository;
         this.unitTypeRepository = unitTypeRepository;
         this.staffShiftService = staffShiftService;
+        this.feePolicyRepository = feePolicyRepository;
     }
 
     public StaffReservationListResponse listReservations() {
@@ -454,7 +453,6 @@ public class StaffReservationService {
         BigDecimal refundAmount = BigDecimal.ZERO;
         BigDecimal penaltyAmount = BigDecimal.ZERO;
         if (paidDeposit.signum() > 0) {
-            long diffDays = ChronoUnit.DAYS.between(LocalDate.now(), reservation.getStartDate());
             BigDecimal refundRate = new BigDecimal("0.50"); // BR-20: Hủy tại quầy giữ 50% cọc, hoàn 50%
             refundAmount = paidDeposit.multiply(refundRate).setScale(2, java.math.RoundingMode.HALF_UP);
             penaltyAmount = paidDeposit.subtract(refundAmount);

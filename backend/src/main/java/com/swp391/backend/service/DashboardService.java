@@ -7,7 +7,6 @@ import com.swp391.backend.repository.*;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -80,7 +79,6 @@ public class DashboardService {
         }
 
         Facility fac = facOpt.get();
-        String facilityCode = storageService.mapFacilityToResponse(fac).getFacilityCode();
 
         // 1. Thống kê ô kho thuộc cơ sở này (thông qua Floor)
         List<Floor> floors = floorRepository.findByFacilityId(facilityId);
@@ -666,18 +664,5 @@ public class DashboardService {
         return BigDecimal.ZERO;
     }
 
-    private LocalDateTime getContractTerminationTime(Contract c, List<Payment> paymentList) {
-        if (c == null) return null;
-        if (c.getTerminatedAt() != null) return c.getTerminatedAt();
-        if (paymentList != null && c.getContractId() != null) {
-            return paymentList.stream()
-                    .filter(p -> c.getContractId().equals(p.getContractId()))
-                    .filter(p -> "REF".equalsIgnoreCase(p.getInvoiceType()) || (p.getInvoiceNumber() != null && p.getInvoiceNumber().startsWith("REF-")))
-                    .map(p -> p.getPaidAt() != null ? p.getPaidAt() : p.getIssuedAt())
-                    .filter(Objects::nonNull)
-                    .findFirst()
-                    .orElse(null);
-        }
-        return null;
-    }
+
 }

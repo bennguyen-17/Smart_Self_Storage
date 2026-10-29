@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/api/admin/accounts")
 public class AdminAccountController {
 
     private final AccountRepository accountRepository;
@@ -94,7 +94,7 @@ public class AdminAccountController {
     /**
      * 1. GET /api/admin/accounts: Danh sách mọi tài khoản nội bộ
      */
-    @GetMapping("/accounts")
+    @GetMapping
     public ResponseEntity<List<InternalAccountResponse>> listAccounts() {
         List<Account> all = accountRepository.findAll();
         List<InternalAccountResponse> responses = new ArrayList<>();
@@ -112,7 +112,7 @@ public class AdminAccountController {
     /**
      * 2. POST /api/admin/accounts: Tạo tài khoản nội bộ mới
      */
-    @PostMapping("/accounts")
+    @PostMapping
     public ResponseEntity<?> createAccount(@RequestBody Map<String, Object> body) {
         String email = body.get("email") != null ? body.get("email").toString().trim().toLowerCase() : "";
         String fullName = body.get("fullName") != null ? body.get("fullName").toString().trim() : "";
@@ -168,7 +168,7 @@ public class AdminAccountController {
     /**
      * 3. PATCH /api/admin/accounts/{id}: Cập nhật vai trò hoặc cơ sở
      */
-    @PatchMapping("/accounts/{accountId}")
+    @PatchMapping("/{accountId}")
     public ResponseEntity<?> updateAccountAssignment(
             @PathVariable Integer accountId,
             @RequestBody Map<String, Object> body,
@@ -228,7 +228,7 @@ public class AdminAccountController {
     /**
      * 4. PATCH /api/admin/accounts/{id}/status: Khóa / mở khóa tài khoản
      */
-    @PatchMapping("/accounts/{accountId}/status")
+    @PatchMapping("/{accountId}/status")
     public ResponseEntity<?> setAccountStatus(
             @PathVariable Integer accountId,
             @RequestBody Map<String, Object> body,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, Copy, MapPin, Snowflake, Layers, Filter } from 'lucide-react';
+import { Building2, Check, Copy, MapPin, Snowflake, Layers, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 import { getStorageUnits, getBranches } from '../rentApi';
 
@@ -92,7 +92,8 @@ export default function StorageMap2D({
   selectedUnit,
   onSelectUnit,
   refreshTrigger,
-  copyableUnitCode = false
+  copyableUnitCode = false,
+  lockFacility = false
 }: {
   facility: string;
   onFacilityChange: (fac: string) => void;
@@ -102,17 +103,22 @@ export default function StorageMap2D({
   onSelectUnit: (u: any) => void;
   refreshTrigger?: number;
   copyableUnitCode?: boolean;
+  lockFacility?: boolean;
 }) {
   const [branches, setBranches] = useState<any[]>([]);
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedStorageType, setSelectedStorageType] = useState<'ALL' | 'STANDARD' | 'CLIMATE_CONTROLLED' | null>(null);
+  const [selectedStorageType, setSelectedStorageType] = useState<'ALL' | 'STANDARD' | 'CLIMATE_CONTROLLED' | null>(lockFacility ? 'ALL' : null);
   const [selectedCity, setSelectedCity] = useState<string>('ALL');
 
   // Khi đổi cơ sở kho, reset loại kho đã chọn để hiện lại tuần tự
   useEffect(() => {
-    setSelectedStorageType(null);
-  }, [facility]);
+    if (lockFacility) {
+      setSelectedStorageType('ALL');
+    } else {
+      setSelectedStorageType(null);
+    }
+  }, [facility, lockFacility]);
 
   // Tải danh sách chi nhánh cơ sở từ Database & lắng nghe sự kiện đồng bộ tự động
   useEffect(() => {
@@ -273,99 +279,135 @@ export default function StorageMap2D({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide flex items-center gap-1.5">
               <MapPin className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
-              <span>1. Chọn cơ sở kho:</span>
+              <span>{lockFacility ? 'Cơ sở trực thuộc của bạn:' : '1. Chọn cơ sở kho:'}</span>
             </span>
+            {lockFacility && (
+              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                Cố định theo phân công ca trực
+              </span>
+            )}
           </div>
 
-          {/* BỘ LỌC ĐỊA ĐIỂM (TỈNH / THÀNH PHỐ) */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 scrollbar-none">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0 mr-1">
-              <Filter className="size-3.5 text-blue-600 dark:text-blue-400" />
-              <span>Khu vực:</span>
-            </div>
-            {[
-              { id: 'ALL', label: 'Tất cả (7)' },
-              { id: 'Hà Nội', label: 'Hà Nội (2)' },
-              { id: 'TP.HCM', label: 'TP.HCM (3)' },
-              { id: 'Đà Nẵng', label: 'Đà Nẵng (1)' },
-              { id: 'Cần Thơ', label: 'Cần Thơ (1)' },
-            ].map((c) => {
-              const active = selectedCity === c.id;
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => setSelectedCity(c.id)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all duration-200 cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
-                    active
-                      ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-500/30'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  {c.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Danh sách 7 card cơ sở với ảnh thực tế bự hơn */}
-          <div className="flex gap-4 overflow-x-auto pb-4 pt-1 scrollbar-thin">
-            {Object.entries(facilityData)
-              .filter(([_, fData]) => selectedCity === 'ALL' || fData.city === selectedCity)
-              .map(([fKey, fData]) => {
-                const isSelected = facility === fKey;
-                return (
-                <button
-                  key={fKey}
-                  type="button"
-                  onClick={() => onFacilityChange(fKey)}
-                  className={`group relative shrink-0 w-64 sm:w-72 text-left rounded-2xl overflow-hidden border-2 transition-all duration-200 cursor-pointer flex flex-col ${
-                    isSelected
-                      ? 'border-blue-600 dark:border-blue-500 ring-4 ring-blue-500/20 shadow-xl bg-blue-50/20 dark:bg-blue-950/20 scale-[1.02]'
-                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-blue-300 dark:hover:border-slate-700 opacity-85 hover:opacity-100 hover:shadow-md'
-                  }`}
-                >
-                  {/* Ảnh cơ sở bự hơn */}
-                  <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
-                    <img
-                      src={fData.image}
-                      alt={fData.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
-
-                    {/* Tag thành phố */}
-                    <span className="absolute top-3 left-3 text-xs font-black px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white border border-white/20">
-                      {fData.city}
+          {lockFacility ? (
+            <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="size-11 rounded-xl bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <Building2 className="size-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-black text-slate-900 dark:text-white">
+                      {currentFacilityObj?.name || `Cơ sở ${facility}`}
                     </span>
-
-                    {/* Dấu tích khi đang chọn */}
-                    {isSelected && (
-                      <span className="absolute top-3 right-3 w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg">
-                        <Check className="size-4 stroke-[3]" />
-                      </span>
-                    )}
-
-                    {/* Tên cơ sở in đè trên ảnh */}
-                    <div className="absolute bottom-3 left-3 right-3">
-                      <p className="text-white text-base sm:text-lg font-black truncate leading-tight drop-shadow-sm">
-                        {fData.name.replace('SmartStorage ', '')}
-                      </p>
-                    </div>
+                    <span className="px-2 py-0.5 rounded text-[11px] font-mono font-black bg-blue-600 text-white">
+                      {facility}
+                    </span>
                   </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                    <MapPin className="size-3.5 text-slate-400 shrink-0" />
+                    <span>{currentFacilityObj?.address || "Hệ thống kho thông minh SmartStorage"}</span>
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                  Quy mô: <strong>{currentFacilityObj?.floors || 3} tầng</strong>
+                </span>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* BỘ LỌC ĐỊA ĐIỂM (TỈNH / THÀNH PHỐ) */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 scrollbar-none">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0 mr-1">
+                  <Filter className="size-3.5 text-blue-600 dark:text-blue-400" />
+                  <span>Khu vực:</span>
+                </div>
+                {[
+                  { id: 'ALL', label: 'Tất cả (7)' },
+                  { id: 'Hà Nội', label: 'Hà Nội (2)' },
+                  { id: 'TP.HCM', label: 'TP.HCM (3)' },
+                  { id: 'Đà Nẵng', label: 'Đà Nẵng (1)' },
+                  { id: 'Cần Thơ', label: 'Cần Thơ (1)' },
+                ].map((c) => {
+                  const active = selectedCity === c.id;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setSelectedCity(c.id)}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all duration-200 cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
+                        active
+                          ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-500/30'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      {c.label}
+                    </button>
+                  );
+                })}
+              </div>
 
-                  {/* Địa chỉ cơ sở: hiển thị đầy đủ, không bị cắt xén */}
-                  <div className="p-3 bg-white dark:bg-slate-900 flex-1 min-h-[58px] flex items-start gap-1.5 border-t border-slate-100 dark:border-slate-800/80">
-                    <MapPin className="size-3.5 text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
-                    <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium leading-snug">
-                      {fData.address}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+              {/* Danh sách 7 card cơ sở với ảnh thực tế bự hơn */}
+              <div className="flex gap-4 overflow-x-auto pb-4 pt-1 scrollbar-thin">
+                {Object.entries(facilityData)
+                  .filter(([_, fData]) => selectedCity === 'ALL' || fData.city === selectedCity)
+                  .map(([fKey, fData]) => {
+                    const isSelected = facility === fKey;
+                    return (
+                    <button
+                      key={fKey}
+                      type="button"
+                      onClick={() => onFacilityChange(fKey)}
+                      className={`group relative shrink-0 w-64 sm:w-72 text-left rounded-2xl overflow-hidden border-2 transition-all duration-200 cursor-pointer flex flex-col ${
+                        isSelected
+                          ? 'border-blue-600 dark:border-blue-500 ring-4 ring-blue-500/20 shadow-xl bg-blue-50/20 dark:bg-blue-950/20 scale-[1.02]'
+                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-blue-300 dark:hover:border-slate-700 opacity-85 hover:opacity-100 hover:shadow-md'
+                      }`}
+                    >
+                      {/* Ảnh cơ sở bự hơn */}
+                      <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                        <img
+                          src={fData.image}
+                          alt={fData.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+
+                        {/* Tag thành phố */}
+                        <span className="absolute top-3 left-3 text-xs font-black px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white border border-white/20">
+                          {fData.city}
+                        </span>
+
+                        {/* Dấu tích khi đang chọn */}
+                        {isSelected && (
+                          <span className="absolute top-3 right-3 w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg">
+                            <Check className="size-4 stroke-[3]" />
+                          </span>
+                        )}
+
+                        {/* Tên cơ sở in đè trên ảnh */}
+                        <div className="absolute bottom-3 left-3 right-3">
+                          <p className="text-white text-base sm:text-lg font-black truncate leading-tight drop-shadow-sm">
+                            {fData.name.replace('SmartStorage ', '')}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Địa chỉ cơ sở: hiển thị đầy đủ, không bị cắt xén */}
+                      <div className="p-3 bg-white dark:bg-slate-900 flex-1 min-h-[58px] flex items-start gap-1.5 border-t border-slate-100 dark:border-slate-800/80">
+                        <MapPin className="size-3.5 text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
+                        <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium leading-snug">
+                          {fData.address}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       </div>
 

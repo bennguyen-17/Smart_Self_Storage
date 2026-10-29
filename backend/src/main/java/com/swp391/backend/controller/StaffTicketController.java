@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/staff")
+@RequestMapping("/api/staff/tickets")
 public class StaffTicketController {
 
     private final SupportTicketService supportTicketService;
@@ -23,7 +23,7 @@ public class StaffTicketController {
     }
 
     // --- US-22: 1. Xem hàng đợi Ticket của cơ sở kèm đếm ngược SLA 15 phút ---
-    @GetMapping("/tickets")
+    @GetMapping
     public ResponseEntity<?> getStaffTickets(
             @AuthenticationPrincipal Integer staffAccountId,
             @RequestParam(required = false) String status,
@@ -40,7 +40,7 @@ public class StaffTicketController {
     }
 
     // --- US-22: 2. Staff bấm Tiếp nhận Ticket (chuyển sang IN_PROGRESS) ---
-    @PostMapping("/tickets/{id}/accept")
+    @PostMapping("/{id}/accept")
     public ResponseEntity<?> acceptTicket(
             @PathVariable Long id,
             @AuthenticationPrincipal Integer staffId
@@ -58,7 +58,7 @@ public class StaffTicketController {
     }
 
     // --- US-23: 1. Mở modal đối chiếu CCCD lưu trên Hợp đồng ---
-    @GetMapping("/tickets/{id}/unlock-detail")
+    @GetMapping("/{id}/unlock-detail")
     public ResponseEntity<?> getUnlockDetails(
             @PathVariable Long id,
             @AuthenticationPrincipal Integer staffAccountId
@@ -74,7 +74,7 @@ public class StaffTicketController {
     }
 
     // --- US-23: 2. Hoàn tất mở khóa hộ (bắt buộc identityVerified == true) ---
-    @PostMapping("/tickets/{id}/resolve-unlock")
+    @PostMapping("/{id}/resolve-unlock")
     public ResponseEntity<?> resolveUnlock(
             @PathVariable Long id,
             @RequestBody ResolveUnlockRequest request,
@@ -93,7 +93,7 @@ public class StaffTicketController {
     }
 
     // --- US-22: 3. Staff hoàn tất xử lý ticket thường (Bảo trì, Nghiệm thu, ...) ---
-    @PostMapping("/tickets/{id}/resolve")
+    @PostMapping("/{id}/resolve")
     public ResponseEntity<?> resolveTicket(
             @PathVariable Long id,
             @RequestBody(required = false) Map<String, String> body,
