@@ -4,6 +4,7 @@ import {
   ClipboardListIcon,
   IdCardIcon,
   KeyIcon,
+  MapIcon,
   MoonIcon,
   SunIcon,
   WarehouseIcon,
@@ -27,6 +28,12 @@ const NAV_ITEMS = [
     hint: "Quản lý hợp đồng khách hàng",
     to: "/staff/checkin",
     icon: IdCardIcon,
+  },
+  {
+    label: "Sơ đồ kho 2D",
+    hint: "Xem mặt bằng ô kho theo tầng",
+    to: "/staff/floorplan",
+    icon: MapIcon,
   },
   {
     label: "Hỗ trợ & xử lý ticket",

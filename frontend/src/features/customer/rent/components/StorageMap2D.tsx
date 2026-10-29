@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, MapPin, Snowflake, Layers, Filter } from 'lucide-react';
+import { Check, Copy, MapPin, Snowflake, Layers, Filter } from 'lucide-react';
+import { toast } from 'sonner';
 import { getStorageUnits, getBranches } from '../rentApi';
 
 export const facilityData: Record<string, {
@@ -90,7 +91,8 @@ export default function StorageMap2D({
   onSelectFloor,
   selectedUnit,
   onSelectUnit,
-  refreshTrigger
+  refreshTrigger,
+  copyableUnitCode = false
 }: {
   facility: string;
   onFacilityChange: (fac: string) => void;
@@ -99,6 +101,7 @@ export default function StorageMap2D({
   selectedUnit: any;
   onSelectUnit: (u: any) => void;
   refreshTrigger?: number;
+  copyableUnitCode?: boolean;
 }) {
   const [branches, setBranches] = useState<any[]>([]);
   const [units, setUnits] = useState([]);
@@ -249,6 +252,15 @@ export default function StorageMap2D({
         </div>
       </div>
     );
+  };
+
+  const copyUnitCode = async (unitCode: string) => {
+    try {
+      await navigator.clipboard.writeText(unitCode);
+      toast.success(`Đã sao chép mã ô kho: ${unitCode}`);
+    } catch {
+      toast.error('Không sao chép được mã ô kho');
+    }
   };
 
   return (
@@ -482,6 +494,22 @@ export default function StorageMap2D({
                 <div className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 px-3 py-1.5 rounded-xl flex items-center gap-2">
                   <Check className="size-4 text-emerald-600 shrink-0" />
                   <span>Đã chọn ô <strong>{selectedUnit.id}</strong> ({selectedUnit.dim} - {selectedUnit.isClimate ? 'Kho mát' : 'Kho thường'})</span>
+                </div>
+              )}
+
+              {/* Dòng mã ô kho có thể sao chép (chỉ bật ở Cổng Nhân Viên) */}
+              {copyableUnitCode && selectedUnit && (
+                <div className="w-full text-xs font-bold text-slate-700 dark:text-slate-200">
+                  <span>Mã ô kho: </span>
+                  <button
+                    type="button"
+                    onClick={() => copyUnitCode(selectedUnit.id)}
+                    title="Bấm để sao chép mã ô kho"
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-slate-300 bg-white/80 px-1.5 py-0.5 font-mono font-black text-blue-700 transition hover:bg-white dark:border-slate-700 dark:bg-slate-900/80 dark:text-blue-300 dark:hover:bg-slate-900"
+                  >
+                    {selectedUnit.id}
+                    <Copy className="size-3" aria-hidden="true" />
+                  </button>
                 </div>
               )}
             </div>
