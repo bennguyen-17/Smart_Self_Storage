@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { NavLink } from "react-router-dom"
 import {
-  ClipboardListIcon,
   IdCardIcon,
   KeyIcon,
   MoonIcon,
@@ -33,12 +32,6 @@ const NAV_ITEMS = [
     hint: "Tiếp nhận & xử lý yêu cầu",
     to: "/staff/support",
     icon: WrenchIcon,
-  },
-  {
-    label: "Việc được giao",
-    hint: "Việc trong ca hiện tại",
-    to: "/staff/tasks",
-    icon: ClipboardListIcon,
   },
   {
     label: "Lấy mã PIN",

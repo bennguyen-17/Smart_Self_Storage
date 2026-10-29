@@ -6,7 +6,6 @@ import com.swp391.backend.dto.CalculatePriceResponse;
 import com.swp391.backend.dto.UnitDetailResponse;
 import com.swp391.backend.entity.StorageUnit;
 import com.swp391.backend.service.StorageService;
-import com.swp391.backend.service.StaffTaskService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,12 +17,10 @@ import java.util.List;
 public class StorageUnitController {
 
     private final StorageService storageService;
-    private final StaffTaskService staffTaskService;
     private final SecurityContextHelper securityContextHelper;
 
-    public StorageUnitController(StorageService storageService, StaffTaskService staffTaskService, SecurityContextHelper securityContextHelper) {
+    public StorageUnitController(StorageService storageService, SecurityContextHelper securityContextHelper) {
         this.storageService = storageService;
-        this.staffTaskService = staffTaskService;
         this.securityContextHelper = securityContextHelper;
     }
 
@@ -45,7 +42,7 @@ public class StorageUnitController {
     }
 
     // --- US-03: API Tính giá thuê & tiền cọc tự động ---
-    @PostMapping("/pricing/calculate")
+    @PostMapping({"/pricing/calculate", "/units/pricing/calculate"})
     public ResponseEntity<CalculatePriceResponse> calculatePrice(@RequestBody CalculatePriceRequest request) {
         CalculatePriceResponse response = storageService.calculateRentalPrice(request);
         if (response.isSuccess()) {
@@ -128,7 +125,8 @@ public class StorageUnitController {
             @AuthenticationPrincipal Integer staffAccountId
     ) {
         try {
-            StorageUnit updated = staffTaskService.completeMaintenanceForCurrentStaff(unitCode, staffAccountId);
+            Integer effectiveFacilityId = securityContextHelper.requireCurrentFacilityId(staffAccountId, null);
+            StorageUnit updated = storageService.completeMaintenance(unitCode, effectiveFacilityId, staffAccountId);
             return ResponseEntity.ok(updated);
         } catch (org.springframework.security.access.AccessDeniedException e) {
             return ResponseEntity.status(403).body(e.getMessage());

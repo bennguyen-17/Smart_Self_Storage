@@ -21,7 +21,6 @@ import CheckinPanel from "@/features/staff/checkin/components/CheckinPanel"
 import StaffCheckinProcessPage from "@/features/staff/checkin/components/StaffCheckinProcessPage"
 import StaffTicketPanel from "@/features/staff/support/components/StaffTicketPanel"
 import StaffPinPanel from "@/features/staff/pin/components/StaffPinPanel"
-import StaffTasksPanel from "@/features/staff/tasks/components/StaffTasksPanel"
 
 // Manager & Admin pages
 import ManagerPortalPage from "@/features/manager/ManagerPortalPage"
@@ -127,7 +126,6 @@ export function AppRouter() {
         <Route path="checkin" element={<CheckinPanel />} />
         <Route path="checkin/:reservationId" element={<StaffCheckinProcessPage />} />
         <Route path="support" element={<StaffTicketPanel />} />
-        <Route path="tasks" element={<StaffTasksPanel />} />
         <Route path="pin" element={<StaffPinPanel />} />
       </Route>
 

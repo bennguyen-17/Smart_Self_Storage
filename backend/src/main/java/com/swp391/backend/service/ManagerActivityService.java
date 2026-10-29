@@ -13,7 +13,6 @@ import com.swp391.backend.repository.EmployeeProfileRepository;
 import com.swp391.backend.repository.FacilityRepository;
 import com.swp391.backend.repository.ShiftRepository;
 import com.swp391.backend.repository.StaffShiftRepository;
-import com.swp391.backend.repository.StaffTaskRepository;
 import com.swp391.backend.repository.SupportTicketRepository;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -45,8 +44,7 @@ public class ManagerActivityService {
     private final ShiftRepository shiftRepository;
     private final StaffShiftRepository staffShiftRepository;
     private final ActivityLogRepository activityLogRepository;
-    private final StaffTaskRepository staffTaskRepository;
-    private final SupportTicketRepository supportTicketRepository;
+        private final SupportTicketRepository supportTicketRepository;
     private final FacilityRepository facilityRepository;
 
     public ManagerActivityService(EmployeeProfileRepository employeeProfileRepository,
@@ -54,7 +52,6 @@ public class ManagerActivityService {
                                   ShiftRepository shiftRepository,
                                   StaffShiftRepository staffShiftRepository,
                                   ActivityLogRepository activityLogRepository,
-                                  StaffTaskRepository staffTaskRepository,
                                   SupportTicketRepository supportTicketRepository,
                                   FacilityRepository facilityRepository) {
         this.employeeProfileRepository = employeeProfileRepository;
@@ -62,8 +59,7 @@ public class ManagerActivityService {
         this.shiftRepository = shiftRepository;
         this.staffShiftRepository = staffShiftRepository;
         this.activityLogRepository = activityLogRepository;
-        this.staffTaskRepository = staffTaskRepository;
-        this.supportTicketRepository = supportTicketRepository;
+                this.supportTicketRepository = supportTicketRepository;
         this.facilityRepository = facilityRepository;
     }
 
@@ -129,10 +125,6 @@ public class ManagerActivityService {
             }
 
             List<Integer> employeeIds = employees.stream().map(EmployeeProfile::getEmployeeId).toList();
-            for (Object[] row : staffTaskRepository.countDoneTasksByEmployeeAndShift(
-                    facilityId, date, shift.getShiftId(), employeeIds)) {
-                taskCounts.put(((Number) row[0]).intValue(), ((Number) row[1]).longValue());
-            }
 
             for (Object[] row : supportTicketRepository.findAverageAcceptMinutesByStaffAndShift(
                     facilityId, accountIds, from, to)) {

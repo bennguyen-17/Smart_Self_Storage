@@ -80,7 +80,7 @@ export async function calculateRentalPrice(payload: {
   depositAmount: number
   totalInitialPayment: number
 }> {
-  const body = await apiClient.post("/units/pricing/calculate", payload)
+  const body = await apiClient.post("/pricing/calculate", payload)
   return unwrapApiData(body)
 }
 

@@ -22,13 +22,20 @@ const CELL_SIZE: Record<UnitSize, string> = {
   XL: "w-40 min-h-28",
 }
 
-interface UnitGridProps {
+export interface UnitGridProps {
   units: UnitDetailResponse[]
   onSelect: (unit: UnitDetailResponse) => void
+  currentUnitCode?: string
+  selectedUnitCode?: string
 }
 
 /** Lưới 2D: mỗi size là một dãy kho, các dãy ngăn cách bởi hành lang */
-function UnitGrid({ units, onSelect }: UnitGridProps) {
+function UnitGrid({
+  units,
+  onSelect,
+  currentUnitCode,
+  selectedUnitCode,
+}: UnitGridProps) {
   const rows = [...UNIT_SIZES]
     .reverse()
     .map((size) => ({
@@ -54,7 +61,13 @@ function UnitGrid({ units, onSelect }: UnitGridProps) {
             <ul className="flex flex-wrap gap-2">
               {row.units.map((unit) => (
                 <li key={unit.unitId}>
-                  <UnitCell unit={unit} size={row.size} onSelect={onSelect} />
+                  <UnitCell
+                    unit={unit}
+                    size={row.size}
+                    onSelect={onSelect}
+                    isCurrent={currentUnitCode === unit.unitCode}
+                    isSelected={selectedUnitCode === unit.unitCode}
+                  />
                 </li>
               ))}
             </ul>
@@ -69,9 +82,17 @@ interface UnitCellProps {
   unit: UnitDetailResponse
   size: UnitSize
   onSelect: (unit: UnitDetailResponse) => void
+  isCurrent?: boolean
+  isSelected?: boolean
 }
 
-function UnitCell({ unit, size, onSelect }: UnitCellProps) {
+function UnitCell({
+  unit,
+  size,
+  onSelect,
+  isCurrent,
+  isSelected,
+}: UnitCellProps) {
   const group = statusGroupOf(unit.status)
   const style = STATUS_STYLES[group]
   const area = unitAreaOf(unit)
@@ -83,7 +104,11 @@ function UnitCell({ unit, size, onSelect }: UnitCellProps) {
 
   const content = (
     <>
-      <span className="font-mono text-xs font-bold">{unit.unitCode}</span>
+      <div className="flex w-full items-center justify-between">
+        <span className="font-mono text-xs font-bold">{unit.unitCode}</span>
+        {isCurrent && <span title="Ô ban đầu của khách" className="text-xs">⭐</span>}
+        {isSelected && <span title="Ô mới chọn đổi" className="text-xs font-black text-indigo-700">✓</span>}
+      </div>
       <span className="text-xs">{area != null ? `${area} m²` : "—"}</span>
       <span className="flex items-center gap-1 text-[10px] font-semibold uppercase opacity-80">
         {unit.isClimate && (
@@ -94,9 +119,13 @@ function UnitCell({ unit, size, onSelect }: UnitCellProps) {
     </>
   )
   const className = cn(
-    "flex flex-col items-start justify-between gap-0.5 rounded-lg border-2 p-2 text-left transition-colors",
+    "flex flex-col items-start justify-between gap-0.5 rounded-lg border-2 p-2 text-left transition-colors relative",
     CELL_SIZE[size],
-    style.cell
+    style.cell,
+    isCurrent &&
+      "border-blue-600 ring-4 ring-blue-500/70 shadow-md font-bold scale-[1.02] z-10",
+    isSelected &&
+      "border-indigo-600 ring-4 ring-indigo-500/70 shadow-md font-bold scale-[1.02] z-10"
   )
 
   if (group === "AVAILABLE") {

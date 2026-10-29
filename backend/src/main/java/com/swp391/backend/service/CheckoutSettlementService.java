@@ -31,8 +31,7 @@ public class CheckoutSettlementService {
     private final StorageService storageService;
     private final AccountRepository accountRepository;
     private final StaffShiftService staffShiftService;
-    private final StaffTaskService staffTaskService;
-    private final EmailService emailService;
+        private final EmailService emailService;
     private final CustomerProfileRepository customerProfileRepository;
 
     public CheckoutSettlementService(ContractRepository contractRepository,
@@ -47,7 +46,6 @@ public class CheckoutSettlementService {
                                    StorageService storageService,
                                    AccountRepository accountRepository,
                                    StaffShiftService staffShiftService,
-                                   StaffTaskService staffTaskService,
                                    EmailService emailService,
                                    CustomerProfileRepository customerProfileRepository) {
         this.contractRepository = contractRepository;
@@ -62,8 +60,7 @@ public class CheckoutSettlementService {
         this.storageService = storageService;
         this.accountRepository = accountRepository;
         this.staffShiftService = staffShiftService;
-        this.staffTaskService = staffTaskService;
-        this.emailService = emailService;
+                this.emailService = emailService;
         this.customerProfileRepository = customerProfileRepository;
     }
 
@@ -408,10 +405,6 @@ public class CheckoutSettlementService {
                     contract.getContractId(), unit.getUnitCode(), netAmount, refInvoice != null ? refInvoice : "0 VNĐ"));
             act.setCreatedAt(LocalDateTime.now());
             activityLogRepository.save(act);
-        }
-
-        if (staffAccountId != null) {
-            staffTaskService.completeCheckoutTaskForCurrentStaff(contract.getContractId(), staffAccountId);
         }
 
         CheckoutConfirmResponse resp = new CheckoutConfirmResponse();
