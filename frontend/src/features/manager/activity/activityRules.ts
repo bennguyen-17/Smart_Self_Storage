@@ -11,7 +11,6 @@ export const WORK_COUNTS = [
   { key: "checkouts", label: "Trả kho" },
   { key: "ticketsResolved", label: "Ticket xử lý" },
   { key: "maintenanceDone", label: "Bảo trì xong" },
-  { key: "tasksDone", label: "Việc được giao xong" },
 ] as const satisfies readonly { key: keyof StaffActivity; label: string }[]
 
 export type WorkCountKey = (typeof WORK_COUNTS)[number]["key"]

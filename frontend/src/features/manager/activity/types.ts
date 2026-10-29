@@ -16,8 +16,8 @@ export interface StaffActivity {
   ticketsResolved: number
   /** Số ô kho bảo trì xong */
   maintenanceDone: number
-  /** Số việc được giao đã báo xong */
-  tasksDone: number
+  /** Việc được giao đã xong: không dùng từ 29/10 (nhóm bỏ giao việc), BE có thể bỏ trường này */
+  tasksDone?: number
   /** Thời gian trung bình từ lúc ticket tạo tới lúc nhận, null khi chưa nhận ticket nào */
   avgTicketAcceptMinutes: number | null
 }
