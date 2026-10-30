@@ -98,6 +98,12 @@ function Body({
           </div>
           <div className="text-title space-y-1.5">
             <div>
+              <span className="block text-[10px] text-muted">Số CCCD (Định danh):</span>
+              <span className="text-title font-mono text-sm font-bold block mt-0.5">
+                {contract.customerIdNumber ?? "—"}
+              </span>
+            </div>
+            <div>
               <span className="block text-[10px] text-muted">
                 Số điện thoại:
               </span>
