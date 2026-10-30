@@ -308,15 +308,9 @@ function SuccessPanel({
           <span className="text-muted">Chìa khóa cơ</span>
           <span className="text-title font-bold">Đã bàn giao</span>
         </div>
-        <div className="mt-1.5 flex items-center justify-between gap-4 border-t border-blue-200 pt-1.5 dark:border-blue-900">
-          <span className="text-muted">Mã PIN mở cổng (24/7)</span>
-          <span className="font-mono text-lg font-black tracking-widest text-blue-600 dark:text-blue-400">
-            {result.gatePin ?? "—"}
-          </span>
+        <div className="mt-2 border-t border-blue-200 pt-2 text-[11px] text-blue-800 dark:border-blue-900 dark:text-blue-300">
+          Quyền sinh mã PIN động 15 giây (BR-22/24) đã được tự động kích hoạt trên Web Portal của khách hàng.
         </div>
-        <p className="mt-1 text-[11px] text-muted">
-          Mã PIN động bảo mật — khách có thể lấy mã mới trên ứng dụng mỗi lần ra vào.
-        </p>
       </div>
 
       <div className="pt-2">

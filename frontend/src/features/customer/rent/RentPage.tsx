@@ -192,7 +192,7 @@ export default function RentStoragePage() {
     addNewBookingContract(bookingPayload);
 
     // 2. Cập nhật ô kho sang HOLD
-    markUnitAsHeld(selectedUnit.id, 'HOLD');
+    markUnitAsHeld(selectedUnit.id, 'RESERVED');
 
     setIsSubmittingPayment(false);
     setIsPaymentCompleted(true);

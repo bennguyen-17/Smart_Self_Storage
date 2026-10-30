@@ -26,12 +26,6 @@ export const getHeldUnitsMap = (): Record<string, string> => {
 export const markUnitAsHeld = (unitId: string, status = 'HOLD') => {
   if (!unitId) return;
   heldUnitsState[unitId] = status;
-  try {
-    const current = getHeldUnitsMap();
-    current[unitId] = status;
-    localStorage.setItem('smart_storage_held_units', JSON.stringify(current));
-  } catch (e) {}
-
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('storage_units_updated', { detail: { unitId, status } }));
   }
@@ -57,7 +51,7 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
   const weightLimit = currentFloor === 1 ? '1000 kg/m²' : '500 kg/m²';
   const units: any[] = [];
 
-  const localMap = getHeldUnitsMap();
+
 
   if (currentFloor === 1) {
     for (let i = 1; i <= 10; i++) {
@@ -76,7 +70,7 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
         isClimate,
         typeLabel: isClimate ? 'Kho Mát Điều Hòa (22-25°C)' : 'Kho Tiêu Chuẩn',
         price: dailyPrice, monthlyPrice, deposit: 3000000,
-        status: localMap[uId] || defaultStatus
+        status: defaultStatus
       });
     }
   } else if (currentFloor === 2) {
@@ -96,7 +90,7 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
         price: isClimate ? Math.round(baseDaily * 1.2) : baseDaily,
         monthlyPrice: isClimate ? Math.round(baseMonthly * 1.2) : baseMonthly,
         deposit: 500000,
-        status: localMap[uId] || defaultStatus
+        status: defaultStatus
       });
     }
     for (let i = 1; i <= 6; i++) {
@@ -115,7 +109,7 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
         price: isClimate ? Math.round(baseDaily * 1.2) : baseDaily,
         monthlyPrice: isClimate ? Math.round(baseMonthly * 1.2) : baseMonthly,
         deposit: 1000000,
-        status: localMap[uId] || defaultStatus
+        status: defaultStatus
       });
     }
     for (let i = 1; i <= 4; i++) {
@@ -134,7 +128,7 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
         price: isClimate ? Math.round(baseDaily * 1.2) : baseDaily,
         monthlyPrice: isClimate ? Math.round(baseMonthly * 1.2) : baseMonthly,
         deposit: 2000000,
-        status: localMap[uId] || defaultStatus
+        status: defaultStatus
       });
     }
   } else {
@@ -154,7 +148,7 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
         price: isClimate ? Math.round(baseDaily * 1.2) : baseDaily,
         monthlyPrice: isClimate ? Math.round(baseMonthly * 1.2) : baseMonthly,
         deposit: 500000,
-        status: localMap[uId] || defaultStatus
+        status: defaultStatus
       });
     }
     for (let i = 1; i <= 8; i++) {
@@ -173,7 +167,7 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
         price: isClimate ? Math.round(baseDaily * 1.2) : baseDaily,
         monthlyPrice: isClimate ? Math.round(baseMonthly * 1.2) : baseMonthly,
         deposit: 1000000,
-        status: localMap[uId] || defaultStatus
+        status: defaultStatus
       });
     }
     for (let i = 1; i <= 4; i++) {
@@ -192,7 +186,7 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
         price: isClimate ? Math.round(baseDaily * 1.2) : baseDaily,
         monthlyPrice: isClimate ? Math.round(baseMonthly * 1.2) : baseMonthly,
         deposit: 2000000,
-        status: localMap[uId] || defaultStatus
+        status: defaultStatus
       });
     }
   }
@@ -232,14 +226,21 @@ export const getBranches = async () => {
 };
 
 const FACILITY_CODE_TO_ID: Record<string, number> = {
-  'HN-01': 1,
-  'HN-02': 2,
-  'HCM-01': 3,
-  'HCM-02': 4,
-  'HCM-03': 5,
-  'DN-01': 6,
-  'CT-01': 7,
+  'HN01': 1, 'HN-01': 1,
+  'HN02': 2, 'HN-02': 2,
+  'HCM01': 3, 'HCM-01': 3,
+  'HCM02': 4, 'HCM-02': 4,
+  'HCM03': 5, 'HCM-03': 5,
+  'DN01': 6, 'DN-01': 6,
+  'CT01': 7, 'CT-01': 7,
 };
+
+// Xóa bộ đệm mock cũ khỏi localStorage để 100% dữ liệu hiển thị đúng chuẩn Database
+if (typeof window !== 'undefined') {
+  try {
+    localStorage.removeItem('smart_storage_held_units');
+  } catch (e) {}
+}
 
 /**
  * Lấy danh sách ô kho trên sơ đồ 2D theo cơ sở và tầng
@@ -265,7 +266,6 @@ export const getStorageUnits = async (facilityCode: string, floor: number) => {
       params: { facilityId, floorId: floor }
     });
     const rawList = Array.isArray(res) ? res : (res?.data || []);
-    const localMap = getHeldUnitsMap();
     const units = rawList.map((u: any) => {
       const typeStr = (u.typeName || u.unitTypeName || '').toUpperCase();
       let size = 'M';
@@ -282,11 +282,12 @@ export const getStorageUnits = async (facilityCode: string, floor: number) => {
       const daily = Number(u.dailyPrice || u.pricePerDay || (size === 'S' ? 30000 : size === 'M' ? 60000 : size === 'L' ? 120000 : 200000));
       const monthly = Number(u.monthlyPrice || (size === 'S' ? 600000 : size === 'M' ? 1200000 : size === 'L' ? 2400000 : 4000000));
       const unitCode = u.unitCode || `U-${u.unitId || u.id}`;
-      const statusOverride = localMap[unitCode] || (u.unitCode ? localMap[u.unitCode] : undefined);
+      const rawStatus = (u.status || 'AVAILABLE').toUpperCase();
 
       return {
         id: unitCode,
         unitId: u.unitId || u.id,
+        unitTypeId: u.unitTypeId || u.typeId || (size === 'S' ? 1 : size === 'M' ? (Boolean(u.isClimate || u.climateControl) ? 3 : 2) : size === 'L' ? (Boolean(u.isClimate || u.climateControl) ? 5 : 4) : (Boolean(u.isClimate || u.climateControl) ? 7 : 6)),
         floor: floor,
         floorName: u.floorName || (floor === 1 ? 'Tầng trệt' : `Tầng ${floor - 1}`),
         weightLimit: u.maxLoadKgM2 ? `${u.maxLoadKgM2} kg/m²` : (floor === 1 ? '1000 kg/m²' : '500 kg/m²'),
@@ -295,7 +296,7 @@ export const getStorageUnits = async (facilityCode: string, floor: number) => {
         price: daily,
         monthlyPrice: monthly,
         deposit: Number(u.depositAmount || (size === 'S' ? 500000 : size === 'M' ? 1000000 : size === 'L' ? 2000000 : 3000000)),
-        status: statusOverride || u.status || 'AVAILABLE',
+        status: rawStatus,
         isClimate: Boolean(u.isClimate || u.climateControl),
         storageType: (u.isClimate || u.climateControl) ? 'CLIMATE_CONTROLLED' : 'STANDARD',
         typeLabel: (u.isClimate || u.climateControl) ? 'Kho Mát Điều Hòa (22-25°C)' : 'Kho Tiêu Chuẩn',
@@ -441,5 +442,5 @@ export const mockPayDeposit = async (invoiceNumber: string) => {
  * Thêm hợp đồng mới vừa nộp cọc thành công
  */
 export const addNewBookingContract = (bookingData: any) => {
-  markUnitAsHeld(bookingData.unitId || bookingData.unitCode, 'OCCUPIED');
+  markUnitAsHeld(bookingData.unitId || bookingData.unitCode, 'RESERVED');
 };

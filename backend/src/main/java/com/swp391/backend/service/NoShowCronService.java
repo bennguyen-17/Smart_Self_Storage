@@ -50,7 +50,7 @@ public class NoShowCronService {
     // --- Logic cốt lõi: Quét và hủy các đơn No-Show quá hạn ---
     @Transactional
     public int processNoShowContracts() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
         List<Contract> pendingContracts = contractRepository.findByStatus("PENDING_CHECKIN");
         int count = 0;
 
@@ -65,6 +65,7 @@ public class NoShowCronService {
                 // 1. Chuyển hợp đồng sang CANCELLED
                 contract.setStatus("CANCELLED");
                 contract.setCancelReason("NO_SHOW");
+                contract.setTerminatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
                 contractRepository.save(contract);
 
                 // 2. Chuyển Reservation sang CANCELLED
@@ -125,7 +126,7 @@ public class NoShowCronService {
 
     @Transactional
     public int processContractExpiryReminders() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
         List<Contract> activeContracts = contractRepository.findByStatus("ACTIVE");
         int count = 0;
 

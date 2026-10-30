@@ -378,16 +378,9 @@ function SuccessPanel({
           <KeyRoundIcon className="size-3.5" />
           <span>Quyền ra vào đã mở lại</span>
         </div>
-        <div className="mt-1.5 flex items-center justify-between gap-4 border-t border-blue-200 pt-1.5 dark:border-blue-900">
-          <span className="text-muted">Mã PIN cổng 24/7</span>
-          <span className="font-mono text-lg font-black tracking-widest text-blue-600 dark:text-blue-400">
-            {result.gatePin ?? "—"}
-          </span>
+        <div className="mt-2 border-t border-blue-200 pt-2 text-[11px] text-blue-800 dark:border-blue-900 dark:text-blue-300">
+          Quyền sinh mã PIN động 15 giây (BR-22/24) đã được mở lại thành công trên Web Portal của khách hàng.
         </div>
-        <p className="mt-1 text-[11px] text-muted">
-          Khách có thể sinh mã PIN mới trên Web Portal mỗi lần ra vào như bình
-          thường.
-        </p>
       </div>
 
       <div className="pt-2">

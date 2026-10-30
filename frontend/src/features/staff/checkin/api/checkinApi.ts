@@ -176,11 +176,12 @@ export async function fetchStaffGatePin(): Promise<StaffGatePinData> {
 /** PUT /api/staff/reservations/{reservationId}/customer-cccd — Staff hiệu chỉnh số CCCD khách khi đối chiếu thẻ gốc */
 export async function updateCustomerCccd(
   reservationId: number,
-  identityNumber: string
+  identityNumber: string,
+  fullName?: string
 ): Promise<{ success: boolean; message: string }> {
   const body = await apiClient.put(
     `/staff/reservations/${reservationId}/customer-cccd`,
-    { identityNumber }
+    { identityNumber, fullName }
   )
   return unwrapApiData<{ success: boolean; message: string }>(body)
 }

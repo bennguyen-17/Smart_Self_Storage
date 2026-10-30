@@ -53,6 +53,7 @@ function CheckinContractTable({
   isLoading,
   error,
   onRetry,
+  onOpenDetail,
   onCheckin,
   onCheckout,
   onCollectPenalty,
@@ -85,21 +86,21 @@ function CheckinContractTable({
 
   return (
     <div className="card-box relative overflow-x-auto rounded-2xl border border-slate-200/80 shadow-sm dark:border-slate-800">
-      <table className="w-full text-center text-xs">
-        <thead className="border-b border-slate-200/80 bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400">
-          <tr>
-            <th scope="col" className="px-4 py-3 text-center font-bold">Mã Hợp Đồng</th>
-            <th scope="col" className="px-4 py-3 text-center font-bold">Thông tin Khách hàng</th>
-            <th scope="col" className="px-4 py-3 text-center font-bold">Mã kho</th>
-            <th scope="col" className="px-4 py-3 text-center font-bold">Trạng thái</th>
+      <table className="w-full text-left text-sm border-collapse">
+        <thead>
+          <tr className="bg-slate-50/90 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+            <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">Mã Hợp Đồng</th>
+            <th scope="col" className="py-3 px-3 text-center whitespace-nowrap">Thông tin Khách hàng</th>
+            <th scope="col" className="py-3 px-3 text-center whitespace-nowrap">Mã kho</th>
+            <th scope="col" className="py-3 px-3 text-center whitespace-nowrap">Trạng thái</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800">
+        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200">
           {isLoading &&
             Array.from({ length: 4 }, (_, i) => (
               <tr key={i} className="border-b last:border-0">
                 {Array.from({ length: 4 }, (_, j) => (
-                  <td key={j} className="px-4 py-3.5 text-center">
+                  <td key={j} className="py-3.5 px-3 text-center">
                     <div className="mx-auto h-4 w-24 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
                   </td>
                 ))}
@@ -108,7 +109,7 @@ function CheckinContractTable({
 
           {!isLoading && rows?.length === 0 && (
             <tr>
-              <td colSpan={4} className="px-4 py-12 text-center">
+              <td colSpan={4} className="py-12 px-4 text-center">
                 <InboxIcon className="mx-auto mb-2 size-8 text-slate-400 dark:text-slate-500" />
                 <p className="font-semibold text-slate-600 dark:text-slate-400">Không có hợp đồng nào</p>
               </td>
@@ -122,35 +123,55 @@ function CheckinContractTable({
                 <tr
                   key={item.reservationId}
                   className={cn(
-                    "transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/40",
+                    "hover:bg-slate-50/90 dark:hover:bg-slate-800/60 transition-colors group",
                     item.contractStatus === "CANCELLED" && "opacity-75"
                   )}
                   data-status={item.contractStatus ?? ""}
                 >
-                  <td className="px-4 py-3.5 align-middle text-center font-mono whitespace-nowrap">
-                    <span className="block text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-                      {item.reservationCode}
-                    </span>
-                    {subtitle && (
-                      <span className="block text-xs font-normal font-sans text-slate-500 dark:text-slate-400 mt-0.5">
-                        {subtitle}
-                      </span>
+                  <td className="py-3 px-4 whitespace-nowrap align-middle text-center">
+                    {onOpenDetail ? (
+                      <div className="flex flex-col items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => onOpenDetail(item)}
+                          title="Bấm để xem chi tiết hợp đồng"
+                          className="inline-flex items-center justify-center w-[185px] py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-600 font-mono font-semibold text-xs transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer text-center"
+                        >
+                          {item.reservationCode}
+                        </button>
+                        {subtitle && (
+                          <span className="block text-xs font-normal font-sans text-slate-500 dark:text-slate-400 mt-1">
+                            {subtitle}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center">
+                        <span className="inline-flex items-center justify-center w-[185px] py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 font-mono font-semibold text-xs">
+                          {item.reservationCode}
+                        </span>
+                        {subtitle && (
+                          <span className="block text-xs font-normal font-sans text-slate-500 dark:text-slate-400 mt-1">
+                            {subtitle}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </td>
 
-                  <td className="px-4 py-3.5 align-middle text-center">
-                    <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                  <td className="py-3 px-3 whitespace-nowrap align-middle text-center">
+                    <span className="font-normal text-slate-800 dark:text-slate-200 text-sm">
                       {item.customerName ?? "—"}
-                    </div>
+                    </span>
                   </td>
 
-                  <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
-                    <span className="text-sm font-mono font-semibold text-slate-800 dark:text-slate-200">
+                  <td className="py-3 px-3 whitespace-nowrap align-middle text-center">
+                    <span className="font-normal text-slate-800 dark:text-slate-200 text-sm">
                       {item.unitCode ?? "—"}
                     </span>
                   </td>
 
-                  <td className="px-4 py-3.5 align-middle text-center">
+                  <td className="py-3 px-3 whitespace-nowrap align-middle text-center">
                     <div className="flex items-center justify-center">
                       <StatusAction
                         item={item}
@@ -184,6 +205,34 @@ function StatusAction({
   onRenew: (item: StaffReservationItem) => void
 }) {
   if (item.contractStatus === "PENDING_CHECKIN") {
+    const rawDate = item.checkInDate || item.reservationStartDate
+    const checkInDay = rawDate ? rawDate.slice(0, 10) : ""
+    const todayStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Ho_Chi_Minh",
+    }).format(new Date())
+
+    if (checkInDay && checkInDay > todayStr) {
+      return (
+        <span
+          className="inline-flex items-center justify-center min-w-[104px] rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap text-slate-500 shadow-2xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+          title={`Chưa đến ngày check-in. Khách hẹn nhận kho vào ${formatDate(rawDate)}.`}
+        >
+          <span>Hẹn nhận: {formatDate(rawDate)}</span>
+        </span>
+      )
+    }
+
+    if (checkInDay && checkInDay < todayStr) {
+      return (
+        <span
+          className="inline-flex items-center justify-center min-w-[104px] rounded-full border border-rose-200 bg-rose-50 px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap text-rose-600 shadow-2xs dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-400"
+          title="Đã quá hạn ngày hẹn check-in (No-Show). Hệ thống tự động hủy đơn và tịch thu cọc."
+        >
+          <span>Quá hạn nhận</span>
+        </span>
+      )
+    }
+
     return (
       <button
         type="button"
