@@ -93,7 +93,9 @@ export default function StorageMap2D({
   onSelectUnit,
   refreshTrigger,
   copyableUnitCode = false,
-  lockFacility = false
+  lockFacility = false,
+  currentUnitCode,
+  compact = false
 }: {
   facility: string;
   onFacilityChange: (fac: string) => void;
@@ -104,6 +106,8 @@ export default function StorageMap2D({
   refreshTrigger?: number;
   copyableUnitCode?: boolean;
   lockFacility?: boolean;
+  currentUnitCode?: string;
+  compact?: boolean;
 }) {
   const [branches, setBranches] = useState<any[]>([]);
   const [units, setUnits] = useState([]);
@@ -199,8 +203,9 @@ export default function StorageMap2D({
   }, [facility, currentFloor, refreshTrigger]);
 
 
-  const renderUnitCard = (u) => {
-    const isSelected = selectedUnit && selectedUnit.id === u.id;
+    const renderUnitCard = (u) => {
+    const isSelected = selectedUnit && (selectedUnit.id === u.id || selectedUnit.unitCode === u.id);
+    const isCurrent = Boolean(currentUnitCode && (currentUnitCode === u.id || currentUnitCode === u.unitCode));
     const isOccupied = u.status === 'OCCUPIED' || u.status === 'RENTED';
     const isHold = u.status === 'HOLD';
     const isMaintenance = u.status === 'MAINTENANCE' || u.status === 'UNDER_MAINTENANCE';
@@ -213,9 +218,13 @@ export default function StorageMap2D({
     let statusDot = <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 inline-block" />;
     let badgeText = 'Trống';
 
-    if (isSelected) {
-      cardBg = 'unit-selected ring-2 ring-amber-400 font-black shadow-md';
-      statusDot = <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mr-1 inline-block animate-ping" />;
+    if (isCurrent) {
+      cardBg = 'ring-3 ring-blue-500 border-blue-600 bg-blue-50/90 dark:bg-blue-950/80 font-black shadow-md';
+      statusDot = <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mr-1 inline-block" />;
+      badgeText = 'Ô của khách';
+    } else if (isSelected) {
+      cardBg = 'unit-selected ring-3 ring-indigo-500 border-indigo-600 font-black shadow-md';
+      statusDot = <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-1 inline-block animate-ping" />;
       badgeText = 'Đang chọn';
     } else if (isHold) {
       cardBg = 'bg-amber-100 dark:bg-amber-950/40 border-amber-400 text-amber-800 dark:text-amber-200 cursor-not-allowed';
@@ -237,7 +246,15 @@ export default function StorageMap2D({
     return (
       <div
         key={u.id}
-        onClick={() => isAvailable && onSelectUnit(isSelected ? null : u)}
+        onClick={() => {
+          if (isCurrent) {
+            toast.info(`Đây là ô kho ban đầu của khách (${u.id})`);
+            return;
+          }
+          if (isAvailable) {
+            onSelectUnit(isSelected ? null : u);
+          }
+        }}
         className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p-2 rounded-lg border shadow-xs text-center flex flex-col justify-between transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-md active:scale-95 group`}
       >
         <div className="flex justify-between items-center w-full">
@@ -268,6 +285,197 @@ export default function StorageMap2D({
       toast.error('Không sao chép được mã ô kho');
     }
   };
+
+  if (compact) {
+    return (
+      <div className="space-y-3 w-full">
+        {/* THANH ĐIỀU KHIỂN TINH GỌN DÀNH CHO CHECK-IN */}
+        <div className="p-3.5 sm:p-4 rounded-2xl border shadow-xs bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-slate-900 dark:text-white">
+          <div className="flex flex-wrap items-center gap-4">
+            {/* 1. CHỌN TẦNG */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide flex items-center gap-1.5 shrink-0">
+                <Layers className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span>Chọn tầng:</span>
+              </span>
+              <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => onSelectFloor(1)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
+                    currentFloor === 1 ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
+                  }`}
+                >
+                  Tầng Trệt
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSelectFloor(2)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
+                    currentFloor === 2 ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
+                  }`}
+                >
+                  Tầng 1
+                </button>
+                {(currentFacilityObj?.floors || 3) > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => onSelectFloor(3)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
+                      currentFloor === 3 ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    Tầng 2
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* 2. BỘ LỌC LOẠI KHO */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Lọc loại:</span>
+              <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 gap-1 shrink-0">
+                {[
+                  { id: 'ALL', label: 'Tất cả' },
+                  { id: 'STANDARD', label: 'Kho Thường 📦' },
+                  { id: 'CLIMATE_CONTROLLED', label: 'Kho Điều Hòa ❄️' },
+                ].map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setSelectedStorageType(t.id as any)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                      selectedStorageType === t.id
+                        ? 'bg-blue-600 text-white shadow-2xs'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* CHÚ THÍCH TRẠNG THÁI */}
+          <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-emerald-500 inline-block"></span>Trống</span>
+            {currentUnitCode && (
+              <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-blue-600 inline-block"></span>Ô của khách</span>
+            )}
+            <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-indigo-600 inline-block"></span>Đang chọn</span>
+            <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-rose-500 inline-block"></span>Đã thuê</span>
+          </div>
+        </div>
+
+        {/* SƠ ĐỒ MẶT BẰNG 2D BLUEPRINT BẢN RỘNG */}
+        <div className="p-3 sm:p-4 rounded-2xl border shadow-xs space-y-2.5 bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white w-full">
+          <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2 gap-2">
+            <div className="flex items-center space-x-2 text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+              <i className="fa-solid fa-map text-blue-600 dark:text-blue-400 text-sm"></i>
+              <span>SƠ ĐỒ MẶT BẰNG Ô KHO • {currentFloor === 1 ? 'TẦNG TRỆT' : `TẦNG ${currentFloor - 1}`}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                {units.length} ô kho tầng này
+              </span>
+            </div>
+          </div>
+
+          {/* Blueprint Grid Container */}
+          {loading ? (
+            <div className="py-20 text-center text-xs text-slate-400">
+              <i className="fa-solid fa-spinner animate-spin text-2xl mb-2 block text-blue-500"></i>
+              <span>Đang tải sơ đồ mặt bằng từ máy chủ...</span>
+            </div>
+          ) : currentFloor === 1 ? (
+            <div className="floor-blueprint-container p-3 sm:p-4 space-y-3 shadow-inner relative w-full">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
+                  <span className="flex items-center">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span> Dãy Kho Mặt Tiền (XL - 10m²)
+                  </span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{Math.min(units.length, 5)} ô kho</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
+                  {units.slice(0, 5).map((u) => renderUnitCard(u))}
+                </div>
+              </div>
+
+              {units.length > 5 && (
+                <>
+                  <div className="floor-corridor-strip">HÀNH LANG LỐI ĐI CHÍNH TRỤC XE TẢI / XE NÂNG</div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
+                      <span className="flex items-center">
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span> Dãy Kho Hậu Cần (XL - 10m²)
+                      </span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.length - 5} ô kho</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
+                      {units.slice(5, 10).map((u) => renderUnitCard(u))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="floor-blueprint-container p-3 sm:p-4 space-y-3 shadow-inner relative w-full">
+              {/* Size S Cluster */}
+              {units.filter((u) => u.size === 'S').length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
+                    <span className="flex items-center">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2"></span> Cụm Tủ Cá Nhân S (1.0m × 1.0m)
+                    </span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.filter((u) => u.size === 'S').length} ô kho</span>
+                  </div>
+                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                    {units.filter((u) => u.size === 'S').map((u) => renderUnitCard(u))}
+                  </div>
+                </div>
+              )}
+
+              <div className="floor-corridor-strip">HÀNH LANG LỐI ĐI NỘI BỘ 24/7</div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                {/* Size M Cluster */}
+                {units.filter((u) => u.size === 'M').length > 0 && (
+                  <div className="md:col-span-7 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
+                      <span className="flex items-center">
+                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 mr-2"></span> Khu Phòng Vừa M (1.5m × 2.0m)
+                      </span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.filter((u) => u.size === 'M').length} ô kho</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {units.filter((u) => u.size === 'M').map((u) => renderUnitCard(u))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Size L Cluster */}
+                {units.filter((u) => u.size === 'L').length > 0 && (
+                  <div className="md:col-span-5 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
+                      <span className="flex items-center">
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500 mr-2"></span> Khu Phòng LỚN L (2.0m × 3.0m)
+                      </span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.filter((u) => u.size === 'L').length} ô kho</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {units.filter((u) => u.size === 'L').map((u) => renderUnitCard(u))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">

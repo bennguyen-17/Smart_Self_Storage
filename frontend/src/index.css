@@ -443,7 +443,7 @@ html.dark .staff-portal .text-title {
   color: #ffffff !important;
 }
 .staff-portal .text-muted {
-  color: #64748b !important;
+  color: #334155 !important;
 }
 html.dark .staff-portal .text-muted {
   color: #94a3b8 !important;
@@ -461,11 +461,11 @@ html.dark .staff-portal header.portal-topbar {
 
 .staff-portal table thead tr {
   background-color: #f8fafc !important;
-  color: #64748b !important;
+  color: #334155 !important;
   border-bottom: 1px solid #e2e8f0 !important;
 }
 .staff-portal table thead th {
-  color: #64748b !important;
+  color: #334155 !important;
   font-weight: 700 !important;
 }
 .staff-portal table tbody tr {
@@ -478,11 +478,11 @@ html.dark .staff-portal header.portal-topbar {
 }
 html.dark .staff-portal table thead tr {
   background-color: #0f172a !important;
-  color: #94a3b8 !important;
+  color: #e2e8f0 !important;
   border-bottom: 1px solid #1e293b !important;
 }
 html.dark .staff-portal table thead th {
-  color: #94a3b8 !important;
+  color: #e2e8f0 !important;
   font-weight: 700 !important;
 }
 html.dark .staff-portal table tbody tr {

@@ -128,7 +128,8 @@ public class StaffReservationController {
             @PathVariable Integer reservationId,
             @RequestBody Map<String, String> request) {
         String newCccd = request != null ? request.get("identityNumber") : null;
-        ApiResponse response = staffReservationService.updateCustomerCccd(reservationId, newCccd);
+        String newName = request != null ? request.get("fullName") : null;
+        ApiResponse response = staffReservationService.updateCustomerCccd(reservationId, newCccd, newName);
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.badRequest().body(response);

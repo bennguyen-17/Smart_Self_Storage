@@ -1,7 +1,7 @@
-import { useState } from "react"
-import { IdCardIcon, Edit3Icon, CheckIcon, XIcon } from "lucide-react"
-import { toast } from "sonner"
-import { updateCustomerCccd } from "../api/checkinApi"
+import { IdCardIcon } from "lucide-react"
+
+
+
 
 import { formatDate, formatVnd } from "@/lib/format"
 
@@ -73,27 +73,6 @@ function Body({
   onClose: () => void
 }) {
   const badge = badgeOf(contract.contractStatus)
-  const [isEditingCccd, setIsEditingCccd] = useState(false)
-  const [cccdValue, setCccdValue] = useState(contract.customerIdNumber ?? "")
-  const [isSavingCccd, setIsSavingCccd] = useState(false)
-
-  const handleSaveCccd = async () => {
-    if (!/^\d{12}$/.test(cccdValue.trim())) {
-      toast.error("Số CCCD phải gồm đúng 12 chữ số.")
-      return
-    }
-    setIsSavingCccd(true)
-    try {
-      await updateCustomerCccd(contract.reservationId, cccdValue.trim())
-      contract.customerIdNumber = cccdValue.trim()
-      toast.success("Hiệu chỉnh số CCCD khách hàng thành công!")
-      setIsEditingCccd(false)
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || err?.message || "Lỗi khi cập nhật CCCD")
-    } finally {
-      setIsSavingCccd(false)
-    }
-  }
 
   return (
     <>
@@ -118,55 +97,6 @@ function Body({
             1. Thông tin Định danh &amp; Liên hệ
           </div>
           <div className="text-title space-y-1.5">
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-muted">Số CCCD (Định danh):</span>
-                {!isEditingCccd && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCccdValue(contract.customerIdNumber ?? "")
-                      setIsEditingCccd(true)
-                    }}
-                    className="text-[11px] font-bold text-blue-600 hover:text-blue-500 dark:text-blue-400 flex items-center gap-1 cursor-pointer"
-                  >
-                    <Edit3Icon className="size-3" /> Hiệu chỉnh
-                  </button>
-                )}
-              </div>
-              {isEditingCccd ? (
-                <div className="flex items-center gap-1.5 mt-1">
-                  <input
-                    type="text"
-                    maxLength={12}
-                    value={cccdValue}
-                    onChange={(e) => setCccdValue(e.target.value.replace(/\D/g, ""))}
-                    placeholder="Nhập 12 số CCCD thẻ gốc"
-                    className="w-full text-xs font-mono font-bold px-2.5 py-1.5 rounded-lg border border-blue-500 bg-white dark:bg-slate-900 focus:outline-none"
-                    autoFocus
-                  />
-                  <button
-                    type="button"
-                    disabled={isSavingCccd}
-                    onClick={handleSaveCccd}
-                    className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1 cursor-pointer shrink-0"
-                  >
-                    <CheckIcon className="size-3.5" /> Lưu
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingCccd(false)}
-                    className="px-2 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs cursor-pointer shrink-0"
-                  >
-                    <XIcon className="size-3.5" />
-                  </button>
-                </div>
-              ) : (
-                <span className="text-title font-mono text-sm font-bold block mt-0.5">
-                  {contract.customerIdNumber ?? "—"}
-                </span>
-              )}
-            </div>
             <div>
               <span className="block text-[10px] text-muted">
                 Số điện thoại:

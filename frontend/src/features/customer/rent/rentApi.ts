@@ -287,6 +287,7 @@ export const getStorageUnits = async (facilityCode: string, floor: number) => {
       return {
         id: unitCode,
         unitId: u.unitId || u.id,
+        unitTypeId: u.unitTypeId || u.typeId || (size === 'S' ? 1 : size === 'M' ? (Boolean(u.isClimate || u.climateControl) ? 3 : 2) : size === 'L' ? (Boolean(u.isClimate || u.climateControl) ? 5 : 4) : (Boolean(u.isClimate || u.climateControl) ? 7 : 6)),
         floor: floor,
         floorName: u.floorName || (floor === 1 ? 'Tầng trệt' : `Tầng ${floor - 1}`),
         weightLimit: u.maxLoadKgM2 ? `${u.maxLoadKgM2} kg/m²` : (floor === 1 ? '1000 kg/m²' : '500 kg/m²'),

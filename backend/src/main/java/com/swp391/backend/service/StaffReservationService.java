@@ -91,6 +91,7 @@ public class StaffReservationService {
     private final StaffShiftService staffShiftService;
 
     private final FeePolicyRepository feePolicyRepository;
+    private final NoShowCronService noShowCronService;
 
     private BigDecimal getDailyOverdueFee() {
         try {
@@ -134,7 +135,8 @@ public class StaffReservationService {
             GatePinRepository gatePinRepository,
             UnitTypeRepository unitTypeRepository,
                                    StaffShiftService staffShiftService,
-                                   FeePolicyRepository feePolicyRepository) {
+                                   FeePolicyRepository feePolicyRepository,
+                                   NoShowCronService noShowCronService) {
         this.reservationRepository = reservationRepository;
         this.accountRepository = accountRepository;
         this.contractRepository = contractRepository;
@@ -153,6 +155,7 @@ public class StaffReservationService {
         this.unitTypeRepository = unitTypeRepository;
         this.staffShiftService = staffShiftService;
         this.feePolicyRepository = feePolicyRepository;
+        this.noShowCronService = noShowCronService;
     }
 
     public StaffReservationListResponse listReservations() {
@@ -169,6 +172,13 @@ public class StaffReservationService {
             staffShiftService.requireOnDutyFacility(accountId);
         } catch (AccessDeniedException ex) {
             return new StaffReservationListResponse(false, ex.getMessage(), List.of());
+        }
+
+
+        if (noShowCronService != null) {
+            try {
+                noShowCronService.processNoShowContracts();
+            } catch (Exception ignored) {}
         }
 
         LocalDate today = LocalDate.now();
@@ -677,6 +687,7 @@ public class StaffReservationService {
         item.setMonthlyPrice(monthlyPrice);
 
         // 2. Tính số ngày quá hạn (overdueDays)
+
         LocalDate today = LocalDate.now();
         LocalDate endDate = reservation.getEndDate();
         int overdueDays = 0;
@@ -834,6 +845,7 @@ public class StaffReservationService {
                     "Phương thức thanh toán phải là CASH, BANK_TRANSFER hoặc VIETQR.");
         }
 
+
         LocalDate today = LocalDate.now();
         LocalDate endDate = reservation.getEndDate();
         int overdueDays = (endDate != null && endDate.isBefore(today))
@@ -925,6 +937,7 @@ public class StaffReservationService {
         Contract contract = contractOpt.get();
 
         // 1. Kiểm tra phạt quá hạn chưa nộp (tính chuẩn 50.000đ/ngày quá hạn)
+
         LocalDate today = LocalDate.now();
         LocalDate endDate = reservation.getEndDate();
         int overdueDays = (endDate != null && endDate.isBefore(today))
@@ -1136,6 +1149,11 @@ public class StaffReservationService {
 
     @Transactional
     public ApiResponse updateCustomerCccd(Integer reservationId, String newCccd) {
+        return updateCustomerCccd(reservationId, newCccd, null);
+    }
+
+    @Transactional
+    public ApiResponse updateCustomerCccd(Integer reservationId, String newCccd, String newName) {
         Integer staffAccountId = getAuthenticatedAccountId();
         if (staffAccountId == null) {
             return new ApiResponse(false, "Không tìm thấy tài khoản nhân viên đã xác thực.");
@@ -1166,6 +1184,13 @@ public class StaffReservationService {
         profile.setIdentityNumber(formattedCccd);
         customerProfileRepository.save(profile);
 
+        if (newName != null && !newName.trim().isEmpty()) {
+            accountRepository.findById(customerAccountId.longValue()).ifPresent(acc -> {
+                acc.setFullName(newName.trim());
+                accountRepository.save(acc);
+            });
+        }
+
         // Ghi nhận ActivityLog
         try {
             Account staffAccount = accountRepository.findById(staffAccountId.longValue()).orElse(null);
@@ -1179,6 +1204,6 @@ public class StaffReservationService {
             activityLogRepository.save(log);
         } catch (Exception e) {}
 
-        return new ApiResponse(true, "Hiệu chỉnh số CCCD thành công!");
+        return new ApiResponse(true, "Hiệu chỉnh thông tin thành công!");
     }
 }
