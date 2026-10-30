@@ -529,23 +529,21 @@ export default function StaffCheckinProcessPage() {
               {/* NÚT SÁT GÓC PHẢI THEO YÊU CẦU */}
               {selectedUnit ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800">
-                    Đã đổi: <span className="font-mono">{selectedUnit.unitCode}</span>
-                  </span>
                   <button
                     type="button"
                     onClick={() => {
                       setSelectedUnit(null)
                       setNewPricing(null)
                     }}
-                    className="cursor-pointer text-[11px] font-bold text-rose-600 hover:underline dark:text-rose-400"
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-rose-800 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 transition"
                   >
-                    Hủy
+                    <XIcon className="size-3.5" />
+                    <span>Hủy</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsMapModalOpen(true)}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700 shadow-xs hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 transition"
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 shadow-xs hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 transition active:scale-95"
                   >
                     <RepeatIcon className="size-3.5" />
                     <span>Đổi ô khác</span>

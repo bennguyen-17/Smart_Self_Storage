@@ -82,7 +82,7 @@ function StaffFloorPlanPage() {
           <span>Sơ đồ kho 2D</span>
         </h1>
         <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-          Sơ đồ mặt bằng ô kho theo từng tầng tại cơ sở trực thuộc của bạn {facilityName ? `(${facilityName})` : ""}.
+          Sơ đồ mặt bằng ô kho tại cơ sở trực thuộc của bạn.
         </p>
       </div>
 
@@ -96,7 +96,6 @@ function StaffFloorPlanPage() {
         }}
         selectedUnit={selectedUnit}
         onSelectUnit={setSelectedUnit}
-        copyableUnitCode
         lockFacility
       />
     </section>

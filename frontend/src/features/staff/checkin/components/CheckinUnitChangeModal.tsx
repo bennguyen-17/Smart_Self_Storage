@@ -43,8 +43,8 @@ export default function CheckinUnitChangeModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-3 sm:p-6 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative flex max-h-[92vh] w-full max-w-6xl flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-2 sm:p-4 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="relative flex max-h-[95vh] w-full max-w-[1380px] flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/90 px-6 py-4 dark:border-slate-800 dark:bg-slate-850">
           <div className="flex items-center gap-3">
@@ -74,7 +74,7 @@ export default function CheckinUnitChangeModal({
         </div>
 
         {/* Modal Body: Sơ đồ kho 2D */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="flex-1 overflow-y-auto p-3.5 sm:p-5">
           <StorageMap2D
             compact
             lockFacility
@@ -90,7 +90,6 @@ export default function CheckinUnitChangeModal({
                   : null
             }
             onSelectUnit={(u) => onInitiateUnitChange(u)}
-            copyableUnitCode
             currentUnitCode={contract.unitCode}
           />
         </div>

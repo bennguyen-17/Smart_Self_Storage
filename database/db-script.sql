@@ -546,39 +546,39 @@ INSERT INTO EmployeeProfile (employeeId, accountId, facilityId) VALUES
 -- 6. Danh sách Tầng cho 7 Cơ sở (Mỗi cơ sở chuẩn hóa 3 tầng: Tầng Trệt, Tầng 1, Tầng 2)
 INSERT INTO Floor (floorId, facilityId, floorName, maxLoadPerM2, status) VALUES
 -- HN-01 (Cơ sở 1 - Mẫu Layout A 3 tầng)
-(1, 1, 'Tầng Trệt (Sảnh & Kho XL)', 1000.00, 'ACTIVE'),
-(2, 1, 'Tầng 1 (Kho S, M, L)', 500.00, 'ACTIVE'),
-(3, 1, 'Tầng 2 (Kho S, M, L)', 500.00, 'ACTIVE'),
+(1, 1, 'Tầng Trệt', 1000.00, 'ACTIVE'),
+(2, 1, 'Tầng 1', 500.00, 'ACTIVE'),
+(3, 1, 'Tầng 2', 500.00, 'ACTIVE'),
 
 -- HN-02 (Cơ sở 2 - Mẫu Layout B 3 tầng)
-(4, 2, 'Tầng Trệt (Kho XL Logistics)', 1200.00, 'ACTIVE'),
-(5, 2, 'Tầng 1 (Kho M & L)', 600.00, 'ACTIVE'),
-(6, 2, 'Tầng 2 (Kho M & L)', 600.00, 'ACTIVE'),
+(4, 2, 'Tầng Trệt', 1200.00, 'ACTIVE'),
+(5, 2, 'Tầng 1', 600.00, 'ACTIVE'),
+(6, 2, 'Tầng 2', 600.00, 'ACTIVE'),
 
 -- HCM-01 (Cơ sở 3 - Mẫu Layout A 3 tầng VIP 100% Kho mát)
-(7, 3, 'Tầng Trệt (Kho Mát XL VIP)', 1000.00, 'ACTIVE'),
-(8, 3, 'Tầng 1 (Kho Mát M & L)', 500.00, 'ACTIVE'),
-(9, 3, 'Tầng 2 (Kho Mát M & L)', 500.00, 'ACTIVE'),
+(7, 3, 'Tầng Trệt', 1000.00, 'ACTIVE'),
+(8, 3, 'Tầng 1', 500.00, 'ACTIVE'),
+(9, 3, 'Tầng 2', 500.00, 'ACTIVE'),
 
 -- HCM-02 (Cơ sở 4 - Mẫu Layout B 3 tầng)
-(10, 4, 'Tầng Trệt (Kho XL Pallet)', 1200.00, 'ACTIVE'),
-(11, 4, 'Tầng 1 (Kho M & L)', 600.00, 'ACTIVE'),
-(12, 4, 'Tầng 2 (Kho M & L)', 600.00, 'ACTIVE'),
+(10, 4, 'Tầng Trệt', 1200.00, 'ACTIVE'),
+(11, 4, 'Tầng 1', 600.00, 'ACTIVE'),
+(12, 4, 'Tầng 2', 600.00, 'ACTIVE'),
 
 -- HCM-03 (Cơ sở 5 - Mẫu Layout B 3 tầng)
-(13, 5, 'Tầng Trệt (Kho XL Startup)', 1000.00, 'ACTIVE'),
-(14, 5, 'Tầng 1 (Kho M & L)', 500.00, 'ACTIVE'),
-(15, 5, 'Tầng 2 (Kho M & L)', 500.00, 'ACTIVE'),
+(13, 5, 'Tầng Trệt', 1000.00, 'ACTIVE'),
+(14, 5, 'Tầng 1', 500.00, 'ACTIVE'),
+(15, 5, 'Tầng 2', 500.00, 'ACTIVE'),
 
 -- DN-01 (Cơ sở 6 - Mẫu Layout A 3 tầng)
-(16, 6, 'Tầng Trệt (Kho XL)', 1000.00, 'ACTIVE'),
-(17, 6, 'Tầng 1 (Kho S, M, L)', 500.00, 'ACTIVE'),
-(18, 6, 'Tầng 2 (Kho S, M, L)', 500.00, 'ACTIVE'),
+(16, 6, 'Tầng Trệt', 1000.00, 'ACTIVE'),
+(17, 6, 'Tầng 1', 500.00, 'ACTIVE'),
+(18, 6, 'Tầng 2', 500.00, 'ACTIVE'),
 
 -- CT-01 (Cơ sở 7 - Mẫu Layout B 3 tầng)
-(19, 7, 'Tầng Trệt (Kho XL Hàng mẫu)', 1000.00, 'ACTIVE'),
-(20, 7, 'Tầng 1 (Kho M & L)', 600.00, 'ACTIVE'),
-(21, 7, 'Tầng 2 (Kho M & L)', 600.00, 'ACTIVE');
+(19, 7, 'Tầng Trệt', 1000.00, 'ACTIVE'),
+(20, 7, 'Tầng 1', 600.00, 'ACTIVE'),
+(21, 7, 'Tầng 2', 600.00, 'ACTIVE');
 
 -- 7. Loại kho chuẩn (UnitTypes - Chiều cao cố định 2.0m)
 INSERT INTO UnitType (unitTypeId, typeName, size, storageCondition, status) VALUES
