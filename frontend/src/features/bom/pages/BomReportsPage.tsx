@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react"
+﻿import { useState, useMemo, useEffect } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import apiClient from "@/lib/apiClient"
@@ -178,24 +178,26 @@ export default function BomReportsPage() {
 
   return (
     <div className="space-y-5">
-      {/* HEADER BÁO CÁO */}
-      <div className="flex items-center justify-between p-5 rounded-2xl bg-white/90 dark:bg-slate-900/60 border border-slate-200/90 dark:border-slate-800 shadow-sm dark:shadow-md transition-colors">
-        <div className="flex items-center gap-2">
+      {/* HEADER BÁO CÁO - Chuẩn Staff & Manager */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
           {!isAll && (
             <button
               type="button"
               onClick={() => navigate("/bom/facilities")}
-              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition cursor-pointer shrink-0"
+              className="p-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition cursor-pointer shrink-0 shadow-xs"
               title="Quay lại danh sách cơ sở kho"
             >
               <ArrowLeft className="size-4" />
             </button>
           )}
-          <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
-            {isAll
-              ? "Báo Cáo Tổng Quan Hệ Thống Thuê Kho"
-              : `Báo Cáo Cơ Sở: ${currentFacName} (${currentFacCode})`}
-          </h2>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            <span>
+              {isAll
+                ? "Báo cáo tổng quan doanh thu toàn chuỗi"
+                : `Báo cáo cơ sở: ${currentFacName} (${currentFacCode})`}
+            </span>
+          </h1>
         </div>
       </div>
 
@@ -209,7 +211,7 @@ export default function BomReportsPage() {
             <div>
               <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white tracking-wider flex items-center gap-2">
                 <span>BÁO CÁO CƠ CẤU Ô KHO THEO SIZE &amp; LOẠI HÌNH</span>
-                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200 dark:border-blue-900">
+                <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 shadow-2xs">
                   {currentFacCode}
                 </span>
               </h3>
@@ -226,10 +228,10 @@ export default function BomReportsPage() {
             </div>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-              <table className="w-full text-xs border-collapse">
+              <table className="w-full text-center text-sm border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-800 dark:bg-slate-950/90 dark:text-slate-400 uppercase font-black text-[10px]">
-                    <th className="p-3 text-left whitespace-nowrap">Phân Loại / Size</th>
+                  <tr className="bg-slate-50/90 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+                    <th className="p-3 text-center whitespace-nowrap">Phân Loại / Size</th>
                     <th className="p-3 text-center whitespace-nowrap">Quy Cách Sàn</th>
                     <th className="p-3 text-center whitespace-nowrap">Tổng Số Ô</th>
                     <th className="p-3 text-center whitespace-nowrap">Đang Thuê</th>
@@ -287,8 +289,8 @@ export default function BomReportsPage() {
 
                       return (
                         <tr key={cfg.size} className="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
-                          <td className="p-3 text-left whitespace-nowrap">
-                            <div className="font-extrabold text-slate-900 dark:text-white whitespace-nowrap">{cfg.name}</div>
+                          <td className="p-3 whitespace-nowrap align-middle text-center">
+                            <div className="font-semibold text-slate-800 dark:text-slate-200 text-sm whitespace-nowrap">{cfg.name}</div>
                           </td>
                           <td className="p-3 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{cfg.dim}</td>
                           <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{total} ô</td>
@@ -317,7 +319,7 @@ export default function BomReportsPage() {
                       <>
                         {rows}
                         <tr className="bg-slate-100 dark:bg-slate-950 font-black border-t-2 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
-                          <td className="p-3 text-left uppercase text-slate-900 dark:text-white tracking-wider whitespace-nowrap">
+                          <td className="p-3 whitespace-nowrap align-middle text-center uppercase text-slate-900 dark:text-white tracking-wider">
                             TỔNG CỘNG CƠ CẤU
                           </td>
                           <td className="p-3 text-center text-slate-400 font-mono whitespace-nowrap">—</td>

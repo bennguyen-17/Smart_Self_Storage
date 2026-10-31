@@ -102,11 +102,6 @@ function Body({
 
   return (
     <>
-      <p className="text-xs text-muted">
-        Nhập mã ô kho mới (ô phải đang AVAILABLE cùng cơ sở). Hệ thống tự tính
-        lại tiền thuê/cọc và hoàn phần dư nếu có.
-      </p>
-
       <div className="flex items-center justify-between gap-3 rounded-2xl border p-3.5 text-xs">
         <span className="text-muted">Ô hiện tại</span>
         <span className="font-mono font-bold text-title">
