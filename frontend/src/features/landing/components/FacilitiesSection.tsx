@@ -133,20 +133,24 @@ export function FacilitiesSection({
                 {list.map((f) => (
                   <li
                     key={f.code}
-                    className="flex flex-col gap-3 rounded-(--l-radius-card) l-card p-5.5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                    className="flex flex-col gap-3 rounded-(--l-radius-card) l-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-5.5"
                   >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-lg leading-[1.35] font-bold text-foreground">
+                    <div className="flex items-center gap-2 min-w-0" style={{ flexWrap: "nowrap" }}>
+                      <h3
+                        className="facility-title text-base font-bold text-foreground sm:text-lg"
+                        style={{ whiteSpace: "nowrap", textWrap: "nowrap" }}
+                      >
                         {f.name}
                       </h3>
                       {availabilityLabel(f) && (
                         <span
                           className={cn(
-                            "rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                            "shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold",
                             f.paused || f.available === 0
                               ? "bg-muted text-muted-foreground"
                               : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
                           )}
+                          style={{ whiteSpace: "nowrap", textWrap: "nowrap" }}
                         >
                           {availabilityLabel(f)}
                         </span>

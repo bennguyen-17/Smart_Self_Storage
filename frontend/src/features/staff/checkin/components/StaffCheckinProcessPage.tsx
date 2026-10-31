@@ -402,11 +402,15 @@ export default function StaffCheckinProcessPage() {
     setIsSubmitting(true)
     try {
       // BƯỚC 1: Nếu có đổi kho, gọi API change-unit trước
+      let activeUnitCode = contract.unitCode
+      let activeFloorName = contract.floorName
+
       if (selectedUnit) {
         await changeUnit(contract.reservationId, {
           newUnitCode: selectedUnit.unitCode,
         })
-        toast.info(`Đã cập nhật đổi sang ô kho ${selectedUnit.unitCode}`)
+        activeUnitCode = selectedUnit.unitCode
+        activeFloorName = selectedUnit.floorName || activeFloorName
       }
 
       // BƯỚC 2: Gọi API check-in thu tiền & kích hoạt HĐ sang ACTIVE
@@ -414,6 +418,16 @@ export default function StaffCheckinProcessPage() {
         collectedAmount: financialSummary.remainingDue,
         paymentMethod,
       })
+
+      setContract((prev) =>
+        prev
+          ? {
+              ...prev,
+              unitCode: activeUnitCode,
+              floorName: activeFloorName,
+            }
+          : null
+      )
 
       setActionSuccess(res)
       toast.success("Bàn giao & Check-in kho thành công!", {
@@ -463,7 +477,14 @@ export default function StaffCheckinProcessPage() {
 
   // Màn hình thành công sau khi Check-in xong
   if (actionSuccess) {
-    return <CheckinSuccessView actionSuccess={actionSuccess} contract={contract} />
+    return (
+      <CheckinSuccessView
+        actionSuccess={actionSuccess}
+        contract={contract}
+        unitCode={selectedUnit?.unitCode ?? contract.unitCode}
+        floorName={selectedUnit?.floorName ?? contract.floorName}
+      />
+    )
   }
 
   return (
@@ -578,7 +599,6 @@ export default function StaffCheckinProcessPage() {
                       <span className="line-through text-slate-400">{contract.unitCode}</span>
                       <span className="text-slate-400">→</span>
                       <span className="text-indigo-600 dark:text-indigo-400 font-extrabold">{selectedUnit.unitCode}</span>
-                      <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[9px] font-black uppercase text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Đã đổi</span>
                     </span>
                   ) : (
                     contract.unitCode
@@ -657,9 +677,7 @@ export default function StaffCheckinProcessPage() {
                 <BanknoteIcon className="size-4 text-blue-600 dark:text-blue-400" />
                 <span>Bảng thanh toán tại quầy</span>
               </h2>
-              <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[10.5px] font-bold text-blue-800 dark:bg-blue-950 dark:text-blue-300">
-                Đối soát tiền
-              </span>
+
             </div>
 
             {/* Chi tiết từng mục tiền */}
@@ -731,8 +749,8 @@ export default function StaffCheckinProcessPage() {
                       0 đ
                     </div>
                     {financialSummary.refundAmount > 0 && (
-                      <p className="mt-1 text-xs font-bold text-amber-600 dark:text-amber-400">
-                        Cơ sở tạo yêu cầu hoàn cọc dư: {formatVnd(financialSummary.refundAmount)}
+                      <p className="mt-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+                        Khách hàng sẽ được hoàn lại: {formatVnd(financialSummary.refundAmount)}
                       </p>
                     )}
                   </>

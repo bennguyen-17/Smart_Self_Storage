@@ -1,440 +1,69 @@
-import { useState, useEffect } from "react"
-import { useLocation, useNavigate, useOutlet } from "react-router-dom"
+import { useNavigate, useOutlet } from "react-router-dom"
 import { toast } from "sonner"
-import apiClient from "@/lib/apiClient"
-import {
-  Warehouse,
-  SlidersHorizontal,
-  FileSpreadsheet,
-  Moon,
-  Sun,
-  Home,
-  ChevronDown,
-  X,
-  LogOut,
-  PanelLeft,
-} from "lucide-react"
-import { motion, AnimatePresence } from "motion/react"
-import { useTheme } from "@/components/common/theme-provider"
+import { Warehouse, SlidersHorizontal, FileSpreadsheet } from "lucide-react"
+
+import PortalNavbar, { type PortalNavItem } from "@/components/internal/components/PortalNavbar"
 import { useAuth } from "@/context/AuthContext"
+import { getRoleTitle, normalizeRole } from "@/lib/roles"
 import { BomProvider } from "@/features/bom/context/BomContext"
 
-const NAV_MODULES = [
+const BOM_NAV_ITEMS: readonly PortalNavItem[] = [
   {
-    path: "/bom/facilities",
+    to: "/bom/facilities",
     label: "Giám Sát & Cơ Sở",
-    navLabel: "Cơ Sở Kho",
-    subLabel: "Mặt bằng & Tỷ lệ lấp đầy",
+    hint: "Mặt bằng & Tỷ lệ lấp đầy",
     icon: Warehouse,
   },
   {
-    path: "/bom/pricing",
+    to: "/bom/pricing",
     label: "Khung Giá & Phụ Phí",
-    navLabel: "Khung Giá & Phí",
-    subLabel: "Biểu giá thuê & Phí dịch vụ",
+    hint: "Biểu giá thuê & Phí dịch vụ",
     icon: SlidersHorizontal,
   },
   {
-    path: "/bom/reports",
+    to: "/bom/reports",
     label: "Báo Cáo Doanh Thu",
-    navLabel: "Báo Cáo",
-    subLabel: "Dòng tiền & Đối soát tài chính",
+    hint: "Dòng tiền & Đối soát tài chính",
     icon: FileSpreadsheet,
   },
 ]
 
 function BomLayoutContent() {
-  const { theme, setTheme } = useTheme()
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
   const outlet = useOutlet()
+  const extra = user as (typeof user & { phone?: string | null; facilityId?: number | null }) | null
 
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
-
-  const isDarkMode =
-    theme === "dark" ||
-    (theme === "system" &&
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches)
-
-  // Thông tin người dùng lấy trực tiếp từ API / Database
-  const [profileData, setProfileData] = useState<{
-    fullName?: string
-    phone?: string
-    email?: string
-    role?: string
-    roleTitle?: string
-    staffCode?: string
-    facilityName?: string
-  } | null>(null)
-
-  useEffect(() => {
-    let isMounted = true
-    apiClient
-      .get("/staff/profile")
-      .then((res: any) => {
-        if (isMounted && res && (res.success || res.fullName)) {
-          setProfileData(res)
-        }
-      })
-      .catch((err) => {
-        console.warn("Không thể tải thông tin profile từ API:", err)
-      })
-    return () => {
-      isMounted = false
-    }
-  }, [])
-
-  const storedUser = typeof window !== "undefined" ? localStorage.getItem("user") : null
-  const parsedStoredUser = storedUser ? (() => { try { return JSON.parse(storedUser); } catch (e) { return null; } })() : null
-  const currentUserName = profileData?.fullName || user?.fullName || parsedStoredUser?.fullName || "Ban Điều Hành"
-  const currentUserRole = profileData?.roleTitle || (user?.role ? (user.role === "BOM" ? "Ban Điều Hành (BOM)" : user.role) : "Ban Điều Hành (BOM)")
-  const currentUserEmail = profileData?.email || user?.email || parsedStoredUser?.email || "bom@smartstorage.vn"
-  const currentUserPhone = profileData?.phone || user?.phone || "Chưa cập nhật"
-  const currentUserCode = profileData?.staffCode || (user?.id ? `BM-${String(user.id).padStart(4, "0")}` : "BM-0001")
-  const userInitials = currentUserName
-    .split(" ")
-    .filter(Boolean)
-    .slice(-2)
-    .map((w: string) => w[0].toUpperCase())
-    .join("") || "BM"
-
-  const isHome = location.pathname === "/bom" || location.pathname === "/bom/"
-
-  const handleLogout = async () => {
+  const logout = async () => {
     try {
       await signOut()
       toast.success("Đã đăng xuất khỏi cổng điều hành BOM")
-      navigate("/internal_login")
+      navigate("/internal_login", { replace: true })
     } catch {
       toast.error("Lỗi khi đăng xuất")
     }
   }
 
+  const roleTitle = getRoleTitle(normalizeRole(user?.role)) || "Ban Điều Hành (BOM)"
+
   return (
-    <div className="staff-portal relative min-h-screen bg-[#eef5fc] text-slate-900 dark:bg-[#0b1120] dark:text-slate-100 font-sans antialiased overflow-x-hidden transition-colors duration-200">
-      {/* Vầng sáng xanh mờ phía trên vùng nội dung, đồng bộ 100% chuẩn phong cách Staff & Manager */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed top-0 left-1/2 -z-0 h-80 w-full max-w-5xl -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-500/20 via-cyan-400/25 to-indigo-500/20 blur-3xl lg:left-[calc(50%+8rem)] dark:from-blue-500/10 dark:via-cyan-400/10 dark:to-indigo-500/10"
-      />
-      {/* Vầng sáng phụ lan tỏa góc dưới tạo chiều sâu màu loang mềm mại */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed -bottom-24 right-1/4 -z-0 size-96 rounded-full bg-indigo-500/15 blur-3xl dark:bg-indigo-600/10"
-      />
-
-      {/* Top Header - Fixed cố định trên đỉnh */}
-      <header className="fixed top-0 left-0 right-0 z-50 w-full min-h-[58px] bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-blue-500/20 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4 shrink-0 shadow-xs text-slate-900 dark:text-white transition-colors">
-        {/* BRAND LOGO & NÚT MENU MOBILE */}
-        <div className="shrink-0 flex items-center gap-2 sm:gap-3">
-          {/* Nút toggle mở sidebar trên mobile */}
-          <button
-            type="button"
-            onClick={() => setIsMobileSidebarOpen((prev) => !prev)}
-            className="lg:hidden p-2 rounded-xl bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 cursor-pointer transition shadow-xs dark:bg-slate-800 dark:text-blue-400 dark:hover:text-white dark:hover:bg-slate-700 dark:border-slate-700/80"
-            title="Mở thanh điều hướng"
-          >
-            <PanelLeft className="size-4.5" />
-          </button>
-
-          <div
-            className="flex items-center gap-2 sm:gap-3 cursor-pointer group"
-            onClick={() => {
-              navigate("/bom/facilities")
-              setIsMobileSidebarOpen(false)
-            }}
-            title="Về Trang Giám Sát Cơ Sở Kho"
-          >
-            <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-              <Warehouse className="size-5" />
-            </div>
-            <div>
-              <div className="text-base sm:text-lg font-black tracking-tight leading-tight text-slate-900 dark:text-white flex items-center gap-1.5">
-                <span>Smart Storage</span>
-              </div>
-              <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden xl:block leading-none mt-0.5">
-                Cổng Ban giám đốc
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* CENTER CONTENT - ĐÃ LOẠI BỎ THANH NAVBAR CHÍNH GIỮA THEO YÊU CẦU */}
-        <div className="flex-1" />
-
-        {/* CONTROLS & USER PROFILE - Chỉ hiện trên Header khi ở trang chủ Tổng Quan (nơi không có thanh sidebar bên trái) */}
-        {isHome && (
-          <div className="flex items-center space-x-2 sm:space-x-2.5 shrink-0">
-            {/* Nút Theme Toggle */}
-            <button
-              onClick={() => setTheme(isDarkMode ? "light" : "dark")}
-              title={isDarkMode ? "Chuyển sang giao diện Sáng" : "Chuyển sang giao diện Tối"}
-              className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition cursor-pointer shadow-xs shrink-0"
-            >
-              {isDarkMode ? (
-                <Sun className="size-4 text-slate-300" />
-              ) : (
-                <Moon className="size-4 text-slate-600" />
-              )}
-            </button>
-
-            <div className="h-5 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block"></div>
-            <button
-              onClick={() => setIsProfileModalOpen(true)}
-              className="flex items-center space-x-2 px-2.5 sm:px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white text-slate-900 hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 transition cursor-pointer shadow-xs group text-left shrink-0"
-              title="Nhấn để xem Hồ sơ & Đăng xuất"
-              type="button"
-            >
-              <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
-                {userInitials}
-              </div>
-              <div className="text-left hidden md:block">
-                <div className="text-xs font-extrabold text-slate-900 dark:text-white leading-tight flex items-center space-x-1">
-                  <span className="max-w-[130px] truncate">{currentUserName}</span>
-                  <ChevronDown className="size-3 text-slate-400 group-hover:text-blue-500 transition-colors ml-0.5 shrink-0" />
-                </div>
-                <div className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 truncate max-w-[130px]">
-                  {currentUserRole}
-                </div>
-              </div>
-            </button>
-          </div>
-        )}
-      </header>
-
-      {/* THANH ĐIỀU HƯỚNG DỌC BÊN TRÁI (CHỈ XUẤT HIỆN KHI Ở TRANG CON, CÓ ANIMATION MƯỢT MÀ) */}
-      <AnimatePresence>
-        {!isHome && (
-          <>
-            {/* Lớp phủ mờ (Backdrop) trên màn hình mobile */}
-            {isMobileSidebarOpen && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                onClick={() => setIsMobileSidebarOpen(false)}
-                className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-xs lg:hidden"
-              />
-            )}
-
-            {/* Thanh Sidebar dọc bên trái */}
-            <motion.aside
-              key="bom-vertical-sidebar"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className={`fixed top-[58px] bottom-0 left-0 z-40 w-64 bg-white/95 text-slate-900 shadow-sm backdrop-blur-2xl border-r border-slate-200/80 dark:border-slate-800 dark:bg-slate-950/95 dark:text-white flex flex-col justify-between p-4 transition-transform duration-300 lg:translate-x-0 ${isMobileSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
-                }`}
-            >
-              {/* Phần trên: Danh mục Phân hệ */}
-              <div>
-                <nav className="space-y-1.5">
-                    {NAV_MODULES.map((item) => {
-                      const Icon = item.icon
-                      const isActive = location.pathname.startsWith(item.path)
-
-                      return (
-                        <motion.button
-                          key={item.path}
-                          layoutId={`bom-module-card-${item.path}`}
-                          transition={{
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 28,
-                            mass: 0.85,
-                          }}
-                          type="button"
-                          onClick={() => {
-                            navigate(item.path)
-                            setIsMobileSidebarOpen(false)
-                          }}
-                          className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl font-bold text-xs tracking-wide transition-colors cursor-pointer text-left ${
-                            isActive
-                              ? "text-white font-bold shadow-lg shadow-blue-600/25"
-                              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/60"
-                          }`}
-                        >
-                          {isActive && (
-                            <motion.div
-                              layoutId="bom-sidebar-active-indicator"
-                              transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                              className="absolute inset-0 bg-blue-600 rounded-2xl -z-10"
-                            />
-                          )}
-                          <motion.div
-                            layoutId={`bom-module-icon-${item.path}`}
-                            transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                            className={`size-8 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                              isActive
-                                ? "bg-white/15 text-white"
-                                : "bg-slate-100 text-blue-600 group-hover:bg-blue-50 dark:bg-slate-800 dark:text-blue-300 dark:group-hover:text-white"
-                            }`}
-                          >
-                            <Icon className="size-4" />
-                          </motion.div>
-                          <div className="flex-1 min-w-0">
-                            <motion.div
-                              layoutId={`bom-module-title-${item.path}`}
-                              transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                              className={`text-xs truncate font-extrabold ${isActive ? "text-white" : "text-slate-900 dark:text-white"}`}
-                            >
-                              {item.label}
-                            </motion.div>
-                            <div
-                              className={`text-[10.5px] truncate font-semibold mt-0.5 ${
-                                isActive ? "text-blue-100" : "text-slate-500 dark:text-slate-400"
-                              }`}
-                            >
-                              {item.subLabel}
-                            </div>
-                          </div>
-                        </motion.button>
-                      )
-                    })}
-                  </nav>
-                </div>
-
-              {/* Phần dưới cùng: User Profile và Nút Theme Toggle - Đồng bộ phong cách Staff */}
-              <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800/80 shrink-0">
-                <div className="flex items-center justify-between gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsProfileModalOpen(true)
-                      setIsMobileSidebarOpen(false)
-                    }}
-                    className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl p-1.5 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/70 text-left cursor-pointer group"
-                    title="Nhấn để xem Hồ sơ & Đăng xuất"
-                  >
-                    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white shadow-xs group-hover:scale-105 transition-transform">
-                      {userInitials}
-                    </div>
-                    <div className="min-w-0 flex-1 leading-tight">
-                      <span className="block truncate text-xs font-extrabold text-slate-900 dark:text-white">
-                        {currentUserName}
-                      </span>
-                      <span className="block truncate text-[10px] font-semibold text-blue-600 dark:text-blue-400">
-                        {currentUserRole}
-                      </span>
-                    </div>
-                  </button>
-
-                  {/* Nút Theme Toggle nằm chung ở thanh sidebar */}
-                  <button
-                    type="button"
-                    onClick={() => setTheme(isDarkMode ? "light" : "dark")}
-                    title={isDarkMode ? "Chuyển sang giao diện Sáng" : "Chuyển sang giao diện Tối"}
-                    className="flex size-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white transition cursor-pointer"
-                  >
-                    {isDarkMode ? (
-                      <Moon className="size-4 text-indigo-400" />
-                    ) : (
-                      <Sun className="size-4 text-amber-500" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-
-      <main
-        className={`relative z-10 w-full transition-all duration-300 pt-20 pb-12 sm:pt-22 ${isHome
-            ? "max-w-[1850px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12"
-            : "lg:pl-72 px-4 sm:px-6 lg:pr-8 xl:pr-12 max-w-[1920px] mx-auto"
-          }`}
+    <div className="staff-portal antialiased" style={{ fontFamily: "var(--font-sans)" }}>
+      <PortalNavbar
+        portalName="Cổng Ban giám đốc"
+        hidePortalNameText
+        items={BOM_NAV_ITEMS}
+        profile={{
+          accountId: user?.id ?? null,
+          fullName: user?.fullName ?? "Ban Điều Hành",
+          roleLabel: roleTitle,
+          email: user?.email ?? null,
+          phone: extra?.phone ?? null,
+          facilityId: extra?.facilityId ?? null,
+        }}
+        onLogout={logout}
       >
-        <AnimatePresence mode="popLayout">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: isHome ? -10 : 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full"
-          >
-            {outlet}
-          </motion.div>
-        </AnimatePresence>
-      </main>
-
-      {/* Modal Hồ Sơ Tài Khoản BOM */}
-      {isProfileModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 max-w-md w-full space-y-5 shadow-2xl animate-in fade-in zoom-in duration-150">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <div>
-                <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white">
-                  Hồ Sơ Ban Quản Lý Vận Hành
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsProfileModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-800 cursor-pointer"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div className="flex items-center space-x-3.5 p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900">
-                <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white font-black text-lg flex items-center justify-center shadow-md">
-                  {userInitials}
-                </div>
-                <div>
-                  <div className="font-black text-sm text-blue-950 dark:text-blue-200">
-                    {currentUserName}
-                  </div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">
-                    {currentUserRole}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-1">
-                <div className="space-y-2 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 font-semibold text-xs">
-                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60 dark:border-slate-700/60">
-                    <span className="text-slate-500">Mã Định Danh:</span>
-                    <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{currentUserCode}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60 dark:border-slate-700/60">
-                    <span className="text-slate-500">Họ và Tên:</span>
-                    <span className="text-slate-900 dark:text-white font-bold">{currentUserName}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60 dark:border-slate-700/60">
-                    <span className="text-slate-500">Vai Trò:</span>
-                    <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{currentUserRole}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60 dark:border-slate-700/60">
-                    <span className="text-slate-500">Email:</span>
-                    <span className="font-mono font-bold">{currentUserEmail}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-0.5">
-                    <span className="text-slate-500">Số Điện Thoại:</span>
-                    <span className="font-mono font-bold">{currentUserPhone}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end items-center pt-2 border-t border-slate-200 dark:border-slate-800">
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs flex items-center gap-1.5 cursor-pointer shadow-md"
-              >
-                <LogOut className="size-3.5" />
-                <span>Đăng Xuất</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        {outlet}
+      </PortalNavbar>
     </div>
   )
 }

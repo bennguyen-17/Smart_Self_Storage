@@ -44,6 +44,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class StaffCheckInService {
@@ -236,7 +237,13 @@ public class StaffCheckInService {
                         + "; contract=ACTIVE; unit=OCCUPIED; result=SUCCESS",
                 floorRepository.findById(unit.getFloorId()).map(Floor::getFacilityId).orElse(null));
 
-        sendCheckInEmail(reservation, contract, gatePin.getPin(), unit);
+        CompletableFuture.runAsync(() -> {
+            try {
+                sendCheckInEmail(reservation, contract, gatePin.getPin(), unit);
+            } catch (Exception ex) {
+                log.error("Lỗi gửi email check-in bất đồng bộ: {}", ex.getMessage(), ex);
+            }
+        });
 
         StaffCheckInResponse response = new StaffCheckInResponse(true, "Thủ tục check-in và bàn giao kho thành công.");
         response.setReservationId(reservationId);

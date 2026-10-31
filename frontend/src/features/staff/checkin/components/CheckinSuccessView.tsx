@@ -5,11 +5,20 @@ import type { StaffCheckInResponse, StaffReservationLookup } from "../types"
 interface CheckinSuccessViewProps {
   actionSuccess: StaffCheckInResponse
   contract: StaffReservationLookup
+  unitCode?: string
+  floorName?: string
 }
 
-export default function CheckinSuccessView({ actionSuccess, contract }: CheckinSuccessViewProps) {
+export default function CheckinSuccessView({
+  actionSuccess,
+  contract,
+  unitCode,
+  floorName,
+}: CheckinSuccessViewProps) {
   const navigate = useNavigate()
-  const displayFloor = contract.floorName?.replace(/\s*\(.*?\)/g, "").trim() || contract.floorName
+  const activeUnit = unitCode || contract.unitCode
+  const activeFloor = floorName || contract.floorName
+  const displayFloor = activeFloor?.replace(/\s*\(.*?\)/g, "").trim() || activeFloor
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 py-4 animate-in fade-in duration-300">
@@ -33,28 +42,24 @@ export default function CheckinSuccessView({ actionSuccess, contract }: CheckinS
           đã được kích hoạt.
         </p>
 
-        <div className="mx-auto mt-6 grid max-w-lg grid-cols-2 gap-4 text-left">
-          <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+        <div className="mx-auto mt-6 grid max-w-lg grid-cols-2 gap-4">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200/80 bg-white/80 p-4 text-center shadow-xs dark:border-slate-800 dark:bg-slate-900">
             <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
               Ô kho bàn giao
             </span>
             <p className="mt-1 font-mono text-xl font-black text-blue-600 dark:text-blue-400">
-              {contract.unitCode}
+              {activeUnit}
             </p>
-            {displayFloor && (
-              <p className="text-xs text-muted mt-0.5">{displayFloor}</p>
-            )}
           </div>
 
-          <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200/80 bg-white/80 p-4 text-center shadow-xs dark:border-slate-800 dark:bg-slate-900">
             <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
               Bàn giao phương thức mở kho
             </span>
-            <p className="mt-1 text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+            <p className="mt-2 flex items-center justify-center gap-1.5 text-sm font-bold text-emerald-600 dark:text-emerald-400">
               <KeyRoundIcon className="size-4 shrink-0" />
               <span>Chìa khóa cơ vật lý</span>
             </p>
-            <p className="text-xs text-muted mt-0.5">Đã bàn giao chìa khóa cho khách</p>
           </div>
         </div>
 

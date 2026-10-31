@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+﻿import { useState, useMemo } from "react"
 import { createPortal } from "react-dom"
 import { toast } from "sonner"
 import {
@@ -470,25 +470,22 @@ export default function BomPricingPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Khung Bảng Giá & Phụ Phí Điều Hành */}
-      <div className="bg-white/90 dark:bg-slate-950/75 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-slate-200/90 dark:border-blue-500/20 shadow-sm dark:shadow-xl space-y-6 transition-colors">
-        {/* Header điều phối */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800/80 pb-5">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400">
-                <SlidersHorizontal className="size-5" />
-              </span>
-              <h3 className="font-black text-base uppercase text-slate-900 dark:text-white tracking-wide">
-                BẢNG GIÁ THUÊ &amp; BIỂU PHÍ HỆ THỐNG
-              </h3>
-            </div>
-          </div>
+    <div className="space-y-4">
+      {/* Tiêu đề trang - Chuẩn Staff & Manager */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            <SlidersHorizontal className="size-5 text-blue-600 dark:text-blue-400" />
+            <span>Khung giá thuê &amp; Biểu phí dịch vụ hệ thống</span>
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Biểu giá thuê kho tiêu chuẩn, tỷ lệ phụ phí kho máy lạnh và các chính sách phí dịch vụ toàn chuỗi
+          </p>
         </div>
+      </div>
 
-        {/* 1. KHUNG GIÁ THUÊ 4 SIZE KHO */}
-        <div className="space-y-4">
+      {/* 1. KHUNG GIÁ THUÊ 4 SIZE KHO */}
+      <div className="card-box rounded-2xl border border-slate-200/80 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90 p-5 shadow-sm space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h4 className="font-black text-xs uppercase text-slate-800 dark:text-slate-200 tracking-wider flex items-center gap-2">
@@ -500,10 +497,10 @@ export default function BomPricingPage() {
 
           {/* GIAO DIỆN DẠNG BẢNG NGANG (HORIZONTAL TABLE FORMAT - VỪA VẶN 100% KHÔNG CUỘN) */}
           <div className="rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-md overflow-hidden">
-            <table className="w-full text-left text-xs border-collapse table-auto">
+            <table className="w-full text-center text-sm border-collapse table-auto">
               <thead>
-                <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 dark:bg-slate-900 dark:border-blue-500/30 dark:text-blue-400 uppercase font-bold text-[11px] sm:text-xs tracking-wider">
-                  <th className="py-3 px-3 sm:px-4 text-left">LOẠI KHO / SIZE</th>
+                <tr className="bg-slate-50/90 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+                  <th className="py-3 px-3 sm:px-4 text-center">LOẠI KHO / SIZE</th>
                   <th className="py-3 px-2 sm:px-3 text-center">GIÁ THEO NGÀY</th>
                   <th className="py-3 px-2 sm:px-3 text-center">GIÁ THEO THÁNG</th>
                   <th className="py-3 px-2 sm:px-3 text-center">PHỤ PHÍ KHO MÁT</th>
@@ -516,8 +513,8 @@ export default function BomPricingPage() {
                   return (
                     <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/60 transition">
                       {/* CỘT 1: SIZE & TÊN LOẠI KHO */}
-                      <td className="py-3 px-3 sm:px-4 text-left">
-                        <span className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm">
+                      <td className="py-3 px-3 sm:px-4 whitespace-nowrap align-middle text-center">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
                           {item.name}
                         </span>
                       </td>
@@ -568,10 +565,10 @@ export default function BomPricingPage() {
               </tbody>
             </table>
           </div>
-        </div>
+      </div>
 
-        {/* 2. BIỂU PHÍ PHẠT QUÁ HẠN, GIẢM GIÁ & BỒI THƯỜNG */}
-        <div className="space-y-4 pt-6 border-t border-slate-200/80 dark:border-slate-800">
+      {/* 2. BIỂU PHÍ PHẠT QUÁ HẠN, GIẢM GIÁ & BỒI THƯỜNG */}
+      <div className="card-box rounded-2xl border border-slate-200/80 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90 p-5 shadow-sm space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <h4 className="font-black text-xs uppercase text-slate-800 dark:text-slate-200 tracking-wider flex items-center gap-2">
@@ -581,7 +578,7 @@ export default function BomPricingPage() {
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
-                <Search className="size-3.5 absolute left-3 top-3 text-slate-400" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Tìm kiếm khoản phí..."
@@ -626,13 +623,13 @@ export default function BomPricingPage() {
 
           {/* Dạng bảng cột cho từng khoản phí */}
           <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-md">
-            <table className="w-full text-xs border-collapse">
+            <table className="w-full text-center text-sm border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-800 dark:bg-slate-900/90 uppercase font-black dark:text-slate-300 text-[10px]">
+                <tr className="bg-slate-50/90 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
                   <th className="p-3.5 text-left">Tên Biểu Phí &amp; Chính Sách</th>
                   <th className="p-3.5 text-center">Phân Loại Danh Mục</th>
                   <th className="p-3.5 text-center">Hình Thức Áp Dụng</th>
-                  <th className="p-3.5 text-right">Mức Phí Áp Dụng</th>
+                  <th className="p-3.5 text-center">Mức Phí Áp Dụng</th>
                   <th className="p-3.5 text-center">Thao Tác</th>
                 </tr>
               </thead>
@@ -662,8 +659,8 @@ export default function BomPricingPage() {
                       className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition"
                     >
                       {/* Tên biểu phí */}
-                      <td className="p-3.5 text-left">
-                        <div className="font-extrabold text-slate-900 dark:text-white text-xs">{sc.name}</div>
+                      <td className="p-3.5 whitespace-nowrap align-middle text-center">
+                        <div className="font-semibold text-slate-800 dark:text-slate-200 text-sm">{sc.name}</div>
                         {sc.note && (
                           <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-normal">
                             {sc.note}
@@ -684,7 +681,7 @@ export default function BomPricingPage() {
                       </td>
 
                       {/* Mức phí áp dụng */}
-                      <td className="p-3.5 text-right font-mono font-bold text-slate-900 dark:text-slate-200 text-xs sm:text-sm">
+                      <td className="p-3.5 whitespace-nowrap align-middle text-center font-mono font-semibold text-slate-800 dark:text-slate-200 text-sm">
                         {sc.rate}
                       </td>
 
@@ -714,7 +711,6 @@ export default function BomPricingPage() {
               Không tìm thấy biểu phí hoặc phụ thu nào phù hợp.
             </div>
           )}
-        </div>
       </div>
 
       {/* MODAL 1: CHỈNH SỬA BẢNG GIÁ SIZE S/M/L/XL - PORTAL RA BODY TRÁNH TRỒI LỆCH MÀN HÌNH */}
