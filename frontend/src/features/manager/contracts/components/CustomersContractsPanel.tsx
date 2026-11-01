@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { CheckCircle2Icon, GavelIcon } from "lucide-react"
+import { CheckCircle2Icon, GavelIcon, HourglassIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -21,24 +21,29 @@ import { listFacilityContracts } from "../api/contractApi"
 import {
   CONTRACT_STATUS_LABEL,
   filterContracts,
+  forfeitState,
   isExpiringSoon,
-  overdueDays,
   RENEWAL_WINDOW_DAYS,
   type ContractFilter,
 } from "../contractRules"
 import type { ContractStatus, FacilityContract } from "../types"
 import { ContractStatusBadge, DaysLeft } from "./ContractBadges"
+import ContractDetailDialog from "./ContractDetailDialog"
 import ForfeitProcessedSheet from "./ForfeitProcessedSheet"
 
 const EMPTY_FILTER: ContractFilter = { query: "", status: "ALL", payment: "ALL", expiringSoon: false }
 
-/** Manager › Khách & hợp đồng: theo dõi khách, hợp đồng, thời hạn thuê, công nợ và thanh lý tài sản quá hạn */
+/**
+ * Manager › Quản lí hợp đồng: theo dõi khách, hợp đồng, thời hạn thuê và thanh lý tài sản quá hạn.
+ * Bấm mã hợp đồng để xem chi tiết (tiền cọc, tiến độ trả kho, phạt / truy thu).
+ */
 function CustomersContractsPanel() {
   const ctx = useMemo(() => getManagerContext(), [])
   const today = todayInVietnam()
   const [reloadCount, setReloadCount] = useState(0)
   const [filter, setFilter] = useState<ContractFilter>(EMPTY_FILTER)
   const [forfeiting, setForfeiting] = useState<FacilityContract | null>(null)
+  const [viewing, setViewing] = useState<FacilityContract | null>(null)
   const { data, error, isLoading } = useAsyncData(`contracts#${reloadCount}`, () => listFacilityContracts(ctx))
   const all = data ?? []
   const rows = filterContracts(all, filter, today)
@@ -117,10 +122,8 @@ function CustomersContractsPanel() {
         }
       >
         {slice.rows.map((c) => {
-          const isEligibleForfeit =
-            (c.status === "FORFEITED" && !c.forfeitProcessed) ||
-            (c.status === "OVERDUE" && overdueDays(c, today) >= 30 && !c.forfeitProcessed)
-          const isForfeitDone = Boolean(c.forfeitProcessed)
+          // BE chỉ nhận xác nhận thanh lý khi hợp đồng đã FORFEITED; quá hạn đủ 30 ngày mà chưa chuyển thì chờ hệ thống
+          const forfeit = forfeitState(c, today)
 
           return (
             <tr key={c.contractId} className="border-b last:border-0">
@@ -128,7 +131,16 @@ function CustomersContractsPanel() {
                 <p className="text-title font-bold">{c.customerName}</p>
                 <p className="text-muted">{c.customerPhone}</p>
               </td>
-              <td className="text-title px-4 py-3 font-mono font-semibold whitespace-nowrap text-center">{c.contractCode}</td>
+              <td className="px-4 py-3 text-center whitespace-nowrap">
+                <button
+                  type="button"
+                  onClick={() => setViewing(c)}
+                  aria-label={`Xem chi tiết hợp đồng ${c.contractCode}`}
+                  className="cursor-pointer font-mono font-semibold text-blue-600 underline-offset-2 hover:underline dark:text-blue-400"
+                >
+                  {c.contractCode}
+                </button>
+              </td>
               <td className="text-title px-4 py-3 font-mono whitespace-nowrap text-center">{c.unitCode}</td>
               <td className="text-title px-4 py-3 whitespace-nowrap text-center">
                 {formatDate(c.startDate)} → {formatDate(c.endDate)}
@@ -143,7 +155,7 @@ function CustomersContractsPanel() {
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-center">
                 <div className="flex justify-center">
-                  {isEligibleForfeit ? (
+                  {forfeit === "READY" ? (
                     <Button
                       variant="outline"
                       size="sm"
@@ -153,10 +165,18 @@ function CustomersContractsPanel() {
                       <GavelIcon className="size-3.5" />
                       Thanh lý tài sản
                     </Button>
-                  ) : isForfeitDone ? (
+                  ) : forfeit === "DONE" ? (
                     <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2Icon className="size-4 shrink-0" />
                       Đã thanh lý
+                    </span>
+                  ) : forfeit === "WAITING" ? (
+                    <span
+                      className="flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-amber-300"
+                      title="Hệ thống chuyển sang Tịch thu lúc 00:00, sau đó mới xác nhận thanh lý được"
+                    >
+                      <HourglassIcon className="size-4 shrink-0" />
+                      Chờ chuyển tịch thu
                     </span>
                   ) : (
                     <span className="text-muted text-xs">—</span>
@@ -169,6 +189,19 @@ function CustomersContractsPanel() {
       </TableCard>
 
       {!isLoading && <Pagination {...pagination} unit="hợp đồng" />}
+
+      {viewing && (
+        <ContractDetailDialog
+          key={viewing.contractId}
+          contract={viewing}
+          today={today}
+          onClose={() => setViewing(null)}
+          onForfeit={(c) => {
+            setViewing(null)
+            setForfeiting(c)
+          }}
+        />
+      )}
 
       {forfeiting && (
         <ForfeitProcessedSheet

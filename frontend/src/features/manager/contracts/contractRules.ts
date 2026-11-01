@@ -37,6 +37,20 @@ export const CHECKOUT_STAGE_LABEL: Record<CheckoutStage, string> = {
   HANDED_OVER: "Đã bàn giao kho",
 }
 
+/**
+ * Tiến độ giữ / trả kho suy ra từ trạng thái hợp đồng (trường checkoutStage của API chưa phản ánh đúng
+ * tiến độ nên ngăn chi tiết không dùng).
+ */
+export const CHECKOUT_PROGRESS_LABEL: Record<ContractStatus, string> = {
+  PENDING_CHECKIN: "Khách chưa nhận kho",
+  ACTIVE: "Khách đang giữ kho",
+  OVERDUE: "Khách đang giữ kho (đã quá hạn)",
+  TERMINATED: "Đã bàn giao kho, chờ hoàn cọc",
+  COMPLETED: "Đã bàn giao kho, đã hoàn cọc",
+  FORFEITED: "Cơ sở thu hồi kho, thanh lý tài sản",
+  CANCELLED: "Hủy trước khi nhận kho",
+}
+
 export const FEE_TYPE_LABEL: Record<FeeType, string> = {
   PEN: "Phạt trễ hạn",
   CMP: "Truy thu đền bù",
@@ -70,6 +84,30 @@ export function needsForfeitHandling(
 /** Chỉ hợp đồng BE đã chuyển FORFEITED mới được xác nhận (BE trả 409 với trạng thái khác) */
 export function canConfirmForfeitProcessed(contract: Pick<FacilityContract, "status" | "forfeitProcessed">): boolean {
   return contract.status === "FORFEITED" && !contract.forfeitProcessed
+}
+
+/**
+ * Tình trạng thanh lý để hiện nút / nhãn:
+ * - READY: BE đã chuyển FORFEITED, Manager xác nhận được;
+ * - WAITING: quá hạn đủ 30 ngày nhưng tác vụ 00:00 của BE chưa chuyển FORFEITED (BE sẽ từ chối nếu xác nhận lúc này);
+ * - DONE: đã xác nhận xử lý tài sản; NONE: không liên quan.
+ */
+export type ForfeitState = "NONE" | "WAITING" | "READY" | "DONE"
+
+export function forfeitState(
+  contract: Pick<FacilityContract, "status" | "endDate" | "forfeitProcessed">,
+  today: string
+): ForfeitState {
+  if (contract.forfeitProcessed) return "DONE"
+  if (contract.status === "FORFEITED") return "READY"
+  if (overdueDays(contract, today) >= FORFEIT_AFTER_DAYS) return "WAITING"
+  return "NONE"
+}
+
+/** Tổng các khoản phí theo trạng thái (đã thu / chưa thu / đã hủy) cho ngăn chi tiết hợp đồng */
+export function feeTotals(contract: Pick<FacilityContract, "fees">): { paid: number; unpaid: number; cancelled: number } {
+  const sum = (status: string) => contract.fees.filter((f) => f.status === status).reduce((s, f) => s + f.amount, 0)
+  return { paid: sum("PAID"), unpaid: sum("UNPAID"), cancelled: sum("CANCELLED") }
 }
 
 export const FORFEIT_NOTE_MIN = 10

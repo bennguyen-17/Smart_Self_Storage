@@ -47,4 +47,8 @@ export interface FacilityContract {
   /** Hợp đồng FORFEITED: Manager đã xác nhận cắt khóa, xử lý xong tài sản (ô kho chuyển bảo trì) */
   forfeitProcessed?: boolean
   fees: FeeInvoice[]
+  /** Chưa có trong API (đã nhờ BE thêm 01/11); có thì ngăn chi tiết tự hiện */
+  rentalAmount?: number | null
+  rentalType?: "DAILY" | "MONTHLY" | null
+  reservationCode?: string | null
 }
