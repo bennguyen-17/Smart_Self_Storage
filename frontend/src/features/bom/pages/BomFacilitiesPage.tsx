@@ -111,6 +111,57 @@ export default function BomFacilitiesPage() {
     return fromBreakdown || fromFacList || null
   }, [facilityId, facilities, chainOverview])
 
+  const [selectedFacilityUnits, setSelectedFacilityUnits] = useState<any[]>([])
+  const [isLoadingSelectedUnits, setIsLoadingSelectedUnits] = useState(false)
+
+  useEffect(() => {
+    if (!facilityId || !activeFac) {
+      setSelectedFacilityUnits([])
+      return
+    }
+
+    let isMounted = true
+    setIsLoadingSelectedUnits(true)
+
+    const fetchUnits = async () => {
+      try {
+        let facId = Number(facilityId)
+        if (isNaN(facId) || facId <= 0) {
+          const match = facilityId.match(/\d+/)
+          facId = match ? parseInt(match[0], 10) : 1
+        }
+
+        const res: any = await apiClient
+          .get("/units/filter", { params: { facilityId: facId } })
+          .catch(() => null)
+
+        const raw = Array.isArray(res) ? res : res?.data || []
+        if (isMounted) {
+          if (raw.length > 0) {
+            setSelectedFacilityUnits(raw)
+          } else {
+            const facCode = (activeFac as any).facilityCode || (activeFac as any).code || `FAC-${facId}`
+            const [u1, u2, u3] = await Promise.all([
+              getStorageUnits(facCode, 1).catch(() => ({ data: [] })),
+              getStorageUnits(facCode, 2).catch(() => ({ data: [] })),
+              getStorageUnits(facCode, 3).catch(() => ({ data: [] })),
+            ])
+            const combined = [...(u1?.data || []), ...(u2?.data || []), ...(u3?.data || [])]
+            setSelectedFacilityUnits(combined)
+          }
+        }
+      } catch (err) {
+        console.warn("Lỗi tải ô kho cơ sở:", err)
+      } finally {
+        if (isMounted) setIsLoadingSelectedUnits(false)
+      }
+    }
+
+    fetchUnits()
+    return () => {
+      isMounted = false
+    }
+  }, [facilityId, activeFac])
 
   // State bộ lọc thời gian doanh thu bảng cơ sở: "this_month" (mặc định), "last_3_months", "all_time"
   const [revenuePeriod, setRevenuePeriod] = useState<"this_month" | "last_3_months" | "all_time">("this_month")
@@ -553,6 +604,141 @@ export default function BomFacilitiesPage() {
                 maintenanceUnits={maintUnits}
                 occupancyRate={occRate}
               />
+
+              {/* BẢNG BÁO CÁO CƠ CẤU Ô KHO THEO SIZE */}
+              <div className="rounded-2xl border border-slate-200/90 bg-white/90 dark:border-slate-800/90 dark:bg-slate-900/60 p-5 sm:p-6 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white tracking-wider flex items-center gap-2">
+                      <span>BÁO CÁO CƠ CẤU Ô KHO THEO SIZE &amp; LOẠI HÌNH</span>
+                      <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold normal-case">
+                        ({periodLabel})
+                      </span>
+                    </h3>
+                  </div>
+                </div>
+
+                {isLoadingSelectedUnits ? (
+                  <div className="p-8 text-center text-slate-500 dark:text-slate-400 font-bold space-y-2">
+                    <div className="size-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+                    <p className="text-xs">Đang tổng hợp cơ cấu ô kho...</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table className="w-full text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-800 dark:bg-slate-950/90 dark:text-slate-400 uppercase font-black text-[10px]">
+                          <th className="p-3 text-center whitespace-nowrap">Phân Loại / Size</th>
+                          <th className="p-3 text-center whitespace-nowrap">Quy Cách Sàn</th>
+                          <th className="p-3 text-center whitespace-nowrap">Tổng Số Ô</th>
+                          <th className="p-3 text-center whitespace-nowrap">Đang Thuê</th>
+                          <th className="p-3 text-center whitespace-nowrap">Còn Trống</th>
+                          <th className="p-3 text-center whitespace-nowrap">Giữ Chỗ</th>
+                          <th className="p-3 text-center whitespace-nowrap">Bảo Trì</th>
+                          <th className="p-3 text-center whitespace-nowrap">Tỷ Lệ Lấp Đầy</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80 font-semibold text-slate-700 dark:text-slate-300">
+                        {(() => {
+                          const SIZES = [
+                            { size: "S", name: "Size S (Tủ Cá Nhân)", dim: "1.0m × 1.0m", defaultNorm: 600000 },
+                            { size: "M", name: "Size M (Phòng Vừa)", dim: "1.5m × 2.0m", defaultNorm: 1200000 },
+                            { size: "L", name: "Size L (Phòng Lớn)", dim: "2.0m × 3.0m", defaultNorm: 2400000 },
+                            { size: "XL", name: "Size XL (Kho Doanh Nghiệp)", dim: "2.5m × 4.0m", defaultNorm: 4000000 },
+                          ]
+
+                          let grandTotal = 0
+                          let grandOccupied = 0
+                          let grandAvailable = 0
+                          let grandHold = 0
+                          let grandMaintenance = 0
+
+                          const rows = SIZES.map((cfg) => {
+                            const list = selectedFacilityUnits.filter((u) => {
+                              const typeStr = (u.typeName || u.typeLabel || "").toUpperCase()
+                              const sz = (u.size || "").toUpperCase()
+                              const code = (u.unitCode || u.unitId || "").toUpperCase()
+                              if (cfg.size === "XL") return typeStr.includes("XL") || sz === "XL" || sz.includes("XL") || code.includes("-XL")
+                              if (cfg.size === "S") return (typeStr.includes("SIZE S") || sz === "S" || code.includes("-S")) && !typeStr.includes("XL") && !code.includes("-XL")
+                              if (cfg.size === "M") return typeStr.includes("SIZE M") || sz === "M" || code.includes("-M")
+                              if (cfg.size === "L") return (typeStr.includes("SIZE L") || sz === "L" || code.includes("-L")) && !typeStr.includes("XL") && !code.includes("-XL")
+                              return false
+                            })
+
+                            const total = list.length
+                            let occupied = list.filter((u) => {
+                              const st = (u.status || "").toUpperCase()
+                              return st === "OCCUPIED" || st === "RENTED"
+                            }).length
+                            let available = list.filter((u) => (u.status || "").toUpperCase() === "AVAILABLE").length
+                            let hold = list.filter((u) => {
+                              const st = (u.status || "").toUpperCase()
+                              return st === "HOLD" || st === "RESERVED"
+                            }).length
+                            const maintenance = list.filter((u) => (u.status || "").toUpperCase() === "MAINTENANCE").length
+
+                            const occRate = total > 0 ? Math.round((occupied / total) * 100) : 0
+
+                            grandTotal += total
+                            grandOccupied += occupied
+                            grandAvailable += available
+                            grandHold += hold
+                            grandMaintenance += maintenance
+
+                            return (
+                              <tr key={cfg.size} className="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
+                                <td className="p-3 text-center whitespace-nowrap">
+                                  <div className="font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">{cfg.name}</div>
+                                </td>
+                                <td className="p-3 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{cfg.dim}</td>
+                                <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{total} ô</td>
+                                <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{occupied}</td>
+                                <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{available}</td>
+                                <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{hold}</td>
+                                <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{maintenance}</td>
+                                <td className="p-3 text-center whitespace-nowrap">
+                                  <div className="flex items-center justify-center gap-2">
+                                    <span className="font-mono font-bold text-slate-900 dark:text-white">{occRate}%</span>
+                                    <div className="w-14 bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                      <div
+                                        className="h-full bg-blue-600 dark:bg-slate-300 rounded-full"
+                                        style={{ width: `${Math.min(occRate, 100)}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )
+                          })
+
+                          const grandRate =
+                            grandTotal > 0
+                              ? Number(((grandOccupied / grandTotal) * 100).toFixed(1)).toString().replace(/\.0$/, "")
+                              : "0"
+
+                          return (
+                            <>
+                              {rows}
+                              <tr className="bg-slate-100 dark:bg-slate-950 font-black border-t-2 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
+                                <td className="p-3 text-center uppercase text-slate-900 dark:text-white tracking-wider whitespace-nowrap">
+                                  TỔNG CỘNG CƠ CẤU
+                                </td>
+                                <td className="p-3 text-center text-slate-400 font-mono whitespace-nowrap">—</td>
+                                <td className="p-3 text-center text-blue-600 dark:text-blue-400 font-mono whitespace-nowrap">{grandTotal} ô</td>
+                                <td className="p-3 text-center text-emerald-600 dark:text-emerald-400 font-mono whitespace-nowrap">{grandOccupied}</td>
+                                <td className="p-3 text-center text-slate-600 dark:text-slate-300 font-mono whitespace-nowrap">{grandAvailable}</td>
+                                <td className="p-3 text-center text-amber-600 dark:text-amber-400 font-mono whitespace-nowrap">{grandHold}</td>
+                                <td className="p-3 text-center text-rose-600 dark:text-rose-400 font-mono whitespace-nowrap">{grandMaintenance}</td>
+                                <td className="p-3 text-center text-blue-600 dark:text-blue-400 font-mono whitespace-nowrap">{grandRate}%</td>
+                              </tr>
+                            </>
+                          )
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           )
         })()
