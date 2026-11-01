@@ -45,7 +45,7 @@ public class Payment {
     private String status = "PENDING"; // PENDING, PARTIALLY_PAID, PAID, OVERDUE, CANCELLED
 
     @Column(length = 50)
-    private String paymentMethod; // VIETQR, VNPAY, MOMO, BANK_TRANSFER, CASH
+    private String paymentMethod; // BANK_TRANSFER, CASH
 
     @Column(length = 100)
     private String transactionCode;

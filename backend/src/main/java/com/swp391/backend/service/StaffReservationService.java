@@ -837,12 +837,12 @@ public class StaffReservationService {
         String paymentMethod = switch (requestedMethod) {
             case "CASH", "" -> "CASH";
             case "TRANSFER", "BANK_TRANSFER" -> "BANK_TRANSFER";
-            case "VIETQR" -> "VIETQR";
+            case "VIETQR" -> "BANK_TRANSFER";
             default -> null;
         };
         if (paymentMethod == null) {
             return new CollectPenaltyResponse(false,
-                    "Phương thức thanh toán phải là CASH, BANK_TRANSFER hoặc VIETQR.");
+                    "Phương thức thanh toán phải là CASH hoặc BANK_TRANSFER.");
         }
 
 

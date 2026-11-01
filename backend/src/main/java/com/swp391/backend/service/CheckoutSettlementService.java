@@ -125,10 +125,15 @@ public class CheckoutSettlementService {
             }
         }
 
+        // BẮT BUỘC: Nếu còn nợ phạt trễ hạn -> Chặn không cho trả kho, bắt buộc khách phải nộp phạt tại quầy trước
+        if (unpaidPenalties.compareTo(BigDecimal.ZERO) > 0) {
+            return CheckoutPreviewResponse.error(String.format("Hợp đồng còn nợ phạt quá hạn %s VNĐ. Khách hàng phải thanh toán tiền phạt tại quầy trước khi làm thủ tục trả kho!", unpaidPenalties));
+        }
+
         BigDecimal damageAndCleaningFee = BigDecimal.ZERO; // Mặc định preview là 0, Staff sẽ nhập khi xác nhận
 
-        // Tổng khấu trừ theo thứ tự: Phạt UNPAID + Phí hư hại/vệ sinh
-        BigDecimal totalDeductions = unpaidPenalties.add(damageAndCleaningFee);
+        // Tổng khấu trừ: Chỉ bao gồm phí hư hại / vệ sinh (không cấn trừ phạt trễ hạn vào cọc)
+        BigDecimal totalDeductions = damageAndCleaningFee;
         // Tổng tiền có: (Tiền thuê chưa dùng × 50%) + Tiền cọc gốc
         BigDecimal totalCredits = unusedRentalRefund.add(depositAmount);
         // Số tiền quyết toán cuối cùng = Tổng tiền có - Tổng khấu trừ
@@ -149,6 +154,7 @@ public class CheckoutSettlementService {
         }
 
         CheckoutPreviewResponse resp = new CheckoutPreviewResponse();
+        resp.setSuccess(true);
         String resCode = res.getReservationCode();
         String displayCode = (resCode != null && !resCode.isBlank()) ? resCode : ("CTR-" + contract.getContractId());
         resp.setContractId(contract.getContractId());
@@ -237,7 +243,7 @@ public class CheckoutSettlementService {
         // Thong nhat nhom: Khong hoan lai tien thue chua dung khi tra kho som
         BigDecimal unusedRentalRefund = BigDecimal.ZERO;
 
-        // Lấy phạt quá hạn chưa nộp (UNPAID)
+        // Kiểm tra phạt quá hạn chưa nộp (Bắt buộc phải thu phạt trước tại quầy)
         List<Payment> payments = paymentRepository.findByContractId(contractId);
         BigDecimal unpaidPenalties = BigDecimal.ZERO;
         for (Payment p : payments) {
@@ -246,9 +252,17 @@ public class CheckoutSettlementService {
             }
         }
 
+        if (unpaidPenalties.compareTo(BigDecimal.ZERO) > 0) {
+            CheckoutConfirmResponse resp = new CheckoutConfirmResponse();
+            resp.setSuccess(false);
+            resp.setMessage(String.format("Hợp đồng còn nợ phạt quá hạn %s VNĐ. Vui lòng thu tiền phạt quá hạn tại quầy trước khi chốt biên bản trả kho!", unpaidPenalties));
+            return resp;
+        }
+
         BigDecimal damageFee = request.getDamageFee();
         BigDecimal cleaningFee = request.getCleaningFee();
-        BigDecimal totalDeductions = unpaidPenalties.add(damageFee).add(cleaningFee);
+        // Tổng khấu trừ: Chỉ bao gồm phí hư hại / vệ sinh (không cấn trừ phạt trễ hạn vào cọc)
+        BigDecimal totalDeductions = damageFee.add(cleaningFee);
         BigDecimal totalCredits = unusedRentalRefund.add(depositAmount);
         BigDecimal netAmount = totalCredits.subtract(totalDeductions);
 
@@ -292,7 +306,7 @@ public class CheckoutSettlementService {
             cmpPayment.setDueAt(LocalDateTime.now());
             cmpPayment.setStatus("PAID");
             cmpPayment.setPaymentStatus("SUCCESS");
-            cmpPayment.setPaymentMethod("COUNTER");
+            cmpPayment.setPaymentMethod("CASH");
             paymentRepository.save(cmpPayment);
         }
 

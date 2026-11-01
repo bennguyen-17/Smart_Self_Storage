@@ -172,6 +172,13 @@ public class ManagerContractController {
                     fees
             );
             response.setForfeitProcessed(c.isForfeitProcessed());
+            if (res.getRentalAmount() != null) {
+                response.setRentalAmount(res.getRentalAmount().doubleValue());
+            }
+            if (res.getRentalType() != null) {
+                response.setRentalType(res.getRentalType());
+            }
+            response.setReservationCode(res.getReservationCode());
             result.add(response);
         }
 

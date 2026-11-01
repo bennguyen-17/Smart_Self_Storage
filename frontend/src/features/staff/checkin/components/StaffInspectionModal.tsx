@@ -99,7 +99,13 @@ function Body({
             setDisplayContractCode(data.contractCode.trim())
           }
         })
-        .catch(() => {})
+        .catch((err: any) => {
+          const msg = err?.response?.data?.message || err?.message
+          if (msg) {
+            toast.error(msg)
+            onClose()
+          }
+        })
     }
   }, [target.contractId, target.reservationId])
 
@@ -128,7 +134,7 @@ function Body({
     damages.includes(item.id)
   ).reduce((sum, item) => sum + item.fee, 0)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const balance = deposit - totalDamage - unpaidPenalty
+  const balance = deposit - totalDamage
 
   useEffect(() => {
     if (balance >= 0) {
@@ -167,7 +173,7 @@ function Body({
               ? `Hư hại/vệ sinh: ${damages.join(", ")}`
               : "Ô kho sạch sẽ nguyên vẹn 100%",
           ticketId: target.ticketId || undefined,
-          refundPaymentMethod: "VIETQR",
+          refundPaymentMethod: "BANK_TRANSFER",
         })
       }
 

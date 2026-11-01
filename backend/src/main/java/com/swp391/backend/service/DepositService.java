@@ -142,7 +142,7 @@ public class DepositService {
         payment.setRemainingAmount(totalAmount);
         payment.setDueAt(LocalDateTime.now().plusMinutes(5));
         payment.setStatus("PENDING");
-        payment.setPaymentMethod("VIETQR");
+        payment.setPaymentMethod("BANK_TRANSFER");
         payment.setPaymentStatus("PENDING");
         payment = paymentRepository.save(payment);
 
@@ -231,7 +231,7 @@ public class DepositService {
         payment.setRemainingAmount(initialRentalAmount);
         payment.setStatus("PARTIALLY_PAID");
         payment.setPaymentStatus("SUCCESS");
-        payment.setPaymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod() : "VIETQR");
+        payment.setPaymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod() : "BANK_TRANSFER");
         payment.setTransactionCode(request.getTransactionCode() != null ? request.getTransactionCode() : "TXN_" + System.currentTimeMillis());
         payment.setGatewayTransactionId(request.getGatewayTransactionId());
         payment.setPaidAt(LocalDateTime.now());
