@@ -1,11 +1,10 @@
-﻿import { useState, useMemo } from "react"
+import { useState, useMemo } from "react"
 import { createPortal } from "react-dom"
 import { toast } from "sonner"
 import {
   SlidersHorizontal,
   Plus,
   Edit3,
-  Search,
   CheckCircle,
   X,
   Trash2,
@@ -578,7 +577,6 @@ export default function BomPricingPage() {
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
-                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Tìm kiếm khoản phí..."
@@ -586,6 +584,7 @@ export default function BomPricingPage() {
                   onChange={(e) => setSearchSurcharge(e.target.value)}
                   className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 dark:border-slate-700 dark:bg-slate-950 text-xs font-bold dark:text-white dark:placeholder-slate-500"
                 />
+                <i className="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 dark:text-slate-400 z-10"></i>
               </div>
               <button
                 type="button"

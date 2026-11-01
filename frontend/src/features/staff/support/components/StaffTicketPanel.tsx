@@ -8,7 +8,6 @@ import {
   IdCardIcon,
   InfoIcon,
   KeyRoundIcon,
-  SearchIcon,
   UserCheckIcon,
   WrenchIcon,
 } from "lucide-react"
@@ -405,7 +404,6 @@ function StaffTicketPanel() {
         <div className="card-box flex flex-col justify-between gap-3 rounded-2xl border p-4 shadow-sm md:flex-row md:items-center">
           <div className="flex max-w-xl flex-1 space-x-2">
             <div className="relative flex-1">
-              <SearchIcon className="pointer-events-none absolute top-2.5 left-3.5 size-4 text-muted" />
               <input
                 type="text"
                 value={searchQuery}
@@ -413,6 +411,7 @@ function StaffTicketPanel() {
                 placeholder="Tìm theo Mã Ticket, Tên khách hàng, SĐT hoặc Mã kho..."
                 className="inner-box w-full rounded-xl border border-slate-200/80 px-3.5 py-2 pl-9 text-xs font-normal outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700"
               />
+              <i className="fa-solid fa-magnifying-glass pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 dark:text-slate-400 z-10"></i>
             </div>
             <button
               type="button"

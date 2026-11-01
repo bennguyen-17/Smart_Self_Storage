@@ -2,7 +2,7 @@
 // để mọi trang có cùng cách trình bày (cùng ô lọc, cùng bảng, cùng trạng thái đang tải / trống / lỗi).
 
 import type { ReactNode } from "react"
-import { ChevronLeftIcon, ChevronRightIcon, InboxIcon, RotateCwIcon, SearchIcon } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon, InboxIcon, RotateCwIcon } from "lucide-react"
 import { cn } from "cn"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -33,10 +33,6 @@ export function SearchFilter({
     <label className="flex min-w-56 flex-1 flex-col gap-1 text-xs font-bold">
       <span className="text-title">{label}</span>
       <span className="relative">
-        <SearchIcon
-          aria-hidden="true"
-          className="text-muted pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2"
-        />
         <input
           type="search"
           value={value}
@@ -44,6 +40,7 @@ export function SearchFilter({
           placeholder={placeholder}
           className="inner-box text-title w-full rounded-lg border py-1.5 pr-2.5 pl-8 text-xs font-semibold outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500"
         />
+        <i aria-hidden="true" className="fa-solid fa-magnifying-glass pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-xs text-slate-500 dark:text-slate-400 z-10"></i>
       </span>
     </label>
   )
