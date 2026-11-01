@@ -304,9 +304,9 @@ export default function BomFacilitiesPage() {
     }
   }
 
-  // Quy mô chuẩn hóa: Layout A = 46 kho, Layout B = 15 kho
+  // Quy mô chuẩn hóa: Layout A = 45 kho (3 tầng), Layout B = 15 kho (2 tầng)
   const computedTotalUnits = useMemo(() => {
-    return newFacLayout === "A" ? 46 : 15
+    return newFacLayout === "B" ? 15 : 45
   }, [newFacLayout])
 
   const [internalAccounts, setInternalAccounts] = useState<InternalAccount[]>([])
@@ -1016,8 +1016,8 @@ export default function BomFacilitiesPage() {
                     const isLayoutB =
                       fac.layoutType === "Layout B" ||
                       fac.layoutType === "B" ||
-                      [2, 4, 5, 7].includes(Number(fac.id))
-                    const stdUnits = isLayoutB ? 15 : 46
+                      [2, 4, 5, 7, 8].includes(Number(fac.id))
+                    const stdUnits = isLayoutB ? 15 : 45
                     const cleanName = (fac.name || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
                     const cleanManager = (fac.managerName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
                     const rented = fac.occupied ?? fac.rentedUnits ?? 0
@@ -1382,11 +1382,17 @@ export default function BomFacilitiesPage() {
                     <span>
                       {selectedFacility.layoutType === "Layout B" ||
                       selectedFacility.layoutType === "B" ||
-                      [2, 4, 5, 7].includes(Number(selectedFacility.id))
+                      [2, 4, 5, 7, 8].includes(Number(selectedFacility.id))
                         ? "15 Ô kho"
-                        : "46 Ô kho"}
+                        : "45 Ô kho"}
                     </span>
-                    <span className="text-[10px] text-slate-500 font-normal">3 Tầng Chuẩn</span>
+                    <span className="text-[10px] text-slate-500 font-normal">
+                      {selectedFacility.layoutType === "Layout B" ||
+                      selectedFacility.layoutType === "B" ||
+                      [2, 4, 5, 7, 8].includes(Number(selectedFacility.id))
+                        ? "2 Tầng Chuẩn"
+                        : "3 Tầng Chuẩn"}
+                    </span>
                   </div>
                 </div>
                 <div>
@@ -1502,7 +1508,10 @@ export default function BomFacilitiesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Card Layout A */}
                   <div
-                    onClick={() => setNewFacLayout("A")}
+                    onClick={() => {
+                      setNewFacLayout("A")
+                      setNewFacFloors(3)
+                    }}
                     className={`p-3.5 rounded-2xl border transition-all cursor-pointer relative ${
                       newFacLayout === "A"
                         ? "bg-blue-500/10 border-blue-500 shadow-md shadow-blue-500/10 ring-1 ring-blue-500"
@@ -1516,7 +1525,7 @@ export default function BomFacilitiesPage() {
                     <div className="space-y-1.5 text-[10px] bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
                       <div className="flex items-center justify-between">
                         <span className="text-slate-400 shrink-0">Quy mô:</span>
-                        <span className="font-bold text-blue-300 font-mono">46 Ô Kho (3 Tầng)</span>
+                        <span className="font-bold text-blue-300 font-mono">45 Ô Kho (3 Tầng)</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-slate-400 shrink-0">Kích thước:</span>
@@ -1525,7 +1534,7 @@ export default function BomFacilitiesPage() {
                       <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
                         <span className="text-slate-400 shrink-0 whitespace-nowrap">Cơ cấu tầng:</span>
                         <span className="text-slate-200 font-medium whitespace-nowrap text-right">
-                          Trệt (10 XL) + 2 Lầu (36 ô S, M, L)
+                          Trệt (10 XL) + 2 Lầu (35-36 ô S, M, L)
                         </span>
                       </div>
                     </div>
@@ -1533,7 +1542,10 @@ export default function BomFacilitiesPage() {
 
                   {/* Card Layout B */}
                   <div
-                    onClick={() => setNewFacLayout("B")}
+                    onClick={() => {
+                      setNewFacLayout("B")
+                      setNewFacFloors(2)
+                    }}
                     className={`p-3.5 rounded-2xl border transition-all cursor-pointer relative ${
                       newFacLayout === "B"
                         ? "bg-amber-500/10 border-amber-400 shadow-md shadow-amber-500/10 ring-1 ring-amber-400"
@@ -1547,7 +1559,7 @@ export default function BomFacilitiesPage() {
                     <div className="space-y-1.5 text-[10px] bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
                       <div className="flex items-center justify-between">
                         <span className="text-slate-400 shrink-0">Quy mô:</span>
-                        <span className="font-black text-amber-300 font-mono">15 Ô Kho (3 Tầng)</span>
+                        <span className="font-black text-amber-300 font-mono">15 Ô Kho (2 Tầng)</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-slate-400 shrink-0">Kích thước:</span>
@@ -1556,7 +1568,7 @@ export default function BomFacilitiesPage() {
                       <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
                         <span className="text-slate-400 shrink-0 whitespace-nowrap">Cơ cấu tầng:</span>
                         <span className="text-slate-200 font-medium whitespace-nowrap text-right">
-                          Trệt (5 XL) + 2 Lầu (10 ô S, M, L)
+                          Trệt (5 XL) + 1 Lầu (10 ô S, M, L)
                         </span>
                       </div>
                     </div>

@@ -2,12 +2,12 @@ import apiClient, { isMockMode } from '@/lib/apiClient';
 
 const MOCK_BRANCHES = [
   { id: 'HN01', code: 'HN01', name: 'SmartStorage Cầu Giấy', address: 'Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội', floors: 3, layoutType: 'A', managerName: 'Trần Văn Quân', status: 'ACTIVE' },
-  { id: 'HN02', code: 'HN02', name: 'SmartStorage Thanh Xuân', address: 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội', floors: 3, layoutType: 'B', managerName: 'Hoàng Minh Đức', status: 'ACTIVE' },
+  { id: 'HN02', code: 'HN02', name: 'SmartStorage Thanh Xuân', address: 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội', floors: 2, layoutType: 'B', managerName: 'Hoàng Minh Đức', status: 'ACTIVE' },
   { id: 'HCM01', code: 'HCM01', name: 'SmartStorage Quận 1', address: 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM', floors: 3, layoutType: 'A', managerName: 'Lê Thị Thu Trang', status: 'ACTIVE' },
-  { id: 'HCM02', code: 'HCM02', name: 'SmartStorage Quận 7', address: 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM', floors: 3, layoutType: 'B', managerName: 'Đỗ Đức Anh', status: 'ACTIVE' },
-  { id: 'HCM03', code: 'HCM03', name: 'SmartStorage Thủ Đức', address: 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM', floors: 3, layoutType: 'B', managerName: 'Vũ Đình Trọng', status: 'ACTIVE' },
+  { id: 'HCM02', code: 'HCM02', name: 'SmartStorage Quận 7', address: 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM', floors: 2, layoutType: 'B', managerName: 'Đỗ Đức Anh', status: 'ACTIVE' },
+  { id: 'HCM03', code: 'HCM03', name: 'SmartStorage Thủ Đức', address: 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM', floors: 2, layoutType: 'B', managerName: 'Vũ Đình Trọng', status: 'ACTIVE' },
   { id: 'DN01', code: 'DN01', name: 'SmartStorage Hải Châu', address: 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng', floors: 3, layoutType: 'A', managerName: 'Nguyễn Thanh Tùng', status: 'ACTIVE' },
-  { id: 'CT01', code: 'CT01', name: 'SmartStorage Ninh Kiều', address: 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', floors: 3, layoutType: 'B', managerName: 'Bùi Tuấn Kiệt', status: 'ACTIVE' }
+  { id: 'CT01', code: 'CT01', name: 'SmartStorage Ninh Kiều', address: 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', floors: 2, layoutType: 'B', managerName: 'Bùi Tuấn Kiệt', status: 'ACTIVE' }
 ];
 
 const heldUnitsState: Record<string, string> = {};
@@ -46,14 +46,20 @@ export const releaseUnit = (unitId: string) => {
 
 const generateMockUnits = (facilityCode: string, currentFloor: number) => {
   const prefix = facilityCode.replace('-', '');
+  const isLayoutB = ['HN02', 'HCM02', 'HCM03', 'CT01', 'BRVT01', 'HN-02', 'HCM-02', 'HCM-03', 'CT-01', 'BRVT-01'].includes(facilityCode.toUpperCase());
+  
+  // Layout B chỉ có 2 tầng (Tầng Trệt và Tầng 1)
+  if (isLayoutB && currentFloor > 2) {
+    return [];
+  }
+
   const floorName = currentFloor === 1 ? 'Tầng trệt' : currentFloor === 2 ? 'Tầng 1' : 'Tầng 2';
   const weightLimit = currentFloor === 1 ? '1000 kg/m²' : '500 kg/m²';
   const units: any[] = [];
 
-
-
   if (currentFloor === 1) {
-    for (let i = 1; i <= 10; i++) {
+    const xlCount = isLayoutB ? 5 : 10;
+    for (let i = 1; i <= xlCount; i++) {
       const uId = `${prefix}-G-XL${i < 10 ? '0' + i : i}`;
       const defaultStatus = (i === 3 || i === 7) ? 'OCCUPIED' : 'AVAILABLE';
       const isClimate = i > 5;
@@ -73,7 +79,13 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
       });
     }
   } else if (currentFloor === 2) {
-    for (let i = 1; i <= 8; i++) {
+    // Layout B: 4 ô S, 4 ô M, 2 ô L (10 ô) -> Tổng cộng 5 XL + 10 = 15 ô kho
+    // Layout A: 8 ô S, 6 ô M, 4 ô L (18 ô)
+    const sCount = isLayoutB ? 4 : 8;
+    const mCount = isLayoutB ? 4 : 6;
+    const lCount = isLayoutB ? 2 : 4;
+
+    for (let i = 1; i <= sCount; i++) {
       const uId = `${prefix}-F1-S10${i}`;
       const defaultStatus = (i === 2 || i === 6) ? 'OCCUPIED' : 'AVAILABLE';
       const isClimate = i > 4;
@@ -92,7 +104,7 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
         status: defaultStatus
       });
     }
-    for (let i = 1; i <= 6; i++) {
+    for (let i = 1; i <= mCount; i++) {
       const uId = `${prefix}-F1-M10${i}`;
       const defaultStatus = i === 3 ? 'OCCUPIED' : 'AVAILABLE';
       const isClimate = i > 3;
@@ -111,7 +123,7 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
         status: defaultStatus
       });
     }
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= lCount; i++) {
       const uId = `${prefix}-F1-L10${i}`;
       const defaultStatus = i === 2 ? 'OCCUPIED' : 'AVAILABLE';
       const isClimate = i > 2;
@@ -130,7 +142,7 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
         status: defaultStatus
       });
     }
-  } else {
+  } else if (!isLayoutB) {
     for (let i = 1; i <= 6; i++) {
       const uId = `${prefix}-F2-S20${i}`;
       const defaultStatus = i === 4 ? 'OCCUPIED' : 'AVAILABLE';
@@ -222,6 +234,9 @@ export const getBranches = async () => {
       const managerPhone = hasDbManager ? f.managerPhone : f.phone;
       const managerEmail = hasDbManager ? f.managerEmail : 'manager@smartstorage.vn';
 
+      const isLayoutB = (f.layoutType || '').toUpperCase() === 'B' || (f.layoutType || '').toUpperCase() === 'LAYOUT B';
+      const targetFloors = isLayoutB ? 2 : 3;
+
       const item = {
         id: f.facilityCode || (facId ? `FAC-${facId}` : f.id),
         backendId: facId,
@@ -230,7 +245,7 @@ export const getBranches = async () => {
         name: f.facilityName || f.name,
         facilityName: f.facilityName || f.name,
         address: f.address,
-        floors: f.floorCount || f.floors || 3,
+        floors: targetFloors,
         layoutType: f.layoutType,
         isAllClimate: f.isAllClimate,
         status: f.status || 'ACTIVE',

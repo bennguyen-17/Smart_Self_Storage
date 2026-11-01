@@ -296,7 +296,7 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
               }
             }
           } catch (e) {}
-          const stdUnits = (f.layoutType === "B" || f.layoutType === "Layout B") ? 15 : 46
+          const stdUnits = (f.layoutType === "B" || f.layoutType === "Layout B") ? 15 : 45
 
           return {
             id: facId,
