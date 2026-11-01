@@ -494,7 +494,7 @@ INSERT INTO Account (accountId, roleId, phone, fullName, email, password, status
 (30, 4, '0907000003', 'Hồ Quốc Thái', 'staff.ct01.3@smartstorage.vn', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
 
 -- 4. Khách hàng cá nhân (Customers) - Tên người thật 100%
-(31, 5, '0912345678', 'Nguyễn Thành Long', 'customer.long@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
+(31, 5, '0918610258', 'Nguyễn Hoàng Gia Bảo', 'nguyenhoanggiabao17082006@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
 (32, 5, '0987654321', 'Trần Thu Hà', 'customer.ha@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
 (33, 5, '0933445566', 'Trần Thị Bích Ngọc', 'bichngoc.tran@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
 (34, 5, '0977889900', 'Lê Hữu Đạt', 'dat.le@gmail.com', '$2a$10$V48pz49Bx4OKVMB9lwDKY.yOSJQhRrrCJbMt3DY7x9ZSRm3aFmxPW', 'ACTIVE'),
@@ -503,7 +503,7 @@ INSERT INTO Account (accountId, roleId, phone, fullName, email, password, status
 
 -- 4. Hồ sơ khách hàng (CustomerProfiles gắn CCCD 12 số chuẩn)
 INSERT INTO CustomerProfile (customerId, accountId, identityNumber, bankName, bankAccountNumber, bankAccountName) VALUES
-(1, 31, '001201012345', 'MBBank', '0912345678', 'NGUYEN THANH LONG'),
+(1, 31, '079206001708', 'MBBank', '0918610258', 'NGUYEN HOANG GIA BAO'),
 (2, 32, '079201098765', 'Vietcombank', '079201098765', 'TRAN THU HA'),
 (3, 33, '001202023456', 'Techcombank', '1903678901234', 'TRAN THI BICH NGOC'),
 (4, 34, '079202087654', 'Techcombank', '079202087654', 'LE HUU DAT'),
@@ -868,7 +868,7 @@ INSERT INTO PromotionUnitType (promotionId, unitTypeId) VALUES
 
 -- 14. Đơn đặt chỗ mẫu (Reservations) trải dài 07/2026 - 10/2026 (Chuẩn mã: CTR-[Mã Cơ Sở]-[DDMMYY]-[4 số])
 INSERT INTO Reservation (reservationId, reservationCode, accountId, unitCode, startDate, endDate, rentalType, rentalAmount, depositAmount, penaltyAmount, status, createdAt, holdExpiresAt) VALUES
--- === KHÁCH HÀNG 1: Nguyễn Thành Long (AccountId 31, MBBank) ===
+-- === KHÁCH HÀNG 1: Nguyễn Hoàng Gia Bảo (AccountId 31, MBBank) ===
 (1, 'CTR-HN01-010926-1001', 31, 'HN01-G-XL02', '2026-09-01', '2026-12-01', 'MONTHLY', 12000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-08-30 09:00:00', NULL),
 (2, 'CTR-HN01-010926-1002', 31, 'HN01-F1-L02', '2026-09-01', '2026-10-01', 'MONTHLY', 2400000.00, 2000000.00, 850000.00, 'CONFIRMED', '2026-08-30 08:30:00', NULL),
 (3, 'CTR-HN02-250926-1003', 31, 'HN02-F1-M03', '2026-10-02', '2026-11-02', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CANCELLED', '2026-09-25 10:00:00', NULL),
@@ -922,10 +922,10 @@ INSERT INTO Reservation (reservationId, reservationCode, accountId, unitCode, st
 
 -- 15. Hợp đồng thuê kho (Contracts) đa dạng chu trình 7 trạng thái chuẩn BR-21
 INSERT INTO Contract (contractId, reservationId, activatedAt, terminatedAt, status, cancelReason, refundBankName, refundAccountNumber, refundAccountName) VALUES
--- Khách 1 (Nguyễn Thành Long): ACTIVE, OVERDUE, CANCELLED, PENDING_CHECKIN
+-- Khách 1 (Nguyễn Hoàng Gia Bảo): ACTIVE, OVERDUE, CANCELLED, PENDING_CHECKIN
 (1, 1, '2026-09-01 09:00:00', NULL, 'ACTIVE', NULL, NULL, NULL, NULL),
 (2, 2, '2026-09-01 09:00:00', NULL, 'OVERDUE', NULL, NULL, NULL, NULL),
-(3, 3, NULL, NULL, 'CANCELLED', 'Khách hàng chủ động hủy trước ngày bắt đầu >= 4 ngày. Hoàn lại 100% cọc theo BR-17.', 'MBBank', '0912345678', 'NGUYEN THANH LONG'),
+(3, 3, NULL, NULL, 'CANCELLED', 'Khách hàng chủ động hủy trước ngày bắt đầu >= 4 ngày. Hoàn lại 100% cọc theo BR-17.', 'MBBank', '0918610258', 'NGUYEN HOANG GIA BAO'),
 (4, 4, NULL, NULL, 'PENDING_CHECKIN', NULL, NULL, NULL, NULL),
 
 -- Khách 2 (Trần Thu Hà): ACTIVE, OVERDUE, CANCELLED, PENDING_CHECKIN
@@ -967,7 +967,7 @@ INSERT INTO Contract (contractId, reservationId, activatedAt, terminatedAt, stat
 (30, 30, '2026-09-17 15:00:00', NULL, 'OVERDUE', NULL, NULL, NULL, NULL),
 
 -- Hợp đồng đang thuê có yêu cầu trả kho trước hạn vào ngày hôm nay (01/11/2026) cho mỗi khách hàng (HĐ 31 -> 36)
-(31, 31, '2026-10-15 09:00:00', NULL, 'ACTIVE', 'EARLY_TERMINATION', 'MBBank', '0912345678', 'NGUYEN THANH LONG'),
+(31, 31, '2026-10-15 09:00:00', NULL, 'ACTIVE', 'EARLY_TERMINATION', 'MBBank', '0918610258', 'NGUYEN HOANG GIA BAO'),
 (32, 32, '2026-10-15 10:00:00', NULL, 'ACTIVE', 'EARLY_TERMINATION', 'Vietcombank', '079201098765', 'TRAN THU HA'),
 (33, 33, '2026-10-15 11:00:00', NULL, 'ACTIVE', 'EARLY_TERMINATION', 'Techcombank', '1903678901234', 'TRAN THI BICH NGOC'),
 (34, 34, '2026-10-15 14:00:00', NULL, 'ACTIVE', 'EARLY_TERMINATION', 'Techcombank', '079202087654', 'LE HUU DAT'),
@@ -976,7 +976,7 @@ INSERT INTO Contract (contractId, reservationId, activatedAt, terminatedAt, stat
 
 -- 16. Hóa đơn và Thanh toán (Payments) chuẩn mã định danh BR-37
 INSERT INTO Payment (paymentId, contractId, invoiceNumber, invoiceType, amount, paidAmount, remainingAmount, receiptUrl, issuedAt, dueAt, status, paymentMethod, transactionCode, paymentStatus, gatewayTransactionId, paidAt) VALUES
--- === Khách 1 (Nguyễn Thành Long): HĐ 1 (ACTIVE), HĐ 2 (OVERDUE), HĐ 3 (CANCELLED), HĐ 4 (PENDING_CHECKIN) ===
+-- === Khách 1 (Nguyễn Hoàng Gia Bảo): HĐ 1 (ACTIVE), HĐ 2 (OVERDUE), HĐ 3 (CANCELLED), HĐ 4 (PENDING_CHECKIN) ===
 (1, 1, 'DEP-CTR-HN01-010926-1001', 'DEP', 15000000.00, 15000000.00, 0.00, NULL, '2026-08-30 09:15:00', '2026-09-01 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_1001', 'SUCCESS', 'VNP1001', '2026-09-01 09:05:00'),
 (2, 2, 'DEP-CTR-HN01-010926-1002', 'DEP', 4400000.00, 4400000.00, 0.00, NULL, '2026-08-30 08:35:00', '2026-09-01 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_1002', 'SUCCESS', 'VNP1002', '2026-09-01 09:10:00'),
 (3, 2, 'PEN-HN01-20261018-1002', 'OVERDUE_FEE', 850000.00, 0.00, 850000.00, NULL, '2026-10-18 00:00:00', '2026-10-18 23:59:59', 'OVERDUE', NULL, NULL, 'PENDING', NULL, NULL),
@@ -1065,7 +1065,7 @@ INSERT INTO AuditLog (auditLogId, accountId, facilityId, customerId, action, ope
 
 -- 19. Yêu cầu hỗ trợ & Sự cố vận hành SLA (SupportTickets)
 INSERT INTO SupportTicket (id, ticketCode, type, status, customerId, facilityId, unitCode, contractId, title, description, desiredDate, assignedStaffId, slaDeadline, isSlaBreached, identityVerified, resolutionNote, createdAt, resolvedAt) VALUES
--- === KHÁCH HÀNG 1: Nguyễn Thành Long (CustomerId 1, Cơ sở HN-01, Ô HN01-G-XL02) ===
+-- === KHÁCH HÀNG 1: Nguyễn Hoàng Gia Bảo (CustomerId 1, Cơ sở HN-01, Ô HN01-G-XL02) ===
 (1, 'TCK-202610-001', 'INCIDENT', 'RESOLVED', 1, 1, 'HN01-G-XL02', 1, 'Báo sự cố an ninh & kỹ thuật', 'Khóa thông minh buồng kho không tự bung chốt sau khi nhập mã PIN, đèn tín hiệu nháy đỏ liên tục.', NULL, 10, '2026-10-10 18:00:00', FALSE, TRUE, 'Đã kiểm tra cơ cấu chấp hành, tra dầu mỡ trục khóa và reset cảm biến hành trình.', '2026-10-10 14:00:00', '2026-10-10 15:30:00'),
 (2, 'TCK-202610-002', 'MAINTENANCE', 'RESOLVED', 1, 1, 'HN01-G-XL02', 1, 'Bảo trì / Sửa chữa', 'Yêu cầu nhân viên đo kiểm tra thực tế độ ẩm buồng kho mát định kỳ để bảo quản tài sản đồ da và tranh vẽ.', NULL, 10, '2026-10-25 18:00:00', FALSE, TRUE, 'Đã tiến hành đo kiểm thực tế: độ ẩm đạt 50%RH, nhiệt độ 22°C đạt chuẩn bảo quản đồ da.', '2026-10-24 10:00:00', '2026-10-24 11:30:00'),
 
