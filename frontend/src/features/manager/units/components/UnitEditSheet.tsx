@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Spinner } from "@/components/ui/spinner"
 import { getErrorMessage } from "@/lib/api"
 
-import { changeUnitType, startMaintenance } from "../api/unitManagementApi"
+import { changeUnitType, endMaintenance, startMaintenance } from "../api/unitManagementApi"
 import type { ManagerContext, ManagerUnit } from "../types"
 import {
   canStartMaintenance,
@@ -35,9 +35,8 @@ function UnitEditSheet({ unit, ctx, onClose, onSaved }: UnitEditSheetProps) {
   const meta = statusKey ? UNIT_STATUS_META[statusKey] : null
   const typeBlock = changeTypeBlockReason(unit.status, unit.unitTypeId)
   const underMaintenance = statusKey === "UNDER_MAINTENANCE"
-  const maintenanceBlock = underMaintenance
-    ? "Ô đang trong quá trình bảo trì. Nhân viên cơ sở nghiệm thu xong sẽ mở lại cho thuê."
-    : canStartMaintenance(unit.status)
+  const maintenanceBlock =
+    underMaintenance || canStartMaintenance(unit.status)
       ? null
       : "Ô đang có khách giữ chỗ, đặt cọc hoặc đang thuê nên chưa đưa vào bảo trì được."
 
@@ -46,6 +45,7 @@ function UnitEditSheet({ unit, ctx, onClose, onSaved }: UnitEditSheetProps) {
 
   const hasClimateChange = draft.climate !== Boolean(unit.isClimate)
   const hasMaintenanceChange = draft.maintenance && !underMaintenance
+  const reopening = underMaintenance && !draft.maintenance
 
   async function save() {
     setSubmitting(true)
@@ -54,6 +54,7 @@ function UnitEditSheet({ unit, ctx, onClose, onSaved }: UnitEditSheetProps) {
     try {
       for (const op of plan.ops) {
         if (op.kind === "change-type") await changeUnitType(ctx, unit.unitCode, op.targetTypeId)
+        else if (op.kind === "end-maintenance") await endMaintenance(ctx, unit.unitCode)
         else await startMaintenance(ctx, unit.unitCode, op.note)
         done++
       }
@@ -143,6 +144,12 @@ function UnitEditSheet({ unit, ctx, onClose, onSaved }: UnitEditSheetProps) {
                   Sẽ chuyển sang Bảo trì
                 </span>
               )}
+              {reopening && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2Icon className="size-3.5" />
+                  Sẽ mở lại cho thuê
+                </span>
+              )}
             </div>
 
             <ChoiceCard
@@ -151,8 +158,12 @@ function UnitEditSheet({ unit, ctx, onClose, onSaved }: UnitEditSheetProps) {
               onChange={() => set({ maintenance: false })}
               icon={<WarehouseIcon className="size-4.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />}
               title="Sẵn sàng cho thuê"
-              detail="Ô hiển thị trên sơ đồ để khách đặt thuê khi còn trống."
-              blocked={underMaintenance}
+              detail={
+                underMaintenance
+                  ? "Đã sửa chữa / vệ sinh xong: mở lại ô thành còn trống để khách đặt thuê."
+                  : "Ô hiển thị trên sơ đồ để khách đặt thuê khi còn trống."
+              }
+              blocked={false}
             />
             <ChoiceCard
               name="unit-condition"
@@ -160,7 +171,7 @@ function UnitEditSheet({ unit, ctx, onClose, onSaved }: UnitEditSheetProps) {
               onChange={() => set({ maintenance: true })}
               icon={<WrenchIcon className="size-4.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />}
               title="Bảo trì"
-              detail="Tạm dừng cho thuê để vệ sinh, kiểm tra hoặc bảo dưỡng ô kho."
+              detail="Ô bị hư hại hoặc cần vệ sinh, bảo dưỡng: tạm dừng cho thuê, khách không đặt được."
               blocked={maintenanceBlock !== null && !underMaintenance}
             />
             {maintenanceBlock && <LockedReason>{maintenanceBlock}</LockedReason>}

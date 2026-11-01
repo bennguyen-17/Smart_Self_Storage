@@ -2,7 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
-import { changeUnitType, startMaintenance } from "../api/unitManagementApi"
+import { changeUnitType, endMaintenance, startMaintenance } from "../api/unitManagementApi"
 import { resetManagerUnitsMock } from "../api/unitManagementApi.mock"
 import UnitManagementPanel from "./UnitManagementPanel"
 
@@ -13,6 +13,7 @@ vi.mock("../api/unitManagementApi", async (importOriginal) => {
     ...actual,
     changeUnitType: vi.fn(actual.changeUnitType),
     startMaintenance: vi.fn(actual.startMaintenance),
+    endMaintenance: vi.fn(actual.endMaintenance),
   }
 })
 
@@ -48,6 +49,7 @@ beforeEach(() => {
   resetManagerUnitsMock()
   vi.mocked(startMaintenance).mockClear()
   vi.mocked(changeUnitType).mockClear()
+  vi.mocked(endMaintenance).mockClear()
 })
 afterEach(() => localStorage.clear())
 
@@ -114,11 +116,29 @@ describe("UnitManagementPanel: bảng ô kho + nút Sửa (US-13)", () => {
     })
   })
 
-  test("ô đang bảo trì: không mở lại cho thuê từ đây (việc của nhân viên nghiệm thu)", async () => {
+  test("ô đang bảo trì, sửa xong → chọn Sẵn sàng cho thuê → gọi API mở lại, trạng thái về Còn trống", async () => {
     const { user } = await renderPanel()
     const sheet = await openEdit(user, "HN01-G-XL05")
-    expect(within(sheet).getByRole("radio", { name: /sẵn sàng cho thuê/i })).toBeDisabled()
-    expect(within(sheet).getByText(/nhân viên cơ sở nghiệm thu/i)).toBeInTheDocument()
+    const save = within(sheet).getByRole("button", { name: /lưu thay đổi/i })
+    expect(save).toBeDisabled()
+    await user.click(within(sheet).getByRole("radio", { name: /sẵn sàng cho thuê/i }))
+    expect(within(sheet).getByText("Sẽ mở lại cho thuê")).toBeInTheDocument()
+    await user.click(save)
+    expect(endMaintenance).toHaveBeenCalledWith(expect.anything(), "HN01-G-XL05")
+    expect(startMaintenance).not.toHaveBeenCalled()
+    await waitFor(() => expect(within(row("HN01-G-XL05")).getByText("Còn trống")).toBeInTheDocument(), {
+      timeout: 3000,
+    })
+  })
+
+  test("mở lại cho thuê bị BE từ chối → giữ ngăn mở và hiện lỗi của BE", async () => {
+    vi.mocked(endMaintenance).mockRejectedValueOnce(new Error("Chỉ có thể nghiệm thu ô kho đang ở trạng thái bảo trì"))
+    const { user } = await renderPanel()
+    const sheet = await openEdit(user, "HN01-G-XL05")
+    await user.click(within(sheet).getByRole("radio", { name: /sẵn sàng cho thuê/i }))
+    await user.click(within(sheet).getByRole("button", { name: /lưu thay đổi/i }))
+    expect(await within(sheet).findByRole("alert")).toHaveTextContent(/nghiệm thu ô kho đang ở trạng thái bảo trì/)
+    expect(within(row("HN01-G-XL05")).getByText("Bảo trì")).toBeInTheDocument()
   })
 
   test("bấm chip trạng thái để lọc: chỉ còn ô đúng trạng thái", async () => {

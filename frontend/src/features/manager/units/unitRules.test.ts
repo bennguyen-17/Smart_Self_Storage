@@ -7,6 +7,7 @@ import {
   climateCounterpartTypeId,
   initialUnitDraft,
   MAINTENANCE_NOTE_MAX,
+  canEndMaintenance,
   maintenanceNoteError,
   normalizeUnitStatus,
   planUnitEdit,
@@ -97,6 +98,18 @@ describe("canStartMaintenance: ô đang có khách thì không được đưa v�
   })
 })
 
+describe("canEndMaintenance: chỉ ô đang bảo trì mới mở lại cho thuê", () => {
+  test.each([
+    { status: "UNDER_MAINTENANCE", expected: true },
+    { status: "MAINTENANCE", expected: true },
+    { status: "AVAILABLE", expected: false },
+    { status: "RENTED", expected: false },
+    { status: "RESERVED", expected: false },
+  ])("$status → $expected", ({ status, expected }) => {
+    expect(canEndMaintenance(status)).toBe(expected)
+  })
+})
+
 describe("maintenanceNoteError: ghi chú không bắt buộc, chỉ giới hạn độ dài nếu có", () => {
   test.each([
     { name: "trống", note: "", ok: true },
@@ -146,6 +159,8 @@ describe("planUnitEdit: Sửa ô kho → gọi API nào, theo thứ tự nào", 
     { name: "ô đang thuê: bỏ qua mọi thay đổi", unit: M_DANG_THUE, draft: { climate: true, maintenance: true, note: "x" }, ops: [], noteError: false },
     { name: "Size S không có bản điều hòa", unit: S_TRONG, draft: { climate: true, maintenance: false, note: "" }, ops: [], noteError: false },
     { name: "ô đang bảo trì: không gửi lại lệnh bảo trì", unit: M_BAO_TRI, draft: { climate: false, maintenance: true, note: "" }, ops: [], noteError: false },
+    { name: "ô đang bảo trì, sửa xong: mở lại cho thuê", unit: M_BAO_TRI, draft: { climate: false, maintenance: false, note: "" }, ops: [{ kind: "end-maintenance" }], noteError: false },
+    { name: "ô trống chọn sẵn sàng: không gọi mở lại", unit: M_TRONG, draft: { climate: false, maintenance: false, note: "" }, ops: [], noteError: false },
   ])("$name", ({ unit, draft, ops, noteError }) => {
     const plan = planUnitEdit(unit, draft)
     expect(plan.ops).toEqual(ops)

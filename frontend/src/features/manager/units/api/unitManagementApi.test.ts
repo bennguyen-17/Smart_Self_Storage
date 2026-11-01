@@ -11,7 +11,7 @@ const http = vi.hoisted(() => ({
 }))
 vi.mock("@/lib/apiClient", () => ({ default: http, isMockMode: () => env.mockMode }))
 
-const { changeUnitType, getManagerUnits, MissingFacilityError, startMaintenance } = await import(
+const { changeUnitType, endMaintenance, getManagerUnits, MissingFacilityError, startMaintenance } = await import(
   "./unitManagementApi"
 )
 
@@ -46,6 +46,13 @@ describe("unitManagementApi: gọi đúng API BE của Manager", () => {
   test("đưa vào bảo trì: POST /manager/units/{mã}/maintenance kèm ghi chú đã cắt khoảng trắng", async () => {
     await startMaintenance(CTX, "HN01-F1-M01", "  Rò nước trần  ")
     expect(http.post).toHaveBeenCalledWith("/manager/units/HN01-F1-M01/maintenance", { note: "Rò nước trần" }, {
+      headers: { "X-Facility-Id": "1", "X-Account-Id": "3" },
+    })
+  })
+
+  test("sửa xong, mở lại cho thuê: POST /staff/units/{mã}/complete-maintenance (BE dùng chung cho Staff và Manager)", async () => {
+    await endMaintenance(CTX, "HN01-G-XL05")
+    expect(http.post).toHaveBeenCalledWith("/staff/units/HN01-G-XL05/complete-maintenance", null, {
       headers: { "X-Facility-Id": "1", "X-Account-Id": "3" },
     })
   })
