@@ -26,7 +26,8 @@ const LOADERS: Record<UnreadTab, (ctx: ManagerContext) => Promise<(string | null
 }
 
 /**
- * Số mục mới của từng trang so với lần cuối Manager mở trang đó; tự kiểm tra lại mỗi 30 giây.
+ * Số mục mới của từng trang so với lần cuối Manager mở trang đó; tự kiểm tra lại mỗi 30 giây và ngay khi quay lại tab.
+ * Chỉ đổi con số trên thanh điều hướng, không tải lại trang (form đang nhập, hộp thoại đang mở giữ nguyên).
  * Trang đang mở luôn là 0 và được đánh dấu đã xem. Một API lỗi thì giữ số cũ của trang đó, không ảnh hưởng trang khác.
  */
 export function useUnreadCounts(activeTab: string | undefined): Partial<Record<UnreadTab, number>> {
@@ -57,9 +58,17 @@ export function useUnreadCounts(activeTab: string | undefined): Partial<Record<U
     }
     check()
     const timer = setInterval(check, UNREAD_POLL_MS)
+    // Trình duyệt làm chậm hẹn giờ của tab bị ẩn: quay lại tab / cửa sổ Manager thì kiểm tra ngay, không đợi 30 giây
+    const onVisible = () => {
+      if (document.visibilityState === "visible") check()
+    }
+    document.addEventListener("visibilitychange", onVisible)
+    window.addEventListener("focus", onVisible)
     return () => {
       ignore = true
       clearInterval(timer)
+      document.removeEventListener("visibilitychange", onVisible)
+      window.removeEventListener("focus", onVisible)
     }
   }, [ctx, activeTab])
 

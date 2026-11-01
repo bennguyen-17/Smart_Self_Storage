@@ -71,6 +71,16 @@ describe("useUnreadCounts: chấm đếm mục mới trên thanh điều hướn
     expect(result.current.refunds).toBeUndefined()
   })
 
+  test("quay lại tab Manager → kiểm tra ngay, không đợi 30 giây", async () => {
+    const { result } = renderHook(() => useUnreadCounts("units"))
+    await waitFor(() => expect(result.current.tickets).toBe(3))
+    vi.mocked(listManagerTickets).mockResolvedValue(Array.from({ length: 6 }, () => ({ createdAt: AFTER })) as never)
+    act(() => {
+      window.dispatchEvent(new Event("focus"))
+    })
+    await waitFor(() => expect(result.current.tickets).toBe(6))
+  })
+
   test("tự kiểm tra lại sau 30 giây: ticket mới đến thì số tăng", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     const { result } = renderHook(() => useUnreadCounts("units"))
