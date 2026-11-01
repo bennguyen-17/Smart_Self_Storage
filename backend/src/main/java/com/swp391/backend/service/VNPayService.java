@@ -117,7 +117,7 @@ public class VNPayService {
             DepositWebhookRequest webhookRequest = new DepositWebhookRequest(
                     invoiceNumber,
                     "VNPAY_TXN_" + vnpayTransactionNo,
-                    "VNPAY",
+                    "BANK_TRANSFER",
                     "GATEWAY_" + bankCode + "_" + vnpayTransactionNo
             );
             if (invoiceNumber != null && invoiceNumber.startsWith("EXT-")) {
