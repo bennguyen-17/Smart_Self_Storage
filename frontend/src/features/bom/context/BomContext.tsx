@@ -44,6 +44,7 @@ interface BomContextType {
     layoutType?: string
     floorCount?: number
     isAllClimate?: boolean
+    status?: string
     managerName?: string
   }) => Promise<boolean>
   updateFacilityInDb: (facilityId: number, data: { facilityName?: string; address?: string; phone?: string; status?: string; managerName?: string; managerPhone?: string; managerEmail?: string; priceMultiplier?: number }) => Promise<boolean>
@@ -499,6 +500,7 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
     layoutType?: string
     floorCount?: number
     isAllClimate?: boolean
+    status?: string
     managerName?: string
   }): Promise<boolean> => {
     try {

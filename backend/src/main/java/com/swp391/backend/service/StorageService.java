@@ -82,7 +82,7 @@ public class StorageService {
 
     //Lấy danh sách Cơ sở kèm mã code, shortCode và layout
     public List<FacilityResponse> getAllActiveFacilities() {
-        return facilityRepository.findByStatus("ACTIVE").stream()
+        return facilityRepository.findAll().stream()
                 .map(this::mapFacilityToResponse)
                 .collect(Collectors.toList());
     }
@@ -726,7 +726,7 @@ public class StorageService {
         f.setLayoutType(layout);
         f.setAddress(req.getAddress() != null ? req.getAddress().trim() : "Chưa cập nhật địa chỉ");
         f.setPhone(req.getPhone() != null && !req.getPhone().trim().isEmpty() ? req.getPhone() : "0900000000");
-        f.setStatus("ACTIVE");
+        f.setStatus(req.getStatus() != null && !req.getStatus().trim().isEmpty() ? req.getStatus().trim().toUpperCase() : "ACTIVE");
         Facility saved = facilityRepository.save(f);
 
         // 3. Tự động sinh danh sách Tầng (Floor) (chuẩn 3 tầng)

@@ -28,6 +28,7 @@ import {
   TrendingUp,
   BarChart3,
   ArrowLeft,
+  Activity,
 } from "lucide-react"
 import apiClient from "@/lib/apiClient"
 import { getStorageUnits } from "@/features/customer/rent/rentApi"
@@ -202,6 +203,7 @@ export default function BomFacilitiesPage() {
   const [editManagerName, setEditManagerName] = useState("")
   const [editManagerPhone, setEditManagerPhone] = useState("")
   const [editManagerEmail, setEditManagerEmail] = useState("")
+  const [editFacilityStatus, setEditFacilityStatus] = useState("ACTIVE")
 
   // Modal State Thêm cơ sở kho mới
   const [isAddFacilityModalOpen, setIsAddFacilityModalOpen] = useState(false)
@@ -214,6 +216,7 @@ export default function BomFacilitiesPage() {
   const [newFacManager, setNewFacManager] = useState("")
   const [newFacPhone, setNewFacPhone] = useState("")
   const [newFacMultiplier, setNewFacMultiplier] = useState(1.0)
+  const [newFacStatus, setNewFacStatus] = useState("ACTIVE")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Modal State Xóa cơ sở kho
@@ -333,6 +336,7 @@ export default function BomFacilitiesPage() {
     setNewFacManager("")
     setNewFacPhone("")
     setNewFacMultiplier(1.0)
+    setNewFacStatus("ACTIVE")
     setIsAddFacilityModalOpen(true)
   }
 
@@ -344,6 +348,7 @@ export default function BomFacilitiesPage() {
   const handleOpenFacilityModal = (fac: FacilityPerformance) => {
     setSelectedFacility(fac)
     setFacilityMultiplier(fac.priceMultiplier || 1.0)
+    setEditFacilityStatus(fac.status || "ACTIVE")
     const cleanManager = (!fac.managerName || fac.managerName === "Chưa phân công")
       ? ""
       : fac.managerName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
@@ -363,6 +368,7 @@ export default function BomFacilitiesPage() {
       facilityName: selectedFacility.name,
       address: selectedFacility.address,
       phone: finalManagerPhone || selectedFacility.managerPhone,
+      status: editFacilityStatus,
       managerName: finalManagerName,
       managerPhone: finalManagerPhone,
       managerEmail: finalManagerEmail,
@@ -374,6 +380,7 @@ export default function BomFacilitiesPage() {
         f.id === selectedFacility.id
           ? {
               ...f,
+              status: editFacilityStatus,
               managerName: finalManagerName,
               managerPhone: finalManagerPhone,
               managerEmail: finalManagerEmail,
@@ -384,11 +391,35 @@ export default function BomFacilitiesPage() {
     )
 
     if (success) {
-      toast.success(`Đã lưu cấu hình cơ sở & quản lý kho ${selectedFacility.name}!`)
+      toast.success(`Đã lưu cấu hình & trạng thái cơ sở ${selectedFacility.name}!`)
     } else {
       toast.success(`Đã cập nhật cấu hình cơ sở ${selectedFacility.name}!`)
     }
     setIsFacilityModalOpen(false)
+  }
+
+  const handleQuickUpdateStatus = async (fac: FacilityPerformance, newStatus: string) => {
+    const statusLabel =
+      newStatus === "MAINTENANCE"
+        ? "Bảo trì (Tạm ngưng nhận khách)"
+        : newStatus === "INACTIVE"
+        ? "Tạm ngưng hoạt động"
+        : "Hoạt động bình thường"
+
+    const success = await updateFacilityInDb(Number(fac.id), {
+      status: newStatus,
+      facilityName: fac.name,
+      address: fac.address,
+      phone: fac.managerPhone,
+    })
+
+    setFacilities((prev) =>
+      prev.map((f) => (f.id === fac.id ? { ...f, status: newStatus } : f))
+    )
+
+    if (success) {
+      toast.success(`Đã cập nhật trạng thái cơ sở [${fac.code}] sang: ${statusLabel}`)
+    }
   }
 
   const handleCreateFacility = async () => {
@@ -411,6 +442,7 @@ export default function BomFacilitiesPage() {
         phone: newFacPhone.trim() || "0900000000",
         layoutType: newFacLayout,
         floorCount: newFacFloors,
+        status: newFacStatus,
         managerName: newFacManager.trim() || "Chưa phân công",
       })
 
@@ -435,7 +467,7 @@ export default function BomFacilitiesPage() {
           floorArea: computedTotalUnits * 12,
           monthlyRevenue: "₫0",
           overdueUnits: 0,
-          status: "ACTIVE",
+          status: newFacStatus,
           rating: "5.0 ★",
           priceMultiplier: Number(newFacMultiplier) || 1.0,
           layoutType: `Layout ${newFacLayout}`,
@@ -857,6 +889,7 @@ export default function BomFacilitiesPage() {
               <thead>
                 <tr className="bg-slate-50/90 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">CƠ SỞ KHO</th>
+                  <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">TRẠNG THÁI</th>
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">QUẢN LÝ CHI NHÁNH</th>
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">KHO THUÊ</th>
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">TỶ LỆ LẤP ĐẦY</th>
@@ -897,7 +930,7 @@ export default function BomFacilitiesPage() {
 
                     return (
                       <tr key={fac.id} className="hover:bg-slate-50/90 dark:hover:bg-slate-800/60 transition-colors">
-                        {/* CỘT DUY NHẤT: CƠ SỞ KHO (Toàn bộ cụm Mã cơ sở + Tên cơ sở được bọc chung trong khung badge, không tô màu mã) */}
+                        {/* CỘT 1: CƠ SỞ KHO */}
                         <td className="py-3 px-4 whitespace-nowrap align-middle text-center">
                           <button
                             type="button"
@@ -911,7 +944,32 @@ export default function BomFacilitiesPage() {
                           </button>
                         </td>
 
-                        {/* CỘT 2: QUẢN LÝ CHI NHÁNH */}
+                        {/* CỘT 2: TRẠNG THÁI */}
+                        <td className="py-3 px-4 text-center whitespace-nowrap">
+                          <div className="inline-flex items-center justify-center">
+                            <select
+                              value={fac.status || "ACTIVE"}
+                              onChange={async (e) => {
+                                const newStatus = e.target.value
+                                await handleQuickUpdateStatus(fac, newStatus)
+                              }}
+                              className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition cursor-pointer appearance-none text-center outline-none ${
+                                fac.status === "MAINTENANCE"
+                                  ? "bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-700 font-bold"
+                                  : fac.status === "INACTIVE"
+                                  ? "bg-rose-50 text-rose-700 border-rose-300 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-700 font-bold"
+                                  : "bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700"
+                              }`}
+                              title="Bấm để đổi nhanh trạng thái: Hoạt động / Bảo trì / Tạm ngưng"
+                            >
+                              <option value="ACTIVE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">🟢 Hoạt động</option>
+                              <option value="MAINTENANCE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">🟠 Bảo trì</option>
+                              <option value="INACTIVE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">🔴 Tạm ngưng</option>
+                            </select>
+                          </div>
+                        </td>
+
+                        {/* CỘT 3: QUẢN LÝ CHI NHÁNH */}
                         <td className="py-3 px-4 text-center whitespace-nowrap">
                           <span className="text-sm font-normal text-slate-800 dark:text-slate-200">
                             {cleanManager || "Chưa phân công"}
@@ -964,7 +1022,7 @@ export default function BomFacilitiesPage() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-slate-400 italic">
+                    <td colSpan={7} className="py-8 text-center text-slate-400 italic">
                       Đang tải dữ liệu cơ sở từ hệ thống...
                     </td>
                   </tr>
@@ -1144,6 +1202,73 @@ export default function BomFacilitiesPage() {
                       Chưa có quản lý được chọn. Vui lòng chọn nhân sự ở menu sổ xuống phía trên.
                     </span>
                   </div>
+                )}
+              </div>
+
+              {/* TRẠNG THÁI HOẠT ĐỘNG & BẢO TRÌ */}
+              <div className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-2">
+                <label className="block font-bold text-slate-300 uppercase text-[10px] flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Activity className="size-3.5 text-blue-400" />
+                    <span>Trạng Thái Hoạt Động Cơ Sở:</span>
+                  </span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                    editFacilityStatus === "MAINTENANCE"
+                      ? "bg-amber-950/80 text-amber-300 border border-amber-800"
+                      : editFacilityStatus === "INACTIVE"
+                      ? "bg-rose-950/80 text-rose-300 border border-rose-800"
+                      : "bg-emerald-950/80 text-emerald-300 border border-emerald-800"
+                  }`}>
+                    {editFacilityStatus === "MAINTENANCE" ? "Đang Bảo Trì" : editFacilityStatus === "INACTIVE" ? "Tạm Ngưng" : "Đang Hoạt Động"}
+                  </span>
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditFacilityStatus("ACTIVE")}
+                    className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      editFacilityStatus === "ACTIVE"
+                        ? "bg-emerald-950/70 border-emerald-500 text-emerald-300 ring-1 ring-emerald-500/50 shadow-sm"
+                        : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                    <span>🟢 Hoạt Động</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditFacilityStatus("MAINTENANCE")}
+                    className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      editFacilityStatus === "MAINTENANCE"
+                        ? "bg-amber-950/70 border-amber-500 text-amber-300 ring-1 ring-amber-500/50 shadow-sm"
+                        : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                    <span>🟠 Bảo Trì</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditFacilityStatus("INACTIVE")}
+                    className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      editFacilityStatus === "INACTIVE"
+                        ? "bg-rose-950/70 border-rose-500 text-rose-300 ring-1 ring-rose-500/50 shadow-sm"
+                        : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                    <span>🔴 Tạm Ngưng</span>
+                  </button>
+                </div>
+                {editFacilityStatus === "MAINTENANCE" && (
+                  <p className="text-[10px] text-amber-400/90 italic pt-0.5">
+                    * Lưu ý: Khi cơ sở ở trạng thái Bảo trì, hệ thống sẽ tạm ngưng tiếp nhận khách đặt thuê mới trên sơ đồ 2D.
+                  </p>
+                )}
+                {editFacilityStatus === "INACTIVE" && (
+                  <p className="text-[10px] text-rose-400/90 italic pt-0.5">
+                    * Lưu ý: Khi cơ sở Tạm ngưng, toàn bộ hoạt động đặt thuê mới sẽ bị khóa.
+                  </p>
                 )}
               </div>
 
@@ -1380,6 +1505,49 @@ export default function BomFacilitiesPage() {
                     placeholder="VD: 0901234567"
                     className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-semibold text-xs text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
                   />
+                </div>
+              </div>
+
+              {/* Row 6: Trạng thái ban đầu */}
+              <div>
+                <label className="block font-bold text-slate-300 uppercase text-[10px] mb-1.5 flex items-center gap-1.5">
+                  <Activity className="size-3 text-slate-400" />
+                  <span>Trạng Thái Ban Đầu Khi Khởi Tạo:</span>
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewFacStatus("ACTIVE")}
+                    className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      newFacStatus === "ACTIVE"
+                        ? "bg-emerald-950/70 border-emerald-500 text-emerald-300 ring-1 ring-emerald-500/50 shadow-sm"
+                        : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                    }`}
+                  >
+                    <span>🟢 Hoạt Động</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewFacStatus("MAINTENANCE")}
+                    className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      newFacStatus === "MAINTENANCE"
+                        ? "bg-amber-950/70 border-amber-500 text-amber-300 ring-1 ring-amber-500/50 shadow-sm"
+                        : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                    }`}
+                  >
+                    <span>🟠 Bảo Trì</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewFacStatus("INACTIVE")}
+                    className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      newFacStatus === "INACTIVE"
+                        ? "bg-rose-950/70 border-rose-500 text-rose-300 ring-1 ring-rose-500/50 shadow-sm"
+                        : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                    }`}
+                  >
+                    <span>🔴 Tạm Ngưng</span>
+                  </button>
                 </div>
               </div>
             </div>
