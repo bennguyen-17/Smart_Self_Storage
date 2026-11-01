@@ -2,7 +2,9 @@ import { describe, expect, test } from "vitest"
 
 import {
   daysRemaining,
+  feeTotals,
   filterContracts,
+  forfeitState,
   canConfirmForfeitProcessed,
   forfeitNoteError,
   isClosedContract,
@@ -182,4 +184,22 @@ describe("Xác nhận đã xử lý tài sản (hợp đồng FORFEITED)", () =>
   ])("ghi chú '$note' → $error", ({ note, error }) => {
     expect(forfeitNoteError(note)).toBe(error)
   })
+})
+
+describe("forfeitState: nút thanh lý chỉ khi BE đã chuyển Tịch thu", () => {
+  const today = "2026-11-01"
+  test.each([
+    { name: "đang hiệu lực", c: contract(1, { status: "ACTIVE", endDate: "2026-12-01" }), state: "NONE" },
+    { name: "quá hạn 5 ngày", c: contract(1, { status: "OVERDUE", endDate: "2026-10-27" }), state: "NONE" },
+    { name: "quá hạn đủ 30 ngày, BE chưa chuyển", c: contract(1, { status: "OVERDUE", endDate: "2026-10-02" }), state: "WAITING" },
+    { name: "đã tịch thu, chưa xử lý", c: contract(1, { status: "FORFEITED", endDate: "2026-09-01" }), state: "READY" },
+    { name: "đã xử lý tài sản", c: contract(1, { status: "FORFEITED", endDate: "2026-09-01", forfeitProcessed: true }), state: "DONE" },
+  ])("$name → $state", ({ c, state }) => {
+    expect(forfeitState(c, today)).toBe(state)
+  })
+})
+
+test("feeTotals cộng riêng đã thu / chưa thu / đã hủy", () => {
+  const c = contract(1, { fees: [fee(1, 600_000), fee(2, 300_000, "PAID", "CMP"), fee(3, 100_000, "CANCELLED"), fee(4, 50_000)] })
+  expect(feeTotals(c)).toEqual({ paid: 300_000, unpaid: 650_000, cancelled: 100_000 })
 })

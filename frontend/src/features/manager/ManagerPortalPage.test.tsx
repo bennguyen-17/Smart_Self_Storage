@@ -46,16 +46,17 @@ beforeEach(() => {
 })
 
 describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
-  test("/manager → chuyển tới trang mặc định /manager/units, navbar đủ 9 trang", async () => {
+  test("/manager → chuyển tới trang mặc định /manager/units, navbar đủ 8 trang (đã gỡ Giao việc, Trả kho & công nợ)", async () => {
     renderAt("/manager")
     expect(screen.getByTestId("location")).toHaveTextContent("/manager/units")
     expect(screen.getByRole("heading", { level: 1, name: "Quản lý ô kho" })).toBeInTheDocument()
     expect(within(desktopNav()).getAllByRole("link")).toHaveLength(8)
     expect(within(desktopNav()).queryByRole("link", { name: /^Giao việc/ })).not.toBeInTheDocument()
+    expect(within(desktopNav()).queryByRole("link", { name: /^Trả kho/ })).not.toBeInTheDocument()
     expect(within(desktopNav()).getByRole("link", { name: /^Hoạt động nhân viên/ })).toHaveAttribute("href", "/manager/activity")
     // Trang sự cố cơ sở: theo dõi & hỗ trợ xử lý ticket
     expect(within(desktopNav()).getByRole("link", { name: /^Sự cố cơ sở/ })).toHaveAttribute("href", "/manager/tickets")
-    expect(within(desktopNav()).getByRole("link", { name: /^Ô kho/ })).toHaveAttribute("aria-current", "page")
+    expect(within(desktopNav()).getByRole("link", { name: /^Quản lý ô kho/ })).toHaveAttribute("aria-current", "page")
     expect(await screen.findByText("HN01-F1-M01")).toBeInTheDocument()
   })
 
@@ -67,7 +68,7 @@ describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
 
   test.each([
     { link: "Báo cáo", path: "/manager/reports", title: "Báo cáo cơ sở & KPI" },
-    { link: "Khách & hợp đồng", path: "/manager/customers", title: "Khách hàng & hợp đồng" },
+    { link: "Quản lí hợp đồng", path: "/manager/customers", title: "Khách hàng & hợp đồng" },
     { link: "Hoàn tiền", path: "/manager/refunds", title: "Hoàn tiền cho khách hàng" },
     { link: "Phân công", path: "/manager/staff", title: "Phân công nhân viên" },
   ])("bấm '$link' → $path, trang đã có chức năng (không còn ô giữ chỗ)", async ({ link, path, title }) => {

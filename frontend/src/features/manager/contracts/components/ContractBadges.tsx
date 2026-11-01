@@ -1,8 +1,8 @@
 import { StatusBadge, type BadgeTone } from "@/components/internal/components/PanelKit"
 import { formatVnd } from "@/lib/format"
 
-import { CHECKOUT_STAGE_LABEL, CONTRACT_STATUS_LABEL, daysRemaining, isClosedContract, unpaidTotal } from "../contractRules"
-import type { CheckoutStage, ContractStatus, FacilityContract } from "../types"
+import { CHECKOUT_PROGRESS_LABEL, CONTRACT_STATUS_LABEL, daysRemaining, isClosedContract, unpaidTotal } from "../contractRules"
+import type { ContractStatus, FacilityContract } from "../types"
 
 const STATUS_TONE: Record<ContractStatus, BadgeTone> = {
   PENDING_CHECKIN: "amber",
@@ -14,15 +14,15 @@ const STATUS_TONE: Record<ContractStatus, BadgeTone> = {
   CANCELLED: "slate",
 }
 
-const STAGE_TONE: Record<CheckoutStage, BadgeTone> = { NONE: "slate", INSPECTED: "amber", HANDED_OVER: "blue" }
 
 export function ContractStatusBadge({ status }: { status: ContractStatus }) {
   // Trạng thái BE mới thêm mà FE chưa biết: vẫn hiện mã, màu trung tính, không vỡ giao diện
   return <StatusBadge tone={STATUS_TONE[status] ?? "slate"}>{CONTRACT_STATUS_LABEL[status] ?? status}</StatusBadge>
 }
 
-export function CheckoutStageBadge({ stage }: { stage: CheckoutStage }) {
-  return <StatusBadge tone={STAGE_TONE[stage]}>{CHECKOUT_STAGE_LABEL[stage]}</StatusBadge>
+/** Tiến độ giữ / trả kho theo trạng thái hợp đồng */
+export function CheckoutProgressBadge({ status }: { status: ContractStatus }) {
+  return <StatusBadge tone={STATUS_TONE[status] ?? "slate"}>{CHECKOUT_PROGRESS_LABEL[status] ?? status}</StatusBadge>
 }
 
 /** "Còn 30 ngày" / "Hết hạn hôm nay" / "Quá 4 ngày" với màu theo mức độ gấp */

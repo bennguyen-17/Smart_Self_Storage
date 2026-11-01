@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { InboxIcon, PencilIcon, RotateCwIcon, SnowflakeIcon } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "cn"
@@ -32,8 +32,11 @@ function UnitManagementPanel() {
     getManagerUnits(ctx, {})
   )
 
-  const floorName = (id: number) =>
-    shortFloorName(floors.data?.find((f) => f.floorId === id)?.floorName ?? `Tầng ${id}`)
+  // useCallback: useMemo tìm kiếm bên dưới dùng hàm này, giữ cùng một hàm khi danh sách tầng không đổi
+  const floorName = useCallback(
+    (id: number) => shortFloorName(floors.data?.find((f) => f.floorId === id)?.floorName ?? `Tầng ${id}`),
+    [floors.data]
+  )
 
   const keyword = searchQuery.trim().toLowerCase()
 
@@ -55,7 +58,7 @@ function UnitManagementPanel() {
         type.includes(keyword)
       )
     })
-  }, [units.data, keyword, floors.data])
+  }, [units.data, keyword, floorName])
 
   const counts = STATUS_ORDER.reduce<Record<string, number>>((acc, s) => {
     acc[s] = searchedUnits.filter((u) => normalizeUnitStatus(u.status) === s).length

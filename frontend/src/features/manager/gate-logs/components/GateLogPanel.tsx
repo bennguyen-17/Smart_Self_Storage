@@ -1,13 +1,5 @@
 import { useMemo, useState } from "react"
-import {
-  CheckCircle2Icon,
-  InboxIcon,
-  KeyRoundIcon,
-  RotateCwIcon,
-  SmartphoneIcon,
-  UserCheckIcon,
-  UsersIcon,
-} from "lucide-react"
+import { CheckCircle2Icon, InboxIcon, RotateCwIcon } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -150,11 +142,6 @@ function GateLogPanel() {
 
                 {!isLoading &&
                   slice.rows.map((log) => {
-                    const isManual =
-                      (log.action && log.action.toUpperCase().includes("MANUAL")) ||
-                      (log.accessMethod && log.accessMethod.includes("Thẻ Master")) ||
-                      (log.reason && log.reason.toLowerCase().includes("thẻ master"))
-
                     const personName = log.personName || (log.customerId ? `Khách hàng #${log.customerId}` : "Khách vãng lai")
                     const role = log.personRole || (log.customerId ? "Khách hàng" : "Nhân viên")
                     const isCustomer = role.toLowerCase().includes("khách")
