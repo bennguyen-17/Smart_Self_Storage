@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import { useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
@@ -17,6 +17,8 @@ import {
   Phone,
   Mail,
   ChevronDown,
+  Calendar,
+  Check,
   MapPin,
   Search,
   Snowflake,
@@ -165,6 +167,33 @@ export default function BomFacilitiesPage() {
 
   // State bộ lọc thời gian doanh thu bảng cơ sở: "this_month" (mặc định), "last_3_months", "all_time"
   const [revenuePeriod, setRevenuePeriod] = useState<"this_month" | "last_3_months" | "all_time">("this_month")
+
+  const REVENUE_PERIOD_OPTIONS = [
+    { key: "this_month", label: "Tháng Này" },
+    { key: "last_3_months", label: "3 Tháng Gần Nhất" },
+    { key: "all_time", label: "Toàn Thời Gian" },
+  ] as const
+
+  const [isDetailPeriodOpen, setIsDetailPeriodOpen] = useState(false)
+  const detailPeriodRef = useRef<HTMLDivElement>(null)
+
+  const [isListPeriodOpen, setIsListPeriodOpen] = useState(false)
+  const listPeriodRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (detailPeriodRef.current && !detailPeriodRef.current.contains(e.target as Node)) {
+        setIsDetailPeriodOpen(false)
+      }
+      if (listPeriodRef.current && !listPeriodRef.current.contains(e.target as Node)) {
+        setIsListPeriodOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
 
   // Modal State Cấu hình cơ sở
   const [isFacilityModalOpen, setIsFacilityModalOpen] = useState(false)
@@ -521,44 +550,48 @@ export default function BomFacilitiesPage() {
                 </div>
 
                 <div className="flex flex-col items-end gap-2 shrink-0">
-                  {/* BỘ LỌC 3 NÚT: THÁNG NÀY | 3 THÁNG GẦN NHẤT | TOÀN THỜI GIAN */}
-                  <div className="flex items-center bg-slate-100 dark:bg-slate-950/80 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-inner">
+                  {/* BỘ LỌC THỜI GIAN (DROPDOWN SỔ XUỐNG) */}
+                  <div className="relative" ref={detailPeriodRef}>
                     <button
                       type="button"
-                      onClick={() => setRevenuePeriod("this_month")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        revenuePeriod === "this_month"
-                          ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                      }`}
-                      title="Xem thông số tháng hiện tại"
+                      onClick={() => setIsDetailPeriodOpen((prev) => !prev)}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-blue-500 dark:hover:border-blue-500 shadow-xs transition-all cursor-pointer"
+                      title="Chọn khoảng thời gian xem báo cáo"
                     >
-                      Tháng Này
+                      <Calendar className="size-3.5 text-blue-600 dark:text-blue-400" />
+                      <span>{periodLabel}</span>
+                      <ChevronDown
+                        className={`size-3.5 text-slate-400 transition-transform duration-200 ${
+                          isDetailPeriodOpen ? "rotate-180 text-blue-600 dark:text-blue-400" : ""
+                        }`}
+                      />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setRevenuePeriod("last_3_months")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        revenuePeriod === "last_3_months"
-                          ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                      }`}
-                      title="Xem thông số 3 tháng gần nhất"
-                    >
-                      3 Tháng Gần Nhất
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRevenuePeriod("all_time")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        revenuePeriod === "all_time"
-                          ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                      }`}
-                      title="Xem thông số toàn thời gian"
-                    >
-                      Toàn Thời Gian
-                    </button>
+
+                    {isDetailPeriodOpen && (
+                      <div className="absolute right-0 top-full mt-1.5 w-44 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-50 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                        {REVENUE_PERIOD_OPTIONS.map((opt) => {
+                          const isActive = revenuePeriod === opt.key
+                          return (
+                            <button
+                              key={opt.key}
+                              type="button"
+                              onClick={() => {
+                                setRevenuePeriod(opt.key)
+                                setIsDetailPeriodOpen(false)
+                              }}
+                              className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-left transition-colors cursor-pointer ${
+                                isActive
+                                  ? "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold"
+                                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                              }`}
+                            >
+                              <span>{opt.label}</span>
+                              {isActive && <Check className="size-3.5 text-blue-600 dark:text-blue-400" />}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Thanh chuyển đổi nhanh các cơ sở - Gọn gàng trên 1 hàng */}
@@ -757,44 +790,54 @@ export default function BomFacilitiesPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
-              {/* BỘ LỌC KHOẢNG THỜI GIAN DOANH THU */}
-              <div className="flex items-center bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+              {/* BỘ LỌC KHOẢNG THỜI GIAN DOANH THU (DROPDOWN SỔ XUỐNG) */}
+              <div className="relative" ref={listPeriodRef}>
                 <button
                   type="button"
-                  onClick={() => setRevenuePeriod("this_month")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    revenuePeriod === "this_month"
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                  }`}
-                  title="Xem doanh thu tháng hiện tại"
+                  onClick={() => setIsListPeriodOpen((prev) => !prev)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-blue-500 dark:hover:border-blue-500 shadow-xs transition-all cursor-pointer"
+                  title="Chọn khoảng thời gian doanh thu"
                 >
-                  Tháng Này
+                  <Calendar className="size-3.5 text-blue-600 dark:text-blue-400" />
+                  <span>
+                    {revenuePeriod === "this_month"
+                      ? "Tháng Này"
+                      : revenuePeriod === "last_3_months"
+                        ? "3 Tháng Gần Nhất"
+                        : "Toàn Thời Gian"}
+                  </span>
+                  <ChevronDown
+                    className={`size-3.5 text-slate-400 transition-transform duration-200 ${
+                      isListPeriodOpen ? "rotate-180 text-blue-600 dark:text-blue-400" : ""
+                    }`}
+                  />
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setRevenuePeriod("last_3_months")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    revenuePeriod === "last_3_months"
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                  }`}
-                  title="Xem doanh thu 3 tháng gần nhất"
-                >
-                  3 Tháng Gần Nhất
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRevenuePeriod("all_time")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    revenuePeriod === "all_time"
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                  }`}
-                  title="Xem tổng doanh thu toàn thời gian"
-                >
-                  Toàn Thời Gian
-                </button>
+
+                {isListPeriodOpen && (
+                  <div className="absolute right-0 top-full mt-1.5 w-44 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-50 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                    {REVENUE_PERIOD_OPTIONS.map((opt) => {
+                      const isActive = revenuePeriod === opt.key
+                      return (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => {
+                            setRevenuePeriod(opt.key)
+                            setIsListPeriodOpen(false)
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-left transition-colors cursor-pointer ${
+                            isActive
+                              ? "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold"
+                              : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                          }`}
+                        >
+                          <span>{opt.label}</span>
+                          {isActive && <Check className="size-3.5 text-blue-600 dark:text-blue-400" />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* NÚT THÊM CƠ SỞ KHO MỚI */}

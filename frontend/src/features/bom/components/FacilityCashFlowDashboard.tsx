@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect } from "react"
-import { TrendingUp, Warehouse } from "lucide-react"
+import React, { useState, useMemo, useEffect, useRef } from "react"
+import { TrendingUp, Warehouse, Calendar, ChevronDown, Check } from "lucide-react"
 
 export interface MonthlyRevenuePoint {
   month: string
@@ -71,6 +71,23 @@ export default function FacilityCashFlowDashboard({
     normalizePeriod(period)
   )
 
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false)
+      }
+    }
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [isDropdownOpen])
+
   useEffect(() => {
     if (period !== undefined) {
       setInternalPeriod(normalizePeriod(period))
@@ -82,6 +99,7 @@ export default function FacilityCashFlowDashboard({
   const handleSelectPeriod = (newP: "1_month" | "2_months" | "3_months" | "all") => {
     setInternalPeriod(newP)
     setSelectedMonthIndex(null)
+    setIsDropdownOpen(false)
     onPeriodChange?.(newP)
   }
 
@@ -284,25 +302,45 @@ export default function FacilityCashFlowDashboard({
               </div>
             </div>
 
-            {/* BỘ LỌC KHOẢNG THỜI GIAN: 1 THÁNG, 2 THÁNG, 3 THÁNG, TẤT CẢ */}
-            <div className="flex items-center bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs self-start sm:self-center shrink-0">
-              {CASH_FLOW_PERIOD_OPTIONS.map((opt) => {
-                const isActive = currentPeriod === opt.key
-                return (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    onClick={() => handleSelectPeriod(opt.key)}
-                    className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                      isActive
-                        ? "bg-blue-600 text-white shadow-xs"
-                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                )
-              })}
+            {/* BỘ LỌC KHOẢNG THỜI GIAN (DROPDOWN SỔ XUỐNG) */}
+            <div className="relative self-start sm:self-center shrink-0" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsDropdownOpen((prev) => !prev)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-blue-500 dark:hover:border-blue-500 shadow-xs transition-all cursor-pointer"
+                title="Chọn khoảng thời gian lọc"
+              >
+                <Calendar className="size-3.5 text-blue-600 dark:text-blue-400" />
+                <span>{CASH_FLOW_PERIOD_OPTIONS.find((opt) => opt.key === currentPeriod)?.label || "Tất Cả"}</span>
+                <ChevronDown
+                  className={`size-3.5 text-slate-400 transition-transform duration-200 ${
+                    isDropdownOpen ? "rotate-180 text-blue-600 dark:text-blue-400" : ""
+                  }`}
+                />
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-36 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-50 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                  {CASH_FLOW_PERIOD_OPTIONS.map((opt) => {
+                    const isActive = currentPeriod === opt.key
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => handleSelectPeriod(opt.key)}
+                        className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-left transition-colors cursor-pointer ${
+                          isActive
+                            ? "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold"
+                            : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        {isActive && <Check className="size-3.5 text-blue-600 dark:text-blue-400" />}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
