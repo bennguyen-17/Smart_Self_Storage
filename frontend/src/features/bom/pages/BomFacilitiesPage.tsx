@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react"
+import { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { createPortal } from "react-dom"
 import { useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
@@ -36,13 +36,8 @@ import { useBomContext } from "@/features/bom/context/BomContext"
 import { type FacilityPerformance } from "@/features/bom/data/bomData"
 import { bomApi } from "@/features/bom/api/bomApi"
 import FacilityCashFlowDashboard from "@/features/bom/components/FacilityCashFlowDashboard"
-
-const MANAGER_PRESETS = [
-  { name: "Trần Văn Quản Lý", phone: "0912 345 678", email: "quanly.tran@smartstorage.vn" },
-  { name: "Nguyễn Thị Mai", phone: "0987 654 321", email: "mai.nguyen@smartstorage.vn" },
-  { name: "Lê Hoàng Long", phone: "0903 888 999", email: "long.le@smartstorage.vn" },
-  { name: "Phạm Minh Tuấn", phone: "0934 112 233", email: "tuan.pham@smartstorage.vn" },
-]
+import { listAccounts } from "@/features/admin/accounts/api/accountApi"
+import type { InternalAccount } from "@/features/admin/accounts/types"
 
 const getInitials = (name: string) => {
   if (!name || !name.trim() || name === "Chưa phân công") return "FM"
@@ -314,27 +309,98 @@ export default function BomFacilitiesPage() {
     return newFacLayout === "A" ? 46 : 15
   }, [newFacLayout])
 
-  // Danh sách quản lý khả dụng (từ Preset & cơ sở hiện có)
-  const availableManagers = useMemo(() => {
-    const map = new Map<string, { name: string; phone: string; email: string }>()
+  const [internalAccounts, setInternalAccounts] = useState<InternalAccount[]>([])
 
-    MANAGER_PRESETS.forEach((p) => {
-      map.set(p.name, p)
-    })
+  const loadAccounts = useCallback(() => {
+    listAccounts()
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setInternalAccounts(data)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
-    facilities.forEach((f) => {
-      const clean = (f.managerName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
-      if (clean && clean !== "Chưa phân công" && !map.has(clean)) {
-        map.set(clean, {
-          name: clean,
-          phone: f.managerPhone || "",
-          email: f.managerEmail || "manager@smartstorage.vn",
-        })
+  useEffect(() => {
+    loadAccounts()
+    window.addEventListener("storage_facilities_updated", loadAccounts)
+    return () => window.removeEventListener("storage_facilities_updated", loadAccounts)
+  }, [loadAccounts])
+
+  // Lọc danh sách quản lý hợp lệ: Chỉ role = MANAGER, status = ACTIVE, và CHƯA phụ trách cơ sở nào (mỗi cơ sở 1 quản lý)
+  const getEligibleManagers = useCallback(
+    (targetFacilityId?: number | null, currentManagerName?: string) => {
+      const assignedNamesInOtherFacilities = new Set<string>()
+      facilities.forEach((f) => {
+        const facId = Number(f.id)
+        if (targetFacilityId && facId === targetFacilityId) return
+        const clean = (f.managerName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim().toLowerCase()
+        if (clean && clean !== "chưa phân công" && clean !== "chua phan cong") {
+          assignedNamesInOtherFacilities.add(clean)
+        }
+      })
+
+      const list: { name: string; phone: string; email: string; accountId?: number; facilityId?: number | null }[] = []
+      const seenNames = new Set<string>()
+
+      internalAccounts.forEach((acc) => {
+        // 1. Chỉ những người có role là MANAGER (Quản lý cơ sở)
+        if (acc.role !== "MANAGER") return
+        // 2. Tài khoản phải đang hoạt động (ACTIVE)
+        if (acc.status !== "ACTIVE") return
+
+        const cleanName = (acc.fullName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+        if (!cleanName) return
+
+        // 3. Validate mỗi cơ sở chỉ có 1 manager:
+        // Manager nào đã quản lý cơ sở KHÁC thì KHÔNG được hiện
+        const isAssignedToOther =
+          (acc.facilityId != null && targetFacilityId != null && Number(acc.facilityId) !== Number(targetFacilityId)) ||
+          (acc.facilityId != null && targetFacilityId == null) ||
+          (assignedNamesInOtherFacilities.has(cleanName.toLowerCase()) &&
+            (!currentManagerName || cleanName.toLowerCase() !== currentManagerName.trim().toLowerCase()))
+
+        if (isAssignedToOther) return
+
+        if (!seenNames.has(cleanName.toLowerCase())) {
+          seenNames.add(cleanName.toLowerCase())
+          list.push({
+            name: cleanName,
+            phone: acc.phone || "",
+            email: acc.email || "manager@smartstorage.vn",
+            accountId: acc.accountId,
+            facilityId: acc.facilityId,
+          })
+        }
+      })
+
+      // Nếu cơ sở hiện tại đã có manager (currentManagerName) mà chưa có trong list, giữ lại để hiển thị
+      if (currentManagerName) {
+        const cleanCur = currentManagerName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+        if (cleanCur && cleanCur !== "Chưa phân công" && !seenNames.has(cleanCur.toLowerCase())) {
+          list.unshift({
+            name: cleanCur,
+            phone: editManagerPhone || "",
+            email: editManagerEmail || "manager@smartstorage.vn",
+            facilityId: targetFacilityId,
+          })
+        }
       }
-    })
 
-    return Array.from(map.values())
-  }, [facilities])
+      return list
+    },
+    [facilities, internalAccounts, editManagerPhone, editManagerEmail]
+  )
+
+  // Quản lý khả dụng cho modal Sửa cấu hình cơ sở
+  const availableManagers = useMemo(() => {
+    return getEligibleManagers(selectedFacility ? Number(selectedFacility.id) : null, selectedFacility?.managerName)
+  }, [getEligibleManagers, selectedFacility])
+
+  // Quản lý khả dụng cho modal Thêm cơ sở mới (chỉ manager chưa quản lý cơ sở nào)
+  const addAvailableManagers = useMemo(() => {
+    return getEligibleManagers(null, "")
+  }, [getEligibleManagers])
 
   const handleOpenAddModal = () => {
     const defaultCity = "HN"
@@ -375,6 +441,21 @@ export default function BomFacilitiesPage() {
     const finalManagerPhone = editManagerPhone.trim()
     const finalManagerEmail = editManagerEmail.trim() || "manager@smartstorage.vn"
 
+    if (finalManagerName && finalManagerName !== "Chưa phân công") {
+      const duplicateFacility = facilities.find(
+        (f) =>
+          Number(f.id) !== Number(selectedFacility.id) &&
+          (f.managerName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim().toLowerCase() ===
+            finalManagerName.toLowerCase()
+      )
+      if (duplicateFacility) {
+        toast.error(
+          `Quản lý [${finalManagerName}] đang phụ trách cơ sở [${duplicateFacility.code} - ${duplicateFacility.name}]! Mỗi cơ sở chỉ có 1 Quản lý và 1 Quản lý chỉ phụ trách 1 cơ sở.`
+        )
+        return
+      }
+    }
+
     const success = await updateFacilityInDb(Number(selectedFacility.id), {
       facilityName: selectedFacility.name,
       address: selectedFacility.address,
@@ -406,6 +487,7 @@ export default function BomFacilitiesPage() {
     } else {
       toast.success(`Đã cập nhật cấu hình cơ sở ${selectedFacility.name}!`)
     }
+    loadAccounts()
     setIsFacilityModalOpen(false)
   }
 
@@ -443,6 +525,20 @@ export default function BomFacilitiesPage() {
       return
     }
 
+    if (newFacManager.trim() && newFacManager.trim() !== "Chưa phân công") {
+      const duplicateFacility = facilities.find(
+        (f) =>
+          (f.managerName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim().toLowerCase() ===
+            newFacManager.trim().toLowerCase()
+      )
+      if (duplicateFacility) {
+        toast.error(
+          `Quản lý [${newFacManager.trim()}] đang phụ trách cơ sở [${duplicateFacility.code} - ${duplicateFacility.name}]! Mỗi cơ sở chỉ có 1 Quản lý.`
+        )
+        return
+      }
+    }
+
     setIsSubmitting(true)
     try {
       const codeToUse = newFacCode.trim().toUpperCase() || getNextFacilityCode(newFacCity, facilities)
@@ -459,6 +555,7 @@ export default function BomFacilitiesPage() {
 
       if (success) {
         toast.success(`Đã thêm cơ sở [${codeToUse}] ${newFacName.trim()} & đồng bộ sơ đồ 2D lên Customer Portal!`)
+        loadAccounts()
         setIsAddFacilityModalOpen(false)
       } else {
         const newFacility: FacilityPerformance = {
@@ -1103,7 +1200,7 @@ export default function BomFacilitiesPage() {
                           ? availableManagers.find(
                               (p) => p.name.trim().toLowerCase() === editManagerName.trim().toLowerCase()
                             )?.name
-                          : editManagerName.trim()
+                          : editManagerName.trim() && editManagerName !== "Chưa phân công"
                           ? "__CUSTOM__"
                           : ""
                       }
@@ -1127,7 +1224,7 @@ export default function BomFacilitiesPage() {
                       className="w-full appearance-none px-3.5 py-2.5 pr-10 rounded-xl border border-slate-700 bg-slate-900 font-bold text-xs text-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition cursor-pointer shadow-inner"
                     >
                       <option value="" className="bg-slate-900 text-slate-400 font-normal">
-                        -- Chọn quản lý từ danh sách nhân sự --
+                        -- Chọn quản lý chưa phụ trách cơ sở (Mỗi cơ sở 1 quản lý) --
                       </option>
                       {availableManagers.map((p) => (
                         <option key={p.name} value={p.name} className="bg-slate-900 text-white font-medium py-1">
@@ -1135,16 +1232,23 @@ export default function BomFacilitiesPage() {
                         </option>
                       ))}
                       {editManagerName.trim() &&
+                        editManagerName !== "Chưa phân công" &&
                         !availableManagers.some(
                           (p) => p.name.trim().toLowerCase() === editManagerName.trim().toLowerCase()
                         ) && (
                           <option value="__CUSTOM__" className="bg-slate-900 text-blue-300 font-medium">
-                            ✍️ Tùy chỉnh: {editManagerName}
+                            👤 {editManagerName} (Hiện tại)
                           </option>
                         )}
                     </select>
                     <ChevronDown className="absolute right-3.5 top-3 size-4 text-slate-400 pointer-events-none" />
                   </div>
+                  {availableManagers.length === 0 && (!editManagerName || editManagerName === "Chưa phân công") && (
+                    <p className="mt-1.5 text-[11px] text-amber-400 font-medium flex items-center gap-1">
+                      <span>ℹ️</span>
+                      <span>Không có Quản lý nào chưa phân công. Mỗi cơ sở chỉ có 1 Quản lý và tất cả quản lý hiện tại đều đã phụ trách cơ sở.</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* 2. KHI BẤM CHỌN -> HIỆN THÔNG TIN MANAGER XUỐNG DƯỚI */}
@@ -1483,13 +1587,30 @@ export default function BomFacilitiesPage() {
                   <label className="block font-bold text-slate-300 uppercase text-[10px] mb-1">
                     Quản Lý Chi Nhánh Phụ Trách:
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={newFacManager}
-                    onChange={(e) => setNewFacManager(e.target.value)}
-                    placeholder="VD: Nguyễn Văn Quản Lý"
-                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-semibold text-xs text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
-                  />
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setNewFacManager(val)
+                      const found = addAvailableManagers.find((m) => m.name === val)
+                      if (found && found.phone) {
+                        setNewFacPhone(found.phone)
+                      }
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-semibold text-xs text-white outline-none focus:border-blue-500 cursor-pointer"
+                  >
+                    <option value="">-- Chưa phân công quản lý --</option>
+                    {addAvailableManagers.map((m) => (
+                      <option key={m.name} value={m.name}>
+                        👤 {m.name} {m.phone ? `• SĐT: ${m.phone}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  {addAvailableManagers.length === 0 && (
+                    <p className="text-[10px] text-amber-400 mt-1">
+                      ⚠️ Tất cả Quản lý hiện tại đều đã phụ trách cơ sở. Cơ sở mới sẽ để trạng thái "Chưa phân công".
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block font-bold text-slate-300 uppercase text-[10px] mb-1">

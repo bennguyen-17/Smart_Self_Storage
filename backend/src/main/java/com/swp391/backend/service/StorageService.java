@@ -17,6 +17,7 @@ import com.swp391.backend.dto.FacilityRequest;
 import com.swp391.backend.dto.FacilityResponse;
 import com.swp391.backend.dto.PriceDto;
 import com.swp391.backend.dto.UnitDetailResponse;
+import com.swp391.backend.entity.Account;
 import com.swp391.backend.entity.ActivityLog;
 import com.swp391.backend.entity.Facility;
 import com.swp391.backend.entity.FeePolicy;
@@ -866,10 +867,22 @@ public class StorageService {
                 List<com.swp391.backend.entity.Account> allAccs = accountRepository.findAll();
                 Optional<com.swp391.backend.entity.Account> matchedMgr = allAccs.stream()
                         .filter(a -> Long.valueOf(3L).equals(a.getRoleId()))
-                        .filter(a -> a.getFullName() != null && a.getFullName().toLowerCase().contains(targetName.toLowerCase()))
+                        .filter(a -> "ACTIVE".equalsIgnoreCase(a.getStatus()))
+                        .filter(a -> a.getFullName() != null && (a.getFullName().equalsIgnoreCase(targetName) || a.getFullName().toLowerCase().contains(targetName.toLowerCase())))
                         .findFirst();
                 if (matchedMgr.isPresent()) {
-                    employeeProfileRepository.save(new com.swp391.backend.entity.EmployeeProfile(matchedMgr.get().getAccountId().intValue(), facilityId));
+                    Account mgrAcc = matchedMgr.get();
+                    Optional<com.swp391.backend.entity.EmployeeProfile> otherFacEmp = employeeProfileRepository.findByAccountId(mgrAcc.getAccountId().intValue());
+                    if (otherFacEmp.isPresent()) {
+                        com.swp391.backend.entity.EmployeeProfile ep = otherFacEmp.get();
+                        if (ep.getFacilityId() != null && !ep.getFacilityId().equals(facilityId)) {
+                            throw new IllegalArgumentException("Quản lý [" + mgrAcc.getFullName() + "] đã phụ trách cơ sở khác (#" + ep.getFacilityId() + ")! Mỗi cơ sở chỉ được có 1 Quản lý và 1 Quản lý chỉ quản lý 1 cơ sở.");
+                        }
+                        ep.setFacilityId(facilityId);
+                        employeeProfileRepository.save(ep);
+                    } else {
+                        employeeProfileRepository.save(new com.swp391.backend.entity.EmployeeProfile(mgrAcc.getAccountId().intValue(), facilityId));
+                    }
                 }
             }
         }
