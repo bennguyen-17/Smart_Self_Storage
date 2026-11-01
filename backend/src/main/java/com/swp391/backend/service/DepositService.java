@@ -237,7 +237,6 @@ public class DepositService {
         payment.setRemainingAmount(initialRentalAmount);
         payment.setStatus("PARTIALLY_PAID");
         payment.setPaymentStatus("SUCCESS");
-        // Store online gateway names such as VIETQR using the Payment enum value supported by MySQL.
         payment.setPaymentMethod("BANK_TRANSFER");
         payment.setTransactionCode(request.getTransactionCode() != null ? request.getTransactionCode() : "TXN_" + System.currentTimeMillis());
         payment.setGatewayTransactionId(request.getGatewayTransactionId());
