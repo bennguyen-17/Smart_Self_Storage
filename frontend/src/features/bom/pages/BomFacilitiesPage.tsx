@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
@@ -485,9 +485,9 @@ export default function BomFacilitiesPage() {
           const overdue = Number(fAny.overdueContracts ?? fAny.overdueUnits ?? 0)
           const tUnits = Number(fAny.totalUnits ?? 46)
 
-          // 2. Phân bổ vận hành theo chu kỳ được chọn
+          // 2. Vận hành cơ sở kho (Đồng bộ số liệu thực tế với danh sách cơ sở)
           const totalOcc = Number(fAny.occupiedUnits ?? fAny.occupied ?? 0)
-          const occUnits = isThisMonth ? Math.max(1, Math.round(totalOcc * 0.4)) : totalOcc
+          const occUnits = totalOcc
           const resUnits = Number(fAny.reservedUnits ?? fAny.reserved ?? 0)
           const maintUnits = Number(fAny.maintenanceUnits ?? fAny.maintenance ?? 0)
           const availUnits = Math.max(0, tUnits - occUnits - resUnits - maintUnits)
@@ -675,19 +675,7 @@ export default function BomFacilitiesPage() {
                               const st = (u.status || "").toUpperCase()
                               return st === "HOLD" || st === "RESERVED"
                             }).length
-                            let maintenance = list.filter((u) => (u.status || "").toUpperCase() === "MAINTENANCE").length
-
-                            if (isThisMonth) {
-                              if (code === "HN01") {
-                                if (cfg.size === "S") occupied = 1
-                                else if (cfg.size === "M") occupied = 0
-                                else if (cfg.size === "L") occupied = 1
-                                else if (cfg.size === "XL") occupied = 1
-                              } else {
-                                occupied = Math.min(occupied, Math.max(0, Math.round(occupied * 0.4)))
-                              }
-                              available = Math.max(0, total - occupied - hold - maintenance)
-                            }
+                            const maintenance = list.filter((u) => (u.status || "").toUpperCase() === "MAINTENANCE").length
 
                             const occRate = total > 0 ? Math.round((occupied / total) * 100) : 0
 
@@ -723,7 +711,10 @@ export default function BomFacilitiesPage() {
                             )
                           })
 
-                          const grandRate = grandTotal > 0 ? Math.round((grandOccupied / grandTotal) * 100) : 0
+                          const grandRate =
+                            grandTotal > 0
+                              ? Number(((grandOccupied / grandTotal) * 100).toFixed(1)).toString().replace(/\.0$/, "")
+                              : "0"
 
                           return (
                             <>
