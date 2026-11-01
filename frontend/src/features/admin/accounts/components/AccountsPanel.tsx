@@ -338,6 +338,24 @@ function AccountsPanel() {
               onConfirm={async () => {
                 const next = dialog.account.status === "ACTIVE" ? "LOCKED" : "ACTIVE"
                 await setAccountStatus(dialog.account.accountId, next)
+                if (typeof window !== "undefined" && dialog.account.facilityId) {
+                  try {
+                    const raw = localStorage.getItem("smart_storage_facility_managers")
+                    const curr = raw ? JSON.parse(raw) : {}
+                    const facIdStr = String(dialog.account.facilityId)
+                    if (next === "LOCKED") {
+                      delete curr[facIdStr]
+                      delete curr[dialog.account.facilityId]
+                    } else if (dialog.account.role === "MANAGER") {
+                      curr[facIdStr] = {
+                        name: dialog.account.fullName.trim(),
+                        email: dialog.account.email.trim(),
+                        phone: (dialog.account.phone ?? "").trim(),
+                      }
+                    }
+                    localStorage.setItem("smart_storage_facility_managers", JSON.stringify(curr))
+                  } catch (e) {}
+                }
                 done(`${next === "LOCKED" ? "Đã khóa" : "Đã mở khóa"} tài khoản ${dialog.account.fullName}`)
               }}
             />

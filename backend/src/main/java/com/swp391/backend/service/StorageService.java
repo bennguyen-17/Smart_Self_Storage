@@ -276,7 +276,9 @@ public class StorageService {
             List<com.swp391.backend.entity.EmployeeProfile> emps = employeeProfileRepository.findByFacilityId(f.getFacilityId());
             for (com.swp391.backend.entity.EmployeeProfile ep : emps) {
                 Optional<com.swp391.backend.entity.Account> accOpt = accountRepository.findAccountByAccountId(ep.getAccountId());
-                if (accOpt.isPresent() && Long.valueOf(3L).equals(accOpt.get().getRoleId())) {
+                if (accOpt.isPresent() 
+                        && Long.valueOf(3L).equals(accOpt.get().getRoleId())
+                        && "ACTIVE".equalsIgnoreCase(accOpt.get().getStatus())) {
                     com.swp391.backend.entity.Account acc = accOpt.get();
                     String name = acc.getFullName() != null ? acc.getFullName().trim() : "";
                     String cleanName = name.replaceAll("\\s*\\([^)]*\\)", "").trim();

@@ -273,27 +273,29 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
             ? fixMojibake(breakdown.managerName).replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
             : ""
           const savedMgr = savedManagersMap[facId] || savedManagersMap[f.facilityCode]
-          const savedMgrName = (savedMgr?.name && savedMgr.name !== "Chưa phân công" && savedMgr.name.trim())
-            ? savedMgr.name.trim()
-            : ""
+          const finalMgrName = dbMgrName || breakdownMgrName || "Chưa phân công"
+          const finalMgrEmail = (dbMgrName && f.managerEmail) || (breakdownMgrName && breakdown?.managerEmail) || (f.managerId ? `manager${f.managerId}@smartstorage.vn` : "manager@smartstorage.vn")
+          const finalMgrPhone = (dbMgrName && f.managerPhone) || (breakdownMgrName && breakdown?.managerPhone) || f.phone || "0900000000"
 
-          const finalMgrName = dbMgrName || breakdownMgrName || savedMgrName || (f.managerId ? `Quản lý ID #${f.managerId}` : "Chưa phân công")
-          const finalMgrEmail = (dbMgrName && f.managerEmail) || (breakdownMgrName && breakdown?.managerEmail) || (savedMgrName && savedMgr?.email) || (f.managerId ? `manager${f.managerId}@smartstorage.vn` : "manager@smartstorage.vn")
-          const finalMgrPhone = (dbMgrName && f.managerPhone) || (breakdownMgrName && breakdown?.managerPhone) || (savedMgrName && savedMgr?.phone) || f.phone || "0900000000"
-
-          if (dbMgrName) {
-            try {
-              const raw = localStorage.getItem("smart_storage_facility_managers")
-              if (raw) {
-                const curr = JSON.parse(raw)
+          try {
+            const raw = localStorage.getItem("smart_storage_facility_managers")
+            if (raw) {
+              const curr = JSON.parse(raw)
+              if (dbMgrName) {
                 if (curr[facId]?.name === "Chưa phân công" || curr[f.facilityCode]?.name === "Chưa phân công") {
                   delete curr[facId]
                   delete curr[f.facilityCode]
                   localStorage.setItem("smart_storage_facility_managers", JSON.stringify(curr))
                 }
+              } else {
+                if (curr[facId]?.name && curr[facId]?.name !== "Chưa phân công") {
+                  delete curr[facId]
+                  delete curr[f.facilityCode]
+                  localStorage.setItem("smart_storage_facility_managers", JSON.stringify(curr))
+                }
               }
-            } catch (e) {}
-          }
+            }
+          } catch (e) {}
           const stdUnits = (f.layoutType === "B" || f.layoutType === "Layout B") ? 15 : 46
 
           return {

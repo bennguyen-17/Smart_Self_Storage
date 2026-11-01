@@ -218,10 +218,9 @@ export const getBranches = async () => {
       const facId = f.facilityId || f.id;
       const cached = storedManagers[facId] || storedManagers[String(facId)] || (f.facilityCode ? storedManagers[f.facilityCode] : null);
       const hasDbManager = Boolean(f.managerName && f.managerName !== 'Chưa phân công' && String(f.managerName).trim());
-      const hasCachedManager = Boolean(cached?.name && cached.name !== 'Chưa phân công' && String(cached.name).trim());
-      const managerName = hasDbManager ? f.managerName : (hasCachedManager ? cached.name : (f.managerName || 'Chưa phân công'));
-      const managerPhone = hasDbManager ? (f.managerPhone || cached?.phone) : (cached?.phone || f.managerPhone);
-      const managerEmail = hasDbManager ? (f.managerEmail || cached?.email) : (cached?.email || f.managerEmail);
+      const managerName = hasDbManager ? f.managerName : 'Chưa phân công';
+      const managerPhone = hasDbManager ? f.managerPhone : f.phone;
+      const managerEmail = hasDbManager ? f.managerEmail : 'manager@smartstorage.vn';
 
       const item = {
         id: f.facilityCode || (facId ? `FAC-${facId}` : f.id),

@@ -339,7 +339,9 @@ public class DashboardService {
                 .filter(e -> facilityId.equals(e.getFacilityId()))
                 .filter(e -> {
                     Optional<com.swp391.backend.entity.Account> acc = accountRepository.findAccountByAccountId(e.getAccountId());
-                    return acc.isPresent() && Long.valueOf(3L).equals(acc.get().getRoleId());
+                    return acc.isPresent() 
+                            && Long.valueOf(3L).equals(acc.get().getRoleId())
+                            && "ACTIVE".equalsIgnoreCase(acc.get().getStatus());
                 })
                 .findFirst();
 

@@ -144,20 +144,6 @@ export const getFacilityCity = (address?: string, code?: string): string => {
 export const hasAssignedManager = (fac: any): boolean => {
   if (!fac) return false;
   let mgrName = fac.managerName;
-  if (typeof window !== 'undefined' && (fac.backendId || fac.id)) {
-    try {
-      const raw = localStorage.getItem('smart_storage_facility_managers');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        const saved = parsed[fac.backendId || fac.id] || (fac.code ? parsed[fac.code] : null);
-        const isDbMgrValid = Boolean(mgrName && mgrName !== 'Chưa phân công' && String(mgrName).trim());
-        if (!isDbMgrValid && saved && saved.name !== undefined && saved.name !== 'Chưa phân công' && String(saved.name).trim()) {
-          mgrName = saved.name;
-        }
-      }
-    } catch (e) {}
-  }
-
   if (!mgrName) return false;
   const trimmed = String(mgrName).trim().toLowerCase();
   if (
