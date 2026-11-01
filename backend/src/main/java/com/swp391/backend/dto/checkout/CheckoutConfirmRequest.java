@@ -7,7 +7,7 @@ public class CheckoutConfirmRequest {
     private BigDecimal cleaningFee = BigDecimal.ZERO;
     private String inspectionNotes;
     private Integer ticketId;
-    private String refundPaymentMethod = "VIETQR";
+    private String refundPaymentMethod = "BANK_TRANSFER";
     private boolean confirmInspection; // Bắt buộc phải tích xác nhận biên bản nghiệm thu
     private boolean collectedCompensation; // Xác nhận nhân viên đã thu đủ tiền bồi thường cọc âm tại quầy
 

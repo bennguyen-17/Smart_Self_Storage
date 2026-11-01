@@ -16,6 +16,9 @@ public class FacilityContractResponse {
     private Double depositAmount;
     private String checkoutStage;
     private List<FeeInvoiceResponse> fees = new ArrayList<>();
+    private Double rentalAmount;
+    private String rentalType;
+    private String reservationCode;
 
     public FacilityContractResponse() {
     }
@@ -130,6 +133,30 @@ public class FacilityContractResponse {
 
     public void setFees(List<FeeInvoiceResponse> fees) {
         this.fees = fees;
+    }
+
+    public Double getRentalAmount() {
+        return rentalAmount;
+    }
+
+    public void setRentalAmount(Double rentalAmount) {
+        this.rentalAmount = rentalAmount;
+    }
+
+    public String getRentalType() {
+        return rentalType;
+    }
+
+    public void setRentalType(String rentalType) {
+        this.rentalType = rentalType;
+    }
+
+    public String getReservationCode() {
+        return reservationCode;
+    }
+
+    public void setReservationCode(String reservationCode) {
+        this.reservationCode = reservationCode;
     }
 
     public static class FeeInvoiceResponse {

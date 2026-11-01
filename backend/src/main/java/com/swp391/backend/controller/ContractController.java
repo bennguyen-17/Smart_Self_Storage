@@ -541,7 +541,7 @@ public class ContractController {
         payment.setIssuedAt(LocalDateTime.now());
         payment.setDueAt(LocalDateTime.now().plusDays(1));
         payment.setStatus("PAID");
-        payment.setPaymentMethod("VNPAY");
+        payment.setPaymentMethod("BANK_TRANSFER");
         payment.setPaymentStatus("SUCCESS");
         payment.setTransactionCode("TXN_EXT_" + System.currentTimeMillis());
         payment.setPaidAt(LocalDateTime.now());
