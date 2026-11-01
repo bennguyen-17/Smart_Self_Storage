@@ -1,9 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react"
 import { NavLink } from "react-router-dom"
-import { ChevronDownIcon, MoonIcon, PanelLeftIcon, SunIcon, Warehouse, XIcon, type LucideIcon } from "lucide-react"
+import { MoonIcon, PanelLeftIcon, SunIcon, Warehouse, XIcon, type LucideIcon } from "lucide-react"
 import { cn } from "cn"
 
-import SiteFooter from "@/components/common/SiteFooter"
 import { useTheme } from "@/components/common/theme-provider"
 
 import { initials } from "../initials"
@@ -15,6 +14,8 @@ export interface PortalNavItem {
   /** Mô tả ngắn dưới tên trang */
   hint: string
   icon: LucideIcon
+  /** Chữ trong chấm đếm mục mới ("3", "99+"); không có thì không hiện chấm */
+  badge?: string | null
 }
 
 export interface PortalNavbarProps {
@@ -100,7 +101,7 @@ function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, 
         <div className="flex-1 overflow-y-auto p-4">
           <p className="px-2 pb-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">Danh mục nghiệp vụ</p>
           <nav aria-label={`Các trang ${portalName}`} className="space-y-1.5">
-            {items.map(({ to, label, hint, icon: Icon }) => (
+            {items.map(({ to, label, hint, icon: Icon, badge }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -126,10 +127,18 @@ function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, 
                     >
                       <Icon className="size-4" aria-hidden="true" />
                     </span>
-                    <span className="min-w-0">
+                    <span className="min-w-0 flex-1">
                       <span className="block truncate text-xs font-extrabold">{label}</span>
                       <span className={cn("block truncate text-[11px]", isActive ? "text-blue-100" : "text-slate-500 dark:text-slate-400")}>{hint}</span>
                     </span>
+                    {badge && (
+                      <span
+                        aria-label={`${badge} mục mới`}
+                        className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-rose-600 px-1.5 text-[10px] leading-none font-bold text-white tabular-nums shadow-sm shadow-rose-600/30"
+                      >
+                        {badge}
+                      </span>
+                    )}
                   </>
                 )}
               </NavLink>
