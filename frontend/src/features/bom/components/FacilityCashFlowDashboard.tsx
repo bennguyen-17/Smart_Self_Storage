@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react"
-import { TrendingUp, Warehouse } from "lucide-react"
+import React, { useState, useMemo, useEffect, useRef } from "react"
+import { TrendingUp, Warehouse, Calendar, ChevronDown, Check } from "lucide-react"
 
 export interface MonthlyRevenuePoint {
   month: string
@@ -9,10 +9,13 @@ export interface MonthlyRevenuePoint {
   penaltyRevenue?: number
 }
 
+export type CashFlowPeriod = "1_month" | "2_months" | "3_months" | "all" | "this_month" | "last_3_months" | "all_time"
+
 export interface FacilityCashFlowDashboardProps {
   title?: string
   subtitle?: string
-  period?: "this_month" | "last_3_months" | "all_time"
+  period?: CashFlowPeriod
+  onPeriodChange?: (period: "1_month" | "2_months" | "3_months" | "all") => void
   monthlyRevenues?: MonthlyRevenuePoint[]
   netRevenue?: number
   rentalRevenue?: number
@@ -28,10 +31,25 @@ export interface FacilityCashFlowDashboardProps {
   occupancyRate?: number
 }
 
+export const CASH_FLOW_PERIOD_OPTIONS: { key: "1_month" | "2_months" | "3_months" | "all"; label: string }[] = [
+  { key: "1_month", label: "1 Tháng" },
+  { key: "2_months", label: "2 Tháng" },
+  { key: "3_months", label: "3 Tháng" },
+  { key: "all", label: "Tất Cả" },
+]
+
+function normalizePeriod(p?: CashFlowPeriod): "1_month" | "2_months" | "3_months" | "all" {
+  if (p === "this_month" || p === "1_month") return "1_month"
+  if (p === "2_months") return "2_months"
+  if (p === "last_3_months" || p === "3_months") return "3_months"
+  return "all"
+}
+
 export default function FacilityCashFlowDashboard({
   title = "Doanh Thu Qua Các Tháng",
   subtitle = "Xu hướng dòng tiền thực thu 6 tháng gần nhất",
   period,
+  onPeriodChange,
   monthlyRevenues = [],
   netRevenue = 0,
   rentalRevenue = 0,
@@ -48,6 +66,42 @@ export default function FacilityCashFlowDashboard({
 }: FacilityCashFlowDashboardProps) {
   const [, setHoveredMonthIndex] = useState<number | null>(null)
   const [selectedMonthIndex, setSelectedMonthIndex] = useState<number | null>(null)
+
+  const [internalPeriod, setInternalPeriod] = useState<"1_month" | "2_months" | "3_months" | "all">(() =>
+    normalizePeriod(period)
+  )
+
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false)
+      }
+    }
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [isDropdownOpen])
+
+  useEffect(() => {
+    if (period !== undefined) {
+      setInternalPeriod(normalizePeriod(period))
+    }
+  }, [period])
+
+  const currentPeriod = period !== undefined ? normalizePeriod(period) : internalPeriod
+
+  const handleSelectPeriod = (newP: "1_month" | "2_months" | "3_months" | "all") => {
+    setInternalPeriod(newP)
+    setSelectedMonthIndex(null)
+    setIsDropdownOpen(false)
+    onPeriodChange?.(newP)
+  }
 
   // Đảm bảo có tối thiểu dữ liệu 6 tháng để hiển thị
   const monthlyData: MonthlyRevenuePoint[] = useMemo(() => {
@@ -87,18 +141,53 @@ export default function FacilityCashFlowDashboard({
     ]
   }, [monthlyRevenues, penaltyRevenue, netRevenue, rentalRevenue])
 
-  const activeMonth = useMemo(() => {
-    if (selectedMonthIndex !== null && monthlyData[selectedMonthIndex]) {
-      return monthlyData[selectedMonthIndex]
+  // Xác định khoảng tháng được lọc
+  const activeStartIndex = useMemo(() => {
+    if (currentPeriod === "1_month") return Math.max(0, monthlyData.length - 1)
+    if (currentPeriod === "2_months") return Math.max(0, monthlyData.length - 2)
+    if (currentPeriod === "3_months") return Math.max(0, monthlyData.length - 3)
+    return 0
+  }, [currentPeriod, monthlyData.length])
+
+  const filteredMonths = useMemo(() => {
+    return monthlyData.slice(activeStartIndex)
+  }, [monthlyData, activeStartIndex])
+
+  // Tính toán doanh thu tiền thuê & phạt tương ứng với filter được chọn
+  const periodRentalRevenue = useMemo(() => {
+    if (currentPeriod === "all" && rentalRevenue > 0) {
+      return rentalRevenue
     }
-    return monthlyData[monthlyData.length - 1] || {
-      month: "T10",
-      label: "Tháng 10",
-      revenue: netRevenue || 0,
-      rentalRevenue: rentalRevenue || 0,
-      penaltyRevenue: penaltyRevenue || 0,
+    const sum = filteredMonths.reduce((acc, m) => acc + Number(m.rentalRevenue || 0), 0)
+    return sum > 0 ? sum : currentPeriod === "all" ? rentalRevenue : 0
+  }, [currentPeriod, rentalRevenue, filteredMonths])
+
+  const periodPenaltyRevenue = useMemo(() => {
+    if (currentPeriod === "all" && penaltyRevenue > 0) {
+      return penaltyRevenue
     }
-  }, [selectedMonthIndex, monthlyData, netRevenue, rentalRevenue, penaltyRevenue])
+    const sum = filteredMonths.reduce((acc, m) => acc + Number(m.penaltyRevenue || 0), 0)
+    return sum > 0 ? sum : currentPeriod === "all" ? penaltyRevenue : 0
+  }, [currentPeriod, penaltyRevenue, filteredMonths])
+
+  const dynamicSubtitle = useMemo(() => {
+    if (monthlyData.length === 0) return subtitle
+    const lastM = monthlyData[monthlyData.length - 1]
+    if (currentPeriod === "1_month") {
+      return `Dòng tiền thực thu 1 tháng gần nhất (${lastM?.label || lastM?.month || "tháng này"})`
+    }
+    if (currentPeriod === "2_months") {
+      const startM = monthlyData[Math.max(0, monthlyData.length - 2)]?.month || ""
+      const endM = lastM?.month || ""
+      return `Dòng tiền thực thu 2 tháng gần nhất (${startM} - ${endM})`
+    }
+    if (currentPeriod === "3_months") {
+      const startM = monthlyData[Math.max(0, monthlyData.length - 3)]?.month || ""
+      const endM = lastM?.month || ""
+      return `Dòng tiền thực thu 3 tháng gần nhất (${startM} - ${endM})`
+    }
+    return subtitle || "Xu hướng dòng tiền thực thu 6 tháng gần nhất"
+  }, [subtitle, currentPeriod, monthlyData])
 
   // Xác định mốc min và max để vẽ đồ thị đường cong chuẩn xác
   const allRevenues = monthlyData.map((d) => d.revenue)
@@ -197,18 +286,61 @@ export default function FacilityCashFlowDashboard({
       {/* CỘT TRÁI: BIỂU ĐỒ ĐƯỜNG DOANH THU QUA CÁC THÁNG */}
       <div className="rounded-2xl border border-slate-200/90 bg-white/90 dark:border-slate-800/90 dark:bg-slate-900/60 p-5 sm:p-6 shadow-sm dark:shadow-xl backdrop-blur-xl flex flex-col justify-between transition-colors">
         <div>
-          {/* Tiêu đề & Tỷ lệ tăng trưởng */}
-          <div className="flex items-center justify-between mb-4">
+          {/* Tiêu đề & Bộ lọc khoảng thời gian */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
-              <span className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 shadow-xs dark:shadow-inner">
+              <span className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 shadow-xs dark:shadow-inner shrink-0">
                 <TrendingUp className="size-5" />
               </span>
               <div>
                 <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
                   {title}
                 </h3>
-                {subtitle && <div className="text-[11px] text-slate-500 dark:text-slate-400">{subtitle}</div>}
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                  {dynamicSubtitle}
+                </div>
               </div>
+            </div>
+
+            {/* BỘ LỌC KHOẢNG THỜI GIAN (DROPDOWN SỔ XUỐNG) */}
+            <div className="relative self-start sm:self-center shrink-0" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsDropdownOpen((prev) => !prev)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-blue-500 dark:hover:border-blue-500 shadow-xs transition-all cursor-pointer"
+                title="Chọn khoảng thời gian lọc"
+              >
+                <Calendar className="size-3.5 text-blue-600 dark:text-blue-400" />
+                <span>{CASH_FLOW_PERIOD_OPTIONS.find((opt) => opt.key === currentPeriod)?.label || "Tất Cả"}</span>
+                <ChevronDown
+                  className={`size-3.5 text-slate-400 transition-transform duration-200 ${
+                    isDropdownOpen ? "rotate-180 text-blue-600 dark:text-blue-400" : ""
+                  }`}
+                />
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-36 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-50 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                  {CASH_FLOW_PERIOD_OPTIONS.map((opt) => {
+                    const isActive = currentPeriod === opt.key
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => handleSelectPeriod(opt.key)}
+                        className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-left transition-colors cursor-pointer ${
+                          isActive
+                            ? "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold"
+                            : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        {isActive && <Check className="size-3.5 text-blue-600 dark:text-blue-400" />}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
@@ -261,25 +393,34 @@ export default function FacilityCashFlowDashboard({
                 className="stroke-blue-600 dark:stroke-white"
               />
 
+              {/* Vùng mờ làm nổi bật khung thời gian được lọc */}
+              {currentPeriod !== "all" && chartPoints.length > 0 && activeStartIndex < chartPoints.length && (
+                <rect
+                  x={chartPoints[activeStartIndex].x - 16}
+                  y={plotTop - 4}
+                  width={chartPoints[chartPoints.length - 1].x - chartPoints[activeStartIndex].x + 32}
+                  height={(hasNegative ? plotBottom : 130) - plotTop + 8}
+                  rx="10"
+                  fill="currentColor"
+                  className="text-blue-500/5 dark:text-blue-400/10 pointer-events-none"
+                />
+              )}
+
               {/* Các điểm tròn dữ liệu trên từng tháng & Số tiền hiển thị trực tiếp */}
               {chartPoints.map((p, idx) => {
                 const isNeg = p.revenue < 0
                 const labelY = isNeg ? p.y + 15 : p.y <= 38 ? p.y + 16 : p.y - 9
-
-                const isPeriodActive =
-                  period === "this_month"
-                    ? idx === chartPoints.length - 1
-                    : period === "last_3_months"
-                      ? idx >= chartPoints.length - 3
-                      : true
+                const isPeriodActive = idx >= activeStartIndex
+                const isLastPoint = idx === chartPoints.length - 1
 
                 return (
                   <g
                     key={p.month}
                     className="cursor-pointer transition-opacity"
-                    opacity={isPeriodActive ? 1 : 0.35}
+                    opacity={isPeriodActive ? 1 : 0.3}
                     onMouseEnter={() => setHoveredMonthIndex(idx)}
                     onMouseLeave={() => setHoveredMonthIndex(null)}
+                    onClick={() => setSelectedMonthIndex(idx)}
                   >
                     <circle cx={p.x} cy={p.y} r="14" fill="transparent" />
 
@@ -305,7 +446,7 @@ export default function FacilityCashFlowDashboard({
                       }
                     />
 
-                    {isPeriodActive && period === "this_month" && (
+                    {isPeriodActive && isLastPoint && (
                       <circle
                         cx={p.x}
                         cy={p.y}
@@ -323,7 +464,11 @@ export default function FacilityCashFlowDashboard({
                       fontSize="9.5"
                       fill="currentColor"
                       className={`font-mono font-bold select-none ${
-                        isNeg ? "text-rose-500 fill-rose-500" : "text-blue-600 dark:text-blue-400 fill-blue-600 dark:fill-blue-400"
+                        isNeg
+                          ? "text-rose-500 fill-rose-500"
+                          : isPeriodActive
+                            ? "text-blue-600 dark:text-blue-400 fill-blue-600 dark:fill-blue-400"
+                            : "text-slate-400 dark:text-slate-600 fill-slate-400 dark:fill-slate-600"
                       }`}
                     >
                       {formatShortVnd(p.revenue)}
@@ -336,8 +481,10 @@ export default function FacilityCashFlowDashboard({
                       textAnchor="middle"
                       fontSize="10"
                       fill="currentColor"
-                      className={`font-mono font-bold ${
-                        isNeg ? "text-rose-500 fill-rose-500" : "text-slate-600 dark:text-slate-300 fill-slate-600 dark:fill-slate-300"
+                      className={`font-mono ${
+                        isPeriodActive
+                          ? "font-black text-slate-900 dark:text-white fill-slate-900 dark:fill-white"
+                          : "font-medium text-slate-400 dark:text-slate-600 fill-slate-400 dark:fill-slate-600"
                       }`}
                     >
                       {p.month}
@@ -352,23 +499,36 @@ export default function FacilityCashFlowDashboard({
         {/* 3 THẺ TÀI CHÍNH DƯỚI BIỂU ĐỒ: TIỀN CỌC, TIỀN THUÊ KHO, TIỀN PHẠT */}
         <div className="grid grid-cols-3 gap-2.5 pt-4 mt-2 border-t border-slate-200/80 dark:border-slate-800/80">
           <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs dark:shadow-none">
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Cọc</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Cọc</span>
+              <span className="text-[9px] text-slate-400 font-medium">Hiện giữ</span>
+            </div>
             <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">
               ₫{depositHolding.toLocaleString("vi-VN")}
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs dark:shadow-none">
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Thuê Kho</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Thuê Kho</span>
+              <span className="text-[9px] text-blue-600 dark:text-blue-400 font-semibold">
+                {currentPeriod === "all" ? "Toàn kỳ" : currentPeriod === "1_month" ? "1 tháng" : currentPeriod === "2_months" ? "2 tháng" : "3 tháng"}
+              </span>
+            </div>
             <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">
-              ₫{rentalRevenue.toLocaleString("vi-VN")}
+              ₫{periodRentalRevenue.toLocaleString("vi-VN")}
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs dark:shadow-none">
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Phạt</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Phạt</span>
+              <span className="text-[9px] text-amber-600 dark:text-amber-400 font-semibold">
+                {currentPeriod === "all" ? "Toàn kỳ" : currentPeriod === "1_month" ? "1 tháng" : currentPeriod === "2_months" ? "2 tháng" : "3 tháng"}
+              </span>
+            </div>
             <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">
-              ₫{penaltyRevenue.toLocaleString("vi-VN")}
+              ₫{periodPenaltyRevenue.toLocaleString("vi-VN")}
             </span>
           </div>
         </div>

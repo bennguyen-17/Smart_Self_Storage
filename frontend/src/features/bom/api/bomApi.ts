@@ -92,6 +92,7 @@ export const bomApi = {
     layoutType?: string
     floorCount?: number
     isAllClimate?: boolean
+    status?: string
     managerName?: string
   }): Promise<FacilityApiItem> => {
     return apiClient.post('/facilities', data)

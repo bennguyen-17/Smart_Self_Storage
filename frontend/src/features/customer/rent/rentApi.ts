@@ -1,14 +1,13 @@
 import apiClient, { isMockMode } from '@/lib/apiClient';
 
-// Dữ liệu mẫu Chi Nhánh (Khớp bảng Branch trong MySQL)
 const MOCK_BRANCHES = [
-  { id: 'HN01', code: 'HN01', name: 'SmartStorage Cầu Giấy', address: 'Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội', floors: 3, layoutType: 'A' },
-  { id: 'HN02', code: 'HN02', name: 'SmartStorage Thanh Xuân', address: 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội', floors: 3, layoutType: 'B' },
-  { id: 'HCM01', code: 'HCM01', name: 'SmartStorage Quận 1', address: 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM', floors: 3, layoutType: 'A' },
-  { id: 'HCM02', code: 'HCM02', name: 'SmartStorage Quận 7', address: 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM', floors: 3, layoutType: 'B' },
-  { id: 'HCM03', code: 'HCM03', name: 'SmartStorage Thủ Đức', address: 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM', floors: 3, layoutType: 'B' },
-  { id: 'DN01', code: 'DN01', name: 'SmartStorage Hải Châu', address: 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng', floors: 3, layoutType: 'A' },
-  { id: 'CT01', code: 'CT01', name: 'SmartStorage Ninh Kiều', address: 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', floors: 3, layoutType: 'B' }
+  { id: 'HN01', code: 'HN01', name: 'SmartStorage Cầu Giấy', address: 'Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội', floors: 3, layoutType: 'A', managerName: 'Trần Văn Quân', status: 'ACTIVE' },
+  { id: 'HN02', code: 'HN02', name: 'SmartStorage Thanh Xuân', address: 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội', floors: 3, layoutType: 'B', managerName: 'Hoàng Minh Đức', status: 'ACTIVE' },
+  { id: 'HCM01', code: 'HCM01', name: 'SmartStorage Quận 1', address: 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM', floors: 3, layoutType: 'A', managerName: 'Lê Thị Thu Trang', status: 'ACTIVE' },
+  { id: 'HCM02', code: 'HCM02', name: 'SmartStorage Quận 7', address: 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM', floors: 3, layoutType: 'B', managerName: 'Đỗ Đức Anh', status: 'ACTIVE' },
+  { id: 'HCM03', code: 'HCM03', name: 'SmartStorage Thủ Đức', address: 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM', floors: 3, layoutType: 'B', managerName: 'Vũ Đình Trọng', status: 'ACTIVE' },
+  { id: 'DN01', code: 'DN01', name: 'SmartStorage Hải Châu', address: 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng', floors: 3, layoutType: 'A', managerName: 'Nguyễn Thanh Tùng', status: 'ACTIVE' },
+  { id: 'CT01', code: 'CT01', name: 'SmartStorage Ninh Kiều', address: 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', floors: 3, layoutType: 'B', managerName: 'Bùi Tuấn Kiệt', status: 'ACTIVE' }
 ];
 
 const heldUnitsState: Record<string, string> = {};
@@ -206,18 +205,52 @@ export const getBranches = async () => {
   try {
     const res = await apiClient.get('/facilities');
     const rawList = Array.isArray(res) ? res : (res?.data || []);
-    const facilities = rawList.map((f: any) => ({
-      id: f.facilityCode || (f.facilityId ? `FAC-${f.facilityId}` : f.id),
-      backendId: f.facilityId || f.id,
-      code: f.facilityCode || f.code,
-      shortCode: f.shortCode,
-      name: f.facilityName || f.name,
-      facilityName: f.facilityName || f.name,
-      address: f.address,
-      floors: f.floorCount || f.floors || 3,
-      layoutType: f.layoutType,
-      isAllClimate: f.isAllClimate
-    }));
+
+    let storedManagers: Record<string, any> = {};
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('smart_storage_facility_managers');
+        if (raw) storedManagers = JSON.parse(raw);
+      } catch (e) {}
+    }
+
+    const facilities = rawList.map((f: any) => {
+      const facId = f.facilityId || f.id;
+      const cached = storedManagers[facId] || storedManagers[String(facId)] || (f.facilityCode ? storedManagers[f.facilityCode] : null);
+      const managerName = (cached?.name !== undefined && cached?.name !== null) ? cached.name : f.managerName;
+      const managerPhone = (cached?.phone !== undefined && cached?.phone !== null) ? cached.phone : f.managerPhone;
+      const managerEmail = (cached?.email !== undefined && cached?.email !== null) ? cached.email : f.managerEmail;
+
+      const item = {
+        id: f.facilityCode || (facId ? `FAC-${facId}` : f.id),
+        backendId: facId,
+        code: f.facilityCode || f.code,
+        shortCode: f.shortCode,
+        name: f.facilityName || f.name,
+        facilityName: f.facilityName || f.name,
+        address: f.address,
+        floors: f.floorCount || f.floors || 3,
+        layoutType: f.layoutType,
+        isAllClimate: f.isAllClimate,
+        status: f.status || 'ACTIVE',
+        managerName,
+        managerPhone,
+        managerEmail,
+      };
+
+      if (item.code && item.backendId) {
+        FACILITY_CODE_TO_ID[item.code] = item.backendId;
+        FACILITY_CODE_TO_ID[item.code.toUpperCase()] = item.backendId;
+        FACILITY_CODE_TO_ID[item.code.replace('-', '').toUpperCase()] = item.backendId;
+      }
+      if (item.shortCode && item.backendId) {
+        FACILITY_CODE_TO_ID[item.shortCode] = item.backendId;
+        FACILITY_CODE_TO_ID[item.shortCode.toUpperCase()] = item.backendId;
+      }
+
+      return item;
+    });
+
     return { success: true, data: facilities.length > 0 ? facilities : MOCK_BRANCHES };
   } catch (error) {
     console.warn('API error, falling back to mock branches:', error);
@@ -225,7 +258,7 @@ export const getBranches = async () => {
   }
 };
 
-const FACILITY_CODE_TO_ID: Record<string, number> = {
+export const FACILITY_CODE_TO_ID: Record<string, number> = {
   'HN01': 1, 'HN-01': 1,
   'HN02': 2, 'HN-02': 2,
   'HCM01': 3, 'HCM-01': 3,

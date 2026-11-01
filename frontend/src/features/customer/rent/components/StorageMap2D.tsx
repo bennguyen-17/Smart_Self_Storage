@@ -84,6 +84,95 @@ const STORAGE_TYPES_DATA = [
   }
 ];
 
+export const getFacilityCity = (address?: string, code?: string): string => {
+  const addr = (address || '').toLowerCase();
+  const c = (code || '').toUpperCase();
+
+  if (addr.includes('hà nội') || addr.includes('ha noi') || c.startsWith('HN')) {
+    return 'Hà Nội';
+  }
+  if (
+    addr.includes('tp.hcm') ||
+    addr.includes('tp. hcm') ||
+    addr.includes('hồ chí minh') ||
+    addr.includes('ho chi minh') ||
+    addr.includes('sài gòn') ||
+    addr.includes('sai gon') ||
+    c.startsWith('HCM') ||
+    c.startsWith('SG')
+  ) {
+    return 'TP.HCM';
+  }
+  if (addr.includes('đà nẵng') || addr.includes('da nang') || c.startsWith('DN')) {
+    return 'Đà Nẵng';
+  }
+  if (addr.includes('cần thơ') || addr.includes('can tho') || c.startsWith('CT')) {
+    return 'Cần Thơ';
+  }
+  if (
+    addr.includes('bà rịa') ||
+    addr.includes('vũng tàu') ||
+    addr.includes('ba ria') ||
+    addr.includes('vung tau') ||
+    c.startsWith('BRVT') ||
+    c.startsWith('VT')
+  ) {
+    return 'Bà Rịa - Vũng Tàu';
+  }
+  if (addr.includes('hải phòng') || addr.includes('hai phong') || c.startsWith('HP')) {
+    return 'Hải Phòng';
+  }
+  if (addr.includes('bình dương') || addr.includes('binh duong') || c.startsWith('BD')) {
+    return 'Bình Dương';
+  }
+  if (addr.includes('đồng nai') || addr.includes('dong nai') || c.startsWith('DNI')) {
+    return 'Đồng Nai';
+  }
+  if (addr.includes('nha trang') || addr.includes('khánh hòa') || c.startsWith('NT') || c.startsWith('KH')) {
+    return 'Nha Trang';
+  }
+
+  if (address && address.includes(',')) {
+    const parts = address.split(',');
+    const lastPart = parts[parts.length - 1].trim();
+    if (lastPart) return lastPart;
+  }
+
+  return 'Khác';
+};
+
+export const hasAssignedManager = (fac: any): boolean => {
+  if (!fac) return false;
+  let mgrName = fac.managerName;
+  if (typeof window !== 'undefined' && (fac.backendId || fac.id)) {
+    try {
+      const raw = localStorage.getItem('smart_storage_facility_managers');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const saved = parsed[fac.backendId || fac.id] || (fac.code ? parsed[fac.code] : null);
+        if (saved && saved.name !== undefined) {
+          mgrName = saved.name;
+        }
+      }
+    } catch (e) {}
+  }
+
+  if (!mgrName) return false;
+  const trimmed = String(mgrName).trim().toLowerCase();
+  if (
+    trimmed === '' ||
+    trimmed === 'chưa phân công' ||
+    trimmed === 'chua phan cong' ||
+    trimmed === 'chưa có quản lý' ||
+    trimmed === 'chua co quan ly' ||
+    trimmed === 'null' ||
+    trimmed === 'undefined'
+  ) {
+    return false;
+  }
+  return true;
+};
+
 export default function StorageMap2D({
   facility,
   onFacilityChange,
@@ -112,6 +201,85 @@ export default function StorageMap2D({
   const [loading, setLoading] = useState(false);
   const [selectedStorageType, setSelectedStorageType] = useState<'ALL' | 'STANDARD' | 'CLIMATE_CONTROLLED' | null>(lockFacility ? 'ALL' : null);
   const [selectedCity, setSelectedCity] = useState<string>('ALL');
+
+  // Danh sách cơ sở hợp lệ: Đang hoạt động (ACTIVE) và ĐÃ CÓ MANAGER QUẢN LÝ
+  const eligibleFacilities = React.useMemo(() => {
+    let sourceList: any[] = [];
+    if (branches && branches.length > 0) {
+      sourceList = branches;
+    } else {
+      sourceList = Object.entries(facilityData).map(([code, data]) => ({
+        id: code,
+        code: code,
+        name: data.name,
+        facilityName: data.name,
+        address: data.address,
+        floors: data.floors,
+        city: data.city,
+        image: data.image,
+        status: 'ACTIVE',
+        managerName: 'Quản lý cơ sở',
+      }));
+    }
+
+    const fallbackImages = [
+      'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1590247813693-5541d1c609fd?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1568667256549-094345857637?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1730154838368-c37b1fdebcf6?auto=format&fit=crop&w=600&q=80',
+    ];
+
+    return sourceList
+      .filter((b) => {
+        const isActive = !b.status || b.status === 'ACTIVE';
+        return isActive && hasAssignedManager(b);
+      })
+      .map((b, idx) => {
+        const code = b.code || b.id || `FAC-${idx + 1}`;
+        const normalizedCode = String(code).replace('-', '').toUpperCase();
+        const existingData = facilityData[code] || facilityData[normalizedCode];
+        const city = b.city || existingData?.city || getFacilityCity(b.address, code);
+        const image = b.image || existingData?.image || fallbackImages[idx % fallbackImages.length];
+        const rawName = b.name || b.facilityName || existingData?.name || `Cơ sở ${code}`;
+        const formattedName = rawName.includes('(') ? rawName : `${rawName} (${code})`;
+
+        return {
+          key: code,
+          code: code,
+          name: formattedName,
+          address: b.address || existingData?.address || '',
+          floors: b.floors || b.floorCount || existingData?.floors || 3,
+          city: city,
+          image: image,
+          layoutType: (b.layoutType || existingData?.layoutType || (['HN02', 'HCM02', 'HCM03', 'CT01'].includes(normalizedCode) ? 'B' : 'A')).toUpperCase(),
+          managerName: b.managerName,
+        };
+      });
+  }, [branches]);
+
+  // Bộ lọc khu vực (thành phố) động theo số lượng cơ sở thực tế có Manager
+  const cityTabs = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    eligibleFacilities.forEach((f) => {
+      counts[f.city] = (counts[f.city] || 0) + 1;
+    });
+
+    const tabs = [{ id: 'ALL', label: `Tất cả (${eligibleFacilities.length})` }];
+    Object.keys(counts).forEach((city) => {
+      tabs.push({ id: city, label: `${city} (${counts[city]})` });
+    });
+    return tabs;
+  }, [eligibleFacilities]);
+
+  // Đảm bảo tab được chọn hợp lệ
+  useEffect(() => {
+    if (selectedCity !== 'ALL' && !cityTabs.some((t) => t.id === selectedCity)) {
+      setSelectedCity('ALL');
+    }
+  }, [cityTabs, selectedCity]);
 
   // Khi đổi cơ sở kho, reset loại kho đã chọn để hiện lại tuần tự
   useEffect(() => {
@@ -152,8 +320,18 @@ export default function StorageMap2D({
     };
   }, []);
 
+  const currentEligible = eligibleFacilities.find(
+    (b) => b.code === facility || b.key === facility || b.code === facility.replace('-', '')
+  );
   const matchedBranch = branches.find((b) => b.code === facility || b.id === facility);
-  const currentFacilityObj = matchedBranch
+  const currentFacilityObj = currentEligible
+    ? {
+        name: currentEligible.name,
+        address: currentEligible.address,
+        floors: currentEligible.floors || 3,
+        layoutType: currentEligible.layoutType || 'A',
+      }
+    : matchedBranch
     ? {
         name: matchedBranch.name || matchedBranch.facilityName,
         address: matchedBranch.address,
@@ -492,13 +670,7 @@ export default function StorageMap2D({
                   <Filter className="size-3.5 text-blue-600 dark:text-blue-400" />
                   <span>Khu vực:</span>
                 </div>
-                {[
-                  { id: 'ALL', label: 'Tất cả (7)' },
-                  { id: 'Hà Nội', label: 'Hà Nội (2)' },
-                  { id: 'TP.HCM', label: 'TP.HCM (3)' },
-                  { id: 'Đà Nẵng', label: 'Đà Nẵng (1)' },
-                  { id: 'Cần Thơ', label: 'Cần Thơ (1)' },
-                ].map((c) => {
+                {cityTabs.map((c) => {
                   const active = selectedCity === c.id;
                   return (
                     <button
@@ -517,24 +689,24 @@ export default function StorageMap2D({
                 })}
               </div>
 
-              {/* Danh sách 7 card cơ sở với ảnh thực tế bự hơn */}
+              {/* Danh sách các card cơ sở đã có Manager quản lý */}
               <div className="flex gap-4 overflow-x-auto pb-4 pt-1 scrollbar-thin">
-                {Object.entries(facilityData)
-                  .filter(([_, fData]) => selectedCity === 'ALL' || fData.city === selectedCity)
-                  .map(([fKey, fData]) => {
-                    const isSelected = facility === fKey;
+                {eligibleFacilities
+                  .filter((fData) => selectedCity === 'ALL' || fData.city === selectedCity)
+                  .map((fData) => {
+                    const isSelected = facility === fData.code || facility === fData.key;
                     return (
                     <button
-                      key={fKey}
+                      key={fData.key}
                       type="button"
-                      onClick={() => onFacilityChange(fKey)}
+                      onClick={() => onFacilityChange(fData.code)}
                       className={`group relative shrink-0 w-64 sm:w-72 text-left rounded-2xl overflow-hidden border-2 transition-all duration-200 cursor-pointer flex flex-col ${
                         isSelected
                           ? 'border-blue-600 dark:border-blue-500 ring-4 ring-blue-500/20 shadow-xl bg-blue-50/20 dark:bg-blue-950/20 scale-[1.02]'
                           : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-blue-300 dark:hover:border-slate-700 opacity-85 hover:opacity-100 hover:shadow-md'
                       }`}
                     >
-                      {/* Ảnh cơ sở bự hơn */}
+                      {/* Ảnh cơ sở */}
                       <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                         <img
                           src={fData.image}
@@ -574,6 +746,12 @@ export default function StorageMap2D({
                     </button>
                   );
                 })}
+
+                {eligibleFacilities.filter((fData) => selectedCity === 'ALL' || fData.city === selectedCity).length === 0 && (
+                  <div className="py-8 text-center text-slate-500 dark:text-slate-400 w-full text-xs font-medium">
+                    Không có cơ sở kho nào khả dụng tại khu vực này.
+                  </div>
+                )}
               </div>
         </div>
       </div>

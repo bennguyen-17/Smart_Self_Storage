@@ -11,6 +11,9 @@ public class FacilityResponse {
     private String layoutType;   // "A" (Urban) hoặc "B" (Logistics)
     private Boolean isAllClimate;// true nếu HCM-01
     private String status;
+    private String managerName;
+    private String managerPhone;
+    private String managerEmail;
 
     public FacilityResponse() {
     }
@@ -106,5 +109,29 @@ public class FacilityResponse {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getManagerName() {
+        return managerName;
+    }
+
+    public void setManagerName(String managerName) {
+        this.managerName = managerName;
+    }
+
+    public String getManagerPhone() {
+        return managerPhone;
+    }
+
+    public void setManagerPhone(String managerPhone) {
+        this.managerPhone = managerPhone;
+    }
+
+    public String getManagerEmail() {
+        return managerEmail;
+    }
+
+    public void setManagerEmail(String managerEmail) {
+        this.managerEmail = managerEmail;
     }
 }
