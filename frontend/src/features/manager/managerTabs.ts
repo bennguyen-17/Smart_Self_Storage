@@ -130,12 +130,12 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
   {
     key: "tickets",
     label: "Sự cố cơ sở",
-    title: "Theo dõi & Hỗ trợ sự cố cơ sở",
+    title: "Theo dõi sự cố cơ sở",
     hint: "Giám sát & xử lý ticket",
     icon: HeadphonesIcon,
     stories: "US-22, US-33",
     owner: "Tâm",
-    description: "Theo dõi và trực tiếp hỗ trợ giải quyết các ticket hỗ trợ / sự cố của cơ sở.",
+    description: "Theo dõi ticket của khách: ai phụ trách, đang ở bước nào. Nhân viên trong ca tiếp nhận và giải quyết.",
     component: ManagerTicketPanel,
   },
 ]

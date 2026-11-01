@@ -1,13 +1,12 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { AxiosError, type AxiosResponse } from "axios"
 import { toast } from "sonner"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
 import type { ManagerTicketItem } from "../types"
-import { listManagerTickets, managerAcceptTicket, managerResolveTicket } from "../api/ticketApi"
+import { listManagerTickets } from "../api/ticketApi"
 import ManagerTicketPanel from "./ManagerTicketPanel"
-import ResolveTicketModal from "./ResolveTicketModal"
 
 vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
@@ -15,8 +14,6 @@ vi.mock("sonner", () => ({
 vi.mock("@/context/AuthContext", () => ({ useAuth: () => ({ user: { facilityId: 1 } }) }))
 vi.mock("../api/ticketApi", () => ({
   listManagerTickets: vi.fn(),
-  managerAcceptTicket: vi.fn(),
-  managerResolveTicket: vi.fn(),
 }))
 
 // Lỗi giống axios trả về khi BE từ chối, kèm câu lỗi của BE
@@ -80,27 +77,34 @@ describe("ManagerTicketPanel: báo lỗi rõ lý do", () => {
       ),
     )
   })
-
-  test("tiếp nhận thất bại thì toast nhận chuỗi, không nhận object của BE", async () => {
-    vi.mocked(listManagerTickets).mockResolvedValue([TICKET])
-    vi.mocked(managerAcceptTicket).mockRejectedValue(beError(400, "Ticket đã có người nhận"))
-    render(<ManagerTicketPanel />)
-
-    await userEvent.click(await screen.findByRole("button", { name: /Tiếp nhận xử lý/ }))
-
-    expect(toast.error).toHaveBeenCalledWith("Không thể tiếp nhận ticket: Ticket đã có người nhận")
-  })
 })
 
-describe("ResolveTicketModal: báo lỗi rõ lý do", () => {
-  test("đóng ticket thất bại thì hiện câu lỗi của BE và không đóng popup", async () => {
-    vi.mocked(managerResolveTicket).mockRejectedValue(beError(400, "Ticket đã được giải quyết"))
-    const onClose = vi.fn()
-    render(<ResolveTicketModal ticket={TICKET} onClose={onClose} onResolved={vi.fn()} />)
+const T = (patch: Partial<ManagerTicketItem>): ManagerTicketItem => ({ ...TICKET, ...patch })
 
-    await userEvent.click(screen.getByRole("button", { name: /Xác nhận đóng ticket/ }))
+describe("ManagerTicketPanel: Manager chỉ theo dõi, không tiếp nhận hay đóng ticket", () => {
+  test("không có nút Tiếp nhận hay Đóng / Giải quyết ở bất kỳ trạng thái nào", async () => {
+    vi.mocked(listManagerTickets).mockResolvedValue([
+      T({ id: 1, ticketCode: "TCK-1", status: "SUBMITTED" }),
+      T({ id: 2, ticketCode: "TCK-2", status: "IN_PROGRESS", assignedStaffId: 10, assignedStaffName: "Nguyễn Văn Hùng" }),
+      T({ id: 3, ticketCode: "TCK-3", status: "RESOLVED", assignedStaffId: 10, assignedStaffName: "Nguyễn Văn Hùng", resolutionNote: "Đã thay khóa" }),
+    ])
+    render(<ManagerTicketPanel />)
+    await screen.findByText(/TCK-1/)
+    expect(screen.queryByRole("button", { name: /tiếp nhận xử lý/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /đóng.*giải quyết/i })).not.toBeInTheDocument()
+    expect(screen.getByText("Chờ nhân viên trong ca tiếp nhận")).toBeInTheDocument()
+    expect(screen.getByText("Nhân viên đang xử lý")).toBeInTheDocument()
+    expect(screen.getByText("Nhân viên đã giải quyết xong")).toBeInTheDocument()
+    expect(screen.getByText(/Đã thay khóa/)).toBeInTheDocument()
+  })
 
-    expect(toast.error).toHaveBeenCalledWith("Không thể đóng ticket: Ticket đã được giải quyết")
-    expect(onClose).not.toHaveBeenCalled()
+  test("sự cố được hệ thống tự phân cho nhân viên trong ca nhưng chưa tiếp nhận → hiện tên kèm ghi chú", async () => {
+    vi.mocked(listManagerTickets).mockResolvedValue([
+      T({ type: "INCIDENT", status: "SUBMITTED", assignedStaffId: 11, assignedStaffName: "Lê Thị Ánh Tuyết" }),
+    ])
+    render(<ManagerTicketPanel />)
+    const row = (await screen.findByText("Lê Thị Ánh Tuyết")).closest("tr") as HTMLElement
+    expect(within(row).getByText("Đã phân, chưa tiếp nhận")).toBeInTheDocument()
+    expect(within(row).getByText("Đã phân cho nhân viên trong ca, chờ tiếp nhận")).toBeInTheDocument()
   })
 })
