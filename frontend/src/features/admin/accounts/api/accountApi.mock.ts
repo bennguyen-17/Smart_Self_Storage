@@ -46,6 +46,10 @@ export function mockCreateAccount(input: {
   if (roleNeedsFacility(input.role) && input.facilityId === null) {
     return fail("Nhân viên và quản lý cơ sở phải được gán một cơ sở")
   }
+  // Giống BE hiện tại: chưa tự kiểm trùng số điện thoại, MySQL trả nguyên câu lỗi ràng buộc
+  if (input.phone && store.some((a) => a.phone === input.phone)) {
+    return fail(`could not execute statement [Duplicate entry '${input.phone}' for key 'account.phone'] [insert into Account (...)]; constraint [account.phone]`)
+  }
   const created: InternalAccount = {
     ...input,
     accountId: Math.max(...store.map((a) => a.accountId)) + 1,

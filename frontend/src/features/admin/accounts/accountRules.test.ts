@@ -39,10 +39,13 @@ describe("validateAccountForm: chặn tạo tài khoản sai", () => {
     { name: "tên 1 ký tự", values: { ...VALID, fullName: "A" }, fields: ["fullName"] },
     { name: "email thiếu @", values: { ...VALID, email: "nv1.selfstorage391.vn" }, fields: ["email"] },
     { name: "email có khoảng trắng 2 đầu vẫn hợp lệ", values: { ...VALID, email: "  a@b.vn " }, fields: [] },
-    { name: "SĐT để trống (tùy chọn)", values: { ...VALID, phone: "" }, fields: [] },
+    { name: "SĐT để trống (form Phân quyền không sửa SĐT)", values: { ...VALID, phone: "" }, fields: [] },
     { name: "SĐT có dấu cách", values: { ...VALID, phone: "0901 888 999" }, fields: [] },
     { name: "SĐT 9 số", values: { ...VALID, phone: "090188899" }, fields: ["phone"] },
     { name: "SĐT không bắt đầu bằng 0", values: { ...VALID, phone: "8901888999" }, fields: ["phone"] },
+    { name: "tên 101 ký tự", values: { ...VALID, fullName: "A".repeat(101) }, fields: ["fullName"] },
+    { name: "tên đúng 100 ký tự", values: { ...VALID, fullName: "A".repeat(100) }, fields: [] },
+    { name: "email quá 255 ký tự", values: { ...VALID, email: "a".repeat(250) + "@b.vn" + "x" }, fields: ["email"] },
     {
       name: "trống hết, vai trò Staff",
       values: { fullName: "", email: "", phone: "", role: "STAFF", facilityId: "" },
@@ -51,7 +54,16 @@ describe("validateAccountForm: chặn tạo tài khoản sai", () => {
   ] as { name: string; values: AccountFormValues; fields: string[] }[])("$name → lỗi: $fields", ({ values, fields }) => {
     expect(Object.keys(validateAccountForm(values)).sort()).toEqual([...fields].sort())
   })
+
+  test.each([
+    { name: "tạo mới để trống SĐT → bắt nhập", phone: "", error: "Nhập số điện thoại (dùng để đăng nhập)" },
+    { name: "tạo mới SĐT sai định dạng", phone: "12345", error: "Số điện thoại gồm 10 số, bắt đầu bằng 0" },
+    { name: "tạo mới SĐT đúng", phone: "0901888999", error: undefined },
+  ])("đăng nhập bằng SĐT nên tạo mới bắt buộc SĐT: $name", ({ phone, error }) => {
+    expect(validateAccountForm({ ...VALID, phone }, { requirePhone: true }).phone).toBe(error)
+  })
 })
+
 
 describe("effectiveFacilityId: BOM/Admin luôn lưu là toàn hệ thống", () => {
   test.each([

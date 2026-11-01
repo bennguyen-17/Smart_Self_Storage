@@ -27,16 +27,24 @@ export type AccountFormErrors = Partial<Record<"fullName" | "email" | "phone" | 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_PATTERN = /^0\d{9}$/
 
+/** Độ dài tối đa theo bảng Account (fullName VARCHAR(100), email VARCHAR(255)); dài hơn thì BE báo lỗi SQL */
+export const FULL_NAME_MAX = 100
+export const EMAIL_MAX = 255
+
 /**
  * Kiểm form tạo / sửa tài khoản. Rỗng nghĩa là hợp lệ.
  * AC: Staff/Manager tạo mà không gán cơ sở → bị chặn.
+ * Tạo mới bắt buộc số điện thoại: đăng nhập nội bộ dùng số điện thoại (bỏ trống thì BE tự đặt số ngẫu nhiên, người dùng không đăng nhập được).
  */
-export function validateAccountForm(values: AccountFormValues): AccountFormErrors {
+export function validateAccountForm(values: AccountFormValues, { requirePhone = false } = {}): AccountFormErrors {
   const errors: AccountFormErrors = {}
   if (values.fullName.trim().length < 2) errors.fullName = "Nhập họ tên (ít nhất 2 ký tự)"
+  else if (values.fullName.trim().length > FULL_NAME_MAX) errors.fullName = `Họ tên tối đa ${FULL_NAME_MAX} ký tự`
   if (!EMAIL_PATTERN.test(values.email.trim())) errors.email = "Email không hợp lệ"
+  else if (values.email.trim().length > EMAIL_MAX) errors.email = `Email tối đa ${EMAIL_MAX} ký tự`
   const phone = values.phone.replace(/\s/g, "")
-  if (phone && !PHONE_PATTERN.test(phone)) errors.phone = "Số điện thoại gồm 10 số, bắt đầu bằng 0"
+  if (!phone && requirePhone) errors.phone = "Nhập số điện thoại (dùng để đăng nhập)"
+  else if (phone && !PHONE_PATTERN.test(phone)) errors.phone = "Số điện thoại gồm 10 số, bắt đầu bằng 0"
   if (roleNeedsFacility(values.role) && values.facilityId === "") {
     errors.facilityId = "Nhân viên và quản lý cơ sở phải được gán một cơ sở"
   }
