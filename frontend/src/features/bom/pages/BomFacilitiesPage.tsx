@@ -889,10 +889,8 @@ export default function BomFacilitiesPage() {
               <thead>
                 <tr className="bg-slate-50/90 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">CƠ SỞ KHO</th>
-                  <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">TRẠNG THÁI</th>
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">QUẢN LÝ CHI NHÁNH</th>
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">KHO THUÊ</th>
-                  <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">TỶ LỆ LẤP ĐẦY</th>
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">
                     {revenuePeriod === "this_month"
                       ? "DOANH THU (THÁNG NÀY)"
@@ -900,6 +898,7 @@ export default function BomFacilitiesPage() {
                         ? "DOANH THU (3 THÁNG GẦN NHẤT)"
                         : "DOANH THU (TOÀN THỜI GIAN)"}
                   </th>
+                  <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">TRẠNG THÁI</th>
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">THAO TÁC</th>
                 </tr>
               </thead>
@@ -914,12 +913,6 @@ export default function BomFacilitiesPage() {
                     const cleanName = (fac.name || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
                     const cleanManager = (fac.managerName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
                     const rented = fac.occupied ?? fac.rentedUnits ?? 0
-                    const displayOccRate =
-                      fac.occupancyRate != null
-                        ? Number(fac.occupancyRate).toFixed(1).replace(/\.0$/, "")
-                        : stdUnits > 0
-                          ? String(Math.round((rented / stdUnits) * 100))
-                          : "0"
 
                     const displayRevenue =
                       revenuePeriod === "this_month"
@@ -944,32 +937,7 @@ export default function BomFacilitiesPage() {
                           </button>
                         </td>
 
-                        {/* CỘT 2: TRẠNG THÁI */}
-                        <td className="py-3 px-4 text-center whitespace-nowrap">
-                          <div className="inline-flex items-center justify-center">
-                            <select
-                              value={fac.status || "ACTIVE"}
-                              onChange={async (e) => {
-                                const newStatus = e.target.value
-                                await handleQuickUpdateStatus(fac, newStatus)
-                              }}
-                              className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition cursor-pointer appearance-none text-center outline-none ${
-                                fac.status === "MAINTENANCE"
-                                  ? "bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-700 font-bold"
-                                  : fac.status === "INACTIVE"
-                                  ? "bg-rose-50 text-rose-700 border-rose-300 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-700 font-bold"
-                                  : "bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700"
-                              }`}
-                              title="Bấm để đổi nhanh trạng thái: Hoạt động / Bảo trì / Tạm ngưng"
-                            >
-                              <option value="ACTIVE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">🟢 Hoạt động</option>
-                              <option value="MAINTENANCE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">🟠 Bảo trì</option>
-                              <option value="INACTIVE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">🔴 Tạm ngưng</option>
-                            </select>
-                          </div>
-                        </td>
-
-                        {/* CỘT 3: QUẢN LÝ CHI NHÁNH */}
+                        {/* CỘT 2: QUẢN LÝ CHI NHÁNH */}
                         <td className="py-3 px-4 text-center whitespace-nowrap">
                           <span className="text-sm font-normal text-slate-800 dark:text-slate-200">
                             {cleanManager || "Chưa phân công"}
@@ -984,16 +952,34 @@ export default function BomFacilitiesPage() {
                           </span>
                         </td>
 
-                        {/* CỘT 4: TỶ LỆ LẤP ĐẦY */}
-                        <td className="py-3 px-4 text-center whitespace-nowrap">
-                          <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                            {displayOccRate}%
-                          </span>
-                        </td>
-
-                        {/* CỘT 5: DOANH THU THEO KHOẢNG THỜI GIAN ĐƯỢC CHỌN */}
+                        {/* CỘT 4: DOANH THU THEO KHOẢNG THỜI GIAN ĐƯỢC CHỌN */}
                         <td className="py-3 px-4 text-center whitespace-nowrap text-sm font-semibold text-slate-900 dark:text-slate-100">
                           {displayRevenue}
+                        </td>
+
+                        {/* CỘT 5: TRẠNG THÁI (ĐẶT TRƯỚC THAO TÁC, BO VIỀN NHẸ GIỐNG NÚT CẤU HÌNH, MÀU NHẠT HƠN) */}
+                        <td className="py-3 px-4 text-center whitespace-nowrap">
+                          <div className="inline-flex items-center justify-center">
+                            <select
+                              value={fac.status || "ACTIVE"}
+                              onChange={async (e) => {
+                                const newStatus = e.target.value
+                                await handleQuickUpdateStatus(fac, newStatus)
+                              }}
+                              className={`text-xs font-medium px-2.5 py-1.5 rounded-lg border shadow-2xs transition-all duration-150 cursor-pointer appearance-none text-center outline-none ${
+                                fac.status === "MAINTENANCE"
+                                  ? "bg-amber-50/80 hover:bg-amber-100/80 text-amber-700 dark:bg-amber-950/30 dark:hover:bg-amber-950/50 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/60"
+                                  : fac.status === "INACTIVE"
+                                  ? "bg-rose-50/80 hover:bg-rose-100/80 text-rose-700 dark:bg-rose-950/30 dark:hover:bg-rose-950/50 dark:text-rose-300 border-rose-200/80 dark:border-rose-800/60"
+                                  : "bg-emerald-50/80 hover:bg-emerald-100/80 text-emerald-700 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60"
+                              }`}
+                              title="Bấm để đổi nhanh trạng thái: Hoạt động / Bảo trì / Tạm ngưng"
+                            >
+                              <option value="ACTIVE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">🟢 Hoạt động</option>
+                              <option value="MAINTENANCE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">🟠 Bảo trì</option>
+                              <option value="INACTIVE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">🔴 Tạm ngưng</option>
+                            </select>
+                          </div>
                         </td>
 
                         {/* CỘT 6: THAO TÁC */}
@@ -1022,7 +1008,7 @@ export default function BomFacilitiesPage() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-slate-400 italic">
+                    <td colSpan={6} className="py-8 text-center text-slate-400 italic">
                       Đang tải dữ liệu cơ sở từ hệ thống...
                     </td>
                   </tr>
