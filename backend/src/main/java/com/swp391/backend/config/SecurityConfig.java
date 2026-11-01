@@ -47,6 +47,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/pricing/calculate").permitAll()
                         .requestMatchers("/api/deposits/webhook").permitAll()
                         .requestMatchers("/api/payment/vnpay/callback", "/api/payment/vnpay/ipn").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/gate-pins/verify").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                         .requestMatchers("/error").permitAll()
 
