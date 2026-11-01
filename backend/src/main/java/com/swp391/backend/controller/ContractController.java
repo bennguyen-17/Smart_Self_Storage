@@ -227,7 +227,15 @@ public class ContractController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Chỉ hợp đồng ĐANG THUÊ (ACTIVE) mới có thể yêu cầu trả kho"));
         }
 
-        String reason = body != null && body.get("reason") != null ? body.get("reason").toString() : "Khách hàng yêu cầu trả kho";
+        List<SupportTicket> existingTickets = supportTicketRepository.findByContractId(contract.getContractId());
+        for (SupportTicket existing : existingTickets) {
+            if ("EARLY_TERMINATION".equalsIgnoreCase(existing.getType()) &&
+                ("SUBMITTED".equalsIgnoreCase(existing.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existing.getStatus()) || "ESCALATED".equalsIgnoreCase(existing.getStatus()))) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Hợp đồng này đang có yêu cầu trả kho sớm đang chờ xử lý (#" + existing.getTicketCode() + ")!"));
+            }
+        }
+
+                String reason = body != null && body.get("reason") != null ? body.get("reason").toString() : "Khách hàng yêu cầu trả kho";
         contract.setCancelReason("EARLY_TERMINATION");
         contractRepository.save(contract);
 

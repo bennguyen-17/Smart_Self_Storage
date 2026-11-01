@@ -9,6 +9,7 @@ public class CheckoutConfirmRequest {
     private Integer ticketId;
     private String refundPaymentMethod = "VIETQR";
     private boolean confirmInspection; // Bắt buộc phải tích xác nhận biên bản nghiệm thu
+    private boolean collectedCompensation; // Xác nhận nhân viên đã thu đủ tiền bồi thường cọc âm tại quầy
 
     public CheckoutConfirmRequest() {
     }
@@ -59,5 +60,13 @@ public class CheckoutConfirmRequest {
 
     public void setConfirmInspection(boolean confirmInspection) {
         this.confirmInspection = confirmInspection;
+    }
+
+    public boolean isCollectedCompensation() {
+        return collectedCompensation;
+    }
+
+    public void setCollectedCompensation(boolean collectedCompensation) {
+        this.collectedCompensation = collectedCompensation;
     }
 }

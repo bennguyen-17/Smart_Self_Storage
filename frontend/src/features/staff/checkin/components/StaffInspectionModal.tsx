@@ -50,7 +50,7 @@ function StaffInspectionModal({ target, onClose, onConfirmed }: StaffInspectionM
     >
       {target && (
         <Body
-          key={target.contractCode}
+          key={target.contractId || target.contractCode}
           target={target}
           onClose={onClose}
           onConfirmed={onConfirmed}
@@ -71,26 +71,57 @@ function Body({
 }) {
   const [damages, setDamages] = useState<string[]>([])
   const [photo, setPhoto] = useState<string | null>(null)
+  const [isCompensationCollected, setIsCompensationCollected] = useState(false)
 
   const [actualDeposit, setActualDeposit] = useState<number>(target.depositAmount ?? 0)
   const [unpaidPenalty, setUnpaidPenalty] = useState<number>(0)
+  const [displayContractCode, setDisplayContractCode] = useState<string>(() => {
+    if (target.contractCode && target.contractCode.startsWith("CTR-") && target.contractCode.length > 8) {
+      return target.contractCode
+    }
+    return target.contractCode || "—"
+  })
 
+  // 1. Ưu tiên lấy từ API preview quyết toán
   useEffect(() => {
     const targetId = target.contractId || target.reservationId
     if (targetId) {
       apiClient.get(`/staff/checkout/${targetId}/preview`)
         .then((res: any) => {
-          const data = res?.data?.data ?? res?.data
+          const data = (res as any)?.data?.data ?? (res as any)?.data ?? res
           if (data?.depositAmount != null) {
             setActualDeposit(Number(data.depositAmount))
           }
           if (data?.unpaidPenalties != null) {
             setUnpaidPenalty(Number(data.unpaidPenalties))
           }
+          if (data?.contractCode && typeof data.contractCode === "string" && data.contractCode.trim() !== "") {
+            setDisplayContractCode(data.contractCode.trim())
+          }
         })
         .catch(() => {})
     }
   }, [target.contractId, target.reservationId])
+
+  // 2. Dự phòng: nếu mã hợp đồng chưa đầy đủ CTR-..., tra cứu từ danh sách hợp đồng cơ sở
+  useEffect(() => {
+    if (!displayContractCode || displayContractCode.length <= 8 || !displayContractCode.startsWith("CTR-")) {
+      apiClient.get("/staff/reservations")
+        .then((res: any) => {
+          const list = Array.isArray(res) ? res : (res?.data || [])
+          if (Array.isArray(list)) {
+            const match = list.find((item: any) =>
+              (target.contractId && item.contractId === target.contractId) ||
+              (target.unitCode && item.unitCode === target.unitCode)
+            )
+            if (match?.reservationCode) {
+              setDisplayContractCode(match.reservationCode)
+            }
+          }
+        })
+        .catch(() => {})
+    }
+  }, [displayContractCode, target.contractId, target.unitCode])
 
   const deposit = actualDeposit
   const totalDamage = DAMAGE_ITEMS.filter((item) =>
@@ -98,6 +129,12 @@ function Body({
   ).reduce((sum, item) => sum + item.fee, 0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const balance = deposit - totalDamage - unpaidPenalty
+
+  useEffect(() => {
+    if (balance >= 0) {
+      setIsCompensationCollected(false)
+    }
+  }, [balance])
 
   function toggle(id: string) {
     setDamages((prev) =>
@@ -122,6 +159,7 @@ function Body({
       if (targetId) {
         await apiClient.post(`/staff/checkout/${targetId}/confirm`, {
           confirmInspection: true,
+          collectedCompensation: balance < 0 ? isCompensationCollected : false,
           damageFee,
           cleaningFee,
           inspectionNotes:
@@ -134,8 +172,8 @@ function Body({
       }
 
       if (balance < 0) {
-        toast.warning(
-          `Chi phí khấu trừ vượt quá cọc: thu thêm ${formatVnd(Math.abs(balance))} tại quầy.`
+        toast.success(
+          `Đã chốt biên bản & xác nhận thu đủ ${formatVnd(Math.abs(balance))} tại quầy thành công.`
         )
       } else {
         toast.success(
@@ -160,54 +198,65 @@ function Body({
   }
 
   return (
-    <>
-      {/* CONTRACT & UNIT SUMMARY */}
-      <div className="inner-box flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-3.5 text-xs">
-        <div>
-          <span className="block text-[10px] font-bold text-muted uppercase">
-            Hợp đồng:
+    <div className="space-y-4">
+      {/* CỤM THÔNG TIN HỢP ĐỒNG & Ô KHO (CĂN GIỮA, KHÔNG BỊ TRUNCATE) */}
+      <div className="inner-box grid grid-cols-2 sm:grid-cols-4 gap-3.5 rounded-2xl border p-4 bg-slate-50/60 dark:bg-slate-800/40 text-center">
+        <div className="flex flex-col items-center justify-center space-y-1 text-center">
+          <span className="block text-[10px] font-bold text-muted uppercase tracking-wider text-center">
+            Mã hợp đồng:
           </span>
-          <span className="font-mono text-sm font-bold text-blue-600">
-            {target.contractCode}
+          <span
+            className="font-mono text-[11px] sm:text-xs font-black text-blue-600 dark:text-blue-400 whitespace-nowrap block text-center tracking-tight"
+            title={displayContractCode}
+          >
+            {displayContractCode}
           </span>
         </div>
-        <div>
-          <span className="block text-[10px] font-bold text-muted uppercase">
+
+        <div className="flex flex-col items-center justify-center space-y-1 text-center">
+          <span className="block text-[10px] font-bold text-muted uppercase tracking-wider text-center">
             Khách hàng:
           </span>
-          <span className="text-title font-bold">{target.customerName}</span>
+          <span
+            className="text-title text-xs sm:text-sm font-bold whitespace-nowrap block text-center"
+            title={target.customerName}
+          >
+            {target.customerName}
+          </span>
         </div>
-        <div>
-          <span className="block text-[10px] font-bold text-muted uppercase">
+
+        <div className="flex flex-col items-center justify-center space-y-1 text-center">
+          <span className="block text-[10px] font-bold text-muted uppercase tracking-wider text-center">
             Ô kho trả:
           </span>
-          <span className="text-title font-mono text-sm font-bold">
+          <span className="text-title font-mono text-xs sm:text-sm font-bold whitespace-nowrap block text-center">
             {target.unitCode}
           </span>
         </div>
-        <div>
-          <span className="block text-[10px] font-bold text-muted uppercase">
+
+        <div className="flex flex-col items-center justify-center space-y-1 text-center">
+          <span className="block text-[10px] font-bold text-muted uppercase tracking-wider text-center">
             Tiền cọc gốc:
           </span>
-          <span className="font-mono text-sm font-black text-emerald-600">
+          <span className="font-mono text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap block text-center">
             {formatVnd(deposit)}
           </span>
         </div>
       </div>
 
-      {/* DAMAGE CHECKLIST */}
-      <div className="space-y-2">
+      {/* DANH MỤC KIỂM TRA HƯ HẠI */}
+      <div className="space-y-2.5">
         <div className="flex items-center justify-between">
           <span className="text-title flex items-center gap-1.5 text-xs font-black tracking-wide uppercase">
-            <ListChecksIcon className="size-3.5 text-blue-600" /> Danh mục Kiểm
-            tra Hư hại (Bảng giá niêm yết):
+            <ListChecksIcon className="size-3.5 text-blue-600 dark:text-blue-400" />
+            <span>Danh mục Kiểm tra Hư hại:</span>
           </span>
-          <span className="text-[10px] text-muted">
+          <span className="text-[10px] text-muted whitespace-nowrap">
             Tích chọn nếu phát hiện vi phạm
           </span>
         </div>
 
-        <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-2.5 text-xs sm:grid-cols-2">
           {DAMAGE_ITEMS.map((item) => {
             const checked = damages.includes(item.id)
             return (
@@ -220,13 +269,13 @@ function Body({
                     type="checkbox"
                     checked={checked}
                     onChange={() => toggle(item.id)}
-                    className="size-3.5 rounded text-amber-600"
+                    className="size-3.5 rounded text-amber-600 focus:ring-amber-500/20"
                   />
                   <span className="text-title text-[11px] font-bold">
                     {item.label}
                   </span>
                 </div>
-                <span className="font-mono text-[11px] font-extrabold text-amber-600">
+                <span className="font-mono text-[11px] font-extrabold text-amber-600 whitespace-nowrap">
                   +{formatVnd(item.fee)}
                 </span>
               </label>
@@ -235,14 +284,14 @@ function Body({
         </div>
       </div>
 
-      {/* PHOTO EVIDENCE */}
+      {/* BẰNG CHỨNG HÌNH ẢNH */}
       <div className="inner-box space-y-2 rounded-2xl border p-3">
         <div className="flex items-center justify-between text-xs">
           <span className="text-title flex items-center gap-1.5 font-bold">
-            <CameraIcon className="size-3.5 text-blue-600" /> Bằng chứng Hình
-            ảnh Hiện trường (Bắt buộc nếu có phạt):
+            <CameraIcon className="size-3.5 text-blue-600 dark:text-blue-400" />
+            <span>Bằng chứng Hình ảnh Hiện trường (Bắt buộc nếu có phạt):</span>
           </span>
-          <label className="flex cursor-pointer items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1 text-[10px] font-bold text-white hover:bg-blue-500">
+          <label className="flex cursor-pointer items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1 text-[10px] font-bold text-white hover:bg-blue-500 whitespace-nowrap">
             <UploadIcon className="size-3" /> Tải ảnh chụp
             <input
               type="file"
@@ -254,7 +303,7 @@ function Body({
         </div>
         <div className="flex items-center gap-2 overflow-x-auto py-1">
           {photo ? (
-            <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-blue-400">
+            <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-blue-400 shrink-0">
               <img
                 src={photo}
                 alt="Ảnh hiện trường"
@@ -266,83 +315,82 @@ function Body({
             </div>
           ) : (
             <span className="text-[10px] text-muted italic">
-              Chưa có ảnh đính kèm (Nếu kho nguyên vẹn 100%, có thể bỏ qua bước
-              này).
+              Chưa có ảnh đính kèm (Nếu kho nguyên vẹn 100%, có thể bỏ qua bước này).
             </span>
           )}
         </div>
       </div>
 
-      {/* SETTLEMENT SUMMARY */}
+      {/* TỔNG KẾT QUYẾT TOÁN CỌC (GỌN GÀNG, BỎ CHỮ 24-48H, KHÔNG XUỐNG DÒNG LỞ DỞ) */}
       <div className="space-y-2 rounded-2xl border border-blue-500/30 bg-blue-50/40 p-4 text-xs dark:bg-blue-950/20">
         <div className="flex items-center justify-between text-muted">
-          <span>Tiền cọc gốc ban đầu:</span>
-          <span className="text-title font-mono font-bold">
+          <span className="text-title flex items-center gap-1.5 font-bold whitespace-nowrap" >Tiền cọc gốc ban đầu:</span>
+          <span className="text-title font-mono font-bold whitespace-nowrap">
             {formatVnd(deposit)}
           </span>
         </div>
-        {unpaidPenalty > 0 && (
-          <div className="flex items-center justify-between text-muted">
-            <span>Khấu trừ phí phạt trễ hạn chưa nộp:</span>
-            <span className="font-mono font-bold text-rose-600">
-              - {formatVnd(unpaidPenalty)}
-            </span>
-          </div>
-        )}
         <div className="flex items-center justify-between text-muted">
-          <span>Tổng chi phí khấu trừ (Hư hại + Vệ sinh):</span>
-          <span className="font-mono font-bold text-rose-600">
+          <span className="text-title flex items-center gap-1.5 font-bold whitespace-nowrap" >Tổng chi phí khấu trừ (Hư hại + Vệ sinh):</span>
+          <span className="font-mono font-bold text-rose-600 whitespace-nowrap">
             - {formatVnd(totalDamage)}
           </span>
         </div>
-        <div className="flex items-center justify-between border-t border-slate-300 pt-2 dark:border-slate-700">
-          <span className="text-title text-sm font-extrabold">
+
+        <div className="flex items-center justify-between border-t border-slate-300/80 pt-2.5 dark:border-slate-700/80">
+          <span className="text-title text-xs sm:text-sm font-extrabold uppercase whitespace-nowrap">
             KẾT QUẢ QUYẾT TOÁN CỌC:
           </span>
           <div className="text-right">
             {balance >= 0 ? (
-              <>
-                <span className="font-mono text-base font-black text-emerald-600">
-                  Hoàn lại: {formatVnd(balance)}
-                </span>
-                <p className="text-[10px] text-muted">
-                  Bộ phận kế toán sẽ hoàn tiền về tài khoản ngân hàng của khách trong 24-48h làm việc
-                </p>
-              </>
+              <span className="font-mono text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                Hoàn lại: {formatVnd(balance)}
+              </span>
             ) : (
-              <>
-                <span className="font-mono text-base font-black text-rose-600">
-                  CỌC ÂM! THU THÊM: {formatVnd(Math.abs(balance))}
-                </span>
-                <p className="text-[10px] text-muted">
-                  Khách hàng cần thanh toán phần chênh lệch này tại quầy trước khi bàn giao kho
-                </p>
-              </>
+              <span className="font-mono text-base sm:text-lg font-black text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                Cần Thu thêm: {formatVnd(Math.abs(balance))}
+              </span>
             )}
           </div>
         </div>
       </div>
 
-      {/* ACTIONS */}
-      <div className="flex items-center space-x-3 pt-2">
+      {/* XÁC NHẬN ĐÃ THU TIỀN TẠI QUẦY KHI CỌC ÂM */}
+      {balance < 0 && (
+        <label className="inner-box flex cursor-pointer items-center space-x-2.5 rounded-xl border border-rose-300 bg-rose-50/70 p-3 text-xs text-rose-900 transition hover:border-rose-400 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-200">
+          <input
+            type="checkbox"
+            checked={isCompensationCollected}
+            onChange={(e) => setIsCompensationCollected(e.target.checked)}
+            className="size-4 rounded text-rose-600 focus:ring-rose-500/20 cursor-pointer"
+          />
+          <span className="font-semibold text-rose-800 dark:text-rose-200">
+            Xác nhận khách hàng đã nộp đủ{" "}
+            <span className="font-mono font-black text-rose-600 dark:text-rose-400">
+              {formatVnd(Math.abs(balance))}
+            </span>{" "}
+          </span>
+        </label>
+      )}
+
+      {/* NÚT THAO TÁC */}
+      <div className="flex items-center space-x-3 pt-1">
         <button
           type="button"
           onClick={onClose}
-          className="text-title flex-1 cursor-pointer rounded-xl border py-3 text-xs font-bold transition hover:bg-slate-100 dark:hover:bg-slate-800"
+          className="text-title h-11 flex-1 cursor-pointer rounded-xl border border-slate-200 dark:border-slate-700 py-2.5 text-xs font-bold transition hover:bg-slate-100 dark:hover:bg-slate-800"
         >
           Hủy bỏ
         </button>
         <button
           type="button"
-          disabled={isSubmitting}
+          disabled={isSubmitting || (balance < 0 && !isCompensationCollected)}
           onClick={submit}
-          className="flex flex-1 cursor-pointer items-center justify-center space-x-2 rounded-xl bg-emerald-600 py-3 text-xs font-black text-white shadow-lg transition hover:bg-emerald-500 disabled:opacity-50"
+          className="h-11 flex-1 cursor-pointer rounded-xl bg-emerald-600 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-center"
         >
-          <ClipboardCheckIcon className="size-4" />
-          <span>{isSubmitting ? "Đang xử lý..." : "CHỐT BIÊN BẢN & THANH LÝ HỢP ĐỒNG"}</span>
+          {isSubmitting ? "Đang xử lý..." : "Chốt biên bản"}
         </button>
       </div>
-    </>
+    </div>
   )
 }
 

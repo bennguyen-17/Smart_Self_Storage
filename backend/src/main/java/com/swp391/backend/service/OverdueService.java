@@ -172,7 +172,7 @@ public class OverdueService {
         if (remainingAmount.signum() > 0) {
             payment.setPaymentStatus("PENDING");
         }
-        paymentRepository.save(payment);
+        return paymentRepository.save(payment);
     }
 
     private void sendMilestoneReminder(Contract contract, Reservation reservation, long overdueDays) {

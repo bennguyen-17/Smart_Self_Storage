@@ -27,6 +27,8 @@ import StaffCustomerDetailModal, {
 import StaffInspectionModal, {
   type InspectionTarget,
 } from "./StaffInspectionModal"
+import { usePagedRows } from "@/components/internal/usePagedRows"
+import { Pagination } from "@/components/internal/components/PanelKit"
 
 const TAB_COLORS: Record<CheckinTabKey, string> = {
   all: "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300",
@@ -113,11 +115,14 @@ function CheckinPanel() {
   }, [units])
 
   const all = useMemo(() => {
-    const getStatusPriority = (status?: string): number => {
-      if (status === "PENDING_CHECKIN") return 0
-      if (status === "ACTIVE") return 1
-      if (status === "OVERDUE") return 2
-      return 3
+    const getStatusPriority = (item: StaffReservationItem): number => {
+      if (item.contractStatus === "PENDING_CHECKIN") return 0
+      if (item.contractStatus === "ACTIVE") {
+        const isReturn = Boolean(item.returnRequested || item.cancelReason === "EARLY_TERMINATION")
+        return isReturn ? 2 : 1
+      }
+      if (item.contractStatus === "OVERDUE") return 3
+      return 4
     }
 
     return (data ?? [])
@@ -127,10 +132,10 @@ function CheckinPanel() {
         )
       )
       .sort((a, b) => {
-        const pA = getStatusPriority(a.contractStatus)
-        const pB = getStatusPriority(b.contractStatus)
+        const pA = getStatusPriority(a)
+        const pB = getStatusPriority(b)
         if (pA !== pB) return pA - pB
-        return (a.checkInDate ?? "").localeCompare(b.checkInDate ?? "")
+        return (a.reservationCode ?? "").localeCompare(b.reservationCode ?? "")
       })
   }, [data])
   const keyword = query.trim().toLowerCase()
@@ -140,6 +145,8 @@ function CheckinPanel() {
         !tab.contractStatus || item.contractStatus === tab.contractStatus
     )
     .filter((item) => matches(item, keyword))
+
+  const { slice, pagination } = usePagedRows(rows, `${tab.contractStatus ?? "all"}-${keyword}`)
 
   function countOf(status?: string): number {
     return status
@@ -243,7 +250,7 @@ function CheckinPanel() {
 
       {/* Bảng danh sách hợp đồng - Thẻ card kính mờ riêng biệt */}
       <CheckinContractTable
-        rows={rows}
+        rows={slice.rows}
         isLoading={isLoading}
         error={error}
         onRetry={refresh}
@@ -263,6 +270,8 @@ function CheckinPanel() {
         onRenew={setRenewContract}
         unitMeta={unitMeta}
       />
+
+      <Pagination unit="hợp đồng" {...pagination} />
 
       <StaffCustomerDetailModal
         contract={detailContract}

@@ -16,6 +16,7 @@ import { getErrorMessage } from "@/lib/api"
 import type { ManagerTicketItem, ManagerTicketStatus } from "../types"
 import { listManagerTickets, managerAcceptTicket } from "../api/ticketApi"
 import ResolveTicketModal from "./ResolveTicketModal"
+import { formatDate } from "@/lib/format"
 
 const STATUS_FILTERS: { key: ManagerTicketStatus; label: string }[] = [
   { key: "ALL", label: "Tất cả" },
@@ -266,6 +267,27 @@ export default function ManagerTicketPanel() {
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
               {filteredTickets.map((ticket) => {
+                const isEarlyTerm = ticket.type === "EARLY_TERMINATION"
+                const isReturnDue =
+                  !ticket.desiredDate ||
+                  (() => {
+                    try {
+                      const today = new Date()
+                      today.setHours(0, 0, 0, 0)
+                      const parts = ticket.desiredDate.split(/[-T ]/)
+                      if (parts.length >= 3) {
+                        const year = parseInt(parts[0], 10)
+                        const month = parseInt(parts[1], 10) - 1
+                        const day = parseInt(parts[2], 10)
+                        const d = new Date(year, month, day)
+                        return today.getTime() >= d.getTime()
+                      }
+                      return true
+                    } catch {
+                      return true
+                    }
+                  })()
+
                 return (
                   <tr
                     key={ticket.id}
@@ -325,14 +347,18 @@ export default function ManagerTicketPanel() {
                             ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
                             : ticket.status === "IN_PROGRESS"
                               ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300"
-                              : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                              : ticket.status === "CANCELLED"
+                                ? "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400"
+                                : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
                         )}
                       >
                         {ticket.status === "SUBMITTED"
                           ? "Chờ tiếp nhận"
                           : ticket.status === "IN_PROGRESS"
                             ? "Đang xử lý"
-                            : "Đã giải quyết"}
+                            : ticket.status === "CANCELLED"
+                              ? "Đã hủy"
+                              : "Đã giải quyết"}
                       </span>
                     </td>
 
@@ -357,14 +383,23 @@ export default function ManagerTicketPanel() {
                       <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                         {/* Khi ticket là SUBMITTED: Quản lý bấm Tiếp nhận */}
                         {(ticket.status === "SUBMITTED" || ticket.status === "ESCALATED") && (
-                          <button
-                            type="button"
-                            onClick={() => handleAccept(ticket)}
-                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-white shadow-xs transition hover:bg-blue-700"
-                          >
-                            <UserCheckIcon className="size-3.5" />
-                            <span>Tiếp nhận xử lý</span>
-                          </button>
+                          isEarlyTerm && !isReturnDue ? (
+                            <span
+                              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-500 shadow-2xs dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400"
+                              title={`Lịch hẹn trả kho vào ngày ${ticket.desiredDate ? formatDate(ticket.desiredDate) : "—"}. Chỉ tiếp nhận khi đến ngày hẹn.`}
+                            >
+                              <span>Chờ đến hẹn ({ticket.desiredDate ? formatDate(ticket.desiredDate) : "—"})</span>
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleAccept(ticket)}
+                              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-white shadow-xs transition hover:bg-blue-700"
+                            >
+                              <UserCheckIcon className="size-3.5" />
+                              <span>Tiếp nhận xử lý</span>
+                            </button>
+                          )
                         )}
 
                         {/* Khi ticket đang IN_PROGRESS: Quản lý trực tiếp Đóng / Giải quyết */}

@@ -621,7 +621,7 @@ INSERT INTO FeeItem (feeItemId, feeCode, feeName, category, calcType, feeValue, 
 INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 -- === CƠ SỞ 1: HN-01 (Cầu Giấy, Hà Nội) ===
 -- Floor 1 (Trệt): 10 Ô Kho XL
-('HN01-G-XL01', 1, 4, 'AVAILABLE'),
+('HN01-G-XL01', 1, 4, 'RENTED'),
 ('HN01-G-XL02', 1, 4, 'RENTED'),
 ('HN01-G-XL03', 1, 4, 'AVAILABLE'),
 ('HN01-G-XL04', 1, 4, 'AVAILABLE'),
@@ -632,9 +632,9 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 ('HN01-G-XL09', 1, 4, 'RENTED'),
 ('HN01-G-XL10', 1, 4, 'AVAILABLE'),
 -- Floor 2 (Tầng 1): 8 ô S, 6 ô M, 4 ô L
-('HN01-F1-S01', 2, 1, 'AVAILABLE'),
+('HN01-F1-S01', 2, 1, 'RENTED'),
 ('HN01-F1-S02', 2, 1, 'RENTED'),
-('HN01-F1-S03', 2, 1, 'AVAILABLE'),
+('HN01-F1-S03', 2, 1, 'RENTED'),
 ('HN01-F1-S04', 2, 1, 'RENTED'),
 ('HN01-F1-S05', 2, 1, 'AVAILABLE'),
 ('HN01-F1-S06', 2, 1, 'AVAILABLE'),
@@ -657,16 +657,16 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 ('HN01-F2-S04', 3, 1, 'AVAILABLE'),
 ('HN01-F2-S05', 3, 1, 'AVAILABLE'),
 ('HN01-F2-S06', 3, 1, 'AVAILABLE'),
-('HN01-F2-M01', 3, 2, 'AVAILABLE'),
+('HN01-F2-M01', 3, 2, 'RENTED'),
 ('HN01-F2-M02', 3, 2, 'RENTED'),
 ('HN01-F2-M03', 3, 2, 'RENTED'),
 ('HN01-F2-M04', 3, 2, 'RESERVED'),
 ('HN01-F2-M05', 3, 2, 'RENTED'),
 ('HN01-F2-M06', 3, 2, 'RENTED'),
-('HN01-F2-M07', 3, 2, 'AVAILABLE'),
+('HN01-F2-M07', 3, 2, 'RENTED'),
 ('HN01-F2-M08', 3, 2, 'AVAILABLE'),
 ('HN01-F2-L01', 3, 3, 'MAINTENANCE'),
-('HN01-F2-L02', 3, 3, 'AVAILABLE'),
+('HN01-F2-L02', 3, 3, 'RENTED'),
 ('HN01-F2-L03', 3, 3, 'RENTED'),
 ('HN01-F2-L04', 3, 3, 'AVAILABLE'),
 
@@ -910,7 +910,15 @@ INSERT INTO Reservation (reservationId, reservationCode, accountId, unitCode, st
 (27, 'CTR-HN01-170926-1027', 33, 'HN01-F1-M03', '2026-09-17', '2026-10-17', 'MONTHLY', 1200000.00, 1000000.00, 750000.00, 'CONFIRMED', '2026-09-16 10:00:00', NULL),
 (28, 'CTR-HN01-170926-1028', 34, 'HN01-F2-M02', '2026-09-17', '2026-10-17', 'MONTHLY', 1200000.00, 1000000.00, 750000.00, 'CONFIRMED', '2026-09-16 11:00:00', NULL),
 (29, 'CTR-HN01-170926-1029', 35, 'HN01-F2-M05', '2026-09-17', '2026-10-17', 'MONTHLY', 1200000.00, 1000000.00, 750000.00, 'CONFIRMED', '2026-09-16 14:00:00', NULL),
-(30, 'CTR-HN01-170926-1030', 36, 'HN01-F2-M06', '2026-09-17', '2026-10-17', 'MONTHLY', 1200000.00, 1000000.00, 750000.00, 'CONFIRMED', '2026-09-16 15:00:00', NULL);
+(30, 'CTR-HN01-170926-1030', 36, 'HN01-F2-M06', '2026-09-17', '2026-10-17', 'MONTHLY', 1200000.00, 1000000.00, 750000.00, 'CONFIRMED', '2026-09-16 15:00:00', NULL),
+
+-- Hợp đồng đang thuê có hẹn trả kho sớm vào ngày hôm nay (01/11/2026) cho mỗi tài khoản khách hàng
+(31, 'CTR-HN01-151026-1031', 31, 'HN01-F1-S01', '2026-10-15', '2026-11-15', 'MONTHLY', 600000.00, 500000.00, 0.00, 'CONFIRMED', '2026-10-14 09:00:00', NULL),
+(32, 'CTR-HN01-151026-1032', 32, 'HN01-F1-S03', '2026-10-15', '2026-11-15', 'MONTHLY', 600000.00, 500000.00, 0.00, 'CONFIRMED', '2026-10-14 10:00:00', NULL),
+(33, 'CTR-HN01-151026-1033', 33, 'HN01-F2-M01', '2026-10-15', '2026-11-15', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-10-14 11:00:00', NULL),
+(34, 'CTR-HN01-151026-1034', 34, 'HN01-F2-M07', '2026-10-15', '2026-11-15', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-10-14 14:00:00', NULL),
+(35, 'CTR-HN01-151026-1035', 35, 'HN01-F2-L02', '2026-10-15', '2026-11-15', 'MONTHLY', 2400000.00, 2000000.00, 0.00, 'CONFIRMED', '2026-10-14 15:00:00', NULL),
+(36, 'CTR-HN01-151026-1036', 36, 'HN01-G-XL01', '2026-10-15', '2026-11-15', 'MONTHLY', 4000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-10-14 16:00:00', NULL);
 
 -- 15. Hợp đồng thuê kho (Contracts) đa dạng chu trình 7 trạng thái chuẩn BR-21
 INSERT INTO Contract (contractId, reservationId, activatedAt, terminatedAt, status, cancelReason, refundBankName, refundAccountNumber, refundAccountName) VALUES
@@ -956,7 +964,15 @@ INSERT INTO Contract (contractId, reservationId, activatedAt, terminatedAt, stat
 (27, 27, '2026-09-17 10:00:00', NULL, 'OVERDUE', NULL, NULL, NULL, NULL),
 (28, 28, '2026-09-17 11:00:00', NULL, 'OVERDUE', NULL, NULL, NULL, NULL),
 (29, 29, '2026-09-17 14:00:00', NULL, 'OVERDUE', NULL, NULL, NULL, NULL),
-(30, 30, '2026-09-17 15:00:00', NULL, 'OVERDUE', NULL, NULL, NULL, NULL);
+(30, 30, '2026-09-17 15:00:00', NULL, 'OVERDUE', NULL, NULL, NULL, NULL),
+
+-- Hợp đồng đang thuê có yêu cầu trả kho trước hạn vào ngày hôm nay (01/11/2026) cho mỗi khách hàng (HĐ 31 -> 36)
+(31, 31, '2026-10-15 09:00:00', NULL, 'ACTIVE', 'EARLY_TERMINATION', 'MBBank', '0912345678', 'NGUYEN THANH LONG'),
+(32, 32, '2026-10-15 10:00:00', NULL, 'ACTIVE', 'EARLY_TERMINATION', 'Vietcombank', '079201098765', 'TRAN THU HA'),
+(33, 33, '2026-10-15 11:00:00', NULL, 'ACTIVE', 'EARLY_TERMINATION', 'Techcombank', '1903678901234', 'TRAN THI BICH NGOC'),
+(34, 34, '2026-10-15 14:00:00', NULL, 'ACTIVE', 'EARLY_TERMINATION', 'Techcombank', '079202087654', 'LE HUU DAT'),
+(35, 35, '2026-10-15 15:00:00', NULL, 'ACTIVE', 'EARLY_TERMINATION', 'VietinBank', '108876543210', 'LE HOANG LONG'),
+(36, 36, '2026-10-15 16:00:00', NULL, 'ACTIVE', 'EARLY_TERMINATION', 'ACB', '246813579', 'VU MAI PHUONG');
 
 -- 16. Hóa đơn và Thanh toán (Payments) chuẩn mã định danh BR-37
 INSERT INTO Payment (paymentId, contractId, invoiceNumber, invoiceType, amount, paidAmount, remainingAmount, receiptUrl, issuedAt, dueAt, status, paymentMethod, transactionCode, paymentStatus, gatewayTransactionId, paidAt) VALUES
@@ -1020,7 +1036,15 @@ INSERT INTO Payment (paymentId, contractId, invoiceNumber, invoiceType, amount, 
 (45, 29, 'DEP-CTR-HN01-170926-1029', 'DEP', 2200000.00, 2200000.00, 0.00, NULL, '2026-09-16 14:05:00', '2026-09-17 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_1029', 'SUCCESS', 'VNP1029', '2026-09-17 09:25:00'),
 (46, 29, 'PEN-HN01-170926-1029', 'OVERDUE_FEE', 750000.00, 0.00, 750000.00, NULL, '2026-10-18 00:00:00', '2026-10-18 23:59:59', 'OVERDUE', NULL, NULL, 'PENDING', NULL, NULL),
 (47, 30, 'DEP-CTR-HN01-170926-1030', 'DEP', 2200000.00, 2200000.00, 0.00, NULL, '2026-09-16 15:05:00', '2026-09-17 23:59:59', 'PAID', 'VIETQR', 'TXN_VQR_1030', 'SUCCESS', 'QR1030', '2026-09-17 09:30:00'),
-(48, 30, 'PEN-HN01-170926-1030', 'OVERDUE_FEE', 750000.00, 0.00, 750000.00, NULL, '2026-10-18 00:00:00', '2026-10-18 23:59:59', 'OVERDUE', NULL, NULL, 'PENDING', NULL, NULL);
+(48, 30, 'PEN-HN01-170926-1030', 'OVERDUE_FEE', 750000.00, 0.00, 750000.00, NULL, '2026-10-18 00:00:00', '2026-10-18 23:59:59', 'OVERDUE', NULL, NULL, 'PENDING', NULL, NULL),
+
+-- Hóa đơn tiền cọc & tiền thuê ban đầu (DEP) đã thanh toán cho HĐ 31 -> 36
+(49, 31, 'DEP-CTR-HN01-151026-1031', 'DEP', 1100000.00, 1100000.00, 0.00, NULL, '2026-10-14 09:05:00', '2026-10-15 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_1031', 'SUCCESS', 'VNP1031', '2026-10-15 09:00:00'),
+(50, 32, 'DEP-CTR-HN01-151026-1032', 'DEP', 1100000.00, 1100000.00, 0.00, NULL, '2026-10-14 10:05:00', '2026-10-15 23:59:59', 'PAID', 'VIETQR', 'TXN_VQR_1032', 'SUCCESS', 'QR1032', '2026-10-15 10:00:00'),
+(51, 33, 'DEP-CTR-HN01-151026-1033', 'DEP', 2200000.00, 2200000.00, 0.00, NULL, '2026-10-14 11:05:00', '2026-10-15 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_1033', 'SUCCESS', 'VNP1033', '2026-10-15 11:00:00'),
+(52, 34, 'DEP-CTR-HN01-151026-1034', 'DEP', 2200000.00, 2200000.00, 0.00, NULL, '2026-10-14 14:05:00', '2026-10-15 23:59:59', 'PAID', 'MOMO', 'TXN_MM_1034', 'SUCCESS', 'MM1034', '2026-10-15 14:00:00'),
+(53, 35, 'DEP-CTR-HN01-151026-1035', 'DEP', 4400000.00, 4400000.00, 0.00, NULL, '2026-10-14 15:05:00', '2026-10-15 23:59:59', 'PAID', 'VNPAY', 'TXN_VNP_1035', 'SUCCESS', 'VNP1035', '2026-10-15 15:00:00'),
+(54, 36, 'DEP-CTR-HN01-151026-1036', 'DEP', 7000000.00, 7000000.00, 0.00, NULL, '2026-10-14 16:05:00', '2026-10-15 23:59:59', 'PAID', 'VIETQR', 'TXN_VQR_1036', 'SUCCESS', 'QR1036', '2026-10-15 16:00:00');
 
 -- 17. Mã PIN động mở cổng IoT 24/7 (GatePins)
 INSERT INTO GatePin (gatePinId, contractId, pinCode, status, generatedAt, expiresAt) VALUES
@@ -1063,7 +1087,15 @@ INSERT INTO SupportTicket (id, ticketCode, type, status, customerId, facilityId,
 
 -- === KHÁCH HÀNG 6: Vũ Mai Phương (CustomerId 6, Cơ sở HN-02, Ô HN02-F1-M02) ===
 (11, 'TCK-202610-010', 'MAINTENANCE', 'RESOLVED', 6, 2, 'HN02-F1-M02', 21, 'Bảo trì / Sửa chữa', 'Cần kiểm tra định kỳ cảm biến nhiệt độ buồng kho mát để đảm bảo tiêu chuẩn bảo quản tài liệu điện tử.', NULL, 11, '2026-10-25 20:00:00', FALSE, TRUE, 'Hệ thống điều hòa và cảm biến nhiệt độ buồng kho hoạt động chuẩn xác, duy trì 22°C liên tục.', '2026-10-24 13:00:00', '2026-10-24 14:15:00'),
-(12, 'TCK-202610-011', 'EARLY_TERMINATION', 'RESOLVED', 6, 2, 'HN02-F1-M02', 21, 'Yêu cầu trả kho sớm', 'Khách hàng hoàn tất kế hoạch lưu trữ trước thời hạn, xin làm thủ tục bàn giao kho và tất toán hợp đồng.', '2026-10-22', 12, NULL, FALSE, TRUE, 'Đã hoàn tất nghiệm thu ô kho sạch sẽ, không hư hại và tạo lệnh hoàn tiền cọc.', '2026-10-18 10:00:00', '2026-10-22 10:30:00');
+(12, 'TCK-202610-011', 'EARLY_TERMINATION', 'RESOLVED', 6, 2, 'HN02-F1-M02', 21, 'Yêu cầu trả kho sớm', 'Khách hàng hoàn tất kế hoạch lưu trữ trước thời hạn, xin làm thủ tục bàn giao kho và tất toán hợp đồng.', '2026-10-22', 12, NULL, FALSE, TRUE, 'Đã hoàn tất nghiệm thu ô kho sạch sẽ, không hư hại và tạo lệnh hoàn tiền cọc.', '2026-10-18 10:00:00', '2026-10-22 10:30:00'),
+
+-- Các ticket yêu cầu trả kho trước hạn vào ngày hôm nay (01/11/2026) cho HĐ 31 -> 36
+(13, 'TCK-202611-013', 'EARLY_TERMINATION', 'SUBMITTED', 1, 1, 'HN01-F1-S01', 31, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 01/11/2026', '2026-11-01', 10, '2026-11-01 18:00:00', 0, 1, NULL, '2026-10-31 08:30:00', NULL),
+(14, 'TCK-202611-014', 'EARLY_TERMINATION', 'SUBMITTED', 2, 1, 'HN01-F1-S03', 32, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 01/11/2026', '2026-11-01', 10, '2026-11-01 18:00:00', 0, 1, NULL, '2026-10-31 09:15:00', NULL),
+(15, 'TCK-202611-015', 'EARLY_TERMINATION', 'SUBMITTED', 3, 1, 'HN01-F2-M01', 33, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 01/11/2026', '2026-11-01', 11, '2026-11-01 18:00:00', 0, 1, NULL, '2026-10-31 10:00:00', NULL),
+(16, 'TCK-202611-016', 'EARLY_TERMINATION', 'SUBMITTED', 4, 1, 'HN01-F2-M07', 34, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 01/11/2026', '2026-11-01', 11, '2026-11-01 18:00:00', 0, 1, NULL, '2026-10-31 11:30:00', NULL),
+(17, 'TCK-202611-017', 'EARLY_TERMINATION', 'SUBMITTED', 5, 1, 'HN01-F2-L02', 35, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 01/11/2026', '2026-11-01', 10, '2026-11-01 18:00:00', 0, 1, NULL, '2026-10-31 14:00:00', NULL),
+(18, 'TCK-202611-018', 'EARLY_TERMINATION', 'SUBMITTED', 6, 1, 'HN01-G-XL01', 36, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 01/11/2026', '2026-11-01', 10, '2026-11-01 18:00:00', 0, 1, NULL, '2026-10-31 16:30:00', NULL);
 
 -- 20. Biên bản nghiệm thu kiểm tra trả kho (Inspections & InspectionItems)
 -- (Không có biên bản vi phạm phát sinh)

@@ -24,27 +24,80 @@ public class NoShowCronService {
     private final PaymentRepository paymentRepository;
     private final ActivityLogRepository activityLogRepository;
     private final OverdueService overdueService;
+    private final SupportTicketRepository supportTicketRepository;
 
     public NoShowCronService(ContractRepository contractRepository,
                              ReservationRepository reservationRepository,
                              StorageUnitRepository storageUnitRepository,
                              PaymentRepository paymentRepository,
                              ActivityLogRepository activityLogRepository,
-                             OverdueService overdueService) {
+                             OverdueService overdueService,
+                             SupportTicketRepository supportTicketRepository) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
         this.paymentRepository = paymentRepository;
         this.activityLogRepository = activityLogRepository;
         this.overdueService = overdueService;
+        this.supportTicketRepository = supportTicketRepository;
     }
 
-    // --- US-15: Cron Job chạy tự động lúc 00:00:00 hằng ngày ---
-    @Scheduled(cron = "0 0 0 * * ?")
+    // --- US-15: Cron Job chạy tự động lúc 00:00:00 hằng ngày (giờ Việt Nam) ---
+    @Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Ho_Chi_Minh")
     public void scheduledNoShowJob() {
-        log.info("Starting Daily No-Show Cron Job at 00:00:00...");
+        log.info("Starting Daily No-Show Cron Job at 00:00:00 (Asia/Ho_Chi_Minh)...");
         int processedCount = processNoShowContracts();
-        log.info("Daily No-Show Cron Job completed. Processed {} no-show contracts.", processedCount);
+        log.info("Daily No-Show Check-in Cron Job completed. Processed {} no-show contracts.", processedCount);
+
+        int cancelledTickets = processExpiredEarlyTerminationTickets();
+        log.info("Daily Early Termination No-Show Cron Job completed. Processed {} expired tickets.", cancelledTickets);
+    }
+
+    // --- US-22 / BR: Tự động đóng các ticket Trả kho sớm lỡ hẹn khi qua 00:00 ngày hôm sau ---
+    @Transactional
+    public int processExpiredEarlyTerminationTickets() {
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        List<SupportTicket> openEarlyTickets = supportTicketRepository.findAll().stream()
+                .filter(t -> "EARLY_TERMINATION".equalsIgnoreCase(t.getType())
+                        && !"RESOLVED".equalsIgnoreCase(t.getStatus())
+                        && !"CANCELLED".equalsIgnoreCase(t.getStatus())
+                        && t.getDesiredDate() != null
+                        && t.getDesiredDate().isBefore(today))
+                .toList();
+
+        int count = 0;
+        java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        for (SupportTicket ticket : openEarlyTickets) {
+            ticket.setStatus("CANCELLED");
+            ticket.setResolvedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+            String formattedDate = ticket.getDesiredDate().format(dtf);
+            ticket.setResolutionNote(String.format("Khách hàng không đến cơ sở nghiệm thu vào ngày hẹn %s. Lịch hẹn trả kho đã tự động đóng. Hợp đồng tiếp tục duy trì.", formattedDate));
+            supportTicketRepository.save(ticket);
+
+            // Giữ hợp đồng ACTIVE và reset cancelReason nếu có
+            if (ticket.getContractId() != null) {
+                contractRepository.findById(ticket.getContractId()).ifPresent(contract -> {
+                    if ("ACTIVE".equalsIgnoreCase(contract.getStatus()) && "EARLY_TERMINATION".equalsIgnoreCase(contract.getCancelReason())) {
+                        contract.setCancelReason(null);
+                        contractRepository.save(contract);
+                    }
+                });
+            }
+
+            // Ghi nhận ActivityLog
+            if (activityLogRepository != null) {
+                ActivityLog activityLog = new ActivityLog();
+                activityLog.setAccountId(ticket.getCustomerId());
+                activityLog.setAction("EARLY_TERMINATION_NO_SHOW");
+                activityLog.setDescription(String.format("Hệ thống tự động hủy lịch hẹn trả kho #%s (ô %s) do khách hàng không đến nghiệm thu ngày %s. Hợp đồng #%d vẫn tiếp tục ACTIVE.",
+                        ticket.getTicketCode(), ticket.getUnitCode() != null ? ticket.getUnitCode() : "", formattedDate, ticket.getContractId()));
+                activityLog.setCreatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+                activityLogRepository.save(activityLog);
+            }
+
+            count++;
+        }
+        return count;
     }
 
     // --- Logic cốt lõi: Quét và hủy các đơn No-Show quá hạn ---

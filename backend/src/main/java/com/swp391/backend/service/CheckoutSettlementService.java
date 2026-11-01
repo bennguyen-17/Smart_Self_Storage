@@ -262,41 +262,42 @@ public class CheckoutSettlementService {
         String cleanBranch = branchCode.replace("-", "").toUpperCase();
 
         // Nếu tiền cọc + hoàn < tổng khấu trừ -> Bị âm tiền (Khách phải nộp thêm truy thu CMP)
+        String cmpInvoice = null;
         if (netAmount.compareTo(BigDecimal.ZERO) < 0) {
             BigDecimal compensationDue = netAmount.abs();
-            String cmpInvoice = String.format("CMP-%s-%s-%04d", cleanBranch, dateStr, randomSuffix);
+            if (!request.isCollectedCompensation()) {
+                CheckoutConfirmResponse resp = new CheckoutConfirmResponse();
+                resp.setSuccess(false);
+                resp.setMessage(String.format("Khách hàng còn thiếu khoản truy thu hư hại/vệ sinh %s VNĐ. Vui lòng thu tiền tại quầy và tích xác nhận trước khi chốt biên bản!", compensationDue));
+                resp.setContractId(contract.getContractId());
+                resp.setContractStatus(contract.getStatus());
+                resp.setUnitCode(unit.getUnitCode());
+                resp.setUnitStatus(unit.getStatus());
+                resp.setSettlementAmount(compensationDue);
+                resp.setRefund(false);
+                return resp;
+            }
+
+            cmpInvoice = String.format("CMP-%s-%s-%04d", cleanBranch, dateStr, randomSuffix);
 
             Payment cmpPayment = new Payment();
             cmpPayment.setContractId(contract.getContractId());
             cmpPayment.setInvoiceNumber(cmpInvoice);
             cmpPayment.setInvoiceType("INSPECTION_DAMAGE");
             cmpPayment.setAmount(compensationDue);
+            cmpPayment.setPaidAmount(compensationDue);
+            cmpPayment.setRemainingAmount(BigDecimal.ZERO);
             cmpPayment.setIssuedAt(LocalDateTime.now());
-            cmpPayment.setDueAt(LocalDateTime.now().plusDays(1));
-            cmpPayment.setStatus("PENDING");
-            cmpPayment.setPaymentStatus("PENDING");
-            cmpPayment.setPaymentMethod(request.getRefundPaymentMethod());
+            cmpPayment.setPaidAt(LocalDateTime.now());
+            cmpPayment.setDueAt(LocalDateTime.now());
+            cmpPayment.setStatus("PAID");
+            cmpPayment.setPaymentStatus("SUCCESS");
+            cmpPayment.setPaymentMethod("COUNTER");
             paymentRepository.save(cmpPayment);
-
-            // "chỉ khi CMP = PAID mới cho chuyển TERMINATED"
-            CheckoutConfirmResponse resp = new CheckoutConfirmResponse();
-            resp.setSuccess(false);
-            resp.setMessage(String.format("Khách hàng còn thiếu khoản truy thu hư hại/vệ sinh %s VNĐ (Hóa đơn %s). Khách cần thanh toán hóa đơn này trước khi chuyển hợp đồng sang TERMINATED theo quy định!",
-                    compensationDue, cmpInvoice));
-            resp.setContractId(contract.getContractId());
-            resp.setContractStatus(contract.getStatus());
-            resp.setUnitCode(unit.getUnitCode());
-            resp.setUnitStatus(unit.getStatus());
-            resp.setInvoiceNumber(cmpInvoice);
-            resp.setInvoiceType("COMPENSATION");
-            resp.setSettlementAmount(compensationDue);
-            resp.setRefund(false);
-
-            return resp;
         }
 
-        // Tiền cọc đủ bù -> Không có tiền hoàn và không nợ thì chuyển thẳng COMPLETED
-        if (netAmount.compareTo(BigDecimal.ZERO) > 0) {
+        // Chuyển trạng thái hợp đồng sang TERMINATED / COMPLETED
+        if (netAmount.compareTo(BigDecimal.ZERO) != 0 || daysRemaining > 0) {
             contract.setStatus("TERMINATED");
         } else {
             contract.setStatus("COMPLETED");
@@ -401,25 +402,34 @@ public class CheckoutSettlementService {
             act.setAccountId(staffAccountId != null ? staffAccountId : res.getAccountId());
             act.setFacilityId(floorRepository.findById(unit.getFloorId()).map(Floor::getFacilityId).orElse(null));
             act.setAction("CONFIRM_CHECKOUT_TERMINATED");
-            act.setDescription(String.format("Xác nhận bàn giao trả kho #%d (ô %s). HĐ -> TERMINATED, ô -> MAINTENANCE, PIN vô hiệu hóa. Quyết toán: %s (Hóa đơn hoàn: %s).",
-                    contract.getContractId(), unit.getUnitCode(), netAmount, refInvoice != null ? refInvoice : "0 VNĐ"));
+            act.setDescription(String.format("Xác nhận bàn giao trả kho #%d (ô %s). HĐ -> TERMINATED, ô -> MAINTENANCE, PIN vô hiệu hóa. Quyết toán: %s (Hóa đơn: %s).",
+                    contract.getContractId(), unit.getUnitCode(), netAmount, cmpInvoice != null ? cmpInvoice : (refInvoice != null ? refInvoice : "0 VNĐ")));
             act.setCreatedAt(LocalDateTime.now());
             activityLogRepository.save(act);
         }
 
         CheckoutConfirmResponse resp = new CheckoutConfirmResponse();
         resp.setSuccess(true);
-        resp.setMessage(String.format("Nhận bàn giao thành công! Hợp đồng đã chuyển TERMINATED, ô kho chuyển MAINTENANCE, mã PIN bị vô hiệu. Lệnh hoàn cọc: %s.",
-                refInvoice != null ? refInvoice + " (" + netAmount + " VNĐ)" : "0 VNĐ"));
+        if (netAmount.compareTo(BigDecimal.ZERO) < 0) {
+            resp.setMessage(String.format("Nhận bàn giao và thu tiền bồi thường thành công! Hợp đồng đã chuyển TERMINATED, ô kho chuyển MAINTENANCE, mã PIN bị vô hiệu. Hóa đơn bồi thường: %s (%s VNĐ).",
+                    cmpInvoice, netAmount.abs()));
+            resp.setInvoiceNumber(cmpInvoice);
+            resp.setInvoiceType("COMPENSATION");
+            resp.setSettlementAmount(netAmount.abs());
+            resp.setRefund(false);
+        } else {
+            resp.setMessage(String.format("Nhận bàn giao thành công! Hợp đồng đã chuyển TERMINATED, ô kho chuyển MAINTENANCE, mã PIN bị vô hiệu. Lệnh hoàn cọc: %s.",
+                    refInvoice != null ? refInvoice + " (" + netAmount + " VNĐ)" : "0 VNĐ"));
+            resp.setInvoiceNumber(refInvoice);
+            resp.setInvoiceType("REFUND");
+            resp.setSettlementAmount(netAmount);
+            resp.setRefund(refInvoice != null);
+        }
         resp.setContractId(contract.getContractId());
         resp.setContractStatus("TERMINATED");
         resp.setUnitCode(unit.getUnitCode());
         resp.setUnitStatus("MAINTENANCE");
         resp.setGatePinDisabled(true);
-        resp.setInvoiceNumber(refInvoice);
-        resp.setInvoiceType("REFUND");
-        resp.setSettlementAmount(netAmount);
-        resp.setRefund(true);
         resp.setTicketResolved(ticketResolved);
 
         return resp;

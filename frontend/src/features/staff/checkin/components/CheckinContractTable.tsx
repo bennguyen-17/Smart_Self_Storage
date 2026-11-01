@@ -34,10 +34,6 @@ interface CheckinContractTableProps {
 function codeSubtitle(item: StaffReservationItem): string | null {
   if (item.contractStatus === "TERMINATED") return "Hợp đồng đã thanh lý"
   if (item.contractStatus === "CANCELLED") return "Đã hoàn tiền cọc"
-  if (item.contractStatus === "ACTIVE" && (item.returnRequested || item.cancelReason === "EARLY_TERMINATION")) {
-    const returnDateStr = item.desiredReturnDate ? formatDate(item.desiredReturnDate) : null
-    return returnDateStr ? `Khách hẹn trả: ${returnDateStr}` : "Khách hẹn trả kho"
-  }
   return null
 }
 

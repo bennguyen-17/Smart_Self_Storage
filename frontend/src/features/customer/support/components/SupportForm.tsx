@@ -26,7 +26,8 @@ import {
   FileCheck,
   ChevronDown,
   PackageOpen,
-  CalendarDays
+  CalendarDays,
+  XCircle
 } from 'lucide-react';
 
 export default function SupportForm() {
@@ -54,7 +55,7 @@ export default function SupportForm() {
   // Danh sách ticket của khách
   const [myTickets, setMyTickets] = useState<any[]>([]);
   const [loadingTickets, setLoadingTickets] = useState(false);
-  const [ticketStatusFilter, setTicketStatusFilter] = useState<'ALL' | 'SUBMITTED' | 'IN_PROGRESS' | 'RESOLVED'>('ALL');
+  const [ticketStatusFilter, setTicketStatusFilter] = useState<'ALL' | 'SUBMITTED' | 'IN_PROGRESS' | 'RESOLVED' | 'ESCALATED' | 'CANCELLED'>('ALL');
   const [expandedTickets, setExpandedTickets] = useState<Record<string, boolean>>({});
 
   const toggleTicket = (key: string) => {
@@ -124,6 +125,12 @@ export default function SupportForm() {
   }, []);
 
   const hasActiveContracts = myUnits.length > 0;
+  const existingEarlyTicket = ticketType === 'EARLY_TERMINATION' ? myTickets.find(
+    (t: any) =>
+      t.type === 'EARLY_TERMINATION' &&
+      t.unitCode === unitSelect &&
+      (t.status === 'SUBMITTED' || t.status === 'IN_PROGRESS' || t.status === 'ESCALATED')
+  ) : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,6 +148,16 @@ export default function SupportForm() {
       return;
     }
     if (ticketType === 'EARLY_TERMINATION') {
+      const activeTicket = myTickets.find(
+        (t) =>
+          t.type === 'EARLY_TERMINATION' &&
+          t.unitCode === unitSelect &&
+          (t.status === 'SUBMITTED' || t.status === 'IN_PROGRESS' || t.status === 'ESCALATED')
+      );
+      if (activeTicket) {
+        alert(`Ô kho ${unitSelect} đã có một yêu cầu trả kho sớm đang chờ xử lý (#${activeTicket.ticketCode || activeTicket.id}). Bạn không thể gửi thêm yêu cầu mới!`);
+        return;
+      }
       if (!desiredDate || desiredDate < minReturnDate) {
         alert("Ngày hẹn trả kho sớm phải cách ít nhất 1 ngày (không được chọn ngày hôm nay) để nhân viên cơ sở kịp sắp xếp lịch nghiệm thu!");
         return;
@@ -232,6 +249,13 @@ export default function SupportForm() {
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-300">
             <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>Đã hoàn tất</span>
+          </span>
+        );
+      case 'CANCELLED':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-500/10 text-slate-700 border border-slate-500/30 dark:bg-slate-500/15 dark:text-slate-300">
+            <XCircle className="size-3.5 text-slate-500 dark:text-slate-400" />
+            <span>Đã hủy / Lỡ hẹn</span>
           </span>
         );
       default:
@@ -469,11 +493,24 @@ export default function SupportForm() {
                 </div>
               </div>
 
+              {/* Cảnh báo nếu ô kho đã có ticket trả kho đang xử lý */}
+              {existingEarlyTicket && (
+                <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-900 dark:text-amber-200 space-y-1.5 animate-in fade-in">
+                  <div className="flex items-center gap-2 font-bold text-xs text-amber-800 dark:text-amber-300">
+                    <AlertTriangle className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                    <span>Ô kho này đã có yêu cầu trả kho đang chờ xử lý!</span>
+                  </div>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                    Yêu cầu <strong>#{existingEarlyTicket.ticketCode || existingEarlyTicket.id}</strong> (hẹn ngày <strong>{existingEarlyTicket.desiredDate ? formatDate(existingEarlyTicket.desiredDate) : "—"}</strong>) đang ở trạng thái <em>{existingEarlyTicket.status === 'SUBMITTED' ? 'Chờ tiếp nhận' : 'Đang xử lý'}</em>. Vui lòng đến kho theo lịch hẹn hoặc theo dõi tại tab Lịch sử yêu cầu.
+                  </p>
+                </div>
+              )}
+
               {/* Nút gửi ở cuối */}
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={!hasActiveContracts || submitting}
+                  disabled={!hasActiveContracts || submitting || Boolean(existingEarlyTicket)}
                   className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 transition-all ${hasActiveContracts
                       ? 'bg-blue-600 hover:bg-blue-700 text-white font-bold cursor-pointer shadow-md shadow-blue-500/20 dark:bg-blue-600 dark:hover:bg-blue-500 dark:text-white dark:font-bold'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700/60 cursor-not-allowed opacity-75'
@@ -483,6 +520,8 @@ export default function SupportForm() {
                   <span>
                     {submitting
                       ? 'Đang gửi yêu cầu...'
+                      : existingEarlyTicket
+                        ? 'Ô kho đã có yêu cầu trả kho đang xử lý'
                       : !hasActiveContracts
                         ? 'Chỉ tài khoản có hợp đồng ACTIVE mới được gửi ticket'
                         : 'Gửi yêu cầu hỗ trợ ngay'}
@@ -617,6 +656,7 @@ export default function SupportForm() {
                       { key: 'SUBMITTED', label: 'Chờ tiếp nhận', count: myTickets.filter(t => t.status === 'SUBMITTED').length },
                       { key: 'IN_PROGRESS', label: 'Đang xử lý', count: myTickets.filter(t => t.status === 'IN_PROGRESS').length },
                       { key: 'RESOLVED', label: 'Đã hoàn tất', count: myTickets.filter(t => t.status === 'RESOLVED').length },
+                      { key: 'CANCELLED', label: 'Đã hủy', count: myTickets.filter(t => t.status === 'CANCELLED').length },
                     ].map(tab => (
                       <button
                         key={tab.key}
@@ -751,7 +791,9 @@ export default function SupportForm() {
                                     <div className="space-y-0.5">
                                       <p className="font-bold text-rose-900 dark:text-rose-200">Đã chuyển tiếp Quản lý cơ sở xử lý trực tiếp</p>
                                       <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                                        Yêu cầu đã quá 15 phút chưa có nhân viên nhận. Hệ thống đã tự động chuyển tiếp lên Quản lý chi nhánh để giải quyết khẩn cấp cho bạn.
+                                        {ticket.type === 'EARLY_TERMINATION'
+                                          ? 'Yêu cầu hẹn trả kho đã được chuyển tiếp lên Quản lý chi nhánh để hỗ trợ xử lý.'
+                                          : 'Yêu cầu đã quá 15 phút chưa có nhân viên nhận. Hệ thống đã tự động chuyển tiếp lên Quản lý chi nhánh để giải quyết khẩn cấp cho bạn.'}
                                       </p>
                                     </div>
                                   </div>
@@ -761,9 +803,23 @@ export default function SupportForm() {
                                   <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
                                     <Clock className="size-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5 animate-pulse" />
                                     <div className="space-y-0.5">
-                                      <p className="font-bold text-amber-900 dark:text-amber-200">Đang chờ nhân viên ca trực tiếp nhận</p>
+                                      <p className="font-bold text-amber-900 dark:text-amber-200">
+                                        {ticket.type === 'EARLY_TERMINATION'
+                                          ? 'Đã ghi nhận yêu cầu hẹn trả kho'
+                                          : 'Đang chờ nhân viên ca trực tiếp nhận'}
+                                      </p>
                                       <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                                        Nhân viên trực ca sẽ liên hệ hoặc có mặt xử lý trong vòng <strong>15 phút</strong> (trong khung giờ 08:00 - 20:00).
+                                        {ticket.type === 'EARLY_TERMINATION' ? (
+                                          <>
+                                            Vui lòng có mặt tại kho trong khung giờ <strong>08:00 – 20:00</strong> {ticket.desiredDate ? (
+                                              <>ngày <strong>{formatDate(ticket.desiredDate)}</strong></>
+                                            ) : 'vào ngày đã hẹn'} để tiến hành nghiệm thu bàn giao ô kho.
+                                          </>
+                                        ) : (
+                                          <>
+                                            Nhân viên trực ca sẽ liên hệ hoặc có mặt xử lý trong vòng <strong>15 phút</strong> (trong khung giờ 08:00 - 20:00).
+                                          </>
+                                        )}
                                       </p>
                                     </div>
                                   </div>
@@ -773,9 +829,23 @@ export default function SupportForm() {
                                   <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-800 dark:text-blue-300 flex items-start gap-2.5">
                                     <RefreshCw className="size-4 shrink-0 text-blue-600 dark:text-blue-400 mt-0.5 animate-spin" />
                                     <div className="space-y-0.5">
-                                      <p className="font-bold text-blue-900 dark:text-blue-200">Nhân viên đang tiến hành xử lý</p>
+                                      <p className="font-bold text-blue-900 dark:text-blue-200">
+                                        {ticket.type === 'EARLY_TERMINATION'
+                                          ? 'Lịch hẹn đã được tiếp nhận'
+                                          : 'Nhân viên đang tiến hành xử lý'}
+                                      </p>
                                       <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                                        Nhân viên trực ca đã tiếp nhận và đang trực tiếp có mặt tại ô kho để hỗ trợ giải quyết sự cố.
+                                        {ticket.type === 'EARLY_TERMINATION' ? (
+                                          <>
+                                            Yêu cầu hẹn trả kho đã được nhân viên cơ sở tiếp nhận. Vui lòng có mặt tại kho trong khung giờ <strong>08:00 – 20:00</strong> {ticket.desiredDate ? (
+                                              <>ngày <strong>{formatDate(ticket.desiredDate)}</strong></>
+                                            ) : 'vào ngày đã hẹn'} để bàn giao.
+                                          </>
+                                        ) : (
+                                          <>
+                                            Nhân viên trực ca đã tiếp nhận và đang trực tiếp có mặt tại ô kho để hỗ trợ giải quyết sự cố.
+                                          </>
+                                        )}
                                       </p>
                                     </div>
                                   </div>
@@ -799,6 +869,25 @@ export default function SupportForm() {
                                         {ticket.resolutionNote}
                                       </p>
                                     )}
+                                  </div>
+                                )}
+
+                                {ticket.status === 'CANCELLED' && (
+                                  <div className="p-3.5 rounded-xl bg-slate-500/10 border border-slate-500/25 text-xs space-y-2">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
+                                        <XCircle className="size-4 text-slate-500 dark:text-slate-400" />
+                                        <span>Lịch hẹn đã tự động hủy (Lỡ hẹn)</span>
+                                      </div>
+                                      {ticket.resolvedAt && (
+                                        <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+                                          Đóng lúc: {formatTicketDate(ticket.resolvedAt)}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-slate-700 dark:text-slate-200 bg-white/80 dark:bg-slate-900/70 p-3 rounded-lg border border-slate-500/20 leading-relaxed font-medium">
+                                      {ticket.resolutionNote || 'Khách hàng không đến cơ sở nghiệm thu vào ngày hẹn. Lịch hẹn trả kho đã tự động đóng. Hợp đồng tiếp tục duy trì.'}
+                                    </p>
                                   </div>
                                 )}
                               </div>

@@ -71,6 +71,9 @@ public class SupportTicket {
     @Transient
     private String facilityName;
 
+    @Transient
+    private String contractCode;
+
     public SupportTicket() {
     }
 
@@ -256,5 +259,13 @@ public class SupportTicket {
 
     public void setFacilityName(String facilityName) {
         this.facilityName = facilityName;
+    }
+
+    public String getContractCode() {
+        return contractCode;
+    }
+
+    public void setContractCode(String contractCode) {
+        this.contractCode = contractCode;
     }
 }
