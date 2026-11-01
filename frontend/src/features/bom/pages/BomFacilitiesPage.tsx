@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import { useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
@@ -17,6 +17,8 @@ import {
   Phone,
   Mail,
   ChevronDown,
+  Calendar,
+  Check,
   MapPin,
   Search,
   Snowflake,
@@ -26,6 +28,7 @@ import {
   TrendingUp,
   BarChart3,
   ArrowLeft,
+  Activity,
 } from "lucide-react"
 import apiClient from "@/lib/apiClient"
 import { getStorageUnits } from "@/features/customer/rent/rentApi"
@@ -111,9 +114,87 @@ export default function BomFacilitiesPage() {
     return fromBreakdown || fromFacList || null
   }, [facilityId, facilities, chainOverview])
 
+  const [selectedFacilityUnits, setSelectedFacilityUnits] = useState<any[]>([])
+  const [isLoadingSelectedUnits, setIsLoadingSelectedUnits] = useState(false)
+
+  useEffect(() => {
+    if (!facilityId || !activeFac) {
+      setSelectedFacilityUnits([])
+      return
+    }
+
+    let isMounted = true
+    setIsLoadingSelectedUnits(true)
+
+    const fetchUnits = async () => {
+      try {
+        let facId = Number(facilityId)
+        if (isNaN(facId) || facId <= 0) {
+          const match = facilityId.match(/\d+/)
+          facId = match ? parseInt(match[0], 10) : 1
+        }
+
+        const res: any = await apiClient
+          .get("/units/filter", { params: { facilityId: facId } })
+          .catch(() => null)
+
+        const raw = Array.isArray(res) ? res : res?.data || []
+        if (isMounted) {
+          if (raw.length > 0) {
+            setSelectedFacilityUnits(raw)
+          } else {
+            const facCode = (activeFac as any).facilityCode || (activeFac as any).code || `FAC-${facId}`
+            const [u1, u2, u3] = await Promise.all([
+              getStorageUnits(facCode, 1).catch(() => ({ data: [] })),
+              getStorageUnits(facCode, 2).catch(() => ({ data: [] })),
+              getStorageUnits(facCode, 3).catch(() => ({ data: [] })),
+            ])
+            const combined = [...(u1?.data || []), ...(u2?.data || []), ...(u3?.data || [])]
+            setSelectedFacilityUnits(combined)
+          }
+        }
+      } catch (err) {
+        console.warn("Lỗi tải ô kho cơ sở:", err)
+      } finally {
+        if (isMounted) setIsLoadingSelectedUnits(false)
+      }
+    }
+
+    fetchUnits()
+    return () => {
+      isMounted = false
+    }
+  }, [facilityId, activeFac])
 
   // State bộ lọc thời gian doanh thu bảng cơ sở: "this_month" (mặc định), "last_3_months", "all_time"
   const [revenuePeriod, setRevenuePeriod] = useState<"this_month" | "last_3_months" | "all_time">("this_month")
+
+  const REVENUE_PERIOD_OPTIONS = [
+    { key: "this_month", label: "Tháng Này" },
+    { key: "last_3_months", label: "3 Tháng Gần Nhất" },
+    { key: "all_time", label: "Toàn Thời Gian" },
+  ] as const
+
+  const [isDetailPeriodOpen, setIsDetailPeriodOpen] = useState(false)
+  const detailPeriodRef = useRef<HTMLDivElement>(null)
+
+  const [isListPeriodOpen, setIsListPeriodOpen] = useState(false)
+  const listPeriodRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (detailPeriodRef.current && !detailPeriodRef.current.contains(e.target as Node)) {
+        setIsDetailPeriodOpen(false)
+      }
+      if (listPeriodRef.current && !listPeriodRef.current.contains(e.target as Node)) {
+        setIsListPeriodOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
 
   // Modal State Cấu hình cơ sở
   const [isFacilityModalOpen, setIsFacilityModalOpen] = useState(false)
@@ -122,6 +203,7 @@ export default function BomFacilitiesPage() {
   const [editManagerName, setEditManagerName] = useState("")
   const [editManagerPhone, setEditManagerPhone] = useState("")
   const [editManagerEmail, setEditManagerEmail] = useState("")
+  const [editFacilityStatus, setEditFacilityStatus] = useState("ACTIVE")
 
   // Modal State Thêm cơ sở kho mới
   const [isAddFacilityModalOpen, setIsAddFacilityModalOpen] = useState(false)
@@ -134,6 +216,7 @@ export default function BomFacilitiesPage() {
   const [newFacManager, setNewFacManager] = useState("")
   const [newFacPhone, setNewFacPhone] = useState("")
   const [newFacMultiplier, setNewFacMultiplier] = useState(1.0)
+  const [newFacStatus, setNewFacStatus] = useState("ACTIVE")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Modal State Xóa cơ sở kho
@@ -253,6 +336,7 @@ export default function BomFacilitiesPage() {
     setNewFacManager("")
     setNewFacPhone("")
     setNewFacMultiplier(1.0)
+    setNewFacStatus("ACTIVE")
     setIsAddFacilityModalOpen(true)
   }
 
@@ -264,6 +348,7 @@ export default function BomFacilitiesPage() {
   const handleOpenFacilityModal = (fac: FacilityPerformance) => {
     setSelectedFacility(fac)
     setFacilityMultiplier(fac.priceMultiplier || 1.0)
+    setEditFacilityStatus(fac.status || "ACTIVE")
     const cleanManager = (!fac.managerName || fac.managerName === "Chưa phân công")
       ? ""
       : fac.managerName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
@@ -283,6 +368,7 @@ export default function BomFacilitiesPage() {
       facilityName: selectedFacility.name,
       address: selectedFacility.address,
       phone: finalManagerPhone || selectedFacility.managerPhone,
+      status: editFacilityStatus,
       managerName: finalManagerName,
       managerPhone: finalManagerPhone,
       managerEmail: finalManagerEmail,
@@ -294,6 +380,7 @@ export default function BomFacilitiesPage() {
         f.id === selectedFacility.id
           ? {
               ...f,
+              status: editFacilityStatus,
               managerName: finalManagerName,
               managerPhone: finalManagerPhone,
               managerEmail: finalManagerEmail,
@@ -304,11 +391,35 @@ export default function BomFacilitiesPage() {
     )
 
     if (success) {
-      toast.success(`Đã lưu cấu hình cơ sở & quản lý kho ${selectedFacility.name}!`)
+      toast.success(`Đã lưu cấu hình & trạng thái cơ sở ${selectedFacility.name}!`)
     } else {
       toast.success(`Đã cập nhật cấu hình cơ sở ${selectedFacility.name}!`)
     }
     setIsFacilityModalOpen(false)
+  }
+
+  const handleQuickUpdateStatus = async (fac: FacilityPerformance, newStatus: string) => {
+    const statusLabel =
+      newStatus === "MAINTENANCE"
+        ? "Bảo trì (Tạm ngưng nhận khách)"
+        : newStatus === "INACTIVE"
+        ? "Tạm ngưng hoạt động"
+        : "Hoạt động bình thường"
+
+    const success = await updateFacilityInDb(Number(fac.id), {
+      status: newStatus,
+      facilityName: fac.name,
+      address: fac.address,
+      phone: fac.managerPhone,
+    })
+
+    setFacilities((prev) =>
+      prev.map((f) => (f.id === fac.id ? { ...f, status: newStatus } : f))
+    )
+
+    if (success) {
+      toast.success(`Đã cập nhật trạng thái cơ sở [${fac.code}] sang: ${statusLabel}`)
+    }
   }
 
   const handleCreateFacility = async () => {
@@ -331,6 +442,7 @@ export default function BomFacilitiesPage() {
         phone: newFacPhone.trim() || "0900000000",
         layoutType: newFacLayout,
         floorCount: newFacFloors,
+        status: newFacStatus,
         managerName: newFacManager.trim() || "Chưa phân công",
       })
 
@@ -355,7 +467,7 @@ export default function BomFacilitiesPage() {
           floorArea: computedTotalUnits * 12,
           monthlyRevenue: "₫0",
           overdueUnits: 0,
-          status: "ACTIVE",
+          status: newFacStatus,
           rating: "5.0 ★",
           priceMultiplier: Number(newFacMultiplier) || 1.0,
           layoutType: `Layout ${newFacLayout}`,
@@ -470,44 +582,48 @@ export default function BomFacilitiesPage() {
                 </div>
 
                 <div className="flex flex-col items-end gap-2 shrink-0">
-                  {/* BỘ LỌC 3 NÚT: THÁNG NÀY | 3 THÁNG GẦN NHẤT | TOÀN THỜI GIAN */}
-                  <div className="flex items-center bg-slate-100 dark:bg-slate-950/80 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-inner">
+                  {/* BỘ LỌC THỜI GIAN (DROPDOWN SỔ XUỐNG) */}
+                  <div className="relative" ref={detailPeriodRef}>
                     <button
                       type="button"
-                      onClick={() => setRevenuePeriod("this_month")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        revenuePeriod === "this_month"
-                          ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                      }`}
-                      title="Xem thông số tháng hiện tại"
+                      onClick={() => setIsDetailPeriodOpen((prev) => !prev)}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-blue-500 dark:hover:border-blue-500 shadow-xs transition-all cursor-pointer"
+                      title="Chọn khoảng thời gian xem báo cáo"
                     >
-                      Tháng Này
+                      <Calendar className="size-3.5 text-blue-600 dark:text-blue-400" />
+                      <span>{periodLabel}</span>
+                      <ChevronDown
+                        className={`size-3.5 text-slate-400 transition-transform duration-200 ${
+                          isDetailPeriodOpen ? "rotate-180 text-blue-600 dark:text-blue-400" : ""
+                        }`}
+                      />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setRevenuePeriod("last_3_months")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        revenuePeriod === "last_3_months"
-                          ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                      }`}
-                      title="Xem thông số 3 tháng gần nhất"
-                    >
-                      3 Tháng Gần Nhất
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRevenuePeriod("all_time")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        revenuePeriod === "all_time"
-                          ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                      }`}
-                      title="Xem thông số toàn thời gian"
-                    >
-                      Toàn Thời Gian
-                    </button>
+
+                    {isDetailPeriodOpen && (
+                      <div className="absolute right-0 top-full mt-1.5 w-44 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-50 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                        {REVENUE_PERIOD_OPTIONS.map((opt) => {
+                          const isActive = revenuePeriod === opt.key
+                          return (
+                            <button
+                              key={opt.key}
+                              type="button"
+                              onClick={() => {
+                                setRevenuePeriod(opt.key)
+                                setIsDetailPeriodOpen(false)
+                              }}
+                              className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-left transition-colors cursor-pointer ${
+                                isActive
+                                  ? "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold"
+                                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                              }`}
+                            >
+                              <span>{opt.label}</span>
+                              {isActive && <Check className="size-3.5 text-blue-600 dark:text-blue-400" />}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Thanh chuyển đổi nhanh các cơ sở - Gọn gàng trên 1 hàng */}
@@ -553,6 +669,141 @@ export default function BomFacilitiesPage() {
                 maintenanceUnits={maintUnits}
                 occupancyRate={occRate}
               />
+
+              {/* BẢNG BÁO CÁO CƠ CẤU Ô KHO THEO SIZE */}
+              <div className="rounded-2xl border border-slate-200/90 bg-white/90 dark:border-slate-800/90 dark:bg-slate-900/60 p-5 sm:p-6 shadow-sm dark:shadow-xl space-y-4 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white tracking-wider flex items-center gap-2">
+                      <span>BÁO CÁO CƠ CẤU Ô KHO THEO SIZE &amp; LOẠI HÌNH</span>
+                      <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold normal-case">
+                        ({periodLabel})
+                      </span>
+                    </h3>
+                  </div>
+                </div>
+
+                {isLoadingSelectedUnits ? (
+                  <div className="p-8 text-center text-slate-500 dark:text-slate-400 font-bold space-y-2">
+                    <div className="size-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+                    <p className="text-xs">Đang tổng hợp cơ cấu ô kho...</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table className="w-full text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-800 dark:bg-slate-950/90 dark:text-slate-400 uppercase font-black text-[10px]">
+                          <th className="p-3 text-center whitespace-nowrap">Phân Loại / Size</th>
+                          <th className="p-3 text-center whitespace-nowrap">Quy Cách Sàn</th>
+                          <th className="p-3 text-center whitespace-nowrap">Tổng Số Ô</th>
+                          <th className="p-3 text-center whitespace-nowrap">Đang Thuê</th>
+                          <th className="p-3 text-center whitespace-nowrap">Còn Trống</th>
+                          <th className="p-3 text-center whitespace-nowrap">Giữ Chỗ</th>
+                          <th className="p-3 text-center whitespace-nowrap">Bảo Trì</th>
+                          <th className="p-3 text-center whitespace-nowrap">Tỷ Lệ Lấp Đầy</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80 font-semibold text-slate-700 dark:text-slate-300">
+                        {(() => {
+                          const SIZES = [
+                            { size: "S", name: "Size S (Tủ Cá Nhân)", dim: "1.0m × 1.0m", defaultNorm: 600000 },
+                            { size: "M", name: "Size M (Phòng Vừa)", dim: "1.5m × 2.0m", defaultNorm: 1200000 },
+                            { size: "L", name: "Size L (Phòng Lớn)", dim: "2.0m × 3.0m", defaultNorm: 2400000 },
+                            { size: "XL", name: "Size XL (Kho Doanh Nghiệp)", dim: "2.5m × 4.0m", defaultNorm: 4000000 },
+                          ]
+
+                          let grandTotal = 0
+                          let grandOccupied = 0
+                          let grandAvailable = 0
+                          let grandHold = 0
+                          let grandMaintenance = 0
+
+                          const rows = SIZES.map((cfg) => {
+                            const list = selectedFacilityUnits.filter((u) => {
+                              const typeStr = (u.typeName || u.typeLabel || "").toUpperCase()
+                              const sz = (u.size || "").toUpperCase()
+                              const code = (u.unitCode || u.unitId || "").toUpperCase()
+                              if (cfg.size === "XL") return typeStr.includes("XL") || sz === "XL" || sz.includes("XL") || code.includes("-XL")
+                              if (cfg.size === "S") return (typeStr.includes("SIZE S") || sz === "S" || code.includes("-S")) && !typeStr.includes("XL") && !code.includes("-XL")
+                              if (cfg.size === "M") return typeStr.includes("SIZE M") || sz === "M" || code.includes("-M")
+                              if (cfg.size === "L") return (typeStr.includes("SIZE L") || sz === "L" || code.includes("-L")) && !typeStr.includes("XL") && !code.includes("-XL")
+                              return false
+                            })
+
+                            const total = list.length
+                            let occupied = list.filter((u) => {
+                              const st = (u.status || "").toUpperCase()
+                              return st === "OCCUPIED" || st === "RENTED"
+                            }).length
+                            let available = list.filter((u) => (u.status || "").toUpperCase() === "AVAILABLE").length
+                            let hold = list.filter((u) => {
+                              const st = (u.status || "").toUpperCase()
+                              return st === "HOLD" || st === "RESERVED"
+                            }).length
+                            const maintenance = list.filter((u) => (u.status || "").toUpperCase() === "MAINTENANCE").length
+
+                            const occRate = total > 0 ? Math.round((occupied / total) * 100) : 0
+
+                            grandTotal += total
+                            grandOccupied += occupied
+                            grandAvailable += available
+                            grandHold += hold
+                            grandMaintenance += maintenance
+
+                            return (
+                              <tr key={cfg.size} className="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
+                                <td className="p-3 text-center whitespace-nowrap">
+                                  <div className="font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">{cfg.name}</div>
+                                </td>
+                                <td className="p-3 text-center font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">{cfg.dim}</td>
+                                <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{total} ô</td>
+                                <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{occupied}</td>
+                                <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{available}</td>
+                                <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{hold}</td>
+                                <td className="p-3 text-center font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{maintenance}</td>
+                                <td className="p-3 text-center whitespace-nowrap">
+                                  <div className="flex items-center justify-center gap-2">
+                                    <span className="font-mono font-bold text-slate-900 dark:text-white">{occRate}%</span>
+                                    <div className="w-14 bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                      <div
+                                        className="h-full bg-blue-600 dark:bg-slate-300 rounded-full"
+                                        style={{ width: `${Math.min(occRate, 100)}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )
+                          })
+
+                          const grandRate =
+                            grandTotal > 0
+                              ? Number(((grandOccupied / grandTotal) * 100).toFixed(1)).toString().replace(/\.0$/, "")
+                              : "0"
+
+                          return (
+                            <>
+                              {rows}
+                              <tr className="bg-slate-100 dark:bg-slate-950 font-black border-t-2 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
+                                <td className="p-3 text-center uppercase text-slate-900 dark:text-white tracking-wider whitespace-nowrap">
+                                  TỔNG CỘNG CƠ CẤU
+                                </td>
+                                <td className="p-3 text-center text-slate-400 font-mono whitespace-nowrap">—</td>
+                                <td className="p-3 text-center text-blue-600 dark:text-blue-400 font-mono whitespace-nowrap">{grandTotal} ô</td>
+                                <td className="p-3 text-center text-emerald-600 dark:text-emerald-400 font-mono whitespace-nowrap">{grandOccupied}</td>
+                                <td className="p-3 text-center text-slate-600 dark:text-slate-300 font-mono whitespace-nowrap">{grandAvailable}</td>
+                                <td className="p-3 text-center text-amber-600 dark:text-amber-400 font-mono whitespace-nowrap">{grandHold}</td>
+                                <td className="p-3 text-center text-rose-600 dark:text-rose-400 font-mono whitespace-nowrap">{grandMaintenance}</td>
+                                <td className="p-3 text-center text-blue-600 dark:text-blue-400 font-mono whitespace-nowrap">{grandRate}%</td>
+                              </tr>
+                            </>
+                          )
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           )
         })()
@@ -571,44 +822,54 @@ export default function BomFacilitiesPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
-              {/* BỘ LỌC KHOẢNG THỜI GIAN DOANH THU */}
-              <div className="flex items-center bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+              {/* BỘ LỌC KHOẢNG THỜI GIAN DOANH THU (DROPDOWN SỔ XUỐNG) */}
+              <div className="relative" ref={listPeriodRef}>
                 <button
                   type="button"
-                  onClick={() => setRevenuePeriod("this_month")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    revenuePeriod === "this_month"
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                  }`}
-                  title="Xem doanh thu tháng hiện tại"
+                  onClick={() => setIsListPeriodOpen((prev) => !prev)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-blue-500 dark:hover:border-blue-500 shadow-xs transition-all cursor-pointer"
+                  title="Chọn khoảng thời gian doanh thu"
                 >
-                  Tháng Này
+                  <Calendar className="size-3.5 text-blue-600 dark:text-blue-400" />
+                  <span>
+                    {revenuePeriod === "this_month"
+                      ? "Tháng Này"
+                      : revenuePeriod === "last_3_months"
+                        ? "3 Tháng Gần Nhất"
+                        : "Toàn Thời Gian"}
+                  </span>
+                  <ChevronDown
+                    className={`size-3.5 text-slate-400 transition-transform duration-200 ${
+                      isListPeriodOpen ? "rotate-180 text-blue-600 dark:text-blue-400" : ""
+                    }`}
+                  />
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setRevenuePeriod("last_3_months")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    revenuePeriod === "last_3_months"
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                  }`}
-                  title="Xem doanh thu 3 tháng gần nhất"
-                >
-                  3 Tháng Gần Nhất
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRevenuePeriod("all_time")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    revenuePeriod === "all_time"
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                  }`}
-                  title="Xem tổng doanh thu toàn thời gian"
-                >
-                  Toàn Thời Gian
-                </button>
+
+                {isListPeriodOpen && (
+                  <div className="absolute right-0 top-full mt-1.5 w-44 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-50 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                    {REVENUE_PERIOD_OPTIONS.map((opt) => {
+                      const isActive = revenuePeriod === opt.key
+                      return (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => {
+                            setRevenuePeriod(opt.key)
+                            setIsListPeriodOpen(false)
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-left transition-colors cursor-pointer ${
+                            isActive
+                              ? "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold"
+                              : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                          }`}
+                        >
+                          <span>{opt.label}</span>
+                          {isActive && <Check className="size-3.5 text-blue-600 dark:text-blue-400" />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* NÚT THÊM CƠ SỞ KHO MỚI */}
@@ -630,7 +891,6 @@ export default function BomFacilitiesPage() {
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">CƠ SỞ KHO</th>
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">QUẢN LÝ CHI NHÁNH</th>
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">KHO THUÊ</th>
-                  <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">TỶ LỆ LẤP ĐẦY</th>
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">
                     {revenuePeriod === "this_month"
                       ? "DOANH THU (THÁNG NÀY)"
@@ -638,6 +898,7 @@ export default function BomFacilitiesPage() {
                         ? "DOANH THU (3 THÁNG GẦN NHẤT)"
                         : "DOANH THU (TOÀN THỜI GIAN)"}
                   </th>
+                  <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">TRẠNG THÁI</th>
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">THAO TÁC</th>
                 </tr>
               </thead>
@@ -652,12 +913,6 @@ export default function BomFacilitiesPage() {
                     const cleanName = (fac.name || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
                     const cleanManager = (fac.managerName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
                     const rented = fac.occupied ?? fac.rentedUnits ?? 0
-                    const displayOccRate =
-                      fac.occupancyRate != null
-                        ? Number(fac.occupancyRate).toFixed(1).replace(/\.0$/, "")
-                        : stdUnits > 0
-                          ? String(Math.round((rented / stdUnits) * 100))
-                          : "0"
 
                     const displayRevenue =
                       revenuePeriod === "this_month"
@@ -668,7 +923,7 @@ export default function BomFacilitiesPage() {
 
                     return (
                       <tr key={fac.id} className="hover:bg-slate-50/90 dark:hover:bg-slate-800/60 transition-colors">
-                        {/* CỘT DUY NHẤT: CƠ SỞ KHO (Toàn bộ cụm Mã cơ sở + Tên cơ sở được bọc chung trong khung badge, không tô màu mã) */}
+                        {/* CỘT 1: CƠ SỞ KHO */}
                         <td className="py-3 px-4 whitespace-nowrap align-middle text-center">
                           <button
                             type="button"
@@ -697,16 +952,34 @@ export default function BomFacilitiesPage() {
                           </span>
                         </td>
 
-                        {/* CỘT 4: TỶ LỆ LẤP ĐẦY */}
-                        <td className="py-3 px-4 text-center whitespace-nowrap">
-                          <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                            {displayOccRate}%
-                          </span>
-                        </td>
-
-                        {/* CỘT 5: DOANH THU THEO KHOẢNG THỜI GIAN ĐƯỢC CHỌN */}
+                        {/* CỘT 4: DOANH THU THEO KHOẢNG THỜI GIAN ĐƯỢC CHỌN */}
                         <td className="py-3 px-4 text-center whitespace-nowrap text-sm font-semibold text-slate-900 dark:text-slate-100">
                           {displayRevenue}
+                        </td>
+
+                        {/* CỘT 5: TRẠNG THÁI (ĐẶT TRƯỚC THAO TÁC, BO VIỀN NHẸ GIỐNG NÚT CẤU HÌNH, MÀU NHẠT HƠN) */}
+                        <td className="py-3 px-4 text-center whitespace-nowrap">
+                          <div className="inline-flex items-center justify-center">
+                            <select
+                              value={fac.status || "ACTIVE"}
+                              onChange={async (e) => {
+                                const newStatus = e.target.value
+                                await handleQuickUpdateStatus(fac, newStatus)
+                              }}
+                              className={`text-xs font-medium px-2.5 py-1.5 rounded-lg border shadow-2xs transition-all duration-150 cursor-pointer appearance-none text-center outline-none ${
+                                fac.status === "MAINTENANCE"
+                                  ? "bg-amber-50/80 hover:bg-amber-100/80 text-amber-700 dark:bg-amber-950/30 dark:hover:bg-amber-950/50 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/60"
+                                  : fac.status === "INACTIVE"
+                                  ? "bg-rose-50/80 hover:bg-rose-100/80 text-rose-700 dark:bg-rose-950/30 dark:hover:bg-rose-950/50 dark:text-rose-300 border-rose-200/80 dark:border-rose-800/60"
+                                  : "bg-emerald-50/80 hover:bg-emerald-100/80 text-emerald-700 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60"
+                              }`}
+                              title="Bấm để đổi nhanh trạng thái: Hoạt động / Bảo trì / Tạm ngưng"
+                            >
+                              <option value="ACTIVE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">🟢 Hoạt động</option>
+                              <option value="MAINTENANCE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">🟠 Bảo trì</option>
+                              <option value="INACTIVE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">🔴 Tạm ngưng</option>
+                            </select>
+                          </div>
                         </td>
 
                         {/* CỘT 6: THAO TÁC */}
@@ -915,6 +1188,73 @@ export default function BomFacilitiesPage() {
                       Chưa có quản lý được chọn. Vui lòng chọn nhân sự ở menu sổ xuống phía trên.
                     </span>
                   </div>
+                )}
+              </div>
+
+              {/* TRẠNG THÁI HOẠT ĐỘNG & BẢO TRÌ */}
+              <div className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-2">
+                <label className="block font-bold text-slate-300 uppercase text-[10px] flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Activity className="size-3.5 text-blue-400" />
+                    <span>Trạng Thái Hoạt Động Cơ Sở:</span>
+                  </span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                    editFacilityStatus === "MAINTENANCE"
+                      ? "bg-amber-950/80 text-amber-300 border border-amber-800"
+                      : editFacilityStatus === "INACTIVE"
+                      ? "bg-rose-950/80 text-rose-300 border border-rose-800"
+                      : "bg-emerald-950/80 text-emerald-300 border border-emerald-800"
+                  }`}>
+                    {editFacilityStatus === "MAINTENANCE" ? "Đang Bảo Trì" : editFacilityStatus === "INACTIVE" ? "Tạm Ngưng" : "Đang Hoạt Động"}
+                  </span>
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditFacilityStatus("ACTIVE")}
+                    className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      editFacilityStatus === "ACTIVE"
+                        ? "bg-emerald-950/70 border-emerald-500 text-emerald-300 ring-1 ring-emerald-500/50 shadow-sm"
+                        : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                    <span>🟢 Hoạt Động</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditFacilityStatus("MAINTENANCE")}
+                    className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      editFacilityStatus === "MAINTENANCE"
+                        ? "bg-amber-950/70 border-amber-500 text-amber-300 ring-1 ring-amber-500/50 shadow-sm"
+                        : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                    <span>🟠 Bảo Trì</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditFacilityStatus("INACTIVE")}
+                    className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      editFacilityStatus === "INACTIVE"
+                        ? "bg-rose-950/70 border-rose-500 text-rose-300 ring-1 ring-rose-500/50 shadow-sm"
+                        : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                    <span>🔴 Tạm Ngưng</span>
+                  </button>
+                </div>
+                {editFacilityStatus === "MAINTENANCE" && (
+                  <p className="text-[10px] text-amber-400/90 italic pt-0.5">
+                    * Lưu ý: Khi cơ sở ở trạng thái Bảo trì, hệ thống sẽ tạm ngưng tiếp nhận khách đặt thuê mới trên sơ đồ 2D.
+                  </p>
+                )}
+                {editFacilityStatus === "INACTIVE" && (
+                  <p className="text-[10px] text-rose-400/90 italic pt-0.5">
+                    * Lưu ý: Khi cơ sở Tạm ngưng, toàn bộ hoạt động đặt thuê mới sẽ bị khóa.
+                  </p>
                 )}
               </div>
 
@@ -1151,6 +1491,49 @@ export default function BomFacilitiesPage() {
                     placeholder="VD: 0901234567"
                     className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-semibold text-xs text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
                   />
+                </div>
+              </div>
+
+              {/* Row 6: Trạng thái ban đầu */}
+              <div>
+                <label className="block font-bold text-slate-300 uppercase text-[10px] mb-1.5 flex items-center gap-1.5">
+                  <Activity className="size-3 text-slate-400" />
+                  <span>Trạng Thái Ban Đầu Khi Khởi Tạo:</span>
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewFacStatus("ACTIVE")}
+                    className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      newFacStatus === "ACTIVE"
+                        ? "bg-emerald-950/70 border-emerald-500 text-emerald-300 ring-1 ring-emerald-500/50 shadow-sm"
+                        : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                    }`}
+                  >
+                    <span>🟢 Hoạt Động</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewFacStatus("MAINTENANCE")}
+                    className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      newFacStatus === "MAINTENANCE"
+                        ? "bg-amber-950/70 border-amber-500 text-amber-300 ring-1 ring-amber-500/50 shadow-sm"
+                        : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                    }`}
+                  >
+                    <span>🟠 Bảo Trì</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewFacStatus("INACTIVE")}
+                    className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      newFacStatus === "INACTIVE"
+                        ? "bg-rose-950/70 border-rose-500 text-rose-300 ring-1 ring-rose-500/50 shadow-sm"
+                        : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                    }`}
+                  >
+                    <span>🔴 Tạm Ngưng</span>
+                  </button>
                 </div>
               </div>
             </div>

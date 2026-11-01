@@ -84,8 +84,18 @@ export default function RentStoragePage() {
       }
     };
     fetchBranches();
+
+    const handleSync = () => {
+      fetchBranches();
+    };
+
+    window.addEventListener('storage_facilities_updated', handleSync);
+    window.addEventListener('storage', handleSync);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('storage_facilities_updated', handleSync);
+      window.removeEventListener('storage', handleSync);
     };
   }, []);
 

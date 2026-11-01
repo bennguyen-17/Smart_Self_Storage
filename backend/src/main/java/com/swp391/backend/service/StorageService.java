@@ -24,7 +24,9 @@ import com.swp391.backend.entity.Floor;
 import com.swp391.backend.entity.Price;
 import com.swp391.backend.entity.StorageUnit;
 import com.swp391.backend.entity.UnitType;
+import com.swp391.backend.repository.AccountRepository;
 import com.swp391.backend.repository.ActivityLogRepository;
+import com.swp391.backend.repository.EmployeeProfileRepository;
 import com.swp391.backend.repository.FacilityRepository;
 import com.swp391.backend.repository.FeePolicyRepository;
 import com.swp391.backend.repository.FloorRepository;
@@ -43,6 +45,8 @@ public class StorageService {
     private final ActivityLogRepository activityLogRepository;
 
     private final FeePolicyRepository feePolicyRepository;
+    private final EmployeeProfileRepository employeeProfileRepository;
+    private final AccountRepository accountRepository;
 
     private BigDecimal getDiscountRate(String code, BigDecimal defaultRate) {
         try {
@@ -62,7 +66,9 @@ public class StorageService {
             StorageUnitRepository storageUnitRepository,
             PriceRepository priceRepository,
                           ActivityLogRepository activityLogRepository,
-                          FeePolicyRepository feePolicyRepository) {
+                          FeePolicyRepository feePolicyRepository,
+                          EmployeeProfileRepository employeeProfileRepository,
+                          AccountRepository accountRepository) {
         this.facilityRepository = facilityRepository;
         this.floorRepository = floorRepository;
         this.unitTypeRepository = unitTypeRepository;
@@ -70,11 +76,13 @@ public class StorageService {
         this.priceRepository = priceRepository;
         this.activityLogRepository = activityLogRepository;
         this.feePolicyRepository = feePolicyRepository;
+        this.employeeProfileRepository = employeeProfileRepository;
+        this.accountRepository = accountRepository;
     }
 
     //Lấy danh sách Cơ sở kèm mã code, shortCode và layout
     public List<FacilityResponse> getAllActiveFacilities() {
-        return facilityRepository.findByStatus("ACTIVE").stream()
+        return facilityRepository.findAll().stream()
                 .map(this::mapFacilityToResponse)
                 .collect(Collectors.toList());
     }
@@ -263,6 +271,22 @@ public class StorageService {
 
         List<Floor> actualFloors = floorRepository.findByFacilityId(f.getFacilityId());
         res.setFloorCount(actualFloors.isEmpty() ? 3 : actualFloors.size());
+
+        if (f.getFacilityId() != null && employeeProfileRepository != null && accountRepository != null) {
+            List<com.swp391.backend.entity.EmployeeProfile> emps = employeeProfileRepository.findByFacilityId(f.getFacilityId());
+            for (com.swp391.backend.entity.EmployeeProfile ep : emps) {
+                Optional<com.swp391.backend.entity.Account> accOpt = accountRepository.findAccountByAccountId(ep.getAccountId());
+                if (accOpt.isPresent() && Long.valueOf(3L).equals(accOpt.get().getRoleId())) {
+                    com.swp391.backend.entity.Account acc = accOpt.get();
+                    String name = acc.getFullName() != null ? acc.getFullName().trim() : "";
+                    String cleanName = name.replaceAll("\\s*\\([^)]*\\)", "").trim();
+                    res.setManagerName(cleanName.isEmpty() ? name : cleanName);
+                    res.setManagerPhone(acc.getPhone());
+                    res.setManagerEmail(acc.getEmail());
+                    break;
+                }
+            }
+        }
 
         return res;
     }
@@ -702,7 +726,7 @@ public class StorageService {
         f.setLayoutType(layout);
         f.setAddress(req.getAddress() != null ? req.getAddress().trim() : "Chưa cập nhật địa chỉ");
         f.setPhone(req.getPhone() != null && !req.getPhone().trim().isEmpty() ? req.getPhone() : "0900000000");
-        f.setStatus("ACTIVE");
+        f.setStatus(req.getStatus() != null && !req.getStatus().trim().isEmpty() ? req.getStatus().trim().toUpperCase() : "ACTIVE");
         Facility saved = facilityRepository.save(f);
 
         // 3. Tự động sinh danh sách Tầng (Floor) (chuẩn 3 tầng)
@@ -789,6 +813,18 @@ public class StorageService {
 
         storageUnitRepository.saveAll(newUnits);
 
+        if (req.getManagerName() != null && !req.getManagerName().trim().isEmpty() && !req.getManagerName().equalsIgnoreCase("Chưa phân công") && employeeProfileRepository != null && accountRepository != null) {
+            String targetName = req.getManagerName().trim();
+            List<com.swp391.backend.entity.Account> allAccs = accountRepository.findAll();
+            Optional<com.swp391.backend.entity.Account> matchedMgr = allAccs.stream()
+                    .filter(a -> Long.valueOf(3L).equals(a.getRoleId()))
+                    .filter(a -> a.getFullName() != null && a.getFullName().toLowerCase().contains(targetName.toLowerCase()))
+                    .findFirst();
+            if (matchedMgr.isPresent()) {
+                employeeProfileRepository.save(new com.swp391.backend.entity.EmployeeProfile(matchedMgr.get().getAccountId().intValue(), saved.getFacilityId()));
+            }
+        }
+
         FacilityResponse res = mapFacilityToResponse(saved);
         res.setFacilityCode(code);
         res.setLayoutType(layout);
@@ -814,6 +850,28 @@ public class StorageService {
         if (req.getPhone() != null) f.setPhone(req.getPhone().trim());
         if (req.getStatus() != null) f.setStatus(req.getStatus().trim());
         Facility saved = facilityRepository.save(f);
+
+        if (req.getManagerName() != null && employeeProfileRepository != null && accountRepository != null) {
+            String targetName = req.getManagerName().trim();
+            List<com.swp391.backend.entity.EmployeeProfile> existingEmps = employeeProfileRepository.findByFacilityId(facilityId);
+            for (com.swp391.backend.entity.EmployeeProfile ep : existingEmps) {
+                Optional<com.swp391.backend.entity.Account> acc = accountRepository.findAccountByAccountId(ep.getAccountId());
+                if (acc.isPresent() && Long.valueOf(3L).equals(acc.get().getRoleId())) {
+                    employeeProfileRepository.delete(ep);
+                }
+            }
+            if (!targetName.isEmpty() && !targetName.equalsIgnoreCase("Chưa phân công")) {
+                List<com.swp391.backend.entity.Account> allAccs = accountRepository.findAll();
+                Optional<com.swp391.backend.entity.Account> matchedMgr = allAccs.stream()
+                        .filter(a -> Long.valueOf(3L).equals(a.getRoleId()))
+                        .filter(a -> a.getFullName() != null && a.getFullName().toLowerCase().contains(targetName.toLowerCase()))
+                        .findFirst();
+                if (matchedMgr.isPresent()) {
+                    employeeProfileRepository.save(new com.swp391.backend.entity.EmployeeProfile(matchedMgr.get().getAccountId().intValue(), facilityId));
+                }
+            }
+        }
+
         return mapFacilityToResponse(saved);
     }
 
