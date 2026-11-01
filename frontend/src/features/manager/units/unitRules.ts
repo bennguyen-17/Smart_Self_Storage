@@ -49,6 +49,11 @@ export function canStartMaintenance(status: string): boolean {
   return normalizeUnitStatus(status) === "AVAILABLE"
 }
 
+/** Chỉ ô đang bảo trì mới mở lại cho thuê được (sửa / vệ sinh xong) */
+export function canEndMaintenance(status: string): boolean {
+  return normalizeUnitStatus(status) === "UNDER_MAINTENANCE"
+}
+
 /** Lý do không thao tác được, để hiện tooltip thay vì nút bị khóa mà không giải thích */
 export function changeTypeBlockReason(status: string, unitTypeId: number | null | undefined): string | null {
   if (normalizeUnitStatus(status) !== "AVAILABLE") return "Chỉ đổi được loại kho khi ô đang trống"
@@ -113,6 +118,7 @@ export interface UnitEditDraft {
 export type UnitEditOp =
   | { kind: "change-type"; targetTypeId: number }
   | { kind: "maintenance"; note: string }
+  | { kind: "end-maintenance" }
 
 interface EditableUnit {
   status: string
@@ -146,6 +152,11 @@ export function planUnitEdit(unit: EditableUnit, draft: UnitEditDraft): { ops: U
   if (draft.maintenance && canStartMaintenance(unit.status)) {
     noteError = maintenanceNoteError(draft.note)
     ops.push({ kind: "maintenance", note: (draft.note || "").trim() })
+  }
+
+  // Sửa xong: ô đang bảo trì được chọn "Sẵn sàng cho thuê" → mở lại thành còn trống
+  if (!draft.maintenance && canEndMaintenance(unit.status)) {
+    ops.push({ kind: "end-maintenance" })
   }
 
   return { ops, noteError }

@@ -2,10 +2,8 @@ import { useEffect, useMemo, useState } from "react"
 import {
   ArchiveIcon,
   CheckCircle2Icon,
-  CircleCheckIcon,
   KeyRoundIcon,
   RefreshCwIcon,
-  UserCheckIcon,
   WrenchIcon,
 } from "lucide-react"
 import { cn } from "cn"
@@ -13,10 +11,10 @@ import { toast } from "sonner"
 
 import { useAuth } from "@/context/AuthContext"
 import { getErrorMessage } from "@/lib/api"
+import { todayInVietnam } from "@/lib/format"
 import type { ManagerTicketItem, ManagerTicketStatus } from "../types"
-import { listManagerTickets, managerAcceptTicket } from "../api/ticketApi"
-import ResolveTicketModal from "./ResolveTicketModal"
-import { formatDate } from "@/lib/format"
+import { listManagerTickets } from "../api/ticketApi"
+import { ticketProgress } from "../ticketRules"
 
 const STATUS_FILTERS: { key: ManagerTicketStatus; label: string }[] = [
   { key: "ALL", label: "Tất cả" },
@@ -35,7 +33,7 @@ export default function ManagerTicketPanel() {
   const [statusFilter, setStatusFilter] = useState<ManagerTicketStatus>("ALL")
   const [typeFilter, setTypeFilter] = useState<string>("ALL")
   const [searchQuery, setSearchQuery] = useState("")
-  const [resolvingTicket, setResolvingTicket] = useState<ManagerTicketItem | null>(null)
+  const today = todayInVietnam()
 
   const [reloadCount, setReloadCount] = useState(0)
 
@@ -68,17 +66,6 @@ export default function ManagerTicketPanel() {
   function refreshTickets() {
     setLoading(true)
     setReloadCount((n) => n + 1)
-  }
-
-  // Manager trực tiếp bấm Tiếp nhận ticket
-  async function handleAccept(ticket: ManagerTicketItem) {
-    try {
-      const updated = await managerAcceptTicket(ticket.id)
-      toast.success(`Quản lý đã tiếp nhận Ticket #${ticket.ticketCode} (IN_PROGRESS).`)
-      setTickets((prev) => prev.map((t) => (t.id === ticket.id ? { ...t, ...updated, status: "IN_PROGRESS" } : t)))
-    } catch (err) {
-      toast.error(`Không thể tiếp nhận ticket: ${getErrorMessage(err)}`)
-    }
   }
 
   // Thống kê số lượng theo nhóm
@@ -163,7 +150,7 @@ export default function ManagerTicketPanel() {
   }
 
   return (
-    <section aria-label="Xử lý sự cố & Escalation" className="space-y-4">
+    <section aria-label="Theo dõi ticket sự cố của cơ sở" className="space-y-4">
       {/* Filter and Search Bar */}
       <div className="card-box flex flex-col justify-between gap-3 rounded-2xl border p-4 shadow-sm md:flex-row md:items-center">
         <div className="flex max-w-xl flex-1 space-x-2">
@@ -247,8 +234,8 @@ export default function ManagerTicketPanel() {
       {filteredTickets.length === 0 ? (
         <div className="card-box flex flex-col items-center justify-center rounded-2xl border py-12 text-center text-muted">
           <CheckCircle2Icon className="mb-2 size-10 text-emerald-500/70" />
-          <h4 className="text-title text-sm font-bold">Không có yêu cầu nào cần xử lý</h4>
-          <p className="text-xs text-slate-500">Tất cả ticket đều đã được xử lý hoặc không khớp với bộ lọc.</p>
+          <h4 className="text-title text-sm font-bold">Không có ticket nào</h4>
+          <p className="text-xs text-slate-500">Cơ sở chưa có ticket hoặc không ticket nào khớp bộ lọc.</p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm dark:border-slate-800">
@@ -262,32 +249,11 @@ export default function ManagerTicketPanel() {
                 <th className="px-4 py-3.5 text-center whitespace-nowrap">Thời Gian / Lịch Hẹn</th>
                 <th className="px-4 py-3.5 text-center whitespace-nowrap">Trạng Thái</th>
                 <th className="px-4 py-3.5 text-center whitespace-nowrap">Người Phụ Trách</th>
-                <th className="px-4 py-3.5 text-center whitespace-nowrap">Hành Động Của Quản Lý</th>
+                <th className="px-4 py-3.5 text-center whitespace-nowrap">Tiến Độ Xử Lý</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
               {filteredTickets.map((ticket) => {
-                const isEarlyTerm = ticket.type === "EARLY_TERMINATION"
-                const isReturnDue =
-                  !ticket.desiredDate ||
-                  (() => {
-                    try {
-                      const today = new Date()
-                      today.setHours(0, 0, 0, 0)
-                      const parts = ticket.desiredDate.split(/[-T ]/)
-                      if (parts.length >= 3) {
-                        const year = parseInt(parts[0], 10)
-                        const month = parseInt(parts[1], 10) - 1
-                        const day = parseInt(parts[2], 10)
-                        const d = new Date(year, month, day)
-                        return today.getTime() >= d.getTime()
-                      }
-                      return true
-                    } catch {
-                      return true
-                    }
-                  })()
-
                 return (
                   <tr
                     key={ticket.id}
@@ -369,67 +335,40 @@ export default function ManagerTicketPanel() {
                           <span className="font-semibold text-slate-800 dark:text-slate-200">
                             {ticket.assignedStaffName}
                           </span>
-                          <span className="text-[10px] text-blue-600 dark:text-blue-400">
-                            (ID #{ticket.assignedStaffId})
-                          </span>
+                          {(ticket.status === "SUBMITTED" || ticket.status === "ESCALATED") && (
+                            <span className="text-[10px] text-amber-700 dark:text-amber-300">Đã phân, chưa tiếp nhận</span>
+                          )}
                         </div>
                       ) : (
-                        <span className="text-slate-400 italic">Chưa tiếp nhận</span>
+                        <span className="text-slate-400 italic">Chưa có</span>
                       )}
                     </td>
 
-                    {/* Cột 8: Hành động của Quản lý */}
+                    {/* Cột 8: Tiến độ (Manager chỉ theo dõi, nhân viên trong ca tiếp nhận và giải quyết) */}
                     <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
-                        {/* Khi ticket là SUBMITTED: Quản lý bấm Tiếp nhận */}
-                        {(ticket.status === "SUBMITTED" || ticket.status === "ESCALATED") && (
-                          isEarlyTerm && !isReturnDue ? (
-                            <span
-                              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-500 shadow-2xs dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400"
-                              title={`Lịch hẹn trả kho vào ngày ${ticket.desiredDate ? formatDate(ticket.desiredDate) : "—"}. Chỉ tiếp nhận khi đến ngày hẹn.`}
-                            >
-                              <span>Chờ đến hẹn ({ticket.desiredDate ? formatDate(ticket.desiredDate) : "—"})</span>
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleAccept(ticket)}
-                              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-white shadow-xs transition hover:bg-blue-700"
-                            >
-                              <UserCheckIcon className="size-3.5" />
-                              <span>Tiếp nhận xử lý</span>
-                            </button>
-                          )
-                        )}
-
-                        {/* Khi ticket đang IN_PROGRESS: Quản lý trực tiếp Đóng / Giải quyết */}
-                        {ticket.status === "IN_PROGRESS" && (
-                          <button
-                            type="button"
-                            onClick={() => setResolvingTicket(ticket)}
-                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold whitespace-nowrap text-white shadow-xs transition hover:bg-emerald-700"
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 text-xs font-semibold",
+                            ticket.status === "RESOLVED"
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : ticket.status === "IN_PROGRESS"
+                                ? "text-blue-700 dark:text-blue-300"
+                                : ticket.status === "CANCELLED"
+                                  ? "text-slate-500 dark:text-slate-400"
+                                  : "text-amber-700 dark:text-amber-300"
+                          )}
+                        >
+                          {ticket.status === "RESOLVED" && <CheckCircle2Icon className="size-4" />}
+                          <span>{ticketProgress(ticket, today)}</span>
+                        </span>
+                        {ticket.status === "RESOLVED" && ticket.resolutionNote && (
+                          <span
+                            className="max-w-[200px] truncate text-[10px] text-slate-500 italic dark:text-slate-400"
+                            title={ticket.resolutionNote}
                           >
-                            <CircleCheckIcon className="size-3.5" />
-                            <span>Đóng / Giải quyết</span>
-                          </button>
-                        )}
-
-                        {/* Khi ticket đã RESOLVED: Hiển thị kết quả */}
-                        {ticket.status === "RESOLVED" && (
-                          <div className="flex flex-col items-center">
-                            <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                              <CheckCircle2Icon className="size-4" />
-                              <span>Đã giải quyết</span>
-                            </span>
-                            {ticket.resolutionNote && (
-                              <span
-                                className="max-w-[180px] truncate text-[10px] text-slate-500 italic"
-                                title={ticket.resolutionNote}
-                              >
-                                "{ticket.resolutionNote}"
-                              </span>
-                            )}
-                          </div>
+                            "{ticket.resolutionNote}"
+                          </span>
                         )}
                       </div>
                     </td>
@@ -440,15 +379,6 @@ export default function ManagerTicketPanel() {
           </table>
         </div>
       )}
-
-      {/* Modal giải quyết ticket */}
-      <ResolveTicketModal
-        ticket={resolvingTicket}
-        onClose={() => setResolvingTicket(null)}
-        onResolved={(updated) => {
-          setTickets((prev) => prev.map((t) => (t.id === updated.id ? { ...t, ...updated } : t)))
-        }}
-      />
     </section>
   )
 }

@@ -3,7 +3,7 @@
 
 import type { Floor } from "@/types"
 
-import { canStartMaintenance, climateCounterpartTypeId, normalizeUnitStatus } from "../unitRules"
+import { canEndMaintenance, canStartMaintenance, climateCounterpartTypeId, normalizeUnitStatus } from "../unitRules"
 import type { ManagerUnit, ManagerUnitFilter } from "../types"
 
 const MOCK_LATENCY_MS = 300
@@ -103,6 +103,16 @@ export function mockStartMaintenance(unitCode: string): Promise<ManagerUnit> {
     return fail(`Không thể đưa vào bảo trì khi ô kho đang có khách đặt hoặc đang thuê! Trạng thái: ${store[index].status}`)
   }
   store[index] = { ...store[index], status: "UNDER_MAINTENANCE" as ManagerUnit["status"] }
+  return delay(store[index])
+}
+
+export function mockEndMaintenance(unitCode: string): Promise<ManagerUnit> {
+  const index = store.findIndex((u) => u.unitCode === unitCode)
+  if (index < 0) return fail(`Không tìm thấy ô kho: ${unitCode}`)
+  if (!canEndMaintenance(store[index].status)) {
+    return fail(`Chỉ có thể nghiệm thu ô kho đang ở trạng thái bảo trì (MAINTENANCE)! Trạng thái hiện tại: ${store[index].status}`)
+  }
+  store[index] = { ...store[index], status: "AVAILABLE" as ManagerUnit["status"] }
   return delay(store[index])
 }
 

@@ -22,7 +22,7 @@ export async function listAccounts(): Promise<InternalAccount[]> {
 
 /**
  * POST /api/admin/accounts  body { fullName, email, phone, role, facilityId }
- * BE tự sinh mật khẩu tạm, gửi qua email và đặt mustChangePassword = true.
+ * BE đặt mật khẩu ban đầu cố định (INITIAL_INTERNAL_PASSWORD), chưa gửi email, và đặt mustChangePassword = true.
  */
 export async function createAccount(values: AccountFormValues): Promise<InternalAccount> {
   const phone = values.phone.replace(/\s/g, "")
