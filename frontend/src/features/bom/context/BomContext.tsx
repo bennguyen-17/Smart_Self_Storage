@@ -265,12 +265,35 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
           const cleanName = fixedName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
           const fixedAddress = fixMojibake(f.address || "Hệ thống cơ sở kho")
 
-          const rawMgr = breakdown?.managerName || f.managerName || (f.managerId ? `Quản lý ID #${f.managerId}` : "Chưa phân công")
-          const cleanMgr = fixMojibake(rawMgr).replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+          // Ưu tiên thông tin Quản lý từ DB (f.managerName từ API /api/facilities kết nối bảng EmployeeProfile & Account)
+          const dbMgrName = (f.managerName && f.managerName !== "Chưa phân công" && f.managerName.trim())
+            ? fixMojibake(f.managerName).replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+            : ""
+          const breakdownMgrName = (breakdown?.managerName && breakdown.managerName !== "Chưa phân công" && breakdown.managerName.trim())
+            ? fixMojibake(breakdown.managerName).replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+            : ""
           const savedMgr = savedManagersMap[facId] || savedManagersMap[f.facilityCode]
-          const finalMgrName = savedMgr?.name || cleanMgr || rawMgr || "Chưa phân công"
-          const finalMgrEmail = savedMgr?.email || breakdown?.managerEmail || (f.managerId ? `manager${f.managerId}@smartstorage.vn` : "manager@smartstorage.vn")
-          const finalMgrPhone = savedMgr?.phone || breakdown?.managerPhone || f.phone || "0900000000"
+          const savedMgrName = (savedMgr?.name && savedMgr.name !== "Chưa phân công" && savedMgr.name.trim())
+            ? savedMgr.name.trim()
+            : ""
+
+          const finalMgrName = dbMgrName || breakdownMgrName || savedMgrName || (f.managerId ? `Quản lý ID #${f.managerId}` : "Chưa phân công")
+          const finalMgrEmail = (dbMgrName && f.managerEmail) || (breakdownMgrName && breakdown?.managerEmail) || (savedMgrName && savedMgr?.email) || (f.managerId ? `manager${f.managerId}@smartstorage.vn` : "manager@smartstorage.vn")
+          const finalMgrPhone = (dbMgrName && f.managerPhone) || (breakdownMgrName && breakdown?.managerPhone) || (savedMgrName && savedMgr?.phone) || f.phone || "0900000000"
+
+          if (dbMgrName) {
+            try {
+              const raw = localStorage.getItem("smart_storage_facility_managers")
+              if (raw) {
+                const curr = JSON.parse(raw)
+                if (curr[facId]?.name === "Chưa phân công" || curr[f.facilityCode]?.name === "Chưa phân công") {
+                  delete curr[facId]
+                  delete curr[f.facilityCode]
+                  localStorage.setItem("smart_storage_facility_managers", JSON.stringify(curr))
+                }
+              }
+            } catch (e) {}
+          }
           const stdUnits = (f.layoutType === "B" || f.layoutType === "Layout B") ? 15 : 46
 
           return {
@@ -387,6 +410,15 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     loadLiveData()
+    const handleUpdate = () => {
+      loadLiveData()
+    }
+    window.addEventListener("storage_facilities_updated", handleUpdate)
+    window.addEventListener("storage", handleUpdate)
+    return () => {
+      window.removeEventListener("storage_facilities_updated", handleUpdate)
+      window.removeEventListener("storage", handleUpdate)
+    }
   }, [loadLiveData])
 
   // Cập nhật giá & cọc lưu trực tiếp vào Database

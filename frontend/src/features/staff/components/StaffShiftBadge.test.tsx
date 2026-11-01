@@ -78,7 +78,7 @@ describe("StaffShiftBadge: hiển thị trạng thái và kết thúc ca", () =>
 
     render(<StaffShiftBadge />)
 
-    expect(await screen.findByText(/Ca Trực Hoạt Động/)).toBeInTheDocument()
+    expect(await screen.findByText(/Ca Sáng/)).toBeInTheDocument()
     expect(
       screen.getByRole("button", { name: /kết thúc ca/i })
     ).toBeInTheDocument()

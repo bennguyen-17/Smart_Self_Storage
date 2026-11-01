@@ -109,7 +109,18 @@ export default function BomFacilitiesPage() {
     )
 
     if (fromBreakdown && fromFacList) {
-      return { ...fromFacList, ...fromBreakdown }
+      const bestManagerName = (fromFacList.managerName && fromFacList.managerName !== "Chưa phân công")
+        ? fromFacList.managerName
+        : (fromBreakdown.managerName || fromFacList.managerName || "Chưa phân công")
+      const bestManagerPhone = fromFacList.managerPhone || fromBreakdown.managerPhone
+      const bestManagerEmail = fromFacList.managerEmail || fromBreakdown.managerEmail
+      return {
+        ...fromBreakdown,
+        ...fromFacList,
+        managerName: bestManagerName,
+        managerPhone: bestManagerPhone,
+        managerEmail: bestManagerEmail,
+      }
     }
     return fromBreakdown || fromFacList || null
   }, [facilityId, facilities, chainOverview])

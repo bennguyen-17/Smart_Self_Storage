@@ -150,7 +150,8 @@ export const hasAssignedManager = (fac: any): boolean => {
       if (raw) {
         const parsed = JSON.parse(raw);
         const saved = parsed[fac.backendId || fac.id] || (fac.code ? parsed[fac.code] : null);
-        if (saved && saved.name !== undefined) {
+        const isDbMgrValid = Boolean(mgrName && mgrName !== 'Chưa phân công' && String(mgrName).trim());
+        if (!isDbMgrValid && saved && saved.name !== undefined && saved.name !== 'Chưa phân công' && String(saved.name).trim()) {
           mgrName = saved.name;
         }
       }

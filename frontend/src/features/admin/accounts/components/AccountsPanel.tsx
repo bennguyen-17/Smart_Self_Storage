@@ -92,6 +92,12 @@ function AccountsPanel() {
     toast.success(message)
     setDialog(null)
     setReloadCount((n) => n + 1)
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("storage_facilities_updated"))
+      try {
+        localStorage.setItem("smart_storage_last_facility_sync", String(Date.now()))
+      } catch (e) {}
+    }
   }
 
   return (
@@ -277,6 +283,18 @@ function AccountsPanel() {
               onCancel={() => setDialog(null)}
               onSubmit={async (values) => {
                 const created = await createAccount(values)
+                if (typeof window !== "undefined" && values.role === "MANAGER" && values.facilityId) {
+                  try {
+                    const raw = localStorage.getItem("smart_storage_facility_managers")
+                    const curr = raw ? JSON.parse(raw) : {}
+                    curr[String(values.facilityId)] = {
+                      name: values.fullName.trim(),
+                      email: values.email.trim(),
+                      phone: values.phone.trim(),
+                    }
+                    localStorage.setItem("smart_storage_facility_managers", JSON.stringify(curr))
+                  } catch (e) {}
+                }
                 done(
                   `Đã tạo tài khoản ${created.email}. Mật khẩu ban đầu: ${INITIAL_INTERNAL_PASSWORD}, hãy báo cho người dùng đăng nhập bằng số điện thoại và đổi mật khẩu.`
                 )
@@ -297,6 +315,18 @@ function AccountsPanel() {
               onCancel={() => setDialog(null)}
               onSubmit={async (values) => {
                 await updateAccountAssignment(dialog.account.accountId, values)
+                if (typeof window !== "undefined" && values.role === "MANAGER" && values.facilityId) {
+                  try {
+                    const raw = localStorage.getItem("smart_storage_facility_managers")
+                    const curr = raw ? JSON.parse(raw) : {}
+                    curr[String(values.facilityId)] = {
+                      name: dialog.account.fullName.trim(),
+                      email: dialog.account.email.trim(),
+                      phone: (dialog.account.phone ?? "").trim(),
+                    }
+                    localStorage.setItem("smart_storage_facility_managers", JSON.stringify(curr))
+                  } catch (e) {}
+                }
                 done(`Đã cập nhật phân quyền cho ${dialog.account.fullName}`)
               }}
             />
