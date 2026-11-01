@@ -231,7 +231,7 @@ function FacilityReportPanel() {
           trong khoảng này; số ô kho, hợp đồng và tiền cọc đang giữ là số hiện tại.
         </p>
       ) : (
-        <p role="alert" className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+        <p role="alert" className="[overflow-wrap:anywhere] text-xs font-semibold text-rose-600 dark:text-rose-400">
           Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.
         </p>
       )}

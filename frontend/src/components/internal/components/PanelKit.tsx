@@ -6,6 +6,7 @@ import { ChevronLeftIcon, ChevronRightIcon, InboxIcon, RotateCwIcon } from "luci
 import { cn } from "cn"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { sanitizeErrorMessage } from "../readableError"
 import { Button } from "@/components/ui/button"
 
 import { PAGE_SIZE_OPTIONS, pageWindow, type PageSlice } from "../pagination"
@@ -169,8 +170,8 @@ export function LoadError({ title, message, onRetry }: { title: string; message:
   return (
     <Alert variant="destructive">
       <AlertTitle>{title}</AlertTitle>
-      <AlertDescription className="flex flex-wrap items-center gap-2">
-        {message}
+      <AlertDescription className="flex flex-wrap items-center gap-2 [overflow-wrap:anywhere]">
+        {sanitizeErrorMessage(message)}
         <Button variant="outline" size="sm" onClick={onRetry}>
           <RotateCwIcon aria-hidden="true" /> Thử lại
         </Button>
@@ -214,20 +215,20 @@ export function ResultCount({ shown, total, unit, isLoading }: { shown: number; 
 export function Pagination({
   slice,
   total,
-  unit,
   pageSize,
   onPageChange,
   onPageSizeChange,
 }: {
   slice: PageSlice<unknown>
   total: number
+  /** Giữ cho các trang đang truyền; dòng "Hiển thị x – y trong tổng số N" đã bỏ nên chưa dùng */
   unit: string
   pageSize: number
   onPageChange: (page: number) => void
   onPageSizeChange: (size: number) => void
 }) {
   if (total === 0) return null
-  const { page, totalPages, from, to } = slice
+  const { page, totalPages } = slice
   return (
     <nav aria-label="Phân trang" className="flex flex-wrap items-center justify-between gap-3 text-xs">
       <div className="flex flex-wrap items-center gap-3">

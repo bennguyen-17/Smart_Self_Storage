@@ -17,7 +17,7 @@ import {
 } from "@/components/internal/components/PanelKit"
 import { usePagedRows } from "@/components/internal/usePagedRows"
 import { useAsyncData } from "@/hooks/useAsyncData"
-import { getErrorMessage } from "@/lib/api"
+import { readableError } from "@/components/internal/readableError"
 import { formatDateTime } from "@/lib/format"
 
 import { listCustomers, unlockCustomer } from "../api/customerApi"
@@ -56,7 +56,7 @@ function CustomersPanel() {
       setUnlocking(null)
       reload()
     } catch (err) {
-      setUnlockError(getErrorMessage(err))
+      setUnlockError(readableError(err))
     } finally {
       setBusy(false)
     }
@@ -116,7 +116,7 @@ function CustomersPanel() {
             <tr key={c.accountId} className="border-b align-top last:border-0">
               <td className="text-title px-4 py-3 font-bold">{c.fullName ?? `Tài khoản #${c.accountId}`}</td>
               <td className="text-title px-4 py-3 font-mono whitespace-nowrap">{c.phone ?? "—"}</td>
-              <td className="text-title px-4 py-3">{c.email ?? "—"}</td>
+              <td className="text-title max-w-xs px-4 py-3 [overflow-wrap:anywhere]">{c.email ?? "—"}</td>
               <td className="px-4 py-3">
                 <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
                 {locked && c.lockUntil && (
@@ -160,7 +160,7 @@ function CustomersPanel() {
                 </DialogDescription>
               </DialogHeader>
               {unlockError && (
-                <p role="alert" className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+                <p role="alert" className="[overflow-wrap:anywhere] text-xs font-semibold text-rose-600 dark:text-rose-400">
                   {unlockError}
                 </p>
               )}

@@ -4,7 +4,7 @@ import { cn } from "cn"
 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
-import { getErrorMessage } from "@/lib/api"
+import { readableError } from "@/components/internal/readableError"
 
 import { changeUnitType, endMaintenance, startMaintenance } from "../api/unitManagementApi"
 import type { ManagerContext, ManagerUnit } from "../types"
@@ -60,7 +60,7 @@ function UnitEditSheet({ unit, ctx, onClose, onSaved }: UnitEditSheetProps) {
       }
       onSaved(`Đã lưu thay đổi cho ô ${unit.unitCode}`)
     } catch (err) {
-      setServerError(getErrorMessage(err))
+      setServerError(readableError(err))
       if (done > 0) onSaved(null)
     } finally {
       setSubmitting(false)
@@ -178,7 +178,7 @@ function UnitEditSheet({ unit, ctx, onClose, onSaved }: UnitEditSheetProps) {
           </fieldset>
 
           {serverError && (
-            <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50/80 p-3 text-xs font-semibold text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
+            <p role="alert" className="[overflow-wrap:anywhere] rounded-xl border border-rose-200 bg-rose-50/80 p-3 text-xs font-semibold text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
               {serverError}
             </p>
           )}
