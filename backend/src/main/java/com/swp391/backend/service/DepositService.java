@@ -380,7 +380,7 @@ public class DepositService {
         payment.setPaymentStatus("SUCCESS");
         payment.setPaidAmount(payment.getAmount());
         payment.setRemainingAmount(BigDecimal.ZERO);
-        payment.setPaymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod() : "VNPAY");
+        payment.setPaymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod() : "BANK_TRANSFER");
         payment.setTransactionCode(request.getTransactionCode() != null ? request.getTransactionCode() : "TXN_EXT_" + System.currentTimeMillis());
         payment.setGatewayTransactionId(request.getGatewayTransactionId());
         payment.setPaidAt(LocalDateTime.now());
