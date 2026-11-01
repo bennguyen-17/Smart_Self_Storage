@@ -71,6 +71,30 @@ describe("Quản lí hợp đồng: thanh lý tài sản quá hạn", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
   })
 
+  test("dán chữ không phải link → báo ngay, không cho xác nhận", async () => {
+    api.markForfeitProcessed.mockReset().mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    render(<CustomersContractsPanel />)
+    await user.click(within(await screen.findByText("Khách Ba").then(() => row("Khách Ba"))).getByRole("button", { name: /Thanh lý tài sản/ }))
+    const dialog = await screen.findByRole("dialog")
+    await user.type(within(dialog).getByLabelText(/link ảnh/i), "da niem phong roi")
+    expect(within(dialog).getByText(/phải bắt đầu bằng http/)).toBeInTheDocument()
+    expect(within(dialog).getByRole("button", { name: "Xác nhận thanh lý tài sản" })).toBeDisabled()
+    expect(api.markForfeitProcessed).not.toHaveBeenCalled()
+  })
+
+  test("BE trả lỗi SQL → hiện câu dễ hiểu, không lộ câu lệnh", async () => {
+    api.markForfeitProcessed.mockReset().mockRejectedValue(new Error("Lỗi hệ thống: could not execute statement [Data too long for column description] [insert into ActivityLog ...]"))
+    const user = userEvent.setup()
+    render(<CustomersContractsPanel />)
+    await user.click(within(await screen.findByText("Khách Ba").then(() => row("Khách Ba"))).getByRole("button", { name: /Thanh lý tài sản/ }))
+    const dialog = await screen.findByRole("dialog")
+    await user.type(within(dialog).getByLabelText(/link ảnh/i), LINK)
+    await user.click(within(dialog).getByRole("button", { name: "Xác nhận thanh lý tài sản" }))
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Nội dung nhập quá dài")
+    expect(within(dialog).queryByText(/could not execute|insert into/)).not.toBeInTheDocument()
+  })
+
   test("BE từ chối → giữ hộp thoại mở, hiện nguyên câu lỗi của BE", async () => {
     api.markForfeitProcessed.mockReset().mockRejectedValue(new Error("Hợp đồng đã được xác nhận xử lý tài sản."))
     const user = userEvent.setup()

@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import type { ManagerContext } from "@/features/manager/units/types"
-import { getErrorMessage } from "@/lib/api"
+import { readableError } from "@/components/internal/readableError"
+import { EVIDENCE_URL_MAX, isValidEvidenceLink } from "@/features/manager/refunds/refundRules"
 import { formatDate, formatVnd } from "@/lib/format"
 
 import { markForfeitProcessed } from "../api/contractApi"
@@ -32,12 +33,21 @@ function ForfeitProcessedSheet({
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
-  const imageError = showErrors && !imageUrl.trim() ? "Vui lòng dán đường link ảnh hiện trường tài sản hoặc biên bản thanh lý" : null
-  const isFormValid = imageUrl.trim().length > 0
+  // Bắt buộc link ảnh thật (http/https): ghi chú thanh lý là minh chứng, không nhận chữ tùy ý
+  const linkOk = isValidEvidenceLink(imageUrl)
+  // Gõ link sai thì báo ngay (nút xác nhận đang khóa nên không đợi bấm mới báo)
+  const imageError = imageUrl.trim()
+    ? linkOk
+      ? null
+      : `Link ảnh phải bắt đầu bằng http:// hoặc https:// và tối đa ${EVIDENCE_URL_MAX} ký tự`
+    : showErrors
+      ? "Vui lòng dán đường link ảnh hiện trường tài sản hoặc biên bản thanh lý"
+      : null
+  const isFormValid = linkOk
 
   async function submit() {
     setShowErrors(true)
-    if (!imageUrl.trim()) return
+    if (!linkOk) return
     setSubmitting(true)
     setServerError(null)
     try {
@@ -45,7 +55,7 @@ function ForfeitProcessedSheet({
       await markForfeitProcessed(ctx, contract.contractId, fullNote)
       onDone(`Đã xác nhận thanh lý tài sản hợp đồng ${contract.contractCode}`)
     } catch (err) {
-      setServerError(getErrorMessage(err))
+      setServerError(readableError(err))
     } finally {
       setSubmitting(false)
     }
@@ -140,7 +150,7 @@ function ForfeitProcessedSheet({
         </div>
 
         {serverError && (
-          <p role="alert" className="rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
+          <p role="alert" className="[overflow-wrap:anywhere] rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
             {serverError}
           </p>
         )}

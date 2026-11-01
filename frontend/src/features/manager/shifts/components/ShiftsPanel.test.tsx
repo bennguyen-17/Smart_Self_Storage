@@ -129,4 +129,18 @@ describe("ShiftsPanel: phân ai trực ca nào (US-32)", () => {
     await user.click(target)
     expect(target).toHaveAttribute("aria-pressed", "true")
   })
+  test("ngày đã qua (tuần trước) → chỉ xem: khóa thêm / bỏ người và nút Lưu", async () => {
+    const user = await renderPanel()
+    await user.click(screen.getByRole("button", { name: "Tuần trước" }))
+    const morning = await waitFor(() => card("Ca Sáng"))
+    await waitFor(() => expect(within(morning).getByText(/Ngày đã qua: chỉ xem/)).toBeInTheDocument())
+    expect(within(morning).getByRole("button", { name: /lưu ca sáng/i })).toBeDisabled()
+    expect(within(morning).getByRole("combobox")).toBeDisabled()
+    for (const b of within(morning).queryAllByRole("button", { name: /^Bỏ / })) expect(b).toBeDisabled()
+  })
+
+  test("hôm nay vẫn sửa được (không hiện chỉ xem)", async () => {
+    await renderPanel()
+    expect(within(card("Ca Sáng")).queryByText(/Ngày đã qua/)).not.toBeInTheDocument()
+  })
 })
