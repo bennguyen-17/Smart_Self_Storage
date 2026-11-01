@@ -50,6 +50,9 @@ describe("AccountsPanel: Admin quản lý tài khoản nội bộ (US-29)", () =
     const { user } = await renderPanel()
     await user.click(screen.getByRole("button", { name: /tạo tài khoản/i }))
     const dialog = await screen.findByRole("dialog")
+    // Chưa có email gửi mật khẩu: form nói rõ mật khẩu ban đầu để Admin báo người dùng
+    expect(within(dialog).getByText(/mật khẩu ban đầu 123456/i)).toBeInTheDocument()
+    expect(within(dialog).queryByText(/gửi mật khẩu tạm tới email/i)).not.toBeInTheDocument()
     await user.type(within(dialog).getByLabelText(/họ và tên/i), "Nguyễn Văn Mới")
     await user.type(within(dialog).getByLabelText(/^email/i), "nv.moi@selfstorage391.vn")
     await user.selectOptions(within(dialog).getByLabelText(/cơ sở/i), "2")

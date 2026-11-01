@@ -34,6 +34,7 @@ import type { Facility } from "@/types"
 import { createAccount, listAccounts, setAccountStatus, updateAccountAssignment } from "../api/accountApi"
 import {
   filterAccounts,
+  INITIAL_INTERNAL_PASSWORD,
   INTERNAL_ROLES,
   isSelf,
   ROLE_LABEL,
@@ -276,7 +277,9 @@ function AccountsPanel() {
               onCancel={() => setDialog(null)}
               onSubmit={async (values) => {
                 const created = await createAccount(values)
-                done(`Đã tạo tài khoản ${created.email}. Mật khẩu tạm đã được gửi qua email.`)
+                done(
+                  `Đã tạo tài khoản ${created.email}. Mật khẩu ban đầu: ${INITIAL_INTERNAL_PASSWORD}, hãy báo cho người dùng đăng nhập bằng số điện thoại và đổi mật khẩu.`
+                )
               }}
             />
           )}
@@ -358,7 +361,7 @@ function AccountForm({
         <DialogTitle>{mode === "create" ? "Tạo tài khoản nội bộ" : `Phân quyền ${initial.fullName}`}</DialogTitle>
         <DialogDescription>
           {mode === "create"
-            ? "Hệ thống sẽ gửi mật khẩu tạm tới email này; người dùng phải đổi mật khẩu ở lần đăng nhập đầu."
+            ? `Tài khoản mới có mật khẩu ban đầu ${INITIAL_INTERNAL_PASSWORD}; người dùng đăng nhập bằng số điện thoại rồi đổi mật khẩu.`
             : `${initial.email} · Đổi vai trò hoặc cơ sở làm việc.`}
         </DialogDescription>
       </DialogHeader>

@@ -4,6 +4,12 @@ import type { AccountFilter, AccountFormValues, InternalAccount, InternalRole } 
 
 export const INTERNAL_ROLES: readonly InternalRole[] = ["STAFF", "MANAGER", "BOM", "ADMIN"]
 
+/**
+ * Mật khẩu ban đầu BE đặt cho mọi tài khoản nội bộ mới (AdminAccountController.createAccount).
+ * Chưa có SMTP gửi mật khẩu tạm, nên Admin báo trực tiếp cho người dùng; đổi ở BE thì sửa ở đây.
+ */
+export const INITIAL_INTERNAL_PASSWORD = "123456"
+
 export const ROLE_LABEL: Record<InternalRole, string> = {
   STAFF: "Nhân viên cơ sở",
   MANAGER: "Quản lý cơ sở",
