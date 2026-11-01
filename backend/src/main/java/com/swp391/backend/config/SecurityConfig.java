@@ -80,7 +80,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/contracts/**").authenticated()
                         .requestMatchers("/api/deposits/**").authenticated()
                         .requestMatchers("/api/payment/**").authenticated()
-                        .requestMatchers("/api/gate-pins/**").authenticated()
+                        .requestMatchers("/api/gate-pin/**").authenticated()
 
                         .anyRequest().authenticated()
                 )
