@@ -27,7 +27,7 @@ import { usePagedRows } from "@/components/internal/usePagedRows"
 import { getFacilities } from "@/features/floorplan/api/floorPlanApi"
 import { useAsyncData } from "@/hooks/useAsyncData"
 import { getStoredUser } from "@/hooks/useAuthSession"
-import { getErrorMessage } from "@/lib/api"
+import { readableError } from "@/components/internal/readableError"
 import { formatDateTime } from "@/lib/format"
 import type { Facility } from "@/types"
 
@@ -200,7 +200,7 @@ function AccountsPanel() {
                             {a.fullName}
                             {self && <span className="text-muted ml-1 font-semibold">(bạn)</span>}
                           </p>
-                          <p className="text-muted">{a.email}</p>
+                          <p className="text-muted [overflow-wrap:anywhere]">{a.email}</p>
                           {a.phone && <p className="text-muted">{a.phone}</p>}
                         </td>
                         <td className="px-4 py-3">
@@ -335,7 +335,7 @@ function AccountForm({
   const [showErrors, setShowErrors] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
-  const errors: AccountFormErrors = validateAccountForm(values)
+  const errors: AccountFormErrors = validateAccountForm(values, { requirePhone: mode === "create" })
   const visible = showErrors ? errors : {}
   const needsFacility = roleNeedsFacility(values.role)
   const set = (patch: Partial<AccountFormValues>) => setValues((v) => ({ ...v, ...patch }))
@@ -349,7 +349,7 @@ function AccountForm({
     try {
       await onSubmit(values)
     } catch (err) {
-      setServerError(getErrorMessage(err))
+      setServerError(readableError(err))
     } finally {
       setSubmitting(false)
     }
@@ -370,7 +370,7 @@ function AccountForm({
         <>
           <TextField id="acc-name" label="Họ và tên" required value={values.fullName} error={visible.fullName} onChange={(fullName) => set({ fullName })} />
           <TextField id="acc-email" label="Email" type="email" required value={values.email} error={visible.email} onChange={(email) => set({ email })} />
-          <TextField id="acc-phone" label="Số điện thoại (tùy chọn)" type="tel" value={values.phone} error={visible.phone} onChange={(phone) => set({ phone })} />
+          <TextField id="acc-phone" label="Số điện thoại (dùng để đăng nhập)" type="tel" required value={values.phone} error={visible.phone} onChange={(phone) => set({ phone })} />
         </>
       )}
 
@@ -417,7 +417,7 @@ function AccountForm({
       </div>
 
       {serverError && (
-        <p role="alert" className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+        <p role="alert" className="text-xs font-semibold [overflow-wrap:anywhere] text-rose-600 dark:text-rose-400">
           {serverError}
         </p>
       )}
@@ -454,7 +454,7 @@ function StatusConfirm({
     try {
       await onConfirm()
     } catch (err) {
-      setServerError(getErrorMessage(err))
+      setServerError(readableError(err))
     } finally {
       setSubmitting(false)
     }
@@ -471,7 +471,7 @@ function StatusConfirm({
         </DialogDescription>
       </DialogHeader>
       {serverError && (
-        <p role="alert" className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+        <p role="alert" className="text-xs font-semibold [overflow-wrap:anywhere] text-rose-600 dark:text-rose-400">
           {serverError}
         </p>
       )}

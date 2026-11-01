@@ -208,7 +208,7 @@ function StaffActivityPanel() {
                   <td className="px-4 py-3">
                     <StatusBadge tone={isSensitive(l.action) ? "amber" : "blue"}>{actionLabel(l.action)}</StatusBadge>
                   </td>
-                  <td className="text-title px-4 py-3">{l.description ?? "—"}</td>
+                  <td className="text-title max-w-md px-4 py-3 [overflow-wrap:anywhere]">{l.description ?? "—"}</td>
                 </tr>
               ))}
             </TableCard>

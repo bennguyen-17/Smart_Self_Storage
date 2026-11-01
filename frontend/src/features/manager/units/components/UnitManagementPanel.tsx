@@ -4,6 +4,7 @@ import { toast } from "sonner"
 import { cn } from "cn"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { sanitizeErrorMessage } from "@/components/internal/readableError"
 import { Button } from "@/components/ui/button"
 import { Pagination } from "@/components/internal/components/PanelKit"
 import { usePagedRows } from "@/components/internal/usePagedRows"
@@ -83,8 +84,8 @@ function UnitManagementPanel() {
       {error ? (
         <Alert variant="destructive">
           <AlertTitle>Không tải được danh sách ô kho</AlertTitle>
-          <AlertDescription className="flex flex-wrap items-center gap-2">
-            {error}
+          <AlertDescription className="flex flex-wrap items-center gap-2 [overflow-wrap:anywhere]">
+            {sanitizeErrorMessage(error)}
             {ctx.facilityId !== null && (
               <Button variant="outline" size="sm" onClick={() => setReloadCount((n) => n + 1)}>
                 <RotateCwIcon aria-hidden="true" /> Thử lại

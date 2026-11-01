@@ -204,7 +204,7 @@ function AuditLogPanel() {
                 {actionLabel(l.action)}
               </span>
             </td>
-            <td className="text-title max-w-md px-4 py-3 break-words">
+            <td className="text-title max-w-md px-4 py-3 [overflow-wrap:anywhere]">
               {l.description ?? "—"}
             </td>
             <td className="px-4 py-3 font-mono whitespace-nowrap text-muted">

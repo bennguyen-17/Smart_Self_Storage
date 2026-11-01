@@ -10,7 +10,7 @@ import { cn } from "cn"
 import { toast } from "sonner"
 
 import { useAuth } from "@/context/AuthContext"
-import { getErrorMessage } from "@/lib/api"
+import { readableError } from "@/components/internal/readableError"
 import { todayInVietnam } from "@/lib/format"
 import type { ManagerTicketItem, ManagerTicketStatus } from "../types"
 import { listManagerTickets } from "../api/ticketApi"
@@ -48,7 +48,7 @@ export default function ManagerTicketPanel() {
             if (!ignore) setTickets(data)
           },
           (err: unknown) => {
-            if (!ignore) toast.error(`Không thể tải danh sách ticket của cơ sở: ${getErrorMessage(err)}`)
+            if (!ignore) toast.error(`Không thể tải danh sách ticket của cơ sở: ${readableError(err)}`)
           }
         )
         .finally(() => {

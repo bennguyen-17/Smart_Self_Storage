@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { CheckCircle2Icon, InboxIcon, RotateCwIcon } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { sanitizeErrorMessage } from "@/components/internal/readableError"
 import { Button } from "@/components/ui/button"
 import { Pagination } from "@/components/internal/components/PanelKit"
 import { usePagedRows } from "@/components/internal/usePagedRows"
@@ -49,8 +50,8 @@ function GateLogPanel() {
       {error ? (
         <Alert variant="destructive">
           <AlertTitle>Không tải được nhật ký mở cổng</AlertTitle>
-          <AlertDescription className="flex flex-wrap items-center gap-2">
-            {error}
+          <AlertDescription className="flex flex-wrap items-center gap-2 [overflow-wrap:anywhere]">
+            {sanitizeErrorMessage(error)}
             <Button variant="outline" size="sm" onClick={() => setReloadCount((n) => n + 1)}>
               <RotateCwIcon aria-hidden="true" /> Thử lại
             </Button>
@@ -85,7 +86,7 @@ function GateLogPanel() {
           </div>
 
           {!rangeOk && (
-            <p role="alert" className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+            <p role="alert" className="[overflow-wrap:anywhere] text-xs font-semibold text-rose-600 dark:text-rose-400">
               Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.
             </p>
           )}

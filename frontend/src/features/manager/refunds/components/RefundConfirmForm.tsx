@@ -4,7 +4,7 @@ import { CheckCircle2Icon, FileCheck2Icon, ImageIcon, TriangleAlertIcon, UploadI
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { getStoredUser } from "@/hooks/useAuthSession"
-import { getErrorMessage } from "@/lib/api"
+import { readableError } from "@/components/internal/readableError"
 import { isMockMode } from "@/lib/apiClient"
 import { formatVnd } from "@/lib/format"
 
@@ -84,7 +84,7 @@ function RefundConfirmForm({
       await submit(paymentId, { evidenceUrl, transactionRef })
       onConfirmed()
     } catch (err) {
-      setErrorMsg(getErrorMessage(err))
+      setErrorMsg(readableError(err))
     } finally {
       setIsSubmitting(false)
     }
@@ -233,7 +233,7 @@ function RefundConfirmForm({
         )}
 
         {errorMsg && (
-          <p role="alert" className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+          <p role="alert" className="[overflow-wrap:anywhere] text-xs font-semibold text-rose-600 dark:text-rose-400">
             {errorMsg}
           </p>
         )}

@@ -15,7 +15,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { StatusBadge } from "@/components/internal/components/PanelKit"
 import { initials } from "@/components/internal/initials"
 import type { ManagerContext } from "@/features/manager/units/types"
-import { getErrorMessage } from "@/lib/api"
+import { readableError } from "@/components/internal/readableError"
 
 import { saveShift } from "../api/shiftApi"
 import {
@@ -47,12 +47,15 @@ function ShiftCard({
   schedule,
   shift,
   staff,
+  readOnly = false,
   onSaved,
 }: {
   ctx: ManagerContext
   schedule: DaySchedule
   shift: DayShift
   staff: readonly FacilityStaff[]
+  /** Ngày đã qua: chỉ xem ai đã trực, không sửa (tránh làm sai lịch sử ca và số liệu Hoạt động nhân viên) */
+  readOnly?: boolean
   onSaved: (message: string) => void
 }) {
   const Icon = PERIOD_ICON[shiftPeriod(shift.startTime)]
@@ -78,7 +81,7 @@ function ShiftCard({
       )
       onSaved(`Đã lưu ${shift.shiftName}`)
     } catch (err) {
-      setError(getErrorMessage(err))
+      setError(readableError(err))
     } finally {
       setSaving(false)
     }
@@ -153,7 +156,7 @@ function ShiftCard({
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    disabled={saving}
+                    disabled={saving || readOnly}
                     aria-label={`Bỏ ${a.fullName} khỏi ${shift.shiftName}`}
                     onClick={() =>
                       setDraft((d) =>
@@ -170,7 +173,10 @@ function ShiftCard({
         )}
       </div>
 
-      <fieldset className="mt-auto space-y-2 border-t pt-3" disabled={saving}>
+      <fieldset className="mt-auto space-y-2 border-t pt-3" disabled={saving || readOnly}>
+        {readOnly && (
+          <p className="text-muted text-xs font-semibold">Ngày đã qua: chỉ xem, không sửa được người trực.</p>
+        )}
         <legend className="sr-only">Thêm người vào {shift.shiftName}</legend>
         <select
           aria-label={`Nhân viên thêm vào ${shift.shiftName}`}
@@ -216,7 +222,7 @@ function ShiftCard({
         {error && (
           <p
             role="alert"
-            className="text-xs font-semibold text-rose-600 dark:text-rose-400"
+            className="text-xs font-semibold [overflow-wrap:anywhere] text-rose-600 dark:text-rose-400"
           >
             {error}
           </p>

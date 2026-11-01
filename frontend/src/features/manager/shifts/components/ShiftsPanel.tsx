@@ -130,6 +130,7 @@ function ShiftsPanel() {
                 schedule={schedule.data!}
                 shift={s}
                 staff={staff.data ?? []}
+                readOnly={date < today}
                 onSaved={(message) => {
                   toast.success(message)
                   setReloadCount((n) => n + 1)
