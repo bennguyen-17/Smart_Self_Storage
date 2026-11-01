@@ -8,7 +8,6 @@ import {
   IdCardIcon,
   InfoIcon,
   KeyRoundIcon,
-  SearchIcon,
   UserCheckIcon,
   WrenchIcon,
 } from "lucide-react"
@@ -24,8 +23,11 @@ import StaffInspectionModal, {
 } from "@/features/staff/checkin/components/StaffInspectionModal"
 import StaffUnlockModal, { type UnlockTicketInfo } from "./StaffUnlockModal"
 import StaffShiftBadge from "@/features/staff/components/StaffShiftBadge"
+import { formatDate } from "@/lib/format"
+import { usePagedRows } from "@/components/internal/usePagedRows"
+import { Pagination } from "@/components/internal/components/PanelKit"
 
-type TicketStatus = "SUBMITTED" | "IN_PROGRESS" | "RESOLVED"
+type TicketStatus = "SUBMITTED" | "IN_PROGRESS" | "RESOLVED" | "CANCELLED"
 
 export interface TicketItem {
   id: string | number
@@ -54,6 +56,7 @@ const FILTERS: { key: "ALL" | TicketStatus; label: string }[] = [
   { key: "SUBMITTED", label: "Chờ Tiếp Nhận" },
   { key: "IN_PROGRESS", label: "Đang Xử Lý" },
   { key: "RESOLVED", label: "Đã Hoàn Tất" },
+  { key: "CANCELLED", label: "Đã Hủy" },
 ]
 
 function formatTicketTimeInfo(ticket: TicketItem) {
@@ -200,7 +203,22 @@ function StaffTicketPanel() {
   const fetchTickets = useCallback(async () => {
     try {
       if (!isMockMode()) {
-        const res: any = await apiClient.get("/staff/tickets")
+        const [res, reservationsRes]: any = await Promise.all([
+          apiClient.get("/staff/tickets"),
+          apiClient.get("/staff/reservations").catch(() => []),
+        ])
+        const contractCodeMap = new Map<number, string>()
+        const unitContractMap = new Map<string, string>()
+        const resList = Array.isArray(reservationsRes) ? reservationsRes : (reservationsRes?.data || [])
+        if (Array.isArray(resList)) {
+          resList.forEach((r: any) => {
+            const code = r.reservationCode || r.contractCode
+            if (code) {
+              if (r.contractId) contractCodeMap.set(Number(r.contractId), code)
+              if (r.unitCode) unitContractMap.set(r.unitCode, code)
+            }
+          })
+        }
         setShiftError(null)
         if (Array.isArray(res)) {
           const mapped: TicketItem[] = res.map((t: any) => ({
@@ -219,8 +237,11 @@ function StaffTicketPanel() {
             unitCode: t.unitCode || "—",
             contractId: t.contractId,
             contractCode:
+              (t.contractCode && t.contractCode.length > 8 ? t.contractCode : undefined) ||
+              (t.contractId ? contractCodeMap.get(Number(t.contractId)) : undefined) ||
+              (t.unitCode ? unitContractMap.get(t.unitCode) : undefined) ||
               t.contractCode ||
-              (t.contractId ? `HD-${t.contractId}` : undefined),
+              (t.contractId ? `CTR-${t.contractId}` : undefined),
             description: t.description || "Không có mô tả chi tiết.",
             desiredDate: t.desiredDate ? String(t.desiredDate) : undefined,
             slaDeadline: t.slaDeadline ? String(t.slaDeadline) : undefined,
@@ -289,12 +310,7 @@ function StaffTicketPanel() {
         await apiClient.post(`/staff/tickets/${ticket.id}/accept`)
       }
       updateStatus(ticket.id, "IN_PROGRESS")
-      toast.success(
-        `Nhân viên đã tiếp nhận Ticket #${ticket.ticketCode} (IN_PROGRESS).`
-      )
-      if (ticket.type === "EARLY_TERMINATION") {
-        handleOpenInspection(ticket)
-      }
+      fetchTickets()
     } catch (err: any) {
       toast.error(
         err?.response?.data || "Không thể tiếp nhận ticket, vui lòng thử lại."
@@ -322,17 +338,23 @@ function StaffTicketPanel() {
 
   function handleOpenInspection(ticket: TicketItem) {
     setInspectionTicketId(ticket.id)
+    const unitCode = ticket.unitCode || ""
+    let defaultDeposit = 1_000_000
+    if (unitCode.includes("-XL") || unitCode.includes("XL")) defaultDeposit = 3_000_000
+    else if (unitCode.includes("-L") || unitCode.includes("L0") || unitCode.includes("L1") || unitCode.includes("L2")) defaultDeposit = 2_000_000
+    else if (unitCode.includes("-S") || unitCode.includes("S0") || unitCode.includes("S1")) defaultDeposit = 500_000
+
     setInspectionTarget({
       contractId: ticket.contractId,
       ticketId: typeof ticket.id === "number" ? ticket.id : undefined,
       contractCode:
         ticket.contractCode ||
         (ticket.contractId
-          ? `HD-CG-2026-${ticket.contractId}`
-          : `HD-${ticket.unitCode || "902"}`),
+          ? `CTR-${ticket.contractId}`
+          : (ticket.unitCode ? `CTR-${ticket.unitCode}` : '—')),
       customerName: ticket.customerName || "Khách hàng trả kho",
       unitCode: ticket.unitCode || "F1-S105",
-      depositAmount: 1_000_000,
+      depositAmount: defaultDeposit,
     })
   }
 
@@ -386,6 +408,8 @@ function StaffTicketPanel() {
     )
   })
 
+  const { slice, pagination } = usePagedRows(filtered, `${filter}-${query}`)
+
   function countOf(status: TicketStatus): number {
     return tickets.filter((t) => t.status === status).length
   }
@@ -405,7 +429,6 @@ function StaffTicketPanel() {
         <div className="card-box flex flex-col justify-between gap-3 rounded-2xl border p-4 shadow-sm md:flex-row md:items-center">
           <div className="flex max-w-xl flex-1 space-x-2">
             <div className="relative flex-1">
-              <SearchIcon className="pointer-events-none absolute top-2.5 left-3.5 size-4 text-muted" />
               <input
                 type="text"
                 value={searchQuery}
@@ -413,6 +436,7 @@ function StaffTicketPanel() {
                 placeholder="Tìm theo Mã Ticket, Tên khách hàng, SĐT hoặc Mã kho..."
                 className="inner-box w-full rounded-xl border border-slate-200/80 px-3.5 py-2 pl-9 text-xs font-normal outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700"
               />
+              <i className="fa-solid fa-magnifying-glass pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 dark:text-slate-400 z-10"></i>
             </div>
             <button
               type="button"
@@ -478,7 +502,7 @@ function StaffTicketPanel() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                {filtered.map((ticket) => {
+                {slice.rows.map((ticket) => {
                   const timeInfo = formatTicketTimeInfo(ticket)
                   const isUnlock =
                     ticket.type === "INCIDENT" &&
@@ -576,14 +600,18 @@ function StaffTicketPanel() {
                                 ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
                                 : ticket.status === "IN_PROGRESS"
                                   ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300"
-                                  : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                  : ticket.status === "CANCELLED"
+                                    ? "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400"
+                                    : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
                             )}
                           >
                             {ticket.status === "SUBMITTED"
                               ? "Chờ Tiếp Nhận"
                               : ticket.status === "IN_PROGRESS"
                                 ? "Đang Xử Lý"
-                                : "Đã Hoàn Tất"}
+                                : ticket.status === "CANCELLED"
+                                  ? "Đã Hủy"
+                                  : "Đã Hoàn Tất"}
                           </span>
                         </div>
                       </td>
@@ -592,14 +620,23 @@ function StaffTicketPanel() {
                       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                           {ticket.status === "SUBMITTED" && (
-                            <button
-                              type="button"
-                              onClick={() => handleClaim(ticket)}
-                              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-white shadow-xs transition hover:bg-blue-700"
-                            >
-                              <UserCheckIcon className="size-3.5" />
-                              <span>Tiếp Nhận</span>
-                            </button>
+                            isEarlyTerm && !isReturnDue ? (
+                              <span
+                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-500 shadow-2xs dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400"
+                                title={`Lịch hẹn trả kho vào ngày ${ticket.desiredDate ? formatDate(ticket.desiredDate) : "—"}. Chỉ tiếp nhận khi đến ngày hẹn.`}
+                              >
+                                <span>Chờ đến hẹn ({ticket.desiredDate ? formatDate(ticket.desiredDate) : "—"})</span>
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleClaim(ticket)}
+                                className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-white shadow-xs transition hover:bg-blue-700"
+                              >
+                                <UserCheckIcon className="size-3.5" />
+                                <span>Tiếp Nhận</span>
+                              </button>
+                            )
                           )}
 
                           {ticket.status === "IN_PROGRESS" && isUnlock && (
@@ -614,44 +651,15 @@ function StaffTicketPanel() {
                           )}
 
                           {ticket.status === "IN_PROGRESS" && isEarlyTerm && (
-                            <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
-                              {isReturnDue ? (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenInspection(ticket)}
-                                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-extrabold whitespace-nowrap text-white shadow-xs transition hover:bg-emerald-700"
-                                    title="Nghiệm thu ô kho & thanh lý cọc"
-                                  >
-                                    <ClipboardCheckIcon className="size-3.5" />
-                                    <span>Xác nhận trả kho</span>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleResolveGeneral(ticket)}
-                                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold whitespace-nowrap text-slate-700 shadow-xs transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                                    title="Đóng ticket hoàn tất"
-                                  >
-                                    <CircleCheckIcon className="size-3.5" />
-                                    <span>Đóng ticket</span>
-                                  </button>
-                                </>
-                              ) : (
-                                <div className="flex items-center gap-2 whitespace-nowrap">
-                                  <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
-                                    Chờ đến hẹn ({ticket.desiredDate})
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenInspection(ticket)}
-                                    className="cursor-pointer text-[10px] text-blue-600 underline hover:text-blue-700 dark:text-blue-400"
-                                    title="Khách đến sớm hơn lịch hẹn"
-                                  >
-                                    Khách đến sớm? Xác nhận
-                                  </button>
-                                </div>
-                              )}
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenInspection(ticket)}
+                              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-extrabold whitespace-nowrap text-white shadow-xs transition hover:bg-emerald-700"
+                              title="Nghiệm thu ô kho & thanh lý cọc"
+                            >
+                              <ClipboardCheckIcon className="size-3.5" />
+                              <span>Xác nhận trả kho</span>
+                            </button>
                           )}
 
                           {ticket.status === "IN_PROGRESS" &&
@@ -681,6 +689,10 @@ function StaffTicketPanel() {
               </tbody>
             </table>
           </div>
+        )}
+
+        {filtered.length > 0 && (
+          <Pagination unit="yêu cầu" {...pagination} />
         )}
       </div>
 

@@ -1,21 +1,10 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import {
-  Building2Icon,
-  CheckCircle2Icon,
-  KeyRoundIcon,
-  LogOutIcon,
-  MailIcon,
-  MapPinIcon,
-  PhoneIcon,
-  ShieldCheckIcon,
-  UserCheckIcon,
-  UserShieldIcon,
-} from "lucide-react"
+import { IdCardIcon, LogOutIcon } from "lucide-react"
 import { toast } from "sonner"
 
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { useAuth } from "@/context/AuthContext"
-import ProtoModal from "./ProtoModal"
 import {
   getStaffProfile,
   type StaffProfileData,
@@ -70,8 +59,8 @@ export default function StaffProfileModal({
 
   // Dữ liệu hiển thị (Lấy từ API hồ sơ, fallback từ phiên đăng nhập thực tế của tài khoản)
   const staffName = profile?.fullName || user?.fullName || "Chưa cập nhật"
-  const staffEmail = profile?.email || user?.email || "—"
-  const staffPhone = profile?.phone || user?.phone || "—"
+  const staffEmail = profile?.email || user?.email || "Chưa cập nhật"
+  const staffPhone = profile?.phone || user?.phone || "Chưa cập nhật"
   const staffCode =
     profile?.staffCode ||
     (user?.id ? `NV-${String(user.id).padStart(4, "0")}` : "—")
@@ -94,91 +83,78 @@ export default function StaffProfileModal({
     navigate("/internal_login")
   }
 
+  const fields: { label: string; value: string; mono?: boolean }[] = [
+    { label: "HỌ VÀ TÊN", value: staffName },
+    { label: "MÃ NHÂN SỰ", value: staffCode, mono: true },
+    { label: "SỐ ĐIỆN THOẠI", value: staffPhone, mono: true },
+    { label: "EMAIL", value: staffEmail },
+    {
+      label: "CƠ SỞ PHỤ TRÁCH",
+      value:
+        facilityCode && !branchName.includes(facilityCode)
+          ? `${branchName} (${facilityCode})`
+          : branchName,
+    },
+  ]
+
   return (
-    <ProtoModal
-      open={open}
-      onClose={onClose}
-      title="Hồ sơ Nhân viên Cơ sở"
-      subtitle="Thông tin cá nhân & Đơn vị trực thuộc"
-      icon={<UserShieldIcon className="size-5" />}
-    >
-      {/* THẺ ĐẠI DIỆN NHÂN VIÊN */}
-      <div className="flex items-center space-x-4 rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 p-4 text-white shadow-inner">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-blue-300 bg-gradient-to-tr from-blue-500 to-indigo-400 text-xl font-black text-white shadow-lg">
-          {initials}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="truncate text-lg font-black text-white">
-              {staffName}
-            </h2>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="max-w-md gap-4 rounded-3xl p-5 sm:max-w-md sm:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl">
+        {/* Header tiêu đề */}
+        <div className="flex items-center gap-2.5 border-b border-slate-200 dark:border-slate-800 pb-3 pr-8">
+          <div className="flex size-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow">
+            <IdCardIcon className="size-4" aria-hidden="true" />
           </div>
+          <DialogTitle className="text-sm font-extrabold tracking-wide text-slate-900 dark:text-white">
+            HỒ SƠ NHÂN SỰ
+          </DialogTitle>
+        </div>
+        <DialogDescription className="sr-only">Thông tin hồ sơ nhân sự</DialogDescription>
 
-          {/* Đổi thành: Nhân viên cơ sở */}
-          <p className="mt-0.5 text-xs font-semibold text-blue-200">
-            {roleName}
-          </p>
-
-          {/* Mã nhân viên 1 dòng, xuống dòng là mã cơ sở */}
-          <div className="mt-2 space-y-0.5 text-xs text-slate-300">
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-400 font-medium">Mã nhân viên:</span>
-              <b className="text-white font-mono font-bold tracking-wide">{staffCode}</b>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-400 font-medium">Chi nhánh:</span>
-              <b className="text-white font-mono font-bold tracking-wide">
-                {facilityCode && !branchName.includes(facilityCode)
-                  ? `${branchName} - ${facilityCode}`
-                  : branchName}
-              </b>
-            </div>
+        {/* Banner đại diện */}
+        <div className="relative flex items-center space-x-4 rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900 to-blue-950 p-4 text-white shadow-inner sm:p-5">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-blue-300 bg-gradient-to-tr from-blue-500 to-indigo-400 text-xl font-black text-white shadow-lg">
+            {initials}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-base font-black text-white">{staffName}</h2>
+            <span className="block mt-0.5 text-[11px] font-medium text-blue-200">
+              {roleName}
+            </span>
           </div>
         </div>
-      </div>
 
-      {/* THÔNG TIN LIÊN HỆ: GỌN GÀNG, KHÔNG LỒNG HỘP, KHÔNG TIÊU ĐỀ THỪA */}
-      <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-3.5 space-y-2.5 dark:border-slate-800 dark:bg-slate-900/50">
-        {/* SỐ ĐIỆN THOẠI */}
-        <div className="flex items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-950/60 dark:text-blue-400 dark:border-blue-900/50">
-              <PhoneIcon className="size-3.5" />
+        {/* Khung danh sách thông tin kiểu các dòng thẻ ngang như Customer */}
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 space-y-2 text-slate-900 dark:border-slate-800 dark:bg-slate-800/50 dark:text-white pt-0.5">
+          {fields.map((f) => (
+            <div
+              key={f.label}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs gap-3"
+            >
+              <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider shrink-0">
+                {f.label}
+              </span>
+              <span
+                className={`font-bold text-xs text-slate-900 dark:text-white text-right break-all ${
+                  f.mono ? "font-mono" : ""
+                }`}
+              >
+                {f.value}
+              </span>
             </div>
-            <span className="font-medium">Số điện thoại liên hệ</span>
-          </div>
-          <span className="font-bold text-slate-900 dark:text-white text-sm">
-            {staffPhone}
-          </span>
+          ))}
         </div>
 
-        <div className="border-t border-slate-200/60 dark:border-slate-800/60" />
-
-        {/* EMAIL */}
-        <div className="flex items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-950/60 dark:text-blue-400 dark:border-blue-900/50">
-              <MailIcon className="size-3.5" />
-            </div>
-            <span className="font-medium">Email</span>
-          </div>
-          <span className="font-bold text-slate-900 dark:text-white text-sm truncate max-w-[210px] text-right">
-            {staffEmail}
-          </span>
-        </div>
-      </div>
-
-      {/* NÚT THAO TÁC DƯỚI CÙNG: ĐÓNG (TRÁI) & ĐĂNG XUẤT (PHẢI) */}
-      <div className="flex items-center space-x-3 pt-2">
+        {/* Nút Đăng xuất màu đỏ full-width như bên Customer */}
         <button
           type="button"
           onClick={handleLogout}
-          className="flex flex-1 cursor-pointer items-center justify-center space-x-1.5 rounded-xl border border-rose-300 bg-rose-50 py-2.5 text-xs font-extrabold text-rose-600 transition hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-400"
+          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-rose-600 py-3 text-xs font-bold text-white shadow-md transition hover:bg-rose-700 active:scale-[0.99]"
         >
-          <LogOutIcon className="size-3.5" />
-          <span>Đăng Xuất</span>
+          <LogOutIcon className="size-4" aria-hidden="true" />
+          <span>Đăng xuất</span>
         </button>
-      </div>
-    </ProtoModal>
+      </DialogContent>
+    </Dialog>
   )
 }

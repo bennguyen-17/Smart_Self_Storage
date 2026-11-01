@@ -1,4 +1,4 @@
-import { IdCardIcon, LogOutIcon, ShieldCheckIcon } from "lucide-react"
+import { IdCardIcon, LogOutIcon } from "lucide-react"
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { getFacilities } from "@/features/floorplan/api/floorPlanApi"
@@ -17,11 +17,23 @@ export interface PortalProfile {
 }
 
 /**
- * Popup hồ sơ nhân sự của cổng nội bộ, cùng kiểu "Hồ sơ khách hàng" ở cổng khách của Tâm:
- * dải tên + vai trò, lưới thông tin, nút Đăng xuất. Chỉ xem: thông tin tài khoản nội bộ do Admin quản lý.
+ * Popup hồ sơ nhân sự của cổng nội bộ (BOM, Manager, Admin),
+ * đồng bộ thiết kế giống "Hồ sơ khách hàng":
+ * icon thẻ ID, dải tên gradient, danh sách các dòng thẻ ngang bo góc, và nút Đăng xuất đỏ.
  */
-function PortalProfileModal({ profile, onClose, onLogout }: { profile: PortalProfile; onClose: () => void; onLogout: () => void }) {
-  const facilities = useAsyncData(profile.facilityId !== null ? "profile-facilities" : null, getFacilities)
+function PortalProfileModal({
+  profile,
+  onClose,
+  onLogout,
+}: {
+  profile: PortalProfile
+  onClose: () => void
+  onLogout: () => void
+}) {
+  const facilities = useAsyncData(
+    profile.facilityId !== null ? "profile-facilities" : null,
+    getFacilities
+  )
   const facility = facilities.data?.find((f) => f.facilityId === profile.facilityId)
   const facilityText =
     profile.facilityId === null
@@ -32,59 +44,74 @@ function PortalProfileModal({ profile, onClose, onLogout }: { profile: PortalPro
           ? "Đang tải…"
           : `Cơ sở #${profile.facilityId}`
 
-  const fields: { label: string; value: string; mono?: boolean; wide?: boolean }[] = [
-    { label: "Họ và tên", value: profile.fullName },
-    { label: "Mã nhân sự", value: profile.accountId !== null ? `#${profile.accountId}` : "—", mono: true },
-    { label: "Số điện thoại", value: profile.phone || "Chưa cập nhật" },
-    { label: "Cơ sở phụ trách", value: facilityText, wide: true },
-    { label: "Email", value: profile.email || "Chưa cập nhật", wide: true },
+  const fields: { label: string; value: string; mono?: boolean }[] = [
+    { label: "HỌ VÀ TÊN", value: profile.fullName },
+    {
+      label: "MÃ NHÂN SỰ",
+      value: profile.accountId !== null ? `#${profile.accountId}` : "—",
+      mono: true,
+    },
+    { label: "SỐ ĐIỆN THOẠI", value: profile.phone || "Chưa cập nhật", mono: true },
+    { label: "EMAIL", value: profile.email || "Chưa cập nhật" },
+    { label: "CƠ SỞ PHỤ TRÁCH", value: facilityText },
   ]
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md gap-4 rounded-3xl p-5 sm:max-w-md sm:p-6">
-        <div className="flex items-center gap-2.5 border-b pb-3 pr-8">
+      <DialogContent className="max-w-md gap-4 rounded-3xl p-5 sm:max-w-md sm:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl">
+        {/* Header tiêu đề */}
+        <div className="flex items-center gap-2.5 border-b border-slate-200 dark:border-slate-800 pb-3 pr-8">
           <div className="flex size-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow">
             <IdCardIcon className="size-4" aria-hidden="true" />
           </div>
-          <DialogTitle className="text-sm font-extrabold tracking-wide">HỒ SƠ NHÂN SỰ</DialogTitle>
+          <DialogTitle className="text-sm font-extrabold tracking-wide text-slate-900 dark:text-white">
+            HỒ SƠ NHÂN SỰ
+          </DialogTitle>
         </div>
         <DialogDescription className="sr-only">Thông tin tài khoản nội bộ đang đăng nhập</DialogDescription>
 
-        <div className="flex items-center gap-4 rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900 to-blue-950 p-4 text-white shadow-inner sm:p-5">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-blue-300 bg-blue-600 text-xl font-black shadow-lg">
+        {/* Banner đại diện */}
+        <div className="relative flex items-center space-x-4 rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900 to-blue-950 p-4 text-white shadow-inner sm:p-5">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-blue-300 bg-gradient-to-tr from-blue-500 to-indigo-400 text-xl font-black text-white shadow-lg">
             {initials(profile.fullName)}
           </div>
-          <div className="min-w-0">
-            <p className="truncate text-base font-black">{profile.fullName}</p>
-            <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-black text-slate-950">
-              <ShieldCheckIcon className="size-3" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-base font-black text-white">{profile.fullName}</h2>
+            <span className="block mt-0.5 text-[11px] font-medium text-blue-200">
               {profile.roleLabel}
             </span>
           </div>
         </div>
 
-        <div className="space-y-3 rounded-2xl border bg-slate-50 p-3.5 text-xs dark:bg-slate-800/50">
-          <p className="border-b pb-1 text-[11px] font-bold text-slate-600 dark:text-slate-400">Thông tin tài khoản</p>
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-3.5">
-            {fields.map((f) => (
-              <div key={f.label} className={f.wide ? "col-span-2" : undefined}>
-                <dt className="mb-0.5 text-slate-500 dark:text-slate-400">{f.label}</dt>
-                <dd className={`font-semibold text-slate-900 dark:text-white ${f.wide ? "break-words" : "truncate"} ${f.mono ? "font-mono" : ""}`}>{f.value}</dd>
-              </div>
-            ))}
-          </dl>
-          <p className="text-[11px] text-slate-600 dark:text-slate-400">
-            Muốn đổi thông tin hoặc vai trò, vui lòng liên hệ quản trị hệ thống.
-          </p>
+        {/* Khung danh sách thông tin kiểu các dòng thẻ ngang như Customer */}
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 space-y-2 text-slate-900 dark:border-slate-800 dark:bg-slate-800/50 dark:text-white pt-0.5">
+          {fields.map((f) => (
+            <div
+              key={f.label}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs gap-3"
+            >
+              <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider shrink-0">
+                {f.label}
+              </span>
+              <span
+                className={`font-bold text-xs text-slate-900 dark:text-white text-right break-all ${
+                  f.mono ? "font-mono" : ""
+                }`}
+              >
+                {f.value}
+              </span>
+            </div>
+          ))}
         </div>
 
+        {/* Nút Đăng xuất màu đỏ full-width như bên Customer */}
         <button
           type="button"
           onClick={onLogout}
-          className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-rose-600 py-2.5 text-xs font-extrabold text-white shadow-sm transition hover:bg-rose-500 focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:outline-none"
+          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-rose-600 py-3 text-xs font-bold text-white shadow-md transition hover:bg-rose-700 active:scale-[0.99]"
         >
-          <LogOutIcon className="size-3.5" aria-hidden="true" /> Đăng xuất
+          <LogOutIcon className="size-4" aria-hidden="true" />
+          <span>Đăng xuất</span>
         </button>
       </DialogContent>
     </Dialog>

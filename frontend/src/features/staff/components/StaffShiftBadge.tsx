@@ -82,9 +82,8 @@ export default function StaffShiftBadge() {
         >
           <span className="size-1.5 rounded-full " />
           <span>
-            Ca Trực Hoạt Động
             {currentShift
-              ? ` · ${currentShift.shiftName} (${currentShift.startTime} - ${currentShift.endTime})`
+              ? `${currentShift.shiftName} (${currentShift.startTime} - ${currentShift.endTime})`
               : ""}
           </span>
         </div>

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
@@ -28,6 +29,7 @@ public class SupportTicketService {
     private final FacilityRepository facilityRepository;
     private final EmailService emailService;
     private final StaffShiftService staffShiftService;
+    private final NoShowCronService noShowCronService;
 
     public SupportTicketService(SupportTicketRepository supportTicketRepository,
                                 ContractRepository contractRepository,
@@ -39,7 +41,8 @@ public class SupportTicketService {
                                 FloorRepository floorRepository,
                                 FacilityRepository facilityRepository,
                                 EmailService emailService,
-                                StaffShiftService staffShiftService) {
+                                StaffShiftService staffShiftService,
+                                NoShowCronService noShowCronService) {
         this.supportTicketRepository = supportTicketRepository;
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
@@ -51,6 +54,7 @@ public class SupportTicketService {
         this.facilityRepository = facilityRepository;
         this.emailService = emailService;
         this.staffShiftService = staffShiftService;
+        this.noShowCronService = noShowCronService;
     }
 
     private Integer getFacilityIdByUnit(String unitCode) {
@@ -197,6 +201,13 @@ public class SupportTicketService {
         ticket.setUnitCode(unitCode);
         ticket.setContractId(activeContract.getContractId());
         if ("EARLY_TERMINATION".equalsIgnoreCase(type)) {
+            List<SupportTicket> existingTickets = supportTicketRepository.findByContractId(activeContract.getContractId());
+            for (SupportTicket existing : existingTickets) {
+                if ("EARLY_TERMINATION".equalsIgnoreCase(existing.getType()) &&
+                    ("SUBMITTED".equalsIgnoreCase(existing.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existing.getStatus()) || "ESCALATED".equalsIgnoreCase(existing.getStatus()))) {
+                    throw new IllegalArgumentException("Hợp đồng ô kho " + unitCode + " đang có yêu cầu trả kho sớm đang chờ xử lý (#" + existing.getTicketCode() + "). Không thể gửi thêm yêu cầu mới!");
+                }
+            }
             LocalDate minDate = LocalDate.now().plusDays(1);
             if (desiredDate != null && desiredDate.isBefore(minDate)) {
                 throw new IllegalArgumentException("Ngày hẹn trả kho sớm phải báo trước ít nhất 1 ngày (sớm nhất là từ ngày mai " + minDate + ").");
@@ -375,6 +386,11 @@ public class SupportTicketService {
 
     // --- US-21: 5. Khách xem danh sách ticket của mình ---
     public List<SupportTicket> getCustomerTickets(Integer accountOrCustomerId) {
+        if (noShowCronService != null) {
+            try {
+                noShowCronService.processExpiredEarlyTerminationTickets();
+            } catch (Exception ignored) {}
+        }
         if (accountOrCustomerId == null) return Collections.emptyList();
 
         Set<Integer> targetCustomerIds = new LinkedHashSet<>();
@@ -447,6 +463,21 @@ public class SupportTicketService {
                 });
             } catch (Exception ignored) {}
         }
+        if (t.getContractId() != null && contractRepository != null) {
+            try {
+                contractRepository.findById(t.getContractId()).ifPresent(c -> {
+                    if (c.getReservationId() != null && reservationRepository != null) {
+                        reservationRepository.findById(c.getReservationId()).ifPresent(r -> {
+                            String code = r.getReservationCode();
+                            t.setContractCode(code != null && !code.isBlank() ? code : ("CTR-" + c.getContractId()));
+                        });
+                    }
+                    if (t.getContractCode() == null) {
+                        t.setContractCode("CTR-" + c.getContractId());
+                    }
+                });
+            } catch (Exception ignored) {}
+        }
     }
 
     public void checkAndEscalateTickets(List<SupportTicket> tickets) {
@@ -464,6 +495,11 @@ public class SupportTicketService {
     // --- US-22: 1. Staff xem hàng đợi Ticket của cơ sở kèm đếm lùi SLA 15 phút ---
     @Transactional
     public List<SupportTicket> getStaffTickets(Integer staffAccountId, String status, String type) {
+        if (noShowCronService != null) {
+            try {
+                noShowCronService.processExpiredEarlyTerminationTickets();
+            } catch (Exception ignored) {}
+        }
         Integer facilityId = staffShiftService.requireOnDutyFacility(staffAccountId);
         List<SupportTicket> tickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
 
@@ -492,6 +528,14 @@ public class SupportTicketService {
 
         if (!"SUBMITTED".equalsIgnoreCase(ticket.getStatus()) && !"ESCALATED".equalsIgnoreCase(ticket.getStatus())) {
             throw new IllegalArgumentException("Ticket này đã được tiếp nhận hoặc đã xử lý xong!");
+        }
+
+        if ("EARLY_TERMINATION".equalsIgnoreCase(ticket.getType()) && ticket.getDesiredDate() != null) {
+            LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+            if (ticket.getDesiredDate().isAfter(today)) {
+                String dStr = ticket.getDesiredDate().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                throw new IllegalArgumentException("Chưa đến ngày hẹn trả kho (" + dStr + "). Chỉ tiếp nhận vào đúng ngày hẹn!");
+            }
         }
 
         ticket.setStatus("IN_PROGRESS");
@@ -616,6 +660,11 @@ public class SupportTicketService {
     // --- CÁCH 2: Quản lý chi nhánh xem danh sách ticket cơ sở (Ưu tiên ESCALATED quá hạn 15p) ---
     @Transactional
     public List<SupportTicket> getManagerTickets(Integer facilityId, String status, String type) {
+        if (noShowCronService != null) {
+            try {
+                noShowCronService.processExpiredEarlyTerminationTickets();
+            } catch (Exception ignored) {}
+        }
         List<SupportTicket> tickets;
         if (facilityId == null || facilityId <= 0) {
             tickets = supportTicketRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
@@ -662,6 +711,14 @@ public class SupportTicketService {
 
         if ("RESOLVED".equalsIgnoreCase(ticket.getStatus())) {
             throw new IllegalArgumentException("Ticket này đã được giải quyết hoàn tất trước đó!");
+        }
+
+        if ("EARLY_TERMINATION".equalsIgnoreCase(ticket.getType()) && ticket.getDesiredDate() != null) {
+            LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+            if (ticket.getDesiredDate().isAfter(today)) {
+                String dStr = ticket.getDesiredDate().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                throw new IllegalArgumentException("Chưa đến ngày hẹn trả kho (" + dStr + "). Chỉ tiếp nhận vào đúng ngày hẹn!");
+            }
         }
 
         ticket.setStatus("IN_PROGRESS");

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { SearchIcon, UsersIcon } from "lucide-react"
+import { UsersIcon } from "lucide-react"
 import { cn } from "cn"
 
 import { useAsyncData } from "@/hooks/useAsyncData"
@@ -27,6 +27,8 @@ import StaffCustomerDetailModal, {
 import StaffInspectionModal, {
   type InspectionTarget,
 } from "./StaffInspectionModal"
+import { usePagedRows } from "@/components/internal/usePagedRows"
+import { Pagination } from "@/components/internal/components/PanelKit"
 
 const TAB_COLORS: Record<CheckinTabKey, string> = {
   all: "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300",
@@ -113,11 +115,14 @@ function CheckinPanel() {
   }, [units])
 
   const all = useMemo(() => {
-    const getStatusPriority = (status?: string): number => {
-      if (status === "PENDING_CHECKIN") return 0
-      if (status === "ACTIVE") return 1
-      if (status === "OVERDUE") return 2
-      return 3
+    const getStatusPriority = (item: StaffReservationItem): number => {
+      if (item.contractStatus === "PENDING_CHECKIN") return 0
+      if (item.contractStatus === "ACTIVE") {
+        const isReturn = Boolean(item.returnRequested || item.cancelReason === "EARLY_TERMINATION")
+        return isReturn ? 2 : 1
+      }
+      if (item.contractStatus === "OVERDUE") return 3
+      return 4
     }
 
     return (data ?? [])
@@ -127,10 +132,10 @@ function CheckinPanel() {
         )
       )
       .sort((a, b) => {
-        const pA = getStatusPriority(a.contractStatus)
-        const pB = getStatusPriority(b.contractStatus)
+        const pA = getStatusPriority(a)
+        const pB = getStatusPriority(b)
         if (pA !== pB) return pA - pB
-        return (a.checkInDate ?? "").localeCompare(b.checkInDate ?? "")
+        return (a.reservationCode ?? "").localeCompare(b.reservationCode ?? "")
       })
   }, [data])
   const keyword = query.trim().toLowerCase()
@@ -140,6 +145,8 @@ function CheckinPanel() {
         !tab.contractStatus || item.contractStatus === tab.contractStatus
     )
     .filter((item) => matches(item, keyword))
+
+  const { slice, pagination } = usePagedRows(rows, `${tab.contractStatus ?? "all"}-${keyword}`)
 
   function countOf(status?: string): number {
     return status
@@ -188,7 +195,6 @@ function CheckinPanel() {
       <div className="card-box flex flex-col justify-between gap-3 rounded-2xl border p-4 shadow-sm md:flex-row md:items-center">
         <div className="flex max-w-xl flex-1 space-x-2">
           <div className="relative flex-1">
-            <SearchIcon className="pointer-events-none absolute top-2.5 left-3.5 size-4 text-muted" />
             <input
               type="text"
               value={query}
@@ -199,6 +205,7 @@ function CheckinPanel() {
               placeholder="Tìm theo Mã HĐ, Tên khách hàng, SĐT hoặc Mã kho..."
               className="inner-box w-full rounded-xl border border-slate-200/80 px-3.5 py-2 pl-9 text-xs font-normal outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700"
             />
+            <i className="fa-solid fa-magnifying-glass pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 dark:text-slate-400 z-10"></i>
           </div>
           <button
             type="button"
@@ -243,7 +250,7 @@ function CheckinPanel() {
 
       {/* Bảng danh sách hợp đồng - Thẻ card kính mờ riêng biệt */}
       <CheckinContractTable
-        rows={rows}
+        rows={slice.rows}
         isLoading={isLoading}
         error={error}
         onRetry={refresh}
@@ -256,13 +263,15 @@ function CheckinPanel() {
             contractCode: item.reservationCode,
             customerName: item.customerName ?? "—",
             unitCode: item.unitCode ?? "—",
-            depositAmount: item.depAmount,
+            depositAmount: item.depositAmount ?? item.depPaidAmount ?? (item.depAmount != null && item.depAmount <= 3_000_000 ? item.depAmount : 2_000_000),
           })
         }
         onCollectPenalty={setPenaltyContract}
         onRenew={setRenewContract}
         unitMeta={unitMeta}
       />
+
+      <Pagination unit="hợp đồng" {...pagination} />
 
       <StaffCustomerDetailModal
         contract={detailContract}

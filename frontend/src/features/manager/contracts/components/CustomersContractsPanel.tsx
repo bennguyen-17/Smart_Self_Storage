@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react"
+import { CheckCircle2Icon, GavelIcon } from "lucide-react"
+import { toast } from "sonner"
 
+import { Button } from "@/components/ui/button"
 import {
   FilterBar,
   LoadError,
@@ -19,21 +22,23 @@ import {
   CONTRACT_STATUS_LABEL,
   filterContracts,
   isExpiringSoon,
+  overdueDays,
   RENEWAL_WINDOW_DAYS,
   type ContractFilter,
-  type PaymentFilter,
 } from "../contractRules"
-import type { ContractStatus } from "../types"
-import { ContractStatusBadge, DaysLeft, PaymentState } from "./ContractBadges"
+import type { ContractStatus, FacilityContract } from "../types"
+import { ContractStatusBadge, DaysLeft } from "./ContractBadges"
+import ForfeitProcessedSheet from "./ForfeitProcessedSheet"
 
 const EMPTY_FILTER: ContractFilter = { query: "", status: "ALL", payment: "ALL", expiringSoon: false }
 
-/** Manager › Khách & hợp đồng: theo dõi khách, hợp đồng, thời hạn thuê và công nợ của cơ sở (chỉ xem) */
+/** Manager › Khách & hợp đồng: theo dõi khách, hợp đồng, thời hạn thuê, công nợ và thanh lý tài sản quá hạn */
 function CustomersContractsPanel() {
   const ctx = useMemo(() => getManagerContext(), [])
   const today = todayInVietnam()
   const [reloadCount, setReloadCount] = useState(0)
   const [filter, setFilter] = useState<ContractFilter>(EMPTY_FILTER)
+  const [forfeiting, setForfeiting] = useState<FacilityContract | null>(null)
   const { data, error, isLoading } = useAsyncData(`contracts#${reloadCount}`, () => listFacilityContracts(ctx))
   const all = data ?? []
   const rows = filterContracts(all, filter, today)
@@ -56,16 +61,6 @@ function CustomersContractsPanel() {
           options={[
             { value: "ALL", label: "Tất cả" },
             ...(Object.keys(CONTRACT_STATUS_LABEL) as ContractStatus[]).map((s) => ({ value: s, label: CONTRACT_STATUS_LABEL[s] })),
-          ]}
-        />
-        <SelectFilter
-          label="Thanh toán"
-          value={filter.payment}
-          onChange={(v) => update({ payment: v as PaymentFilter })}
-          options={[
-            { value: "ALL", label: "Tất cả" },
-            { value: "DEBT", label: "Còn nợ" },
-            { value: "CLEAR", label: "Đã thanh toán đủ" },
           ]}
         />
         <SelectFilter
@@ -102,15 +97,15 @@ function CustomersContractsPanel() {
       <TableCard
         caption="Khách hàng và hợp đồng"
         columns={[
-          { header: "Khách hàng" },
-          { header: "Hợp đồng" },
-          { header: "Ô kho" },
-          { header: "Thời hạn" },
-          { header: "Còn lại" },
-          { header: "Trạng thái" },
-          { header: "Thanh toán" },
+          { header: "Khách hàng", align: "center" },
+          { header: "Hợp đồng", align: "center" },
+          { header: "Ô kho", align: "center" },
+          { header: "Thời hạn", align: "center" },
+          { header: "Tình trạng", align: "center" },
+          { header: "Trạng thái", align: "center" },
+          { header: "Thao tác", align: "center" },
         ]}
-        minWidth={980}
+        minWidth={960}
         isLoading={isLoading}
         isEmpty={rows.length === 0}
         emptyText={
@@ -121,31 +116,73 @@ function CustomersContractsPanel() {
               : "Không có hợp đồng phù hợp bộ lọc"
         }
       >
-        {slice.rows.map((c) => (
-          <tr key={c.contractId} className="border-b last:border-0">
-            <td className="px-4 py-3">
-              <p className="text-title font-bold">{c.customerName}</p>
-              <p className="text-muted">{c.customerPhone}</p>
-            </td>
-            <td className="text-title px-4 py-3 font-mono font-semibold whitespace-nowrap">{c.contractCode}</td>
-            <td className="text-title px-4 py-3 font-mono whitespace-nowrap">{c.unitCode}</td>
-            <td className="text-title px-4 py-3 whitespace-nowrap">
-              {formatDate(c.startDate)} → {formatDate(c.endDate)}
-            </td>
-            <td className="px-4 py-3 whitespace-nowrap">
-              <DaysLeft contract={c} today={today} />
-            </td>
-            <td className="px-4 py-3">
-              <ContractStatusBadge status={c.status} />
-            </td>
-            <td className="px-4 py-3">
-              <PaymentState contract={c} />
-            </td>
-          </tr>
-        ))}
+        {slice.rows.map((c) => {
+          const isEligibleForfeit =
+            (c.status === "FORFEITED" && !c.forfeitProcessed) ||
+            (c.status === "OVERDUE" && overdueDays(c, today) >= 30 && !c.forfeitProcessed)
+          const isForfeitDone = Boolean(c.forfeitProcessed)
+
+          return (
+            <tr key={c.contractId} className="border-b last:border-0">
+              <td className="px-4 py-3 text-center">
+                <p className="text-title font-bold">{c.customerName}</p>
+                <p className="text-muted">{c.customerPhone}</p>
+              </td>
+              <td className="text-title px-4 py-3 font-mono font-semibold whitespace-nowrap text-center">{c.contractCode}</td>
+              <td className="text-title px-4 py-3 font-mono whitespace-nowrap text-center">{c.unitCode}</td>
+              <td className="text-title px-4 py-3 whitespace-nowrap text-center">
+                {formatDate(c.startDate)} → {formatDate(c.endDate)}
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap text-center">
+                <DaysLeft contract={c} today={today} />
+              </td>
+              <td className="px-4 py-3 text-center">
+                <div className="flex justify-center">
+                  <ContractStatusBadge status={c.status} />
+                </div>
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap text-center">
+                <div className="flex justify-center">
+                  {isEligibleForfeit ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 gap-1.5 rounded-xl border-rose-300 bg-rose-50 px-2.5 text-xs font-bold text-rose-700 hover:bg-rose-100 hover:text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-900/60 cursor-pointer"
+                      onClick={() => setForfeiting(c)}
+                    >
+                      <GavelIcon className="size-3.5" />
+                      Thanh lý tài sản
+                    </Button>
+                  ) : isForfeitDone ? (
+                    <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                      <CheckCircle2Icon className="size-4 shrink-0" />
+                      Đã thanh lý
+                    </span>
+                  ) : (
+                    <span className="text-muted text-xs">—</span>
+                  )}
+                </div>
+              </td>
+            </tr>
+          )
+        })}
       </TableCard>
 
       {!isLoading && <Pagination {...pagination} unit="hợp đồng" />}
+
+      {forfeiting && (
+        <ForfeitProcessedSheet
+          key={forfeiting.contractId}
+          contract={forfeiting}
+          ctx={ctx}
+          onClose={() => setForfeiting(null)}
+          onDone={(message) => {
+            toast.success(message)
+            setForfeiting(null)
+            setReloadCount((n) => n + 1)
+          }}
+        />
+      )}
     </section>
   )
 }

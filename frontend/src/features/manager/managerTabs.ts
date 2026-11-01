@@ -6,7 +6,6 @@ import {
   ActivityIcon,
   BanknoteIcon,
   ChartColumnIcon,
-  ClipboardListIcon,
   DoorOpenIcon,
   HeadphonesIcon,
   UserCheckIcon,
@@ -15,7 +14,6 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-import CheckoutDebtPanel from "@/features/manager/contracts/components/CheckoutDebtPanel"
 import CustomersContractsPanel from "@/features/manager/contracts/components/CustomersContractsPanel"
 import FacilityReportPanel from "@/features/manager/reports/components/FacilityReportPanel"
 import GateLogPanel from "@/features/manager/gate-logs/components/GateLogPanel"
@@ -29,7 +27,6 @@ export type ManagerTabKey =
   | "units"
   | "reports"
   | "customers"
-  | "workflow"
   | "refunds"
   | "staff"
   | "activity"
@@ -55,7 +52,7 @@ export interface ManagerTab {
 export const MANAGER_TABS: readonly ManagerTab[] = [
   {
     key: "units",
-    label: "Ô kho",
+    label: "Quản lý ô kho",
     title: "Quản lý ô kho",
     hint: "Loại kho & bảo trì",
     icon: WarehouseIcon,
@@ -68,7 +65,7 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     key: "reports",
     label: "Báo cáo",
     title: "Báo cáo cơ sở & KPI",
-    hint: "Lấp đầy, doanh thu, SLA",
+    hint: "Tỉ lệ lấp đầy, doanh thu",
     icon: ChartColumnIcon,
     stories: "US-33",
     owner: "Vỹ",
@@ -77,9 +74,9 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
   },
   {
     key: "customers",
-    label: "Khách & hợp đồng",
+    label: "Quản lí hợp đồng",
     title: "Khách hàng & hợp đồng",
-    hint: "Thời hạn & công nợ",
+    hint: "Thời hạn, tình trạng",
     icon: UsersRoundIcon,
     stories: "US-24, US-25",
     owner: "Vỹ",
@@ -87,21 +84,10 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     component: CustomersContractsPanel,
   },
   {
-    key: "workflow",
-    label: "Trả kho & công nợ",
-    title: "Trả kho & công nợ",
-    hint: "Quá hạn, trả kho, miễn giảm",
-    icon: ClipboardListIcon,
-    stories: "US-24, US-25, US-26, US-31",
-    owner: "Vỹ",
-    description: "Nghiệm thu trả kho, quyết toán cọc, truy thu và duyệt miễn/giảm phí.",
-    component: CheckoutDebtPanel,
-  },
-  {
     key: "refunds",
     label: "Hoàn tiền",
     title: "Hoàn tiền cho khách hàng",
-    hint: "Chuyển khoản & xác nhận",
+    hint: "Hoàn cọc hoặc tiền thừa",
     icon: BanknoteIcon,
     stories: "US-26",
     owner: "Vỹ",
@@ -112,7 +98,7 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     key: "staff",
     label: "Phân công",
     title: "Phân công nhân viên",
-    hint: "Ai trực ca nào",
+    hint: "Phân công trực ca ",
     icon: UserCheckIcon,
     stories: "US-32",
     owner: "Vỹ",
@@ -134,7 +120,7 @@ export const MANAGER_TABS: readonly ManagerTab[] = [
     key: "gate-logs",
     label: "Nhật ký cổng",
     title: "Nhật ký kiểm soát ra vào cổng",
-    hint: "Khách & nhân viên qua cổng",
+    hint: "Nhật ký kiểm soát cổng",
     icon: DoorOpenIcon,
     stories: "US-18",
     owner: "Vỹ",

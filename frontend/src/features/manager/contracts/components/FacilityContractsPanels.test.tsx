@@ -15,15 +15,15 @@ beforeEach(() => {
 const bodyRows = () => within(screen.getByRole("table")).getAllByRole("row").slice(1)
 
 describe("CustomersContractsPanel: khách & hợp đồng của cơ sở", () => {
-  test("hiện thời hạn còn lại và công nợ; lọc 'Còn nợ' chỉ còn hợp đồng nợ", async () => {
-    const user = userEvent.setup()
+  test("hiện thời hạn còn lại và trạng thái hợp đồng", async () => {
+
     render(<CustomersContractsPanel />)
     const row = (await screen.findByText("Đỗ Thị Thu")).closest("tr") as HTMLElement
     expect(within(row).getByText("Quá 12 ngày")).toBeInTheDocument()
-    expect(within(row).getByText(/còn nợ 600\.000/i)).toBeInTheDocument()
-    await user.selectOptions(screen.getByRole("combobox", { name: /thanh toán/i }), "DEBT")
-    for (const r of bodyRows()) expect(within(r).getByText(/còn nợ/i)).toBeInTheDocument()
-    expect(bodyRows()).toHaveLength(3)
+    expect(within(row).getByText("Quá hạn")).toBeInTheDocument()
+
+
+    expect(bodyRows()).toHaveLength(7)
   })
 
   test("không có nút sửa/xóa: trang chỉ để theo dõi", async () => {

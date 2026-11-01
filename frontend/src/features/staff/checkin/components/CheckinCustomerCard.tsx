@@ -92,11 +92,6 @@ export default function CheckinCustomerCard({
         <div className="flex items-center justify-between py-2.5">
           <div className="flex items-center gap-1.5">
             <span className="text-slate-500 dark:text-slate-400 font-medium">Số điện thoại:</span>
-            {isEditingCustomer && (
-              <span className="text-[11px] text-slate-400 dark:text-slate-500 italic">
-                (Cố định theo tài khoản)
-              </span>
-            )}
           </div>
           <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
             {contract.customerPhone ?? "—"}
@@ -106,11 +101,6 @@ export default function CheckinCustomerCard({
         <div className="flex items-center justify-between py-2.5">
           <div className="flex items-center gap-1.5">
             <span className="text-slate-500 dark:text-slate-400 font-medium">Email liên hệ:</span>
-            {isEditingCustomer && (
-              <span className="text-[11px] text-slate-400 dark:text-slate-500 italic">
-                (Cố định theo tài khoản)
-              </span>
-            )}
           </div>
           <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[260px]">
             {contract.customerEmail ?? "—"}

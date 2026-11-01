@@ -5,7 +5,6 @@ import {
   CircleCheckIcon,
   KeyRoundIcon,
   RefreshCwIcon,
-  SearchIcon,
   UserCheckIcon,
   WrenchIcon,
 } from "lucide-react"
@@ -17,6 +16,7 @@ import { getErrorMessage } from "@/lib/api"
 import type { ManagerTicketItem, ManagerTicketStatus } from "../types"
 import { listManagerTickets, managerAcceptTicket } from "../api/ticketApi"
 import ResolveTicketModal from "./ResolveTicketModal"
+import { formatDate } from "@/lib/format"
 
 const STATUS_FILTERS: { key: ManagerTicketStatus; label: string }[] = [
   { key: "ALL", label: "Tất cả" },
@@ -163,83 +163,11 @@ export default function ManagerTicketPanel() {
   }
 
   return (
-    <section aria-label="Xử lý sự cố & Escalation" className="space-y-5">
-      {/* KPI Summary Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {/* Card 1: Tổng ticket */}
-        <div
-          onClick={() => setStatusFilter("ALL")}
-          className={cn(
-            "card-box cursor-pointer rounded-2xl border p-4 shadow-sm transition hover:scale-[1.02]",
-            statusFilter === "ALL"
-              ? "border-blue-500 bg-blue-500/10 ring-2 ring-blue-500/30"
-              : "border-slate-200 dark:border-slate-800"
-          )}
-        >
-          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Tất cả ticket</span>
-          <div className="mt-2 text-2xl font-black text-slate-800 dark:text-slate-100">
-            {counts.total}
-          </div>
-          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Yêu cầu tại cơ sở</p>
-        </div>
-
-        {/* Card 2: Chờ tiếp nhận */}
-        <div
-          onClick={() => setStatusFilter("SUBMITTED")}
-          className={cn(
-            "card-box cursor-pointer rounded-2xl border p-4 shadow-sm transition hover:scale-[1.02]",
-            statusFilter === "SUBMITTED"
-              ? "border-amber-500 bg-amber-500/10 ring-2 ring-amber-500/30"
-              : "border-slate-200 dark:border-slate-800"
-          )}
-        >
-          <span className="text-xs font-bold text-amber-700 dark:text-amber-400">Chờ tiếp nhận</span>
-          <div className="mt-2 text-2xl font-black text-amber-600 dark:text-amber-300">
-            {counts.submitted}
-          </div>
-          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Chưa có người nhận</p>
-        </div>
-
-        {/* Card 3: Đang xử lý */}
-        <div
-          onClick={() => setStatusFilter("IN_PROGRESS")}
-          className={cn(
-            "card-box cursor-pointer rounded-2xl border p-4 shadow-sm transition hover:scale-[1.02]",
-            statusFilter === "IN_PROGRESS"
-              ? "border-blue-500 bg-blue-500/10 ring-2 ring-blue-500/30"
-              : "border-slate-200 dark:border-slate-800"
-          )}
-        >
-          <span className="text-xs font-bold text-blue-700 dark:text-blue-400">Đang xử lý</span>
-          <div className="mt-2 text-2xl font-black text-blue-600 dark:text-blue-300">
-            {counts.inProgress}
-          </div>
-          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Đang được xử lý</p>
-        </div>
-
-        {/* Card 4: Đã hoàn tất */}
-        <div
-          onClick={() => setStatusFilter("RESOLVED")}
-          className={cn(
-            "card-box cursor-pointer rounded-2xl border p-4 shadow-sm transition hover:scale-[1.02]",
-            statusFilter === "RESOLVED"
-              ? "border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30"
-              : "border-slate-200 dark:border-slate-800"
-          )}
-        >
-          <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">Đã giải quyết</span>
-          <div className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-300">
-            {counts.resolved}
-          </div>
-          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Hoàn tất đóng ticket</p>
-        </div>
-      </div>
-
+    <section aria-label="Xử lý sự cố & Escalation" className="space-y-4">
       {/* Filter and Search Bar */}
       <div className="card-box flex flex-col justify-between gap-3 rounded-2xl border p-4 shadow-sm md:flex-row md:items-center">
         <div className="flex max-w-xl flex-1 space-x-2">
           <div className="relative flex-1">
-            <SearchIcon className="pointer-events-none absolute top-2.5 left-3.5 size-4 text-muted" />
             <input
               type="text"
               value={searchQuery}
@@ -247,7 +175,17 @@ export default function ManagerTicketPanel() {
               placeholder="Tìm theo Mã Ticket, Tên khách hàng, SĐT hoặc Vị trí ô kho..."
               className="inner-box w-full rounded-xl border border-slate-200/80 px-3.5 py-2 pl-9 text-xs font-normal outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700"
             />
+            <i className="fa-solid fa-magnifying-glass pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 dark:text-slate-400 z-10"></i>
           </div>
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="shrink-0 cursor-pointer rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              Xóa tìm
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -274,8 +212,8 @@ export default function ManagerTicketPanel() {
         </div>
       </div>
 
-      {/* Filter Chips */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Dàn Filter Chips lọc theo trạng thái ticket - nằm ngay phía dưới thanh tìm kiếm */}
+      <div role="group" aria-label="Lọc theo trạng thái ticket" className="flex flex-wrap items-center gap-2">
         {STATUS_FILTERS.map((f) => {
           const active = f.key === statusFilter
           const count =
@@ -290,9 +228,10 @@ export default function ManagerTicketPanel() {
             <button
               key={f.key}
               type="button"
+              aria-pressed={active}
               onClick={() => setStatusFilter(f.key)}
               className={cn(
-                "cursor-pointer rounded-full border px-3 py-1 text-xs font-semibold whitespace-nowrap shadow-2xs transition",
+                "cursor-pointer rounded-full border px-3 py-1 text-xs font-semibold whitespace-nowrap shadow-2xs transition backdrop-blur-sm",
                 active
                   ? "border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-500/20"
                   : "border-slate-200/90 bg-white/80 text-slate-700 hover:bg-white hover:text-slate-900 dark:border-slate-700/80 dark:bg-slate-800/70 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -328,6 +267,27 @@ export default function ManagerTicketPanel() {
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
               {filteredTickets.map((ticket) => {
+                const isEarlyTerm = ticket.type === "EARLY_TERMINATION"
+                const isReturnDue =
+                  !ticket.desiredDate ||
+                  (() => {
+                    try {
+                      const today = new Date()
+                      today.setHours(0, 0, 0, 0)
+                      const parts = ticket.desiredDate.split(/[-T ]/)
+                      if (parts.length >= 3) {
+                        const year = parseInt(parts[0], 10)
+                        const month = parseInt(parts[1], 10) - 1
+                        const day = parseInt(parts[2], 10)
+                        const d = new Date(year, month, day)
+                        return today.getTime() >= d.getTime()
+                      }
+                      return true
+                    } catch {
+                      return true
+                    }
+                  })()
+
                 return (
                   <tr
                     key={ticket.id}
@@ -387,14 +347,18 @@ export default function ManagerTicketPanel() {
                             ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
                             : ticket.status === "IN_PROGRESS"
                               ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300"
-                              : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                              : ticket.status === "CANCELLED"
+                                ? "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400"
+                                : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
                         )}
                       >
                         {ticket.status === "SUBMITTED"
                           ? "Chờ tiếp nhận"
                           : ticket.status === "IN_PROGRESS"
                             ? "Đang xử lý"
-                            : "Đã giải quyết"}
+                            : ticket.status === "CANCELLED"
+                              ? "Đã hủy"
+                              : "Đã giải quyết"}
                       </span>
                     </td>
 
@@ -419,14 +383,23 @@ export default function ManagerTicketPanel() {
                       <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                         {/* Khi ticket là SUBMITTED: Quản lý bấm Tiếp nhận */}
                         {(ticket.status === "SUBMITTED" || ticket.status === "ESCALATED") && (
-                          <button
-                            type="button"
-                            onClick={() => handleAccept(ticket)}
-                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-white shadow-xs transition hover:bg-blue-700"
-                          >
-                            <UserCheckIcon className="size-3.5" />
-                            <span>Tiếp nhận xử lý</span>
-                          </button>
+                          isEarlyTerm && !isReturnDue ? (
+                            <span
+                              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-500 shadow-2xs dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400"
+                              title={`Lịch hẹn trả kho vào ngày ${ticket.desiredDate ? formatDate(ticket.desiredDate) : "—"}. Chỉ tiếp nhận khi đến ngày hẹn.`}
+                            >
+                              <span>Chờ đến hẹn ({ticket.desiredDate ? formatDate(ticket.desiredDate) : "—"})</span>
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleAccept(ticket)}
+                              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-white shadow-xs transition hover:bg-blue-700"
+                            >
+                              <UserCheckIcon className="size-3.5" />
+                              <span>Tiếp nhận xử lý</span>
+                            </button>
+                          )
                         )}
 
                         {/* Khi ticket đang IN_PROGRESS: Quản lý trực tiếp Đóng / Giải quyết */}

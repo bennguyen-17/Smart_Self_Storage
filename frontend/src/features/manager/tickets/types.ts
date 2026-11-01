@@ -1,10 +1,10 @@
-export type ManagerTicketStatus = "ALL" | "ESCALATED" | "SUBMITTED" | "IN_PROGRESS" | "RESOLVED"
+export type ManagerTicketStatus = "ALL" | "ESCALATED" | "SUBMITTED" | "IN_PROGRESS" | "RESOLVED" | "CANCELLED"
 
 export interface ManagerTicketItem {
   id: number
   ticketCode: string
   type: string
-  status: "ESCALATED" | "SUBMITTED" | "IN_PROGRESS" | "RESOLVED"
+  status: "ESCALATED" | "SUBMITTED" | "IN_PROGRESS" | "RESOLVED" | "CANCELLED"
   customerId?: number
   customerName?: string
   customerPhone?: string

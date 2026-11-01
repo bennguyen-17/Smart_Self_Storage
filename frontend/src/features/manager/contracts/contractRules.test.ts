@@ -74,7 +74,7 @@ describe("filterContracts", () => {
   const ids = (f: ContractFilter) => filterContracts(LIST, f).map((c) => c.contractId)
 
   test.each([
-    { name: "không lọc → hết hạn sớm nhất lên đầu", filter: ALL, expected: [2, 3, 1] },
+    { name: "không lọc → Chờ nhận kho → Đang hiệu lực → Quá hạn", filter: ALL, expected: [3, 1, 2] },
     { name: "tên không dấu", filter: { ...ALL, query: "bich" }, expected: [2] },
     { name: "theo mã ô", filter: { ...ALL, query: "m03" }, expected: [3] },
     { name: "quá hạn", filter: { ...ALL, status: "OVERDUE" }, expected: [2] },
