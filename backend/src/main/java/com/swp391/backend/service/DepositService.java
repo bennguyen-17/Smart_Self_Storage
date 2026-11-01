@@ -26,6 +26,8 @@ public class DepositService {
     private final StorageUnitRepository storageUnitRepository;
     private final FloorRepository floorRepository;
     private final FacilityRepository facilityRepository;
+    private final AccountRepository accountRepository;
+    private final EmailService emailService;
 
     public DepositService(StorageService storageService,
                           ReservationRepository reservationRepository,
@@ -34,7 +36,9 @@ public class DepositService {
                           ActivityLogRepository activityLogRepository,
                           StorageUnitRepository storageUnitRepository,
                           FloorRepository floorRepository,
-                          FacilityRepository facilityRepository) {
+                          FacilityRepository facilityRepository,
+                          AccountRepository accountRepository,
+                          EmailService emailService) {
         this.storageService = storageService;
         this.reservationRepository = reservationRepository;
         this.contractRepository = contractRepository;
@@ -43,6 +47,8 @@ public class DepositService {
         this.storageUnitRepository = storageUnitRepository;
         this.floorRepository = floorRepository;
         this.facilityRepository = facilityRepository;
+        this.accountRepository = accountRepository;
+        this.emailService = emailService;
     }
 
     // --- 1. Tạo đơn Đặt cọc 100% Online & Thỏa thuận Clickwrap ---
@@ -231,7 +237,7 @@ public class DepositService {
         payment.setRemainingAmount(initialRentalAmount);
         payment.setStatus("PARTIALLY_PAID");
         payment.setPaymentStatus("SUCCESS");
-        payment.setPaymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod() : "BANK_TRANSFER");
+        payment.setPaymentMethod("BANK_TRANSFER");
         payment.setTransactionCode(request.getTransactionCode() != null ? request.getTransactionCode() : "TXN_" + System.currentTimeMillis());
         payment.setGatewayTransactionId(request.getGatewayTransactionId());
         payment.setPaidAt(LocalDateTime.now());
@@ -257,6 +263,23 @@ public class DepositService {
         log.setDescription("Khách đã thanh toán tiền cọc cho hợp đồng " + contract.getContractId() + ", hóa đơn " + payment.getInvoiceNumber());
         log.setCreatedAt(LocalDateTime.now());
         activityLogRepository.save(log);
+
+        accountRepository.findAccountByAccountId(res.getAccountId()).ifPresent(account -> {
+            String facilityName = floorRepository.findById(unit.getFloorId())
+                    .flatMap(floor -> facilityRepository.findById(floor.getFacilityId()))
+                    .map(Facility::getFacilityName)
+                    .orElse("Cơ sở SmartStorage");
+            emailService.sendDepositSuccessEmail(
+                    account.getEmail(),
+                    account.getFullName(),
+                    res.getReservationCode(),
+                    unit.getUnitCode(),
+                    facilityName,
+                    res.getStartDate(),
+                    res.getEndDate(),
+                    depositAmount,
+                    initialRentalAmount);
+        });
 
         return new ApiResponse(true, "Xác nhận nộp cọc thành công! Hợp đồng ở trạng thái PENDING_CHECKIN và ô kho đã được bảo lưu giữ chỗ.");
     }

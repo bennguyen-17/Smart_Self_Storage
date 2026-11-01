@@ -358,7 +358,7 @@ public class EmailService {
                                             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 24px;">
                                                 <span style="display: block; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b; letter-spacing: 1px; margin-bottom: 6px;">MÃ HỢP ĐỒNG / CHECK-IN</span>
                                                 <div style="font-family: 'Courier New', Courier, monospace; font-size: 24px; font-weight: 900; color: #0f172a; letter-spacing: 2px;">%s</div>
-                                                <span style="display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 700; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; padding: 3px 10px; border-radius: 20px;">Trạng thái: CHỜ CHECK-IN (PENDING_CHECKIN)</span>
+                                                <span style="display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 700; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; padding: 3px 10px; border-radius: 20px;">Trạng thái: CHỜ CHECK-IN</span>
                                             </div>
 
                                             <!-- Chi tiết ô kho -->
