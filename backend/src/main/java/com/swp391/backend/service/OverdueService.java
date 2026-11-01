@@ -28,7 +28,7 @@ import com.swp391.backend.repository.ReservationRepository;
 public class OverdueService {
 
     private static final BigDecimal DAILY_OVERDUE_FEE = new BigDecimal("50000.00");
-    private static final int MAX_CHARGEABLE_OVERDUE_DAYS = 29;
+    private static final int MAX_CHARGEABLE_OVERDUE_DAYS = 30;
     private static final List<Long> REMINDER_MILESTONES = List.of(15L, 25L, 30L);
     private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
@@ -133,7 +133,7 @@ public class OverdueService {
         return updatedCount;
     }
 
-    private void createOrUpdateOverdueFine(Contract contract, LocalDate endDate, LocalDate today) {
+    public Payment createOrUpdateOverdueFine(Contract contract, LocalDate endDate, LocalDate today) {
         long overdueDays = Math.min(
                 ChronoUnit.DAYS.between(endDate, today), MAX_CHARGEABLE_OVERDUE_DAYS);
         BigDecimal totalFine = getDailyOverdueFee().multiply(BigDecimal.valueOf(overdueDays));
@@ -145,7 +145,11 @@ public class OverdueService {
         String invoiceNumber = "PEN-" + contractCode;
         LocalDateTime issuedAt = LocalDateTime.now(VIETNAM_ZONE);
 
-        Payment payment = paymentRepository.findByInvoiceNumber(invoiceNumber)
+        // Tìm khoản phạt quá hạn đã có của hợp đồng (bất kể invoiceNumber cũ hay mới)
+        Payment payment = paymentRepository.findByContractId(contract.getContractId()).stream()
+                .filter(p -> "OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType())
+                        || (p.getInvoiceNumber() != null && (p.getInvoiceNumber().startsWith("PEN-") || p.getInvoiceNumber().startsWith("OVD-"))))
+                .findFirst()
                 .orElseGet(Payment::new);
         if (payment.getPaymentId() == null) {
             payment.setContractId(contract.getContractId());

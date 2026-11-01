@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from "react"
+import { useState, useEffect, type ChangeEvent } from "react"
 import {
   CameraIcon,
   ClipboardCheckIcon,
@@ -72,12 +72,32 @@ function Body({
   const [damages, setDamages] = useState<string[]>([])
   const [photo, setPhoto] = useState<string | null>(null)
 
-  const deposit = target.depositAmount ?? 0
+  const [actualDeposit, setActualDeposit] = useState<number>(target.depositAmount ?? 0)
+  const [unpaidPenalty, setUnpaidPenalty] = useState<number>(0)
+
+  useEffect(() => {
+    const targetId = target.contractId || target.reservationId
+    if (targetId) {
+      apiClient.get(`/staff/checkout/${targetId}/preview`)
+        .then((res: any) => {
+          const data = res?.data?.data ?? res?.data
+          if (data?.depositAmount != null) {
+            setActualDeposit(Number(data.depositAmount))
+          }
+          if (data?.unpaidPenalties != null) {
+            setUnpaidPenalty(Number(data.unpaidPenalties))
+          }
+        })
+        .catch(() => {})
+    }
+  }, [target.contractId, target.reservationId])
+
+  const deposit = actualDeposit
   const totalDamage = DAMAGE_ITEMS.filter((item) =>
     damages.includes(item.id)
   ).reduce((sum, item) => sum + item.fee, 0)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const balance = deposit - totalDamage
+  const balance = deposit - totalDamage - unpaidPenalty
 
   function toggle(id: string) {
     setDamages((prev) =>
@@ -115,7 +135,7 @@ function Body({
 
       if (balance < 0) {
         toast.warning(
-          `Cọc âm: thu thêm ${formatVnd(Math.abs(balance))} tại quầy trước khi mang đồ ra.`
+          `Chi phí khấu trừ vượt quá cọc: thu thêm ${formatVnd(Math.abs(balance))} tại quầy.`
         )
       } else {
         toast.success(
@@ -261,6 +281,14 @@ function Body({
             {formatVnd(deposit)}
           </span>
         </div>
+        {unpaidPenalty > 0 && (
+          <div className="flex items-center justify-between text-muted">
+            <span>Khấu trừ phí phạt trễ hạn chưa nộp:</span>
+            <span className="font-mono font-bold text-rose-600">
+              - {formatVnd(unpaidPenalty)}
+            </span>
+          </div>
+        )}
         <div className="flex items-center justify-between text-muted">
           <span>Tổng chi phí khấu trừ (Hư hại + Vệ sinh):</span>
           <span className="font-mono font-bold text-rose-600">
@@ -278,7 +306,7 @@ function Body({
                   Hoàn lại: {formatVnd(balance)}
                 </span>
                 <p className="text-[10px] text-muted">
-                  Hệ thống chuyển khoản tự động trong 24-48h
+                  Bộ phận kế toán sẽ hoàn tiền về tài khoản ngân hàng của khách trong 24-48h làm việc
                 </p>
               </>
             ) : (
@@ -287,7 +315,7 @@ function Body({
                   CỌC ÂM! THU THÊM: {formatVnd(Math.abs(balance))}
                 </span>
                 <p className="text-[10px] text-muted">
-                  Khách bắt buộc nộp khoản này tại quầy mới được mang đồ ra!
+                  Khách hàng cần thanh toán phần chênh lệch này tại quầy trước khi bàn giao kho
                 </p>
               </>
             )}

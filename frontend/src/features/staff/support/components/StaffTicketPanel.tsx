@@ -321,6 +321,12 @@ function StaffTicketPanel() {
 
   function handleOpenInspection(ticket: TicketItem) {
     setInspectionTicketId(ticket.id)
+    const unitCode = ticket.unitCode || ""
+    let defaultDeposit = 1_000_000
+    if (unitCode.includes("-XL") || unitCode.includes("XL")) defaultDeposit = 3_000_000
+    else if (unitCode.includes("-L") || unitCode.includes("L0") || unitCode.includes("L1") || unitCode.includes("L2")) defaultDeposit = 2_000_000
+    else if (unitCode.includes("-S") || unitCode.includes("S0") || unitCode.includes("S1")) defaultDeposit = 500_000
+
     setInspectionTarget({
       contractId: ticket.contractId,
       ticketId: typeof ticket.id === "number" ? ticket.id : undefined,
@@ -331,7 +337,7 @@ function StaffTicketPanel() {
           : `HD-${ticket.unitCode || "902"}`),
       customerName: ticket.customerName || "Khách hàng trả kho",
       unitCode: ticket.unitCode || "F1-S105",
-      depositAmount: 1_000_000,
+      depositAmount: defaultDeposit,
     })
   }
 

@@ -8,7 +8,7 @@ export const CONTRACT_STATUS_LABEL: Record<ContractStatus, string> = {
   PENDING_CHECKIN: "Chờ nhận kho",
   ACTIVE: "Đang hiệu lực",
   OVERDUE: "Quá hạn",
-  TERMINATED: "Đã trả kho, chờ tất toán",
+  TERMINATED: "Đã trả kho (Chờ hoàn cọc)",
   COMPLETED: "Đã hoàn tất",
   FORFEITED: "Đã tịch thu, thanh lý tài sản",
   CANCELLED: "Đã hủy",
@@ -117,7 +117,18 @@ export interface ContractFilter {
   expiringSoon?: boolean
 }
 
-/** Lọc theo từ khóa (khách, SĐT, mã HĐ, mã ô), trạng thái HĐ, công nợ, sắp hết hạn; hết hạn sớm nhất lên đầu */
+export const STATUS_PRIORITY: Record<ContractStatus, number> = {
+  PENDING_CHECKIN: 1, // Chờ nhận kho lên trước
+  ACTIVE: 2,          // Đang hiệu lực
+  OVERDUE: 3,         // Quá hạn
+  TERMINATED: 4,      // Đã trả kho (Chờ hoàn cọc)
+  FORFEITED: 5,       // Đã tịch thu, thanh lý tài sản
+  COMPLETED: 6,       // Đã hoàn tất
+  CANCELLED: 7,       // Đã hủy
+}
+
+/** Lọc theo từ khóa, trạng thái HĐ, sắp hết hạn.
+ * Sắp xếp: Chờ nhận kho → Đang hiệu lực → Quá hạn → Đã kết thúc/hủy; trong cùng trạng thái thì hết hạn sớm nhất lên đầu */
 export function filterContracts(
   list: readonly FacilityContract[],
   filter: ContractFilter,
@@ -128,5 +139,10 @@ export function filterContracts(
     .filter((c) => filter.payment === "ALL" || (filter.payment === "DEBT") === unpaidTotal(c) > 0)
     .filter((c) => !filter.expiringSoon || isExpiringSoon(c, today))
     .filter((c) => matchesQuery(filter.query, [c.customerName, c.customerPhone, c.contractCode, c.unitCode]))
-    .sort((a, b) => a.endDate.localeCompare(b.endDate))
+    .sort((a, b) => {
+      const pA = STATUS_PRIORITY[a.status] ?? 99
+      const pB = STATUS_PRIORITY[b.status] ?? 99
+      if (pA !== pB) return pA - pB
+      return a.endDate.localeCompare(b.endDate)
+    })
 }

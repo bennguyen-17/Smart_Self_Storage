@@ -891,6 +891,16 @@ public class StaffReservationService {
         penaltyInvoice.setPaidAt(now);
         paymentRepository.save(penaltyInvoice);
 
+        for (Payment p : penPayments) {
+            if (p.getPaymentId() != null && !p.getPaymentId().equals(penaltyInvoice.getPaymentId()) && ("PENDING".equalsIgnoreCase(p.getStatus()) || "OVERDUE".equalsIgnoreCase(p.getStatus()))) {
+                p.setStatus("PAID");
+                p.setRemainingAmount(BigDecimal.ZERO);
+                p.setPaidAmount(p.getAmount());
+                p.setPaidAt(now);
+                paymentRepository.save(p);
+            }
+        }
+
         writeActivityLog(staffAccountId, "COLLECT_PENALTY_AT_COUNTER",
                 "Thu phạt quá hạn tại quầy bằng " + paymentMethod + " cho hợp đồng " + (reservation.getReservationCode() != null ? reservation.getReservationCode() : contract.getContractId()) + ", số tiền: " + collectedAmount + " VND (" + overdueDays + " ngày quá hạn, đơn giá 50.000đ/ngày)",
                 unitOpt.map(StorageUnit::getFloorId).flatMap(floorRepository::findById).map(Floor::getFacilityId).orElse(null));

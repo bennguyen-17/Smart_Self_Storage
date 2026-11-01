@@ -256,7 +256,7 @@ function CheckinPanel() {
             contractCode: item.reservationCode,
             customerName: item.customerName ?? "—",
             unitCode: item.unitCode ?? "—",
-            depositAmount: item.depAmount,
+            depositAmount: item.depositAmount ?? item.depPaidAmount ?? (item.depAmount != null && item.depAmount <= 3_000_000 ? item.depAmount : 2_000_000),
           })
         }
         onCollectPenalty={setPenaltyContract}

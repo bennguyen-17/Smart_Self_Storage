@@ -102,7 +102,7 @@ export function DateFilter({
 
 export interface TableColumn {
   header: string
-  align?: "right"
+  align?: "right" | "center"
   /** Chỉ cho trình đọc màn hình (cột thao tác) */
   srOnly?: boolean
 }
@@ -135,7 +135,7 @@ export function TableCard({
         <thead className="text-muted border-b text-[11px] uppercase">
           <tr>
             {columns.map((c, i) => (
-              <th key={i} scope="col" className={cn("px-4 py-3 font-bold", c.align === "right" && "text-right")}>
+              <th key={i} scope="col" className={cn("px-4 py-3 font-bold", c.align === "right" && "text-right", c.align === "center" && "text-center")}>
                 {c.srOnly ? <span className="sr-only">{c.header}</span> : c.header}
               </th>
             ))}

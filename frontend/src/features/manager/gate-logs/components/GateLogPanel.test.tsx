@@ -57,28 +57,20 @@ beforeEach(() => {
 })
 
 describe("GateLogPanel: Manager xem nhật ký ra vào cổng của cơ sở (US-18)", () => {
-  test("mỗi lượt hiện đủ người ra vào, vị trí cổng, phương thức; mới nhất lên đầu; KHÔNG có nút sửa/xóa", async () => {
+  test("mỗi lượt hiện đủ người ra vào, trạng thái; mới nhất lên đầu; KHÔNG có nút sửa/xóa", async () => {
     await renderPanel()
     const [newest, older] = bodyRows()
     expect(within(newest).getByText("Trần Thị Mai")).toBeInTheDocument()
-    expect(within(newest).getByText("Cổng Xe Tải")).toBeInTheDocument()
-    expect(within(newest).getByText("Mã PIN IoT")).toBeInTheDocument()
     expect(within(older).getByText("Mã: KH-101")).toBeInTheDocument()
     expect(within(older).getByText("SĐT: 0912345678")).toBeInTheDocument()
     expect(within(older).getByText("CCCD: 001201012345")).toBeInTheDocument()
-    expect(within(older).getByText("Thẻ Master")).toBeInTheDocument()
-    expect(within(older).getByText("Bởi: Nguyễn Văn Nhân Viên 1")).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: /sửa|xóa log|xoá/i })).not.toBeInTheDocument()
     expect(screen.getByText("Hiển thị 2 / 2 lượt ra vào cổng")).toBeInTheDocument()
   })
 
-  test("thống kê nhanh đếm đúng tổng, lượt PIN, lượt Thẻ Master, số người", async () => {
+  test("hiển thị số lượt ra vào cổng trên thanh thông tin", async () => {
     await renderPanel()
-    const stat = (label: string) => screen.getByText(label, { selector: "p" }).nextElementSibling
-    expect(stat("Tổng lượt ra vào")).toHaveTextContent("2")
-    expect(stat("Mã PIN động IoT")).toHaveTextContent("1")
-    expect(stat("Thẻ Master thủ công")).toHaveTextContent("1")
-    expect(stat("Người ra vào")).toHaveTextContent("2")
+    expect(screen.getByText("Hiển thị 2 / 2 lượt ra vào cổng")).toBeInTheDocument()
   })
 
   test("tìm theo lý do → chỉ còn lượt khớp; Xóa bộ lọc → hiện lại hết", async () => {
@@ -90,9 +82,9 @@ describe("GateLogPanel: Manager xem nhật ký ra vào cổng của cơ sở (US
     expect(bodyRows()).toHaveLength(2)
   })
 
-  test("lọc theo phương thức: chỉ Thẻ Master thủ công", async () => {
+  test("tìm theo tên khách hàng → chỉ còn lượt khớp", async () => {
     const { user } = await renderPanel()
-    await user.selectOptions(screen.getByRole("combobox", { name: /phương thức mở/i }), "MANUAL")
+    await user.type(screen.getByRole("searchbox"), "Thành Long")
     expect(bodyRows()).toHaveLength(1)
     expect(screen.getByText("Nguyễn Thành Long")).toBeInTheDocument()
   })

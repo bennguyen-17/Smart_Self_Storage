@@ -7,9 +7,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Pagination } from "@/components/internal/components/PanelKit"
 import { usePagedRows } from "@/components/internal/usePagedRows"
-import { shortFloorName, unitSizeOf, UNIT_SIZES } from "@/features/floorplan/unitDisplay"
+import { shortFloorName, unitSizeOf } from "@/features/floorplan/unitDisplay"
 import { useAsyncData } from "@/hooks/useAsyncData"
-import type { StorageCondition } from "@/types"
 
 import { getManagerFloors, getManagerUnits } from "../api/unitManagementApi"
 import { getManagerContext } from "@/features/manager/managerContext"
@@ -23,40 +22,48 @@ const STATUS_ORDER: PhysicalUnitStatus[] = ["AVAILABLE", "HOLD", "RESERVED", "OC
 
 function UnitManagementPanel() {
   const ctx = useMemo(() => getManagerContext(), [])
-  const [floorId, setFloorId] = useState<number | "ALL">("ALL")
-  const [condition, setCondition] = useState<StorageCondition | "ALL">("ALL")
-  const [size, setSize] = useState<string>("ALL")
+  const [searchQuery, setSearchQuery] = useState("")
   const [status, setStatus] = useState<PhysicalUnitStatus | "ALL">("ALL")
   const [reloadCount, setReloadCount] = useState(0)
   const [editing, setEditing] = useState<ManagerUnit | null>(null)
 
   const floors = useAsyncData(`floors#${reloadCount}`, () => getManagerFloors(ctx))
-  const units = useAsyncData(`units:${floorId}:${condition}#${reloadCount}`, () =>
-    getManagerUnits(ctx, {
-      floorId: floorId === "ALL" ? undefined : floorId,
-      storageCondition: condition === "ALL" ? undefined : condition,
-    })
+  const units = useAsyncData(`units#${reloadCount}`, () =>
+    getManagerUnits(ctx, {})
   )
 
-  // Size và trạng thái lọc ở FE: BE chưa lọc theo size, và cần đếm số ô theo từng trạng thái
-  const bySize = (units.data ?? []).filter((u) => size === "ALL" || unitSizeOf(u) === size)
-  const counts = STATUS_ORDER.reduce<Record<string, number>>((acc, s) => {
-    acc[s] = bySize.filter((u) => normalizeUnitStatus(u.status) === s).length
-    return acc
-  }, {})
-  const rows = bySize.filter((u) => status === "ALL" || normalizeUnitStatus(u.status) === status)
-  const { slice, pagination } = usePagedRows(rows, `${floorId}|${condition}|${size}|${status}`)
   const floorName = (id: number) =>
     shortFloorName(floors.data?.find((f) => f.floorId === id)?.floorName ?? `Tầng ${id}`)
 
-  const isFiltered = floorId !== "ALL" || condition !== "ALL" || size !== "ALL" || status !== "ALL"
+  const keyword = searchQuery.trim().toLowerCase()
 
-  function handleResetFilters() {
-    setFloorId("ALL")
-    setCondition("ALL")
-    setSize("ALL")
-    setStatus("ALL")
-  }
+  const searchedUnits = useMemo(() => {
+    return (units.data ?? []).filter((u) => {
+      if (!keyword) return true
+      const code = (u.unitCode ?? "").toLowerCase()
+      const fl = floorName(u.floorId).toLowerCase()
+      const sz = (unitSizeOf(u) || u.size || "").toLowerCase()
+      const isClim = u.storageCondition === "CLIMATE_CONTROLLED" || u.isClimate
+      const cond = isClim ? "điều hòa kho mát lạnh" : "thường tiêu chuẩn"
+      const type = (u.typeName ?? "").toLowerCase()
+      return (
+        code.includes(keyword) ||
+        fl.includes(keyword) ||
+        sz.includes(keyword) ||
+        `size ${sz}`.includes(keyword) ||
+        cond.includes(keyword) ||
+        type.includes(keyword)
+      )
+    })
+  }, [units.data, keyword, floors.data])
+
+  const counts = STATUS_ORDER.reduce<Record<string, number>>((acc, s) => {
+    acc[s] = searchedUnits.filter((u) => normalizeUnitStatus(u.status) === s).length
+    return acc
+  }, {})
+
+  const rows = searchedUnits.filter((u) => status === "ALL" || normalizeUnitStatus(u.status) === status)
+  const { slice, pagination } = usePagedRows(rows, `${keyword}|${status}`)
 
   function handleSaved(message: string | null) {
     if (message) {
@@ -84,59 +91,42 @@ function UnitManagementPanel() {
         </Alert>
       ) : (
         <>
-          {/* Cụm bộ lọc 1 hàng ngang duy nhất */}
-          <div className="card-box flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white/90 p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-900/80">
-            {/* Vế trái: Dàn chip lọc theo trạng thái */}
-            <div role="group" aria-label="Lọc theo trạng thái ô kho" className="flex flex-wrap items-center gap-2">
-              <StatusChip active={status === "ALL"} onClick={() => setStatus("ALL")} label={`Tất cả (${bySize.length})`} />
-              {STATUS_ORDER.map((s) => (
-                <StatusChip
-                  key={s}
-                  active={status === s}
-                  onClick={() => setStatus(s)}
-                  label={`${UNIT_STATUS_META[s].label} (${counts[s] ?? 0})`}
+          {/* Cụm Tìm kiếm ô kho - đặt phía trên */}
+          <div className="card-box flex flex-col justify-between gap-3 rounded-2xl border p-4 shadow-sm md:flex-row md:items-center">
+            <div className="flex max-w-xl flex-1 space-x-2">
+              <div className="relative flex-1">
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Tìm theo mã ô kho, vị trí tầng, kích thước hoặc loại kho..."
+                  className="inner-box w-full rounded-xl border border-slate-200/80 px-3.5 py-2 pl-9 text-xs font-normal outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700"
                 />
-              ))}
-            </div>
-
-            {/* Vế phải: 3 dropdown lọc nhanh + nút đặt lại */}
-            <div className="flex flex-wrap items-center gap-2.5">
-              <FilterSelect
-                label="Tầng"
-                value={String(floorId)}
-                onChange={(v) => setFloorId(v === "ALL" ? "ALL" : Number(v))}
-                options={[
-                  { value: "ALL", label: "Tất cả tầng" },
-                  ...(floors.data ?? []).map((f) => ({ value: String(f.floorId), label: shortFloorName(f.floorName) })),
-                ]}
-              />
-              <FilterSelect
-                label="Loại"
-                value={condition}
-                onChange={(v) => setCondition(v as StorageCondition | "ALL")}
-                options={[
-                  { value: "ALL", label: "Tất cả loại" },
-                  { value: "NORMAL", label: "Kho thường" },
-                  { value: "CLIMATE_CONTROLLED", label: "Kho điều hòa" },
-                ]}
-              />
-              <FilterSelect
-                label="Size"
-                value={size}
-                onChange={setSize}
-                options={[{ value: "ALL", label: "Tất cả size" }, ...UNIT_SIZES.map((s) => ({ value: s, label: `Size ${s}` }))]}
-              />
-              {isFiltered && (
+                <i className="fa-solid fa-magnifying-glass pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 dark:text-slate-400 z-10"></i>
+              </div>
+              {searchQuery && (
                 <button
                   type="button"
-                  onClick={handleResetFilters}
-                  className="cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-                  title="Đặt lại tất cả bộ lọc về mặc định"
+                  onClick={() => setSearchQuery("")}
+                  className="shrink-0 cursor-pointer rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                 >
-                  Đặt lại
+                  Xóa tìm
                 </button>
               )}
             </div>
+          </div>
+
+          {/* Dàn chip lọc theo trạng thái - nằm ngay phía dưới thanh tìm kiếm (chuẩn như Check-in) */}
+          <div role="group" aria-label="Lọc theo trạng thái ô kho" className="flex flex-wrap items-center gap-2">
+            <StatusChip active={status === "ALL"} onClick={() => setStatus("ALL")} label={`Tất cả (${searchedUnits.length})`} />
+            {STATUS_ORDER.map((s) => (
+              <StatusChip
+                key={s}
+                active={status === s}
+                onClick={() => setStatus(s)}
+                label={`${UNIT_STATUS_META[s].label} (${counts[s] ?? 0})`}
+              />
+            ))}
           </div>
 
           <div className="card-box relative overflow-x-auto rounded-2xl border border-slate-200/80 shadow-sm dark:border-slate-800">
@@ -297,35 +287,6 @@ function UnitRow({ unit, floorLabel, onEdit }: { unit: ManagerUnit; floorLabel: 
         </div>
       </td>
     </tr>
-  )
-}
-
-function FilterSelect({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string
-  value: string
-  onChange: (value: string) => void
-  options: { value: string; label: string }[]
-}) {
-  return (
-    <label className="flex items-center gap-2 text-xs font-semibold">
-      <span className="text-slate-600 dark:text-slate-400 whitespace-nowrap">{label}:</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="inner-box text-title min-w-32 cursor-pointer rounded-xl border border-slate-200/90 bg-white px-2.5 py-1.5 text-xs font-semibold outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800"
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </label>
   )
 }
 

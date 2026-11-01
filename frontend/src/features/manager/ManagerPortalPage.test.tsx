@@ -50,7 +50,7 @@ describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
     renderAt("/manager")
     expect(screen.getByTestId("location")).toHaveTextContent("/manager/units")
     expect(screen.getByRole("heading", { level: 1, name: "Quản lý ô kho" })).toBeInTheDocument()
-    expect(within(desktopNav()).getAllByRole("link")).toHaveLength(9)
+    expect(within(desktopNav()).getAllByRole("link")).toHaveLength(8)
     expect(within(desktopNav()).queryByRole("link", { name: /^Giao việc/ })).not.toBeInTheDocument()
     expect(within(desktopNav()).getByRole("link", { name: /^Hoạt động nhân viên/ })).toHaveAttribute("href", "/manager/activity")
     // Trang sự cố cơ sở: theo dõi & hỗ trợ xử lý ticket
@@ -68,7 +68,6 @@ describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
   test.each([
     { link: "Báo cáo", path: "/manager/reports", title: "Báo cáo cơ sở & KPI" },
     { link: "Khách & hợp đồng", path: "/manager/customers", title: "Khách hàng & hợp đồng" },
-    { link: "Trả kho & công nợ", path: "/manager/workflow", title: "Trả kho & công nợ" },
     { link: "Hoàn tiền", path: "/manager/refunds", title: "Hoàn tiền cho khách hàng" },
     { link: "Phân công", path: "/manager/staff", title: "Phân công nhân viên" },
   ])("bấm '$link' → $path, trang đã có chức năng (không còn ô giữ chỗ)", async ({ link, path, title }) => {
