@@ -327,6 +327,11 @@ public class DashboardService {
         com.swp391.backend.dto.FacilityResponse mappedFac = storageService.mapFacilityToResponse(fac);
         resp.setFacilityName(mappedFac.getFacilityName());
         resp.setFacilityCode(mappedFac.getFacilityCode());
+        if (mappedFac.getManagerName() != null && !mappedFac.getManagerName().isBlank()) {
+            resp.setManagerName(mappedFac.getManagerName());
+            resp.setManagerEmail(mappedFac.getManagerEmail());
+            resp.setManagerPhone(mappedFac.getManagerPhone());
+        }
 
         // Lấy thông tin Quản lý chi nhánh (Manager) từ DB
         List<com.swp391.backend.entity.EmployeeProfile> employees = employeeProfileRepository.findAll();
@@ -334,7 +339,9 @@ public class DashboardService {
                 .filter(e -> facilityId.equals(e.getFacilityId()))
                 .filter(e -> {
                     Optional<com.swp391.backend.entity.Account> acc = accountRepository.findAccountByAccountId(e.getAccountId());
-                    return acc.isPresent() && Long.valueOf(3L).equals(acc.get().getRoleId());
+                    return acc.isPresent() 
+                            && Long.valueOf(3L).equals(acc.get().getRoleId())
+                            && "ACTIVE".equalsIgnoreCase(acc.get().getStatus());
                 })
                 .findFirst();
 

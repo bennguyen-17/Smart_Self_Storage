@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react"
+import { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { createPortal } from "react-dom"
 import { useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
@@ -36,13 +36,8 @@ import { useBomContext } from "@/features/bom/context/BomContext"
 import { type FacilityPerformance } from "@/features/bom/data/bomData"
 import { bomApi } from "@/features/bom/api/bomApi"
 import FacilityCashFlowDashboard from "@/features/bom/components/FacilityCashFlowDashboard"
-
-const MANAGER_PRESETS = [
-  { name: "Trần Văn Quản Lý", phone: "0912 345 678", email: "quanly.tran@smartstorage.vn" },
-  { name: "Nguyễn Thị Mai", phone: "0987 654 321", email: "mai.nguyen@smartstorage.vn" },
-  { name: "Lê Hoàng Long", phone: "0903 888 999", email: "long.le@smartstorage.vn" },
-  { name: "Phạm Minh Tuấn", phone: "0934 112 233", email: "tuan.pham@smartstorage.vn" },
-]
+import { listAccounts } from "@/features/admin/accounts/api/accountApi"
+import type { InternalAccount } from "@/features/admin/accounts/types"
 
 const getInitials = (name: string) => {
   if (!name || !name.trim() || name === "Chưa phân công") return "FM"
@@ -109,7 +104,18 @@ export default function BomFacilitiesPage() {
     )
 
     if (fromBreakdown && fromFacList) {
-      return { ...fromFacList, ...fromBreakdown }
+      const bestManagerName = (fromFacList.managerName && fromFacList.managerName !== "Chưa phân công")
+        ? fromFacList.managerName
+        : (fromBreakdown.managerName || fromFacList.managerName || "Chưa phân công")
+      const bestManagerPhone = fromFacList.managerPhone || fromBreakdown.managerPhone
+      const bestManagerEmail = fromFacList.managerEmail || fromBreakdown.managerEmail
+      return {
+        ...fromBreakdown,
+        ...fromFacList,
+        managerName: bestManagerName,
+        managerPhone: bestManagerPhone,
+        managerEmail: bestManagerEmail,
+      }
     }
     return fromBreakdown || fromFacList || null
   }, [facilityId, facilities, chainOverview])
@@ -172,7 +178,7 @@ export default function BomFacilitiesPage() {
   const REVENUE_PERIOD_OPTIONS = [
     { key: "this_month", label: "Tháng Này" },
     { key: "last_3_months", label: "3 Tháng Gần Nhất" },
-    { key: "all_time", label: "Toàn Thời Gian" },
+    { key: "all_time", label: "Tất Cả" },
   ] as const
 
   const [isDetailPeriodOpen, setIsDetailPeriodOpen] = useState(false)
@@ -298,32 +304,103 @@ export default function BomFacilitiesPage() {
     }
   }
 
-  // Quy mô chuẩn hóa: Layout A = 46 kho, Layout B = 15 kho
+  // Quy mô chuẩn hóa: Layout A = 45 kho (3 tầng), Layout B = 15 kho (2 tầng)
   const computedTotalUnits = useMemo(() => {
-    return newFacLayout === "A" ? 46 : 15
+    return newFacLayout === "B" ? 15 : 45
   }, [newFacLayout])
 
-  // Danh sách quản lý khả dụng (từ Preset & cơ sở hiện có)
-  const availableManagers = useMemo(() => {
-    const map = new Map<string, { name: string; phone: string; email: string }>()
+  const [internalAccounts, setInternalAccounts] = useState<InternalAccount[]>([])
 
-    MANAGER_PRESETS.forEach((p) => {
-      map.set(p.name, p)
-    })
+  const loadAccounts = useCallback(() => {
+    listAccounts()
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setInternalAccounts(data)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
-    facilities.forEach((f) => {
-      const clean = (f.managerName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
-      if (clean && clean !== "Chưa phân công" && !map.has(clean)) {
-        map.set(clean, {
-          name: clean,
-          phone: f.managerPhone || "",
-          email: f.managerEmail || "manager@smartstorage.vn",
-        })
+  useEffect(() => {
+    loadAccounts()
+    window.addEventListener("storage_facilities_updated", loadAccounts)
+    return () => window.removeEventListener("storage_facilities_updated", loadAccounts)
+  }, [loadAccounts])
+
+  // Lọc danh sách quản lý hợp lệ: Chỉ role = MANAGER, status = ACTIVE, và CHƯA phụ trách cơ sở nào (mỗi cơ sở 1 quản lý)
+  const getEligibleManagers = useCallback(
+    (targetFacilityId?: number | null, currentManagerName?: string) => {
+      const assignedNamesInOtherFacilities = new Set<string>()
+      facilities.forEach((f) => {
+        const facId = Number(f.id)
+        if (targetFacilityId && facId === targetFacilityId) return
+        const clean = (f.managerName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim().toLowerCase()
+        if (clean && clean !== "chưa phân công" && clean !== "chua phan cong") {
+          assignedNamesInOtherFacilities.add(clean)
+        }
+      })
+
+      const list: { name: string; phone: string; email: string; accountId?: number; facilityId?: number | null }[] = []
+      const seenNames = new Set<string>()
+
+      internalAccounts.forEach((acc) => {
+        // 1. Chỉ những người có role là MANAGER (Quản lý cơ sở)
+        if (acc.role !== "MANAGER") return
+        // 2. Tài khoản phải đang hoạt động (ACTIVE)
+        if (acc.status !== "ACTIVE") return
+
+        const cleanName = (acc.fullName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+        if (!cleanName) return
+
+        // 3. Validate mỗi cơ sở chỉ có 1 manager:
+        // Manager nào đã quản lý cơ sở KHÁC thì KHÔNG được hiện
+        const isAssignedToOther =
+          (acc.facilityId != null && targetFacilityId != null && Number(acc.facilityId) !== Number(targetFacilityId)) ||
+          (acc.facilityId != null && targetFacilityId == null) ||
+          (assignedNamesInOtherFacilities.has(cleanName.toLowerCase()) &&
+            (!currentManagerName || cleanName.toLowerCase() !== currentManagerName.trim().toLowerCase()))
+
+        if (isAssignedToOther) return
+
+        if (!seenNames.has(cleanName.toLowerCase())) {
+          seenNames.add(cleanName.toLowerCase())
+          list.push({
+            name: cleanName,
+            phone: acc.phone || "",
+            email: acc.email || "manager@smartstorage.vn",
+            accountId: acc.accountId,
+            facilityId: acc.facilityId,
+          })
+        }
+      })
+
+      // Nếu cơ sở hiện tại đã có manager (currentManagerName) mà chưa có trong list, giữ lại để hiển thị
+      if (currentManagerName) {
+        const cleanCur = currentManagerName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+        if (cleanCur && cleanCur !== "Chưa phân công" && !seenNames.has(cleanCur.toLowerCase())) {
+          list.unshift({
+            name: cleanCur,
+            phone: editManagerPhone || "",
+            email: editManagerEmail || "manager@smartstorage.vn",
+            facilityId: targetFacilityId,
+          })
+        }
       }
-    })
 
-    return Array.from(map.values())
-  }, [facilities])
+      return list
+    },
+    [facilities, internalAccounts, editManagerPhone, editManagerEmail]
+  )
+
+  // Quản lý khả dụng cho modal Sửa cấu hình cơ sở
+  const availableManagers = useMemo(() => {
+    return getEligibleManagers(selectedFacility ? Number(selectedFacility.id) : null, selectedFacility?.managerName)
+  }, [getEligibleManagers, selectedFacility])
+
+  // Quản lý khả dụng cho modal Thêm cơ sở mới (chỉ manager chưa quản lý cơ sở nào)
+  const addAvailableManagers = useMemo(() => {
+    return getEligibleManagers(null, "")
+  }, [getEligibleManagers])
 
   const handleOpenAddModal = () => {
     const defaultCity = "HN"
@@ -364,6 +441,21 @@ export default function BomFacilitiesPage() {
     const finalManagerPhone = editManagerPhone.trim()
     const finalManagerEmail = editManagerEmail.trim() || "manager@smartstorage.vn"
 
+    if (finalManagerName && finalManagerName !== "Chưa phân công") {
+      const duplicateFacility = facilities.find(
+        (f) =>
+          Number(f.id) !== Number(selectedFacility.id) &&
+          (f.managerName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim().toLowerCase() ===
+            finalManagerName.toLowerCase()
+      )
+      if (duplicateFacility) {
+        toast.error(
+          `Quản lý [${finalManagerName}] đang phụ trách cơ sở [${duplicateFacility.code} - ${duplicateFacility.name}]! Mỗi cơ sở chỉ có 1 Quản lý và 1 Quản lý chỉ phụ trách 1 cơ sở.`
+        )
+        return
+      }
+    }
+
     const success = await updateFacilityInDb(Number(selectedFacility.id), {
       facilityName: selectedFacility.name,
       address: selectedFacility.address,
@@ -395,6 +487,7 @@ export default function BomFacilitiesPage() {
     } else {
       toast.success(`Đã cập nhật cấu hình cơ sở ${selectedFacility.name}!`)
     }
+    loadAccounts()
     setIsFacilityModalOpen(false)
   }
 
@@ -432,6 +525,20 @@ export default function BomFacilitiesPage() {
       return
     }
 
+    if (newFacManager.trim() && newFacManager.trim() !== "Chưa phân công") {
+      const duplicateFacility = facilities.find(
+        (f) =>
+          (f.managerName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim().toLowerCase() ===
+            newFacManager.trim().toLowerCase()
+      )
+      if (duplicateFacility) {
+        toast.error(
+          `Quản lý [${newFacManager.trim()}] đang phụ trách cơ sở [${duplicateFacility.code} - ${duplicateFacility.name}]! Mỗi cơ sở chỉ có 1 Quản lý.`
+        )
+        return
+      }
+    }
+
     setIsSubmitting(true)
     try {
       const codeToUse = newFacCode.trim().toUpperCase() || getNextFacilityCode(newFacCity, facilities)
@@ -448,6 +555,7 @@ export default function BomFacilitiesPage() {
 
       if (success) {
         toast.success(`Đã thêm cơ sở [${codeToUse}] ${newFacName.trim()} & đồng bộ sơ đồ 2D lên Customer Portal!`)
+        loadAccounts()
         setIsAddFacilityModalOpen(false)
       } else {
         const newFacility: FacilityPerformance = {
@@ -559,7 +667,7 @@ export default function BomFacilitiesPage() {
               ? "Tháng Này"
               : revenuePeriod === "last_3_months"
                 ? "3 Tháng Gần Nhất"
-                : "Toàn Thời Gian"
+                : "Tất Cả"
 
           return (
             <div className="space-y-5">
@@ -655,6 +763,7 @@ export default function BomFacilitiesPage() {
                 title={`Doanh Thu Thực Thu - ${code}`}
                 subtitle={`Xu hướng dòng tiền thực thu (${periodLabel})`}
                 period={revenuePeriod}
+                onPeriodChange={(newP) => setRevenuePeriod(newP === "all" ? "all_time" : newP)}
                 monthlyRevenues={monthlyRevs}
                 netRevenue={netRev}
                 rentalRevenue={rentalRev}
@@ -836,7 +945,7 @@ export default function BomFacilitiesPage() {
                       ? "Tháng Này"
                       : revenuePeriod === "last_3_months"
                         ? "3 Tháng Gần Nhất"
-                        : "Toàn Thời Gian"}
+                        : "Tất Cả"}
                   </span>
                   <ChevronDown
                     className={`size-3.5 text-slate-400 transition-transform duration-200 ${
@@ -896,7 +1005,7 @@ export default function BomFacilitiesPage() {
                       ? "DOANH THU (THÁNG NÀY)"
                       : revenuePeriod === "last_3_months"
                         ? "DOANH THU (3 THÁNG GẦN NHẤT)"
-                        : "DOANH THU (TOÀN THỜI GIAN)"}
+                        : "DOANH THU (TẤT CẢ)"}
                   </th>
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">TRẠNG THÁI</th>
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">THAO TÁC</th>
@@ -908,8 +1017,8 @@ export default function BomFacilitiesPage() {
                     const isLayoutB =
                       fac.layoutType === "Layout B" ||
                       fac.layoutType === "B" ||
-                      [2, 4, 5, 7].includes(Number(fac.id))
-                    const stdUnits = isLayoutB ? 15 : 46
+                      [2, 4, 5, 7, 8].includes(Number(fac.id))
+                    const stdUnits = isLayoutB ? 15 : 45
                     const cleanName = (fac.name || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
                     const cleanManager = (fac.managerName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
                     const rented = fac.occupied ?? fac.rentedUnits ?? 0
@@ -1021,20 +1130,20 @@ export default function BomFacilitiesPage() {
 
       {/* MODAL 1: CẤU HÌNH CƠ SỞ KHO - PORTAL RA BODY */}
       {isFacilityModalOpen && selectedFacility && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[999] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 max-w-lg w-full space-y-5 shadow-2xl animate-in fade-in zoom-in duration-150 text-white my-auto">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 max-w-lg w-full space-y-5 shadow-2xl animate-in fade-in zoom-in duration-150 text-slate-900 dark:text-white my-auto">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div>
-                <h3 className="font-black text-sm uppercase text-blue-400">
+                <h3 className="font-black text-sm uppercase text-blue-600 dark:text-blue-400">
                   CHI TIẾT CẤU HÌNH CƠ SỞ KHO
                 </h3>
-                <p className="text-xs text-slate-400 font-bold mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-0.5">
                   Cơ sở {selectedFacility.name.replace(/\s*\([A-Z0-9-]+\)\s*$/, "")} ({selectedFacility.code})
                 </p>
               </div>
               <button
                 onClick={() => setIsFacilityModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white cursor-pointer transition"
               >
                 <X className="size-4" />
               </button>
@@ -1042,20 +1151,20 @@ export default function BomFacilitiesPage() {
 
             <div className="space-y-4 text-xs">
               {/* PHÂN CÔNG QUẢN LÝ CƠ SỞ */}
-              <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3">
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <UserCheck className="size-4 text-blue-400" />
-                    <span className="text-[11px] text-slate-300 uppercase font-black tracking-wider">
+                    <UserCheck className="size-4 text-blue-600 dark:text-blue-400" />
+                    <span className="text-[11px] text-slate-700 dark:text-slate-300 uppercase font-black tracking-wider">
                       Phân công Quản Lý Cơ Sở (Facility Manager)
                     </span>
                   </div>
                   {editManagerName.trim() ? (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30">
                       Đã gán quản lý
                     </span>
                   ) : (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-300 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30">
                       Chưa phân công
                     </span>
                   )}
@@ -1064,7 +1173,7 @@ export default function BomFacilitiesPage() {
                 {/* 1. MENU SỔ XUỐNG ĐƯA LÊN TRÊN CÙNG */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1.5">
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-1.5">
                       <span>Chọn nhân sự quản lý (Sổ xuống):</span>
                     </label>
                     {editManagerName && (
@@ -1075,7 +1184,7 @@ export default function BomFacilitiesPage() {
                           setEditManagerPhone("")
                           setEditManagerEmail("")
                         }}
-                        className="text-[10px] text-rose-400 hover:text-rose-300 font-bold hover:underline flex items-center gap-1 cursor-pointer transition"
+                        className="text-[10px] text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 font-bold hover:underline flex items-center gap-1 cursor-pointer transition"
                       >
                         <UserX className="size-3" />
                         <span>Bỏ phân công</span>
@@ -1092,7 +1201,7 @@ export default function BomFacilitiesPage() {
                           ? availableManagers.find(
                               (p) => p.name.trim().toLowerCase() === editManagerName.trim().toLowerCase()
                             )?.name
-                          : editManagerName.trim()
+                          : editManagerName.trim() && editManagerName !== "Chưa phân công"
                           ? "__CUSTOM__"
                           : ""
                       }
@@ -1113,35 +1222,42 @@ export default function BomFacilitiesPage() {
                           }
                         }
                       }}
-                      className="w-full appearance-none px-3.5 py-2.5 pr-10 rounded-xl border border-slate-700 bg-slate-900 font-bold text-xs text-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition cursor-pointer shadow-inner"
+                      className="w-full appearance-none px-3.5 py-2.5 pr-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold text-xs text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition cursor-pointer shadow-xs"
                     >
-                      <option value="" className="bg-slate-900 text-slate-400 font-normal">
-                        -- Chọn quản lý từ danh sách nhân sự --
+                      <option value="" className="bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 font-normal">
+                        -- Chọn quản lý chưa phụ trách cơ sở (Mỗi cơ sở 1 quản lý) --
                       </option>
                       {availableManagers.map((p) => (
-                        <option key={p.name} value={p.name} className="bg-slate-900 text-white font-medium py-1">
+                        <option key={p.name} value={p.name} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white font-medium py-1">
                           👤 {p.name} {p.phone ? `• SĐT: ${p.phone}` : ""}
                         </option>
                       ))}
                       {editManagerName.trim() &&
+                        editManagerName !== "Chưa phân công" &&
                         !availableManagers.some(
                           (p) => p.name.trim().toLowerCase() === editManagerName.trim().toLowerCase()
                         ) && (
-                          <option value="__CUSTOM__" className="bg-slate-900 text-blue-300 font-medium">
-                            ✍️ Tùy chỉnh: {editManagerName}
+                          <option value="__CUSTOM__" className="bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-300 font-medium">
+                            👤 {editManagerName} (Hiện tại)
                           </option>
                         )}
                     </select>
                     <ChevronDown className="absolute right-3.5 top-3 size-4 text-slate-400 pointer-events-none" />
                   </div>
+                  {availableManagers.length === 0 && (!editManagerName || editManagerName === "Chưa phân công") && (
+                    <p className="mt-1.5 text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
+                      <span>ℹ️</span>
+                      <span>Không có Quản lý nào chưa phân công. Mỗi cơ sở chỉ có 1 Quản lý và tất cả quản lý hiện tại đều đã phụ trách cơ sở.</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* 2. KHI BẤM CHỌN -> HIỆN THÔNG TIN MANAGER XUỐNG DƯỚI */}
                 {editManagerName.trim() ? (
-                  <div className="pt-2 border-t border-slate-800/80 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <div className="pt-2 border-t border-slate-200 dark:border-slate-800/80 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
                     <div>
-                      <label className="block text-[9.5px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
-                        <User className="size-3 text-slate-400" />
+                      <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 flex items-center gap-1">
+                        <User className="size-3 text-slate-500 dark:text-slate-400" />
                         <span>Họ và tên Quản Lý:</span>
                       </label>
                       <input
@@ -1149,14 +1265,14 @@ export default function BomFacilitiesPage() {
                         value={editManagerName}
                         onChange={(e) => setEditManagerName(e.target.value)}
                         placeholder="VD: Trần Văn Quản Lý..."
-                        className="w-full px-3 py-2 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[9.5px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
-                          <Phone className="size-3 text-slate-400" />
+                        <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 flex items-center gap-1">
+                          <Phone className="size-3 text-slate-500 dark:text-slate-400" />
                           <span>Số điện thoại:</span>
                         </label>
                         <input
@@ -1164,12 +1280,12 @@ export default function BomFacilitiesPage() {
                           value={editManagerPhone}
                           onChange={(e) => setEditManagerPhone(e.target.value)}
                           placeholder="VD: 0912 345 678"
-                          className="w-full px-2.5 py-2 rounded-lg border border-slate-700 bg-slate-950 font-medium text-xs text-white placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                          className="w-full px-2.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-medium text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                         />
                       </div>
                       <div>
-                        <label className="block text-[9.5px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
-                          <Mail className="size-3 text-slate-400" />
+                        <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 flex items-center gap-1">
+                          <Mail className="size-3 text-slate-500 dark:text-slate-400" />
                           <span>Email liên hệ:</span>
                         </label>
                         <input
@@ -1177,13 +1293,13 @@ export default function BomFacilitiesPage() {
                           value={editManagerEmail}
                           onChange={(e) => setEditManagerEmail(e.target.value)}
                           placeholder="VD: manager@smartstorage.vn"
-                          className="w-full px-2.5 py-2 rounded-lg border border-slate-700 bg-slate-950 font-medium text-xs text-white placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                          className="w-full px-2.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-medium text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                         />
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="pt-2 border-t border-slate-800/80 p-3 rounded-xl bg-slate-900/40 border border-dashed border-slate-800 text-center">
+                  <div className="pt-2 border-t border-slate-200 dark:border-slate-800/80 p-3 rounded-xl bg-slate-100/70 dark:bg-slate-900/40 border border-dashed border-slate-300 dark:border-slate-800 text-center">
                     <span className="text-[11px] text-slate-500 italic">
                       Chưa có quản lý được chọn. Vui lòng chọn nhân sự ở menu sổ xuống phía trên.
                     </span>
@@ -1192,18 +1308,18 @@ export default function BomFacilitiesPage() {
               </div>
 
               {/* TRẠNG THÁI HOẠT ĐỘNG & BẢO TRÌ */}
-              <div className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-2">
-                <label className="block font-bold text-slate-300 uppercase text-[10px] flex items-center justify-between">
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-2">
+                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <Activity className="size-3.5 text-blue-400" />
+                    <Activity className="size-3.5 text-blue-600 dark:text-blue-400" />
                     <span>Trạng Thái Hoạt Động Cơ Sở:</span>
                   </span>
                   <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                     editFacilityStatus === "MAINTENANCE"
-                      ? "bg-amber-950/80 text-amber-300 border border-amber-800"
+                      ? "bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800"
                       : editFacilityStatus === "INACTIVE"
-                      ? "bg-rose-950/80 text-rose-300 border border-rose-800"
-                      : "bg-emerald-950/80 text-emerald-300 border border-emerald-800"
+                      ? "bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-800"
+                      : "bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800"
                   }`}>
                     {editFacilityStatus === "MAINTENANCE" ? "Đang Bảo Trì" : editFacilityStatus === "INACTIVE" ? "Tạm Ngưng" : "Đang Hoạt Động"}
                   </span>
@@ -1214,8 +1330,8 @@ export default function BomFacilitiesPage() {
                     onClick={() => setEditFacilityStatus("ACTIVE")}
                     className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                       editFacilityStatus === "ACTIVE"
-                        ? "bg-emerald-950/70 border-emerald-500 text-emerald-300 ring-1 ring-emerald-500/50 shadow-sm"
-                        : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                        ? "bg-emerald-50 border-emerald-500 text-emerald-700 ring-1 ring-emerald-500/50 shadow-sm dark:bg-emerald-950/70 dark:border-emerald-500 dark:text-emerald-300"
+                        : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
@@ -1226,8 +1342,8 @@ export default function BomFacilitiesPage() {
                     onClick={() => setEditFacilityStatus("MAINTENANCE")}
                     className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                       editFacilityStatus === "MAINTENANCE"
-                        ? "bg-amber-950/70 border-amber-500 text-amber-300 ring-1 ring-amber-500/50 shadow-sm"
-                        : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                        ? "bg-amber-50 border-amber-500 text-amber-700 ring-1 ring-amber-500/50 shadow-sm dark:bg-amber-950/70 dark:border-amber-500 dark:text-amber-300"
+                        : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
@@ -1238,8 +1354,8 @@ export default function BomFacilitiesPage() {
                     onClick={() => setEditFacilityStatus("INACTIVE")}
                     className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                       editFacilityStatus === "INACTIVE"
-                        ? "bg-rose-950/70 border-rose-500 text-rose-300 ring-1 ring-rose-500/50 shadow-sm"
-                        : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                        ? "bg-rose-50 border-rose-500 text-rose-700 ring-1 ring-rose-500/50 shadow-sm dark:bg-rose-950/70 dark:border-rose-500 dark:text-rose-300"
+                        : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
@@ -1247,12 +1363,12 @@ export default function BomFacilitiesPage() {
                   </button>
                 </div>
                 {editFacilityStatus === "MAINTENANCE" && (
-                  <p className="text-[10px] text-amber-400/90 italic pt-0.5">
+                  <p className="text-[10px] text-amber-600 dark:text-amber-400/90 italic pt-0.5">
                     * Lưu ý: Khi cơ sở ở trạng thái Bảo trì, hệ thống sẽ tạm ngưng tiếp nhận khách đặt thuê mới trên sơ đồ 2D.
                   </p>
                 )}
                 {editFacilityStatus === "INACTIVE" && (
-                  <p className="text-[10px] text-rose-400/90 italic pt-0.5">
+                  <p className="text-[10px] text-rose-600 dark:text-rose-400/90 italic pt-0.5">
                     * Lưu ý: Khi cơ sở Tạm ngưng, toàn bộ hoạt động đặt thuê mới sẽ bị khóa.
                   </p>
                 )}
@@ -1260,22 +1376,28 @@ export default function BomFacilitiesPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase text-[10px] mb-1">
                     Quy Mô Ô Kho:
                   </label>
-                  <div className="p-2.5 rounded-xl border border-slate-800 bg-slate-950/80 font-bold text-xs text-blue-300 flex items-center justify-between">
+                  <div className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 font-bold text-xs text-blue-600 dark:text-blue-300 flex items-center justify-between">
                     <span>
                       {selectedFacility.layoutType === "Layout B" ||
                       selectedFacility.layoutType === "B" ||
-                      [2, 4, 5, 7].includes(Number(selectedFacility.id))
+                      [2, 4, 5, 7, 8].includes(Number(selectedFacility.id))
                         ? "15 Ô kho"
-                        : "46 Ô kho"}
+                        : "45 Ô kho"}
                     </span>
-                    <span className="text-[10px] text-slate-500 font-normal">3 Tầng Chuẩn</span>
+                    <span className="text-[10px] text-slate-500 font-normal">
+                      {selectedFacility.layoutType === "Layout B" ||
+                      selectedFacility.layoutType === "B" ||
+                      [2, 4, 5, 7, 8].includes(Number(selectedFacility.id))
+                        ? "2 Tầng Chuẩn"
+                        : "3 Tầng Chuẩn"}
+                    </span>
                   </div>
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase text-[10px] mb-1">
                     Hệ Số Giá Cơ Sở:
                   </label>
                   <input
@@ -1283,22 +1405,22 @@ export default function BomFacilitiesPage() {
                     step="0.05"
                     value={facilityMultiplier}
                     onChange={(e) => setFacilityMultiplier(Number(e.target.value))}
-                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold text-xs text-slate-800 dark:text-white outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
               <button
                 onClick={() => setIsFacilityModalOpen(false)}
-                className="px-4 py-2 rounded-xl border border-slate-700 font-bold text-xs text-slate-300 hover:text-white cursor-pointer"
+                className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 font-bold text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white cursor-pointer transition"
               >
                 Hủy Bỏ
               </button>
               <button
                 onClick={handleSaveFacilityModal}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer transition"
               >
                 Lưu Cấu Hình
               </button>
@@ -1310,19 +1432,19 @@ export default function BomFacilitiesPage() {
 
       {/* MODAL 2: THÊM CƠ SỞ KHO MỚI & CHỌN LAYOUT 2D - PORTAL RA BODY */}
       {isAddFacilityModalOpen && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[999] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-slate-900 rounded-3xl border border-slate-800 p-5 sm:p-6 max-w-2xl w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-white my-auto max-h-[92vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 max-w-2xl w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-slate-900 dark:text-white my-auto max-h-[92vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div>
-                <h3 className="font-black text-sm uppercase text-blue-400 flex items-center gap-2">
+                <h3 className="font-black text-sm uppercase text-blue-600 dark:text-blue-400 flex items-center gap-2">
                   <Warehouse className="size-4.5" />
                   <span>THÊM CƠ SỞ KHO MỚI</span>
                 </h3>
               </div>
               <button
                 onClick={() => setIsAddFacilityModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white cursor-pointer transition"
               >
                 <X className="size-4" />
               </button>
@@ -1332,28 +1454,28 @@ export default function BomFacilitiesPage() {
             <div className="space-y-4">
               {/* Row 1: Tên chi nhánh */}
               <div>
-                <label className="block font-bold text-slate-300 uppercase text-[10px] mb-1">
-                  Tên Chi Nhánh Cơ Sở Kho <span className="text-rose-400">*</span>:
+                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] mb-1">
+                  Tên Chi Nhánh Cơ Sở Kho <span className="text-rose-500">*</span>:
                 </label>
                 <input
                   type="text"
                   value={newFacName}
                   onChange={(e) => setNewFacName(e.target.value)}
                   placeholder="VD: SmartStorage Cầu Giấy hoặc SmartStorage Bình Thạnh"
-                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold text-xs text-slate-800 dark:text-white outline-none focus:border-blue-500 placeholder:text-slate-400 dark:placeholder:text-slate-600 transition"
                 />
               </div>
 
               {/* Row 2: Khu vực tỉnh thành & Mã Code tự động */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-300 uppercase text-[10px] mb-1">
-                    Tỉnh / Thành Phố <span className="text-rose-400">*</span>:
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] mb-1">
+                    Tỉnh / Thành Phố <span className="text-rose-500">*</span>:
                   </label>
                   <select
                     value={newFacCity}
                     onChange={(e) => handleCityChange(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500 cursor-pointer"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold text-xs text-slate-800 dark:text-white outline-none focus:border-blue-500 cursor-pointer transition"
                   >
                     {CITY_REGIONS.map((city) => (
                       <option key={city.prefix} value={city.prefix}>
@@ -1364,7 +1486,7 @@ export default function BomFacilitiesPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-300 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] mb-1">
                     Mã Cơ Sở Hệ Thống:
                   </label>
                   <div className="relative">
@@ -1372,7 +1494,7 @@ export default function BomFacilitiesPage() {
                       type="text"
                       value={newFacCode}
                       onChange={(e) => setNewFacCode(e.target.value.toUpperCase())}
-                      className="w-full p-2.5 pl-3 rounded-xl border border-blue-500/40 bg-blue-950/20 font-mono font-black text-xs text-blue-300 outline-none focus:border-blue-500 uppercase tracking-wider"
+                      className="w-full p-2.5 pl-3 rounded-xl border border-blue-300 dark:border-blue-500/40 bg-blue-50/70 dark:bg-blue-950/20 font-mono font-black text-xs text-blue-700 dark:text-blue-300 outline-none focus:border-blue-500 uppercase tracking-wider transition"
                     />
                   </div>
                 </div>
@@ -1380,37 +1502,40 @@ export default function BomFacilitiesPage() {
 
               {/* Row 3: Lựa chọn Mô hình Layout Kiến Trúc Thống Nhất */}
               <div className="space-y-2">
-                <label className="block font-bold text-slate-300 uppercase text-[10px]">
-                  Mô Hình Kiến Trúc &amp; Sơ Đồ Thiết Kế 2D <span className="text-rose-400">*</span>:
+                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px]">
+                  Mô Hình Kiến Trúc &amp; Sơ Đồ Thiết Kế 2D <span className="text-rose-500">*</span>:
                 </label>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Card Layout A */}
                   <div
-                    onClick={() => setNewFacLayout("A")}
+                    onClick={() => {
+                      setNewFacLayout("A")
+                      setNewFacFloors(3)
+                    }}
                     className={`p-3.5 rounded-2xl border transition-all cursor-pointer relative ${
                       newFacLayout === "A"
-                        ? "bg-blue-500/10 border-blue-500 shadow-md shadow-blue-500/10 ring-1 ring-blue-500"
-                        : "bg-slate-950/60 border-slate-800 hover:border-slate-700"
+                        ? "bg-blue-50 dark:bg-blue-500/10 border-blue-500 shadow-md shadow-blue-500/10 ring-1 ring-blue-500"
+                        : "bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-extrabold text-xs text-blue-400">Layout A</span>
-                      {newFacLayout === "A" && <CheckCircle2 className="size-4 text-blue-400" />}
+                      <span className="font-extrabold text-xs text-blue-600 dark:text-blue-400">Layout A</span>
+                      {newFacLayout === "A" && <CheckCircle2 className="size-4 text-blue-600 dark:text-blue-400" />}
                     </div>
-                    <div className="space-y-1.5 text-[10px] bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
+                    <div className="space-y-1.5 text-[10px] bg-white dark:bg-slate-900/90 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
                       <div className="flex items-center justify-between">
-                        <span className="text-slate-400 shrink-0">Quy mô:</span>
-                        <span className="font-bold text-blue-300 font-mono">46 Ô Kho (3 Tầng)</span>
+                        <span className="text-slate-500 dark:text-slate-400 shrink-0">Quy mô:</span>
+                        <span className="font-bold text-blue-600 dark:text-blue-300 font-mono">45 Ô Kho (3 Tầng)</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-slate-400 shrink-0">Kích thước:</span>
-                        <span className="font-bold text-white">Size S, M, L, XL</span>
+                        <span className="text-slate-500 dark:text-slate-400 shrink-0">Kích thước:</span>
+                        <span className="font-bold text-slate-800 dark:text-white">Size S, M, L, XL</span>
                       </div>
-                      <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
-                        <span className="text-slate-400 shrink-0 whitespace-nowrap">Cơ cấu tầng:</span>
-                        <span className="text-slate-200 font-medium whitespace-nowrap text-right">
-                          Trệt (10 XL) + 2 Lầu (36 ô S, M, L)
+                      <div className="flex items-center justify-between pt-1 border-t border-slate-200 dark:border-slate-800/80">
+                        <span className="text-slate-500 dark:text-slate-400 shrink-0 whitespace-nowrap">Cơ cấu tầng:</span>
+                        <span className="text-slate-700 dark:text-slate-200 font-medium whitespace-nowrap text-right">
+                          Trệt (10 XL) + 2 Lầu (35-36 ô S, M, L)
                         </span>
                       </div>
                     </div>
@@ -1418,30 +1543,33 @@ export default function BomFacilitiesPage() {
 
                   {/* Card Layout B */}
                   <div
-                    onClick={() => setNewFacLayout("B")}
+                    onClick={() => {
+                      setNewFacLayout("B")
+                      setNewFacFloors(2)
+                    }}
                     className={`p-3.5 rounded-2xl border transition-all cursor-pointer relative ${
                       newFacLayout === "B"
-                        ? "bg-amber-500/10 border-amber-400 shadow-md shadow-amber-500/10 ring-1 ring-amber-400"
-                        : "bg-slate-950/60 border-slate-800 hover:border-slate-700"
+                        ? "bg-amber-50 dark:bg-amber-500/10 border-amber-400 shadow-md shadow-amber-500/10 ring-1 ring-amber-400"
+                        : "bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-extrabold text-xs text-amber-400">Layout B</span>
-                      {newFacLayout === "B" && <CheckCircle2 className="size-4 text-amber-400" />}
+                      <span className="font-extrabold text-xs text-amber-600 dark:text-amber-400">Layout B</span>
+                      {newFacLayout === "B" && <CheckCircle2 className="size-4 text-amber-600 dark:text-amber-400" />}
                     </div>
-                    <div className="space-y-1.5 text-[10px] bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
+                    <div className="space-y-1.5 text-[10px] bg-white dark:bg-slate-900/90 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
                       <div className="flex items-center justify-between">
-                        <span className="text-slate-400 shrink-0">Quy mô:</span>
-                        <span className="font-black text-amber-300 font-mono">15 Ô Kho (3 Tầng)</span>
+                        <span className="text-slate-500 dark:text-slate-400 shrink-0">Quy mô:</span>
+                        <span className="font-black text-amber-600 dark:text-amber-300 font-mono">15 Ô Kho (2 Tầng)</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-slate-400 shrink-0">Kích thước:</span>
-                        <span className="font-bold text-white">Size S, M, L, XL</span>
+                        <span className="text-slate-500 dark:text-slate-400 shrink-0">Kích thước:</span>
+                        <span className="font-bold text-slate-800 dark:text-white">Size S, M, L, XL</span>
                       </div>
-                      <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
-                        <span className="text-slate-400 shrink-0 whitespace-nowrap">Cơ cấu tầng:</span>
-                        <span className="text-slate-200 font-medium whitespace-nowrap text-right">
-                          Trệt (5 XL) + 2 Lầu (10 ô S, M, L)
+                      <div className="flex items-center justify-between pt-1 border-t border-slate-200 dark:border-slate-800/80">
+                        <span className="text-slate-500 dark:text-slate-400 shrink-0 whitespace-nowrap">Cơ cấu tầng:</span>
+                        <span className="text-slate-700 dark:text-slate-200 font-medium whitespace-nowrap text-right">
+                          Trệt (5 XL) + 1 Lầu (10 ô S, M, L)
                         </span>
                       </div>
                     </div>
@@ -1451,8 +1579,8 @@ export default function BomFacilitiesPage() {
 
               {/* Row 4: Địa chỉ chi nhánh */}
               <div>
-                <label className="block font-bold text-slate-300 uppercase text-[10px] mb-1">
-                  Địa Chỉ Chi Nhánh <span className="text-rose-400">*</span>:
+                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] mb-1">
+                  Địa Chỉ Chi Nhánh <span className="text-rose-500">*</span>:
                 </label>
                 <input
                   type="text"
@@ -1462,26 +1590,43 @@ export default function BomFacilitiesPage() {
                     CITY_REGIONS.find((c) => c.prefix === newFacCity)?.hint ||
                     "Số nhà, tên đường, phường/xã, quận/huyện..."
                   }
-                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-semibold text-xs text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-semibold text-xs text-slate-800 dark:text-white outline-none focus:border-blue-500 placeholder:text-slate-400 dark:placeholder:text-slate-600 transition"
                 />
               </div>
 
               {/* Row 5: Quản lý & Hotline */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-300 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] mb-1">
                     Quản Lý Chi Nhánh Phụ Trách:
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={newFacManager}
-                    onChange={(e) => setNewFacManager(e.target.value)}
-                    placeholder="VD: Nguyễn Văn Quản Lý"
-                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-semibold text-xs text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
-                  />
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setNewFacManager(val)
+                      const found = addAvailableManagers.find((m) => m.name === val)
+                      if (found && found.phone) {
+                        setNewFacPhone(found.phone)
+                      }
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-semibold text-xs text-slate-800 dark:text-white outline-none focus:border-blue-500 cursor-pointer transition"
+                  >
+                    <option value="">-- Chưa phân công quản lý --</option>
+                    {addAvailableManagers.map((m) => (
+                      <option key={m.name} value={m.name}>
+                        👤 {m.name} {m.phone ? `• SĐT: ${m.phone}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  {addAvailableManagers.length === 0 && (
+                    <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
+                      ⚠️ Tất cả Quản lý hiện tại đều đã phụ trách cơ sở. Cơ sở mới sẽ để trạng thái "Chưa phân công".
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-300 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] mb-1">
                     Hotline Liên Hệ Chi Nhánh:
                   </label>
                   <input
@@ -1489,15 +1634,15 @@ export default function BomFacilitiesPage() {
                     value={newFacPhone}
                     onChange={(e) => setNewFacPhone(e.target.value)}
                     placeholder="VD: 0901234567"
-                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-semibold text-xs text-white outline-none focus:border-blue-500 placeholder:text-slate-600"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-semibold text-xs text-slate-800 dark:text-white outline-none focus:border-blue-500 placeholder:text-slate-400 dark:placeholder:text-slate-600 transition"
                   />
                 </div>
               </div>
 
               {/* Row 6: Trạng thái ban đầu */}
               <div>
-                <label className="block font-bold text-slate-300 uppercase text-[10px] mb-1.5 flex items-center gap-1.5">
-                  <Activity className="size-3 text-slate-400" />
+                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] mb-1.5 flex items-center gap-1.5">
+                  <Activity className="size-3 text-slate-500 dark:text-slate-400" />
                   <span>Trạng Thái Ban Đầu Khi Khởi Tạo:</span>
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -1506,8 +1651,8 @@ export default function BomFacilitiesPage() {
                     onClick={() => setNewFacStatus("ACTIVE")}
                     className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                       newFacStatus === "ACTIVE"
-                        ? "bg-emerald-950/70 border-emerald-500 text-emerald-300 ring-1 ring-emerald-500/50 shadow-sm"
-                        : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                        ? "bg-emerald-50 dark:bg-emerald-950/70 border-emerald-500 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500/50 shadow-sm"
+                        : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700"
                     }`}
                   >
                     <span>🟢 Hoạt Động</span>
@@ -1517,8 +1662,8 @@ export default function BomFacilitiesPage() {
                     onClick={() => setNewFacStatus("MAINTENANCE")}
                     className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                       newFacStatus === "MAINTENANCE"
-                        ? "bg-amber-950/70 border-amber-500 text-amber-300 ring-1 ring-amber-500/50 shadow-sm"
-                        : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                        ? "bg-amber-50 dark:bg-amber-950/70 border-amber-500 text-amber-700 dark:text-amber-300 ring-1 ring-amber-500/50 shadow-sm"
+                        : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700"
                     }`}
                   >
                     <span>🟠 Bảo Trì</span>
@@ -1528,8 +1673,8 @@ export default function BomFacilitiesPage() {
                     onClick={() => setNewFacStatus("INACTIVE")}
                     className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                       newFacStatus === "INACTIVE"
-                        ? "bg-rose-950/70 border-rose-500 text-rose-300 ring-1 ring-rose-500/50 shadow-sm"
-                        : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                        ? "bg-rose-50 dark:bg-rose-950/70 border-rose-500 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500/50 shadow-sm"
+                        : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700"
                     }`}
                   >
                     <span>🔴 Tạm Ngưng</span>
@@ -1539,11 +1684,11 @@ export default function BomFacilitiesPage() {
             </div>
 
             {/* Modal Actions */}
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => setIsAddFacilityModalOpen(false)}
-                className="px-4 py-2.5 rounded-xl border border-slate-700 font-bold text-xs text-slate-300 hover:text-white cursor-pointer"
+                className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 font-bold text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition"
               >
                 Hủy Bỏ
               </button>
@@ -1564,19 +1709,19 @@ export default function BomFacilitiesPage() {
 
       {/* MODAL 3: XÁC NHẬN XÓA CƠ SỞ KHO - PORTAL RA BODY */}
       {facilityToDelete && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[999] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-900 rounded-3xl border border-rose-500/30 p-6 max-w-md w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-white my-auto">
+        <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-rose-200 dark:border-rose-500/30 p-6 max-w-md w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-slate-900 dark:text-white my-auto">
             <div className="flex items-start gap-3">
-              <div className="p-3 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 shrink-0">
+              <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-400 shrink-0">
                 <AlertTriangle className="size-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-black text-sm uppercase text-white">
+                <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white">
                   Xác Nhận Xóa Cơ Sở Kho?
                 </h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   Bạn có chắc chắn muốn xóa{" "}
-                  <span className="font-bold text-rose-400">
+                  <span className="font-bold text-rose-600 dark:text-rose-400">
                     {facilityToDelete.name.replace(/\s*\([A-Z0-9-]+\)\s*$/, "")}
                   </span>{" "}
                   khỏi chuỗi vận hành?
@@ -1584,16 +1729,16 @@ export default function BomFacilitiesPage() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
               <button
                 onClick={() => setFacilityToDelete(null)}
-                className="px-4 py-2 rounded-xl border border-slate-700 font-bold text-xs text-slate-300 hover:text-white cursor-pointer"
+                className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 font-bold text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition"
               >
                 Hủy Bỏ
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md cursor-pointer flex items-center gap-1.5 transition"
               >
                 <Trash2 className="size-4" />
                 <span>Xác Nhận Xóa Cơ Sở</span>

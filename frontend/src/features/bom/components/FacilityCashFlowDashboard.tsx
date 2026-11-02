@@ -9,13 +9,15 @@ export interface MonthlyRevenuePoint {
   penaltyRevenue?: number
 }
 
-export type CashFlowPeriod = "1_month" | "2_months" | "3_months" | "all" | "this_month" | "last_3_months" | "all_time"
+export type CashFlowPeriod = "this_month" | "last_3_months" | "all" | "1_month" | "2_months" | "3_months" | "all_time"
+
+export type NormalizedCashFlowPeriod = "this_month" | "last_3_months" | "all"
 
 export interface FacilityCashFlowDashboardProps {
   title?: string
   subtitle?: string
   period?: CashFlowPeriod
-  onPeriodChange?: (period: "1_month" | "2_months" | "3_months" | "all") => void
+  onPeriodChange?: (period: NormalizedCashFlowPeriod) => void
   monthlyRevenues?: MonthlyRevenuePoint[]
   netRevenue?: number
   rentalRevenue?: number
@@ -31,17 +33,15 @@ export interface FacilityCashFlowDashboardProps {
   occupancyRate?: number
 }
 
-export const CASH_FLOW_PERIOD_OPTIONS: { key: "1_month" | "2_months" | "3_months" | "all"; label: string }[] = [
-  { key: "1_month", label: "1 Tháng" },
-  { key: "2_months", label: "2 Tháng" },
-  { key: "3_months", label: "3 Tháng" },
+export const CASH_FLOW_PERIOD_OPTIONS: { key: NormalizedCashFlowPeriod; label: string }[] = [
+  { key: "this_month", label: "Tháng Này" },
+  { key: "last_3_months", label: "3 Tháng Gần Nhất" },
   { key: "all", label: "Tất Cả" },
 ]
 
-function normalizePeriod(p?: CashFlowPeriod): "1_month" | "2_months" | "3_months" | "all" {
-  if (p === "this_month" || p === "1_month") return "1_month"
-  if (p === "2_months") return "2_months"
-  if (p === "last_3_months" || p === "3_months") return "3_months"
+function normalizePeriod(p?: CashFlowPeriod): NormalizedCashFlowPeriod {
+  if (p === "this_month" || p === "1_month") return "this_month"
+  if (p === "last_3_months" || p === "3_months" || p === "2_months") return "last_3_months"
   return "all"
 }
 
@@ -67,7 +67,7 @@ export default function FacilityCashFlowDashboard({
   const [, setHoveredMonthIndex] = useState<number | null>(null)
   const [selectedMonthIndex, setSelectedMonthIndex] = useState<number | null>(null)
 
-  const [internalPeriod, setInternalPeriod] = useState<"1_month" | "2_months" | "3_months" | "all">(() =>
+  const [internalPeriod, setInternalPeriod] = useState<NormalizedCashFlowPeriod>(() =>
     normalizePeriod(period)
   )
 
@@ -96,7 +96,7 @@ export default function FacilityCashFlowDashboard({
 
   const currentPeriod = period !== undefined ? normalizePeriod(period) : internalPeriod
 
-  const handleSelectPeriod = (newP: "1_month" | "2_months" | "3_months" | "all") => {
+  const handleSelectPeriod = (newP: NormalizedCashFlowPeriod) => {
     setInternalPeriod(newP)
     setSelectedMonthIndex(null)
     setIsDropdownOpen(false)
@@ -143,9 +143,8 @@ export default function FacilityCashFlowDashboard({
 
   // Xác định khoảng tháng được lọc
   const activeStartIndex = useMemo(() => {
-    if (currentPeriod === "1_month") return Math.max(0, monthlyData.length - 1)
-    if (currentPeriod === "2_months") return Math.max(0, monthlyData.length - 2)
-    if (currentPeriod === "3_months") return Math.max(0, monthlyData.length - 3)
+    if (currentPeriod === "this_month") return Math.max(0, monthlyData.length - 1)
+    if (currentPeriod === "last_3_months") return Math.max(0, monthlyData.length - 3)
     return 0
   }, [currentPeriod, monthlyData.length])
 
@@ -173,20 +172,15 @@ export default function FacilityCashFlowDashboard({
   const dynamicSubtitle = useMemo(() => {
     if (monthlyData.length === 0) return subtitle
     const lastM = monthlyData[monthlyData.length - 1]
-    if (currentPeriod === "1_month") {
-      return `Dòng tiền thực thu 1 tháng gần nhất (${lastM?.label || lastM?.month || "tháng này"})`
+    if (currentPeriod === "this_month") {
+      return `Dòng tiền thực thu tháng này (${lastM?.label || lastM?.month || "tháng này"})`
     }
-    if (currentPeriod === "2_months") {
-      const startM = monthlyData[Math.max(0, monthlyData.length - 2)]?.month || ""
-      const endM = lastM?.month || ""
-      return `Dòng tiền thực thu 2 tháng gần nhất (${startM} - ${endM})`
-    }
-    if (currentPeriod === "3_months") {
+    if (currentPeriod === "last_3_months") {
       const startM = monthlyData[Math.max(0, monthlyData.length - 3)]?.month || ""
       const endM = lastM?.month || ""
       return `Dòng tiền thực thu 3 tháng gần nhất (${startM} - ${endM})`
     }
-    return subtitle || "Xu hướng dòng tiền thực thu 6 tháng gần nhất"
+    return subtitle || "Xu hướng dòng tiền thực thu toàn thời gian"
   }, [subtitle, currentPeriod, monthlyData])
 
   // Xác định mốc min và max để vẽ đồ thị đường cong chuẩn xác
@@ -512,7 +506,7 @@ export default function FacilityCashFlowDashboard({
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Thuê Kho</span>
               <span className="text-[9px] text-blue-600 dark:text-blue-400 font-semibold">
-                {currentPeriod === "all" ? "Toàn kỳ" : currentPeriod === "1_month" ? "1 tháng" : currentPeriod === "2_months" ? "2 tháng" : "3 tháng"}
+                {currentPeriod === "all" ? "Tất cả" : currentPeriod === "this_month" ? "Tháng này" : "3 tháng gần nhất"}
               </span>
             </div>
             <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">
@@ -524,7 +518,7 @@ export default function FacilityCashFlowDashboard({
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Phạt</span>
               <span className="text-[9px] text-amber-600 dark:text-amber-400 font-semibold">
-                {currentPeriod === "all" ? "Toàn kỳ" : currentPeriod === "1_month" ? "1 tháng" : currentPeriod === "2_months" ? "2 tháng" : "3 tháng"}
+                {currentPeriod === "all" ? "Tất cả" : currentPeriod === "this_month" ? "Tháng này" : "3 tháng gần nhất"}
               </span>
             </div>
             <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">

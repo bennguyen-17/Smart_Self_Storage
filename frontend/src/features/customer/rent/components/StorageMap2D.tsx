@@ -17,13 +17,15 @@ export const facilityData: Record<string, {
     address: 'Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội',
     floors: 3,
     city: 'Hà Nội',
+    layoutType: 'A',
     image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80',
   },
   HN02: {
     name: 'SmartStorage Thanh Xuân (HN02)',
     address: 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội',
-    floors: 3,
+    floors: 2,
     city: 'Hà Nội',
+    layoutType: 'B',
     image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=600&q=80',
   },
   HCM01: {
@@ -31,6 +33,7 @@ export const facilityData: Record<string, {
     address: 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM',
     floors: 3,
     city: 'TP.HCM',
+    layoutType: 'A',
     image: 'https://images.unsplash.com/photo-1590247813693-5541d1c609fd?auto=format&fit=crop&w=600&q=80',
   },
   HCM02: {
@@ -38,20 +41,23 @@ export const facilityData: Record<string, {
     address: 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM',
     floors: 2,
     city: 'TP.HCM',
+    layoutType: 'B',
     image: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?auto=format&fit=crop&w=600&q=80',
   },
   HCM03: {
     name: 'SmartStorage Thủ Đức (HCM03)',
     address: 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM',
-    floors: 3,
+    floors: 2,
     city: 'TP.HCM',
+    layoutType: 'B',
     image: 'https://images.unsplash.com/photo-1568667256549-094345857637?auto=format&fit=crop&w=600&q=80',
   },
   DN01: {
     name: 'SmartStorage Hải Châu (DN01)',
     address: 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng',
-    floors: 2,
+    floors: 3,
     city: 'Đà Nẵng',
+    layoutType: 'A',
     image: 'https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=600&q=80',
   },
   CT01: {
@@ -59,6 +65,7 @@ export const facilityData: Record<string, {
     address: 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ',
     floors: 2,
     city: 'Cần Thơ',
+    layoutType: 'B',
     image: 'https://images.unsplash.com/photo-1730154838368-c37b1fdebcf6?auto=format&fit=crop&w=600&q=80',
   },
 };
@@ -144,19 +151,6 @@ export const getFacilityCity = (address?: string, code?: string): string => {
 export const hasAssignedManager = (fac: any): boolean => {
   if (!fac) return false;
   let mgrName = fac.managerName;
-  if (typeof window !== 'undefined' && (fac.backendId || fac.id)) {
-    try {
-      const raw = localStorage.getItem('smart_storage_facility_managers');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        const saved = parsed[fac.backendId || fac.id] || (fac.code ? parsed[fac.code] : null);
-        if (saved && saved.name !== undefined) {
-          mgrName = saved.name;
-        }
-      }
-    } catch (e) {}
-  }
-
   if (!mgrName) return false;
   const trimmed = String(mgrName).trim().toLowerCase();
   if (
@@ -246,15 +240,19 @@ export default function StorageMap2D({
         const rawName = b.name || b.facilityName || existingData?.name || `Cơ sở ${code}`;
         const formattedName = rawName.includes('(') ? rawName : `${rawName} (${code})`;
 
+        const layoutType = (b.layoutType || existingData?.layoutType || (['HN02', 'HCM02', 'HCM03', 'CT01', 'BRVT01'].includes(normalizedCode) ? 'B' : 'A')).toUpperCase();
+        const isLayoutB = layoutType === 'B' || layoutType === 'LAYOUT B';
+        const targetFloors = isLayoutB ? 2 : 3;
+
         return {
           key: code,
           code: code,
           name: formattedName,
           address: b.address || existingData?.address || '',
-          floors: b.floors || b.floorCount || existingData?.floors || 3,
+          floors: targetFloors,
           city: city,
           image: image,
-          layoutType: (b.layoutType || existingData?.layoutType || (['HN02', 'HCM02', 'HCM03', 'CT01'].includes(normalizedCode) ? 'B' : 'A')).toUpperCase(),
+          layoutType: layoutType,
           managerName: b.managerName,
         };
       });
@@ -324,26 +322,44 @@ export default function StorageMap2D({
     (b) => b.code === facility || b.key === facility || b.code === facility.replace('-', '')
   );
   const matchedBranch = branches.find((b) => b.code === facility || b.id === facility);
+  const effectiveLayout = (
+    currentEligible?.layoutType ||
+    matchedBranch?.layoutType ||
+    (facility && (facilityData[facility] || facilityData[facility.replace('-', '')])?.layoutType) ||
+    (['HN02', 'HCM02', 'HCM03', 'CT01', 'BRVT01', 'HN-02', 'HCM-02', 'HCM-03', 'CT-01', 'BRVT-01'].includes(facility) ? 'B' : 'A')
+  ).toUpperCase();
+  const isLayoutB = effectiveLayout === 'B' || effectiveLayout === 'LAYOUT B';
+  const effectiveFloors = isLayoutB ? 2 : 3;
+
   const currentFacilityObj = currentEligible
     ? {
         name: currentEligible.name,
         address: currentEligible.address,
-        floors: currentEligible.floors || 3,
-        layoutType: currentEligible.layoutType || 'A',
+        floors: effectiveFloors,
+        layoutType: effectiveLayout,
       }
     : matchedBranch
     ? {
         name: matchedBranch.name || matchedBranch.facilityName,
         address: matchedBranch.address,
-        floors: matchedBranch.floors || 3,
-        layoutType: (matchedBranch.layoutType || 'A').toUpperCase(),
+        floors: effectiveFloors,
+        layoutType: effectiveLayout,
       }
     : (facility && (facilityData[facility] || facilityData[facility.replace('-', '')]))
       ? {
           ...(facilityData[facility] || facilityData[facility.replace('-', '')]),
-          layoutType: ['HN02', 'HCM02', 'HCM03', 'CT01', 'HN-02', 'HCM-02', 'HCM-03', 'CT-01'].includes(facility) ? 'B' : 'A',
+          floors: effectiveFloors,
+          layoutType: effectiveLayout,
         }
       : null;
+
+  // Tự động chuyển về Tầng Trệt nếu tầng đang chọn vượt quá số tầng của cơ sở (vd: từ cơ sở 3 tầng sang cơ sở 2 tầng)
+  useEffect(() => {
+    const maxFloors = currentFacilityObj?.floors || (isLayoutB ? 2 : 3);
+    if (currentFloor > maxFloors) {
+      onSelectFloor(1);
+    }
+  }, [currentFacilityObj?.floors, currentFloor, isLayoutB, onSelectFloor]);
 
   // Gọi API lấy danh sách ô kho theo cơ sở và tầng
   useEffect(() => {
