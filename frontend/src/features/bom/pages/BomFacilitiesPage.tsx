@@ -178,7 +178,7 @@ export default function BomFacilitiesPage() {
   const REVENUE_PERIOD_OPTIONS = [
     { key: "this_month", label: "Tháng Này" },
     { key: "last_3_months", label: "3 Tháng Gần Nhất" },
-    { key: "all_time", label: "Toàn Thời Gian" },
+    { key: "all_time", label: "Tất Cả" },
   ] as const
 
   const [isDetailPeriodOpen, setIsDetailPeriodOpen] = useState(false)
@@ -667,7 +667,7 @@ export default function BomFacilitiesPage() {
               ? "Tháng Này"
               : revenuePeriod === "last_3_months"
                 ? "3 Tháng Gần Nhất"
-                : "Toàn Thời Gian"
+                : "Tất Cả"
 
           return (
             <div className="space-y-5">
@@ -763,6 +763,7 @@ export default function BomFacilitiesPage() {
                 title={`Doanh Thu Thực Thu - ${code}`}
                 subtitle={`Xu hướng dòng tiền thực thu (${periodLabel})`}
                 period={revenuePeriod}
+                onPeriodChange={(newP) => setRevenuePeriod(newP === "all" ? "all_time" : newP)}
                 monthlyRevenues={monthlyRevs}
                 netRevenue={netRev}
                 rentalRevenue={rentalRev}
@@ -944,7 +945,7 @@ export default function BomFacilitiesPage() {
                       ? "Tháng Này"
                       : revenuePeriod === "last_3_months"
                         ? "3 Tháng Gần Nhất"
-                        : "Toàn Thời Gian"}
+                        : "Tất Cả"}
                   </span>
                   <ChevronDown
                     className={`size-3.5 text-slate-400 transition-transform duration-200 ${
@@ -1004,7 +1005,7 @@ export default function BomFacilitiesPage() {
                       ? "DOANH THU (THÁNG NÀY)"
                       : revenuePeriod === "last_3_months"
                         ? "DOANH THU (3 THÁNG GẦN NHẤT)"
-                        : "DOANH THU (TOÀN THỜI GIAN)"}
+                        : "DOANH THU (TẤT CẢ)"}
                   </th>
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">TRẠNG THÁI</th>
                   <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">THAO TÁC</th>
