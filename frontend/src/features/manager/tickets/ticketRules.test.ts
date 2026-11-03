@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 
-import { isWaitingForReturnDate, ticketProgress } from "./ticketRules"
+import { isWaitingForReturnDate, ticketProgress, ticketsOfFacility } from "./ticketRules"
 
 const TODAY = "2026-11-02"
 
@@ -26,5 +26,21 @@ describe("isWaitingForReturnDate: chỉ ticket trả kho sớm có hẹn sau hô
     { type: "MAINTENANCE", desiredDate: "2026-11-10", expected: false },
   ] as const)("$type hẹn $desiredDate → $expected", ({ type, desiredDate, expected }) => {
     expect(isWaitingForReturnDate({ status: "SUBMITTED", type, desiredDate }, TODAY)).toBe(expected)
+  })
+})
+
+describe("ticketsOfFacility: Manager chỉ thấy ticket cơ sở mình (BE có lúc trả cả cơ sở khác)", () => {
+  const LIST = [
+    { id: 1, facilityId: 1 },
+    { id: 2, facilityId: 4 },
+    { id: 3, facilityId: null },
+    { id: 4, facilityId: 4 },
+  ]
+  test.each([
+    { name: "Manager HCM-02 (cơ sở 4)", facilityId: 4, expected: [2, 4] },
+    { name: "cơ sở chưa có ticket", facilityId: 7, expected: [] },
+    { name: "chưa biết cơ sở", facilityId: null, expected: [] },
+  ])("$name → $expected", ({ facilityId, expected }) => {
+    expect(ticketsOfFacility(LIST, facilityId).map((t) => t.id)).toEqual(expected)
   })
 })

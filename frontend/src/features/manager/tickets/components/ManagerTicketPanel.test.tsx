@@ -27,6 +27,7 @@ function beError(status: number, message: string) {
 const TICKET: ManagerTicketItem = {
   id: 6,
   ticketCode: "TCK-202610-006",
+  facilityId: 1,
   type: "MAINTENANCE",
   status: "SUBMITTED",
   customerName: "Nguyễn Thành Long",
@@ -106,5 +107,17 @@ describe("ManagerTicketPanel: Manager chỉ theo dõi, không tiếp nhận hay 
     const row = (await screen.findByText("Lê Thị Ánh Tuyết")).closest("tr") as HTMLElement
     expect(within(row).getByText("Đã phân, chưa tiếp nhận")).toBeInTheDocument()
     expect(within(row).getByText("Đã phân cho nhân viên trong ca, chờ tiếp nhận")).toBeInTheDocument()
+  })
+})
+
+describe("ManagerTicketPanel: chỉ hiện ticket của cơ sở mình", () => {
+  test("BE trả lẫn ticket cơ sở khác → không hiện", async () => {
+    vi.mocked(listManagerTickets).mockResolvedValue([
+      { ...TICKET, id: 1, ticketCode: "TCK-HN01" },
+      { ...TICKET, id: 2, ticketCode: "TCK-HCM02", facilityId: 4, facilityName: "SmartStorage Quận 7" },
+    ])
+    render(<ManagerTicketPanel />)
+    expect(await screen.findByText(/TCK-HN01/)).toBeInTheDocument()
+    expect(screen.queryByText(/TCK-HCM02/)).not.toBeInTheDocument()
   })
 })

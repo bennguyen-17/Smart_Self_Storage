@@ -187,17 +187,10 @@ describe("AuditLogPanel: phân trang khi có nhiều log", () => {
     ).toBeDisabled()
   })
 
-  test("đổi số dòng mỗi trang → về trang 1, hiện đủ", async () => {
-    const user = await renderMany()
-    await user.click(screen.getByRole("button", { name: "Trang sau" }))
-    await user.selectOptions(
-      screen.getByRole("combobox", { name: /số dòng mỗi trang/i }),
-      "50"
-    )
-    expect(bodyRows()).toHaveLength(45)
-    expect(
-      within(screen.getByRole("navigation", { name: "Phân trang" })).getAllByRole("button", { name: /^Trang \d+$/ })
-    ).toHaveLength(1)
+  test("cố định 10 dòng mỗi trang, không có ô chọn số dòng", async () => {
+    await renderMany()
+    expect(bodyRows()).toHaveLength(10)
+    expect(screen.queryByRole("combobox", { name: /số dòng mỗi trang/i })).not.toBeInTheDocument()
   })
 
   test("đang ở trang cuối mà lọc lại → quay về trang 1 của kết quả lọc", async () => {

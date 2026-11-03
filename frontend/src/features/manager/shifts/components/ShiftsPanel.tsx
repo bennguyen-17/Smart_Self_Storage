@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react"
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
+import { CalendarRangeIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "cn"
 
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Spinner } from "@/components/ui/spinner"
 import {
   DateFilter,
   FilterBar,
@@ -13,14 +15,16 @@ import { getManagerContext } from "@/features/manager/managerContext"
 import { useAsyncData } from "@/hooks/useAsyncData"
 import { addDays, todayInVietnam } from "@/lib/format"
 
-import { getDaySchedule, listFacilityStaff } from "../api/shiftApi"
-import { weekDays } from "../shiftRules"
+import { readableError } from "@/components/internal/readableError"
+
+import { getDaySchedule, listFacilityStaff, saveShift } from "../api/shiftApi"
+import { planWeekCopy, weekDays } from "../shiftRules"
 import ShiftCard from "./ShiftCard"
 
 /**
  * US-32: ma trận phân ca theo prototype manager_portal: chọn ngày trên dải tuần (thứ 2 → chủ nhật),
- * mỗi ca (tên, giờ lấy từ bảng Shift) là một thẻ, thêm người và lưu ngay trong từng thẻ.
- * Chỉ phân ai trực ca nào; không chia việc trong ca.
+ * mỗi ca (tên, giờ lấy từ bảng Shift) là một thẻ, mỗi ca 1 người trực, đổi người và lưu ngay trong từng thẻ.
+ * "Áp dụng cho cả tuần" chép lịch ngày đang xem sang các ngày còn lại trong tuần (T2 → CN), ghi đè lịch cũ.
  */
 function ShiftsPanel() {
   const ctx = useMemo(() => getManagerContext(), [])
@@ -36,6 +40,31 @@ function ShiftsPanel() {
   const error = staff.error ?? schedule.error
   const isLoading = staff.isLoading || schedule.isLoading
   const week = weekDays(date)
+  const [confirmWeek, setConfirmWeek] = useState(false)
+  const [copying, setCopying] = useState(false)
+  const weekPlan = schedule.data && !isLoading ? planWeekCopy(schedule.data, today) : []
+  const targetDays = week.filter((d) => weekPlan.some((w) => w.date === d.date))
+  const sourceDay = week.find((d) => d.date === date)
+
+  async function applyToWeek() {
+    setCopying(true)
+    let failed = 0
+    let lastError = ""
+    // Gọi lần lượt từng ca để BE kiểm tra từng lượt; một ca lỗi không chặn các ca khác
+    for (const w of weekPlan) {
+      try {
+        await saveShift(ctx, w.date, w.shiftId, w.employeeIds)
+      } catch (err) {
+        failed++
+        lastError = readableError(err)
+      }
+    }
+    setCopying(false)
+    setConfirmWeek(false)
+    if (failed === 0) toast.success(`Đã áp dụng lịch ${sourceDay?.weekday} ${sourceDay?.dayMonth} cho ${targetDays.length} ngày còn lại trong tuần`)
+    else toast.error(`${failed} / ${weekPlan.length} ca chưa lưu được: ${lastError}`)
+    setReloadCount((n) => n + 1)
+  }
 
   if (error) {
     return (
@@ -110,9 +139,17 @@ function ShiftsPanel() {
         </div>
       </FilterBar>
 
-      <p className="text-xs text-muted">
-        Chỉ chọn được nhân viên đang làm việc tại cơ sở của bạn.
-      </p>
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={weekPlan.length === 0 || copying}
+          title={weekPlan.length === 0 ? "Không còn ngày nào trong tuần để áp dụng (các ngày khác đã qua)" : undefined}
+          onClick={() => setConfirmWeek(true)}
+        >
+          <CalendarRangeIcon aria-hidden="true" /> Áp dụng lịch ngày này cho cả tuần
+        </Button>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         {isLoading || !schedule.data
@@ -138,6 +175,27 @@ function ShiftsPanel() {
               />
             ))}
       </div>
+      <Dialog open={confirmWeek} onOpenChange={(open) => !copying && setConfirmWeek(open)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Áp dụng lịch cho cả tuần?</DialogTitle>
+            <DialogDescription>
+              Người trực từng ca của {sourceDay?.weekday} {sourceDay?.dayMonth} sẽ được chép sang{" "}
+              {targetDays.map((d) => `${d.weekday} ${d.dayMonth}`).join(", ")}. Lịch đang có ở các ngày này sẽ bị ghi đè; ngày đã qua
+              giữ nguyên.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" disabled={copying} onClick={() => setConfirmWeek(false)}>
+              Hủy
+            </Button>
+            <Button className="bg-blue-600 text-white hover:bg-blue-500" disabled={copying} onClick={applyToWeek}>
+              {copying && <Spinner />}
+              Áp dụng
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   )
 }

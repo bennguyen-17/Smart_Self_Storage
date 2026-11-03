@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest"
 
 import {
-  addAssignment,
-  assignableStaff,
+  onDutyOf,
   otherShiftsOf,
+  pickableStaff,
+  planWeekCopy,
   shiftPeriod,
   shiftTimeLabel,
   weekDays,
@@ -30,46 +31,58 @@ const STAFF = [
   staff(6, "Phạm Thị Nhân Viên 2", 2),
 ]
 
-describe("assignableStaff: Manager chỉ chọn được nhân viên của cơ sở mình", () => {
+describe("pickableStaff: Manager chỉ chọn được nhân viên của cơ sở mình, đang hoạt động", () => {
   test.each([
-    { name: "cơ sở 1, ca trống", facilityId: 1, current: [], expected: [8, 5] },
-    {
-      name: "loại người đã có trong ca",
-      facilityId: 1,
-      current: [{ employeeId: 5, fullName: "" }],
-      expected: [8],
-    },
-    {
-      name: "cơ sở 2 chỉ thấy nhân viên cơ sở 2",
-      facilityId: 2,
-      current: [],
-      expected: [6],
-    },
-    {
-      name: "chưa biết cơ sở → không cho chọn ai",
-      facilityId: null,
-      current: [],
-      expected: [],
-    },
-  ] as {
-    name: string
-    facilityId: number | null
-    current: ShiftAssignment[]
-    expected: number[]
-  }[])("$name", ({ facilityId, current, expected }) => {
-    expect(
-      assignableStaff(STAFF, facilityId, current).map((s) => s.employeeId)
-    ).toEqual(expected)
-  })
-
-  test("tài khoản bị khóa không xuất hiện", () => {
-    expect(assignableStaff(STAFF, 1, []).some((s) => s.employeeId === 9)).toBe(
-      false
-    )
+    { name: "cơ sở 1 (sắp theo tên, bỏ tài khoản khóa)", facilityId: 1, expected: [8, 5] },
+    { name: "cơ sở 2 chỉ thấy nhân viên cơ sở 2", facilityId: 2, expected: [6] },
+    { name: "chưa biết cơ sở → không cho chọn ai", facilityId: null, expected: [] },
+  ])("$name", ({ facilityId, expected }) => {
+    expect(pickableStaff(STAFF, facilityId).map((s) => s.employeeId)).toEqual(expected)
   })
 })
 
-describe("otherShiftsOf / addAssignment", () => {
+describe("onDutyOf: mỗi ca 1 người trực", () => {
+  test.each([
+    { name: "ca trống", staff: [], expected: null },
+    { name: "1 người", staff: [{ employeeId: 5, fullName: "A" }], expected: 5 },
+    { name: "dữ liệu cũ 2 người → lấy người đầu", staff: [{ employeeId: 8, fullName: "B" }, { employeeId: 5, fullName: "A" }], expected: 8 },
+  ] as { name: string; staff: ShiftAssignment[]; expected: number | null }[])("$name → $expected", ({ staff: list, expected }) => {
+    expect(onDutyOf({ staff: list })?.employeeId ?? null).toBe(expected)
+  })
+})
+
+describe("planWeekCopy: áp dụng lịch một ngày cho cả tuần (T2 → CN), ghi đè, bỏ ngày đã qua", () => {
+  // 2026-11-04 là thứ 4; tuần đó T2 02/11 → CN 08/11
+  const SOURCE: DaySchedule = {
+    date: "2026-11-04",
+    shifts: [
+      { shiftId: 1, shiftName: "Ca Sáng", startTime: "08:00", endTime: "12:00", staff: [{ employeeId: 5, fullName: "A" }] },
+      { shiftId: 2, shiftName: "Ca Chiều", startTime: "12:00", endTime: "16:00", staff: [{ employeeId: 8, fullName: "B" }, { employeeId: 5, fullName: "A" }] },
+      { shiftId: 3, shiftName: "Ca Tối", startTime: "16:00", endTime: "20:00", staff: [] },
+    ],
+  }
+
+  test("hôm nay là T3: chép sang T3, T5, T6, T7, CN (bỏ T2 đã qua và chính ngày nguồn), đủ 3 ca mỗi ngày", () => {
+    const plan = planWeekCopy(SOURCE, "2026-11-03")
+    expect([...new Set(plan.map((w) => w.date))]).toEqual(["2026-11-03", "2026-11-05", "2026-11-06", "2026-11-07", "2026-11-08"])
+    expect(plan).toHaveLength(5 * 3)
+  })
+
+  test("mỗi ca ghi đúng 1 người (dữ liệu cũ nhiều người lấy người đầu); ca nguồn trống thì để trống", () => {
+    const sat = planWeekCopy(SOURCE, "2026-11-03").filter((w) => w.date === "2026-11-07")
+    expect(sat).toEqual([
+      { date: "2026-11-07", shiftId: 1, employeeIds: [5] },
+      { date: "2026-11-07", shiftId: 2, employeeIds: [8] },
+      { date: "2026-11-07", shiftId: 3, employeeIds: [] },
+    ])
+  })
+
+  test("ngày nguồn là CN và các ngày khác đã qua → không còn gì để chép", () => {
+    expect(planWeekCopy({ ...SOURCE, date: "2026-11-08" }, "2026-11-08")).toEqual([])
+  })
+})
+
+describe("otherShiftsOf", () => {
   const SCHEDULE: DaySchedule = {
     date: "2026-10-14",
     shifts: [
@@ -111,12 +124,6 @@ describe("otherShiftsOf / addAssignment", () => {
       expect(otherShiftsOf(SCHEDULE, employeeId, except)).toEqual(expected)
     }
   )
-
-  test("addAssignment: thêm mới, không thêm trùng", () => {
-    const once = addAssignment([], STAFF[1])
-    expect(once).toEqual([{ employeeId: 8, fullName: "Bùi Thị Lan" }])
-    expect(addAssignment(once, STAFF[1])).toEqual(once)
-  })
 })
 
 describe("giờ ca lấy từ DB: nhãn và biểu tượng", () => {

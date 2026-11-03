@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 
-import { barWidths, buildReportSections, donutArcs, percentOf, reportCsvRows, unitMix, isReportRangeValid, presetRange, rangeLabel } from "./reportRules"
+import { barWidths, buildReportSections, revenueTotal, donutArcs, percentOf, reportCsvRows, unitMix, isReportRangeValid, presetRange, rangeLabel } from "./reportRules"
 import type { ManagerDashboard } from "./types"
 
 const D: ManagerDashboard = {
@@ -28,11 +28,17 @@ describe("percentOf", () => {
 })
 
 describe("buildReportSections: đúng AC về doanh thu và tiền cọc", () => {
-  test("bảng doanh thu cộng các khoản rồi trừ hoàn tiền, khớp doanh thu thuần của BE", () => {
+  test("tổng doanh thu = thuê + gia hạn + phạt + truy thu; KHÔNG trừ tiền hoàn (hoàn cọc không phải doanh thu)", () => {
     const rows = section("revenue").rows.filter((r) => !r.emphasis)
     const sum = rows.reduce((acc, r) => acc + r.value, 0)
-    expect(sum).toBe(D.netRevenue)
-    expect(value("revenue", "Đã hoàn tiền")).toBe(-3_000_000)
+    expect(sum).toBe(117_500_000)
+    expect(value("revenue", "Tổng doanh thu")).toBe(117_500_000)
+    expect(revenueTotal(D)).toBe(117_500_000)
+    expect(value("revenue", "Đã hoàn tiền")).toBeUndefined()
+  })
+
+  test("tiền đã hoàn cho khách nằm ở nhóm Tiền cọc", () => {
+    expect(value("deposits", "Đã hoàn cọc cho khách")).toBe(3_000_000)
   })
 
   test("cọc đang giữ KHÔNG nằm trong bảng doanh thu", () => {
@@ -59,7 +65,8 @@ describe("buildReportSections: đúng AC về doanh thu và tiền cọc", () =>
 describe("reportCsvRows: file CSV đúng số liệu đang xem", () => {
   test("mỗi dòng gồm Nhóm, Chỉ số, Giá trị (số thô)", () => {
     const rows = reportCsvRows(D)
-    expect(rows).toContainEqual(["Doanh thu", "Doanh thu thuần", 114_500_000])
+    expect(rows).toContainEqual(["Doanh thu", "Tổng doanh thu", 117_500_000])
+    expect(rows).toContainEqual(["Tiền cọc", "Đã hoàn cọc cho khách", 3_000_000])
     expect(rows).toContainEqual(["Ô kho", "Tỷ lệ lấp đầy", 84])
     expect(rows.every((r) => r.length === 3)).toBe(true)
   })

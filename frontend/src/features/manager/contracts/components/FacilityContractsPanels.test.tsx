@@ -64,4 +64,19 @@ describe("Chi tiết hợp đồng (bấm mã hợp đồng)", () => {
     expect(within(dialog).getByText(/chưa phát sinh khoản phạt hay truy thu nào/)).toBeInTheDocument()
     expect(within(dialog).queryByRole("table")).not.toBeInTheDocument()
   })
+
+  test("hợp đồng đã kết thúc → ô thời hạn ghi \"Đã kết thúc\" (không để trống); đang hiệu lực → còn bao nhiêu ngày", async () => {
+    const user = userEvent.setup()
+    render(<CustomersContractsPanel />)
+    const ended = (await screen.findByText("Vũ Thị Hương")).closest("tr") as HTMLElement
+    await user.click(within(ended).getByRole("button", { name: /^Xem chi tiết hợp đồng / }))
+    expect(within(await screen.findByRole("dialog")).getByText("Đã kết thúc")).toBeInTheDocument()
+    await user.keyboard("{Escape}")
+
+    const active = screen.getByText("Nguyễn Văn An").closest("tr") as HTMLElement
+    await user.click(within(active).getByRole("button", { name: /^Xem chi tiết hợp đồng / }))
+    const dialog = await screen.findByRole("dialog")
+    expect(within(dialog).queryByText("Đã kết thúc")).not.toBeInTheDocument()
+    expect(within(dialog).getByText(/^Còn [0-9]+ ngày$/)).toBeInTheDocument()
+  })
 })

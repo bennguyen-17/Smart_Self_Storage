@@ -25,12 +25,11 @@ vi.mock("@/lib/apiClient", () => ({
   isTokenValid: () => true,
 }))
 
-/** Các test sửa ô cần thấy đủ ô trên một trang → chọn 50 dòng mỗi trang */
-async function renderPanel({ allRows = true } = {}) {
+/** Bảng cố định 10 ô mỗi trang: test cần một ô cụ thể thì tìm theo mã, giống người dùng thật */
+async function renderPanel() {
   const user = userEvent.setup()
   render(<UnitManagementPanel />)
   await screen.findByText("HN01-F1-M01")
-  if (allRows) await user.selectOptions(screen.getByRole("combobox", { name: /số dòng mỗi trang/i }), "50")
   return { user }
 }
 
@@ -40,6 +39,9 @@ function row(unitCode: string) {
 }
 
 async function openEdit(user: ReturnType<typeof userEvent.setup>, unitCode: string) {
+  const search = screen.getByRole("searchbox")
+  await user.clear(search)
+  await user.type(search, unitCode)
   await user.click(screen.getByRole("button", { name: new RegExp(`(Chỉnh sửa|Sửa) ô ${unitCode}`, "i") }))
   return screen.findByRole("dialog", { name: `Sửa ô ${unitCode}` })
 }
@@ -150,7 +152,7 @@ describe("UnitManagementPanel: bảng ô kho + nút Sửa (US-13)", () => {
   })
 
   test("mặc định 10 ô mỗi trang; lọc theo trạng thái thì về trang 1", async () => {
-    const { user } = await renderPanel({ allRows: false })
+    const { user } = await renderPanel()
     const nav = screen.getByRole("navigation", { name: "Phân trang" })
     expect(screen.getAllByRole("row").slice(1)).toHaveLength(10)
     expect(within(nav).getByRole("button", { name: "Trang 1" })).toHaveAttribute("aria-current", "page")
