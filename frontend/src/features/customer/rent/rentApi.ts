@@ -475,21 +475,6 @@ export const checkBookingStatus = async (invoiceNumber: string) => {
   }
 };
 
-/**
- * Giả lập thanh toán đặt cọc thành công (Test Mock)
- */
-export const mockPayDeposit = async (invoiceNumber: string) => {
-  try {
-    const res = await apiClient.post(`/deposits/mock-pay?invoiceNumber=${encodeURIComponent(invoiceNumber)}`);
-    return { success: true, data: res.data || res };
-  } catch (error) {
-    return { success: true, message: 'Đã thanh toán thử nghiệm thành công' };
-  }
-};
-
-/**
- * Thêm hợp đồng mới vừa nộp cọc thành công
- */
 export const addNewBookingContract = (bookingData: any) => {
   markUnitAsHeld(bookingData.unitId || bookingData.unitCode, 'RESERVED');
 };

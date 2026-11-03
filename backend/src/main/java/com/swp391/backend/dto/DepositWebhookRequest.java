@@ -3,7 +3,7 @@ package com.swp391.backend.dto;
 public class DepositWebhookRequest {
     private String invoiceNumber;
     private String transactionCode;
-    private String paymentMethod; // VIETQR, VNPAY, MOMO
+    private String paymentMethod; // BANK_TRANSFER, CASH
     private String gatewayTransactionId;
 
     public DepositWebhookRequest() {
