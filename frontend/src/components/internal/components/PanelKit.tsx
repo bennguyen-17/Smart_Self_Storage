@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { sanitizeErrorMessage } from "../readableError"
 import { Button } from "@/components/ui/button"
 
-import { PAGE_SIZE_OPTIONS, pageWindow, type PageSlice } from "../pagination"
+import { pageWindow, type PageSlice } from "../pagination"
 
 export function FilterBar({ children, className }: { children: ReactNode; className?: string }) {
   return (
@@ -209,43 +209,24 @@ export function ResultCount({ shown, total, unit, isLoading }: { shown: number; 
 }
 
 /**
- * Thanh phân trang dưới bảng: "Hiển thị x – y trong tổng số N", chọn số dòng mỗi trang,
- * nút trang trước / sau và số trang (theo kiểu bảng hợp đồng ở cổng khách hàng).
+ * Thanh phân trang dưới bảng: nút trang trước / sau và số trang, cố định 10 dòng mỗi trang (theo kiểu bảng hợp đồng ở cổng khách hàng).
  */
 export function Pagination({
   slice,
   total,
-  pageSize,
   onPageChange,
-  onPageSizeChange,
 }: {
   slice: PageSlice<unknown>
   total: number
   /** Giữ cho các trang đang truyền; dòng "Hiển thị x – y trong tổng số N" đã bỏ nên chưa dùng */
   unit: string
-  pageSize: number
   onPageChange: (page: number) => void
-  onPageSizeChange: (size: number) => void
 }) {
   if (total === 0) return null
   const { page, totalPages } = slice
   return (
     <nav aria-label="Phân trang" className="flex flex-wrap items-center justify-between gap-3 text-xs">
       <div className="flex flex-wrap items-center gap-3">
-        <label className="text-muted flex items-center gap-2">
-          Số dòng mỗi trang
-          <select
-            value={pageSize}
-            onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="inner-box text-title rounded-lg border px-2 py-1 font-semibold outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {PAGE_SIZE_OPTIONS.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
         <div className="flex items-center gap-1">
           <Button variant="outline" size="icon-sm" aria-label="Trang trước" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
             <ChevronLeftIcon aria-hidden="true" />

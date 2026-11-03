@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { formatDate, formatDateTime, formatVnd } from "@/lib/format"
 
-import { FEE_TYPE_LABEL, FORFEIT_AFTER_DAYS, feeTotals, forfeitState } from "../contractRules"
+import { FEE_TYPE_LABEL, FORFEIT_AFTER_DAYS, feeTotals, forfeitState, isClosedContract } from "../contractRules"
 import type { FacilityContract, FeeStatus } from "../types"
 import { CheckoutProgressBadge, ContractStatusBadge, DaysLeft } from "./ContractBadges"
 
@@ -76,7 +76,12 @@ function ContractDetailDialog({
           <Field label="Ngày nhận kho">{formatDate(contract.startDate)}</Field>
           <Field label="Hạn trả kho">{formatDate(contract.endDate)}</Field>
           <Field label="Thời hạn còn lại">
-            <DaysLeft contract={contract} today={today} />
+            {/* Hợp đồng đã đóng: ghi rõ thay vì dấu "—" mờ (trông như ô trống) */}
+            {isClosedContract(contract.status) ? (
+              <span className="text-muted">Đã kết thúc</span>
+            ) : (
+              <DaysLeft contract={contract} today={today} />
+            )}
           </Field>
         </dl>
 

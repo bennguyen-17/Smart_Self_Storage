@@ -14,7 +14,7 @@ import { readableError } from "@/components/internal/readableError"
 import { todayInVietnam } from "@/lib/format"
 import type { ManagerTicketItem, ManagerTicketStatus } from "../types"
 import { listManagerTickets } from "../api/ticketApi"
-import { ticketProgress } from "../ticketRules"
+import { ticketProgress, ticketsOfFacility } from "../ticketRules"
 
 const STATUS_FILTERS: { key: ManagerTicketStatus; label: string }[] = [
   { key: "ALL", label: "Tất cả" },
@@ -45,7 +45,7 @@ export default function ManagerTicketPanel() {
       listManagerTickets(facilityId)
         .then(
           (data) => {
-            if (!ignore) setTickets(data)
+            if (!ignore) setTickets(ticketsOfFacility(data, facilityId))
           },
           (err: unknown) => {
             if (!ignore) toast.error(`Không thể tải danh sách ticket của cơ sở: ${readableError(err)}`)

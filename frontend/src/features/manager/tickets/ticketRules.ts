@@ -32,3 +32,13 @@ export function ticketProgress(ticket: TicketLike, today: string): string {
       return "Chờ nhân viên trong ca tiếp nhận"
   }
 }
+
+/**
+ * Chỉ giữ ticket của cơ sở Manager đang phụ trách. BE hiện trả ticket MỌI cơ sở khi cơ sở mình chưa có ticket nào
+ * (SupportTicketService.getManagerTickets dùng findAll làm dự phòng); lọc lại ở FE để không lộ dữ liệu cơ sở khác.
+ * Chưa biết cơ sở của Manager thì không hiện ticket nào.
+ */
+export function ticketsOfFacility<T extends { facilityId?: number | null }>(tickets: readonly T[], facilityId: number | null): T[] {
+  if (facilityId === null) return []
+  return tickets.filter((t) => t.facilityId === facilityId)
+}

@@ -75,9 +75,6 @@ function StaffActivityPanel() {
             setLogFilter({ accountId: "ALL", query: "" })
           }}
         />
-        <p className="text-muted max-w-md self-center text-xs">
-          Số liệu tính trong ngày đã chọn. Bấm tên nhân viên để xem nhật ký thao tác của người đó.
-        </p>
       </FilterBar>
 
       {!activity.isLoading && totals.scheduled > 0 && (

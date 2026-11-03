@@ -1,6 +1,7 @@
 // Phân trang phía FE cho các bảng của cổng nội bộ. Hàm thuần, kiểm bằng bảng DDT.
 
-export const PAGE_SIZE_OPTIONS = [10, 20, 50] as const
+/** Cố định 10 dòng mỗi trang cho mọi bảng Manager / Admin (góp ý của Tâm 03/11: bỏ ô chọn số dòng, bảng gọn, nút chuyển trang luôn gần) */
+export const PAGE_SIZE = 10
 
 export interface PageSlice<T> {
   rows: T[]
