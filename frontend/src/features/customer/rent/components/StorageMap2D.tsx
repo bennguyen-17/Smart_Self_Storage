@@ -424,7 +424,7 @@ export default function StorageMap2D({
     } else if (isReserved) {
       cardBg = 'bg-amber-100 dark:bg-amber-950/40 border-amber-400 text-amber-800 dark:text-amber-200 cursor-not-allowed';
       statusDot = <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1 inline-block" />;
-      badgeText = 'Đã giữ chỗ';
+      badgeText = 'Giữ chỗ';
     } else if (isHold) {
       cardBg = 'bg-amber-50 dark:bg-amber-950/30 border-amber-300 text-amber-700 dark:text-amber-300 cursor-not-allowed';
       statusDot = <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mr-1 inline-block" />;
@@ -545,7 +545,7 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
               <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-blue-600 inline-block"></span>Ô của khách</span>
             )}
             <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-indigo-600 inline-block"></span>Đang chọn</span>
-            <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-amber-500 inline-block"></span>Đã giữ chỗ</span>
+            <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-amber-500 inline-block"></span>Giữ chỗ</span>
             <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-rose-500 inline-block"></span>Đã thuê</span>
           </div>
         </div>

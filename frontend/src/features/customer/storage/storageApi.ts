@@ -47,6 +47,18 @@ export const getMyContracts = async () => {
           else if (c.status === 'TERMINATED') statusLabel = 'ĐÃ THANH LÝ';
 
           const resCode = c.reservationCode || c.bookingCode;
+          let storedUser: any = null;
+          try {
+            const rawAuth = localStorage.getItem('auth_session') || sessionStorage.getItem('auth_session');
+            if (rawAuth) {
+              const parsed = JSON.parse(rawAuth);
+              storedUser = parsed?.user || parsed;
+            }
+            if (!storedUser) {
+              const rawUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+              if (rawUser) storedUser = JSON.parse(rawUser);
+            }
+          } catch (e) {}
           const displayId = (resCode && !resCode.startsWith('#HD-'))
             ? resCode
             : (c.contractId && !c.contractId.startsWith('#HD-') ? c.contractId : `CTR-${c.rawContractId || '1'}`);

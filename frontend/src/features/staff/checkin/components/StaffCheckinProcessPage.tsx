@@ -759,46 +759,46 @@ export default function StaffCheckinProcessPage() {
             )}
 
             {/* CHECKLIST ĐỐI SOÁT VỚI KHÁCH */}
-            <div className="space-y-2 rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5 text-xs dark:border-slate-800 dark:bg-slate-850">
-              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+            <div className="space-y-2.5 rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5 text-xs dark:border-slate-700/80 dark:bg-slate-900/90 shadow-2xs">
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 block">
                 Xác nhận trực tiếp với khách trước khi hoàn tất:
               </span>
 
-              <label className="flex items-start gap-2 cursor-pointer pt-1">
+              <label className="flex items-start gap-2.5 cursor-pointer pt-0.5 select-none">
                 <input
                   type="checkbox"
                   checked={verifiedCustomer}
                   onChange={(e) => setVerifiedCustomer(e.target.checked)}
-                  className="mt-0.5 size-4 rounded text-blue-600 cursor-pointer"
+                  className="mt-0.5 size-4 rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-blue-600 accent-blue-600 focus:ring-blue-500 cursor-pointer shrink-0"
                 />
                 <span className="text-slate-700 dark:text-slate-300 leading-tight">
                   Đã đối chiếu thông tin cá nhân &amp; CCCD gốc của khách hàng.
                 </span>
               </label>
 
-              <label className="flex items-start gap-2 cursor-pointer">
+              <label className="flex items-start gap-2.5 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={verifiedUnit}
                   onChange={(e) => setVerifiedUnit(e.target.checked)}
-                  className="mt-0.5 size-4 rounded text-blue-600 cursor-pointer"
+                  className="mt-0.5 size-4 rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-blue-600 accent-blue-600 focus:ring-blue-500 cursor-pointer shrink-0"
                 />
                 <span className="text-slate-700 dark:text-slate-300 leading-tight">
                   Khách đã đồng ý nhận ô kho{" "}
-                  <strong>{selectedUnit?.unitCode ?? contract.unitCode}</strong> và nội quy lưu kho.
+                  <strong className="font-semibold text-slate-900 dark:text-white">{selectedUnit?.unitCode ?? contract.unitCode}</strong> và nội quy lưu kho.
                 </span>
               </label>
 
-              <label className="flex items-start gap-2 cursor-pointer">
+              <label className="flex items-start gap-2.5 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={collectedMoney}
                   onChange={(e) => setCollectedMoney(e.target.checked)}
-                  className="mt-0.5 size-4 rounded text-blue-600 cursor-pointer"
+                  className="mt-0.5 size-4 rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-blue-600 accent-blue-600 focus:ring-blue-500 cursor-pointer shrink-0"
                 />
                 <span className="text-slate-700 dark:text-slate-300 leading-tight">
                   Đã xác nhận thanh toán đủ số tiền{" "}
-                  <strong>{financialSummary ? formatVnd(financialSummary.remainingDue) : "0 đ"}</strong>.
+                  <strong className="font-semibold text-slate-900 dark:text-white">{financialSummary ? formatVnd(financialSummary.remainingDue) : "0 đ"}</strong>.
                 </span>
               </label>
             </div>

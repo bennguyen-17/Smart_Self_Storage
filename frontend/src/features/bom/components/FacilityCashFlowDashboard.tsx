@@ -593,7 +593,7 @@ export default function FacilityCashFlowDashboard({
 
             {/* Ô 4: Kho Đang Giữ Chỗ / Đặt Trước */}
             <div className="rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-3.5 flex flex-col justify-center shadow-xs dark:shadow-none">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Đang Giữ Chỗ</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Giữ Chỗ</span>
               <span className="font-mono font-black text-slate-900 dark:text-white text-xl sm:text-2xl mt-0.5">
                 {reservedUnits.toLocaleString("vi-VN")}
               </span>

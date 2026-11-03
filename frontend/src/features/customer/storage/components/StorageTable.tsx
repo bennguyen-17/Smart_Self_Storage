@@ -35,12 +35,14 @@ export default function StorageTable({
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200">
           {contracts.map((item) => {
-            const isPending = item.status === 'PENDING_CHECKIN';
+            const isNoShow = (item.status === 'CANCELLED' && (item.cancelReason === 'NO_SHOW' || item.cancelReason?.includes('NO_SHOW')))
+              || (item.status === 'PENDING_CHECKIN' && Boolean(item.startDate) && new Date(item.startDate).setHours(23, 59, 59, 999) < Date.now());
+            const isPending = item.status === 'PENDING_CHECKIN' && !isNoShow;
             const isActive = item.status === 'ACTIVE';
             const isCompleted = item.status === 'COMPLETED';
             const isTerminated = item.status === 'TERMINATED';
-            const isCanceled = item.status === 'CANCELLED';
-            const isReturnRequested = isActive && Boolean(item.returnRequested || item.cancelReason === 'EARLY_TERMINATION');
+            const isCanceled = (item.status === 'CANCELLED' && !isNoShow);
+            const isReturnRequested = isActive && Boolean(item.returnRequested);
 
             return (
               <tr key={item.contractId} className="hover:bg-slate-50/90 dark:hover:bg-slate-800/60 transition-colors group">
@@ -76,7 +78,7 @@ export default function StorageTable({
                       ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                       : isPending
                       ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
-                      : item.status === 'OVERDUE'
+                      : isNoShow || item.status === 'OVERDUE'
                       ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
                       : isCompleted
                       ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
@@ -91,7 +93,7 @@ export default function StorageTable({
                         ? 'bg-emerald-500'
                         : isPending
                         ? 'bg-amber-500'
-                        : item.status === 'OVERDUE'
+                        : isNoShow || item.status === 'OVERDUE'
                         ? 'bg-rose-500'
                         : isCompleted
                         ? 'bg-emerald-500'
@@ -103,6 +105,8 @@ export default function StorageTable({
                       ? 'Chờ trả kho'
                       : isPending
                       ? 'Chờ check-in'
+                      : isNoShow
+                      ? 'Quá hạn nhận kho (No-Show)'
                       : isActive
                       ? 'Đang hiệu lực'
                       : item.status === 'OVERDUE'
@@ -142,7 +146,7 @@ export default function StorageTable({
                       </button>
                     )}
 
-                    {(isCompleted || isTerminated || isCanceled) && (
+                    {(isCompleted || isTerminated || isCanceled || isNoShow) && (
                       <span className="text-slate-400 dark:text-slate-600 font-mono text-base select-none" title="Không có hành động khả dụng">
                         —
                       </span>

@@ -22,12 +22,14 @@ export default function StorageCardList({
   return (
     <div className="xl:hidden divide-y divide-slate-100 dark:divide-slate-800">
       {contracts.map((item) => {
-        const isPending = item.status === 'PENDING_CHECKIN';
+        const isNoShow = (item.status === 'CANCELLED' && (item.cancelReason === 'NO_SHOW' || item.cancelReason?.includes('NO_SHOW')))
+          || (item.status === 'PENDING_CHECKIN' && Boolean(item.startDate) && new Date(item.startDate).setHours(23, 59, 59, 999) < Date.now());
+        const isPending = item.status === 'PENDING_CHECKIN' && !isNoShow;
         const isActive = item.status === 'ACTIVE';
         const isCompleted = item.status === 'COMPLETED';
         const isTerminated = item.status === 'TERMINATED';
-        const isCanceled = item.status === 'CANCELLED';
-        const isReturnRequested = isActive && Boolean(item.returnRequested || item.cancelReason === 'EARLY_TERMINATION');
+        const isCanceled = (item.status === 'CANCELLED' && !isNoShow);
+        const isReturnRequested = isActive && Boolean(item.returnRequested);
 
         return (
           <div key={item.contractId} className="p-4 sm:p-5 space-y-3 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
@@ -76,10 +78,14 @@ export default function StorageCardList({
                   ? 'Chờ trả kho'
                   : isPending
                   ? 'Chờ check-in'
+                  : isNoShow
+                  ? 'Quá hạn nhận kho (No-Show)'
                   : isCompleted
                   ? 'Đã hoàn tất'
                   : isTerminated
                   ? 'Đã thanh lý'
+                  : isCanceled
+                  ? 'Đã hủy cọc'
                   : (item.statusLabel || item.status)}
               </span>
             </div>
@@ -130,7 +136,7 @@ export default function StorageCardList({
                 </button>
               )}
 
-              {(isCompleted || isTerminated || isCanceled) && (
+              {(isCompleted || isTerminated || isCanceled || isNoShow) && (
                 <span className="text-slate-400 dark:text-slate-600 font-mono text-sm select-none" title="Không có hành động khả dụng">
                   —
                 </span>

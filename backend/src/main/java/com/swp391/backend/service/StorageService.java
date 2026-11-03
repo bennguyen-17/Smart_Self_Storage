@@ -730,7 +730,7 @@ public class StorageService {
         f.setFacilityCode(code);
         f.setLayoutType(layout);
         f.setAddress(req.getAddress() != null ? req.getAddress().trim() : "Chưa cập nhật địa chỉ");
-        f.setPhone(req.getPhone() != null && !req.getPhone().trim().isEmpty() ? req.getPhone() : "0900000000");
+        f.setPhone(req.getPhone() != null && !req.getPhone().trim().isEmpty() ? req.getPhone().trim() : "");
         f.setStatus(req.getStatus() != null && !req.getStatus().trim().isEmpty() ? req.getStatus().trim().toUpperCase() : "ACTIVE");
         Facility saved = facilityRepository.save(f);
 

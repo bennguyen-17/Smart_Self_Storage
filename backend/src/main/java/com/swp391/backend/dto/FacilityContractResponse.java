@@ -19,6 +19,8 @@ public class FacilityContractResponse {
     private Double rentalAmount;
     private String rentalType;
     private String reservationCode;
+    private String customerEmail;
+    private String customerIdNumber;
 
     public FacilityContractResponse() {
     }
@@ -149,6 +151,22 @@ public class FacilityContractResponse {
 
     public void setRentalType(String rentalType) {
         this.rentalType = rentalType;
+    }
+
+    public String getCustomerEmail() {
+        return customerEmail;
+    }
+
+    public void setCustomerEmail(String customerEmail) {
+        this.customerEmail = customerEmail;
+    }
+
+    public String getCustomerIdNumber() {
+        return customerIdNumber;
+    }
+
+    public void setCustomerIdNumber(String customerIdNumber) {
+        this.customerIdNumber = customerIdNumber;
     }
 
     public String getReservationCode() {

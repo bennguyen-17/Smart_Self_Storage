@@ -40,113 +40,190 @@ export default function ContractDetailModal({
   if (!contract) return null;
   if (typeof document === 'undefined') return null;
 
-  // 1. Trích xuất thông tin hợp đồng & khách hàng
-  const branchName = contract.branchName || contract.facilityName || 'Chi nhánh Hà Nội (HN01)';
-  const unitCode = contract.unitCode || contract.unitId || 'HN01-G-XL04';
-  const startDate = formatDate(contract.startDate) || '01/11/2026';
-  const endDate = formatDate(contract.expiryDate || contract.endDate) || '01/12/2026';
-
-  const rentalFee = Number(contract.rentalFee ?? contract.rentalAmount ?? 1500000);
-  const depositFee = Number(contract.depositFee ?? contract.depositAmount ?? 500000);
-  const totalAmount = Number(contract.totalAmount ?? (rentalFee + depositFee));
-
+  // 1. Trích xuất thông tin hợp đồng & cơ sở
+  const unitCode = contract.unitCode || contract.unitId || '';
   const contractCode =
-    contract.contractCode || contract.contractId || contract.reservationCode || contract.bookingCode || 'CTR-HN01-011126-1036';
+    contract.contractCode || contract.reservationCode || contract.bookingCode || (contract.contractId ? `CTR-${contract.contractId}` : (contract.rawContractId ? `CTR-${contract.rawContractId}` : ''));
   const reservationCode = contract.reservationCode || contract.bookingCode || contractCode;
 
-  // Lấy thông tin khách hàng từ contract hoặc fallback từ auth_session
-  let customerName = contract.customerName;
-  let customerPhone = contract.customerPhone;
-  let customerEmail = contract.customerEmail;
-  let citizenId = contract.citizenId;
+  // Bản đồ cơ sở toàn quốc chuẩn hóa
+  const FACILITY_MAP: Record<string, { name: string; address: string; city: string; email: string }> = {
+    HN01: {
+      name: 'SmartStorage Cầu Giấy (HN01)',
+      address: 'Số 391 Cầu Giấy, Phường Dịch Vọng, Quận Cầu Giấy, Hà Nội',
+      city: 'Hà Nội',
+      email: 'caugiay.hn01@smartstorage.vn',
+    },
+    HN02: {
+      name: 'SmartStorage Thanh Xuân (HN02)',
+      address: 'Số 120 Khuất Duy Tiến, Phường Nhân Chính, Quận Thanh Xuân, Hà Nội',
+      city: 'Hà Nội',
+      email: 'thanhxuan.hn02@smartstorage.vn',
+    },
+    HCM01: {
+      name: 'SmartStorage Quận 1 (HCM01)',
+      address: 'Số 123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh',
+      city: 'TP. Hồ Chí Minh',
+      email: 'quan1.hcm01@smartstorage.vn',
+    },
+    HCM02: {
+      name: 'SmartStorage Quận 7 (HCM02)',
+      address: 'Số 456 Nguyễn Thị Thập, Phường Tân Phú, Quận 7, TP. Hồ Chí Minh',
+      city: 'TP. Hồ Chí Minh',
+      email: 'quan7.hcm02@smartstorage.vn',
+    },
+    HCM03: {
+      name: 'SmartStorage Thủ Đức (HCM03)',
+      address: 'Số 789 Xa Lộ Hà Nội, Phường Bình Thọ, TP. Thủ Đức, TP. Hồ Chí Minh',
+      city: 'TP. Hồ Chí Minh',
+      email: 'thuduc.hcm03@smartstorage.vn',
+    },
+    DN01: {
+      name: 'SmartStorage Hải Châu (DN01)',
+      address: 'Số 68 Nguyễn Văn Linh, Phường Nam Dương, Quận Hải Châu, Đà Nẵng',
+      city: 'Đà Nẵng',
+      email: 'haichau.dn01@smartstorage.vn',
+    },
+    CT01: {
+      name: 'SmartStorage Ninh Kiều (CT01)',
+      address: 'Số 12 Đại lộ Hòa Bình, Phường An Lạc, Quận Ninh Kiều, Cần Thơ',
+      city: 'Cần Thơ',
+      email: 'ninhkieu.ct01@smartstorage.vn',
+    },
+  };
 
-  if (!customerName || !customerPhone) {
+  const facPrefix = String(unitCode || contractCode).split('-')[0].replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  const matchedFac = FACILITY_MAP[facPrefix];
+
+  const branchName = contract.branchName || contract.facilityName || matchedFac?.name || 'Smart Self Storage';
+  const contractCity = contract.city || matchedFac?.city || 'Việt Nam';
+  const branchAddress = contract.branchAddress || contract.facilityAddress || matchedFac?.address || 'Hệ thống Smart Self Storage';
+  const branchEmail = contract.branchEmail || matchedFac?.email || 'support@smartstorage.vn';
+
+  // Thời hạn
+  const rawStart = contract.startDate || contract.reservationStartDate || contract.checkInDate;
+  const rawEnd = contract.expiryDate || contract.endDate || contract.reservationEndDate;
+  const startDate = rawStart ? formatDate(rawStart) : '—';
+  const endDate = rawEnd ? formatDate(rawEnd) : '—';
+
+  const startMs = rawStart ? new Date(rawStart).getTime() : Date.now();
+  const endMs = rawEnd ? new Date(rawEnd).getTime() : startMs + 30 * 86400000;
+  const diffDays = Math.max(1, Math.round((endMs - startMs) / (1000 * 60 * 60 * 24)));
+  const rentalDurationDays = contract.durationDays || diffDays || 30;
+
+  // Trạng thái hợp đồng
+  const isPending =
+    contract.status === 'PENDING_CHECKIN' ||
+    contract.contractStatus === 'PENDING_CHECKIN' ||
+    contract.reservationStatus === 'PENDING';
+
+  // Chi phí
+  const rentalFee = Number(contract.rentalFee ?? contract.rentalAmount ?? contract.depRemainingAmount ?? 0);
+  const depositFee = Number(contract.depositFee ?? contract.depositAmount ?? contract.depPaidAmount ?? 0);
+  const totalAmount = Number(contract.totalAmount ?? contract.depAmount ?? (rentalFee + depositFee));
+  const paidDepositAmount = Number(contract.paidAmount ?? contract.depPaidAmount ?? (isPending ? depositFee : totalAmount));
+  const remainingCheckinAmount = Number(contract.remainingAmount ?? contract.depRemainingAmount ?? (isPending ? rentalFee : 0));
+
+  // Lấy thông tin khách hàng từ contract hoặc fallback từ auth_session
+  let customerName = contract.customerName || contract.fullName || contract.name;
+  let customerPhone = contract.customerPhone || contract.phone;
+  let customerEmail = contract.customerEmail || contract.email;
+  let citizenId = contract.customerIdNumber || contract.customerCccd || contract.citizenId || contract.idNumber || contract.identityNumber || contract.cccd;
+
+  // Fallback từ auth_session hoặc user trong session/localStorage
+  if (!customerName || !customerPhone || !customerEmail || !citizenId) {
     try {
       const rawAuth = localStorage.getItem('auth_session') || sessionStorage.getItem('auth_session');
       if (rawAuth) {
         const parsed = JSON.parse(rawAuth);
         const u = parsed.user || parsed;
-        if (!customerName && u.fullName) customerName = u.fullName;
+        if (!customerName && (u.fullName || u.name)) customerName = u.fullName || u.name;
         if (!customerPhone && u.phone) customerPhone = u.phone;
         if (!customerEmail && u.email) customerEmail = u.email;
-        if (!citizenId && u.citizenId) citizenId = u.citizenId;
+        if (!citizenId && (u.identityNumber || u.cccd || u.citizenId || u.customerIdNumber)) {
+          citizenId = u.identityNumber || u.cccd || u.citizenId || u.customerIdNumber;
+        }
       }
-    } catch (e) {}
+    } catch (e) { }
+
+    try {
+      const rawUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+      if (rawUser) {
+        const u = JSON.parse(rawUser);
+        if (!customerName && (u.fullName || u.name)) customerName = u.fullName || u.name;
+        if (!customerPhone && u.phone) customerPhone = u.phone;
+        if (!customerEmail && u.email) customerEmail = u.email;
+        if (!citizenId && (u.identityNumber || u.cccd || u.citizenId || u.customerIdNumber)) {
+          citizenId = u.identityNumber || u.cccd || u.citizenId || u.customerIdNumber;
+        }
+      }
+    } catch (e) { }
   }
 
-  customerName = customerName || 'Nguyễn Văn A';
-  customerPhone = customerPhone || '0912 345 678';
-  customerEmail = customerEmail || 'khachhang@gmail.com';
-  citizenId = citizenId || '079098012345';
-  const maskedCitizenId =
-    citizenId.length >= 8 ? `${citizenId.substring(0, 3)}****${citizenId.substring(citizenId.length - 4)}` : citizenId;
+  customerName = customerName || 'Chưa cập nhật';
+  customerPhone = customerPhone || 'Chưa cập nhật';
+  customerEmail = customerEmail || 'Chưa cập nhật';
+  citizenId = citizenId || 'Chưa cập nhật';
 
-  // Tự động nhận diện địa danh và địa chỉ cơ sở theo chi nhánh thực tế
-  const rawBranch = String(contract.branchName || contract.facilityName || unitCode || '').toLowerCase();
-  let contractCity = 'TP. Hồ Chí Minh';
-  let branchAddress = 'Số 15 Lê Duẩn, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh';
-
-  if (
-    rawBranch.includes('hà nội') ||
-    rawBranch.includes('hn') ||
-    rawBranch.includes('cầu giấy') ||
-    rawBranch.includes('thanh xuân')
-  ) {
-    contractCity = 'Hà Nội';
-    branchAddress = rawBranch.includes('thanh xuân')
-      ? 'Số 120 Khuất Duy Tiến, Quận Thanh Xuân, Hà Nội'
-      : 'Số 391 Cầu Giấy, Phường Dịch Vọng, Quận Cầu Giấy, Hà Nội';
-  } else if (
-    rawBranch.includes('đà nẵng') ||
-    rawBranch.includes('dn') ||
-    rawBranch.includes('hải châu')
-  ) {
-    contractCity = 'Đà Nẵng';
-    branchAddress = 'Số 88 Nguyễn Văn Linh, Quận Hải Châu, Đà Nẵng';
-  } else if (rawBranch.includes('tân bình') || rawBranch.includes('hcm02')) {
-    contractCity = 'TP. Hồ Chí Minh';
-    branchAddress = 'Số 202 Hoàng Văn Thụ, Phường 9, Quận Tân Bình, TP. Hồ Chí Minh';
-  } else if (rawBranch.includes('quận 1') || rawBranch.includes('hcm01') || rawBranch.includes('hcm')) {
-    contractCity = 'TP. Hồ Chí Minh';
-    branchAddress = 'Số 15 Lê Duẩn, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh';
-  }
-
-  if (contract.branchAddress || contract.facilityAddress) {
-    branchAddress = contract.branchAddress || contract.facilityAddress;
-  }
-
-  // Ngày ký hợp đồng
+  // Ngày lập văn bản
   const contractDateObj = contract.createdDate
     ? new Date(contract.createdDate)
-    : contract.startDate
-    ? new Date(contract.startDate)
-    : new Date();
-  const signDay = !isNaN(contractDateObj.getDate()) ? contractDateObj.getDate() : new Date().getDate();
-  const signMonth = !isNaN(contractDateObj.getMonth()) ? contractDateObj.getMonth() + 1 : new Date().getMonth() + 1;
-  const signYear = !isNaN(contractDateObj.getFullYear()) ? contractDateObj.getFullYear() : new Date().getFullYear();
+    : rawStart
+      ? new Date(rawStart)
+      : new Date();
+  const todayDate = new Date();
+  const signDay = !isNaN(contractDateObj.getDate()) ? String(contractDateObj.getDate()).padStart(2, '0') : String(todayDate.getDate()).padStart(2, '0');
+  const signMonth = !isNaN(contractDateObj.getMonth()) ? String(contractDateObj.getMonth() + 1).padStart(2, '0') : String(todayDate.getMonth() + 1).padStart(2, '0');
+  const signYear = !isNaN(contractDateObj.getFullYear()) ? contractDateObj.getFullYear() : todayDate.getFullYear();
 
-  const isPending = contract.status === 'PENDING_CHECKIN';
-  const isActive = contract.status === 'ACTIVE';
-  const isCompleted = contract.status === 'COMPLETED';
-  const isTerminated = contract.status === 'TERMINATED';
-  const isOverdue = contract.status === 'OVERDUE';
-  const isCanceled = contract.status === 'CANCELLED';
+  // Kích thước, Diện tích & Loại hình kho từ dữ liệu thực tế
+  const rawDimensions = contract.unitDimensions || contract.dimensions || contract.unitSize || (contract.size?.includes('m') ? contract.size : null);
+  let unitDimensions = rawDimensions || '—';
+  let unitArea = contract.unitArea || contract.area || '';
+
+  // Tính diện tích tự động từ dimensions nếu có dạng "XxYxZ" (vd: "1.5m x 2.0m x 2.0m" -> 1.5 * 2.0 = 3.0 m²)
+  if (!unitArea && unitDimensions !== '—') {
+    const parts = unitDimensions.split('x').map((s: string) => parseFloat(s.replace(/[^0-9.]/g, ''))).filter((n: number) => !isNaN(n));
+    if (parts.length >= 2) {
+      const areaCalc = (parts[0] * parts[1]).toFixed(1);
+      unitArea = `${areaCalc} m²`;
+    }
+  }
+  if (!unitArea) {
+    unitArea = contract.unitTypeName?.includes('m²') ? (contract.unitTypeName.match(/([0-9.]+)\s*m²/)?.[0] || '—') : '—';
+  }
 
   const isClimate =
     Boolean(contract.isClimate) ||
+    contract.storageCondition === 'CLIMATE_CONTROLLED' ||
     contract.storageType === 'CLIMATE_CONTROLLED' ||
-    String(unitCode).includes('XL') ||
-    String(contract.typeLabel || '').includes('Mát');
+    String(contract.unitTypeName || '').toUpperCase().includes('CLIMATE') ||
+    String(contract.unitTypeName || '').toLowerCase().includes('mát');
+
+  const loaiHinhKho = isClimate
+    ? 'Kho mát kiểm soát vi khí hậu (22 - 25°C, độ ẩm < 50%)'
+    : 'Kho lưu trữ tiêu chuẩn tự quản (Standard Self-Storage)';
+
+  const formatDateTime = (val?: string | Date) => {
+    if (!val) return '—';
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return String(val);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  };
+
+  const rawPaidAt = contract.paidAt || contract.paymentPaidAt || contract.depositDate || contract.createdAt || contract.createdDate;
+  const paymentTimeStr = rawPaidAt ? formatDateTime(rawPaidAt) : (startDate !== '—' ? `${startDate} 09:00:00` : '—');
+  const paymentTxnCode = contract.transactionCode || contract.paymentTxnCode || contract.invoiceNumber || (contract.reservationCode ? `TXN-${contract.reservationCode}` : '—');
 
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Tải trực tiếp file PDF đầy đủ các trang về máy tính (Tự động tải về, không bao giờ mở hộp thoại in)
+  // Tải trực tiếp file PDF chuẩn 3 trang chất lượng cao
   const handleDownloadPdf = async () => {
     const sourceElement = printRef.current;
     if (!sourceElement || isDownloading) return;
 
     setIsDownloading(true);
-
     let renderContainer: HTMLDivElement | null = null;
 
     try {
@@ -157,8 +234,7 @@ export default function ContractDetailModal({
         throw new Error('Thư viện tạo PDF chưa sẵn sàng trên trình duyệt');
       }
 
-      // 1. Tạo container độc lập ngoài DOM scroll để chụp trọn vẹn 100% chiều cao văn bản không bị cắt xén
-      const targetWidth = 800; // Khổ rộng chuẩn văn bản A4
+      const targetWidth = 800; // Khổ A4 tiêu chuẩn 800px
 
       renderContainer = document.createElement('div');
       renderContainer.style.position = 'fixed';
@@ -178,59 +254,30 @@ export default function ContractDetailModal({
       clone.style.overflow = 'visible';
       clone.style.boxShadow = 'none';
       clone.style.border = 'none';
-      clone.style.borderRadius = '0';
-      clone.style.padding = '32px';
-      clone.style.backgroundColor = '#ffffff';
-      clone.style.color = '#000000';
 
       renderContainer.appendChild(clone);
       document.body.appendChild(renderContainer);
 
-      // Đợi DOM clone render hoàn tất
-      await new Promise((r) => setTimeout(r, 60));
-
-      const totalHeight = Math.max(clone.scrollHeight, clone.offsetHeight);
-
-      // 2. Chụp toàn bộ tài liệu từ đầu đến cuối trang với độ nét cao x2
       const canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
-        width: targetWidth,
-        height: totalHeight,
         windowWidth: targetWidth,
-        windowHeight: totalHeight,
-        x: 0,
-        y: 0,
-        scrollX: 0,
-        scrollY: 0,
       });
 
-      // Dọn dẹp DOM clone ngay sau khi chụp
-      if (renderContainer && document.body.contains(renderContainer)) {
-        document.body.removeChild(renderContainer);
-        renderContainer = null;
-      }
-
-      // 3. Chuẩn hóa sang các trang A4 chuẩn (210mm x 297mm)
       const pdf = new JsPDF('p', 'mm', 'a4');
-      const a4Width = 210;
-      const a4Height = 297;
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
       const margin = 10;
-      const printableWidth = a4Width - margin * 2;
-      const printableHeight = a4Height - margin * 2;
+      const printableWidth = pdfWidth - margin * 2;
+      const printableHeight = pdfHeight - margin * 2;
 
-      // Chiều cao pixel canvas tương ứng với 1 trang A4
-      const scaleMmToPx = canvas.width / printableWidth;
-      const pageHeightPx = Math.floor(printableHeight * scaleMmToPx);
-
+      const pageHeightPx = (canvas.width * printableHeight) / printableWidth;
       const totalPages = Math.ceil(canvas.height / pageHeightPx);
 
       for (let i = 0; i < totalPages; i++) {
-        if (i > 0) {
-          pdf.addPage();
-        }
+        if (i > 0) pdf.addPage();
 
         const sourceY = i * pageHeightPx;
         const sourceHeight = Math.min(pageHeightPx, canvas.height - sourceY);
@@ -261,7 +308,6 @@ export default function ContractDetailModal({
         }
       }
 
-      // 4. Lưu và tự động tải trực tiếp file PDF về máy tính (không bao giờ mở print hay save dialog)
       const cleanName = String(contractCode).replace(/[^a-zA-Z0-9_-]/g, '_');
       pdf.save(`Hop_Dong_Thue_Kho_${cleanName}.pdf`);
     } catch (err: any) {
@@ -282,22 +328,17 @@ export default function ContractDetailModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      {/* Container cuộn dọc mượt mà */}
       <div
         className="min-h-full w-full flex flex-col items-center justify-start p-2.5 sm:p-6 pt-4 pb-12 sm:pb-16"
         onClick={(e) => {
           if (e.target === e.currentTarget) onClose();
         }}
       >
-        {/* Style chuyên biệt khi In / Lưu PDF: Chỉ in đúng trang văn bản A4, ẩn toàn bộ UI nền */}
+        {/* Style in ấn */}
         <style>{`
           @media print {
-            body * {
-              visibility: hidden !important;
-            }
-            #contract-a4-document, #contract-a4-document * {
-              visibility: visible !important;
-            }
+            body * { visibility: hidden !important; }
+            #contract-a4-document, #contract-a4-document * { visibility: visible !important; }
             #contract-a4-document {
               position: absolute !important;
               left: 0 !important;
@@ -310,78 +351,54 @@ export default function ContractDetailModal({
               background: #ffffff !important;
               color: #000000 !important;
             }
-            .contract-no-print {
-              display: none !important;
-            }
+            .contract-no-print { display: none !important; }
           }
         `}</style>
 
-        {/* 1. THANH ĐIỀU KHIỂN NỔI (DOCUMENT TOOLBAR) */}
+        {/* 1. THANH ĐIỀU KHIỂN NỔI */}
         <div className="contract-no-print w-full max-w-4xl bg-slate-900 text-white rounded-2xl shadow-xl px-4 py-3 sm:px-6 sm:py-3.5 mb-4 flex flex-wrap items-center justify-between gap-3 border border-slate-800 shrink-0 sticky top-2 z-30 backdrop-blur-md bg-slate-900/95">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center text-base">
-              <i className="fa-solid fa-file-contract"></i>
+            <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 text-blue-400 flex items-center justify-center">
+              <i className="fa-solid fa-file-contract text-lg"></i>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-mono font-bold text-sm sm:text-base text-white tracking-wide">
-                  {contractCode}
+                <span className="font-bold text-sm sm:text-base text-white tracking-wide">
+                  {isPending ? 'Thỏa thuận đặt cọc & giữ chỗ' : 'Hợp đồng thuê kho điện tử'}
                 </span>
-                {/* Badge trạng thái */}
-                {isPending && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                    DỰ THẢO (CHỜ NHẬN KHO)
-                  </span>
-                )}
-                {isActive && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                    CHÍNH THỨC (ĐÃ KÍCH HOẠT)
-                  </span>
-                )}
-                {isOverdue && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                    QUÁ HẠN THUÊ
-                  </span>
-                )}
-                {(isCompleted || isTerminated) && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/20 text-slate-300 border border-slate-500/40">
-                    ĐÃ THANH LÝ
-                  </span>
-                )}
-                {isCanceled && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                    ĐÃ HỦY
-                  </span>
-                )}
+                <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase ${isPending
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                  : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                  }`}>
+                  {isPending ? 'Đang giữ chỗ' : 'Có hiệu lực'}
+                </span>
               </div>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Văn bản thỏa thuận pháp lý điện tử theo Luật Giao dịch điện tử 2023
+              <p className="text-xs text-slate-400 font-mono mt-0.5">
+                Mã HĐ: <strong className="text-slate-200">{contractCode}</strong> · Khách hàng: <strong className="text-slate-200">{customerName}</strong>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* Nút Tải file PDF trực tiếp về máy */}
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              disabled={isDownloading}
               onClick={handleDownloadPdf}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white transition-all shadow-md cursor-pointer disabled:opacity-70 disabled:cursor-wait"
-              title="Tự động tải file PDF về thư mục Downloads"
+              disabled={isDownloading}
+              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+              title="Tải văn bản PDF 3 trang chuẩn"
             >
               {isDownloading ? (
                 <>
-                  <i className="fa-solid fa-spinner animate-spin"></i>
-                  <span>Đang tải...</span>
+                  <i className="fa-solid fa-spinner fa-spin text-sm"></i>
+                  <span>Đang xuất PDF...</span>
                 </>
               ) : (
                 <>
-                  <i className="fa-solid fa-file-arrow-down"></i>
+                  <i className="fa-solid fa-file-pdf text-sm text-red-300"></i>
                   <span>Tải PDF</span>
                 </>
               )}
             </button>
-
 
             <button
               type="button"
@@ -394,31 +411,30 @@ export default function ContractDetailModal({
           </div>
         </div>
 
-        {/* 2. KHỔ GIẤY VĂN BẢN A4 (CHUẨN HỢP ĐỒNG PHÁP LÝ TRẮNG ĐEN) */}
+        {/* 2. KHỔ GIẤY VĂN BẢN A4 (BÁM SÁT 100% TEMPLATE CHUẨN 3 TRANG) */}
         <div
           id="contract-a4-document"
           ref={printRef}
           className="w-full max-w-4xl bg-white text-black shadow-2xl p-8 sm:p-14 border border-neutral-300 relative font-serif leading-relaxed text-xs sm:text-[13px] print:shadow-none print:border-none print:p-0 shrink-0"
         >
-          {/* NỘI DUNG VĂN BẢN */}
           <div className="space-y-6">
-            
+
             {/* HEADER: QUỐC HIỆU & TIÊU NGỮ */}
-            <div className="text-center space-y-1 pb-4 border-b border-black">
+            <div className="text-center space-y-1 pb-3">
               <h4 className="font-serif font-bold text-xs sm:text-sm uppercase tracking-wider text-black">
                 CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
               </h4>
               <p className="font-serif italic text-xs text-black font-semibold">
                 Độc lập – Tự do – Hạnh phúc
               </p>
-              <div className="w-28 h-[1px] bg-black mx-auto mt-1 mb-2"></div>
-              <p className="font-serif italic text-[11px] text-neutral-800 pt-1">
+              <div className="w-32 h-[1px] bg-black mx-auto mt-1 mb-2"></div>
+              <p className="font-serif italic text-[11px] text-neutral-800 pt-0.5">
                 {contractCity}, ngày {signDay} tháng {signMonth} năm {signYear}
               </p>
             </div>
 
             {/* TIÊU ĐỀ HỢP ĐỒNG */}
-            <div className="text-center pt-2 pb-2">
+            <div className="text-center pt-1 pb-2">
               <h2 className="font-serif font-bold text-lg sm:text-2xl uppercase tracking-tight text-black">
                 {isPending
                   ? 'THỎA THUẬN ĐẶT CỌC & GIỮ CHỖ THUÊ KHO'
@@ -430,17 +446,16 @@ export default function ContractDetailModal({
             </div>
 
             {/* THÔNG TIN HAI BÊN */}
-            <div className="space-y-4 text-xs sm:text-[13px] pt-1 text-black">
+            <div className="space-y-3.5 text-xs sm:text-[13px] pt-1 text-black">
               <div>
                 <p className="font-bold uppercase tracking-wide">
                   BÊN CHO THUÊ (BÊN A):
                 </p>
-                <div className="pl-4 pt-1.5 space-y-1 text-neutral-900">
+                <div className="pl-4 pt-1 space-y-0.5 text-neutral-900">
                   <p>• <strong>Tên đơn vị:</strong> CÔNG TY CỔ PHẦN SMART SELF STORAGE</p>
                   <p>• <strong>Cơ sở phụ trách:</strong> {branchName}</p>
                   <p>• <strong>Địa chỉ cơ sở:</strong> {branchAddress}</p>
-                  <p>• <strong>Hotline:</strong> 1900 8899 &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Email:</strong> hotro@smartstorage.vn</p>
-                  <p>• <strong>Mã số thuế:</strong> 0109988776 do Sở Kế hoạch và Đầu tư cấp</p>
+                  <p>• <strong>Email:</strong> {branchEmail}</p>
                 </div>
               </div>
 
@@ -448,12 +463,12 @@ export default function ContractDetailModal({
                 <p className="font-bold uppercase tracking-wide">
                   BÊN THUÊ (BÊN B):
                 </p>
-                <div className="pl-4 pt-1.5 space-y-1 text-neutral-900">
+                <div className="pl-4 pt-1 space-y-0.5 text-neutral-900">
                   <p>• <strong>Họ và tên:</strong> {customerName}</p>
-                  <p>• <strong>Số CMND/CCCD:</strong> {maskedCitizenId}</p>
+                  <p>• <strong>Số CCCD:</strong> {citizenId}</p>
                   <p>• <strong>Số điện thoại:</strong> {customerPhone}</p>
                   <p>• <strong>Email liên hệ:</strong> {customerEmail}</p>
-                  <p>• <strong>Mã hồ sơ / Giữ chỗ:</strong> {reservationCode}</p>
+                  <p>• <strong>Mã hồ sơ / Giữ chỗ:</strong> <span className="font-mono font-semibold">{reservationCode}</span></p>
                 </div>
               </div>
             </div>
@@ -462,42 +477,44 @@ export default function ContractDetailModal({
               Hai bên cùng thỏa thuận và thống nhất ký kết các điều khoản dưới đây:
             </p>
 
-            {/* CÁC ĐIỀU KHOẢN (ARTICLES) */}
-            <div className="space-y-5 pt-1 text-black">
-              
+            {/* NỘI DUNG CÁC ĐIỀU KHOẢN (ĐIỀU 1 ĐẾN ĐIỀU 6) */}
+            <div className="space-y-6 pt-1 text-black">
+
               {/* ĐIỀU 1 */}
               <div className="space-y-2">
                 <h4 className="font-serif font-bold text-xs sm:text-sm uppercase tracking-wide">
-                  ĐIỀU 1: ĐỐI TƯỢNG HỢP ĐỒNG & THÔNG TIN Ô KHO
+                  ĐIỀU 1: ĐỐI TƯỢNG THỎA THUẬN & THÔNG TIN Ô KHO
                 </h4>
                 <p className="text-neutral-900">
-                  1.1. Bên cho thuê đồng ý cung cấp cho Bên thuê quyền sử dụng ô kho lưu trữ tự quản với các thông số cụ thể như sau:
+                  1.1. Bên A đồng ý cung cấp cho Bên B quyền sử dụng ô kho lưu trữ tự quản với các thông số cụ thể như sau:
                 </p>
-                
+
                 <div className="overflow-x-auto pt-1">
-                  <table className="w-full border-collapse border border-black text-left text-xs sm:text-[13px]">
+                  <table className="w-full border-collapse border border-black text-left text-xs sm:text-[13px] table-fixed">
+                    <colgroup>
+                      <col className="w-[30%]" />
+                      <col className="w-[70%]" />
+                    </colgroup>
                     <tbody>
                       <tr className="border-b border-black">
-                        <td className="p-2 border-r border-black font-bold w-1/3">Mã ô kho:</td>
-                        <td className="p-2 font-mono font-bold">{unitCode}</td>
+                        <td className="p-2.5 sm:p-3 border-r border-black font-bold bg-neutral-50/80">Mã ô kho</td>
+                        <td className="p-2.5 sm:p-3 font-mono font-bold text-neutral-900">{unitCode}</td>
                       </tr>
                       <tr className="border-b border-black">
-                        <td className="p-2 border-r border-black font-bold">Loại hình kho:</td>
-                        <td className="p-2">
-                          {isClimate
-                            ? 'Kho mát kiểm soát nhiệt độ (22 - 25°C, độ ẩm < 50%)'
-                            : 'Kho lưu trữ tiêu chuẩn (Standard Storage)'}
-                        </td>
+                        <td className="p-2.5 sm:p-3 border-r border-black font-bold bg-neutral-50/80">Loại hình kho</td>
+                        <td className="p-2.5 sm:p-3 text-neutral-900">{loaiHinhKho}</td>
                       </tr>
                       <tr className="border-b border-black">
-                        <td className="p-2 border-r border-black font-bold">Cơ sở chi nhánh:</td>
-                        <td className="p-2">{branchName}</td>
+                        <td className="p-2.5 sm:p-3 border-r border-black font-bold bg-neutral-50/80">Diện tích</td>
+                        <td className="p-2.5 sm:p-3 text-neutral-900">{unitArea} ({unitDimensions})</td>
+                      </tr>
+                      <tr className="border-b border-black">
+                        <td className="p-2.5 sm:p-3 border-r border-black font-bold bg-neutral-50/80">Cơ sở chi nhánh</td>
+                        <td className="p-2.5 sm:p-3 text-neutral-900">{branchName}</td>
                       </tr>
                       <tr>
-                        <td className="p-2 border-r border-black font-bold">Trang thiết bị đi kèm:</td>
-                        <td className="p-2">
-                          Hệ thống kiểm soát khóa từ thông minh, PCCC tự động đạt chuẩn, cảm biến môi trường 24/7, camera an ninh hành lang.
-                        </td>
+                        <td className="p-2.5 sm:p-3 border-r border-black font-bold bg-neutral-50/80">Trang thiết bị đi kèm</td>
+                        <td className="p-2.5 sm:p-3 text-neutral-900 leading-relaxed">Hệ thống khóa thông minh IoT, PCCC tự động, camera an ninh 24/7, cảm biến nhiệt độ &amp; độ ẩm chuyên dụng.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -505,24 +522,25 @@ export default function ContractDetailModal({
               </div>
 
               {/* ĐIỀU 2 */}
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <h4 className="font-serif font-bold text-xs sm:text-sm uppercase tracking-wide">
                   ĐIỀU 2: THỜI HẠN THUÊ & QUYỀN TRUY CẬP KHO
                 </h4>
                 <p className="text-neutral-900">
-                  2.1. <strong>Thời hạn thuê kho:</strong> Bắt đầu từ ngày <strong>{startDate}</strong> đến hết ngày <strong>{endDate}</strong>.
+                  2.1. <strong>Thời hạn thuê kho:</strong> <strong>{rentalDurationDays}</strong> ngày, bắt đầu từ ngày <strong>{startDate}</strong> đến hết ngày <strong>{endDate}</strong>.
                 </p>
                 <p className="text-neutral-900">
-                  2.2. <strong>Quyền ra vào:</strong> Bên thuê được toàn quyền ra vào cơ sở và sử dụng ô kho 24/7 trong suốt thời hạn hợp đồng có hiệu lực.
+                  2.2. <strong>Giữ chỗ:</strong> Ô kho được giữ cho Bên B trong vòng <strong>10 ngày</strong> kể từ thời điểm Bên B thanh toán tiền cọc. Quá thời hạn này mà Bên B chưa nhận kho (No-Show), Bên A có quyền hủy giữ chỗ và xử lý tiền cọc theo Khoản 3.3.
                 </p>
                 <p className="text-neutral-900">
-                  2.3. <strong>Mã PIN kiểm soát an ninh (Gate PIN):</strong> {contract.gatePin ? (
-                    <span className="font-mono font-bold">{contract.gatePin}</span>
+                  2.3. <strong>Quyền ra vào:</strong> Bên B được toàn quyền ra vào cơ sở và sử dụng ô kho 24/7 trong suốt thời hạn thuê kể từ khi hoàn tất thủ tục nhận kho.
+                </p>
+                <p className="text-neutral-900">
+                  2.4. <strong>Mã PIN kiểm soát an ninh (Gate PIN):</strong> {contract.gatePin ? (
+                    <span className="font-mono font-bold">Mã PIN: {contract.gatePin}</span>
                   ) : (
-                    <span className="italic">
-                      (Hệ thống tự động thiết lập và gửi cho Bên thuê ngay khi hoàn tất thủ tục nhận kho tại quầy)
-                    </span>
-                  )}.
+                    <span>Hệ thống tự động thiết lập và gửi cho Bên B qua số điện thoại/email đã đăng ký ngay khi hoàn tất thủ tục nhận kho tại quầy.</span>
+                  )}
                 </p>
               </div>
 
@@ -531,44 +549,113 @@ export default function ContractDetailModal({
                 <h4 className="font-serif font-bold text-xs sm:text-sm uppercase tracking-wide">
                   ĐIỀU 3: GIÁ THUÊ, TIỀN CỌC & PHƯƠNG THỨC THANH TOÁN
                 </h4>
-                
+                <p className="text-neutral-900">
+                  3.1. Các khoản chi phí được thống nhất như sau:
+                </p>
+
                 <div className="overflow-x-auto pt-1">
-                  <table className="w-full border-collapse border border-black text-left text-xs sm:text-[13px]">
+                  <table className="w-full border-collapse border border-black text-left text-xs sm:text-[13px] table-fixed">
+                    <colgroup>
+                      <col className="w-[28%]" />
+                      <col className="w-[22%]" />
+                      <col className="w-[22%]" />
+                      <col className="w-[28%]" />
+                    </colgroup>
                     <thead>
-                      <tr className="border-b border-black font-bold">
-                        <th className="p-2 border-r border-black">Khoản mục chi phí</th>
-                        <th className="p-2 border-r border-black text-right">Số tiền (VNĐ)</th>
-                        <th className="p-2">Ghi chú & Chính sách hoàn trả</th>
+                      <tr className="border-b border-black font-bold bg-neutral-100">
+                        <th className="p-2.5 sm:p-3 border-r border-black text-center">Khoản mục chi phí</th>
+                        <th className="p-2.5 sm:p-3 border-r border-black text-center whitespace-nowrap">Số tiền (VNĐ)</th>
+                        <th className="p-2.5 sm:p-3 border-r border-black text-center">Tình trạng thanh toán</th>
+                        <th className="p-2.5 sm:p-3 text-center">Ghi chú & Chính sách hoàn trả</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr className="border-b border-black">
-                        <td className="p-2 border-r border-black font-bold">1. Tiền thuê ô kho:</td>
-                        <td className="p-2 border-r border-black text-right font-mono font-bold">
+                        <td className="p-2.5 sm:p-3 border-r border-black font-semibold">1. Tiền thuê ô kho</td>
+                        <td className="p-2.5 sm:p-3 border-r border-black text-right font-mono font-bold whitespace-nowrap">
                           {rentalFee.toLocaleString('vi-VN')} đ
                         </td>
-                        <td className="p-2">Đã bao gồm chi phí an ninh, điện chiếu sáng và bảo vệ 24/7.</td>
+                        <td className="p-2.5 sm:p-3 border-r border-black text-center">
+                          {isPending ? 'Thanh toán khi nhận kho' : 'Đã thanh toán'}
+                        </td>
+                        <td className="p-2.5 sm:p-3 text-neutral-800 leading-relaxed">
+                          Đã bao gồm chi phí an ninh, điện chiếu sáng và bảo vệ 24/7.
+                        </td>
                       </tr>
+
                       <tr className="border-b border-black">
-                        <td className="p-2 border-r border-black font-bold">2. Tiền cọc bảo chứng:</td>
-                        <td className="p-2 border-r border-black text-right font-mono font-bold">
+                        <td className="p-2.5 sm:p-3 border-r border-black font-semibold">2. Tiền cọc bảo chứng</td>
+                        <td className="p-2.5 sm:p-3 border-r border-black text-right font-mono font-bold whitespace-nowrap">
                           {depositFee.toLocaleString('vi-VN')} đ
                         </td>
-                        <td className="p-2">Hoàn lại 100% khi thanh lý hợp đồng và nghiệm thu kho không hư hại.</td>
+                        <td className="p-2.5 sm:p-3 border-r border-black text-center">
+                          Đã thanh toán trực tuyến
+                        </td>
+                        <td className="p-2.5 sm:p-3 text-neutral-800 leading-relaxed">
+                          Hoàn lại khi thanh lý hợp đồng và nghiệm thu kho không hư hại (xem Khoản 3.2).
+                        </td>
                       </tr>
-                      <tr className="border-t-2 border-black font-bold">
-                        <td className="p-2 border-r border-black">TỔNG GIÁ TRỊ:</td>
-                        <td className="p-2 border-r border-black text-right font-mono">
+
+                      <tr className="border-b border-black bg-neutral-50/90 font-bold">
+                        <td className="p-2.5 sm:p-3 border-r border-black uppercase tracking-wide">
+                          TỔNG GIÁ TRỊ HỢP ĐỒNG
+                        </td>
+                        <td className="p-2.5 sm:p-3 border-r border-black text-right font-mono font-extrabold whitespace-nowrap">
                           {totalAmount.toLocaleString('vi-VN')} đ
                         </td>
-                        <td className="p-2">
-                          {isPending
-                            ? 'Đã thanh toán tiền cọc trực tuyến. Phần tiền thuê thanh toán khi nhận kho.'
-                            : 'Đã hoàn tất thanh toán 100%'}
+                        <td className="p-2.5 sm:p-3 border-r border-black text-center font-bold">
+                          {isPending ? 'Đang giữ chỗ' : 'Đã thanh toán 100%'}
+                        </td>
+                        <td className="p-2.5 sm:p-3 text-neutral-800 leading-relaxed">
+                          Đã bao gồm toàn bộ tiền cọc bảo chứng và tiền thuê kỳ đầu.
+                        </td>
+                      </tr>
+
+                      <tr className="border-b border-black">
+                        <td className="p-2.5 sm:p-3 border-r border-black pl-5 font-medium">
+                          • Đã thanh toán
+                        </td>
+                        <td className="p-2.5 sm:p-3 border-r border-black text-right font-mono font-bold whitespace-nowrap">
+                          {paidDepositAmount.toLocaleString('vi-VN')} đ
+                        </td>
+                        <td className="p-2.5 sm:p-3 border-r border-black text-center text-neutral-800">
+                          {isPending ? 'Đã thu tiền cọc' : 'Đã tất toán'}
+                        </td>
+                        <td className="p-2.5 sm:p-3 text-neutral-700 italic leading-relaxed">
+                          {isPending ? 'Đã thu tiền đặt cọc giữ chỗ trực tuyến.' : 'Toàn bộ nghĩa vụ tài chính đã được thanh toán 100%.'}
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td className="p-2.5 sm:p-3 border-r border-black pl-5 font-medium">
+                          • Còn phải thanh toán khi nhận kho
+                        </td>
+                        <td className="p-2.5 sm:p-3 border-r border-black text-right font-mono font-bold whitespace-nowrap">
+                          {remainingCheckinAmount.toLocaleString('vi-VN')} đ
+                        </td>
+                        <td className="p-2.5 sm:p-3 border-r border-black text-center font-semibold text-neutral-800">
+                          {remainingCheckinAmount === 0 ? '0 đ' : 'Thanh toán tại quầy'}
+                        </td>
+                        <td className="p-2.5 sm:p-3 text-neutral-700 italic leading-relaxed">
+                          {remainingCheckinAmount === 0
+                            ? '0 đ (Đã tất toán, không còn nợ tồn đọng).'
+                            : 'Thanh toán tiền thuê tại quầy check-in trước khi nhận mã PIN.'}
                         </td>
                       </tr>
                     </tbody>
                   </table>
+                </div>
+
+                <div className="pt-1.5 space-y-1.5 text-neutral-900">
+                  <p>
+                    3.2. <strong>Hoàn trả tiền cọc:</strong> Bên A hoàn lại 100% tiền cọc cho Bên B trong vòng <strong>03 ngày làm việc</strong> kể từ ngày thanh lý hợp đồng và nghiệm thu ô kho không hư hại, sau khi khấu trừ (nếu có) phí quá hạn theo Điều 4 hoặc chi phí khắc phục thiệt hại có biên bản xác nhận.
+                  </p>
+                  <p>
+                    3.3. <strong>Hủy giữ chỗ trước khi nhận kho:</strong> Khách hàng được hủy và hoàn 100% cọc nếu gửi yêu cầu trước ngày bắt đầu thuê tối thiểu 04 (bốn) ngày theo quy định BR-17. Hủy muộn hơn hoặc không đến nhận kho (No-Show) sẽ bị thu hồi toàn bộ tiền cọc.
+                  </p>
+                  <p>
+                    3.4. <strong>Thông tin thanh toán cọc:</strong> Bên B đã thanh toán tiền cọc trực tuyến lúc <strong>{paymentTimeStr}</strong>, mã giao dịch <span className="font-mono font-semibold">{paymentTxnCode}</span>.
+                  </p>
                 </div>
               </div>
 
@@ -578,13 +665,16 @@ export default function ContractDetailModal({
                   ĐIỀU 4: QUY ĐỊNH PHẠT QUÁ HẠN & XỬ LÝ TÀI SẢN TỒN ĐỌNG
                 </h4>
                 <p className="text-neutral-900">
-                  4.1. Khi hết hạn thuê mà Bên thuê không gia hạn hoặc không làm thủ tục bàn giao trả kho, hệ thống sẽ tự động chuyển hợp đồng sang trạng thái <strong>Quá hạn (OVERDUE)</strong>.
+                  4.1. Khi hết hạn thuê mà Bên B không gia hạn hoặc không làm thủ tục bàn giao trả kho, hệ thống sẽ tự động chuyển hợp đồng sang trạng thái <strong>Quá hạn (OVERDUE)</strong>.
                 </p>
                 <p className="text-neutral-900">
-                  4.2. <strong>Phí quá hạn:</strong> Áp dụng mức phí <strong>50.000 VNĐ / ngày trễ hạn</strong>. Bên thuê có trách nhiệm thanh toán đầy đủ phí phát sinh trước khi nhận lại hàng hóa.
+                  4.2. <strong>Phí quá hạn:</strong> Áp dụng mức phí <strong>50.000 VNĐ / ngày trễ hạn</strong>. Bên B có trách nhiệm thanh toán đầy đủ phí phát sinh trước khi nhận lại hàng hóa.
                 </p>
                 <p className="text-neutral-900">
-                  4.3. <strong>Xử lý tài sản:</strong> Sau <strong>15 (mười lăm) ngày</strong> kể từ ngày quá hạn nếu Bên thuê không liên hệ giải quyết, Bên cho thuê có quyền kiểm kê, di dời hoặc thanh lý tài sản để thu hồi diện tích kho theo quy chế vận hành.
+                  4.3. <strong>Xử lý tài sản:</strong> Sau <strong>15 ngày</strong> kể từ ngày quá hạn, nếu Bên B không liên hệ giải quyết sau khi Bên A đã thông báo tối thiểu 02 lần qua email và số điện thoại đã đăng ký, Bên A có quyền kiểm kê (có lập biên bản), di dời hoặc thanh lý tài sản để thu hồi diện tích kho theo quy chế vận hành.
+                </p>
+                <p className="text-neutral-900">
+                  4.4. Số tiền thu được từ việc thanh lý (nếu có), sau khi trừ phí quá hạn và chi phí xử lý hợp lý, sẽ được hoàn lại cho Bên B.
                 </p>
               </div>
 
@@ -594,10 +684,13 @@ export default function ContractDetailModal({
                   ĐIỀU 5: CAM KẾT AN TOÀN PHÒNG CHÁY CHỮA CHÁY & HÀNG HÓA
                 </h4>
                 <p className="text-neutral-900">
-                  5.1. Bên thuê cam kết tuyệt đối <strong>KHÔNG</strong> lưu trữ: Hóa chất cháy nổ, xăng dầu, pháo hoa; Vũ khí, hàng cấm theo quy định của pháp luật; Động vật sống hoặc thực phẩm dễ ôi thiu gây ô nhiễm.
+                  5.1. Bên B cam kết tuyệt đối <strong>KHÔNG</strong> lưu trữ: Hóa chất cháy nổ, xăng dầu, pháo hoa; Vũ khí, hàng cấm theo quy định của pháp luật; Động vật sống hoặc thực phẩm dễ ôi thiu gây ô nhiễm.
                 </p>
                 <p className="text-neutral-900">
-                  5.2. Bên thuê chịu hoàn toàn trách nhiệm trước pháp luật và bồi thường thiệt hại nếu vi phạm các cam kết nêu trên.
+                  5.2. Bên B chịu hoàn toàn trách nhiệm trước pháp luật và bồi thường thiệt hại thực tế (có chứng cứ) nếu vi phạm các cam kết nêu trên.
+                </p>
+                <p className="text-neutral-900">
+                  5.3. Bên A có trách nhiệm duy trì hệ thống an ninh, PCCC và vận hành cơ sở theo đúng thông số tại Điều 1; không mở ô kho của Bên B khi chưa có sự đồng ý của Bên B, trừ trường hợp khẩn cấp (cháy, nổ, rò rỉ) hoặc theo yêu cầu của cơ quan có thẩm quyền.
                 </p>
               </div>
 
@@ -607,59 +700,21 @@ export default function ContractDetailModal({
                   ĐIỀU 6: ĐIỀU KHOẢN CHUNG & HIỆU LỰC
                 </h4>
                 <p className="text-neutral-900">
-                  6.1. Hợp đồng này được xác lập bằng phương tiện điện tử theo quy định của Luật Giao dịch điện tử, có đầy đủ giá trị pháp lý tương đương văn bản ký kết truyền thống.
+                  6.1. Thỏa thuận này được xác lập bằng phương tiện điện tử theo quy định của Luật Giao dịch điện tử, có đầy đủ giá trị pháp lý tương đương văn bản ký kết truyền thống. Dữ liệu xác nhận điện tử của mỗi bên được lưu trên hệ thống và là căn cứ đối chiếu khi cần thiết.
                 </p>
                 <p className="text-neutral-900">
                   6.2. Mọi tranh chấp phát sinh (nếu có) trước hết được giải quyết thông qua thương lượng, hòa giải; trường hợp không thương lượng được sẽ đưa ra Tòa án có thẩm quyền để giải quyết.
                 </p>
               </div>
+
             </div>
 
-            {/* KHỐI CHỮ KÝ */}
-            <div className="pt-8 pb-4 border-t border-black">
-              <div className="grid grid-cols-2 gap-8 text-center text-xs sm:text-[13px] text-black">
-                
-                <div>
-                  <p className="font-serif font-bold uppercase">BÊN CHO THUÊ</p>
-                  <p className="font-serif italic text-[11px] text-neutral-600">(Ký, ghi rõ họ tên và đóng dấu)</p>
-                  
-                  <div className="h-28 flex flex-col items-center justify-center">
-                    <p className="font-serif italic text-xs text-neutral-500">
-                      [Đã xác nhận điện tử]
-                    </p>
-                  </div>
-
-                  <p className="font-serif font-bold uppercase text-xs">
-                    CÔNG TY CP SMART SELF STORAGE
-                  </p>
-                </div>
-
-                <div>
-                  <p className="font-serif font-bold uppercase">BÊN THUÊ</p>
-                  <p className="font-serif italic text-[11px] text-neutral-600">(Ký, ghi rõ họ tên)</p>
-
-                  <div className="h-28 flex flex-col items-center justify-center">
-                    <p className="font-serif italic text-xs text-neutral-500">
-                      {isPending ? '[Đã xác nhận đặt cọc trực tuyến]' : '[Đã ký điện tử]'}
-                    </p>
-                  </div>
-
-                  <p className="font-serif font-bold uppercase text-xs">
-                    {customerName}
-                  </p>
-                </div>
-
-              </div>
-            </div>
-
-            {/* FOOTER GHI CHÚ PHÁP LÝ */}
-            <div className="border-t border-neutral-300 pt-2 text-center text-[10.5px] text-neutral-500 font-sans">
-              Hệ thống lưu trữ tự quản thông minh Smart Self Storage · Mã hợp đồng: {contractCode}
+            <div className="border-t border-neutral-300 pt-2 flex items-center justify-between text-[10.5px] text-neutral-500 font-sans">
+              <span>Hệ thống Smart Self Storage</span>
             </div>
 
           </div>
         </div>
-
 
       </div>
     </div>

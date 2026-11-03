@@ -37,6 +37,8 @@ export interface FacilityContract {
   contractCode: string
   customerName: string
   customerPhone: string
+  customerEmail?: string
+  customerIdNumber?: string
   unitCode: string
   /** YYYY-MM-DD */
   startDate: string

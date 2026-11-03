@@ -10,6 +10,9 @@ import com.swp391.backend.service.JwtService;
 import com.swp391.backend.service.StorageService;
 import com.swp391.backend.service.CustomerReservationService;
 import com.swp391.backend.service.GatePinService;
+import com.swp391.backend.service.NoShowCronService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import io.jsonwebtoken.Claims;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,6 +31,8 @@ public class ContractController {
     private final ContractRepository contractRepository;
     private final ReservationRepository reservationRepository;
     private final StorageUnitRepository storageUnitRepository;
+    private final AccountRepository accountRepository;
+    private final CustomerProfileRepository customerProfileRepository;
     private final FloorRepository floorRepository;
     private final FacilityRepository facilityRepository;
     private final StorageService storageService;
@@ -38,11 +43,15 @@ public class ContractController {
     private final ActivityLogRepository activityLogRepository;
     private final CustomerReservationService customerReservationService;
     private final GatePinService gatePinService;
+    private static final Logger log = LoggerFactory.getLogger(ContractController.class);
     private final SupportTicketRepository supportTicketRepository;
+    private final NoShowCronService noShowCronService;
 
     public ContractController(ContractRepository contractRepository,
                               ReservationRepository reservationRepository,
                               StorageUnitRepository storageUnitRepository,
+                              AccountRepository accountRepository,
+                              CustomerProfileRepository customerProfileRepository,
                               FloorRepository floorRepository,
                               FacilityRepository facilityRepository,
                               StorageService storageService,
@@ -53,10 +62,13 @@ public class ContractController {
                               ActivityLogRepository activityLogRepository,
                               CustomerReservationService customerReservationService,
                               GatePinService gatePinService,
-                              SupportTicketRepository supportTicketRepository) {
+                              SupportTicketRepository supportTicketRepository,
+                              NoShowCronService noShowCronService) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
+        this.accountRepository = accountRepository;
+        this.customerProfileRepository = customerProfileRepository;
         this.floorRepository = floorRepository;
         this.facilityRepository = facilityRepository;
         this.storageService = storageService;
@@ -68,6 +80,7 @@ public class ContractController {
         this.customerReservationService = customerReservationService;
         this.gatePinService = gatePinService;
         this.supportTicketRepository = supportTicketRepository;
+        this.noShowCronService = noShowCronService;
     }
 
     @GetMapping("/contracts/my-contracts")
@@ -91,6 +104,19 @@ public class ContractController {
             return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
         }
 
+        try {
+            noShowCronService.processNoShowContracts();
+        } catch (Exception e) {
+            log.error("Lỗi khi quét hợp đồng No-Show: {}", e.getMessage());
+        }
+
+        Account customerAcc = (targetId != null) ? accountRepository.findAccountByAccountId(targetId).orElse(null) : null;
+        CustomerProfile customerProf = (targetId != null) ? customerProfileRepository.findByAccountId(targetId).orElse(null) : null;
+        String defaultCustName = (customerAcc != null && customerAcc.getFullName() != null) ? customerAcc.getFullName() : "";
+        String defaultCustPhone = (customerAcc != null && customerAcc.getPhone() != null) ? customerAcc.getPhone() : "";
+        String defaultCustEmail = (customerAcc != null && customerAcc.getEmail() != null) ? customerAcc.getEmail() : "";
+        String defaultCustIdNum = (customerProf != null && customerProf.getIdentityNumber() != null) ? customerProf.getIdentityNumber() : "";
+
         List<Reservation> reservations = reservationRepository.findByAccountId(targetId);
         List<Map<String, Object>> result = new ArrayList<>();
 
@@ -102,18 +128,53 @@ public class ContractController {
             if ("INITIATED".equalsIgnoreCase(c.getStatus())) {
                 continue; // Bỏ qua đơn giữ chỗ chưa thanh toán cọc
             }
+            Integer accId = res.getAccountId() != null ? res.getAccountId() : targetId;
+            Account currentAcc = customerAcc;
+            CustomerProfile currentProf = customerProf;
+            if (accId != null && !accId.equals(targetId)) {
+                currentAcc = accountRepository.findAccountByAccountId(accId).orElse(null);
+                currentProf = customerProfileRepository.findByAccountId(accId).orElse(null);
+            }
+            String custName = (currentAcc != null && currentAcc.getFullName() != null) ? currentAcc.getFullName() : defaultCustName;
+            String custPhone = (currentAcc != null && currentAcc.getPhone() != null) ? currentAcc.getPhone() : defaultCustPhone;
+            String custEmail = (currentAcc != null && currentAcc.getEmail() != null) ? currentAcc.getEmail() : defaultCustEmail;
+            String custIdNum = (currentProf != null && currentProf.getIdentityNumber() != null) ? currentProf.getIdentityNumber() : defaultCustIdNum;
+
             Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitCode());
             if (unitOpt.isEmpty()) continue;
 
             StorageUnit unit = unitOpt.get();
             Optional<Floor> floorOpt = floorRepository.findById(unit.getFloorId());
-            String branchName = "Cầu Giấy, Hà Nội";
-            String branchCode = "HN01";
+            String branchName = "";
+            String branchCode = "";
+            String branchAddress = "";
+            String branchPhone = "";
             if (floorOpt.isPresent()) {
                 Optional<Facility> facOpt = facilityRepository.findById(floorOpt.get().getFacilityId());
                 if (facOpt.isPresent()) {
-                    branchName = facOpt.get().getFacilityName();
-                    branchCode = storageService.mapFacilityToResponse(facOpt.get()).getFacilityCode();
+                    Facility fac = facOpt.get();
+                    branchName = fac.getFacilityName();
+                    branchCode = fac.getFacilityCode() != null ? fac.getFacilityCode() : storageService.mapFacilityToResponse(fac).getFacilityCode();
+                    branchAddress = fac.getAddress() != null ? fac.getAddress() : "";
+                    branchPhone = fac.getPhone() != null ? fac.getPhone() : "";
+                }
+            }
+
+            List<Payment> payments = paymentRepository.findByContractId(c.getContractId());
+            String txnCode = "";
+            String paymentPaidAt = "";
+            for (Payment p : payments) {
+                if (p.getTransactionCode() != null && !p.getTransactionCode().isBlank()) {
+                    txnCode = p.getTransactionCode();
+                } else if (p.getGatewayTransactionId() != null && !p.getGatewayTransactionId().isBlank()) {
+                    txnCode = p.getGatewayTransactionId();
+                } else if (txnCode.isBlank() && p.getInvoiceNumber() != null && !p.getInvoiceNumber().isBlank()) {
+                    txnCode = p.getInvoiceNumber();
+                }
+                if (p.getPaidAt() != null) {
+                    paymentPaidAt = p.getPaidAt().toString();
+                } else if (paymentPaidAt.isBlank() && p.getIssuedAt() != null) {
+                    paymentPaidAt = p.getIssuedAt().toString();
                 }
             }
 
@@ -122,32 +183,48 @@ public class ContractController {
 
             String size = "M";
             String sizeLabel = "Size M";
+            String storageCondition = "NORMAL";
+            String dimensions = "1.5m x 2.0m x 2.0m";
             Optional<UnitType> typeOpt = unitTypeRepository.findById(unit.getUnitTypeId());
             if (typeOpt.isPresent()) {
                 UnitType ut = typeOpt.get();
                 size = ut.getSize() != null ? ut.getSize() : "M";
                 sizeLabel = ut.getTypeName() != null ? ut.getTypeName() : ("Size " + size);
+                storageCondition = ut.getStorageCondition() != null ? ut.getStorageCondition() : "NORMAL";
+                dimensions = ut.getSize() != null ? ut.getSize() : dimensions;
+            }
+
+            String currentStatus = c.getStatus();
+            String currentCancelReason = c.getCancelReason();
+            LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+            if ("PENDING_CHECKIN".equalsIgnoreCase(currentStatus) && res.getStartDate() != null && res.getStartDate().isBefore(today)) {
+                currentStatus = "CANCELLED";
+                currentCancelReason = "NO_SHOW";
             }
 
             String statusLabel;
-            if ("PENDING_CHECKIN".equalsIgnoreCase(c.getStatus())) {
+            if ("PENDING_CHECKIN".equalsIgnoreCase(currentStatus)) {
                 statusLabel = "Chờ check-in";
-            } else if ("ACTIVE".equalsIgnoreCase(c.getStatus())) {
+            } else if ("ACTIVE".equalsIgnoreCase(currentStatus)) {
                 statusLabel = "Đang hiệu lực";
-            } else if ("INITIATED".equalsIgnoreCase(c.getStatus())) {
+            } else if ("INITIATED".equalsIgnoreCase(currentStatus)) {
                 statusLabel = "Khởi tạo";
-            } else if ("OVERDUE".equalsIgnoreCase(c.getStatus())) {
+            } else if ("OVERDUE".equalsIgnoreCase(currentStatus)) {
                 statusLabel = "Quá hạn";
-            } else if ("TERMINATED".equalsIgnoreCase(c.getStatus())) {
+            } else if ("TERMINATED".equalsIgnoreCase(currentStatus)) {
                 statusLabel = "Đã thanh lý";
-            } else if ("COMPLETED".equalsIgnoreCase(c.getStatus())) {
+            } else if ("COMPLETED".equalsIgnoreCase(currentStatus)) {
                 statusLabel = "Đã hoàn tất";
-            } else if ("CANCELLED".equalsIgnoreCase(c.getStatus())) {
-                statusLabel = "Đã hủy cọc";
-            } else if ("FORFEITED".equalsIgnoreCase(c.getStatus())) {
+            } else if ("CANCELLED".equalsIgnoreCase(currentStatus)) {
+                if ("NO_SHOW".equalsIgnoreCase(currentCancelReason) || (currentCancelReason != null && currentCancelReason.toUpperCase().contains("NO_SHOW"))) {
+                    statusLabel = "Quá hạn nhận kho (No-Show)";
+                } else {
+                    statusLabel = "Đã hủy cọc";
+                }
+            } else if ("FORFEITED".equalsIgnoreCase(currentStatus)) {
                 statusLabel = "Mất cọc";
             } else {
-                statusLabel = c.getStatus();
+                statusLabel = currentStatus;
             }
 
             String resCode = res.getReservationCode();
@@ -165,6 +242,12 @@ public class ContractController {
             map.put("branchCode", branchCode);
             map.put("size", size);
             map.put("sizeLabel", sizeLabel);
+            map.put("unitTypeName", sizeLabel);
+            map.put("storageCondition", storageCondition);
+            map.put("storageType", storageCondition);
+            map.put("unitDimensions", dimensions);
+            map.put("dimensions", dimensions);
+            map.put("unitSize", dimensions);
             map.put("startDate", res.getStartDate() != null ? res.getStartDate().toString() : LocalDate.now().toString());
             map.put("expiryDate", res.getEndDate() != null ? res.getEndDate().toString() : LocalDate.now().plusMonths(1).toString());
             map.put("endDate", res.getEndDate() != null ? res.getEndDate().toString() : LocalDate.now().plusMonths(1).toString());
@@ -176,17 +259,37 @@ public class ContractController {
             map.put("rentalAmount", rentAmount);
             map.put("depositAmount", depAmount);
             map.put("totalAmount", totAmount);
+            map.put("customerName", custName);
+            map.put("customerPhone", custPhone);
+            map.put("customerEmail", custEmail);
+            map.put("customerIdNumber", custIdNum);
+            map.put("customerCccd", custIdNum);
+            map.put("facilityAddress", branchAddress);
+            map.put("branchAddress", branchAddress);
+            map.put("branchPhone", branchPhone);
+            map.put("transactionCode", txnCode);
+            map.put("paidAt", paymentPaidAt);
             map.put("daysLeft", daysLeft);
-            map.put("status", c.getStatus());
+            map.put("status", currentStatus);
             map.put("statusLabel", statusLabel);
-            map.put("cancelReason", c.getCancelReason());
+            map.put("cancelReason", currentCancelReason);
             map.put("refundBankName", c.getRefundBankName());
             map.put("refundAccountNumber", c.getRefundAccountNumber());
             map.put("refundAccountName", c.getRefundAccountName());
 
-            boolean isReturnReq = "EARLY_TERMINATION".equalsIgnoreCase(c.getCancelReason())
-                    || supportTicketRepository.findByContractId(c.getContractId()).stream()
-                            .anyMatch(t -> "EARLY_TERMINATION".equalsIgnoreCase(t.getType()) && !"RESOLVED".equalsIgnoreCase(t.getStatus()));
+            Optional<SupportTicket> activeReturnTicket = supportTicketRepository.findByContractId(c.getContractId()).stream()
+                    .filter(t -> "EARLY_TERMINATION".equalsIgnoreCase(t.getType())
+                            && ("SUBMITTED".equalsIgnoreCase(t.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(t.getStatus()) || "OPEN".equalsIgnoreCase(t.getStatus()))
+                            && (t.getDesiredDate() == null || !t.getDesiredDate().isBefore(today)))
+                    .findFirst();
+
+            boolean isReturnReq = activeReturnTicket.isPresent();
+            if (!isReturnReq && "EARLY_TERMINATION".equalsIgnoreCase(currentCancelReason)) {
+                currentCancelReason = null;
+                c.setCancelReason(null);
+                contractRepository.save(c);
+            }
+            map.put("cancelReason", currentCancelReason);
             map.put("returnRequested", isReturnReq);
 
             result.add(map);

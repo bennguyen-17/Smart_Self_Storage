@@ -84,7 +84,7 @@ export const STATUS_STYLES: Record<
     swatch: "border-emerald-500 bg-emerald-100 dark:bg-emerald-950",
   },
   HOLD: {
-    label: "Đang giữ chỗ",
+    label: "Giữ chỗ",
     cell: "border-amber-500 bg-amber-100 text-amber-900 dark:border-amber-600 dark:bg-amber-950 dark:text-amber-100",
     swatch: "border-amber-500 bg-amber-100 dark:bg-amber-950",
   },

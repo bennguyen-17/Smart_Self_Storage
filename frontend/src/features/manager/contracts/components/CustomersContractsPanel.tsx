@@ -28,7 +28,7 @@ import {
 } from "../contractRules"
 import type { ContractStatus, FacilityContract } from "../types"
 import { ContractStatusBadge, DaysLeft } from "./ContractBadges"
-import ContractDetailDialog from "./ContractDetailDialog"
+import ContractDetailModal from "@/features/customer/storage/modals/ContractDetailModal"
 import ForfeitProcessedSheet from "./ForfeitProcessedSheet"
 
 const EMPTY_FILTER: ContractFilter = { query: "", status: "ALL", payment: "ALL", expiringSoon: false }
@@ -191,15 +191,9 @@ function CustomersContractsPanel() {
       {!isLoading && <Pagination {...pagination} unit="hợp đồng" />}
 
       {viewing && (
-        <ContractDetailDialog
-          key={viewing.contractId}
+        <ContractDetailModal
           contract={viewing}
-          today={today}
           onClose={() => setViewing(null)}
-          onForfeit={(c) => {
-            setViewing(null)
-            setForfeiting(c)
-          }}
         />
       )}
 

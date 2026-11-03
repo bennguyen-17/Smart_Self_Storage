@@ -275,7 +275,7 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
           const savedMgr = savedManagersMap[facId] || savedManagersMap[f.facilityCode]
           const finalMgrName = dbMgrName || breakdownMgrName || "Chưa phân công"
           const finalMgrEmail = (dbMgrName && f.managerEmail) || (breakdownMgrName && breakdown?.managerEmail) || (f.managerId ? `manager${f.managerId}@smartstorage.vn` : "manager@smartstorage.vn")
-          const finalMgrPhone = (dbMgrName && f.managerPhone) || (breakdownMgrName && breakdown?.managerPhone) || f.phone || "0900000000"
+          const finalMgrPhone = (dbMgrName && f.managerPhone) || (breakdownMgrName && breakdown?.managerPhone) || f.phone || ""
 
           try {
             const raw = localStorage.getItem("smart_storage_facility_managers")
@@ -367,7 +367,7 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
             address: "Hệ thống chi nhánh SmartStorage",
             managerName: cleanMgr || rawMgr,
             managerEmail: b.managerEmail || "manager@smartstorage.vn",
-            managerPhone: b.managerPhone || "0900000000",
+            managerPhone: b.managerPhone || "",
             totalUnits: b.totalUnits && b.totalUnits > 0 ? b.totalUnits : stdUnits,
             occupied: b.occupiedUnits || 0,
             rentedUnits: b.occupiedUnits || 0,

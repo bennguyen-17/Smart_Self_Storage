@@ -46,7 +46,7 @@ export default function CheckinUnitChangeModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-2 sm:p-4 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="relative flex max-h-[95vh] w-full max-w-[1380px] flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/90 px-6 py-4 dark:border-slate-800 dark:bg-slate-850">
+        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/90 px-6 py-4 dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center gap-3">
             <div className="flex size-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-950/70 dark:text-indigo-400">
               <RepeatIcon className="size-4.5" />
@@ -138,7 +138,7 @@ export default function CheckinUnitChangeModal({
         )}
 
         {!confirmingUnit && (
-          <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-3 dark:border-slate-800 dark:bg-slate-850 text-xs">
+          <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-3 dark:border-slate-800 dark:bg-slate-900 text-xs">
             <span className="text-slate-500 dark:text-slate-400">
               {selectedUnit ? `Đang áp dụng ô đổi: ${selectedUnit.unitCode}` : "Chưa chọn ô kho thay thế"}
             </span>
