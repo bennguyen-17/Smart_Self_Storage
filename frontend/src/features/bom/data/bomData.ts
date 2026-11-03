@@ -217,7 +217,7 @@ export const INITIAL_SURCHARGES: SurchargeItem[] = [
   {
     id: "pn-1",
     category: "penalty",
-    categoryLabel: "Phí Phạt Quá Hạn (Penalties & Overdue Fees)",
+    categoryLabel: "Phí Phạt Quá Hạn",
     type: "Quá hạn thanh toán",
     name: "Mức Phạt Theo Ngày Quá Hạn",
     rate: "1.5% / ngày trễ",
@@ -227,7 +227,7 @@ export const INITIAL_SURCHARGES: SurchargeItem[] = [
   {
     id: "pn-2",
     category: "penalty",
-    categoryLabel: "Phí Phạt Quá Hạn (Penalties & Overdue Fees)",
+    categoryLabel: "Phí Phạt Quá Hạn",
     type: "Mở phong tỏa PIN",
     name: "Phí Mở Phong Tỏa PIN Động",
     rate: "₫100,000 / lần",
@@ -237,7 +237,7 @@ export const INITIAL_SURCHARGES: SurchargeItem[] = [
   {
     id: "pn-3",
     category: "penalty",
-    categoryLabel: "Phí Phạt Quá Hạn (Penalties & Overdue Fees)",
+    categoryLabel: "Phí Phạt Quá Hạn",
     type: "Kiểm kê xử lý kho",
     name: "Phí Kiểm Kê Niêm Phong Tài Sản",
     rate: "₫500,000 / vụ",
@@ -247,7 +247,7 @@ export const INITIAL_SURCHARGES: SurchargeItem[] = [
   {
     id: "dc-1",
     category: "discount",
-    categoryLabel: "Chính Sách Miễn Giảm Giá (Discount Policy & Waivers)",
+    categoryLabel: "Chính Sách Miễn Giảm Giá",
     type: "Khuyến mãi dài hạn",
     name: "Ưu Đãi Thuê Khách Hàng 6 Tháng",
     rate: "Giảm 10% Tổng Đơn",
@@ -257,7 +257,7 @@ export const INITIAL_SURCHARGES: SurchargeItem[] = [
   {
     id: "dc-2",
     category: "discount",
-    categoryLabel: "Chính Sách Miễn Giảm Giá (Discount Policy & Waivers)",
+    categoryLabel: "Chính Sách Miễn Giảm Giá",
     type: "Khuyến mãi dài hạn",
     name: "Ưu Đãi Thuê Khách Hàng 12 Tháng",
     rate: "Giảm 15% + Miễn Cọc",
@@ -267,7 +267,7 @@ export const INITIAL_SURCHARGES: SurchargeItem[] = [
   {
     id: "dc-3",
     category: "discount",
-    categoryLabel: "Chính Sách Miễn Giảm Giá (Discount Policy & Waivers)",
+    categoryLabel: "Chính Sách Miễn Giảm Giá",
     type: "Phân quyền chi nhánh",
     name: "Hạn Mức Duyệt Giảm Giá Manager",
     rate: "Tối đa 10% / đơn",

@@ -112,14 +112,6 @@ function InternalLoginForm() {
     }
   }
 
-  const handleForgotPassword = () => {
-    toast.info("Liên hệ IT để đặt lại mật khẩu", {
-      description:
-        "Vui lòng liên hệ Trưởng bộ phận hoặc Quản trị viên hệ thống.",
-    })
-  }
-
-
   if (isAuthenticated && user) {
     const role = normalizeRole(user.role)
     const destination = getRoleDestination(role)
@@ -226,17 +218,6 @@ function InternalLoginForm() {
                 </InputGroup>
 
                 <FieldError errors={[fieldState.error]} />
-
-                <div className="flex justify-end pt-0.5">
-                  <Button
-                    type="button"
-                    variant="link"
-                    onClick={handleForgotPassword}
-                    className="h-auto p-0 text-xs font-medium text-blue-600 dark:text-blue-400"
-                  >
-                    Quên mật khẩu?
-                  </Button>
-                </div>
               </Field>
             )}
           />

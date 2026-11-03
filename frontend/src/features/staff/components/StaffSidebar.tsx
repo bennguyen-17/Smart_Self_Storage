@@ -99,9 +99,6 @@ function StaffSidebar({ isDark, onToggleTheme }: StaffSidebarProps) {
         </SidebarHeader>
 
         <SidebarContent className="p-3">
-          <p className="px-2 pb-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 group-data-[collapsible=icon]:hidden">
-            Danh mục nghiệp vụ
-          </p>
           <nav aria-label="Nghiệp vụ nhân viên" className="space-y-1.5">
             {NAV_ITEMS.map(({ to, label, hint, icon: Icon }) => (
               <NavLink
