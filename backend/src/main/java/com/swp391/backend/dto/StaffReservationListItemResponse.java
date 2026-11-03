@@ -35,6 +35,9 @@ public class StaffReservationListItemResponse {
     private String unitTypeName;
     private String unitSize;
     private LocalDate depositDate;
+    private String transactionCode;
+    private String paidAt;
+    private String storageCondition;
 
     public StaffReservationListItemResponse() {}
 
@@ -46,6 +49,15 @@ public class StaffReservationListItemResponse {
 
     public LocalDate getDepositDate() { return depositDate; }
     public void setDepositDate(LocalDate depositDate) { this.depositDate = depositDate; }
+
+    public String getTransactionCode() { return transactionCode; }
+    public void setTransactionCode(String transactionCode) { this.transactionCode = transactionCode; }
+
+    public String getPaidAt() { return paidAt; }
+    public void setPaidAt(String paidAt) { this.paidAt = paidAt; }
+
+    public String getStorageCondition() { return storageCondition; }
+    public void setStorageCondition(String storageCondition) { this.storageCondition = storageCondition; }
 
     public LocalDate getDesiredReturnDate() { return desiredReturnDate; }
     public void setDesiredReturnDate(LocalDate desiredReturnDate) { this.desiredReturnDate = desiredReturnDate; }

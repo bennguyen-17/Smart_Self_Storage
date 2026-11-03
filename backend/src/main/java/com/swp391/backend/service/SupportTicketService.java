@@ -670,9 +670,6 @@ public class SupportTicketService {
             tickets = supportTicketRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
         } else {
             tickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
-            if (tickets.isEmpty()) {
-                tickets = supportTicketRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
-            }
         }
 
         checkAndEscalateTickets(tickets);

@@ -23,18 +23,22 @@ export default function StoragePage() {
 
   // Phân trang
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(8);
+  const pageSize = 10;
 
   // Thống kê số lượng từng loại
   const counts = useMemo(() => {
     return {
       all: contracts.length,
       active: contracts.filter((c) => c.status === 'ACTIVE').length,
-      pending: contracts.filter((c) => c.status === 'PENDING_CHECKIN').length,
+      pending: contracts.filter((c) => {
+        const isPastCheckin = Boolean(c.startDate) && new Date(c.startDate).setHours(23, 59, 59, 999) < Date.now();
+        return c.status === 'PENDING_CHECKIN' && !isPastCheckin;
+      }).length,
       overdue: contracts.filter((c) => c.status === 'OVERDUE').length,
-      cancelled: contracts.filter((c) =>
-        ['CANCELLED', 'TERMINATED', 'COMPLETED', 'FORFEITED'].includes(c.status)
-      ).length,
+      cancelled: contracts.filter((c) => {
+        const isPastCheckin = Boolean(c.startDate) && new Date(c.startDate).setHours(23, 59, 59, 999) < Date.now();
+        return ['CANCELLED', 'TERMINATED', 'COMPLETED', 'FORFEITED'].includes(c.status) || (c.status === 'PENDING_CHECKIN' && isPastCheckin);
+      }).length,
     };
   }, [contracts]);
 
@@ -42,12 +46,15 @@ export default function StoragePage() {
   const filteredContracts = useMemo(() => {
     const list = contracts.filter((c) => {
       // 1. Lọc theo tab
-      if (activeTab === 'ACTIVE' && c.status !== 'ACTIVE') return false;
-      if (activeTab === 'PENDING_CHECKIN' && c.status !== 'PENDING_CHECKIN') return false;
-      if (activeTab === 'OVERDUE' && c.status !== 'OVERDUE') return false;
+      const isPastCheckin = Boolean(c.startDate) && new Date(c.startDate).setHours(23, 59, 59, 999) < Date.now();
+      const effectiveStatus = (c.status === 'PENDING_CHECKIN' && isPastCheckin) ? 'CANCELLED' : c.status;
+
+      if (activeTab === 'ACTIVE' && effectiveStatus !== 'ACTIVE') return false;
+      if (activeTab === 'PENDING_CHECKIN' && effectiveStatus !== 'PENDING_CHECKIN') return false;
+      if (activeTab === 'OVERDUE' && effectiveStatus !== 'OVERDUE') return false;
       if (
         activeTab === 'CANCELLED' &&
-        !['CANCELLED', 'TERMINATED', 'COMPLETED', 'FORFEITED'].includes(c.status)
+        !['CANCELLED', 'TERMINATED', 'COMPLETED', 'FORFEITED'].includes(effectiveStatus)
       ) {
         return false;
       }
@@ -68,7 +75,9 @@ export default function StoragePage() {
     // 3. Sắp xếp:
     // Nhóm hiệu lực / chờ check-in lên đầu, quá hạn và đã hủy nằm phía dưới
     // Trong cùng nhóm: cái nào mới nhất (rawContractId lớn hơn hoặc ngày bắt đầu mới hơn) nằm trên
-    const getStatusPriority = (status: string) => {
+    const getContractPriority = (c: any) => {
+      const isPastCheckin = Boolean(c.startDate) && new Date(c.startDate).setHours(23, 59, 59, 999) < Date.now();
+      const status = (c.status === 'PENDING_CHECKIN' && isPastCheckin) ? 'CANCELLED' : c.status;
       switch (status) {
         case 'PENDING_CHECKIN':
           return 0;
@@ -86,8 +95,8 @@ export default function StoragePage() {
     };
 
     return [...list].sort((a, b) => {
-      const pA = getStatusPriority(a.status);
-      const pB = getStatusPriority(b.status);
+      const pA = getContractPriority(a);
+      const pB = getContractPriority(b);
       if (pA !== pB) return pA - pB;
       const idA = Number(a.rawContractId) || 0;
       const idB = Number(b.rawContractId) || 0;
@@ -361,7 +370,7 @@ export default function StoragePage() {
                 <i className="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
                 <input
                   type="text"
-                  placeholder="Tìm mã HĐ, mã ô, cơ sở..."
+                  placeholder="Tìm mã hợp đồng, mã ô, cơ sở..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
@@ -430,13 +439,8 @@ export default function StoragePage() {
                 <StoragePagination
                   currentPage={currentPage}
                   totalPages={totalPages}
-                  pageSize={pageSize}
                   totalItems={totalItems}
                   onPageChange={setCurrentPage}
-                  onPageSizeChange={(size) => {
-                    setPageSize(size);
-                    setCurrentPage(1);
-                  }}
                 />
               </>
             )}

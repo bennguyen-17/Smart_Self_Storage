@@ -306,7 +306,7 @@ export default function BomFacilitiesPage() {
 
   // Quy mô chuẩn hóa: Layout A = 45 kho (3 tầng), Layout B = 15 kho (2 tầng)
   const computedTotalUnits = useMemo(() => {
-    return newFacLayout === "B" ? 15 : 45
+    return newFacLayout === "B" ? 20 : 22
   }, [newFacLayout])
 
   const [internalAccounts, setInternalAccounts] = useState<InternalAccount[]>([])
@@ -409,7 +409,7 @@ export default function BomFacilitiesPage() {
     setNewFacName("")
     setNewFacAddress("")
     setNewFacLayout("A")
-    setNewFacFloors(3)
+    setNewFacFloors(2)
     setNewFacManager("")
     setNewFacPhone("")
     setNewFacMultiplier(1.0)
@@ -546,7 +546,7 @@ export default function BomFacilitiesPage() {
         facilityName: newFacName.trim(),
         facilityCode: codeToUse,
         address: newFacAddress.trim(),
-        phone: newFacPhone.trim() || "0900000000",
+        phone: newFacPhone.trim() || "",
         layoutType: newFacLayout,
         floorCount: newFacFloors,
         status: newFacStatus,
@@ -565,7 +565,7 @@ export default function BomFacilitiesPage() {
           address: newFacAddress.trim(),
           managerName: newFacManager.trim() || "Chưa phân công",
           managerEmail: "manager@smartstorage.vn",
-          managerPhone: newFacPhone.trim() || "0900000000",
+          managerPhone: newFacPhone.trim() || "",
           totalUnits: computedTotalUnits,
           occupied: 0,
           rentedUnits: 0,
@@ -652,7 +652,7 @@ export default function BomFacilitiesPage() {
           const depHold = Number(fAny.depositHolding ?? 0)
           const totRefund = Number(fAny.totalRefunds ?? 0)
           const overdue = Number(fAny.overdueContracts ?? fAny.overdueUnits ?? 0)
-          const tUnits = Number(fAny.totalUnits ?? 46)
+          const tUnits = Number(fAny.totalUnits ?? 22)
 
           // 2. Vận hành cơ sở kho (Đồng bộ số liệu thực tế với danh sách cơ sở)
           const totalOcc = Number(fAny.occupiedUnits ?? fAny.occupied ?? 0)
@@ -1378,15 +1378,15 @@ export default function BomFacilitiesPage() {
                       {selectedFacility.layoutType === "Layout B" ||
                       selectedFacility.layoutType === "B" ||
                       [2, 4, 5, 7, 8].includes(Number(selectedFacility.id))
-                        ? "15 Ô kho"
-                        : "45 Ô kho"}
+                        ? "20 Ô kho"
+                        : "22 Ô kho"}
                     </span>
                     <span className="text-[10px] text-slate-500 font-normal">
                       {selectedFacility.layoutType === "Layout B" ||
                       selectedFacility.layoutType === "B" ||
                       [2, 4, 5, 7, 8].includes(Number(selectedFacility.id))
                         ? "2 Tầng Chuẩn"
-                        : "3 Tầng Chuẩn"}
+                        : "2 Tầng Chuẩn"}
                     </span>
                   </div>
                 </div>
@@ -1520,7 +1520,7 @@ export default function BomFacilitiesPage() {
                     <div className="space-y-1.5 text-[10px] bg-white dark:bg-slate-900/90 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
                       <div className="flex items-center justify-between">
                         <span className="text-slate-500 dark:text-slate-400 shrink-0">Quy mô:</span>
-                        <span className="font-bold text-blue-600 dark:text-blue-300 font-mono">45 Ô Kho (3 Tầng)</span>
+                        <span className="font-bold text-blue-600 dark:text-blue-300 font-mono">22 Ô Kho (2 Tầng)</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-slate-500 dark:text-slate-400 shrink-0">Kích thước:</span>
@@ -1529,7 +1529,7 @@ export default function BomFacilitiesPage() {
                       <div className="flex items-center justify-between pt-1 border-t border-slate-200 dark:border-slate-800/80">
                         <span className="text-slate-500 dark:text-slate-400 shrink-0 whitespace-nowrap">Cơ cấu tầng:</span>
                         <span className="text-slate-700 dark:text-slate-200 font-medium whitespace-nowrap text-right">
-                          Trệt (10 XL) + 2 Lầu (35-36 ô S, M, L)
+                          Trệt (6 XL) + 1 Lầu (16 ô S, M, L)
                         </span>
                       </div>
                     </div>
@@ -1554,7 +1554,7 @@ export default function BomFacilitiesPage() {
                     <div className="space-y-1.5 text-[10px] bg-white dark:bg-slate-900/90 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
                       <div className="flex items-center justify-between">
                         <span className="text-slate-500 dark:text-slate-400 shrink-0">Quy mô:</span>
-                        <span className="font-black text-amber-600 dark:text-amber-300 font-mono">15 Ô Kho (2 Tầng)</span>
+                        <span className="font-black text-amber-600 dark:text-amber-300 font-mono">20 Ô Kho (2 Tầng)</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-slate-500 dark:text-slate-400 shrink-0">Kích thước:</span>
@@ -1563,7 +1563,7 @@ export default function BomFacilitiesPage() {
                       <div className="flex items-center justify-between pt-1 border-t border-slate-200 dark:border-slate-800/80">
                         <span className="text-slate-500 dark:text-slate-400 shrink-0 whitespace-nowrap">Cơ cấu tầng:</span>
                         <span className="text-slate-700 dark:text-slate-200 font-medium whitespace-nowrap text-right">
-                          Trệt (5 XL) + 1 Lầu (10 ô S, M, L)
+                          Trệt (8 XL) + 1 Lầu (12 ô S, M, L)
                         </span>
                       </div>
                     </div>

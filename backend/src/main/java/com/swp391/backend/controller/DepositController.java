@@ -44,7 +44,7 @@ public class DepositController {
         DepositWebhookRequest req = new DepositWebhookRequest(
                 invoiceNumber,
                 "MOCK_TXN_" + System.currentTimeMillis(),
-                "VIETQR",
+                "BANK_TRANSFER",
                 "GATEWAY_MB_" + System.currentTimeMillis()
         );
         ApiResponse response = depositService.confirmDepositPayment(req);

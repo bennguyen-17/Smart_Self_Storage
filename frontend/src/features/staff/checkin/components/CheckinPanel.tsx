@@ -21,6 +21,7 @@ import CollectPenaltyDialog from "./CollectPenaltyDialog"
 import ConfirmCheckinDialog from "./ConfirmCheckinDialog"
 import CounterCancelDialog from "./CounterCancelDialog"
 import RenewAtCounterDialog from "./RenewAtCounterDialog"
+import ContractDetailModal from "@/features/customer/storage/modals/ContractDetailModal"
 import StaffCustomerDetailModal, {
   type CheckinTarget,
 } from "./StaffCustomerDetailModal"
@@ -273,10 +274,12 @@ function CheckinPanel() {
 
       <Pagination unit="hợp đồng" {...pagination} />
 
-      <StaffCustomerDetailModal
-        contract={detailContract}
-        onClose={() => setDetailContract(null)}
-      />
+      {detailContract && (
+        <ContractDetailModal
+          contract={detailContract}
+          onClose={() => setDetailContract(null)}
+        />
+      )}
 
       <ConfirmCheckinDialog
         contract={checkinContract}

@@ -22,7 +22,7 @@ import CustomerLayout from '@/components/layouts/CustomerLayout';
 import StorageMap2D from './components/StorageMap2D';
 import { getBranches, markUnitAsHeld } from './rentApi';
 import { addNewBookingContract } from './rentApi';
-import { createDepositTransaction, mockPayDeposit } from './rentApi';
+import { createDepositTransaction } from './rentApi';
 import apiClient from '@/lib/apiClient';
 import {
   calcRentalTotal,
@@ -68,7 +68,6 @@ export default function RentStoragePage() {
   const [bookingCode, setBookingCode] = useState('CTR-HN01-171026-0042');
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [timeLeft, setTimeLeft] = useState(300); // 5:00
-  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const [isPaymentCompleted, setIsPaymentCompleted] = useState(false);
 
   useEffect(() => {
@@ -169,43 +168,6 @@ export default function RentStoragePage() {
       console.warn('Backend createDepositTransaction:', e);
       alert('Lỗi tạo đơn đặt cọc: ' + (e?.message || 'Vui lòng thử lại'));
     }
-  };
-
-  // Hoàn tất xác nhận thanh toán ở Bước 4 (Chuyển khoản / Test)
-  const handleConfirmPayment = async () => {
-    setIsSubmittingPayment(true);
-    const transferMemo = invoiceNumber || `DEP-${bookingCode}`;
-
-    try {
-      await mockPayDeposit(transferMemo);
-    } catch (e) {
-      console.warn('Backend mockPayDeposit:', e);
-    }
-
-    // 1. Lưu hợp đồng vào danh sách PENDING_CHECKIN
-    const bookingPayload = {
-      facilityName: facilityDisplayName,
-      unitId: selectedUnit.id,
-      unitSize: `Size ${selectedUnit.size}`,
-      storageType: selectedUnit.isClimate ? 'CLIMATE_CONTROLLED' : 'STANDARD',
-      typeLabel: selectedUnit.isClimate ? 'Kho Mát Điều Hòa (22-25°C)' : 'Kho Tiêu Chuẩn',
-      isClimate: selectedUnit.isClimate,
-      startDate: startDate,
-      endDate: checkOutDateIso,
-      effectiveDays,
-      estimatedTotalRental: rental.total,
-      depositAmount: selectedUnit.deposit,
-      contractId: bookingCode,
-      reservationCode: bookingCode,
-      bookingCode: bookingCode,
-    };
-    addNewBookingContract(bookingPayload);
-
-    // 2. Cập nhật ô kho sang HOLD
-    markUnitAsHeld(selectedUnit.id, 'RESERVED');
-
-    setIsSubmittingPayment(false);
-    setIsPaymentCompleted(true);
   };
 
   const [isRedirectingVNPay, setIsRedirectingVNPay] = useState(false);

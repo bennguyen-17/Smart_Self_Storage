@@ -29,6 +29,7 @@ public class ManagerContractController {
     private final PaymentRepository paymentRepository;
     private final ForfeitProcessingService forfeitProcessingService;
     private final SecurityContextHelper securityContextHelper;
+    private final CustomerProfileRepository customerProfileRepository;
 
     public ManagerContractController(ContractRepository contractRepository,
                                       ReservationRepository reservationRepository,
@@ -37,7 +38,8 @@ public class ManagerContractController {
                                       AccountRepository accountRepository,
                                       PaymentRepository paymentRepository,
                                       ForfeitProcessingService forfeitProcessingService,
-                                      SecurityContextHelper securityContextHelper) {
+                                      SecurityContextHelper securityContextHelper,
+                                      CustomerProfileRepository customerProfileRepository) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -46,6 +48,7 @@ public class ManagerContractController {
         this.paymentRepository = paymentRepository;
         this.forfeitProcessingService = forfeitProcessingService;
         this.securityContextHelper = securityContextHelper;
+        this.customerProfileRepository = customerProfileRepository;
     }
 
     /**
@@ -89,13 +92,20 @@ public class ManagerContractController {
                     : "CTR-" + c.getContractId();
 
             String customerName = "Khách hàng #" + res.getAccountId();
-            String customerPhone = "0900000000";
+            String customerPhone = "";
+            String customerEmail = "";
+            String customerIdNumber = "";
             if (res.getAccountId() != null) {
                 Optional<Account> accOpt = accountRepository.findById(Long.valueOf(res.getAccountId()));
                 if (accOpt.isPresent()) {
                     Account acc = accOpt.get();
                     if (acc.getFullName() != null) customerName = acc.getFullName();
                     if (acc.getPhone() != null) customerPhone = acc.getPhone();
+                    if (acc.getEmail() != null) customerEmail = acc.getEmail();
+                }
+                Optional<CustomerProfile> cpOpt = customerProfileRepository.findByAccountId(res.getAccountId());
+                if (cpOpt.isPresent() && cpOpt.get().getIdentityNumber() != null) {
+                    customerIdNumber = cpOpt.get().getIdentityNumber();
                 }
             }
 

@@ -241,9 +241,7 @@ function StatusAction({
   }
 
   if (item.contractStatus === "ACTIVE") {
-    const isReturnRequested = Boolean(
-      item.returnRequested || item.cancelReason === "EARLY_TERMINATION"
-    )
+    const isReturnRequested = Boolean(item.returnRequested)
     if (isReturnRequested) {
       const returnDateStr = item.desiredReturnDate
         ? formatDate(item.desiredReturnDate)

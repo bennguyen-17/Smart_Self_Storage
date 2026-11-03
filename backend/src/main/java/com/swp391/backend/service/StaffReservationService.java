@@ -612,6 +612,7 @@ public class StaffReservationService {
             unitTypeRepository.findById(unit.getUnitTypeId()).ifPresent(ut -> {
                 item.setUnitTypeName(ut.getTypeName());
                 item.setUnitSize(ut.getSize());
+                item.setStorageCondition(ut.getStorageCondition());
             });
         });
 
@@ -627,14 +628,21 @@ public class StaffReservationService {
         contractRepository.findByReservationId(reservation.getReservationId()).ifPresent(contract -> {
             item.setContractId(contract.getContractId());
             item.setContractStatus(contract.getStatus());
+            LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
             Optional<SupportTicket> earlyTicket = supportTicketRepository.findByContractId(contract.getContractId()).stream()
-                    .filter(t -> "EARLY_TERMINATION".equalsIgnoreCase(t.getType()) && !"RESOLVED".equalsIgnoreCase(t.getStatus()))
+                    .filter(t -> "EARLY_TERMINATION".equalsIgnoreCase(t.getType())
+                            && ("SUBMITTED".equalsIgnoreCase(t.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(t.getStatus()) || "OPEN".equalsIgnoreCase(t.getStatus()))
+                            && (t.getDesiredDate() == null || !t.getDesiredDate().isBefore(today)))
                     .findFirst();
             if (earlyTicket.isPresent()) {
                 item.setReturnRequested(true);
                 item.setDesiredReturnDate(earlyTicket.get().getDesiredDate());
-            } else if ("EARLY_TERMINATION".equalsIgnoreCase(contract.getCancelReason())) {
-                item.setReturnRequested(true);
+            } else {
+                item.setReturnRequested(false);
+                if ("EARLY_TERMINATION".equalsIgnoreCase(contract.getCancelReason())) {
+                    contract.setCancelReason(null);
+                    contractRepository.save(contract);
+                }
             }
             paymentRepository.findByContractId(contract.getContractId()).stream()
                     .filter(payment -> "DEP".equalsIgnoreCase(payment.getInvoiceType())
@@ -667,6 +675,18 @@ public class StaffReservationService {
                         item.setDepAmount(totalAmt);
                         item.setDepPaidAmount(paid);
                         item.setDepRemainingAmount(remaining);
+                        if (payment.getTransactionCode() != null && !payment.getTransactionCode().isBlank()) {
+                            item.setTransactionCode(payment.getTransactionCode());
+                        } else if (payment.getGatewayTransactionId() != null && !payment.getGatewayTransactionId().isBlank()) {
+                            item.setTransactionCode(payment.getGatewayTransactionId());
+                        } else if (payment.getInvoiceNumber() != null) {
+                            item.setTransactionCode(payment.getInvoiceNumber());
+                        }
+                        if (payment.getPaidAt() != null) {
+                            item.setPaidAt(payment.getPaidAt().toString());
+                        } else if (payment.getIssuedAt() != null) {
+                            item.setPaidAt(payment.getIssuedAt().toString());
+                        }
                     });
         });
 
