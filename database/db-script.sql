@@ -602,20 +602,36 @@ INSERT INTO Price (priceId, unitTypeId, dailyPrice, monthlyPrice, depositAmount,
 
 -- 8.1. Biểu phí phạt quá hạn, chiết khấu & bồi thường hư hỏng (FeeItems)
 INSERT INTO FeeItem (feeItemId, feeCode, feeName, category, calcType, feeValue, unitBasis, description, isWaiveDeposit, status) VALUES
-(4, 'OVERDUE_DAILY_RATE', 'Mức Phạt Theo Ngày Quá Hạn', 'PENALTY', 'FIXED', 50000.00, 'PER_DAY', 'Phạt 50.000 VNĐ mỗi ngày quá hạn thanh toán', FALSE, 'ACTIVE'),
-(5, 'PIN_UNBLOCK', 'Phí Mở Phong Tỏa PIN Động', 'PENALTY', 'FIXED', 100000.00, 'PER_REQUEST', 'Phí mở khóa sau khi hệ thống tự động ngắt mã PIN do nợ quá hạn', FALSE, 'ACTIVE'),
-(6, 'ASSET_SEAL', 'Phí Kiểm Kê Niêm Phong Tài Sản', 'PENALTY', 'FIXED', 500000.00, 'PER_REQUEST', 'Chi phí niêm phong, lập biên bản tài sản khi nợ quá 15 ngày', FALSE, 'ACTIVE'),
+-- 1. Ưu Đãi Thuê Khách Hàng 6 Tháng
 (7, 'DISCOUNT_6M', 'Ưu Đãi Thuê Khách Hàng 6 Tháng', 'DISCOUNT', 'PERCENT', 10.00, 'CONTRACT_TOTAL', 'Chiết khấu 10% tổng tiền thuê cho hợp đồng từ 6 tháng', FALSE, 'ACTIVE'),
+
+-- 2. Ưu Đãi Thuê Khách Hàng 12 Tháng
 (8, 'DISCOUNT_12M', 'Ưu Đãi Thuê Khách Hàng 12 Tháng', 'DISCOUNT', 'PERCENT', 15.00, 'CONTRACT_TOTAL', 'Chiết khấu 15% tổng tiền thuê cho hợp đồng dài hạn từ 12 tháng', FALSE, 'ACTIVE'),
+
+-- 3. Ưu Đãi Thuê Khách Hàng 3 Tháng
+(16, 'DISCOUNT_3M', 'Ưu Đãi Thuê Khách Hàng 3 Tháng', 'DISCOUNT', 'PERCENT', 5.00, 'CONTRACT_TOTAL', 'Chiết khấu 5% tổng tiền thuê cho hợp đồng dài hạn từ 12 tháng', FALSE, 'ACTIVE'),
+
+-- 4. Phí vệ sinh kho
 (10, 'DMG_CLEANING', 'Phí vệ sinh kho', 'DAMAGE', 'FIXED', 150000.00, 'PER_REQUEST', 'Dọn dẹp rác cơ bản hoặc vệ sinh kho sau khi trả kho', FALSE, 'ACTIVE'),
+
+-- 5. Mất chìa khóa cơ mở tủ
 (11, 'DMG_LOST_KEY', 'Mất chìa khóa cơ mở tủ', 'DAMAGE', 'FIXED', 200000.00, 'PER_REQUEST', 'Đền bù làm lại chìa khóa cơ / thay ổ khóa tủ cá nhân', FALSE, 'ACTIVE'),
+
+-- 6. Phí sơn lại / vá điểm trầy xước
 (12, 'DMG_WALL_SCRATCH', 'Phí sơn lại / vá điểm trầy xước', 'DAMAGE', 'FIXED', 300000.00, 'PER_REQUEST', 'Xử lý trầy xước, dặm vá sơn bề mặt vách ngăn', FALSE, 'ACTIVE'),
+
+-- 7. Hư hỏng bóng đèn / ổ cắm
 (13, 'DMG_ELECTRIC_BROKEN', 'Hư hỏng bóng đèn / ổ cắm', 'DAMAGE', 'FIXED', 300000.00, 'PER_REQUEST', 'Thay thế bóng đèn LED hoặc ổ cắm điện bị cháy hỏng', FALSE, 'ACTIVE'),
+
+-- 8. Vách ngăn ô kho bị móp / thủng
 (14, 'DMG_WALL_DENT', 'Vách ngăn ô kho bị móp / thủng', 'DAMAGE', 'FIXED', 500000.00, 'PER_REQUEST', 'Gia cố hoặc thay tấm vách panel ngăn ô kho bị va đập móp méo', FALSE, 'ACTIVE'),
+
+-- 9. Hư hỏng cửa kho / khóa cửa chính
 (15, 'DMG_DOOR_BROKEN', 'Hư hỏng cửa kho / khóa cửa chính', 'DAMAGE', 'FIXED', 1000000.00, 'PER_REQUEST', 'Sửa chữa cửa cuốn, thay thế khóa cửa chính ô kho', FALSE, 'ACTIVE'),
-(16, 'DISCOUNT_3M', 'Ưu Đãi Thuê Khách Hàng 3 Tháng', 'DISCOUNT', 'PERCENT', 5.00, 'CONTRACT_TOTAL', 'Chiết khấu 5% tổng tiền thuê cho hợp đồng từ 3 tháng', FALSE, 'ACTIVE'),
-(17, 'OVERDUE_LIQUIDATION_DAYS', 'Mốc Ngày Quá Hạn Chuyển Thanh Lý', 'PENALTY', 'FIXED', 30.00, 'DAYS', 'Thời hạn tối đa quá hạn trước khi tiến hành thanh lý ô kho (30 ngày)', FALSE, 'ACTIVE'),
-(18, 'DEPOSIT_RATE', 'Tỷ lệ tiền cọc giữ chỗ', 'SURCHARGE', 'PERCENT', 30.00, 'RENTAL_TOTAL', 'Tỷ lệ tiền đặt cọc giữ chỗ mặc định (30% giá thuê)', FALSE, 'ACTIVE');
+
+-- 10. Thu phạt kho quá hạn
+(4, 'OVERDUE_DAILY_RATE', 'Thu phạt kho quá hạn', 'PENALTY', 'FIXED', 50000.00, 'PER_DAY', 'Khi quá ngày trả kho mà khách không đến trả kho cũng không gia hạn', FALSE, 'ACTIVE');
+
 
 -- 9. Danh mục Ngăn kho thực tế (StorageUnits) phân bổ trên cả 7 cơ sở
 INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES

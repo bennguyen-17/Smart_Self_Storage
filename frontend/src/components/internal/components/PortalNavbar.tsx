@@ -12,7 +12,7 @@ export interface PortalNavItem {
   to: string
   label: string
   /** Mô tả ngắn dưới tên trang */
-  hint: string
+  hint?: string
   icon: LucideIcon
   /** Chữ trong chấm đếm mục mới ("3", "99+"); không có thì không hiện chấm */
   badge?: string | null
@@ -99,7 +99,6 @@ function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, 
 
         {/* Danh mục các trang nghiệp vụ */}
         <div className="flex-1 overflow-y-auto p-4">
-          <p className="px-2 pb-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">Danh mục nghiệp vụ</p>
           <nav aria-label={`Các trang ${portalName}`} className="space-y-1.5">
             {items.map(({ to, label, hint, icon: Icon, badge }) => (
               <NavLink
@@ -129,7 +128,9 @@ function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, 
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-xs font-extrabold">{label}</span>
-                      <span className={cn("block truncate text-[11px]", isActive ? "text-blue-100" : "text-slate-500 dark:text-slate-400")}>{hint}</span>
+                      {hint && (
+                        <span className={cn("block truncate text-[11px]", isActive ? "text-blue-100" : "text-slate-500 dark:text-slate-400")}>{hint}</span>
+                      )}
                     </span>
                     {badge && (
                       <span

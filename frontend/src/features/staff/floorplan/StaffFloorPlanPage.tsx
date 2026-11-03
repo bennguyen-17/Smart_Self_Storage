@@ -81,9 +81,6 @@ function StaffFloorPlanPage() {
           <MapIcon className="size-5 text-blue-600 dark:text-blue-400" />
           <span>Sơ đồ kho 2D</span>
         </h1>
-        <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-          Sơ đồ mặt bằng ô kho tại cơ sở trực thuộc của bạn.
-        </p>
       </div>
 
       <StorageMap2D
@@ -97,6 +94,7 @@ function StaffFloorPlanPage() {
         selectedUnit={selectedUnit}
         onSelectUnit={setSelectedUnit}
         lockFacility
+        readOnly
       />
     </section>
   )

@@ -925,9 +925,6 @@ export default function BomFacilitiesPage() {
                 <Warehouse className="size-5 text-blue-600 dark:text-blue-400" />
                 <span>Giám sát cơ sở kho toàn chuỗi</span>
               </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Quản lý danh sách chi nhánh nằm trong chuỗi kho, theo dõi tình trạng vận hành.
-              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
@@ -1156,7 +1153,7 @@ export default function BomFacilitiesPage() {
                   <div className="flex items-center gap-2">
                     <UserCheck className="size-4 text-blue-600 dark:text-blue-400" />
                     <span className="text-[11px] text-slate-700 dark:text-slate-300 uppercase font-black tracking-wider">
-                      Phân công Quản Lý Cơ Sở (Facility Manager)
+                      Phân công Quản Lý Cơ Sở
                     </span>
                   </div>
                   {editManagerName.trim() ? (
@@ -1174,7 +1171,7 @@ export default function BomFacilitiesPage() {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-1.5">
-                      <span>Chọn nhân sự quản lý (Sổ xuống):</span>
+                      <span>Chọn nhân sự quản lý:</span>
                     </label>
                     {editManagerName && (
                       <button
@@ -1225,7 +1222,7 @@ export default function BomFacilitiesPage() {
                       className="w-full appearance-none px-3.5 py-2.5 pr-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold text-xs text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition cursor-pointer shadow-xs"
                     >
                       <option value="" className="bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 font-normal">
-                        -- Chọn quản lý chưa phụ trách cơ sở (Mỗi cơ sở 1 quản lý) --
+                        -- Chọn quản lý chưa phụ trách cơ sở --
                       </option>
                       {availableManagers.map((p) => (
                         <option key={p.name} value={p.name} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white font-medium py-1">
@@ -1334,7 +1331,6 @@ export default function BomFacilitiesPage() {
                         : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                     <span>🟢 Hoạt Động</span>
                   </button>
                   <button
@@ -1346,7 +1342,6 @@ export default function BomFacilitiesPage() {
                         : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
-                    <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
                     <span>🟠 Bảo Trì</span>
                   </button>
                   <button
@@ -1358,7 +1353,6 @@ export default function BomFacilitiesPage() {
                         : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
-                    <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
                     <span>🔴 Tạm Ngưng</span>
                   </button>
                 </div>

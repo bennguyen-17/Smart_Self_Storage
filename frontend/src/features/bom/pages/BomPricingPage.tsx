@@ -399,8 +399,8 @@ export default function BomPricingPage() {
     }
 
     const categoryLabels = {
-      penalty: "Phí Phạt Quá Hạn (Penalties & Overdue Fees)",
-      discount: "Chính Sách Miễn Giảm Giá (Discount Policy)",
+      penalty: "Phí Phạt Quá Hạn",
+      discount: "Chính Sách Miễn Giảm Giá",
       damage: "Biểu Phí Bồi Thường Hư Hỏng & Vệ Sinh",
     }
 
@@ -477,9 +477,6 @@ export default function BomPricingPage() {
             <SlidersHorizontal className="size-5 text-blue-600 dark:text-blue-400" />
             <span>Khung giá thuê &amp; Biểu phí dịch vụ hệ thống</span>
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Biểu giá thuê kho tiêu chuẩn, tỷ lệ phụ phí kho máy lạnh và các chính sách phí dịch vụ toàn chuỗi
-          </p>
         </div>
       </div>
 
@@ -714,24 +711,24 @@ export default function BomPricingPage() {
 
       {/* MODAL 1: CHỈNH SỬA BẢNG GIÁ SIZE S/M/L/XL - PORTAL RA BODY TRÁNH TRỒI LỆCH MÀN HÌNH */}
       {isPricingModalOpen && selectedPricingItem && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[999] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 max-w-lg w-full space-y-5 shadow-2xl animate-in fade-in zoom-in duration-150 text-white my-auto">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 max-w-lg w-full space-y-5 shadow-2xl animate-in fade-in zoom-in duration-150 text-slate-900 dark:text-white my-auto">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div>
-                <h3 className="font-black text-sm uppercase text-blue-400">
+                <h3 className="font-black text-sm uppercase text-blue-600 dark:text-blue-400">
                   CẬP NHẬT BIỂU GIÁ &amp; MỨC CỌC CHUẨN - {selectedPricingItem.name}
                 </h3>
               </div>
               <button
                 onClick={() => setIsPricingModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white cursor-pointer transition"
               >
                 <X className="size-4" />
               </button>
             </div>
 
             {/* TAB CHỌN SIZE KHO ĐỂ CHUYỂN ĐỔI TIỆN LỢI */}
-            <div className="flex items-center gap-1.5 p-1 bg-slate-950 rounded-2xl border border-slate-800">
+            <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800">
               {pricingList.map((p) => {
                 const isCurrent = selectedPricingItem.id === p.id
                 return (
@@ -748,7 +745,7 @@ export default function BomPricingPage() {
                     className={`flex-1 py-1.5 rounded-xl font-black text-xs transition cursor-pointer ${
                       isCurrent
                         ? "bg-blue-600 text-white shadow-md font-bold shadow-blue-500/20"
-                        : "text-slate-400 hover:text-white hover:bg-slate-900"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-900"
                     }`}
                   >
                     Size {p.size}
@@ -760,7 +757,7 @@ export default function BomPricingPage() {
             <div className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                     Giá Thuê Theo Ngày:
                   </label>
                   <div className="relative">
@@ -768,13 +765,13 @@ export default function BomPricingPage() {
                       type="number"
                       value={editDailyPrice}
                       onChange={(e) => setEditDailyPrice(Number(e.target.value))}
-                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
-                    <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">VNĐ/ngày</span>
+                    <span className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 font-bold text-[10px]">VNĐ/ngày</span>
                   </div>
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                     Giá Thuê Theo Tháng:
                   </label>
                   <div className="relative">
@@ -782,16 +779,16 @@ export default function BomPricingPage() {
                       type="number"
                       value={editNormPrice}
                       onChange={(e) => setEditNormPrice(Number(e.target.value))}
-                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
-                    <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">VNĐ/tháng</span>
+                    <span className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 font-bold text-[10px]">VNĐ/tháng</span>
                   </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                     Phụ Phí Kho Mát (%):
                   </label>
                   <div className="relative">
@@ -801,13 +798,13 @@ export default function BomPricingPage() {
                       max={100}
                       value={editClimatePercent}
                       onChange={(e) => setEditClimatePercent(Number(e.target.value))}
-                      className="w-full p-2.5 pr-8 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 pr-8 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
-                    <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">%</span>
+                    <span className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 font-bold text-[10px]">%</span>
                   </div>
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                     Mức Tiền Cọc Chuẩn:
                   </label>
                   <div className="relative">
@@ -815,24 +812,24 @@ export default function BomPricingPage() {
                       type="number"
                       value={editDepositAmount}
                       onChange={(e) => setEditDepositAmount(Number(e.target.value))}
-                      className="w-full p-2.5 pr-12 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 pr-12 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
-                    <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">VNĐ</span>
+                    <span className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 font-bold text-[10px]">VNĐ</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
               <button
                 onClick={() => setIsPricingModalOpen(false)}
-                className="px-4 py-2 rounded-xl border border-slate-700 font-bold text-xs text-slate-300 hover:text-white cursor-pointer"
+                className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 font-bold text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white cursor-pointer transition"
               >
                 Hủy Bỏ
               </button>
               <button
                 onClick={handleSavePricingModal}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer transition"
               >
                 Lưu Thay Đổi
               </button>
@@ -844,17 +841,17 @@ export default function BomPricingPage() {
 
       {/* MODAL 2: THÊM / CHỈNH SỬA HẠNG MỤC PHỤ THU & PHÍ PHẠT - PORTAL RA BODY */}
       {isSurchargeModalOpen && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[999] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <form
             onSubmit={handleSaveSurcharge}
-            className="bg-slate-900 rounded-3xl border border-slate-800 p-6 max-w-lg w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-white my-auto"
+            className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 max-w-lg w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-slate-900 dark:text-white my-auto"
           >
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div>
-                <h3 className="font-black text-sm uppercase text-blue-400">
+                <h3 className="font-black text-sm uppercase text-blue-600 dark:text-blue-400">
                   {editingSurcharge ? "CẬP NHẬT BIỂU PHÍ & PHỤ THU" : "THÊM PHỤ THU / BIỂU PHÍ MỚI"}
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   {editingSurcharge
                     ? `Chỉnh sửa mức phí cho "${editingSurcharge.name}"`
                     : "Thiết lập biểu phí phụ thu hoặc chế tài trễ hạn mới"}
@@ -866,7 +863,7 @@ export default function BomPricingPage() {
                   setIsSurchargeModalOpen(false)
                   setEditingSurcharge(null)
                 }}
-                className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white cursor-pointer transition"
               >
                 <X className="size-4" />
               </button>
@@ -874,22 +871,22 @@ export default function BomPricingPage() {
 
             <div className="space-y-3.5 text-xs">
               <div>
-                <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                   Nhóm Phân Loại:
                 </label>
                 <select
                   value={surchargeCat}
                   onChange={(e) => setSurchargeCat(e.target.value as any)}
-                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                 >
-                  <option value="penalty">1. Phí Phạt Quá Hạn (Penalties)</option>
-                  <option value="discount">2. Chính Sách Miễn Giảm Giá (Discount Policy)</option>
-                  <option value="damage">3. Bồi Thường Hư Hỏng &amp; Vệ Sinh (Damages)</option>
+                  <option value="penalty">1. Phí Phạt Quá Hạn</option>
+                  <option value="discount">2. Chính Sách Miễn Giảm Giá</option>
+                  <option value="damage">3. Bồi Thường Hư Hỏng &amp; Vệ Sinh</option>
                 </select>
               </div>
 
               <div>
-                <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                   Tên Khoản Phí / Nội Dung:
                 </label>
                 <input
@@ -898,13 +895,13 @@ export default function BomPricingPage() {
                   placeholder="Ví dụ: Phí Phạt Quá Hạn Thanh Toán"
                   value={surchargeName}
                   onChange={(e) => setSurchargeName(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                 />
               </div>
 
               {/* Cách thức tính phí: Số tiền cố định hay % */}
               <div>
-                <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                   Cách Thức Tính Phí:
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -917,7 +914,7 @@ export default function BomPricingPage() {
                     className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                       surchargeCalcType === "FIXED"
                         ? "bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-500/20 font-bold"
-                        : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                        : "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900"
                     }`}
                   >
                     <span>💵 Số Tiền Cố Định (VNĐ)</span>
@@ -931,7 +928,7 @@ export default function BomPricingPage() {
                     className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                       surchargeCalcType === "PERCENT"
                         ? "bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-500/20 font-bold"
-                        : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                        : "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900"
                     }`}
                   >
                     <span>% Tỷ Lệ Phần Trăm (%)</span>
@@ -942,7 +939,7 @@ export default function BomPricingPage() {
               {/* Mức phí và Đơn vị tính */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                     {surchargeCalcType === "PERCENT" ? "Tỷ Lệ Phần Trăm (%):" : "Số Tiền Áp Dụng (VNĐ):"}
                   </label>
                   <div className="relative">
@@ -953,22 +950,22 @@ export default function BomPricingPage() {
                       step={surchargeCalcType === "PERCENT" ? "0.1" : "1000"}
                       value={surchargeFeeValue}
                       onChange={(e) => setSurchargeFeeValue(parseFloat(e.target.value) || 0)}
-                      className="w-full p-2.5 pr-10 rounded-xl border border-slate-700 bg-slate-950 font-mono font-bold text-xs text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 pr-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-mono font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
-                    <span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400 pointer-events-none">
+                    <span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400 dark:text-slate-500 pointer-events-none">
                       {surchargeCalcType === "PERCENT" ? "%" : "₫"}
                     </span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                     Chu Kỳ / Đơn Vị Tính:
                   </label>
                   <select
                     value={surchargeUnitBasis}
                     onChange={(e) => setSurchargeUnitBasis(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                   >
                     <option value="PER_REQUEST">Theo Lần (/ lần)</option>
                     <option value="PER_MONTH">Theo Tháng (/ tháng)</option>
@@ -981,15 +978,16 @@ export default function BomPricingPage() {
 
               {/* Tùy chọn Miễn Cọc khi là Discount */}
               {surchargeCat === "discount" && (
-                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
                   <input
                     type="checkbox"
                     id="waiveDepositPolicy"
                     checked={surchargeWaiveDeposit}
                     onChange={(e) => setSurchargeWaiveDeposit(e.target.checked)}
-                    className="rounded border-slate-700 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
-                  />
-                  <label htmlFor="waiveDepositPolicy" className="text-xs text-slate-300 font-bold cursor-pointer select-none">
+                    className="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                  >
+                  </input>
+                  <label htmlFor="waiveDepositPolicy" className="text-xs text-slate-700 dark:text-slate-300 font-bold cursor-pointer select-none">
                     Miễn thu tiền cọc phòng khi áp dụng chính sách này
                   </label>
                 </div>
@@ -997,7 +995,7 @@ export default function BomPricingPage() {
 
               {/* Mô tả / Ghi chú chính sách */}
               <div>
-                <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                   Mô Tả / Hình Thức Áp Dụng:
                 </label>
                 <textarea
@@ -1005,25 +1003,25 @@ export default function BomPricingPage() {
                   placeholder="Ví dụ: Phạt 50.000 VNĐ mỗi ngày quá hạn thanh toán tiền kho..."
                   value={surchargeNote}
                   onChange={(e) => setSurchargeNote(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-medium text-xs text-white outline-none focus:border-blue-500 resize-none"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-medium text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition resize-none"
                 />
               </div>
 
               {/* Dòng Xem Trước (Preview) */}
-              <div className="p-3 bg-slate-950/80 rounded-xl border border-blue-500/30 flex items-center justify-between">
-                <span className="text-[11px] text-slate-400 font-medium">Mức phí áp dụng vào hóa đơn:</span>
-                <span className="font-mono font-black text-xs text-blue-400">
+              <div className="p-3 bg-blue-50/70 dark:bg-slate-950/80 rounded-xl border border-blue-200 dark:border-blue-500/30 flex items-center justify-between">
+                <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Mức phí áp dụng vào hóa đơn:</span>
+                <span className="font-mono font-black text-xs text-blue-600 dark:text-blue-400">
                   {previewRateString}
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+            <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
               {editingSurcharge ? (
                 <button
                   type="button"
                   onClick={() => handleDeleteSurcharge(editingSurcharge.id, editingSurcharge)}
-                  className="px-3.5 py-2 rounded-xl text-rose-400 hover:bg-rose-950/40 border border-rose-900/60 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-3.5 py-2 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
                 >
                   <Trash2 className="size-3.5" />
                   <span>Xóa Phí</span>
@@ -1037,13 +1035,13 @@ export default function BomPricingPage() {
                     setIsSurchargeModalOpen(false)
                     setEditingSurcharge(null)
                   }}
-                  className="px-4 py-2 rounded-xl border border-slate-700 font-bold text-xs text-slate-300 hover:text-white cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 font-bold text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white cursor-pointer transition"
                 >
                   Hủy Bỏ
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer transition"
                 >
                   {editingSurcharge ? "Lưu Thay Đổi" : "Lưu Hạng Mục"}
                 </button>
@@ -1056,24 +1054,24 @@ export default function BomPricingPage() {
 
       {/* MODAL 3: THÊM LOẠI KHO MỚI - PORTAL RA BODY */}
       {isAddPricingModalOpen && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[999] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <form
             onSubmit={handleCreatePricing}
-            className="bg-slate-900 rounded-3xl border border-slate-800 p-6 max-w-lg w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-white my-auto"
+            className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 max-w-lg w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-slate-900 dark:text-white my-auto"
           >
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div>
-                <h3 className="font-black text-sm uppercase text-blue-400">
+                <h3 className="font-black text-sm uppercase text-blue-600 dark:text-blue-400">
                   THÊM LOẠI KHO MỚI &amp; KHUNG GIÁ
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Tạo phân loại kho mới và áp dụng bảng giá niêm yết vào hệ thống
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsAddPricingModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white cursor-pointer transition"
               >
                 <X className="size-4" />
               </button>
@@ -1082,7 +1080,7 @@ export default function BomPricingPage() {
             <div className="space-y-3.5 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                     Tên Loại Kho:
                   </label>
                   <input
@@ -1091,17 +1089,17 @@ export default function BomPricingPage() {
                     placeholder="Ví dụ: Kho VIP Siêu Lớn"
                     value={newTypeName}
                     onChange={(e) => setNewTypeName(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                     Ký Hiệu / Mã Size:
                   </label>
                   <select
                     value={newSizeCode}
                     onChange={(e) => setNewSizeCode(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                   >
                     <option value="S">Size S (Nhỏ / Tủ đồ cá nhân)</option>
                     <option value="M">Size M (Vừa / Căn hộ mini)</option>
@@ -1114,7 +1112,7 @@ export default function BomPricingPage() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                   Kích Thước Chuẩn (Dài x Rộng x Cao):
                 </label>
                 <input
@@ -1123,13 +1121,13 @@ export default function BomPricingPage() {
                   placeholder="Ví dụ: 3.5m x 3.0m x 2.8m"
                   value={newDimensions}
                   onChange={(e) => setNewDimensions(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                     Giá Thuê Theo Ngày:
                   </label>
                   <div className="relative">
@@ -1139,13 +1137,13 @@ export default function BomPricingPage() {
                       min={0}
                       value={newDailyPrice}
                       onChange={(e) => setNewDailyPrice(Number(e.target.value))}
-                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
-                    <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">VNĐ/ngày</span>
+                    <span className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 font-bold text-[10px]">VNĐ/ngày</span>
                   </div>
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                     Giá Thuê Theo Tháng:
                   </label>
                   <div className="relative">
@@ -1155,16 +1153,16 @@ export default function BomPricingPage() {
                       min={0}
                       value={newMonthlyPrice}
                       onChange={(e) => setNewMonthlyPrice(Number(e.target.value))}
-                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 pr-14 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
-                    <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">VNĐ/tháng</span>
+                    <span className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 font-bold text-[10px]">VNĐ/tháng</span>
                   </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                     Phụ Phí Kho Mát (%):
                   </label>
                   <div className="relative">
@@ -1174,13 +1172,13 @@ export default function BomPricingPage() {
                       max={100}
                       value={newClimatePercent}
                       onChange={(e) => setNewClimatePercent(Number(e.target.value))}
-                      className="w-full p-2.5 pr-8 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 pr-8 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
-                    <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">%</span>
+                    <span className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 font-bold text-[10px]">%</span>
                   </div>
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-400 uppercase text-[10px] mb-1">
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                     Mức Tiền Cọc Chuẩn:
                   </label>
                   <div className="relative">
@@ -1190,26 +1188,26 @@ export default function BomPricingPage() {
                       min={0}
                       value={newDepositAmount}
                       onChange={(e) => setNewDepositAmount(Number(e.target.value))}
-                      className="w-full p-2.5 pr-12 rounded-xl border border-slate-700 bg-slate-950 font-bold text-xs text-white outline-none focus:border-blue-500"
+                      className="w-full p-2.5 pr-12 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
-                    <span className="absolute right-3 top-2.5 text-slate-500 font-bold text-[10px]">VNĐ</span>
+                    <span className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 font-bold text-[10px]">VNĐ</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => setIsAddPricingModalOpen(false)}
-                className="px-4 py-2 rounded-xl border border-slate-700 font-bold text-xs text-slate-300 hover:text-white cursor-pointer"
+                className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 font-bold text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white cursor-pointer transition"
               >
                 Hủy Bỏ
               </button>
               <button
                 type="submit"
                 disabled={isCreatingPricing}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer disabled:opacity-50 transition"
               >
                 {isCreatingPricing ? "Đang Lưu..." : "Thêm Loại Kho Mới"}
               </button>
@@ -1221,36 +1219,36 @@ export default function BomPricingPage() {
 
       {/* MODAL 4: XÁC NHẬN XÓA LOẠI KHO - PORTAL RA BODY */}
       {pricingToDelete && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[999] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 max-w-md w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-white">
+        <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 max-w-md w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-slate-900 dark:text-white">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 shrink-0">
                 <Trash2 className="size-5" />
               </div>
               <div>
-                <h3 className="font-black text-sm uppercase text-white">
+                <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white">
                   XÁC NHẬN XÓA LOẠI KHO
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Thao tác này sẽ ngưng kích hoạt loại kho trong hệ thống
                 </p>
               </div>
             </div>
 
-            <div className="p-3.5 bg-slate-950 rounded-2xl border border-slate-800 text-xs text-slate-300 leading-relaxed space-y-1.5">
+            <div className="p-3.5 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 leading-relaxed space-y-1.5">
               <p>
-                Bạn có chắc chắn muốn xóa loại kho: <strong className="text-rose-400 font-bold">{pricingToDelete.name}</strong> (Size {pricingToDelete.size})?
+                Bạn có chắc chắn muốn xóa loại kho: <strong className="text-rose-600 dark:text-rose-400 font-bold">{pricingToDelete.name}</strong> (Size {pricingToDelete.size})?
               </p>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Bảng giá và thông tin size kho này sẽ chuyển sang trạng thái <strong>NGƯNG HOẠT ĐỘNG</strong> và không hiển thị cho khách hàng thuê mới.
               </p>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => setPricingToDelete(null)}
-                className="px-4 py-2 rounded-xl border border-slate-700 font-bold text-xs text-slate-300 hover:text-white cursor-pointer"
+                className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 font-bold text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white cursor-pointer transition"
               >
                 Hủy Bỏ
               </button>
@@ -1258,7 +1256,7 @@ export default function BomPricingPage() {
                 type="button"
                 disabled={isDeletingPricing}
                 onClick={handleConfirmDeletePricing}
-                className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs shadow-md shadow-rose-500/20 cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-md shadow-rose-500/20 cursor-pointer disabled:opacity-50 transition"
               >
                 {isDeletingPricing ? "Đang Xóa..." : "Xác Nhận Xóa"}
               </button>
@@ -1270,43 +1268,43 @@ export default function BomPricingPage() {
 
       {/* MODAL 5: XÁC NHẬN XÓA BIỂU PHÍ / PHỤ THU - PORTAL RA BODY */}
       {surchargeToDelete && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[999] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 max-w-md w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-white">
+        <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 max-w-md w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-slate-900 dark:text-white">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 shrink-0">
                 <Trash2 className="size-5" />
               </div>
               <div>
-                <h3 className="font-black text-sm uppercase text-white">
+                <h3 className="font-black text-sm uppercase text-slate-900 dark:text-white">
                   XÁC NHẬN XÓA BIỂU PHÍ
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Thao tác này sẽ xóa hoàn toàn khoản phí khỏi hệ thống
                 </p>
               </div>
             </div>
 
-            <div className="p-3.5 bg-slate-950 rounded-2xl border border-slate-800 text-xs text-slate-300 leading-relaxed space-y-1.5">
+            <div className="p-3.5 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 leading-relaxed space-y-1.5">
               <p>
-                Bạn có chắc chắn muốn xóa: <strong className="text-rose-400 font-bold">{surchargeToDelete.name}</strong> ({surchargeToDelete.rate})?
+                Bạn có chắc chắn muốn xóa: <strong className="text-rose-600 dark:text-rose-400 font-bold">{surchargeToDelete.name}</strong> ({surchargeToDelete.rate})?
               </p>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Sau khi xác nhận xóa, khoản phí này sẽ không còn hiển thị trong hệ thống và không áp dụng cho khách hàng thuê mới.
               </p>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => setSurchargeToDelete(null)}
-                className="px-4 py-2 rounded-xl border border-slate-700 font-bold text-xs text-slate-300 hover:text-white cursor-pointer"
+                className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 font-bold text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white cursor-pointer transition"
               >
                 Hủy Bỏ
               </button>
               <button
                 type="button"
                 onClick={() => handleDeleteSurcharge(surchargeToDelete.id, surchargeToDelete)}
-                className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs shadow-md shadow-rose-500/20 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-md shadow-rose-500/20 cursor-pointer transition"
               >
                 Xác Nhận Xóa
               </button>
