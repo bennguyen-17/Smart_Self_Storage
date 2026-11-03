@@ -1025,13 +1025,13 @@ INSERT INTO SupportTicket (id, ticketCode, type, status, customerId, facilityId,
 (11, 'TCK-202610-010', 'MAINTENANCE', 'RESOLVED', 6, 6, 'DN01-F1-S02', 21, 'Bảo trì / Sửa chữa', 'Cần kiểm tra định kỳ cảm biến nhiệt độ buồng kho mát để đảm bảo tiêu chuẩn bảo quản tài liệu điện tử.', NULL, 25, '2026-10-25 20:00:00', FALSE, TRUE, 'Hệ thống điều hòa và cảm biến nhiệt độ buồng kho hoạt động chuẩn xác, duy trì 22°C liên tục.', '2026-10-24 13:00:00', '2026-10-24 14:15:00'),
 (12, 'TCK-202610-011', 'EARLY_TERMINATION', 'RESOLVED', 6, 6, 'DN01-F1-S02', 21, 'Yêu cầu trả kho sớm', 'Khách hàng hoàn tất kế hoạch lưu trữ trước thời hạn, xin làm thủ tục bàn giao kho và tất toán hợp đồng.', '2026-10-22', 26, NULL, FALSE, TRUE, 'Đã hoàn tất nghiệm thu ô kho sạch sẽ, không hư hại và tạo lệnh hoàn tiền cọc.', '2026-10-18 10:00:00', '2026-10-22 10:30:00'),
 
--- Các ticket yêu cầu trả kho trước hạn vào ngày hôm nay (03/11/2026) cho HĐ 31 -> 36 chia đều 6 cơ sở
-(13, 'TCK-202611-013', 'EARLY_TERMINATION', 'SUBMITTED', 1, 1, 'HN01-F1-S01', 31, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 03/11/2026', '2026-11-03', 10, '2026-11-03 18:00:00', 0, 1, NULL, '2026-10-31 08:30:00', NULL),
-(14, 'TCK-202611-014', 'EARLY_TERMINATION', 'SUBMITTED', 2, 2, 'HN02-F1-S02', 32, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 03/11/2026', '2026-11-03', 13, '2026-11-03 18:00:00', 0, 1, NULL, '2026-10-31 09:15:00', NULL),
-(15, 'TCK-202611-015', 'EARLY_TERMINATION', 'SUBMITTED', 3, 3, 'HCM01-F1-S01', 33, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 03/11/2026', '2026-11-03', 16, '2026-11-03 18:00:00', 0, 1, NULL, '2026-10-31 10:00:00', NULL),
-(16, 'TCK-202611-016', 'EARLY_TERMINATION', 'SUBMITTED', 4, 4, 'HCM02-F1-S02', 34, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 03/11/2026', '2026-11-03', 19, '2026-11-03 18:00:00', 0, 1, NULL, '2026-10-31 11:30:00', NULL),
-(17, 'TCK-202611-017', 'EARLY_TERMINATION', 'SUBMITTED', 5, 6, 'DN01-F1-S01', 35, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 03/11/2026', '2026-11-03', 25, '2026-11-03 18:00:00', 0, 1, NULL, '2026-10-31 14:00:00', NULL),
-(18, 'TCK-202611-018', 'EARLY_TERMINATION', 'SUBMITTED', 6, 7, 'CT01-F1-S02', 36, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 03/11/2026', '2026-11-03', 28, '2026-11-03 18:00:00', 0, 1, NULL, '2026-10-31 16:30:00', NULL);
+-- Các ticket yêu cầu trả kho trước hạn vào ngày hôm nay (04/11/2026) cho HĐ 31 -> 36 chia đều 6 cơ sở
+(13, 'TCK-202611-013', 'EARLY_TERMINATION', 'SUBMITTED', 1, 1, 'HN01-F1-S01', 31, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 04/11/2026', '2026-11-04', 10, '2026-11-04 18:00:00', 0, 1, NULL, '2026-10-31 08:30:00', NULL),
+(14, 'TCK-202611-014', 'EARLY_TERMINATION', 'SUBMITTED', 2, 2, 'HN02-F1-S02', 32, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 04/11/2026', '2026-11-04', 13, '2026-11-04 18:00:00', 0, 1, NULL, '2026-10-31 09:15:00', NULL),
+(15, 'TCK-202611-015', 'EARLY_TERMINATION', 'SUBMITTED', 3, 3, 'HCM01-F1-S01', 33, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 04/11/2026', '2026-11-04', 16, '2026-11-04 18:00:00', 0, 1, NULL, '2026-10-31 10:00:00', NULL),
+(16, 'TCK-202611-016', 'EARLY_TERMINATION', 'SUBMITTED', 4, 4, 'HCM02-F1-S02', 34, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 04/11/2026', '2026-11-04', 19, '2026-11-04 18:00:00', 0, 1, NULL, '2026-10-31 11:30:00', NULL),
+(17, 'TCK-202611-017', 'EARLY_TERMINATION', 'SUBMITTED', 5, 6, 'DN01-F1-S01', 35, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 04/11/2026', '2026-11-04', 25, '2026-11-04 18:00:00', 0, 1, NULL, '2026-10-31 14:00:00', NULL),
+(18, 'TCK-202611-018', 'EARLY_TERMINATION', 'SUBMITTED', 6, 7, 'CT01-F1-S02', 36, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 04/11/2026', '2026-11-04', 28, '2026-11-04 18:00:00', 0, 1, NULL, '2026-10-31 16:30:00', NULL);
 
 -- 20. Biên bản nghiệm thu kiểm tra trả kho (Inspections & InspectionItems)
 -- (Không có biên bản vi phạm phát sinh)

@@ -140,7 +140,7 @@ public class AdminAccountController {
         account.setPhone(phone.isBlank() ? "09" + (System.currentTimeMillis() % 100000000) : phone);
         account.setRoleId(roleId);
         account.setStatus("ACTIVE");
-        account.setPassword(passwordEncoder.encode("123456"));
+        account.setPassword(passwordEncoder.encode("123456@Test"));
         account.setMustChangePassword(true);
         account.setCreatedAt(LocalDateTime.now());
         account.setUpdatedAt(LocalDateTime.now());

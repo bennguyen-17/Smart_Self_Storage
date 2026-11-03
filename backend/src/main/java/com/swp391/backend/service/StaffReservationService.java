@@ -612,6 +612,7 @@ public class StaffReservationService {
             unitTypeRepository.findById(unit.getUnitTypeId()).ifPresent(ut -> {
                 item.setUnitTypeName(ut.getTypeName());
                 item.setUnitSize(ut.getSize());
+                item.setStorageCondition(ut.getStorageCondition());
             });
         });
 
@@ -674,6 +675,18 @@ public class StaffReservationService {
                         item.setDepAmount(totalAmt);
                         item.setDepPaidAmount(paid);
                         item.setDepRemainingAmount(remaining);
+                        if (payment.getTransactionCode() != null && !payment.getTransactionCode().isBlank()) {
+                            item.setTransactionCode(payment.getTransactionCode());
+                        } else if (payment.getGatewayTransactionId() != null && !payment.getGatewayTransactionId().isBlank()) {
+                            item.setTransactionCode(payment.getGatewayTransactionId());
+                        } else if (payment.getInvoiceNumber() != null) {
+                            item.setTransactionCode(payment.getInvoiceNumber());
+                        }
+                        if (payment.getPaidAt() != null) {
+                            item.setPaidAt(payment.getPaidAt().toString());
+                        } else if (payment.getIssuedAt() != null) {
+                            item.setPaidAt(payment.getIssuedAt().toString());
+                        }
                     });
         });
 
