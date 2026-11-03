@@ -17,6 +17,7 @@ import com.swp391.backend.dto.FacilityRequest;
 import com.swp391.backend.dto.FacilityResponse;
 import com.swp391.backend.dto.PriceDto;
 import com.swp391.backend.dto.UnitDetailResponse;
+import com.swp391.backend.entity.Account;
 import com.swp391.backend.entity.ActivityLog;
 import com.swp391.backend.entity.Facility;
 import com.swp391.backend.entity.FeePolicy;
@@ -270,13 +271,17 @@ public class StorageService {
         res.setIsAllClimate("HCM01".equalsIgnoreCase(code));
 
         List<Floor> actualFloors = floorRepository.findByFacilityId(f.getFacilityId());
-        res.setFloorCount(actualFloors.isEmpty() ? 3 : actualFloors.size());
+        boolean isLayoutB = "B".equalsIgnoreCase(layout);
+        int expectedFloors = isLayoutB ? 2 : 3;
+        res.setFloorCount(actualFloors.isEmpty() ? expectedFloors : Math.min(actualFloors.size(), expectedFloors));
 
         if (f.getFacilityId() != null && employeeProfileRepository != null && accountRepository != null) {
             List<com.swp391.backend.entity.EmployeeProfile> emps = employeeProfileRepository.findByFacilityId(f.getFacilityId());
             for (com.swp391.backend.entity.EmployeeProfile ep : emps) {
                 Optional<com.swp391.backend.entity.Account> accOpt = accountRepository.findAccountByAccountId(ep.getAccountId());
-                if (accOpt.isPresent() && Long.valueOf(3L).equals(accOpt.get().getRoleId())) {
+                if (accOpt.isPresent() 
+                        && Long.valueOf(3L).equals(accOpt.get().getRoleId())
+                        && "ACTIVE".equalsIgnoreCase(accOpt.get().getStatus())) {
                     com.swp391.backend.entity.Account acc = accOpt.get();
                     String name = acc.getFullName() != null ? acc.getFullName().trim() : "";
                     String cleanName = name.replaceAll("\\s*\\([^)]*\\)", "").trim();
@@ -729,8 +734,9 @@ public class StorageService {
         f.setStatus(req.getStatus() != null && !req.getStatus().trim().isEmpty() ? req.getStatus().trim().toUpperCase() : "ACTIVE");
         Facility saved = facilityRepository.save(f);
 
-        // 3. Tự động sinh danh sách Tầng (Floor) (chuẩn 3 tầng)
-        int floors = (req.getFloorCount() != null && req.getFloorCount() >= 1) ? req.getFloorCount() : 3;
+        // 3. Tự động sinh danh sách Tầng (Floor) theo Layout: Layout B = 2 tầng, Layout A = 3 tầng
+        boolean isLayoutB = layout.equalsIgnoreCase("B");
+        int floors = (req.getFloorCount() != null && req.getFloorCount() >= 1) ? req.getFloorCount() : (isLayoutB ? 2 : 3);
         List<Floor> createdFloors = new java.util.ArrayList<>();
         for (int fl = 1; fl <= floors; fl++) {
             Floor floor = new Floor();
@@ -749,7 +755,7 @@ public class StorageService {
         // Layout A: 10 ô XL
         // Layout B: 5 ô XL
         Floor floor1 = createdFloors.get(0);
-        int xlCount = layout.equals("A") ? 10 : 5;
+        int xlCount = isLayoutB ? 5 : 10;
         for (int i = 1; i <= xlCount; i++) {
             String unitCode = String.format("%s-G-XL%02d", cleanCode, i);
             newUnits.add(new StorageUnit(unitCode, floor1.getFloorId(), 4, "AVAILABLE"));
@@ -757,10 +763,20 @@ public class StorageService {
 
         // Floor 2 (Tầng 1):
         // Layout A: 8 ô S, 6 ô M, 4 ô L (18 ô)
-        // Layout B: 3 ô M, 2 ô L (5 ô)
+        // Layout B: 4 ô S, 4 ô M, 2 ô L (10 ô) -> Tổng cộng Layout B = 5 XL + 10 = 15 Ô Kho trong 2 Tầng
         if (createdFloors.size() >= 2) {
             Floor floor2 = createdFloors.get(1);
-            if (layout.equals("A")) {
+            if (isLayoutB) {
+                for (int s = 1; s <= 4; s++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F1-S%02d", cleanCode, s), floor2.getFloorId(), 1, "AVAILABLE"));
+                }
+                for (int m = 1; m <= 4; m++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F1-M%02d", cleanCode, m), floor2.getFloorId(), 2, "AVAILABLE"));
+                }
+                for (int l = 1; l <= 2; l++) {
+                    newUnits.add(new StorageUnit(String.format("%s-F1-L%02d", cleanCode, l), floor2.getFloorId(), 3, "AVAILABLE"));
+                }
+            } else {
                 for (int s = 1; s <= 8; s++) {
                     newUnits.add(new StorageUnit(String.format("%s-F1-S%02d", cleanCode, s), floor2.getFloorId(), 1, "AVAILABLE"));
                 }
@@ -770,44 +786,20 @@ public class StorageService {
                 for (int l = 1; l <= 4; l++) {
                     newUnits.add(new StorageUnit(String.format("%s-F1-L%02d", cleanCode, l), floor2.getFloorId(), 3, "AVAILABLE"));
                 }
-            } else {
-                for (int s = 1; s <= 2; s++) {
-                    newUnits.add(new StorageUnit(String.format("%s-F1-S%02d", cleanCode, s), floor2.getFloorId(), 1, "AVAILABLE"));
-                }
-                for (int m = 1; m <= 2; m++) {
-                    newUnits.add(new StorageUnit(String.format("%s-F1-M%02d", cleanCode, m), floor2.getFloorId(), 2, "AVAILABLE"));
-                }
-                for (int l = 1; l <= 1; l++) {
-                    newUnits.add(new StorageUnit(String.format("%s-F1-L%02d", cleanCode, l), floor2.getFloorId(), 3, "AVAILABLE"));
-                }
             }
         }
 
-        // Floor 3 (Tầng 2):
-        // Layout A: 6 ô S, 8 ô M, 4 ô L (18 ô)
-        // Layout B: 2 ô S, 2 ô M, 1 ô L (5 ô)
-        if (createdFloors.size() >= 3) {
+        // Floor 3 (Tầng 2): Chỉ sinh cho Layout A (3 tầng)
+        if (!isLayoutB && createdFloors.size() >= 3) {
             Floor floor3 = createdFloors.get(2);
-            if (layout.equals("A")) {
-                for (int s = 1; s <= 6; s++) {
-                    newUnits.add(new StorageUnit(String.format("%s-F2-S%02d", cleanCode, s), floor3.getFloorId(), 1, "AVAILABLE"));
-                }
-                for (int m = 1; m <= 8; m++) {
-                    newUnits.add(new StorageUnit(String.format("%s-F2-M%02d", cleanCode, m), floor3.getFloorId(), 2, "AVAILABLE"));
-                }
-                for (int l = 1; l <= 4; l++) {
-                    newUnits.add(new StorageUnit(String.format("%s-F2-L%02d", cleanCode, l), floor3.getFloorId(), 3, "AVAILABLE"));
-                }
-            } else {
-                for (int s = 1; s <= 2; s++) {
-                    newUnits.add(new StorageUnit(String.format("%s-F2-S%02d", cleanCode, s), floor3.getFloorId(), 1, "AVAILABLE"));
-                }
-                for (int m = 1; m <= 2; m++) {
-                    newUnits.add(new StorageUnit(String.format("%s-F2-M%02d", cleanCode, m), floor3.getFloorId(), 2, "AVAILABLE"));
-                }
-                for (int l = 1; l <= 1; l++) {
-                    newUnits.add(new StorageUnit(String.format("%s-F2-L%02d", cleanCode, l), floor3.getFloorId(), 3, "AVAILABLE"));
-                }
+            for (int s = 1; s <= 6; s++) {
+                newUnits.add(new StorageUnit(String.format("%s-F2-S%02d", cleanCode, s), floor3.getFloorId(), 1, "AVAILABLE"));
+            }
+            for (int m = 1; m <= 8; m++) {
+                newUnits.add(new StorageUnit(String.format("%s-F2-M%02d", cleanCode, m), floor3.getFloorId(), 2, "AVAILABLE"));
+            }
+            for (int l = 1; l <= 4; l++) {
+                newUnits.add(new StorageUnit(String.format("%s-F2-L%02d", cleanCode, l), floor3.getFloorId(), 3, "AVAILABLE"));
             }
         }
 
@@ -864,10 +856,22 @@ public class StorageService {
                 List<com.swp391.backend.entity.Account> allAccs = accountRepository.findAll();
                 Optional<com.swp391.backend.entity.Account> matchedMgr = allAccs.stream()
                         .filter(a -> Long.valueOf(3L).equals(a.getRoleId()))
-                        .filter(a -> a.getFullName() != null && a.getFullName().toLowerCase().contains(targetName.toLowerCase()))
+                        .filter(a -> "ACTIVE".equalsIgnoreCase(a.getStatus()))
+                        .filter(a -> a.getFullName() != null && (a.getFullName().equalsIgnoreCase(targetName) || a.getFullName().toLowerCase().contains(targetName.toLowerCase())))
                         .findFirst();
                 if (matchedMgr.isPresent()) {
-                    employeeProfileRepository.save(new com.swp391.backend.entity.EmployeeProfile(matchedMgr.get().getAccountId().intValue(), facilityId));
+                    Account mgrAcc = matchedMgr.get();
+                    Optional<com.swp391.backend.entity.EmployeeProfile> otherFacEmp = employeeProfileRepository.findByAccountId(mgrAcc.getAccountId().intValue());
+                    if (otherFacEmp.isPresent()) {
+                        com.swp391.backend.entity.EmployeeProfile ep = otherFacEmp.get();
+                        if (ep.getFacilityId() != null && !ep.getFacilityId().equals(facilityId)) {
+                            throw new IllegalArgumentException("Quản lý [" + mgrAcc.getFullName() + "] đã phụ trách cơ sở khác (#" + ep.getFacilityId() + ")! Mỗi cơ sở chỉ được có 1 Quản lý và 1 Quản lý chỉ quản lý 1 cơ sở.");
+                        }
+                        ep.setFacilityId(facilityId);
+                        employeeProfileRepository.save(ep);
+                    } else {
+                        employeeProfileRepository.save(new com.swp391.backend.entity.EmployeeProfile(mgrAcc.getAccountId().intValue(), facilityId));
+                    }
                 }
             }
         }

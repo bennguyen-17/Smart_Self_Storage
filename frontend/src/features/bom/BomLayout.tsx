@@ -11,19 +11,16 @@ const BOM_NAV_ITEMS: readonly PortalNavItem[] = [
   {
     to: "/bom/facilities",
     label: "Giám Sát & Cơ Sở",
-    hint: "Mặt bằng & Tỷ lệ lấp đầy",
     icon: Warehouse,
   },
   {
     to: "/bom/pricing",
     label: "Khung Giá & Phụ Phí",
-    hint: "Biểu giá thuê & Phí dịch vụ",
     icon: SlidersHorizontal,
   },
   {
     to: "/bom/reports",
     label: "Báo Cáo Doanh Thu",
-    hint: "Dòng tiền & Đối soát tài chính",
     icon: FileSpreadsheet,
   },
 ]

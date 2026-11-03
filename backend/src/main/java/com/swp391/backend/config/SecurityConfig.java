@@ -56,6 +56,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/dashboard/chain").hasAnyRole("BOM", "ADMIN")
                         .requestMatchers("/api/admin/dashboard/**").hasAnyRole("BOM", "ADMIN")
                         .requestMatchers("/api/deposits/mock-pay").hasAnyRole("BOM", "ADMIN")
+                        .requestMatchers("/api/admin/accounts/**").hasAnyRole("BOM", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/facilities/**").hasAnyRole("BOM", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/facilities/**").hasAnyRole("BOM", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/facilities/**").hasAnyRole("BOM", "ADMIN")
