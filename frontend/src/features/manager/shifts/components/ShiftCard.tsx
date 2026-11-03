@@ -1,13 +1,5 @@
 import { useState } from "react"
-import {
-  MoonIcon,
-  PlusIcon,
-  SunIcon,
-  SunsetIcon,
-  TriangleAlertIcon,
-  XIcon,
-  type LucideIcon,
-} from "lucide-react"
+import { MoonIcon, SunIcon, SunsetIcon, TriangleAlertIcon, type LucideIcon } from "lucide-react"
 import { cn } from "cn"
 
 import { Button } from "@/components/ui/button"
@@ -18,14 +10,7 @@ import type { ManagerContext } from "@/features/manager/units/types"
 import { readableError } from "@/components/internal/readableError"
 
 import { saveShift } from "../api/shiftApi"
-import {
-  addAssignment,
-  assignableStaff,
-  otherShiftsOf,
-  shiftPeriod,
-  shiftTimeLabel,
-  type ShiftPeriod,
-} from "../shiftRules"
+import { onDutyOf, otherShiftsOf, pickableStaff, shiftPeriod, shiftTimeLabel, type ShiftPeriod } from "../shiftRules"
 import type { DaySchedule, DayShift, FacilityStaff } from "../types"
 
 const PERIOD_ICON: Record<ShiftPeriod, LucideIcon> = {
@@ -38,9 +23,8 @@ const fieldClass =
   "inner-box text-title w-full rounded-lg border px-2.5 py-1.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500"
 
 /**
- * Một ca trong ngày (theo prototype manager_portal): tên + giờ ca lấy từ bảng Shift,
- * danh sách người trực, chọn thêm người ngay trong thẻ và "Lưu".
- * Chỉ phân AI trực ca nào, không chia việc trong ca.
+ * Một ca trong ngày: tên + giờ ca lấy từ bảng Shift, **một người trực** (nhóm chốt 03/11), đổi người bằng ô chọn rồi "Lưu".
+ * Mỗi ca 1 người nên sự cố khách gửi trong ca luôn được phân cho đúng người đang trực.
  */
 function ShiftCard({
   ctx,
@@ -59,27 +43,25 @@ function ShiftCard({
   onSaved: (message: string) => void
 }) {
   const Icon = PERIOD_ICON[shiftPeriod(shift.startTime)]
-  const [draft, setDraft] = useState(shift.staff)
-  const [pickId, setPickId] = useState("")
+  const current = onDutyOf(shift)
+  const [pickId, setPickId] = useState(current ? String(current.employeeId) : "")
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const options = assignableStaff(staff, ctx.facilityId, draft)
-  const picked = options.find((s) => String(s.employeeId) === pickId)
-  const changed = JSON.stringify(draft) !== JSON.stringify(shift.staff)
+  const options = pickableStaff(staff, ctx.facilityId)
+  const picked = options.find((s) => String(s.employeeId) === pickId) ?? null
+  // Dữ liệu cũ còn nhiều người trong ca: lưu lại là chuẩn hóa về 1 người
+  const extra = shift.staff.length > 1
+  const changed = extra || (picked?.employeeId ?? null) !== (current?.employeeId ?? null)
+  const others = picked ? otherShiftsOf(schedule, picked.employeeId, shift.shiftId) : []
   const titleId = `shift-${shift.shiftId}-title`
 
   async function save() {
     setSaving(true)
     setError(null)
     try {
-      await saveShift(
-        ctx,
-        schedule.date,
-        shift.shiftId,
-        draft.map((a) => a.employeeId)
-      )
-      onSaved(`Đã lưu ${shift.shiftName}`)
+      await saveShift(ctx, schedule.date, shift.shiftId, picked ? [picked.employeeId] : [])
+      onSaved(picked ? `Đã đổi người trực ${shift.shiftName}: ${picked.fullName}` : `Đã để trống ${shift.shiftName}`)
     } catch (err) {
       setError(readableError(err))
     } finally {
@@ -88,10 +70,7 @@ function ShiftCard({
   }
 
   return (
-    <section
-      aria-labelledby={titleId}
-      className="card-box flex flex-col gap-4 rounded-2xl border p-4 shadow-sm"
-    >
+    <section aria-labelledby={titleId} className="card-box flex flex-col gap-4 rounded-2xl border p-4 shadow-sm">
       <header className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2.5">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-600/10 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
@@ -101,129 +80,77 @@ function ShiftCard({
             <h2 id={titleId} className="text-title text-sm font-black">
               {shift.shiftName}
             </h2>
-            <p className="text-xs text-muted tabular-nums">
-              {shiftTimeLabel(shift.startTime, shift.endTime)}
-            </p>
+            <p className="text-muted text-xs tabular-nums">{shiftTimeLabel(shift.startTime, shift.endTime)}</p>
           </div>
         </div>
-        <StatusBadge tone={draft.length === 0 ? "red" : "blue"}>
-          {draft.length} người trực
-        </StatusBadge>
+        <StatusBadge tone={current ? "blue" : "red"}>{current ? "Có người trực" : "Chưa có người"}</StatusBadge>
       </header>
 
-      <div className="space-y-2">
-        {draft.length === 0 ? (
-          <p className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed px-3 py-3 text-xs font-semibold text-rose-600 dark:text-rose-400">
-            <TriangleAlertIcon
-              aria-hidden="true"
-              className="size-3.5 shrink-0"
-            />
-            Ca chưa có nhân viên trực
-          </p>
-        ) : (
-          <ul className="space-y-1.5">
-            {draft.map((a) => {
-              const others = otherShiftsOf(
-                schedule,
-                a.employeeId,
-                shift.shiftId
-              )
-              return (
-                <li
-                  key={a.employeeId}
-                  className="flex items-center gap-2.5 rounded-xl px-1 py-1"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[11px] font-black text-white"
-                  >
-                    {initials(a.fullName)}
-                  </span>
-                  <div className="min-w-0 flex-1 text-xs">
-                    <p className="text-title truncate font-bold">
-                      {a.fullName}
-                    </p>
-                    {others.length > 0 && (
-                      <p className="flex items-center gap-1 font-semibold text-amber-700 dark:text-amber-300">
-                        <TriangleAlertIcon
-                          aria-hidden="true"
-                          className="size-3 shrink-0"
-                        />
-                        Đã trực {others.join(", ")}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={saving || readOnly}
-                    aria-label={`Bỏ ${a.fullName} khỏi ${shift.shiftName}`}
-                    onClick={() =>
-                      setDraft((d) =>
-                        d.filter((x) => x.employeeId !== a.employeeId)
-                      )
-                    }
-                  >
-                    <XIcon aria-hidden="true" />
-                  </Button>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </div>
+      {current ? (
+        <div className="flex items-center gap-2.5 rounded-xl px-1 py-1">
+          <span
+            aria-hidden="true"
+            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[11px] font-black text-white"
+          >
+            {initials(current.fullName)}
+          </span>
+          <div className="min-w-0 text-xs">
+            <p className="text-muted">Người trực</p>
+            <p className="text-title truncate font-bold">{current.fullName}</p>
+          </div>
+        </div>
+      ) : (
+        <p className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed px-3 py-3 text-xs font-semibold text-rose-600 dark:text-rose-400">
+          <TriangleAlertIcon aria-hidden="true" className="size-3.5 shrink-0" />
+          Ca chưa có người trực
+        </p>
+      )}
+
+      {extra && (
+        <p className="text-xs font-semibold [overflow-wrap:anywhere] text-amber-700 dark:text-amber-300">
+          Ca đang có {shift.staff.length} người ({shift.staff.map((a) => a.fullName).join(", ")}). Mỗi ca chỉ 1 người: chọn người
+          trực rồi Lưu.
+        </p>
+      )}
 
       <fieldset className="mt-auto space-y-2 border-t pt-3" disabled={saving || readOnly}>
-        {readOnly && (
-          <p className="text-muted text-xs font-semibold">Ngày đã qua: chỉ xem, không sửa được người trực.</p>
+        <legend className="sr-only">Đổi người trực {shift.shiftName}</legend>
+        {readOnly && <p className="text-muted text-xs font-semibold">Ngày đã qua: chỉ xem, không đổi được người trực.</p>}
+        <label className="block space-y-1 text-xs font-bold">
+          <span className="text-title">Người trực</span>
+          <select
+            aria-label={`Người trực ${shift.shiftName}`}
+            value={pickId}
+            onChange={(e) => setPickId(e.target.value)}
+            className={fieldClass}
+          >
+            <option value="">— Chưa xếp người —</option>
+            {options.map((s) => (
+              <option key={s.employeeId} value={s.employeeId}>
+                {s.fullName}
+              </option>
+            ))}
+          </select>
+        </label>
+        {others.length > 0 && (
+          <p className="flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
+            <TriangleAlertIcon aria-hidden="true" className="size-3 shrink-0" />
+            {picked?.fullName} cũng đang trực {others.join(", ")} hôm nay
+          </p>
         )}
-        <legend className="sr-only">Thêm người vào {shift.shiftName}</legend>
-        <select
-          aria-label={`Nhân viên thêm vào ${shift.shiftName}`}
-          value={pickId}
-          onChange={(e) => setPickId(e.target.value)}
-          className={fieldClass}
+        <Button
+          size="sm"
+          className={cn("w-full bg-blue-600 text-white hover:bg-blue-500")}
+          disabled={!changed || saving || readOnly}
+          title={changed ? undefined : "Chưa có thay đổi nào"}
+          aria-label={`Lưu ${shift.shiftName}`}
+          onClick={save}
         >
-          <option value="">
-            {options.length === 0 ? "Hết nhân viên" : "Chọn nhân viên…"}
-          </option>
-          {options.map((s) => (
-            <option key={s.employeeId} value={s.employeeId}>
-              {s.fullName}
-            </option>
-          ))}
-        </select>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            disabled={!picked}
-            onClick={() => {
-              if (!picked) return
-              setDraft((d) => addAssignment(d, picked))
-              setPickId("")
-            }}
-          >
-            <PlusIcon aria-hidden="true" /> Thêm
-          </Button>
-          <Button
-            size="sm"
-            className={cn("flex-1 bg-blue-600 text-white hover:bg-blue-500")}
-            disabled={!changed || saving}
-            title={changed ? undefined : "Chưa có thay đổi nào"}
-            aria-label={`Lưu ${shift.shiftName}`}
-            onClick={save}
-          >
-            {saving && <Spinner />}
-            Lưu
-          </Button>
-        </div>
+          {saving && <Spinner />}
+          Lưu
+        </Button>
         {error && (
-          <p
-            role="alert"
-            className="text-xs font-semibold [overflow-wrap:anywhere] text-rose-600 dark:text-rose-400"
-          >
+          <p role="alert" className="text-xs font-semibold [overflow-wrap:anywhere] text-rose-600 dark:text-rose-400">
             {error}
           </p>
         )}

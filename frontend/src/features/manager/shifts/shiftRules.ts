@@ -1,26 +1,42 @@
 // Luật phân ca (US-32). Hàm thuần, kiểm bằng bảng DDT.
 
-import type { DaySchedule, FacilityStaff, ShiftAssignment } from "./types"
+import type { DayShift, DaySchedule, FacilityStaff, ShiftAssignment } from "./types"
 
 /**
- * Nhân viên được phép chọn cho một ca: đúng cơ sở của Manager (AC), đang hoạt động,
- * chưa có trong ca đó. Sắp theo tên.
+ * Nhân viên chọn được làm người trực: đúng cơ sở của Manager, tài khoản đang hoạt động. Sắp theo tên.
+ * Mỗi ca chỉ 1 người trực (nhóm chốt 03/11): sự cố gửi trong ca luôn được phân cho đúng người đó.
  */
-export function assignableStaff(
-  staff: readonly FacilityStaff[],
-  facilityId: number | null,
-  current: readonly ShiftAssignment[]
-): FacilityStaff[] {
+export function pickableStaff(staff: readonly FacilityStaff[], facilityId: number | null): FacilityStaff[] {
   if (facilityId === null) return []
-  const taken = new Set(current.map((a) => a.employeeId))
   return staff
-    .filter(
-      (s) =>
-        s.facilityId === facilityId &&
-        s.status === "ACTIVE" &&
-        !taken.has(s.employeeId)
-    )
+    .filter((s) => s.facilityId === facilityId && s.status === "ACTIVE")
     .sort((a, b) => a.fullName.localeCompare(b.fullName, "vi"))
+}
+
+/** Người trực của ca (dữ liệu cũ có thể còn nhiều người: lấy người đầu, giao diện báo để Manager chuẩn hóa) */
+export function onDutyOf(shift: Pick<DayShift, "staff">): ShiftAssignment | null {
+  return shift.staff[0] ?? null
+}
+
+export interface ShiftWrite {
+  date: string
+  shiftId: number
+  employeeIds: number[]
+}
+
+/**
+ * "Áp dụng lịch ngày này cho cả tuần": chép người trực từng ca của ngày nguồn sang các ngày khác trong tuần (T2 → CN),
+ * ghi đè lịch đang có. Bỏ qua ngày đã qua (chỉ xem). Ca nguồn chưa có người thì ngày đích cũng để trống ca đó.
+ */
+export function planWeekCopy(source: DaySchedule, today: string): ShiftWrite[] {
+  return weekDays(source.date)
+    .filter((d) => d.date !== source.date && d.date >= today)
+    .flatMap((d) =>
+      source.shifts.map((s) => {
+        const person = onDutyOf(s)
+        return { date: d.date, shiftId: s.shiftId, employeeIds: person ? [person.employeeId] : [] }
+      })
+    )
 }
 
 /** Tên các ca khác trong ngày mà nhân viên đã trực (để cảnh báo Manager khi xếp nhiều ca) */
@@ -37,19 +53,6 @@ export function otherShiftsOf(
         s.staff.some((a) => a.employeeId === employeeId)
     )
     .map((s) => s.shiftName)
-}
-
-/** Thêm một người vào ca; trùng người thì giữ nguyên danh sách */
-export function addAssignment(
-  current: readonly ShiftAssignment[],
-  staff: FacilityStaff
-): ShiftAssignment[] {
-  if (current.some((a) => a.employeeId === staff.employeeId))
-    return [...current]
-  return [
-    ...current,
-    { employeeId: staff.employeeId, fullName: staff.fullName },
-  ]
 }
 
 /** "06:00:00" → "06:00" */
