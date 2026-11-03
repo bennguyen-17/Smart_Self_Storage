@@ -106,3 +106,21 @@ describe("AccountsPanel: Admin quản lý tài khoản nội bộ (US-29)", () =
     expect(within(dialog).queryByText(/could not execute|Duplicate entry/)).not.toBeInTheDocument()
   })
 })
+
+describe("AccountsPanel: trang Admin chỉ gọi API, không ghi dữ liệu hộ trang khác vào trình duyệt", () => {
+  test("tạo Manager rồi khóa tài khoản → không ghi gì vào localStorage (BOM đọc tên Manager từ BE)", async () => {
+    const { user } = await renderPanel()
+    const before = Object.keys(localStorage).sort()
+    await user.click(screen.getByRole("button", { name: /tạo tài khoản/i }))
+    const dialog = await screen.findByRole("dialog")
+    await user.type(within(dialog).getByLabelText(/họ và tên/i), "Quản Lý Mới")
+    await user.type(within(dialog).getByLabelText(/^email/i), "ql.moi@selfstorage391.vn")
+    await user.type(within(dialog).getByLabelText(/số điện thoại/i), "0909000222")
+    await user.selectOptions(within(dialog).getByLabelText(/vai trò/i), "MANAGER")
+    await user.selectOptions(within(dialog).getByLabelText(/cơ sở/i), "2")
+    await user.click(within(dialog).getByRole("button", { name: /tạo tài khoản/i }))
+    await screen.findByText("ql.moi@selfstorage391.vn", {}, { timeout: 3000 })
+    expect(Object.keys(localStorage).sort()).toEqual(before)
+    expect(localStorage.getItem("smart_storage_facility_managers")).toBeNull()
+  })
+})
