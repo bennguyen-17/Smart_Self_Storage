@@ -26,6 +26,15 @@ export function percentOf(part: number, total: number): number {
   return Math.round((part / total) * 1000) / 10
 }
 
+/**
+ * Tổng doanh thu = tiền thuê + gia hạn + phạt trễ hạn + truy thu đền bù.
+ * Không trừ tiền hoàn: phiếu hoàn (REF) đều là hoàn CỌC, mà cọc không phải doanh thu (cô chốt 29/10; trả kho sớm
+ * không hoàn tiền thuê). netRevenue của BE đang trừ cả hoàn cọc nên FE không dùng.
+ */
+export function revenueTotal(d: Pick<ManagerDashboard, "rentalRevenue" | "extensionRevenue" | "penaltyRevenue" | "compensationRevenue">): number {
+  return d.rentalRevenue + d.extensionRevenue + d.penaltyRevenue + d.compensationRevenue
+}
+
 export function buildReportSections(d: ManagerDashboard): ReportSection[] {
   return [
     {
@@ -58,16 +67,16 @@ export function buildReportSections(d: ManagerDashboard): ReportSection[] {
         { label: "Gia hạn", value: d.extensionRevenue, kind: "money" },
         { label: "Phạt trễ hạn", value: d.penaltyRevenue, kind: "money" },
         { label: "Truy thu đền bù", value: d.compensationRevenue, kind: "money" },
-        { label: "Đã hoàn tiền", value: -d.totalRefunds, kind: "money", note: "trừ ra" },
-        { label: "Doanh thu thuần", value: d.netRevenue, kind: "money", emphasis: true },
+        { label: "Tổng doanh thu", value: revenueTotal(d), kind: "money", emphasis: true },
       ],
     },
     {
-      // Tách riêng: cọc đang giữ không phải doanh thu; cọc tịch thu là dòng riêng (không còn miễn / giảm từ 28/10)
+      // Tách riêng: cọc không phải doanh thu; tiền hoàn cho khách là hoàn cọc nên nằm ở đây
       key: "deposits",
       title: "Tiền cọc",
       rows: [
         { label: "Cọc đang giữ", value: d.depositHolding, kind: "money", note: "không tính vào doanh thu" },
+        { label: "Đã hoàn cọc cho khách", value: d.totalRefunds, kind: "money" },
         { label: "Cọc bị tịch thu", value: d.forfeitedDeposit, kind: "money" },
       ],
     },

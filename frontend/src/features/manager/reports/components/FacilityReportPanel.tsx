@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react"
-import { ChartColumnIcon, DownloadIcon, RotateCwIcon, TableIcon } from "lucide-react"
+import { DownloadIcon } from "lucide-react"
 import { cn } from "cn"
 
 import { Button } from "@/components/ui/button"
@@ -12,28 +12,18 @@ import { formatVnd, todayInVietnam } from "@/lib/format"
 import { getManagerDashboard } from "../api/reportApi"
 import {
   ALL_TIME,
-  buildReportSections,
   isReportRangeValid,
   percentOf,
   presetRange,
   RANGE_PRESET_LABEL,
-  rangeLabel,
   reportCsvRows,
+  revenueTotal,
   unitMix,
-  type MetricRow,
   type RangePreset,
   type ReportRange,
 } from "../reportRules"
 import type { ManagerDashboard } from "../types"
 import { BarList, Meter, UnitDonut } from "./ReportCharts"
-
-type View = "charts" | "table"
-
-function formatMetric(row: MetricRow): string {
-  if (row.kind === "money") return formatVnd(row.value)
-  if (row.kind === "percent") return `${row.value.toLocaleString("vi-VN")}%`
-  return row.value.toLocaleString("vi-VN")
-}
 
 function ChartCard({ title, children, className }: { title: string; children: ReactNode; className?: string }) {
   return (
@@ -54,9 +44,9 @@ function Charts({ d }: { d: ManagerDashboard }) {
 
       <ChartCard title="Doanh thu">
         <div>
-          <p className="text-muted text-xs">Doanh thu thuần</p>
-          <p className="text-title text-3xl font-black tabular-nums">{formatVnd(d.netRevenue)}</p>
-          <p className="text-muted text-xs">Các khoản đã thu trừ phần đã hoàn; không gồm tiền cọc đang giữ.</p>
+          <p className="text-muted text-xs">Tổng doanh thu</p>
+          <p className="text-title text-3xl font-black tabular-nums">{formatVnd(revenueTotal(d))}</p>
+          <p className="text-muted text-xs">Không gồm tiền cọc.</p>
         </div>
         <BarList
           label="Cơ cấu doanh thu"
@@ -65,7 +55,6 @@ function Charts({ d }: { d: ManagerDashboard }) {
             { label: "Gia hạn", value: d.extensionRevenue, display: formatVnd(d.extensionRevenue) },
             { label: "Phạt trễ hạn", value: d.penaltyRevenue, display: formatVnd(d.penaltyRevenue) },
             { label: "Truy thu đền bù", value: d.compensationRevenue, display: formatVnd(d.compensationRevenue) },
-            { label: "Đã hoàn tiền", value: d.totalRefunds, display: `−${formatVnd(d.totalRefunds)}`, subtract: true },
           ]}
         />
       </ChartCard>
@@ -96,9 +85,10 @@ function Charts({ d }: { d: ManagerDashboard }) {
       </ChartCard>
 
       <ChartCard title="Tiền cọc" className="lg:col-span-2">
-        <dl className="grid gap-4 sm:grid-cols-2">
+        <dl className="grid gap-4 sm:grid-cols-3">
           {[
             { label: "Cọc đang giữ", value: d.depositHolding, note: "Không tính vào doanh thu" },
+            { label: "Đã hoàn cọc cho khách", value: d.totalRefunds, note: "Sau khi trả kho, đã trừ phạt / phí" },
             { label: "Cọc bị tịch thu", value: d.forfeitedDeposit, note: "Không đến nhận kho, quá hạn 30 ngày" },
           ].map((s) => (
             <div key={s.label}>
@@ -113,47 +103,14 @@ function Charts({ d }: { d: ManagerDashboard }) {
   )
 }
 
-function Tables({ d }: { d: ManagerDashboard }) {
-  return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {buildReportSections(d).map((s) => (
-        <div key={s.key} className="card-box overflow-hidden rounded-2xl border shadow-sm">
-          <table className="w-full text-xs">
-            <caption className="text-title border-b px-4 py-3 text-left text-sm font-black">{s.title}</caption>
-            <tbody>
-              {s.rows.map((r) => (
-                <tr key={r.label} className={cn("border-b last:border-0", r.emphasis && "bg-blue-50/60 dark:bg-blue-950/20")}>
-                  <th scope="row" className="text-title px-4 py-2.5 text-left font-semibold">
-                    {r.label}
-                    {r.note && <span className="text-muted ml-1 font-normal">({r.note})</span>}
-                  </th>
-                  <td
-                    className={cn(
-                      "text-title px-4 py-2.5 text-right tabular-nums whitespace-nowrap",
-                      r.emphasis ? "font-black" : "font-semibold",
-                      r.value < 0 && "text-rose-600 dark:text-rose-400"
-                    )}
-                  >
-                    {formatMetric(r)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 /**
- * US-33 (phần Manager): số liệu tổng quan của đúng cơ sở mình phụ trách, dạng biểu đồ (mặc định) hoặc bảng số liệu.
- * Doanh thu chỉ gồm hóa đơn đã thu trừ phần đã hoàn; tiền cọc đang giữ để riêng.
+ * US-33 (phần Manager): số liệu tổng quan của đúng cơ sở mình phụ trách, một dạng duy nhất (thẻ có biểu đồ kèm con số;
+ * góp ý của Tâm 03/11). Đổi khoảng ngày là tự tải lại; muốn số liệu dạng bảng thì Xuất CSV.
+ * Doanh thu không gồm tiền cọc; tiền hoàn cho khách là hoàn cọc nên nằm ở thẻ Tiền cọc.
  */
 function FacilityReportPanel() {
   const ctx = useMemo(() => getManagerContext(), [])
   const [reloadCount, setReloadCount] = useState(0)
-  const [view, setView] = useState<View>("charts")
   const [preset, setPreset] = useState<RangePreset>("ALL")
   const [range, setRange] = useState<ReportRange>(ALL_TIME)
   const rangeOk = isReportRangeValid(range)
@@ -196,41 +153,13 @@ function FacilityReportPanel() {
         <DateFilter label="Từ ngày" value={range.from} onChange={(from) => editRange({ from })} invalid={!rangeOk} />
         <DateFilter label="Đến ngày" value={range.to} onChange={(to) => editRange({ to })} invalid={!rangeOk} />
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <div role="group" aria-label="Cách xem" className="inner-box flex rounded-lg border p-0.5">
-            {([
-              { key: "charts", label: "Biểu đồ", icon: ChartColumnIcon },
-              { key: "table", label: "Bảng số liệu", icon: TableIcon },
-            ] as const).map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                type="button"
-                aria-pressed={view === key}
-                onClick={() => setView(key)}
-                className={cn(
-                  "flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none",
-                  view === key ? "bg-blue-600 text-white" : "text-title hover:bg-slate-100 dark:hover:bg-slate-800"
-                )}
-              >
-                <Icon className="size-3.5" aria-hidden="true" /> {label}
-              </button>
-            ))}
-          </div>
-          <Button variant="outline" size="sm" disabled={isLoading} onClick={() => setReloadCount((n) => n + 1)}>
-            <RotateCwIcon aria-hidden="true" /> Tải lại
-          </Button>
           <Button size="sm" disabled={!data} onClick={exportCsv} className="bg-blue-600 text-white hover:bg-blue-500">
             <DownloadIcon aria-hidden="true" /> Xuất CSV
           </Button>
         </div>
       </FilterBar>
 
-      {rangeOk ? (
-        <p className="text-muted text-xs">
-          <span className="text-title font-bold">{data ? data.facilityName : "Đang tải…"}</span> ·{" "}
-          <span className="text-title font-semibold">{rangeLabel(range)}</span>. Doanh thu, hoàn tiền và yêu cầu hỗ trợ tính
-          trong khoảng này; số ô kho, hợp đồng và tiền cọc đang giữ là số hiện tại.
-        </p>
-      ) : (
+      {!rangeOk && (
         <p role="alert" className="[overflow-wrap:anywhere] text-xs font-semibold text-rose-600 dark:text-rose-400">
           Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.
         </p>
@@ -243,7 +172,7 @@ function FacilityReportPanel() {
           ))}
         </div>
       )}
-      {data && (view === "charts" ? <Charts d={data} /> : <Tables d={data} />)}
+      {data && <Charts d={data} />}
     </section>
   )
 }
