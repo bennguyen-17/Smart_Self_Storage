@@ -290,9 +290,6 @@ export default function FacilityCashFlowDashboard({
                 <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
                   {title}
                 </h3>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                  {dynamicSubtitle}
-                </div>
               </div>
             </div>
 

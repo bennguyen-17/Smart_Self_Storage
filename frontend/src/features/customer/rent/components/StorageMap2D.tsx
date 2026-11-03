@@ -177,7 +177,8 @@ export default function StorageMap2D({
   refreshTrigger,
   lockFacility = false,
   currentUnitCode,
-  compact = false
+  compact = false,
+  readOnly = false
 }: {
   facility: string;
   onFacilityChange: (fac: string) => void;
@@ -189,6 +190,7 @@ export default function StorageMap2D({
   lockFacility?: boolean;
   currentUnitCode?: string;
   compact?: boolean;
+  readOnly?: boolean;
 }) {
   const [branches, setBranches] = useState<any[]>([]);
   const [units, setUnits] = useState([]);
@@ -444,6 +446,7 @@ export default function StorageMap2D({
       <div
         key={u.id}
         onClick={() => {
+          if (readOnly) return;
           if (isCurrent) {
             toast.info(`Đây là ô kho ban đầu của khách (${u.id})`);
             return;
@@ -452,10 +455,10 @@ export default function StorageMap2D({
             onSelectUnit(isSelected ? null : u);
           }
         }}
-        className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p-2 rounded-lg border shadow-xs text-center flex flex-col justify-between transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-md active:scale-95 group`}
+        className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p-2 rounded-lg border shadow-xs text-center flex flex-col justify-between transition-all duration-200 group${readOnly ? ' cursor-default' : ' cursor-pointer hover:scale-105 hover:shadow-md active:scale-95'}`}
       >
         <div className="flex justify-between items-center w-full">
-          <span className="font-black text-xs sm:text-sm font-mono tracking-tight group-hover:text-blue-600 transition-colors flex items-center gap-1">
+          <span className={`font-black text-xs sm:text-sm font-mono tracking-tight flex items-center gap-1${readOnly ? '' : ' group-hover:text-blue-600 transition-colors'}`}>
             {u.isClimate ? <span className="text-[10px] text-cyan-600 dark:text-blue-400" title="Kho mát điều hòa 22-25°C">❄️</span> : null}
             {shortId}
           </span>

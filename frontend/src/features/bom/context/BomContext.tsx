@@ -138,8 +138,8 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
             const rawCat = (fp.category || "PENALTY").toLowerCase()
             const cat = (rawCat === "discount" || rawCat === "damage" ? rawCat : "penalty") as "penalty" | "discount" | "damage"
             const catLabels: Record<string, string> = {
-              penalty: "Phí Phạt Quá Hạn (Penalties & Overdue Fees)",
-              discount: "Chính Sách Miễn Giảm Giá (Discount Policy & Waivers)",
+              penalty: "Phí Phạt Quá Hạn",
+              discount: "Chính Sách Miễn Giảm Giá",
               damage: "Biểu Phí Bồi Thường Hư Hỏng & Vệ Sinh",
             }
             const typeLabels: Record<string, string> = {
