@@ -19,7 +19,7 @@ const FACILITIES: Facility[] = [
     facilityName: "SmartStorage Cầu Giấy (HN-01)",
     address: "Số 391 Cầu Giấy, Q. Cầu Giấy, Hà Nội",
     phone: "02439100001",
-    floorCount: 3,
+    floorCount: 2,
     layoutType: "A",
     isAllClimate: false,
     status: "ACTIVE",
@@ -43,9 +43,9 @@ const FACILITIES: Facility[] = [
     facilityName: "SmartStorage Quận 1 (HCM-01)",
     address: "Số 123 Nguyễn Huệ, Quận 1, TP.HCM",
     phone: "02839100001",
-    floorCount: 3,
+    floorCount: 2,
     layoutType: "A",
-    isAllClimate: true,
+    isAllClimate: false,
     status: "ACTIVE",
   },
   {
@@ -79,7 +79,7 @@ const FACILITIES: Facility[] = [
     facilityName: "SmartStorage Hải Châu (DN-01)",
     address: "Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng",
     phone: "02369100001",
-    floorCount: 3,
+    floorCount: 2,
     layoutType: "A",
     isAllClimate: false,
     status: "ACTIVE",
@@ -101,22 +101,18 @@ const FACILITIES: Facility[] = [
 const FLOORS: Floor[] = [
   [1, 1, "Tầng Trệt", 1500],
   [2, 1, "Tầng 1", 500],
-  [3, 1, "Tầng 2", 500],
-  [4, 2, "Tầng Trệt", 2000],
-  [5, 2, "Tầng 1", 1000],
-  [6, 2, "Tầng 2", 800],
-  [7, 3, "Tầng Trệt", 1200],
-  [8, 3, "Tầng 1", 600],
-  [9, 3, "Tầng 2", 600],
-  [10, 4, "Tầng Trệt", 2500],
-  [11, 4, "Tầng 1", 1000],
-  [12, 5, "Tầng Trệt", 2000],
-  [13, 5, "Tầng 1", 1000],
-  [14, 5, "Tầng 2", 800],
-  [15, 6, "Tầng Trệt", 1000],
-  [16, 6, "Tầng 1", 400],
-  [17, 7, "Tầng Trệt", 1500],
-  [18, 7, "Tầng 1", 400],
+  [3, 2, "Tầng Trệt", 2000],
+  [4, 2, "Tầng 1", 1000],
+  [5, 3, "Tầng Trệt", 1200],
+  [6, 3, "Tầng 1", 600],
+  [7, 4, "Tầng Trệt", 2500],
+  [8, 4, "Tầng 1", 1000],
+  [9, 5, "Tầng Trệt", 2000],
+  [10, 5, "Tầng 1", 1000],
+  [11, 6, "Tầng Trệt", 1000],
+  [12, 6, "Tầng 1", 400],
+  [13, 7, "Tầng Trệt", 1500],
+  [14, 7, "Tầng 1", 400],
 ].map(([floorId, facilityId, floorName, maxLoadPerM2]) => ({
   floorId: floorId as number,
   facilityId: facilityId as number,
@@ -205,7 +201,18 @@ const UNIT_TYPES: Record<number, MockUnitType> = {
     depositAmount: 4_500_000,
     climateSurchargePercent: 20,
   },
-}
+  7: {
+    unitTypeId: 7,
+    typeName: "Size XL - Climate (Kho mát VIP)",
+    sizeCode: "XL",
+    dims: [4, 2.5, 2],
+    storageCondition: "CLIMATE_CONTROLLED",
+    dailyPrice: 500_000,
+    monthlyPrice: 8_500_000,
+    depositAmount: 8_500_000,
+    climateSurchargePercent: 20,
+  },
+};
 
 // Vòng trạng thái để mỗi tầng có đủ 4 màu
 const STATUS_CYCLE = [
@@ -229,19 +236,38 @@ function floorComposition(
   facility: Facility
 ): [number, number][] {
   const isGround = floor.floorName.toLowerCase().includes("trệt")
-  if (facility.isAllClimate)
-    return isGround
-      ? [[6, 6]]
-      : [
-          [5, 6],
-          [6, 4],
-        ]
-  if (isGround) return [[4, 6]]
+  const isLayoutB = facility.layoutType === "B"
+
+  if (isLayoutB) {
+    // Layout B: 20 units total (Ground: 8 XL, F1: 4 S, 5 M, 3 L)
+    if (isGround) {
+      return [
+        [4, 5],
+        [7, 3],
+      ]
+    }
+    return [
+      [1, 4],
+      [2, 3],
+      [5, 2],
+      [3, 2],
+      [6, 1],
+    ]
+  }
+
+  // Layout A: 22 units total (Ground: 6 XL, F1: 8 S, 5 M, 3 L)
+  if (isGround) {
+    return [
+      [4, 4],
+      [7, 2],
+    ]
+  }
   return [
     [1, 8],
-    [2, 5],
+    [2, 3],
     [5, 2],
-    [3, 3],
+    [3, 2],
+    [6, 1],
   ]
 }
 

@@ -543,42 +543,35 @@ INSERT INTO EmployeeProfile (employeeId, accountId, facilityId) VALUES
 (27, 29, 7), -- Staff 2 CT-01
 (28, 30, 7); -- Staff 3 CT-01
 
--- 6. Danh sách Tầng cho 7 Cơ sở (Mỗi cơ sở chuẩn hóa 3 tầng: Tầng Trệt, Tầng 1, Tầng 2)
+-- 6. Danh sách Tầng cho 7 Cơ sở (Mỗi cơ sở chuẩn hóa 2 tầng: Tầng Trệt, Tầng 1)
 INSERT INTO Floor (floorId, facilityId, floorName, maxLoadPerM2, status) VALUES
--- HN-01 (Cơ sở 1 - Mẫu Layout A 3 tầng)
+-- HN-01 (Cơ sở 1 - Mẫu Layout A 2 tầng: 22 ô kho)
 (1, 1, 'Tầng Trệt', 1000.00, 'ACTIVE'),
 (2, 1, 'Tầng 1', 500.00, 'ACTIVE'),
-(3, 1, 'Tầng 2', 500.00, 'ACTIVE'),
 
--- HN-02 (Cơ sở 2 - Mẫu Layout B 3 tầng)
-(4, 2, 'Tầng Trệt', 1200.00, 'ACTIVE'),
-(5, 2, 'Tầng 1', 600.00, 'ACTIVE'),
-(6, 2, 'Tầng 2', 600.00, 'ACTIVE'),
+-- HN-02 (Cơ sở 2 - Mẫu Layout B 2 tầng: 20 ô kho)
+(3, 2, 'Tầng Trệt', 1200.00, 'ACTIVE'),
+(4, 2, 'Tầng 1', 600.00, 'ACTIVE'),
 
--- HCM-01 (Cơ sở 3 - Mẫu Layout A 3 tầng VIP 100% Kho mát)
-(7, 3, 'Tầng Trệt', 1000.00, 'ACTIVE'),
-(8, 3, 'Tầng 1', 500.00, 'ACTIVE'),
-(9, 3, 'Tầng 2', 500.00, 'ACTIVE'),
+-- HCM-01 (Cơ sở 3 - Mẫu Layout A 2 tầng: 22 ô kho)
+(5, 3, 'Tầng Trệt', 1000.00, 'ACTIVE'),
+(6, 3, 'Tầng 1', 500.00, 'ACTIVE'),
 
--- HCM-02 (Cơ sở 4 - Mẫu Layout B 3 tầng)
-(10, 4, 'Tầng Trệt', 1200.00, 'ACTIVE'),
-(11, 4, 'Tầng 1', 600.00, 'ACTIVE'),
-(12, 4, 'Tầng 2', 600.00, 'ACTIVE'),
+-- HCM-02 (Cơ sở 4 - Mẫu Layout B 2 tầng: 20 ô kho)
+(7, 4, 'Tầng Trệt', 1200.00, 'ACTIVE'),
+(8, 4, 'Tầng 1', 600.00, 'ACTIVE'),
 
--- HCM-03 (Cơ sở 5 - Mẫu Layout B 3 tầng)
-(13, 5, 'Tầng Trệt', 1000.00, 'ACTIVE'),
-(14, 5, 'Tầng 1', 500.00, 'ACTIVE'),
-(15, 5, 'Tầng 2', 500.00, 'ACTIVE'),
+-- HCM-03 (Cơ sở 5 - Mẫu Layout B 2 tầng: 20 ô kho)
+(9, 5, 'Tầng Trệt', 1000.00, 'ACTIVE'),
+(10, 5, 'Tầng 1', 500.00, 'ACTIVE'),
 
--- DN-01 (Cơ sở 6 - Mẫu Layout A 3 tầng)
-(16, 6, 'Tầng Trệt', 1000.00, 'ACTIVE'),
-(17, 6, 'Tầng 1', 500.00, 'ACTIVE'),
-(18, 6, 'Tầng 2', 500.00, 'ACTIVE'),
+-- DN-01 (Cơ sở 6 - Mẫu Layout A 2 tầng: 22 ô kho)
+(11, 6, 'Tầng Trệt', 1000.00, 'ACTIVE'),
+(12, 6, 'Tầng 1', 500.00, 'ACTIVE'),
 
--- CT-01 (Cơ sở 7 - Mẫu Layout B 3 tầng)
-(19, 7, 'Tầng Trệt', 1000.00, 'ACTIVE'),
-(20, 7, 'Tầng 1', 600.00, 'ACTIVE'),
-(21, 7, 'Tầng 2', 600.00, 'ACTIVE');
+-- CT-01 (Cơ sở 7 - Mẫu Layout B 2 tầng: 20 ô kho)
+(13, 7, 'Tầng Trệt', 1000.00, 'ACTIVE'),
+(14, 7, 'Tầng 1', 600.00, 'ACTIVE');
 
 -- 7. Loại kho chuẩn (UnitTypes - Chiều cao cố định 2.0m)
 INSERT INTO UnitType (unitTypeId, typeName, size, storageCondition, status) VALUES
@@ -633,21 +626,17 @@ INSERT INTO FeeItem (feeItemId, feeCode, feeName, category, calcType, feeValue, 
 (4, 'OVERDUE_DAILY_RATE', 'Thu phạt kho quá hạn', 'PENALTY', 'FIXED', 50000.00, 'PER_DAY', 'Khi quá ngày trả kho mà khách không đến trả kho cũng không gia hạn', FALSE, 'ACTIVE');
 
 
--- 9. Danh mục Ngăn kho thực tế (StorageUnits) phân bổ trên cả 7 cơ sở
+-- 9. Danh mục Ngăn kho thực tế (StorageUnits) phân bổ trên cả 7 cơ sở (Chuẩn 2 tầng)
 INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
--- === CƠ SỞ 1: HN-01 (Cầu Giấy, Hà Nội) ===
--- Floor 1 (Trệt): 10 Ô Kho XL
+-- === CƠ SỞ 1: HN-01 (Cầu Giấy, Hà Nội - Mẫu Layout A: 22 Ô Kho) ===
+-- Floor 1 (Trệt): 6 Ô Kho XL (4 thường, 2 kho mát)
 ('HN01-G-XL01', 1, 4, 'RENTED'),
 ('HN01-G-XL02', 1, 4, 'RENTED'),
-('HN01-G-XL03', 1, 4, 'AVAILABLE'),
+('HN01-G-XL03', 1, 7, 'AVAILABLE'),
 ('HN01-G-XL04', 1, 4, 'AVAILABLE'),
-('HN01-G-XL05', 1, 4, 'MAINTENANCE'),
+('HN01-G-XL05', 1, 4, 'RESERVED'),
 ('HN01-G-XL06', 1, 7, 'AVAILABLE'),
-('HN01-G-XL07', 1, 4, 'RESERVED'),
-('HN01-G-XL08', 1, 4, 'AVAILABLE'),
-('HN01-G-XL09', 1, 4, 'RENTED'),
-('HN01-G-XL10', 1, 4, 'AVAILABLE'),
--- Floor 2 (Tầng 1): 8 ô S, 6 ô M, 4 ô L
+-- Floor 2 (Tầng 1): 8 ô S, 5 ô M (3 thường, 2 mát), 3 ô L (2 thường, 1 mát)
 ('HN01-F1-S01', 2, 1, 'RENTED'),
 ('HN01-F1-S02', 2, 1, 'RENTED'),
 ('HN01-F1-S03', 2, 1, 'RENTED'),
@@ -659,196 +648,159 @@ INSERT INTO StorageUnit (unitCode, floorId, unitTypeId, status) VALUES
 ('HN01-F1-M01', 2, 2, 'RENTED'),
 ('HN01-F1-M02', 2, 2, 'RENTED'),
 ('HN01-F1-M03', 2, 2, 'RENTED'),
-('HN01-F1-M04', 2, 2, 'RESERVED'),
-('HN01-F1-M05', 2, 5, 'AVAILABLE'),
-('HN01-F1-M06', 2, 5, 'AVAILABLE'),
+('HN01-F1-M04', 2, 5, 'RESERVED'),
+('HN01-F1-M05', 2, 5, 'RENTED'),
 ('HN01-F1-L01', 2, 3, 'AVAILABLE'),
 ('HN01-F1-L02', 2, 3, 'RENTED'),
-('HN01-F1-L03', 2, 6, 'AVAILABLE'),
-('HN01-F1-L04', 2, 6, 'AVAILABLE'),
--- Floor 3 (Tầng 2): 6 ô S, 8 ô M, 4 ô L
-('HN01-F2-S01', 3, 1, 'AVAILABLE'),
-('HN01-F2-S02', 3, 1, 'RENTED'),
-('HN01-F2-S03', 3, 1, 'AVAILABLE'),
-('HN01-F2-S04', 3, 1, 'AVAILABLE'),
-('HN01-F2-S05', 3, 1, 'AVAILABLE'),
-('HN01-F2-S06', 3, 1, 'AVAILABLE'),
-('HN01-F2-M01', 3, 2, 'RENTED'),
-('HN01-F2-M02', 3, 2, 'RENTED'),
-('HN01-F2-M03', 3, 2, 'RENTED'),
-('HN01-F2-M04', 3, 2, 'RESERVED'),
-('HN01-F2-M05', 3, 2, 'RENTED'),
-('HN01-F2-M06', 3, 2, 'RENTED'),
-('HN01-F2-M07', 3, 2, 'RENTED'),
-('HN01-F2-M08', 3, 2, 'AVAILABLE'),
-('HN01-F2-L01', 3, 3, 'MAINTENANCE'),
-('HN01-F2-L02', 3, 3, 'RENTED'),
-('HN01-F2-L03', 3, 3, 'RENTED'),
-('HN01-F2-L04', 3, 3, 'AVAILABLE'),
+('HN01-F1-L03', 2, 6, 'RENTED'),
 
--- === CƠ SỞ 2: HN-02 (Thanh Xuân, Hà Nội - Mẫu B: 15 Ô Kho) ===
-('HN02-G-XL01', 4, 4, 'RENTED'),
-('HN02-G-XL02', 4, 4, 'AVAILABLE'),
-('HN02-G-XL03', 4, 7, 'AVAILABLE'),
-('HN02-G-XL04', 4, 4, 'RENTED'),
-('HN02-G-XL05', 4, 4, 'AVAILABLE'),
-('HN02-F1-M01', 5, 2, 'RESERVED'),
-('HN02-F1-M02', 5, 2, 'RENTED'),
-('HN02-F1-M03', 5, 5, 'AVAILABLE'),
-('HN02-F1-L01', 5, 3, 'RENTED'),
-('HN02-F1-L02', 5, 6, 'AVAILABLE'),
-('HN02-F2-M01', 6, 2, 'AVAILABLE'),
-('HN02-F2-M02', 6, 2, 'AVAILABLE'),
-('HN02-F2-M03', 6, 2, 'AVAILABLE'),
-('HN02-F2-L01', 6, 3, 'AVAILABLE'),
-('HN02-F2-L02', 6, 3, 'RENTED'),
+-- === CƠ SỞ 2: HN-02 (Thanh Xuân, Hà Nội - Mẫu Layout B: 20 Ô Kho) ===
+-- Floor 3 (Trệt): 8 Ô Kho XL (5 thường, 3 kho mát)
+('HN02-G-XL01', 3, 4, 'RENTED'),
+('HN02-G-XL02', 3, 4, 'AVAILABLE'),
+('HN02-G-XL03', 3, 7, 'AVAILABLE'),
+('HN02-G-XL04', 3, 4, 'RENTED'),
+('HN02-G-XL05', 3, 4, 'AVAILABLE'),
+('HN02-G-XL06', 3, 4, 'AVAILABLE'),
+('HN02-G-XL07', 3, 7, 'AVAILABLE'),
+('HN02-G-XL08', 3, 7, 'AVAILABLE'),
+-- Floor 4 (Tầng 1): 4 ô S, 5 ô M (3 thường, 2 mát), 3 ô L (2 thường, 1 mát)
+('HN02-F1-S01', 4, 1, 'AVAILABLE'),
+('HN02-F1-S02', 4, 1, 'AVAILABLE'),
+('HN02-F1-S03', 4, 1, 'AVAILABLE'),
+('HN02-F1-S04', 4, 1, 'AVAILABLE'),
+('HN02-F1-M01', 4, 2, 'RESERVED'),
+('HN02-F1-M02', 4, 2, 'RENTED'),
+('HN02-F1-M03', 4, 5, 'AVAILABLE'),
+('HN02-F1-M04', 4, 2, 'AVAILABLE'),
+('HN02-F1-M05', 4, 5, 'AVAILABLE'),
+('HN02-F1-L01', 4, 3, 'RENTED'),
+('HN02-F1-L02', 4, 3, 'RENTED'),
+('HN02-F1-L03', 4, 6, 'AVAILABLE'),
 
--- === CƠ SỞ 3: HCM-01 (Quận 1, TP.HCM - Mẫu A VIP: 46 Ô Kho Mát) ===
-('HCM01-G-XL01', 7, 7, 'RENTED'),
-('HCM01-G-XL02', 7, 7, 'AVAILABLE'),
-('HCM01-G-XL03', 7, 7, 'AVAILABLE'),
-('HCM01-G-XL04', 7, 7, 'RENTED'),
-('HCM01-G-XL05', 7, 7, 'AVAILABLE'),
-('HCM01-G-XL06', 7, 7, 'AVAILABLE'),
-('HCM01-G-XL07', 7, 7, 'AVAILABLE'),
-('HCM01-G-XL08', 7, 7, 'AVAILABLE'),
-('HCM01-G-XL09', 7, 7, 'AVAILABLE'),
-('HCM01-G-XL10', 7, 7, 'AVAILABLE'),
-('HCM01-F1-S01', 8, 1, 'AVAILABLE'),
-('HCM01-F1-S02', 8, 1, 'AVAILABLE'),
-('HCM01-F1-S03', 8, 1, 'AVAILABLE'),
-('HCM01-F1-S04', 8, 1, 'AVAILABLE'),
-('HCM01-F1-S05', 8, 1, 'AVAILABLE'),
-('HCM01-F1-S06', 8, 1, 'AVAILABLE'),
-('HCM01-F1-S07', 8, 1, 'AVAILABLE'),
-('HCM01-F1-S08', 8, 1, 'AVAILABLE'),
-('HCM01-F1-M01', 8, 5, 'RENTED'),
-('HCM01-F1-M02', 8, 5, 'AVAILABLE'),
-('HCM01-F1-M03', 8, 5, 'AVAILABLE'),
-('HCM01-F1-M04', 8, 5, 'AVAILABLE'),
-('HCM01-F1-M05', 8, 5, 'RESERVED'),
-('HCM01-F1-M06', 8, 5, 'AVAILABLE'),
-('HCM01-F1-L01', 8, 6, 'AVAILABLE'),
-('HCM01-F1-L02', 8, 6, 'RENTED'),
-('HCM01-F1-L03', 8, 6, 'AVAILABLE'),
-('HCM01-F1-L04', 8, 6, 'AVAILABLE'),
-('HCM01-F2-S01', 9, 1, 'AVAILABLE'),
-('HCM01-F2-S02', 9, 1, 'AVAILABLE'),
-('HCM01-F2-S03', 9, 1, 'AVAILABLE'),
-('HCM01-F2-S04', 9, 1, 'AVAILABLE'),
-('HCM01-F2-S05', 9, 1, 'AVAILABLE'),
-('HCM01-F2-S06', 9, 1, 'AVAILABLE'),
-('HCM01-F2-S07', 9, 1, 'AVAILABLE'),
-('HCM01-F2-S08', 9, 1, 'AVAILABLE'),
-('HCM01-F2-M01', 9, 5, 'AVAILABLE'),
-('HCM01-F2-M02', 9, 5, 'RENTED'),
-('HCM01-F2-M03', 9, 5, 'AVAILABLE'),
-('HCM01-F2-M04', 9, 5, 'AVAILABLE'),
-('HCM01-F2-M05', 9, 5, 'AVAILABLE'),
-('HCM01-F2-M06', 9, 5, 'AVAILABLE'),
-('HCM01-F2-L01', 9, 6, 'AVAILABLE'),
-('HCM01-F2-L02', 9, 6, 'AVAILABLE'),
-('HCM01-F2-L03', 9, 6, 'AVAILABLE'),
-('HCM01-F2-L04', 9, 6, 'AVAILABLE'),
+-- === CƠ SỞ 3: HCM-01 (Quận 1, TP.HCM - Mẫu Layout A: 22 Ô Kho) ===
+-- Floor 5 (Trệt): 6 Ô Kho XL (4 thường, 2 kho mát)
+('HCM01-G-XL01', 5, 4, 'RENTED'),
+('HCM01-G-XL02', 5, 4, 'AVAILABLE'),
+('HCM01-G-XL03', 5, 7, 'AVAILABLE'),
+('HCM01-G-XL04', 5, 4, 'RENTED'),
+('HCM01-G-XL05', 5, 4, 'AVAILABLE'),
+('HCM01-G-XL06', 5, 7, 'AVAILABLE'),
+-- Floor 6 (Tầng 1): 8 ô S, 5 ô M (3 thường, 2 mát), 3 ô L (2 thường, 1 mát)
+('HCM01-F1-S01', 6, 1, 'AVAILABLE'),
+('HCM01-F1-S02', 6, 1, 'AVAILABLE'),
+('HCM01-F1-S03', 6, 1, 'AVAILABLE'),
+('HCM01-F1-S04', 6, 1, 'AVAILABLE'),
+('HCM01-F1-S05', 6, 1, 'AVAILABLE'),
+('HCM01-F1-S06', 6, 1, 'AVAILABLE'),
+('HCM01-F1-S07', 6, 1, 'AVAILABLE'),
+('HCM01-F1-S08', 6, 1, 'AVAILABLE'),
+('HCM01-F1-M01', 6, 2, 'RENTED'),
+('HCM01-F1-M02', 6, 2, 'AVAILABLE'),
+('HCM01-F1-M03', 6, 2, 'AVAILABLE'),
+('HCM01-F1-M04', 6, 5, 'AVAILABLE'),
+('HCM01-F1-M05', 6, 5, 'RESERVED'),
+('HCM01-F1-L01', 6, 3, 'AVAILABLE'),
+('HCM01-F1-L02', 6, 3, 'RENTED'),
+('HCM01-F1-L03', 6, 6, 'AVAILABLE'),
 
--- === CƠ SỞ 4: HCM-02 (Quận 7, TP.HCM - Mẫu B: 15 Ô Kho) ===
-('HCM02-G-XL01', 10, 4, 'RENTED'),
-('HCM02-G-XL02', 10, 4, 'AVAILABLE'),
-('HCM02-G-XL03', 10, 7, 'AVAILABLE'),
-('HCM02-G-XL04', 10, 4, 'AVAILABLE'),
-('HCM02-G-XL05', 10, 4, 'AVAILABLE'),
-('HCM02-F1-M01', 11, 2, 'AVAILABLE'),
-('HCM02-F1-M02', 11, 2, 'RENTED'),
-('HCM02-F1-M03', 11, 5, 'AVAILABLE'),
-('HCM02-F1-L01', 11, 3, 'AVAILABLE'),
-('HCM02-F1-L02', 11, 6, 'AVAILABLE'),
-('HCM02-F2-M01', 12, 2, 'AVAILABLE'),
-('HCM02-F2-M02', 12, 2, 'AVAILABLE'),
-('HCM02-F2-M03', 12, 2, 'AVAILABLE'),
-('HCM02-F2-L01', 12, 3, 'AVAILABLE'),
-('HCM02-F2-L02', 12, 6, 'AVAILABLE'),
+-- === CƠ SỞ 4: HCM-02 (Quận 7, TP.HCM - Mẫu Layout B: 20 Ô Kho) ===
+-- Floor 7 (Trệt): 8 Ô Kho XL (5 thường, 3 kho mát)
+('HCM02-G-XL01', 7, 4, 'RENTED'),
+('HCM02-G-XL02', 7, 4, 'AVAILABLE'),
+('HCM02-G-XL03', 7, 7, 'AVAILABLE'),
+('HCM02-G-XL04', 7, 4, 'AVAILABLE'),
+('HCM02-G-XL05', 7, 4, 'AVAILABLE'),
+('HCM02-G-XL06', 7, 4, 'AVAILABLE'),
+('HCM02-G-XL07', 7, 7, 'AVAILABLE'),
+('HCM02-G-XL08', 7, 7, 'AVAILABLE'),
+-- Floor 8 (Tầng 1): 4 ô S, 5 ô M (3 thường, 2 mát), 3 ô L (2 thường, 1 mát)
+('HCM02-F1-S01', 8, 1, 'AVAILABLE'),
+('HCM02-F1-S02', 8, 1, 'AVAILABLE'),
+('HCM02-F1-S03', 8, 1, 'AVAILABLE'),
+('HCM02-F1-S04', 8, 1, 'AVAILABLE'),
+('HCM02-F1-M01', 8, 2, 'AVAILABLE'),
+('HCM02-F1-M02', 8, 2, 'RENTED'),
+('HCM02-F1-M03', 8, 5, 'AVAILABLE'),
+('HCM02-F1-M04', 8, 2, 'AVAILABLE'),
+('HCM02-F1-M05', 8, 5, 'AVAILABLE'),
+('HCM02-F1-L01', 8, 3, 'AVAILABLE'),
+('HCM02-F1-L02', 8, 3, 'AVAILABLE'),
+('HCM02-F1-L03', 8, 6, 'AVAILABLE'),
 
--- === CƠ SỞ 5: HCM-03 (Thủ Đức, TP.HCM - Mẫu B: 15 Ô Kho) ===
-('HCM03-G-XL01', 13, 4, 'AVAILABLE'),
-('HCM03-G-XL02', 13, 4, 'RENTED'),
-('HCM03-G-XL03', 13, 7, 'AVAILABLE'),
-('HCM03-G-XL04', 13, 4, 'AVAILABLE'),
-('HCM03-G-XL05', 13, 4, 'AVAILABLE'),
-('HCM03-F1-M01', 14, 2, 'AVAILABLE'),
-('HCM03-F1-M02', 14, 2, 'RENTED'),
-('HCM03-F1-M03', 14, 5, 'AVAILABLE'),
-('HCM03-F1-L01', 14, 3, 'AVAILABLE'),
-('HCM03-F1-L02', 14, 6, 'AVAILABLE'),
-('HCM03-F2-M01', 15, 2, 'AVAILABLE'),
-('HCM03-F2-M02', 15, 2, 'AVAILABLE'),
-('HCM03-F2-M03', 15, 2, 'AVAILABLE'),
-('HCM03-F2-L01', 15, 3, 'AVAILABLE'),
-('HCM03-F2-L02', 15, 6, 'AVAILABLE'),
+-- === CƠ SỞ 5: HCM-03 (Thủ Đức, TP.HCM - Mẫu Layout B: 20 Ô Kho) ===
+-- Floor 9 (Trệt): 8 Ô Kho XL (5 thường, 3 kho mát)
+('HCM03-G-XL01', 9, 4, 'AVAILABLE'),
+('HCM03-G-XL02', 9, 4, 'RENTED'),
+('HCM03-G-XL03', 9, 7, 'AVAILABLE'),
+('HCM03-G-XL04', 9, 4, 'AVAILABLE'),
+('HCM03-G-XL05', 9, 4, 'AVAILABLE'),
+('HCM03-G-XL06', 9, 4, 'AVAILABLE'),
+('HCM03-G-XL07', 9, 7, 'AVAILABLE'),
+('HCM03-G-XL08', 9, 7, 'AVAILABLE'),
+-- Floor 10 (Tầng 1): 4 ô S, 5 ô M (3 thường, 2 mát), 3 ô L (2 thường, 1 mát)
+('HCM03-F1-S01', 10, 1, 'AVAILABLE'),
+('HCM03-F1-S02', 10, 1, 'AVAILABLE'),
+('HCM03-F1-S03', 10, 1, 'AVAILABLE'),
+('HCM03-F1-S04', 10, 1, 'AVAILABLE'),
+('HCM03-F1-M01', 10, 2, 'AVAILABLE'),
+('HCM03-F1-M02', 10, 2, 'RENTED'),
+('HCM03-F1-M03', 10, 5, 'AVAILABLE'),
+('HCM03-F1-M04', 10, 2, 'AVAILABLE'),
+('HCM03-F1-M05', 10, 5, 'AVAILABLE'),
+('HCM03-F1-L01', 10, 3, 'AVAILABLE'),
+('HCM03-F1-L02', 10, 3, 'AVAILABLE'),
+('HCM03-F1-L03', 10, 6, 'AVAILABLE'),
 
--- === CƠ SỞ 6: DN-01 (Hải Châu, Đà Nẵng - Mẫu A: 46 Ô Kho) ===
-('DN01-G-XL01', 16, 4, 'AVAILABLE'),
-('DN01-G-XL02', 16, 4, 'AVAILABLE'),
-('DN01-G-XL03', 16, 7, 'AVAILABLE'),
-('DN01-G-XL04', 16, 4, 'AVAILABLE'),
-('DN01-G-XL05', 16, 4, 'AVAILABLE'),
-('DN01-G-XL06', 16, 4, 'AVAILABLE'),
-('DN01-G-XL07', 16, 4, 'AVAILABLE'),
-('DN01-G-XL08', 16, 4, 'AVAILABLE'),
-('DN01-G-XL09', 16, 4, 'AVAILABLE'),
-('DN01-G-XL10', 16, 4, 'AVAILABLE'),
-('DN01-F1-S01', 17, 1, 'AVAILABLE'),
-('DN01-F1-S02', 17, 1, 'RENTED'),
-('DN01-F1-S03', 17, 1, 'AVAILABLE'),
-('DN01-F1-S04', 17, 1, 'RESERVED'),
-('DN01-F1-S05', 17, 1, 'AVAILABLE'),
-('DN01-F1-S06', 17, 1, 'AVAILABLE'),
-('DN01-F1-S07', 17, 1, 'AVAILABLE'),
-('DN01-F1-S08', 17, 1, 'AVAILABLE'),
-('DN01-F1-M01', 17, 2, 'AVAILABLE'),
-('DN01-F1-M02', 17, 5, 'AVAILABLE'),
-('DN01-F1-M03', 17, 2, 'AVAILABLE'),
-('DN01-F1-M04', 17, 2, 'AVAILABLE'),
-('DN01-F1-M05', 17, 2, 'AVAILABLE'),
-('DN01-F1-M06', 17, 2, 'AVAILABLE'),
-('DN01-F1-L01', 17, 3, 'AVAILABLE'),
-('DN01-F1-L02', 17, 6, 'AVAILABLE'),
-('DN01-F1-L03', 17, 3, 'AVAILABLE'),
-('DN01-F1-L04', 17, 3, 'AVAILABLE'),
-('DN01-F2-S01', 18, 1, 'AVAILABLE'),
-('DN01-F2-S02', 18, 1, 'AVAILABLE'),
-('DN01-F2-S03', 18, 1, 'AVAILABLE'),
-('DN01-F2-S04', 18, 1, 'AVAILABLE'),
-('DN01-F2-S05', 18, 1, 'AVAILABLE'),
-('DN01-F2-S06', 18, 1, 'AVAILABLE'),
-('DN01-F2-S07', 18, 1, 'AVAILABLE'),
-('DN01-F2-S08', 18, 1, 'AVAILABLE'),
-('DN01-F2-M01', 18, 2, 'AVAILABLE'),
-('DN01-F2-M02', 18, 2, 'AVAILABLE'),
-('DN01-F2-M03', 18, 2, 'AVAILABLE'),
-('DN01-F2-M04', 18, 2, 'AVAILABLE'),
-('DN01-F2-M05', 18, 2, 'AVAILABLE'),
-('DN01-F2-M06', 18, 2, 'AVAILABLE'),
-('DN01-F2-L01', 18, 3, 'AVAILABLE'),
-('DN01-F2-L02', 18, 3, 'AVAILABLE'),
-('DN01-F2-L03', 18, 3, 'AVAILABLE'),
-('DN01-F2-L04', 18, 3, 'AVAILABLE'),
+-- === CƠ SỞ 6: DN-01 (Hải Châu, Đà Nẵng - Mẫu Layout A: 22 Ô Kho) ===
+-- Floor 11 (Trệt): 6 Ô Kho XL (4 thường, 2 kho mát)
+('DN01-G-XL01', 11, 4, 'AVAILABLE'),
+('DN01-G-XL02', 11, 4, 'AVAILABLE'),
+('DN01-G-XL03', 11, 7, 'AVAILABLE'),
+('DN01-G-XL04', 11, 4, 'AVAILABLE'),
+('DN01-G-XL05', 11, 4, 'AVAILABLE'),
+('DN01-G-XL06', 11, 7, 'AVAILABLE'),
+-- Floor 12 (Tầng 1): 8 ô S, 5 ô M (3 thường, 2 mát), 3 ô L (2 thường, 1 mát)
+('DN01-F1-S01', 12, 1, 'AVAILABLE'),
+('DN01-F1-S02', 12, 1, 'RENTED'),
+('DN01-F1-S03', 12, 1, 'AVAILABLE'),
+('DN01-F1-S04', 12, 1, 'RESERVED'),
+('DN01-F1-S05', 12, 1, 'AVAILABLE'),
+('DN01-F1-S06', 12, 1, 'AVAILABLE'),
+('DN01-F1-S07', 12, 1, 'AVAILABLE'),
+('DN01-F1-S08', 12, 1, 'AVAILABLE'),
+('DN01-F1-M01', 12, 2, 'AVAILABLE'),
+('DN01-F1-M02', 12, 5, 'AVAILABLE'),
+('DN01-F1-M03', 12, 2, 'AVAILABLE'),
+('DN01-F1-M04', 12, 2, 'AVAILABLE'),
+('DN01-F1-M05', 12, 5, 'AVAILABLE'),
+('DN01-F1-L01', 12, 3, 'AVAILABLE'),
+('DN01-F1-L02', 12, 3, 'AVAILABLE'),
+('DN01-F1-L03', 12, 6, 'AVAILABLE'),
 
--- === CƠ SỞ 7: CT-01 (Ninh Kiều, Cần Thơ - Mẫu B: 15 Ô Kho) ===
-('CT01-G-XL01', 19, 4, 'AVAILABLE'),
-('CT01-G-XL02', 19, 4, 'RENTED'),
-('CT01-G-XL03', 19, 7, 'AVAILABLE'),
-('CT01-G-XL04', 19, 4, 'AVAILABLE'),
-('CT01-G-XL05', 19, 4, 'AVAILABLE'),
-('CT01-F1-M01', 20, 2, 'AVAILABLE'),
-('CT01-F1-M02', 20, 2, 'AVAILABLE'),
-('CT01-F1-M03', 20, 5, 'AVAILABLE'),
-('CT01-F1-L01', 20, 3, 'AVAILABLE'),
-('CT01-F1-L02', 20, 6, 'AVAILABLE'),
-('CT01-F2-M01', 21, 2, 'AVAILABLE'),
-('CT01-F2-M02', 21, 2, 'AVAILABLE'),
-('CT01-F2-M03', 21, 2, 'AVAILABLE'),
-('CT01-F2-L01', 21, 3, 'AVAILABLE'),
-('CT01-F2-L02', 21, 6, 'AVAILABLE');
+-- === CƠ SỞ 7: CT-01 (Ninh Kiều, Cần Thơ - Mẫu Layout B: 20 Ô Kho) ===
+-- Floor 13 (Trệt): 8 Ô Kho XL (5 thường, 3 kho mát)
+('CT01-G-XL01', 13, 4, 'AVAILABLE'),
+('CT01-G-XL02', 13, 4, 'RENTED'),
+('CT01-G-XL03', 13, 7, 'AVAILABLE'),
+('CT01-G-XL04', 13, 4, 'AVAILABLE'),
+('CT01-G-XL05', 13, 4, 'AVAILABLE'),
+('CT01-G-XL06', 13, 4, 'AVAILABLE'),
+('CT01-G-XL07', 13, 7, 'AVAILABLE'),
+('CT01-G-XL08', 13, 7, 'AVAILABLE'),
+-- Floor 14 (Tầng 1): 4 ô S, 5 ô M (3 thường, 2 mát), 3 ô L (2 thường, 1 mát)
+('CT01-F1-S01', 14, 1, 'AVAILABLE'),
+('CT01-F1-S02', 14, 1, 'AVAILABLE'),
+('CT01-F1-S03', 14, 1, 'AVAILABLE'),
+('CT01-F1-S04', 14, 1, 'AVAILABLE'),
+('CT01-F1-M01', 14, 2, 'AVAILABLE'),
+('CT01-F1-M02', 14, 2, 'AVAILABLE'),
+('CT01-F1-M03', 14, 5, 'AVAILABLE'),
+('CT01-F1-M04', 14, 2, 'AVAILABLE'),
+('CT01-F1-M05', 14, 5, 'AVAILABLE'),
+('CT01-F1-L01', 14, 3, 'AVAILABLE'),
+('CT01-F1-L02', 14, 3, 'AVAILABLE'),
+('CT01-F1-L03', 14, 6, 'AVAILABLE');
 
 -- 10. Ca trực vận hành (Shifts)
 INSERT INTO Shift (shiftId, shiftName, startTime, endTime, status) VALUES
@@ -892,18 +844,18 @@ INSERT INTO Reservation (reservationId, reservationCode, accountId, unitCode, st
 
 -- === KHÁCH HÀNG 2: Trần Thu Hà (AccountId 32, Vietcombank) ===
 (5, 'CTR-HN01-150926-1005', 32, 'HN01-F1-S02', '2026-09-15', '2026-12-15', 'MONTHLY', 1800000.00, 500000.00, 0.00, 'CONFIRMED', '2026-09-14 10:00:00', NULL),
-(6, 'CTR-HN01-150826-1006', 32, 'HN01-F2-L03', '2026-08-15', '2026-09-15', 'MONTHLY', 2400000.00, 2000000.00, 1200000.00, 'CONFIRMED', '2026-08-14 09:30:00', NULL),
-(7, 'CTR-HN01-260926-1007', 32, 'HN01-F2-M01', '2026-10-03', '2026-11-03', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CANCELLED', '2026-09-26 11:00:00', NULL),
-(8, 'CTR-HN01-021126-1008', 32, 'HN01-G-XL07', '2026-11-01', '2026-12-01', 'MONTHLY', 4000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-10-24 16:30:00', NULL),
+(6, 'CTR-HN01-150826-1006', 32, 'HN01-F1-L03', '2026-08-15', '2026-09-15', 'MONTHLY', 2400000.00, 2000000.00, 1200000.00, 'CONFIRMED', '2026-08-14 09:30:00', NULL),
+(7, 'CTR-HN01-260926-1007', 32, 'HN01-F1-M01', '2026-10-03', '2026-11-03', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CANCELLED', '2026-09-26 11:00:00', NULL),
+(8, 'CTR-HN01-021126-1008', 32, 'HN01-G-XL05', '2026-11-01', '2026-12-01', 'MONTHLY', 4000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-10-24 16:30:00', NULL),
 
 -- === KHÁCH HÀNG 3: Trần Thị Bích Ngọc (AccountId 33, Techcombank) ===
 (9, 'CTR-HN01-200826-1009', 33, 'HN01-F1-S04', '2026-08-20', '2026-11-20', 'MONTHLY', 1800000.00, 500000.00, 0.00, 'CONFIRMED', '2026-08-19 11:00:00', NULL),
 (10, 'CTR-HCM01-010826-1010', 33, 'HCM01-G-XL04', '2026-08-01', '2026-09-01', 'MONTHLY', 4000000.00, 3000000.00, 1500000.00, 'CONFIRMED', '2026-07-30 14:00:00', NULL),
 (11, 'CTR-HCM01-270926-1011', 33, 'HCM01-F1-M03', '2026-10-04', '2026-11-04', 'MONTHLY', 1440000.00, 1000000.00, 0.00, 'CANCELLED', '2026-09-27 15:00:00', NULL),
-(12, 'CTR-HN01-031126-1012', 33, 'HN01-F2-M04', '2026-11-01', '2026-12-01', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-10-24 10:15:00', NULL),
+(12, 'CTR-HN01-031126-1012', 33, 'HN01-F1-M04', '2026-11-01', '2026-12-01', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-10-24 10:15:00', NULL),
 
 -- === KHÁCH HÀNG 4: Lê Hữu Đạt (AccountId 34, Techcombank) ===
-(13, 'CTR-HN01-210926-1013', 34, 'HN01-F2-M03', '2026-09-21', '2026-11-21', 'MONTHLY', 2400000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-09-20 15:00:00', NULL),
+(13, 'CTR-HN01-210926-1013', 34, 'HN01-F1-M03', '2026-09-21', '2026-11-21', 'MONTHLY', 2400000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-09-20 15:00:00', NULL),
 (14, 'CTR-HCM02-100826-1014', 34, 'HCM02-G-XL01', '2026-08-10', '2026-09-10', 'MONTHLY', 4000000.00, 3000000.00, 1500000.00, 'CONFIRMED', '2026-08-08 10:00:00', NULL),
 (15, 'CTR-HCM02-280926-1015', 34, 'HCM02-F1-M01', '2026-10-05', '2026-11-05', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CANCELLED', '2026-09-28 09:30:00', NULL),
 (16, 'CTR-HN02-041126-1016', 34, 'HN02-F1-M01', '2026-11-01', '2026-12-01', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-10-24 11:20:00', NULL),
@@ -924,16 +876,16 @@ INSERT INTO Reservation (reservationId, reservationCode, accountId, unitCode, st
 (25, 'CTR-HN01-170926-1025', 31, 'HN01-F1-M01', '2026-09-17', '2026-10-17', 'MONTHLY', 1200000.00, 1000000.00, 750000.00, 'CONFIRMED', '2026-09-16 09:00:00', NULL),
 (26, 'CTR-HN01-170926-1026', 32, 'HN01-F1-M02', '2026-09-17', '2026-10-17', 'MONTHLY', 1200000.00, 1000000.00, 750000.00, 'CONFIRMED', '2026-09-16 09:30:00', NULL),
 (27, 'CTR-HN01-170926-1027', 33, 'HN01-F1-M03', '2026-09-17', '2026-10-17', 'MONTHLY', 1200000.00, 1000000.00, 750000.00, 'CONFIRMED', '2026-09-16 10:00:00', NULL),
-(28, 'CTR-HN01-170926-1028', 34, 'HN01-F2-M02', '2026-09-17', '2026-10-17', 'MONTHLY', 1200000.00, 1000000.00, 750000.00, 'CONFIRMED', '2026-09-16 11:00:00', NULL),
-(29, 'CTR-HN01-170926-1029', 35, 'HN01-F2-M05', '2026-09-17', '2026-10-17', 'MONTHLY', 1200000.00, 1000000.00, 750000.00, 'CONFIRMED', '2026-09-16 14:00:00', NULL),
-(30, 'CTR-HN01-170926-1030', 36, 'HN01-F2-M06', '2026-09-17', '2026-10-17', 'MONTHLY', 1200000.00, 1000000.00, 750000.00, 'CONFIRMED', '2026-09-16 15:00:00', NULL),
+(28, 'CTR-HN01-170926-1028', 34, 'HN01-F1-M02', '2026-09-17', '2026-10-17', 'MONTHLY', 1200000.00, 1000000.00, 750000.00, 'CONFIRMED', '2026-09-16 11:00:00', NULL),
+(29, 'CTR-HN01-170926-1029', 35, 'HN01-F1-M05', '2026-09-17', '2026-10-17', 'MONTHLY', 1200000.00, 1000000.00, 750000.00, 'CONFIRMED', '2026-09-16 14:00:00', NULL),
+(30, 'CTR-HN01-170926-1030', 36, 'HN01-F1-M01', '2026-09-17', '2026-10-17', 'MONTHLY', 1200000.00, 1000000.00, 750000.00, 'CONFIRMED', '2026-09-16 15:00:00', NULL),
 
 -- Hợp đồng đang thuê có hẹn trả kho sớm vào ngày hôm nay (01/11/2026) cho mỗi tài khoản khách hàng
 (31, 'CTR-HN01-151026-1031', 31, 'HN01-F1-S01', '2026-10-15', '2026-11-15', 'MONTHLY', 600000.00, 500000.00, 0.00, 'CONFIRMED', '2026-10-14 09:00:00', NULL),
 (32, 'CTR-HN01-151026-1032', 32, 'HN01-F1-S03', '2026-10-15', '2026-11-15', 'MONTHLY', 600000.00, 500000.00, 0.00, 'CONFIRMED', '2026-10-14 10:00:00', NULL),
-(33, 'CTR-HN01-151026-1033', 33, 'HN01-F2-M01', '2026-10-15', '2026-11-15', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-10-14 11:00:00', NULL),
-(34, 'CTR-HN01-151026-1034', 34, 'HN01-F2-M07', '2026-10-15', '2026-11-15', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-10-14 14:00:00', NULL),
-(35, 'CTR-HN01-151026-1035', 35, 'HN01-F2-L02', '2026-10-15', '2026-11-15', 'MONTHLY', 2400000.00, 2000000.00, 0.00, 'CONFIRMED', '2026-10-14 15:00:00', NULL),
+(33, 'CTR-HN01-151026-1033', 33, 'HN01-F1-M01', '2026-10-15', '2026-11-15', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-10-14 11:00:00', NULL),
+(34, 'CTR-HN01-151026-1034', 34, 'HN01-F1-M03', '2026-10-15', '2026-11-15', 'MONTHLY', 1200000.00, 1000000.00, 0.00, 'CONFIRMED', '2026-10-14 14:00:00', NULL),
+(35, 'CTR-HN01-151026-1035', 35, 'HN01-F1-L02', '2026-10-15', '2026-11-15', 'MONTHLY', 2400000.00, 2000000.00, 0.00, 'CONFIRMED', '2026-10-14 15:00:00', NULL),
 (36, 'CTR-HN01-151026-1036', 36, 'HN01-G-XL01', '2026-10-15', '2026-11-15', 'MONTHLY', 4000000.00, 3000000.00, 0.00, 'CONFIRMED', '2026-10-14 16:00:00', NULL);
 
 -- 15. Hợp đồng thuê kho (Contracts) đa dạng chu trình 7 trạng thái chuẩn BR-21
@@ -1093,9 +1045,9 @@ INSERT INTO SupportTicket (id, ticketCode, type, status, customerId, facilityId,
 (5, 'TCK-202610-004', 'MAINTENANCE', 'RESOLVED', 3, 1, 'HN01-F1-S04', 9, 'Bảo trì / Sửa chữa', 'Đèn LED chiếu sáng cảm biến tại lối đi phía trước cửa buồng kho nhấp nháy vào ban đêm.', NULL, 10, '2026-10-15 20:00:00', FALSE, TRUE, 'Đã thay bộ nguồn LED driver và bóng đèn mới tại vị trí hành lang tầng 1.', '2026-10-15 16:30:00', '2026-10-15 17:45:00'),
 (6, 'TCK-202610-005', 'MAINTENANCE', 'RESOLVED', 3, 1, 'HN01-F1-S04', 9, 'Bảo trì / Sửa chữa', 'Mép gioăng cao su viền cửa hơi bị lệch, nhờ nhân viên kiểm tra cân chỉnh lại để chống bụi mịn.', NULL, 11, '2026-10-25 21:00:00', FALSE, TRUE, 'Đã căn chỉnh lại gioăng cao su viền cánh cửa khít hoàn toàn, đạt tiêu chuẩn chống bụi.', '2026-10-24 14:00:00', '2026-10-24 15:30:00'),
 
--- === KHÁCH HÀNG 4: Lê Hữu Đạt (CustomerId 4, Cơ sở HN-01, Ô HN01-F2-M03) ===
-(7, 'TCK-202610-006', 'UNLOCK', 'RESOLVED', 4, 1, 'HN01-F2-M03', 13, 'Mở khóa khẩn cấp', 'Khách hàng để quên mã PIN trong điện thoại bị sập nguồn, nhờ nhân viên hỗ trợ mở khóa khẩn cấp.', NULL, 10, '2026-10-16 11:00:00', FALSE, TRUE, 'Đã đối chiếu CCCD chính chủ trùng khớp hồ sơ và hỗ trợ mở khóa trực tiếp tại quầy.', '2026-10-16 10:15:00', '2026-10-16 10:45:00'),
-(8, 'TCK-202610-007', 'MAINTENANCE', 'RESOLVED', 4, 1, 'HN01-F2-M03', 13, 'Bảo trì / Sửa chữa', 'Bản lề cánh cửa buồng kho bị rít và phát tiếng cọt kẹt khi mở, nhờ nhân viên hỗ trợ tra dầu bôi trơn.', NULL, 11, '2026-10-25 17:00:00', FALSE, TRUE, 'Đã tra mỡ bôi trơn chuyên dụng vào toàn bộ cụm bản lề, cửa đóng mở êm ái.', '2026-10-24 11:00:00', '2026-10-24 11:45:00'),
+-- === KHÁCH HÀNG 4: Lê Hữu Đạt (CustomerId 4, Cơ sở HN-01, Ô HN01-F1-M03) ===
+(7, 'TCK-202610-006', 'UNLOCK', 'RESOLVED', 4, 1, 'HN01-F1-M03', 13, 'Mở khóa khẩn cấp', 'Khách hàng để quên mã PIN trong điện thoại bị sập nguồn, nhờ nhân viên hỗ trợ mở khóa khẩn cấp.', NULL, 10, '2026-10-16 11:00:00', FALSE, TRUE, 'Đã đối chiếu CCCD chính chủ trùng khớp hồ sơ và hỗ trợ mở khóa trực tiếp tại quầy.', '2026-10-16 10:15:00', '2026-10-16 10:45:00'),
+(8, 'TCK-202610-007', 'MAINTENANCE', 'RESOLVED', 4, 1, 'HN01-F1-M03', 13, 'Bảo trì / Sửa chữa', 'Bản lề cánh cửa buồng kho bị rít và phát tiếng cọt kẹt khi mở, nhờ nhân viên hỗ trợ tra dầu bôi trơn.', NULL, 11, '2026-10-25 17:00:00', FALSE, TRUE, 'Đã tra mỡ bôi trơn chuyên dụng vào toàn bộ cụm bản lề, cửa đóng mở êm ái.', '2026-10-24 11:00:00', '2026-10-24 11:45:00'),
 
 -- === KHÁCH HÀNG 5: Lê Hoàng Long (CustomerId 5, Cơ sở HN-02, Ô HN02-G-XL01) ===
 (9, 'TCK-202610-008', 'INCIDENT', 'RESOLVED', 5, 2, 'HN02-G-XL01', 17, 'Báo sự cố an ninh & kỹ thuật', 'Màn hình cảm ứng bảng khóa thông minh bị mờ số hiển thị vào ban ngày, đề nghị kiểm tra màn led.', NULL, 11, '2026-10-14 18:00:00', FALSE, TRUE, 'Đã vệ sinh bề mặt cảm ứng và điều chỉnh lại độ sáng đèn nền LED của bảng điều khiển.', '2026-10-14 14:00:00', '2026-10-14 15:20:00'),
@@ -1108,9 +1060,9 @@ INSERT INTO SupportTicket (id, ticketCode, type, status, customerId, facilityId,
 -- Các ticket yêu cầu trả kho trước hạn vào ngày hôm nay (01/11/2026) cho HĐ 31 -> 36
 (13, 'TCK-202611-013', 'EARLY_TERMINATION', 'SUBMITTED', 1, 1, 'HN01-F1-S01', 31, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 01/11/2026', '2026-11-01', 10, '2026-11-01 18:00:00', 0, 1, NULL, '2026-10-31 08:30:00', NULL),
 (14, 'TCK-202611-014', 'EARLY_TERMINATION', 'SUBMITTED', 2, 1, 'HN01-F1-S03', 32, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 01/11/2026', '2026-11-01', 10, '2026-11-01 18:00:00', 0, 1, NULL, '2026-10-31 09:15:00', NULL),
-(15, 'TCK-202611-015', 'EARLY_TERMINATION', 'SUBMITTED', 3, 1, 'HN01-F2-M01', 33, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 01/11/2026', '2026-11-01', 11, '2026-11-01 18:00:00', 0, 1, NULL, '2026-10-31 10:00:00', NULL),
-(16, 'TCK-202611-016', 'EARLY_TERMINATION', 'SUBMITTED', 4, 1, 'HN01-F2-M07', 34, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 01/11/2026', '2026-11-01', 11, '2026-11-01 18:00:00', 0, 1, NULL, '2026-10-31 11:30:00', NULL),
-(17, 'TCK-202611-017', 'EARLY_TERMINATION', 'SUBMITTED', 5, 1, 'HN01-F2-L02', 35, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 01/11/2026', '2026-11-01', 10, '2026-11-01 18:00:00', 0, 1, NULL, '2026-10-31 14:00:00', NULL),
+(15, 'TCK-202611-015', 'EARLY_TERMINATION', 'SUBMITTED', 3, 1, 'HN01-F1-M01', 33, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 01/11/2026', '2026-11-01', 11, '2026-11-01 18:00:00', 0, 1, NULL, '2026-10-31 10:00:00', NULL),
+(16, 'TCK-202611-016', 'EARLY_TERMINATION', 'SUBMITTED', 4, 1, 'HN01-F1-M03', 34, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 01/11/2026', '2026-11-01', 11, '2026-11-01 18:00:00', 0, 1, NULL, '2026-10-31 11:30:00', NULL),
+(17, 'TCK-202611-017', 'EARLY_TERMINATION', 'SUBMITTED', 5, 1, 'HN01-F1-L02', 35, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 01/11/2026', '2026-11-01', 10, '2026-11-01 18:00:00', 0, 1, NULL, '2026-10-31 14:00:00', NULL),
 (18, 'TCK-202611-018', 'EARLY_TERMINATION', 'SUBMITTED', 6, 1, 'HN01-G-XL01', 36, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 01/11/2026', '2026-11-01', 10, '2026-11-01 18:00:00', 0, 1, NULL, '2026-10-31 16:30:00', NULL);
 
 -- 20. Biên bản nghiệm thu kiểm tra trả kho (Inspections & InspectionItems)

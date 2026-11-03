@@ -15,7 +15,7 @@ export const facilityData: Record<string, {
   HN01: {
     name: 'SmartStorage Cầu Giấy (HN01)',
     address: 'Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội',
-    floors: 3,
+    floors: 2,
     city: 'Hà Nội',
     layoutType: 'A',
     image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80',
@@ -31,7 +31,7 @@ export const facilityData: Record<string, {
   HCM01: {
     name: 'SmartStorage Quận 1 (HCM01)',
     address: 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM',
-    floors: 3,
+    floors: 2,
     city: 'TP.HCM',
     layoutType: 'A',
     image: 'https://images.unsplash.com/photo-1590247813693-5541d1c609fd?auto=format&fit=crop&w=600&q=80',
@@ -55,7 +55,7 @@ export const facilityData: Record<string, {
   DN01: {
     name: 'SmartStorage Hải Châu (DN01)',
     address: 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng',
-    floors: 3,
+    floors: 2,
     city: 'Đà Nẵng',
     layoutType: 'A',
     image: 'https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=600&q=80',
@@ -178,7 +178,7 @@ export default function StorageMap2D({
   lockFacility = false,
   currentUnitCode,
   compact = false,
-  readOnly = false
+  readOnly = false,
 }: {
   facility: string;
   onFacilityChange: (fac: string) => void;
@@ -244,7 +244,7 @@ export default function StorageMap2D({
 
         const layoutType = (b.layoutType || existingData?.layoutType || (['HN02', 'HCM02', 'HCM03', 'CT01', 'BRVT01'].includes(normalizedCode) ? 'B' : 'A')).toUpperCase();
         const isLayoutB = layoutType === 'B' || layoutType === 'LAYOUT B';
-        const targetFloors = isLayoutB ? 2 : 3;
+        const targetFloors = 2;
 
         return {
           key: code,
@@ -455,7 +455,7 @@ export default function StorageMap2D({
             onSelectUnit(isSelected ? null : u);
           }
         }}
-        className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p-2 rounded-lg border shadow-xs text-center flex flex-col justify-between transition-all duration-200 group${readOnly ? ' cursor-default' : ' cursor-pointer hover:scale-105 hover:shadow-md active:scale-95'}`}
+className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p-2 rounded-lg border shadow-xs text-center flex flex-col justify-between transition-all duration-200 ${readOnly ? 'cursor-default' : 'cursor-pointer hover:scale-105 hover:shadow-md active:scale-95'} group`}
       >
         <div className="flex justify-between items-center w-full">
           <span className={`font-black text-xs sm:text-sm font-mono tracking-tight flex items-center gap-1${readOnly ? '' : ' group-hover:text-blue-600 transition-colors'}`}>
@@ -508,17 +508,7 @@ export default function StorageMap2D({
                 >
                   Tầng 1
                 </button>
-                {(currentFacilityObj?.floors || 3) > 2 && (
-                  <button
-                    type="button"
-                    onClick={() => onSelectFloor(3)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
-                      currentFloor === 3 ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
-                    }`}
-                  >
-                    Tầng 2
-                  </button>
-                )}
+                
               </div>
             </div>
 
@@ -575,45 +565,54 @@ export default function StorageMap2D({
           </div>
 
           {/* Blueprint Grid Container */}
-          {loading ? (
-            <div className="py-20 text-center text-xs text-slate-400">
-              <i className="fa-solid fa-spinner animate-spin text-2xl mb-2 block text-blue-500"></i>
-              <span>Đang tải sơ đồ mặt bằng từ máy chủ...</span>
-            </div>
-          ) : currentFloor === 1 ? (
-            <div className="floor-blueprint-container p-3 sm:p-4 space-y-3 shadow-inner relative w-full">
+        {loading ? (
+          <div className="py-24 text-center text-xs text-slate-400">
+            <i className="fa-solid fa-spinner animate-spin text-2xl mb-2 block text-blue-500"></i>
+            <span>Đang tải sơ đồ mặt bằng từ máy chủ...</span>
+          </div>
+        ) : currentFloor === 1 ? (
+          <div className="floor-blueprint-container p-3 sm:p-4 shadow-inner relative w-full overflow-x-auto">
+            <div className="min-w-[560px] space-y-3">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
                   <span className="flex items-center">
                     <span className="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span> Khu Phòng Siêu Lớn XL (10m²)
                   </span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{Math.min(units.length, 5)} ô kho</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.length} ô kho</span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
-                  {units.slice(0, 5).map((u) => renderUnitCard(u))}
+                <div
+                  className="grid gap-2 sm:gap-2.5"
+                  style={{
+                    gridTemplateColumns: `repeat(${Math.ceil(units.length / 2)}, minmax(0, 1fr))`
+                  }}
+                >
+                  {units.slice(0, Math.ceil(units.length / 2)).map((u) => renderUnitCard(u))}
                 </div>
               </div>
 
-              {units.length > 5 && (
+              {units.length > 3 && (
                 <>
-                  <div className="floor-corridor-strip">HÀNH LANG LỐI ĐI CHÍNH TRỤC XE TẢI / XE NÂNG</div>
+                  <div className="floor-corridor-strip text-center py-1 tracking-widest font-mono text-[10px]">
+                    —— LỐI ĐI CHÍNH ——
+                  </div>
 
                   <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
-                      <span className="flex items-center">
-                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span> Khu Phòng Siêu Lớn XL (10m²)
-                      </span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.length - 5} ô kho</span>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
-                      {units.slice(5, 10).map((u) => renderUnitCard(u))}
+                    <div
+                      className="grid gap-2 sm:gap-2.5"
+                      style={{
+                        gridTemplateColumns: `repeat(${units.length - Math.ceil(units.length / 2)}, minmax(0, 1fr))`
+                      }}
+                    >
+                      {units.slice(Math.ceil(units.length / 2)).map((u) => renderUnitCard(u))}
                     </div>
                   </div>
                 </>
               )}
             </div>
-          ) : (
-            <div className="floor-blueprint-container p-3 sm:p-4 space-y-3 shadow-inner relative w-full">
+          </div>
+        ) : (
+          <div className="floor-blueprint-container p-3 sm:p-4 shadow-inner relative w-full overflow-x-auto">
+            <div className="min-w-[560px] space-y-3">
               {/* Size S Cluster */}
               {units.filter((u) => u.size === 'S').length > 0 && (
                 <div className="space-y-2">
@@ -623,13 +622,18 @@ export default function StorageMap2D({
                     </span>
                     <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.filter((u) => u.size === 'S').length} ô kho</span>
                   </div>
-                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                  <div
+                    className="grid gap-2"
+                    style={{
+                      gridTemplateColumns: `repeat(${units.filter((u) => u.size === 'S').length || 8}, minmax(0, 1fr))`
+                    }}
+                  >
                     {units.filter((u) => u.size === 'S').map((u) => renderUnitCard(u))}
                   </div>
                 </div>
               )}
 
-              <div className="floor-corridor-strip">HÀNH LANG LỐI ĐI NỘI BỘ 24/7</div>
+              <div className="floor-corridor-strip">—— LỐI ĐI NỘI BỘ ——</div>
 
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                 {/* Size M Cluster */}
@@ -641,7 +645,12 @@ export default function StorageMap2D({
                       </span>
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.filter((u) => u.size === 'M').length} ô kho</span>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    <div
+                      className="grid gap-2 sm:gap-2.5"
+                      style={{
+                        gridTemplateColumns: `repeat(${units.filter((u) => u.size === 'M').length || 5}, minmax(0, 1fr))`
+                      }}
+                    >
                       {units.filter((u) => u.size === 'M').map((u) => renderUnitCard(u))}
                     </div>
                   </div>
@@ -656,14 +665,20 @@ export default function StorageMap2D({
                       </span>
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.filter((u) => u.size === 'L').length} ô kho</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-2.5">
+                    <div
+                      className="grid gap-2 sm:gap-2.5"
+                      style={{
+                        gridTemplateColumns: `repeat(${units.filter((u) => u.size === 'L').length || 3}, minmax(0, 1fr))`
+                      }}
+                    >
                       {units.filter((u) => u.size === 'L').map((u) => renderUnitCard(u))}
                     </div>
                   </div>
                 )}
               </div>
             </div>
-          )}
+          </div>
+        )}
         </div>
       </div>
     );
@@ -882,22 +897,12 @@ export default function StorageMap2D({
                   >
                     Tầng 1
                   </button>
-                  {(currentFacilityObj?.floors || 3) > 2 && (
-                    <button
-                      type="button"
-                      onClick={() => onSelectFloor(3)}
-                      className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                        currentFloor === 3 ? 'bg-blue-600 dark:bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
-                      }`}
-                    >
-                      Tầng 2
-                    </button>
-                  )}
+                  
                 </div>
               </div>
 
               {/* Thông tin ô kho đã chọn */}
-              {selectedUnit && (
+              {!readOnly && selectedUnit && (
                 <div className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 px-3 py-1.5 rounded-xl flex items-center gap-2">
                   <Check className="size-4 text-emerald-600 shrink-0" />
                   <span>Đã chọn ô <strong>{selectedUnit.id}</strong> ({selectedUnit.isClimate ? 'Kho mát' : 'Kho thường'})</span>
@@ -927,86 +932,111 @@ export default function StorageMap2D({
             <span>Đang tải sơ đồ mặt bằng từ máy chủ...</span>
           </div>
         ) : currentFloor === 1 ? (
-          <div className="floor-blueprint-container p-3 sm:p-3.5 space-y-3 shadow-inner relative">
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
-                <span className="flex items-center">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span> Khu Phòng Siêu Lớn XL (10m²)
-                </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{Math.min(units.length, 5)} ô kho</span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
-                {units.slice(0, 5).map((u) => renderUnitCard(u))}
-              </div>
-            </div>
-
-            {units.length > 5 && (
-              <>
-                <div className="floor-corridor-strip">HÀNH LANG LỐI ĐI CHÍNH TRỤC XE TẢI / XE NÂNG</div>
-
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
-                    <span className="flex items-center">
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span> Khu Phòng Siêu Lớn XL (10m²)
-                    </span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.length - 5} ô kho</span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
-                    {units.slice(5, 10).map((u) => renderUnitCard(u))}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="floor-blueprint-container p-3 sm:p-3.5 space-y-3 shadow-inner relative">
-            {/* Size S Cluster */}
-            {units.filter((u) => u.size === 'S').length > 0 && (
-              <div className="space-y-2">
+          <div className="floor-blueprint-container p-3 sm:p-3.5 shadow-inner relative overflow-x-auto">
+            <div className="min-w-[560px] space-y-3">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
                   <span className="flex items-center">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2"></span> Khu Tủ Cá Nhân S (1m²)
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span> Khu Phòng Siêu Lớn XL (10m²)
                   </span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.filter((u) => u.size === 'S').length} ô kho</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.length} ô kho</span>
                 </div>
-                <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-                  {units.filter((u) => u.size === 'S').map((u) => renderUnitCard(u))}
+                <div
+                  className="grid gap-2 sm:gap-2.5"
+                  style={{
+                    gridTemplateColumns: `repeat(${Math.ceil(units.length / 2)}, minmax(0, 1fr))`
+                  }}
+                >
+                  {units.slice(0, Math.ceil(units.length / 2)).map((u) => renderUnitCard(u))}
                 </div>
               </div>
-            )}
 
-            <div className="floor-corridor-strip">HÀNH LANG LỐI ĐI NỘI BỘ 24/7</div>
+              {units.length > 3 && (
+                <>
+                  <div className="floor-corridor-strip text-center py-1 tracking-widest font-mono text-[10px]">
+                    —— LỐI ĐI CHÍNH ——
+                  </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-              {/* Size M Cluster */}
-              {units.filter((u) => u.size === 'M').length > 0 && (
-                <div className="md:col-span-7 space-y-2">
+                  <div className="space-y-1.5">
+                    <div
+                      className="grid gap-2 sm:gap-2.5"
+                      style={{
+                        gridTemplateColumns: `repeat(${units.length - Math.ceil(units.length / 2)}, minmax(0, 1fr))`
+                      }}
+                    >
+                      {units.slice(Math.ceil(units.length / 2)).map((u) => renderUnitCard(u))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="floor-blueprint-container p-3 sm:p-3.5 shadow-inner relative overflow-x-auto">
+            <div className="min-w-[560px] space-y-3">
+              {/* Size S Cluster */}
+              {units.filter((u) => u.size === 'S').length > 0 && (
+                <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
                     <span className="flex items-center">
-                      <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 mr-2"></span> Khu Phòng Vừa M (3m²)
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2"></span> Khu Tủ Cá Nhân S (1m²)
                     </span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.filter((u) => u.size === 'M').length} ô kho</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.filter((u) => u.size === 'S').length} ô kho</span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                    {units.filter((u) => u.size === 'M').map((u) => renderUnitCard(u))}
+                  <div
+                    className="grid gap-2"
+                    style={{
+                      gridTemplateColumns: `repeat(${units.filter((u) => u.size === 'S').length || 8}, minmax(0, 1fr))`
+                    }}
+                  >
+                    {units.filter((u) => u.size === 'S').map((u) => renderUnitCard(u))}
                   </div>
                 </div>
               )}
 
-              {/* Size L Cluster */}
-              {units.filter((u) => u.size === 'L').length > 0 && (
-                <div className="md:col-span-5 space-y-2">
-                  <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
-                    <span className="flex items-center">
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500 mr-2"></span> Khu Phòng Lớn L (6m²)
-                    </span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.filter((u) => u.size === 'L').length} ô kho</span>
+              <div className="floor-corridor-strip">—— LỐI ĐI NỘI BỘ ——</div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                {/* Size M Cluster */}
+                {units.filter((u) => u.size === 'M').length > 0 && (
+                  <div className="md:col-span-7 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
+                      <span className="flex items-center">
+                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 mr-2"></span> Khu Phòng Vừa M (3m²)
+                      </span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.filter((u) => u.size === 'M').length} ô kho</span>
+                    </div>
+                    <div
+                      className="grid gap-2 sm:gap-2.5"
+                      style={{
+                        gridTemplateColumns: `repeat(${units.filter((u) => u.size === 'M').length || 5}, minmax(0, 1fr))`
+                      }}
+                    >
+                      {units.filter((u) => u.size === 'M').map((u) => renderUnitCard(u))}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {units.filter((u) => u.size === 'L').map((u) => renderUnitCard(u))}
+                )}
+
+                {/* Size L Cluster */}
+                {units.filter((u) => u.size === 'L').length > 0 && (
+                  <div className="md:col-span-5 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
+                      <span className="flex items-center">
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500 mr-2"></span> Khu Phòng Lớn L (6m²)
+                      </span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{units.filter((u) => u.size === 'L').length} ô kho</span>
+                    </div>
+                    <div
+                      className="grid gap-2 sm:gap-2.5"
+                      style={{
+                        gridTemplateColumns: `repeat(${units.filter((u) => u.size === 'L').length || 3}, minmax(0, 1fr))`
+                      }}
+                    >
+                      {units.filter((u) => u.size === 'L').map((u) => renderUnitCard(u))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         )}

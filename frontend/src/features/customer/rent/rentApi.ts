@@ -1,12 +1,12 @@
 import apiClient, { isMockMode } from '@/lib/apiClient';
 
 const MOCK_BRANCHES = [
-  { id: 'HN01', code: 'HN01', name: 'SmartStorage Cầu Giấy', address: 'Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội', floors: 3, layoutType: 'A', managerName: 'Trần Văn Quân', status: 'ACTIVE' },
+  { id: 'HN01', code: 'HN01', name: 'SmartStorage Cầu Giấy', address: 'Số 391 Cầu Giấy, P. Dịch Vọng, Q. Cầu Giấy, Hà Nội', floors: 2, layoutType: 'A', managerName: 'Trần Văn Quân', status: 'ACTIVE' },
   { id: 'HN02', code: 'HN02', name: 'SmartStorage Thanh Xuân', address: 'Số 120 Khuất Duy Tiến, Q. Thanh Xuân, Hà Nội', floors: 2, layoutType: 'B', managerName: 'Hoàng Minh Đức', status: 'ACTIVE' },
-  { id: 'HCM01', code: 'HCM01', name: 'SmartStorage Quận 1', address: 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM', floors: 3, layoutType: 'A', managerName: 'Lê Thị Thu Trang', status: 'ACTIVE' },
+  { id: 'HCM01', code: 'HCM01', name: 'SmartStorage Quận 1', address: 'Số 123 Nguyễn Huệ, Quận 1, TP.HCM', floors: 2, layoutType: 'A', managerName: 'Lê Thị Thu Trang', status: 'ACTIVE' },
   { id: 'HCM02', code: 'HCM02', name: 'SmartStorage Quận 7', address: 'Số 456 Nguyễn Thị Thập, Quận 7, TP.HCM', floors: 2, layoutType: 'B', managerName: 'Đỗ Đức Anh', status: 'ACTIVE' },
   { id: 'HCM03', code: 'HCM03', name: 'SmartStorage Thủ Đức', address: 'Số 789 Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM', floors: 2, layoutType: 'B', managerName: 'Vũ Đình Trọng', status: 'ACTIVE' },
-  { id: 'DN01', code: 'DN01', name: 'SmartStorage Hải Châu', address: 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng', floors: 3, layoutType: 'A', managerName: 'Nguyễn Thanh Tùng', status: 'ACTIVE' },
+  { id: 'DN01', code: 'DN01', name: 'SmartStorage Hải Châu', address: 'Số 68 Nguyễn Văn Linh, Q. Hải Châu, Đà Nẵng', floors: 2, layoutType: 'A', managerName: 'Nguyễn Thanh Tùng', status: 'ACTIVE' },
   { id: 'CT01', code: 'CT01', name: 'SmartStorage Ninh Kiều', address: 'Số 12 Đại lộ Hòa Bình, Q. Ninh Kiều, Cần Thơ', floors: 2, layoutType: 'B', managerName: 'Bùi Tuấn Kiệt', status: 'ACTIVE' }
 ];
 
@@ -48,21 +48,23 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
   const prefix = facilityCode.replace('-', '');
   const isLayoutB = ['HN02', 'HCM02', 'HCM03', 'CT01', 'BRVT01', 'HN-02', 'HCM-02', 'HCM-03', 'CT-01', 'BRVT-01'].includes(facilityCode.toUpperCase());
   
-  // Layout B chỉ có 2 tầng (Tầng Trệt và Tầng 1)
-  if (isLayoutB && currentFloor > 2) {
+  // Thống nhất tất cả cơ sở đều 2 tầng (Tầng Trệt và Tầng 1)
+  if (currentFloor > 2) {
     return [];
   }
 
-  const floorName = currentFloor === 1 ? 'Tầng trệt' : currentFloor === 2 ? 'Tầng 1' : 'Tầng 2';
+  const floorName = currentFloor === 1 ? 'Tầng trệt' : 'Tầng 1';
   const weightLimit = currentFloor === 1 ? '1000 kg/m²' : '500 kg/m²';
   const units: any[] = [];
 
   if (currentFloor === 1) {
-    const xlCount = isLayoutB ? 5 : 10;
+    // Layout A: 6 ô XL | Layout B: 8 ô XL
+    const xlCount = isLayoutB ? 8 : 6;
     for (let i = 1; i <= xlCount; i++) {
       const uId = `${prefix}-G-XL${i < 10 ? '0' + i : i}`;
       const defaultStatus = (i === 3 || i === 7) ? 'OCCUPIED' : 'AVAILABLE';
-      const isClimate = i > 5;
+      // Phân bổ ~35% kho mát (Layout A: 2/6, Layout B: 3/8)
+      const isClimate = isLayoutB ? (i === 3 || i === 7 || i === 8) : (i === 2 || i === 5);
       const baseDaily = 200000;
       const baseMonthly = 4000000;
       const dailyPrice = isClimate ? Math.round(baseDaily * 1.2) : baseDaily;
@@ -79,16 +81,16 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
       });
     }
   } else if (currentFloor === 2) {
-    // Layout B: 4 ô S, 4 ô M, 2 ô L (10 ô) -> Tổng cộng 5 XL + 10 = 15 ô kho
-    // Layout A: 8 ô S, 6 ô M, 4 ô L (18 ô)
+    // Layout A: 8 ô S, 5 ô M, 3 ô L (16 ô) -> Tổng Layout A = 6 XL + 16 = 22 ô kho
+    // Layout B: 4 ô S, 5 ô M, 3 ô L (12 ô) -> Tổng Layout B = 8 XL + 12 = 20 ô kho
     const sCount = isLayoutB ? 4 : 8;
-    const mCount = isLayoutB ? 4 : 6;
-    const lCount = isLayoutB ? 2 : 4;
+    const mCount = 5;
+    const lCount = 3;
 
     for (let i = 1; i <= sCount; i++) {
       const uId = `${prefix}-F1-S10${i}`;
       const defaultStatus = (i === 2 || i === 6) ? 'OCCUPIED' : 'AVAILABLE';
-      const isClimate = i > 4;
+      const isClimate = isLayoutB ? (i === 3) : (i === 3 || i === 7 || i === 8);
       const baseDaily = 30000;
       const baseMonthly = 600000;
       units.push({
@@ -107,7 +109,7 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
     for (let i = 1; i <= mCount; i++) {
       const uId = `${prefix}-F1-M10${i}`;
       const defaultStatus = i === 3 ? 'OCCUPIED' : 'AVAILABLE';
-      const isClimate = i > 3;
+      const isClimate = (i === 2 || i === 4);
       const baseDaily = 60000;
       const baseMonthly = 1200000;
       units.push({
@@ -126,70 +128,12 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
     for (let i = 1; i <= lCount; i++) {
       const uId = `${prefix}-F1-L10${i}`;
       const defaultStatus = i === 2 ? 'OCCUPIED' : 'AVAILABLE';
-      const isClimate = i > 2;
+      const isClimate = (i === 2);
       const baseDaily = 120000;
       const baseMonthly = 2400000;
       units.push({
         id: uId,
         floor: 2, floorName, weightLimit,
-        size: 'L', dim: '2.0m × 3.0m',
-        storageType: isClimate ? 'CLIMATE_CONTROLLED' : 'STANDARD',
-        isClimate,
-        typeLabel: isClimate ? 'Kho Mát Điều Hòa (22-25°C)' : 'Kho Tiêu Chuẩn',
-        price: isClimate ? Math.round(baseDaily * 1.2) : baseDaily,
-        monthlyPrice: isClimate ? Math.round(baseMonthly * 1.2) : baseMonthly,
-        deposit: 2000000,
-        status: defaultStatus
-      });
-    }
-  } else if (!isLayoutB) {
-    for (let i = 1; i <= 6; i++) {
-      const uId = `${prefix}-F2-S20${i}`;
-      const defaultStatus = i === 4 ? 'OCCUPIED' : 'AVAILABLE';
-      const isClimate = i > 3;
-      const baseDaily = 30000;
-      const baseMonthly = 600000;
-      units.push({
-        id: uId,
-        floor: 3, floorName, weightLimit,
-        size: 'S', dim: '1.0m × 1.0m',
-        storageType: isClimate ? 'CLIMATE_CONTROLLED' : 'STANDARD',
-        isClimate,
-        typeLabel: isClimate ? 'Kho Mát Điều Hòa (22-25°C)' : 'Kho Tiêu Chuẩn',
-        price: isClimate ? Math.round(baseDaily * 1.2) : baseDaily,
-        monthlyPrice: isClimate ? Math.round(baseMonthly * 1.2) : baseMonthly,
-        deposit: 500000,
-        status: defaultStatus
-      });
-    }
-    for (let i = 1; i <= 8; i++) {
-      const uId = `${prefix}-F2-M20${i}`;
-      const defaultStatus = (i === 1 || i === 5) ? 'OCCUPIED' : 'AVAILABLE';
-      const isClimate = i > 4;
-      const baseDaily = 60000;
-      const baseMonthly = 1200000;
-      units.push({
-        id: uId,
-        floor: 3, floorName, weightLimit,
-        size: 'M', dim: '1.5m × 2.0m',
-        storageType: isClimate ? 'CLIMATE_CONTROLLED' : 'STANDARD',
-        isClimate,
-        typeLabel: isClimate ? 'Kho Mát Điều Hòa (22-25°C)' : 'Kho Tiêu Chuẩn',
-        price: isClimate ? Math.round(baseDaily * 1.2) : baseDaily,
-        monthlyPrice: isClimate ? Math.round(baseMonthly * 1.2) : baseMonthly,
-        deposit: 1000000,
-        status: defaultStatus
-      });
-    }
-    for (let i = 1; i <= 4; i++) {
-      const uId = `${prefix}-F2-L20${i}`;
-      const defaultStatus = i === 3 ? 'OCCUPIED' : 'AVAILABLE';
-      const isClimate = i > 2;
-      const baseDaily = 120000;
-      const baseMonthly = 2400000;
-      units.push({
-        id: uId,
-        floor: 3, floorName, weightLimit,
         size: 'L', dim: '2.0m × 3.0m',
         storageType: isClimate ? 'CLIMATE_CONTROLLED' : 'STANDARD',
         isClimate,
@@ -235,7 +179,7 @@ export const getBranches = async () => {
       const managerEmail = hasDbManager ? f.managerEmail : 'manager@smartstorage.vn';
 
       const isLayoutB = (f.layoutType || '').toUpperCase() === 'B' || (f.layoutType || '').toUpperCase() === 'LAYOUT B';
-      const targetFloors = isLayoutB ? 2 : 3;
+      const targetFloors = 2;
 
       const item = {
         id: f.facilityCode || (facId ? `FAC-${facId}` : f.id),

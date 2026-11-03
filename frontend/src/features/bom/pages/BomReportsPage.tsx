@@ -141,7 +141,7 @@ export default function BomReportsPage() {
     const penaltyRev = Number(facBreakdown?.penaltyRevenue ?? (facPerformance as any)?.penaltyRevenue ?? 0)
     const totRefund = Number(facBreakdown?.totalRefunds ?? facPerformance?.totalRefunds ?? 0)
     const overdue = Number(facBreakdown?.overdueContracts ?? facPerformance?.overdueUnits ?? 0)
-    const tUnits = Number(facBreakdown?.totalUnits ?? facPerformance?.totalUnits ?? 46)
+    const tUnits = Number(facBreakdown?.totalUnits ?? facPerformance?.totalUnits ?? 22)
     const occUnits = Number(facBreakdown?.occupiedUnits ?? facPerformance?.occupied ?? 0)
     const resUnits = Number(facBreakdown?.reservedUnits ?? (facPerformance as any)?.reservedUnits ?? 0)
     const availUnits = Number(facBreakdown?.availableUnits ?? facPerformance?.available ?? 0)
