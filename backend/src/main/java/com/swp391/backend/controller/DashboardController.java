@@ -2,7 +2,9 @@ package com.swp391.backend.controller;
 
 import com.swp391.backend.dto.dashboard.ChainDashboardResponse;
 import com.swp391.backend.dto.dashboard.ManagerDashboardResponse;
+import com.swp391.backend.config.SecurityContextHelper;
 import com.swp391.backend.service.DashboardService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,22 +15,32 @@ import java.util.Map;
 public class DashboardController {
 
     private final DashboardService dashboardService;
+    private final SecurityContextHelper securityContextHelper;
 
-    public DashboardController(DashboardService dashboardService) {
+    public DashboardController(DashboardService dashboardService, SecurityContextHelper securityContextHelper) {
         this.dashboardService = dashboardService;
+        this.securityContextHelper = securityContextHelper;
     }
 
     // --- US-33: Dashboard cơ sở cho Facility Manager ---
     @GetMapping("/manager/dashboard/overview")
     public ResponseEntity<?> getManagerDashboardOverview(
+            @AuthenticationPrincipal Integer authAccountId,
+            @RequestHeader(value = "X-Account-Id", required = false) Integer headerAccountId,
             @RequestHeader(value = "X-Facility-Id", required = false) Integer managerFacilityId,
             @RequestParam(required = false) Integer facilityId,
             @RequestParam(required = false) String from,
             @RequestParam(required = false) String to) {
 
-        Integer targetFacilityId = managerFacilityId != null ? managerFacilityId : facilityId;
-        if (targetFacilityId == null) {
-            targetFacilityId = 1; 
+        Integer effectiveAccountId = (authAccountId != null) ? authAccountId : headerAccountId;
+        Integer fallbackFacilityId = managerFacilityId != null ? managerFacilityId : facilityId;
+        Integer targetFacilityId;
+        try {
+            targetFacilityId = securityContextHelper.requireCurrentFacilityId(effectiveAccountId, fallbackFacilityId);
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return ResponseEntity.status(403).body(Map.of("success", false, "message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }
 
         try {

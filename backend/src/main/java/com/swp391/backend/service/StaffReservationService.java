@@ -1007,16 +1007,16 @@ public class StaffReservationService {
         }
 
         // 3. Thời gian gia hạn: Hỗ trợ cả gói tháng và số ngày tùy chọn
-        boolean isCustomDays = (request != null && request.getDays() != null && request.getDays() > 0);
+        Integer reqDays = (request != null) ? request.getDays() : null;
+        Integer reqMonths = (request != null) ? request.getMonths() : null;
+        boolean isCustomDays = (reqDays != null && reqDays > 0);
         int addedDays;
         int discountPercent = 0;
         BigDecimal finalAmount;
-        int months = (request != null && request.getMonths() != null && request.getMonths() > 0)
-                ? request.getMonths()
-                : 1;
+        int months = (reqMonths != null && reqMonths > 0) ? reqMonths : 1;
 
-        if (isCustomDays) {
-            addedDays = request.getDays();
+        if (isCustomDays && reqDays != null) {
+            addedDays = reqDays;
             // Đơn giá ngày = monthlyPrice / 30
             BigDecimal dailyPrice = monthlyPrice.divide(BigDecimal.valueOf(30), 2, java.math.RoundingMode.HALF_UP);
             finalAmount = dailyPrice.multiply(BigDecimal.valueOf(addedDays)).setScale(0, java.math.RoundingMode.HALF_UP);

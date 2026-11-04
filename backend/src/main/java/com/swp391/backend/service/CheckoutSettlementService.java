@@ -317,7 +317,9 @@ public class CheckoutSettlementService {
         }
 
         // Chuyển trạng thái hợp đồng sang TERMINATED / COMPLETED
-        if (netAmount.compareTo(BigDecimal.ZERO) != 0 || daysRemaining > 0) {
+        // Nếu có khoản hoàn tiền cọc (netAmount > 0) -> Để TERMINATED và chờ Manager duyệt hoàn cọc (phiếu REF) mới lên COMPLETED.
+        // Nếu không có hoàn cọc (netAmount <= 0) -> Không sinh phiếu REF, mọi khoản bồi thường (nếu có) đã thu tại quầy -> Chuyển thẳng COMPLETED.
+        if (netAmount.compareTo(BigDecimal.ZERO) > 0) {
             contract.setStatus("TERMINATED");
         } else {
             contract.setStatus("COMPLETED");

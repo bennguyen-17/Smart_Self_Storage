@@ -37,6 +37,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
                         // 1. Các API công khai không cần đăng nhập
                         .requestMatchers("/api/auth/**").permitAll()
@@ -49,6 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/deposits/webhook").permitAll()
                         .requestMatchers("/api/payment/vnpay/callback", "/api/payment/vnpay/ipn").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/gate-pins/verify").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/contracts/*/pdf").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                         .requestMatchers("/error").permitAll()
 

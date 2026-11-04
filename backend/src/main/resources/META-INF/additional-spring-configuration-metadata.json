@@ -1,0 +1,74 @@
+{
+  "properties": [
+    {
+      "name": "app.upload.root-dir",
+      "type": "java.lang.String",
+      "description": "Root directory for uploaded files"
+    },
+    {
+      "name": "app.upload.facility-image-dir",
+      "type": "java.lang.String",
+      "description": "Directory for facility images"
+    },
+    {
+      "name": "app.upload.evidence-dir",
+      "type": "java.lang.String",
+      "description": "Directory for evidence images"
+    },
+    {
+      "name": "app.upload.contract-dir",
+      "type": "java.lang.String",
+      "description": "Directory for contract PDF files"
+    },
+    {
+      "name": "jwt.secret",
+      "type": "java.lang.String",
+      "description": "Secret key for JWT generation and validation"
+    },
+    {
+      "name": "app.mail.from",
+      "type": "java.lang.String",
+      "description": "Default sender email address"
+    },
+    {
+      "name": "vnpay.pay-url",
+      "type": "java.lang.String",
+      "description": "VNPay payment gateway URL"
+    },
+    {
+      "name": "vnpay.tmn-code",
+      "type": "java.lang.String",
+      "description": "VNPay terminal code"
+    },
+    {
+      "name": "vnpay.hash-secret",
+      "type": "java.lang.String",
+      "description": "VNPay hash secret"
+    },
+    {
+      "name": "vnpay.return-url",
+      "type": "java.lang.String",
+      "description": "VNPay callback return URL"
+    },
+    {
+      "name": "vnpay.payUrl",
+      "type": "java.lang.String",
+      "description": "VNPay payment gateway URL (camelCase)"
+    },
+    {
+      "name": "vnpay.tmnCode",
+      "type": "java.lang.String",
+      "description": "VNPay terminal code (camelCase)"
+    },
+    {
+      "name": "vnpay.hashSecret",
+      "type": "java.lang.String",
+      "description": "VNPay hash secret (camelCase)"
+    },
+    {
+      "name": "vnpay.returnUrl",
+      "type": "java.lang.String",
+      "description": "VNPay callback return URL (camelCase)"
+    }
+  ]
+}

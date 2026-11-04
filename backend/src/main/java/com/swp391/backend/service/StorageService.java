@@ -271,7 +271,6 @@ public class StorageService {
         res.setIsAllClimate(false);
 
         List<Floor> actualFloors = floorRepository.findByFacilityId(f.getFacilityId());
-        boolean isLayoutB = "B".equalsIgnoreCase(layout);
         int expectedFloors = 2;
         res.setFloorCount(actualFloors.isEmpty() ? expectedFloors : Math.min(actualFloors.size(), expectedFloors));
 

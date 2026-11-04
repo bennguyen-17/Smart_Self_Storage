@@ -194,15 +194,8 @@ public class OverdueService {
         String contractCode = reservation.getReservationCode() != null
                 ? reservation.getReservationCode()
                 : "CTR-" + contract.getContractId();
-        String subject = "Cảnh báo hợp đồng lưu kho quá hạn ngày thứ " + overdueDays;
-        String content = "Xin chào " + (customer.getFullName() == null ? "Quý khách" : customer.getFullName())
-                + ",\n\nHợp đồng " + contractCode + " cho ô kho " + reservation.getUnitCode()
-                + " đã quá hạn " + overdueDays + " ngày. Phí quá hạn hiện tính 50.000 VNĐ/ngày,"
-                + " tối đa đến hết ngày thứ 29. Khi đủ 30 ngày, hợp đồng sẽ chuyển sang FORFEITED"
-                + " và toàn bộ tiền cọc sẽ bị tịch thu. Vui lòng liên hệ cơ sở để xử lý tài sản.\n\n"
-                + "Smart Self Storage";
-
-        if (emailService.sendTextEmail(customer.getEmail(), subject, content)) {
+        BigDecimal totalPenalty = getDailyOverdueFee().multiply(BigDecimal.valueOf(Math.min(overdueDays, MAX_CHARGEABLE_OVERDUE_DAYS)));
+        if (emailService.sendOverdueWarningEmail(customer.getEmail(), customer.getFullName(), contractCode, reservation.getUnitCode(), "Smart Self Storage", overdueDays, totalPenalty)) {
             saveSystemLog(customer.getAccountId(), action, eventKey + ";email=" + customer.getEmail());
         }
     }

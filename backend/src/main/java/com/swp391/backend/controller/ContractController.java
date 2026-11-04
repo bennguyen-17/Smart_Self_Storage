@@ -15,6 +15,13 @@ import com.swp391.backend.service.NoShowCronService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.jsonwebtoken.Claims;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -48,6 +55,10 @@ public class ContractController {
     private final SupportTicketRepository supportTicketRepository;
     private final NoShowCronService noShowCronService;
     private final ImageStorageService imageStorageService;
+    private final com.swp391.backend.service.EmailService emailService;
+    private final com.swp391.backend.service.ContractPdfService contractPdfService;
+    @Value("${app.upload.contract-dir:uploads/contracts}")
+    private String contractUploadDir;
 
     public ContractController(ContractRepository contractRepository,
                               ReservationRepository reservationRepository,
@@ -66,7 +77,9 @@ public class ContractController {
                               GatePinService gatePinService,
                               SupportTicketRepository supportTicketRepository,
                               NoShowCronService noShowCronService,
-                              ImageStorageService imageStorageService) {
+                              ImageStorageService imageStorageService,
+                              com.swp391.backend.service.EmailService emailService,
+                              com.swp391.backend.service.ContractPdfService contractPdfService) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -85,6 +98,8 @@ public class ContractController {
         this.supportTicketRepository = supportTicketRepository;
         this.noShowCronService = noShowCronService;
         this.imageStorageService = imageStorageService;
+        this.emailService = emailService;
+        this.contractPdfService = contractPdfService;
     }
 
     @GetMapping("/contracts/my-contracts")
@@ -97,12 +112,12 @@ public class ContractController {
                 String token = authHeader.substring(7);
                 Claims claims = jwtService.validateTokenAndGetClaims(token);
                 Object userIdObj = claims.get("userId");
-                if (userIdObj instanceof Number) {
-                    targetId = ((Number) userIdObj).intValue();
+                if (userIdObj instanceof Number num) {
+                    targetId = num.intValue();
                 } else if (userIdObj != null) {
-                    targetId = Integer.parseInt(userIdObj.toString());
+                    targetId = Integer.valueOf(userIdObj.toString());
                 }
-            } catch (Exception ignored) {}
+            } catch (io.jsonwebtoken.JwtException | IllegalArgumentException ignored) {}
         }
         if (targetId == null) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
@@ -114,8 +129,8 @@ public class ContractController {
             log.error("Lỗi khi quét hợp đồng No-Show: {}", e.getMessage());
         }
 
-        Account customerAcc = (targetId != null) ? accountRepository.findAccountByAccountId(targetId).orElse(null) : null;
-        CustomerProfile customerProf = (targetId != null) ? customerProfileRepository.findByAccountId(targetId).orElse(null) : null;
+        Account customerAcc = accountRepository.findAccountByAccountId(targetId).orElse(null);
+        CustomerProfile customerProf = customerProfileRepository.findByAccountId(targetId).orElse(null);
         String defaultCustName = (customerAcc != null && customerAcc.getFullName() != null) ? customerAcc.getFullName() : "";
         String defaultCustPhone = (customerAcc != null && customerAcc.getPhone() != null) ? customerAcc.getPhone() : "";
         String defaultCustEmail = (customerAcc != null && customerAcc.getEmail() != null) ? customerAcc.getEmail() : "";
@@ -365,7 +380,8 @@ public class ContractController {
             ticket.setTicketCode(ticketCode);
             ticket.setType("EARLY_TERMINATION");
             ticket.setStatus("SUBMITTED");
-            ticket.setCustomerId(reservation != null ? reservation.getAccountId() : 1);
+            Integer custId = (reservation != null && reservation.getAccountId() != null) ? reservation.getAccountId() : 1;
+            ticket.setCustomerId(custId);
             ticket.setContractId(contract.getContractId());
             ticket.setUnitCode(reservation != null ? reservation.getUnitCode() : null);
             ticket.setTitle("Yêu cầu trả kho - " + (reservation != null ? reservation.getUnitCode() : ""));
@@ -403,12 +419,12 @@ public class ContractController {
                 String token = authHeader.substring(7);
                 Claims claims = jwtService.validateTokenAndGetClaims(token);
                 Object userIdObj = claims.get("userId");
-                if (userIdObj instanceof Number) {
-                    targetId = ((Number) userIdObj).intValue();
+                if (userIdObj instanceof Number num) {
+                    targetId = num.intValue();
                 } else if (userIdObj != null) {
-                    targetId = Integer.parseInt(userIdObj.toString());
+                    targetId = Integer.valueOf(userIdObj.toString());
                 }
-            } catch (Exception ignored) {}
+            } catch (io.jsonwebtoken.JwtException | IllegalArgumentException ignored) {}
         }
         if (targetId == null) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
@@ -499,7 +515,7 @@ public class ContractController {
         data.put("ttlSeconds", ttlSeconds);
         data.put("branchCode", targetBranch);
         data.put("contractId", "CTR-" + activeContract.getContractId());
-        data.put("unitCode", activeUnit.getUnitCode());
+        data.put("unitCode", activeUnit != null ? activeUnit.getUnitCode() : "");
 
         return ResponseEntity.ok(data);
     }
@@ -594,18 +610,18 @@ public class ContractController {
         BigDecimal finalTotal = BigDecimal.ZERO;
 
         if (payload != null) {
-            if (payload.get("effectiveDays") instanceof Number) {
-                effectiveDays = ((Number) payload.get("effectiveDays")).intValue();
-            } else if (payload.get("days") instanceof Number) {
-                effectiveDays = ((Number) payload.get("days")).intValue();
+            if (payload.get("effectiveDays") instanceof Number num) {
+                effectiveDays = num.intValue();
+            } else if (payload.get("days") instanceof Number num) {
+                effectiveDays = num.intValue();
             }
             if (payload.get("packageLabel") != null) {
                 packageLabel = payload.get("packageLabel").toString();
             }
-            if (payload.get("finalTotal") instanceof Number) {
-                finalTotal = BigDecimal.valueOf(((Number) payload.get("finalTotal")).doubleValue());
-            } else if (payload.get("amount") instanceof Number) {
-                finalTotal = BigDecimal.valueOf(((Number) payload.get("amount")).doubleValue());
+            if (payload.get("finalTotal") instanceof Number num) {
+                finalTotal = BigDecimal.valueOf(num.doubleValue());
+            } else if (payload.get("amount") instanceof Number num) {
+                finalTotal = BigDecimal.valueOf(num.doubleValue());
             }
         }
 
@@ -661,13 +677,47 @@ public class ContractController {
         paymentRepository.save(payment);
 
         // Ghi nhật ký kiểm toán (ActivityLog)
-        ActivityLog log = new ActivityLog();
-        log.setAccountId(res.getAccountId());
-        log.setAction("EXTEND_CONTRACT");
-        log.setDescription(String.format("Gia hạn thành công hợp đồng %s (ô %s) thêm %d ngày (%s). Hạn mới: %s. Hóa đơn: %s",
+        ActivityLog activityLog = new ActivityLog();
+        activityLog.setAccountId(res.getAccountId());
+        activityLog.setAction("EXTEND_CONTRACT");
+        activityLog.setDescription(String.format("Gia hạn thành công hợp đồng %s (ô %s) thêm %d ngày (%s). Hạn mới: %s. Hóa đơn: %s",
                 contractCode, res.getUnitCode(), effectiveDays, packageLabel, newExpiry, invoiceNumber));
-        log.setCreatedAt(LocalDateTime.now());
-        activityLogRepository.save(log);
+        activityLog.setCreatedAt(LocalDateTime.now());
+        activityLogRepository.save(activityLog);
+
+        // BR-29: Gửi email xác nhận gia hạn hợp đồng trực tuyến thành công
+        try {
+            if (res.getAccountId() != null) {
+                Account acc = accountRepository.findById(Long.valueOf(res.getAccountId())).orElse(null);
+                if (acc != null) {
+                    String customerName = (acc.getFullName() != null) ? acc.getFullName() : "Quý khách";
+                    String facilityName = "Smart Self Storage";
+                    Optional<StorageUnit> suOpt = storageUnitRepository.findById(res.getUnitCode());
+                    if (suOpt.isPresent()) {
+                        Optional<Floor> flOpt = floorRepository.findById(suOpt.get().getFloorId());
+                        if (flOpt.isPresent()) {
+                            Optional<Facility> facOpt = facilityRepository.findById(flOpt.get().getFacilityId());
+                            if (facOpt.isPresent() && facOpt.get().getFacilityName() != null) {
+                                facilityName = facOpt.get().getFacilityName();
+                            }
+                        }
+                    }
+                    emailService.sendRenewalSuccessEmail(
+                            acc.getEmail(),
+                            customerName,
+                            contractCode,
+                            res.getUnitCode(),
+                            facilityName,
+                            effectiveDays,
+                            newExpiry,
+                            invoiceNumber,
+                            finalTotal
+                    );
+                }
+            }
+        } catch (Exception e) {
+            log.error("Không thể gửi email xác nhận gia hạn hợp đồng {}: {}", contractCode, e.getMessage());
+        }
 
         Map<String, Object> resp = new HashMap<>();
         resp.put("success", true);
@@ -681,6 +731,103 @@ public class ContractController {
         resp.put("amount", finalTotal);
 
         return ResponseEntity.ok(resp);
+    }
+
+    @GetMapping(value = "/contracts/{contractId}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> getContractPdf(@PathVariable String contractId) {
+        if (contractId == null || contractId.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        String rawInput = contractId.trim();
+        Optional<Contract> contractOpt = Optional.empty();
+
+        // 1. Numeric ID
+        try {
+            int numericId = Integer.parseInt(rawInput);
+            contractOpt = contractRepository.findById(numericId);
+        } catch (NumberFormatException ignored) {}
+
+        // 2. Reservation code
+        if (contractOpt.isEmpty()) {
+            Optional<Reservation> resByCode = reservationRepository.findByReservationCode(rawInput);
+            if (resByCode.isPresent()) {
+                contractOpt = contractRepository.findByReservationId(resByCode.get().getReservationId());
+            }
+        }
+
+        // 3. CTR-[num]
+        if (contractOpt.isEmpty() && rawInput.startsWith("CTR-")) {
+            String suffix = rawInput.substring(4);
+            try {
+                int num = Integer.parseInt(suffix);
+                contractOpt = contractRepository.findById(num);
+            } catch (NumberFormatException ignored) {}
+        }
+
+        // 4. Find match in reservations
+        if (contractOpt.isEmpty()) {
+            List<Reservation> allRes = reservationRepository.findAll();
+            for (Reservation r : allRes) {
+                if (r.getReservationCode() != null && (r.getReservationCode().equalsIgnoreCase(rawInput) || r.getReservationCode().endsWith(rawInput))) {
+                    contractOpt = contractRepository.findByReservationId(r.getReservationId());
+                    if (contractOpt.isPresent()) break;
+                }
+            }
+        }
+
+        String fileName = null;
+        if (contractOpt.isPresent()) {
+            Contract c = contractOpt.get();
+            if (c.getContractPdfUrl() != null && !c.getContractPdfUrl().isBlank()) {
+                fileName = Paths.get(c.getContractPdfUrl()).getFileName().toString();
+            } else {
+                Reservation r = reservationRepository.findById(c.getReservationId()).orElse(null);
+                if (r != null && r.getReservationCode() != null) {
+                    fileName = r.getReservationCode() + ".pdf";
+                }
+            }
+        }
+
+        if (fileName == null) {
+            fileName = rawInput.endsWith(".pdf") ? rawInput : (rawInput + ".pdf");
+        }
+
+        Path pdfPath = Paths.get(contractUploadDir, fileName).toAbsolutePath().normalize();
+        if (!Files.exists(pdfPath)) {
+            pdfPath = Paths.get("uploads", "contracts", fileName).toAbsolutePath().normalize();
+        }
+
+        if (!Files.exists(pdfPath)) {
+            if (contractOpt.isPresent()) {
+                try {
+                    byte[] generatedBytes = contractPdfService.generateAndSaveContractPdf(contractOpt.get());
+                    if (generatedBytes != null && generatedBytes.length > 0) {
+                        HttpHeaders headers = new HttpHeaders();
+                        headers.setContentType(MediaType.APPLICATION_PDF);
+                        headers.setContentDisposition(org.springframework.http.ContentDisposition.inline().filename(fileName).build());
+                        headers.setContentLength(generatedBytes.length);
+                        return ResponseEntity.ok().headers(headers).body(generatedBytes);
+                    }
+                } catch (Exception ex) {
+                    log.error("Lỗi khi tự động tạo file PDF hợp đồng {} theo yêu cầu: {}", fileName, ex.getMessage());
+                }
+            }
+            log.warn("Không tìm thấy file PDF hợp đồng: {} (đường dẫn: {})", fileName, pdfPath);
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            byte[] bytes = Files.readAllBytes(pdfPath);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(org.springframework.http.ContentDisposition.inline().filename(fileName).build());
+            headers.setContentLength(bytes.length);
+            return ResponseEntity.ok().headers(headers).body(bytes);
+        } catch (IOException e) {
+            log.error("Lỗi khi đọc file PDF hợp đồng {}: {}", fileName, e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     private int getContractStatusPriority(String status) {

@@ -362,10 +362,17 @@ public class LoginService {
 
             account.setStatus("SUSPENDED");
 
-            account.setLockUntil(
-                    now.plusMinutes(LOCK_MINUTES));
+            LocalDateTime lockUntil = now.plusMinutes(LOCK_MINUTES);
+            account.setLockUntil(lockUntil);
 
             accountRepository.save(account);
+
+            // BR-03: Gửi email cảnh báo bảo mật khi bị khóa 15 phút
+            try {
+                String customerName = account.getFullName();
+                emailService.sendSecurityAlertEmail(account.getEmail(), customerName, ipAddress, lockUntil);
+            } catch (Exception ignored) {
+            }
         }
 
         return failedAttempts;

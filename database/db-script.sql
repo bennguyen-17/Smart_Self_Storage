@@ -294,6 +294,11 @@ CREATE TABLE Contract (
     refundBankName VARCHAR(100),
     refundAccountNumber VARCHAR(50),
     refundAccountName VARCHAR(100),
+    signedFullName VARCHAR(100),
+    signedIdentityNumber VARCHAR(50),
+    signedPhone VARCHAR(20),
+    signedEmail VARCHAR(255),
+    contractPdfUrl VARCHAR(255),
     CONSTRAINT fk_contract_reservation FOREIGN KEY (reservationId) REFERENCES Reservation (reservationId) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -950,6 +955,18 @@ INSERT INTO Contract (contractId, reservationId, activatedAt, terminatedAt, stat
 (34, 34, '2026-10-15 14:00:00', NULL, 'ACTIVE', 'EARLY_TERMINATION', 'Techcombank', '079202087654', 'LE HUU DAT'),
 (35, 35, '2026-10-15 15:00:00', NULL, 'ACTIVE', 'EARLY_TERMINATION', 'VietinBank', '108876543210', 'LE HOANG LONG'),
 (36, 36, '2026-10-15 16:00:00', NULL, 'ACTIVE', 'EARLY_TERMINATION', 'ACB', '246813579', 'VU MAI PHUONG');
+
+-- Đóng băng thông tin Snapshot bất biến (Họ tên, CCCD, SĐT, Email) và URL file PDF hợp đồng
+UPDATE Contract c
+JOIN Reservation r ON c.reservationId = r.reservationId
+JOIN Account a ON r.accountId = a.accountId
+LEFT JOIN CustomerProfile cp ON a.accountId = cp.accountId
+SET 
+  c.signedFullName = a.fullName,
+  c.signedPhone = a.phone,
+  c.signedEmail = a.email,
+  c.signedIdentityNumber = COALESCE(cp.identityNumber, ''),
+  c.contractPdfUrl = CONCAT('/uploads/contracts/', r.reservationCode, '.pdf');
 
 -- 16. Hóa đơn và Thanh toán (Payments) chuẩn mã định danh BR-37
 INSERT INTO Payment (paymentId, contractId, invoiceNumber, invoiceType, amount, paidAmount, remainingAmount, receiptUrl, issuedAt, dueAt, status, paymentMethod, transactionCode, paymentStatus, gatewayTransactionId, paidAt) VALUES
