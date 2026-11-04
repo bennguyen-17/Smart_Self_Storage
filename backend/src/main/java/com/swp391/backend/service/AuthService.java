@@ -50,6 +50,9 @@ public class AuthService {
         if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
             return new ApiResponse(false, "Họ và tên không được để trống!");
         }
+        if (request.getFullName().trim().matches(".*\\d.*") || !request.getFullName().trim().matches("^[\\p{L}\\s]+$")) {
+            return new ApiResponse(false, "Họ và tên chỉ được chứa chữ cái, không được chứa số hoặc ký tự đặc biệt!");
+        }
         if (request.getPhone() == null || request.getPhone().trim().isEmpty()) {
             return new ApiResponse(false, "Số điện thoại không được để trống!");
         }
@@ -65,11 +68,40 @@ public class AuthService {
         if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
             return new ApiResponse(false, "Mật khẩu không được để trống!");
         }
+        if (!request.getPassword().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#^()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]).{8,}$")) {
+            return new ApiResponse(false, "Mật khẩu phải có ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 chữ số và 1 ký tự đặc biệt!");
+        }
         if (request.getCccd() == null || request.getCccd().trim().isEmpty()) {
             return new ApiResponse(false, "Số CCCD không được để trống!");
         }
         if (!request.getCccd().trim().matches("^\\d{12}$")) {
             return new ApiResponse(false, "Số CCCD phải bao gồm đúng 12 chữ số!");
+        }
+
+        // BR-01: Bắt buộc thông tin tài khoản ngân hàng ngay từ lúc đăng ký
+        if (request.getBankName() == null || request.getBankName().trim().isEmpty()) {
+            return new ApiResponse(false, "Vui lòng chọn hoặc nhập tên ngân hàng nhận hoàn cọc!");
+        }
+        if (request.getBankAccountNumber() == null || request.getBankAccountNumber().trim().isEmpty()) {
+            return new ApiResponse(false, "Số tài khoản ngân hàng không được để trống!");
+        }
+        if (!request.getBankAccountNumber().trim().matches("^\\d{6,20}$")) {
+            return new ApiResponse(false, "Số tài khoản ngân hàng phải gồm từ 6 đến 20 chữ số!");
+        }
+        if (request.getBankAccountName() == null || request.getBankAccountName().trim().isEmpty()) {
+            return new ApiResponse(false, "Tên chủ tài khoản ngân hàng không được để trống!");
+        }
+        if (!request.getBankAccountName().trim().matches("^[A-Z\\s]+$")) {
+            return new ApiResponse(false, "Tên chủ tài khoản ngân hàng phải viết in hoa không dấu, không chứa số!");
+        }
+
+        // BR-01: Kiểm tra CCCD trùng lặp trong bảng CustomerProfile
+        Optional<CustomerProfile> existingCccdProfileOpt = customerProfileRepository.findByIdentityNumber(request.getCccd().trim());
+        if (existingCccdProfileOpt.isPresent()) {
+            Optional<Account> cccdAccountOpt = accountRepository.findById(Long.valueOf(existingCccdProfileOpt.get().getAccountId()));
+            if (cccdAccountOpt.isPresent() && !cccdAccountOpt.get().getPhone().equals(request.getPhone().trim())) {
+                return new ApiResponse(false, "Số CCCD này đã được đăng ký cho tài khoản khác!");
+            }
         }
 
         // Kiểm tra email trùng với tài khoản ACTIVE khác

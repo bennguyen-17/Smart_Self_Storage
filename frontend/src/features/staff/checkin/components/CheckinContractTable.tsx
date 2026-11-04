@@ -1,4 +1,4 @@
-import {
+﻿import {
   InboxIcon,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -22,6 +22,8 @@ interface CheckinContractTableProps {
   onOpenDetail?: (item: StaffReservationItem) => void
   onCheckin: (item: StaffReservationItem) => void
   onCheckout: (item: StaffReservationItem) => void
+  /** BR-20: Mở dialog hủy tại quầy (giữ 50% cọc, hoàn 50%) */
+  onCancel?: (item: StaffReservationItem) => void
   /** US-20: mở dialog thu phạt quá hạn tại quầy */
   onCollectPenalty: (item: StaffReservationItem) => void
   /** US-20: mở dialog gia hạn tại quầy */
@@ -52,6 +54,7 @@ function CheckinContractTable({
   onOpenDetail,
   onCheckin,
   onCheckout,
+  onCancel,
   onCollectPenalty,
   onRenew,
   unitMeta,
@@ -191,12 +194,15 @@ function StatusAction({
   item,
   onCheckin,
   onCheckout,
+  onCancel,
   onCollectPenalty,
   onRenew,
 }: {
   item: StaffReservationItem
   onCheckin: (item: StaffReservationItem) => void
   onCheckout: (item: StaffReservationItem) => void
+  /** BR-20: Mở dialog hủy tại quầy (giữ 50% cọc, hoàn 50%) */
+  onCancel?: (item: StaffReservationItem) => void
   onCollectPenalty: (item: StaffReservationItem) => void
   onRenew: (item: StaffReservationItem) => void
 }) {
@@ -230,13 +236,25 @@ function StatusAction({
     }
 
     return (
-      <button
-        type="button"
-        onClick={() => onCheckin(item)}
-        className="inline-flex cursor-pointer items-center justify-center min-w-[104px] rounded-full border border-blue-200 bg-blue-50 px-3.5 py-1.5 text-xs font-bold whitespace-nowrap text-blue-700 transition hover:bg-blue-100 shadow-2xs dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/50"
-      >
-        <span>Check-in</span>
-      </button>
+      <div className="flex flex-col items-center justify-center gap-1.5 sm:flex-row">
+        <button
+          type="button"
+          onClick={() => onCheckin(item)}
+          className="inline-flex cursor-pointer items-center justify-center min-w-[80px] rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold whitespace-nowrap text-blue-700 transition hover:bg-blue-100 shadow-2xs dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/50"
+        >
+          <span>Check-in</span>
+        </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={() => onCancel(item)}
+            className="inline-flex cursor-pointer items-center justify-center min-w-[80px] rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold whitespace-nowrap text-rose-700 transition hover:bg-rose-100 shadow-2xs dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-900/50"
+            title="Khách từ chối nhận kho, hủy tại quầy (giữ 50% cọc, hoàn 50%)"
+          >
+            <span>Hủy quầy</span>
+          </button>
+        )}
+      </div>
     )
   }
 

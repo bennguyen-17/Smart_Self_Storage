@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react"
+﻿import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams, Link } from "react-router-dom"
 import CheckinCustomerCard from "./CheckinCustomerCard"
 import CheckinUnitChangeModal from "./CheckinUnitChangeModal"
 import CheckinSuccessView from "./CheckinSuccessView"
+import CounterCancelDialog from "./CounterCancelDialog"
 import {
   ArrowLeftIcon,
   CheckCircle2Icon,
@@ -145,6 +146,7 @@ export default function StaffCheckinProcessPage() {
 
   // Đổi ô kho state (Cách 1: Modal Sơ đồ 2D)
   const [isMapModalOpen, setIsMapModalOpen] = useState(false)
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
   const [selectedUnit, setSelectedUnit] = useState<UnitDetailResponse | null>(null)
   const [newPricing, setNewPricing] = useState<{
     finalRentalAmount: number
@@ -824,6 +826,17 @@ export default function StaffCheckinProcessPage() {
                   * Vui lòng tích chọn đủ 3 bước xác nhận bên trên để kích hoạt nút Check-in.
                 </p>
               )}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCancelDialogOpen(true)}
+                  disabled={isSubmitting}
+                  className="w-full cursor-pointer rounded-2xl border border-rose-200 bg-rose-50/70 py-3 text-xs font-bold text-rose-700 shadow-2xs transition hover:bg-rose-100 hover:border-rose-300 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-400 dark:hover:bg-rose-900/50 flex items-center justify-center gap-2"
+                >
+                  <XIcon className="size-3.5" />
+                  <span>Khách từ chối nhận kho</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -852,6 +865,19 @@ export default function StaffCheckinProcessPage() {
         isCalculatingConfirm={isCalculatingConfirm}
         getUnitTypeAndClimateDisplay={getUnitTypeAndClimateDisplay}
       />
+
+      {/* DIALOG HỦY TẠI QUẦY (BR-20) */}
+      {isCancelDialogOpen && contract && (
+        <CounterCancelDialog
+          contract={contract as any}
+          onClose={() => setIsCancelDialogOpen(false)}
+          onCanceled={() => {
+            setIsCancelDialogOpen(false)
+            toast.success("Đã hủy đơn đặt kho tại quầy thành công.")
+            navigate("/staff/checkin")
+          }}
+        />
+      )}
     </div>
   )
 }

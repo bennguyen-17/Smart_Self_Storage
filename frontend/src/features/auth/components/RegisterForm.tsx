@@ -1,4 +1,4 @@
-import { useState } from "react"
+﻿import { useState } from "react"
 import axios from "axios"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Check, ChevronDown, Circle, Eye, EyeOff, List } from "lucide-react"
@@ -431,7 +431,15 @@ function RegisterForm() {
             </ul>
           )}
 
-          {/* Thông tin nhận hoàn cọc (không bắt buộc) */}
+          {/* Thông tin tài khoản ngân hàng nhận hoàn cọc (Bắt buộc theo BR-01) */}
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              Tài khoản ngân hàng nhận hoàn cọc <span className="text-rose-500">*</span>
+            </p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
+              Dùng để hoàn trả tiền cọc tự động khi thanh lý hợp đồng
+            </p>
+          </div>
           <div className="grid grid-cols-1 gap-2.5">
             <BankNameField control={form.control} />
 
