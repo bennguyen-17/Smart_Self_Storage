@@ -1,6 +1,10 @@
 package com.swp391.backend.dto.checkout;
 
+import com.swp391.backend.dto.StoredImageResponse;
+
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CheckoutConfirmResponse {
     private boolean success;
@@ -15,6 +19,7 @@ public class CheckoutConfirmResponse {
     private BigDecimal settlementAmount;
     private boolean isRefund;
     private boolean ticketResolved;
+    private List<StoredImageResponse> checkoutImages = new ArrayList<>();
 
     public CheckoutConfirmResponse() {
     }
@@ -120,5 +125,13 @@ public class CheckoutConfirmResponse {
 
     public void setTicketResolved(boolean ticketResolved) {
         this.ticketResolved = ticketResolved;
+    }
+
+    public List<StoredImageResponse> getCheckoutImages() {
+        return checkoutImages;
+    }
+
+    public void setCheckoutImages(List<StoredImageResponse> checkoutImages) {
+        this.checkoutImages = checkoutImages != null ? checkoutImages : new ArrayList<>();
     }
 }

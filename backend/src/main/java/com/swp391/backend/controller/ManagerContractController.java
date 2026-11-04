@@ -7,6 +7,7 @@ import com.swp391.backend.dto.ForfeitProcessedRequest;
 import com.swp391.backend.entity.*;
 import com.swp391.backend.repository.*;
 import com.swp391.backend.service.ForfeitProcessingService;
+import com.swp391.backend.service.ImageStorageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +31,7 @@ public class ManagerContractController {
     private final ForfeitProcessingService forfeitProcessingService;
     private final SecurityContextHelper securityContextHelper;
     private final CustomerProfileRepository customerProfileRepository;
+    private final ImageStorageService imageStorageService;
 
     public ManagerContractController(ContractRepository contractRepository,
                                       ReservationRepository reservationRepository,
@@ -39,7 +41,8 @@ public class ManagerContractController {
                                       PaymentRepository paymentRepository,
                                       ForfeitProcessingService forfeitProcessingService,
                                       SecurityContextHelper securityContextHelper,
-                                      CustomerProfileRepository customerProfileRepository) {
+                                      CustomerProfileRepository customerProfileRepository,
+                                      ImageStorageService imageStorageService) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -49,6 +52,7 @@ public class ManagerContractController {
         this.forfeitProcessingService = forfeitProcessingService;
         this.securityContextHelper = securityContextHelper;
         this.customerProfileRepository = customerProfileRepository;
+        this.imageStorageService = imageStorageService;
     }
 
     /**
@@ -189,6 +193,7 @@ public class ManagerContractController {
                 response.setRentalType(res.getRentalType());
             }
             response.setReservationCode(res.getReservationCode());
+            response.setCheckoutImages(imageStorageService.getCheckoutImageResponses(c.getContractId()));
             result.add(response);
         }
 

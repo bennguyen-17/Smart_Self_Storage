@@ -4,10 +4,12 @@ import com.swp391.backend.dto.checkout.CheckoutConfirmRequest;
 import com.swp391.backend.dto.checkout.CheckoutConfirmResponse;
 import com.swp391.backend.dto.checkout.CheckoutPreviewResponse;
 import com.swp391.backend.dto.checkout.RefundListItemResponse;
+import com.swp391.backend.dto.StoredImageResponse;
 import com.swp391.backend.entity.*;
 import com.swp391.backend.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -33,6 +35,7 @@ public class CheckoutSettlementService {
     private final StaffShiftService staffShiftService;
         private final EmailService emailService;
     private final CustomerProfileRepository customerProfileRepository;
+    private final ImageStorageService imageStorageService;
 
     public CheckoutSettlementService(ContractRepository contractRepository,
                                    ReservationRepository reservationRepository,
@@ -47,7 +50,8 @@ public class CheckoutSettlementService {
                                    AccountRepository accountRepository,
                                    StaffShiftService staffShiftService,
                                    EmailService emailService,
-                                   CustomerProfileRepository customerProfileRepository) {
+                                   CustomerProfileRepository customerProfileRepository,
+                                   ImageStorageService imageStorageService) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -62,6 +66,7 @@ public class CheckoutSettlementService {
         this.staffShiftService = staffShiftService;
                 this.emailService = emailService;
         this.customerProfileRepository = customerProfileRepository;
+        this.imageStorageService = imageStorageService;
     }
 
     /**
@@ -188,6 +193,22 @@ public class CheckoutSettlementService {
     /**
      * US-28 & US-29: Xác nhận nhận bàn giao trả kho & chốt quyết toán
      */
+    @Transactional
+    public CheckoutConfirmResponse confirmCheckout(
+            Integer contractId, CheckoutConfirmRequest request, Integer staffAccountId,
+            List<MultipartFile> inspectionPhotos) {
+        if (inspectionPhotos == null || inspectionPhotos.isEmpty()) {
+            return CheckoutConfirmResponse.error("Cần tải lên ít nhất một ảnh nghiệm thu trước khi chốt biên bản.");
+        }
+        CheckoutConfirmResponse response = confirmCheckout(contractId, request, staffAccountId);
+        if (response.isSuccess()) {
+            List<StoredImage> savedImages = imageStorageService.storeCheckoutInspectionPhotos(
+                    response.getContractId(), staffAccountId, inspectionPhotos);
+            response.setCheckoutImages(savedImages.stream().map(StoredImageResponse::new).toList());
+        }
+        return response;
+    }
+
     @Transactional
     public CheckoutConfirmResponse confirmCheckout(Integer contractId, CheckoutConfirmRequest request, Integer staffAccountId) {
         Integer staffFacilityId = staffShiftService.requireOnDutyFacility(staffAccountId);

@@ -1,5 +1,6 @@
 package com.swp391.backend.service;
 
+import com.swp391.backend.dto.StoredImageResponse;
 import com.swp391.backend.entity.Contract;
 import com.swp391.backend.entity.EmployeeProfile;
 import com.swp391.backend.entity.Floor;
@@ -25,8 +26,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -156,6 +160,76 @@ public class ImageStorageService {
             createdFiles.forEach(this::deleteFile);
             throw ex;
         }
+    }
+
+    public Map<String, StoredImageResponse> getFacilityImageResponses(Integer facilityId) {
+        Map<String, StoredImageResponse> images = new LinkedHashMap<>();
+        storedImageRepository.findByFacilityIdOrderByImageSlotAsc(facilityId)
+                .forEach(image -> images.put(image.getImageSlot(), new StoredImageResponse(image)));
+        return images;
+    }
+
+    public List<StoredImageResponse> getCheckoutImageResponses(Integer contractId) {
+        return storedImageRepository.findByContractIdOrderByUploadedAtAscImageIdAsc(contractId).stream()
+                .map(StoredImageResponse::new)
+                .toList();
+    }
+
+    public ImageFile loadImage(Integer imageId, Integer accountId, Collection<String> authorities) {
+        StoredImage image = storedImageRepository.findById(imageId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy ảnh."));
+
+        if (image.getTypeCode() == StoredImage.TYPE_CHECKOUT_INSPECTION
+                && !canViewCheckoutImage(image, accountId, authorities)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền xem ảnh nghiệm thu này.");
+        }
+
+        Path file = uploadRoot.resolve(image.getStoragePath()).normalize();
+        if (!file.startsWith(uploadRoot) || !Files.isRegularFile(file)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy file ảnh.");
+        }
+        try {
+            return new ImageFile(Files.readAllBytes(file), image.getContentType());
+        } catch (IOException ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Không thể đọc file ảnh.", ex);
+        }
+    }
+
+    private boolean canViewCheckoutImage(
+            StoredImage image, Integer accountId, Collection<String> authorities) {
+        if (accountId == null) {
+            return false;
+        }
+        if (hasAuthority(authorities, "ROLE_ADMIN")) {
+            return true;
+        }
+
+        Contract contract = contractRepository.findById(image.getContractId()).orElse(null);
+        if (contract == null) {
+            return false;
+        }
+        Reservation reservation = reservationRepository.findById(contract.getReservationId()).orElse(null);
+        if (reservation == null) {
+            return false;
+        }
+        if (accountId.equals(reservation.getAccountId())) {
+            return true;
+        }
+
+        boolean isStaffOrManager = hasAuthority(authorities, "ROLE_STAFF")
+                || hasAuthority(authorities, "ROLE_MANAGER");
+        if (!isStaffOrManager) {
+            return false;
+        }
+        EmployeeProfile employee = employeeProfileRepository.findByAccountId(accountId).orElse(null);
+        if (employee == null) {
+            return false;
+        }
+        return employee.getFacilityId().equals(findContractFacilityId(contract));
+    }
+
+    private boolean hasAuthority(Collection<String> authorities, String expected) {
+        return authorities != null && authorities.contains(expected);
     }
 
     private Integer findContractFacilityId(Contract contract) {
@@ -291,5 +365,8 @@ public class ImageStorageService {
     }
 
     private record ValidatedImage(byte[] content, String extension, String originalFileName) {
+    }
+
+    public record ImageFile(byte[] content, String contentType) {
     }
 }

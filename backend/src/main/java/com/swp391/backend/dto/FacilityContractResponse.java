@@ -21,6 +21,7 @@ public class FacilityContractResponse {
     private String reservationCode;
     private String customerEmail;
     private String customerIdNumber;
+    private List<StoredImageResponse> checkoutImages = new ArrayList<>();
 
     public FacilityContractResponse() {
     }
@@ -175,6 +176,14 @@ public class FacilityContractResponse {
 
     public void setReservationCode(String reservationCode) {
         this.reservationCode = reservationCode;
+    }
+
+    public List<StoredImageResponse> getCheckoutImages() {
+        return checkoutImages;
+    }
+
+    public void setCheckoutImages(List<StoredImageResponse> checkoutImages) {
+        this.checkoutImages = checkoutImages != null ? checkoutImages : new ArrayList<>();
     }
 
     public static class FeeInvoiceResponse {

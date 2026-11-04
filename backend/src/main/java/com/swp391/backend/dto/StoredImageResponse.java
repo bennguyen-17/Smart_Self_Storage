@@ -8,6 +8,7 @@ public class StoredImageResponse {
     private Integer imageId;
     private Integer typeCode;
     private String imageSlot;
+    private String url;
     private String originalFileName;
     private String contentType;
     private Long fileSize;
@@ -17,6 +18,7 @@ public class StoredImageResponse {
         this.imageId = image.getImageId();
         this.typeCode = image.getTypeCode();
         this.imageSlot = image.getImageSlot();
+        this.url = "/api/images/" + image.getImageId();
         this.originalFileName = image.getOriginalFileName();
         this.contentType = image.getContentType();
         this.fileSize = image.getFileSize();
@@ -26,6 +28,7 @@ public class StoredImageResponse {
     public Integer getImageId() { return imageId; }
     public Integer getTypeCode() { return typeCode; }
     public String getImageSlot() { return imageSlot; }
+    public String getUrl() { return url; }
     public String getOriginalFileName() { return originalFileName; }
     public String getContentType() { return contentType; }
     public Long getFileSize() { return fileSize; }

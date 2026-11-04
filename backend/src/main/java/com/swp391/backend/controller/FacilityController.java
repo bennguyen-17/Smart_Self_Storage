@@ -32,14 +32,20 @@ public class FacilityController {
     // --- US-03: Lấy danh sách toàn bộ cơ sở (kèm mã code, shortCode, layout) ---
     @GetMapping
     public ResponseEntity<List<FacilityResponse>> getAllFacilities() {
-        return ResponseEntity.ok(storageService.getAllActiveFacilities());
+        List<FacilityResponse> facilities = storageService.getAllActiveFacilities();
+        facilities.forEach(facility -> facility.setImages(
+                imageStorageService.getFacilityImageResponses(facility.getFacilityId())));
+        return ResponseEntity.ok(facilities);
     }
 
     // --- US-03: Lấy thông tin chi tiết 1 cơ sở ---
     @GetMapping("/{facilityId}")
     public ResponseEntity<FacilityResponse> getFacilityById(@PathVariable Integer facilityId) {
         return storageService.getFacilityById(facilityId)
-                .map(ResponseEntity::ok)
+                .map(facility -> {
+                    facility.setImages(imageStorageService.getFacilityImageResponses(facilityId));
+                    return ResponseEntity.ok(facility);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 

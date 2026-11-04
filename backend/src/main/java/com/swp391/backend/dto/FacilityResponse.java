@@ -1,5 +1,7 @@
 package com.swp391.backend.dto;
 
+import java.util.Map;
+
 public class FacilityResponse {
     private Integer facilityId;
     private String facilityCode; // HN-01, HN-02, HCM-01, ...
@@ -14,6 +16,7 @@ public class FacilityResponse {
     private String managerName;
     private String managerPhone;
     private String managerEmail;
+    private Map<String, StoredImageResponse> images = Map.of();
 
     public FacilityResponse() {
     }
@@ -133,5 +136,13 @@ public class FacilityResponse {
 
     public void setManagerEmail(String managerEmail) {
         this.managerEmail = managerEmail;
+    }
+
+    public Map<String, StoredImageResponse> getImages() {
+        return images;
+    }
+
+    public void setImages(Map<String, StoredImageResponse> images) {
+        this.images = images != null ? images : Map.of();
     }
 }

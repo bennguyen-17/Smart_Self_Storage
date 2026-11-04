@@ -5,6 +5,7 @@ import com.swp391.backend.dto.CustomerCancelReservationRequest;
 import com.swp391.backend.dto.CustomerCancelReservationResponse;
 import com.swp391.backend.dto.ApiResponse;
 import com.swp391.backend.dto.GatePinVerificationRequest;
+import com.swp391.backend.service.ImageStorageService;
 import com.swp391.backend.repository.*;
 import com.swp391.backend.service.JwtService;
 import com.swp391.backend.service.StorageService;
@@ -46,6 +47,7 @@ public class ContractController {
     private static final Logger log = LoggerFactory.getLogger(ContractController.class);
     private final SupportTicketRepository supportTicketRepository;
     private final NoShowCronService noShowCronService;
+    private final ImageStorageService imageStorageService;
 
     public ContractController(ContractRepository contractRepository,
                               ReservationRepository reservationRepository,
@@ -63,7 +65,8 @@ public class ContractController {
                               CustomerReservationService customerReservationService,
                               GatePinService gatePinService,
                               SupportTicketRepository supportTicketRepository,
-                              NoShowCronService noShowCronService) {
+                              NoShowCronService noShowCronService,
+                              ImageStorageService imageStorageService) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -81,6 +84,7 @@ public class ContractController {
         this.gatePinService = gatePinService;
         this.supportTicketRepository = supportTicketRepository;
         this.noShowCronService = noShowCronService;
+        this.imageStorageService = imageStorageService;
     }
 
     @GetMapping("/contracts/my-contracts")
@@ -276,6 +280,7 @@ public class ContractController {
             map.put("refundBankName", c.getRefundBankName());
             map.put("refundAccountNumber", c.getRefundAccountNumber());
             map.put("refundAccountName", c.getRefundAccountName());
+            map.put("checkoutImages", imageStorageService.getCheckoutImageResponses(c.getContractId()));
 
             Optional<SupportTicket> activeReturnTicket = supportTicketRepository.findByContractId(c.getContractId()).stream()
                     .filter(t -> "EARLY_TERMINATION".equalsIgnoreCase(t.getType())

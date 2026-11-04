@@ -5,9 +5,11 @@ import com.swp391.backend.dto.checkout.CheckoutConfirmResponse;
 import com.swp391.backend.dto.checkout.CheckoutPreviewResponse;
 import com.swp391.backend.service.CheckoutSettlementService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -38,14 +40,16 @@ public class CheckoutSettlementController {
     }
 
     // --- US-28 & US-29: Xác nhận bàn giao trả kho & chốt quyết toán hoàn cọc / truy thu (Staff) ---
-    @PostMapping("/staff/checkout/{contractId}/confirm")
+    @PostMapping(value = "/staff/checkout/{contractId}/confirm", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CheckoutConfirmResponse> confirmCheckout(
             @PathVariable Integer contractId,
-            @RequestBody CheckoutConfirmRequest request,
+            @RequestPart("request") CheckoutConfirmRequest request,
+            @RequestPart("photos") java.util.List<MultipartFile> photos,
             @AuthenticationPrincipal Integer staffAccountId) {
 
         try {
-            CheckoutConfirmResponse response = checkoutSettlementService.confirmCheckout(contractId, request, staffAccountId);
+            CheckoutConfirmResponse response = checkoutSettlementService.confirmCheckout(
+                    contractId, request, staffAccountId, photos);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }

@@ -41,6 +41,7 @@ public class SecurityConfig {
                         // 1. Các API công khai không cần đăng nhập
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/facilities", "/api/facilities/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/units/**", "/api/units/filter").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/prices", "/api/prices/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/fee-policies", "/api/fee-policies/**", "/api/fee-items", "/api/fee-items/**").permitAll()
