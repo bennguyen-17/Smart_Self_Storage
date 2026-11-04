@@ -70,7 +70,7 @@ function UnitEditSheet({ unit, ctx, onClose, onSaved }: UnitEditSheetProps) {
   return (
     <Dialog open onOpenChange={(open) => !open && !submitting && onClose()}>
       <DialogContent
-        className="top-0 right-0 left-auto flex h-dvh max-h-dvh w-full max-w-full translate-x-0 translate-y-0 flex-col gap-0 rounded-none p-0 sm:max-w-md data-open:slide-in-from-right-10 data-open:zoom-in-100 data-closed:slide-out-to-right-10 data-closed:zoom-out-100"
+        className="portal-dialog top-0 right-0 left-auto flex h-dvh max-h-dvh w-full max-w-full translate-x-0 translate-y-0 flex-col gap-0 rounded-none p-0 sm:max-w-md data-open:slide-in-from-right-10 data-open:zoom-in-100 data-closed:slide-out-to-right-10 data-closed:zoom-out-100"
       >
         <DialogHeader className="border-b border-slate-200/80 bg-slate-50/70 p-4 pr-12 dark:border-slate-800 dark:bg-slate-900/60">
           <div className="flex items-center justify-between gap-3">

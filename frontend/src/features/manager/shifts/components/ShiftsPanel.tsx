@@ -176,7 +176,7 @@ function ShiftsPanel() {
             ))}
       </div>
       <Dialog open={confirmWeek} onOpenChange={(open) => !copying && setConfirmWeek(open)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="portal-dialog sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Áp dụng lịch cho cả tuần?</DialogTitle>
             <DialogDescription>
