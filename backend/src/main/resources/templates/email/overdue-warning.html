@@ -6,28 +6,33 @@
     <title>Cảnh báo quá hạn hợp đồng lưu kho - Smart Self Storage</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
-    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 40px 20px;">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 30px 20px;">
         <tr>
             <td align="center">
-                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.04);">
                     <!-- Header -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%); padding: 32px 30px; text-align: center;">
-                            <div style="display: inline-block; background: rgba(255,255,255,0.2); border-radius: 50%; width: 48px; height: 48px; line-height: 48px; margin-bottom: 12px; font-size: 24px; color: #ffffff;">⚠️</div>
-                            <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px;">CẢNH BÁO HỢP ĐỒNG QUÁ HẠN</h1>
-                            <p style="color: #fecaca; margin: 6px 0 0 0; font-size: 13px; font-weight: 500;">Thông báo quá hạn ngày thứ {{overdueDays}} &amp; nguy cơ thanh lý tài sản</p>
+                        <td style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 16px 24px; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 17px; font-weight: 800; letter-spacing: 0.8px;">SMART SELF STORAGE</h1>
+                            <p style="color: #bfdbfe; margin: 3px 0 0 0; font-size: 11px; font-weight: 500;">Hệ thống lưu trữ thông minh &amp; tiện ích</p>
                         </td>
                     </tr>
                     <!-- Body -->
                     <tr>
-                        <td style="padding: 36px 32px;">
-                            <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6;">Kính gửi <strong>{{displayName}}</strong>,</p>
-                            <p style="margin: 0 0 24px 0; font-size: 14px; line-height: 1.6; color: #475569;">
+                        <td style="padding: 26px 32px 18px 32px;">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <div style="display: inline-block; width: 44px; height: 44px; line-height: 44px; border-radius: 50%; background-color: #fee2e2; color: #dc2626; font-size: 22px; margin-bottom: 8px;">⚠️</div>
+                                <h2 style="margin: 0; color: #991b1b; font-size: 18px; font-weight: 800; text-transform: uppercase;">CẢNH BÁO HỢP ĐỒNG QUÁ HẠN</h2>
+                                <p style="margin: 4px 0 0 0; color: #64748b; font-size: 12px;">Thông báo quá hạn ngày thứ {{overdueDays}} &amp; nguy cơ thanh lý tài sản</p>
+                            </div>
+
+                            <p style="margin: 0 0 12px 0; font-size: 14px; line-height: 1.6;">Kính gửi <strong>{{displayName}}</strong>,</p>
+                            <p style="margin: 0 0 20px 0; font-size: 13px; line-height: 1.6; color: #475569;">
                                 Hệ thống Smart Self Storage ghi nhận Hợp đồng thuê ô kho lưu trữ của Quý khách hiện đã <strong>quá hạn {{overdueDays}} ngày</strong> mà chưa thực hiện gia hạn hoặc thanh lý trả kho.
                             </p>
                             
                             <!-- Bảng thông tin quá hạn -->
-                            <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 16px; padding: 20px; margin-bottom: 24px;">
+                            <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
                                 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size: 13px;">
                                     <tr>
                                         <td style="padding: 6px 0; color: #991b1b; width: 45%;">Mã hợp đồng:</td>
@@ -53,29 +58,25 @@
                             </div>
 
                             <!-- Cảnh báo chế tài theo BR-30 & BR-32 -->
-                            <div style="background: #fff7ed; border-left: 4px solid #ea580c; padding: 16px; border-radius: 0 12px 12px 0; margin-bottom: 24px;">
-                                <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: 700; color: #9a3412;">⚖️ Quy định xử lý quá hạn (Điều 4 Hợp đồng &amp; BR-32):</h4>
-                                <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #431407; line-height: 1.6;">
+                            <div style="background: #fff7ed; border-left: 4px solid #ea580c; padding: 14px 16px; border-radius: 0 10px 10px 0; margin-bottom: 20px;">
+                                <h4 style="margin: 0 0 6px 0; font-size: 12px; font-weight: 700; color: #9a3412;">⚖️ Quy định xử lý quá hạn (Điều 4 Hợp đồng &amp; BR-32):</h4>
+                                <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #431407; line-height: 1.6;">
                                     <li>Phí quá hạn được tính cố định <strong>50.000 VNĐ / ngày</strong> cho đến hết ngày thứ 29.</li>
                                     <li>Quyền sinh mã PIN tự mở cổng của Quý khách tại cơ sở hiện đang bị tạm khóa.</li>
-                                    <li><strong>Khi đủ 30 ngày quá hạn:</strong> Hợp đồng sẽ tự động chuyển sang trạng thái <strong>FORFEITED</strong>. Cơ sở có quyền cắt khóa niêm phong, <strong>tịch thu 100% tiền cọc</strong> và tiến hành các thủ tục thanh lý tài sản bỏ rơi theo quy định.</li>
+                                    <li><strong>Ngày thứ 30:</strong> Nếu không liên hệ xử lý, cơ sở có quyền <strong>tịch thu 100% tiền cọc, cắt khóa niêm phong và thanh lý toàn bộ tài sản</strong> bên trong theo quy chế dịch vụ.</li>
                                 </ul>
                             </div>
 
-                            <p style="margin: 0 0 16px 0; font-size: 13px; color: #1e293b; line-height: 1.6;">
-                                👉 <strong>Biện pháp xử lý ngay:</strong> Quý khách vui lòng đến trực tiếp cơ sở trong khung giờ làm việc <strong>(08:00 - 20:00)</strong> gặp nhân viên quầy để thanh toán khoản tiền phạt trễ hạn và hoàn tất thủ tục dọn kho hoặc gia hạn tiếp tục sử dụng.
-                            </p>
-
-                            <p style="margin: 0; font-size: 13px; color: #64748b; line-height: 1.5;">
-                                Hotline hỗ trợ khẩn cấp: <strong>1900 8899</strong> | Email: <strong>hotro@smartstorage.vn</strong>.
+                            <p style="margin: 0; font-size: 12px; color: #b91c1c; font-weight: 600;">
+                                ⚠️ Vui lòng đến cơ sở sớm nhất để nộp phạt và dọn kho, hoặc liên hệ Hotline: <strong>1900 8899</strong> để được hỗ trợ.
                             </p>
                         </td>
                     </tr>
                     <!-- Footer -->
                     <tr>
-                        <td style="background-color: #f1f5f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e2e8f0;">
-                            <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: 600;">Hệ thống lưu kho tự phục vụ thông minh Smart Self Storage</p>
-                            <p style="margin: 4px 0 0 0; font-size: 11px; color: #94a3b8;">Tổng đài tiếp nhận khiếu nại &amp; hỗ trợ 24/7: 1900 8899</p>
+                        <td style="background-color: #f1f5f9; padding: 16px 24px; text-align: center; border-top: 1px solid #e2e8f0;">
+                            <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: 600;">Hệ thống Smart Self Storage</p>
+                            <p style="margin: 4px 0 0 0; font-size: 11px; color: #94a3b8;">Email hỗ trợ: <a href="mailto:smartstorage.support@gmail.com" style="color: #2563eb; text-decoration: none;">smartstorage.support@gmail.com</a> | Hotline: 1900 8899</p>
                         </td>
                     </tr>
                 </table>

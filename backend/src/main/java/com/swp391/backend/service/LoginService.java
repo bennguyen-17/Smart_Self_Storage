@@ -1,4 +1,4 @@
-﻿package com.swp391.backend.service;
+package com.swp391.backend.service;
 
 import com.swp391.backend.dto.auth.LoginRequest;
 import com.swp391.backend.dto.auth.LoginResponse;
@@ -369,16 +369,7 @@ public class LoginService {
 
             // BR-03: Gửi email cảnh báo bảo mật khi bị khóa 15 phút
             try {
-                String customerName = null;
-                java.util.Optional<com.swp391.backend.entity.CustomerProfile> cp = customerProfileRepository.findByAccountId(account.getAccountId());
-                if (cp.isPresent() && cp.get().getFullName() != null) {
-                    customerName = cp.get().getFullName();
-                } else {
-                    java.util.Optional<com.swp391.backend.entity.EmployeeProfile> ep = employeeProfileRepository.findByAccountId(account.getAccountId());
-                    if (ep.isPresent() && ep.get().getFullName() != null) {
-                        customerName = ep.get().getFullName();
-                    }
-                }
+                String customerName = account.getFullName();
                 emailService.sendSecurityAlertEmail(account.getEmail(), customerName, ipAddress, lockUntil);
             } catch (Exception ignored) {
             }

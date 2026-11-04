@@ -6,28 +6,33 @@
     <title>Thông báo sắp hết hạn hợp đồng thuê kho - Smart Self Storage</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
-    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 40px 20px;">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 30px 20px;">
         <tr>
             <td align="center">
-                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.04);">
                     <!-- Header -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); padding: 32px 30px; text-align: center;">
-                            <div style="display: inline-block; background: rgba(255,255,255,0.2); border-radius: 50%; width: 48px; height: 48px; line-height: 48px; margin-bottom: 12px; font-size: 24px; color: #ffffff;">⏰</div>
-                            <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px;">NHẮC HẠN THUÊ KHO</h1>
-                            <p style="color: #fef3c7; margin: 6px 0 0 0; font-size: 13px; font-weight: 500;">Hợp đồng của bạn sắp hết hạn sau 3 ngày</p>
+                        <td style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 16px 24px; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 17px; font-weight: 800; letter-spacing: 0.8px;">SMART SELF STORAGE</h1>
+                            <p style="color: #bfdbfe; margin: 3px 0 0 0; font-size: 11px; font-weight: 500;">Hệ thống lưu trữ thông minh &amp; tiện ích</p>
                         </td>
                     </tr>
                     <!-- Body -->
                     <tr>
-                        <td style="padding: 36px 32px;">
-                            <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6;">Xin chào <strong>{{displayName}}</strong>,</p>
-                            <p style="margin: 0 0 24px 0; font-size: 14px; line-height: 1.6; color: #475569;">
+                        <td style="padding: 26px 32px 18px 32px;">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <div style="display: inline-block; width: 44px; height: 44px; line-height: 44px; border-radius: 50%; background-color: #fef3c7; color: #d97706; font-size: 22px; margin-bottom: 8px;">⏰</div>
+                                <h2 style="margin: 0; color: #b45309; font-size: 18px; font-weight: 800; text-transform: uppercase;">NHẮC HẠN THUÊ KHO</h2>
+                                <p style="margin: 4px 0 0 0; color: #64748b; font-size: 12px;">Hợp đồng của bạn sắp hết hạn sau {{daysLeft}} ngày</p>
+                            </div>
+
+                            <p style="margin: 0 0 12px 0; font-size: 14px; line-height: 1.6;">Xin chào <strong>{{displayName}}</strong>,</p>
+                            <p style="margin: 0 0 20px 0; font-size: 13px; line-height: 1.6; color: #475569;">
                                 Hệ thống Smart Self Storage xin thông báo: Hợp đồng thuê ô kho lưu trữ của bạn sắp đến hạn kết thúc theo thỏa thuận đã ký kết.
                             </p>
                             
                             <!-- Bảng thông tin hợp đồng -->
-                            <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 16px; padding: 20px; margin-bottom: 24px;">
+                            <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
                                 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size: 13px;">
                                     <tr>
                                         <td style="padding: 6px 0; color: #92400e; width: 45%;">Mã hợp đồng:</td>
@@ -43,36 +48,31 @@
                                     </tr>
                                     <tr>
                                         <td style="padding: 6px 0; color: #92400e;">Ngày hết hạn:</td>
-                                        <td style="padding: 6px 0; font-weight: 800; color: #b45309; text-align: right; font-size: 14px;">{{endDate}} (Còn 3 ngày)</td>
+                                        <td style="padding: 6px 0; font-weight: 800; color: #b45309; text-align: right; font-size: 14px;">{{endDate}} (Còn {{daysLeft}} ngày)</td>
                                     </tr>
                                 </table>
                             </div>
 
-                            <!-- Hướng dẫn gia hạn hoặc trả kho -->
-                            <div style="background: #f8fafc; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 0 12px 12px 0; margin-bottom: 24px;">
-                                <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: 700; color: #1e3a8a;">📌 Bạn có 2 lựa chọn trước khi hết hạn:</h4>
-                                <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #334155; line-height: 1.6;">
-                                    <li><strong>Gia hạn thuê trực tuyến:</strong> Đăng nhập Web Portal và chọn <em>"Gia hạn hợp đồng"</em> để tiếp tục sử dụng kho liên tục với nhiều ưu đãi chiết khấu.</li>
-                                    <li><strong>Dọn đồ &amp; Trả kho:</strong> Thu xếp dọn sạch đồ đạc trong ô kho và gặp nhân viên quầy trước 20:00 ngày {{endDate}} để nghiệm thu hoàn tất thủ tục và nhận lại tiền cọc.</li>
-                                </ul>
+                            <!-- Hướng dẫn lựa chọn -->
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; font-size: 12px; color: #334155; line-height: 1.6;">
+                                <p style="margin: 0 0 6px 0; font-weight: 700; color: #0f172a;">📌 Bạn có 2 lựa chọn trước khi hết hạn:</p>
+                                <p style="margin: 0 0 4px 0;"><strong>1. Gia hạn trực tuyến:</strong> Đăng nhập vào trang cá nhân để gia hạn thêm 1, 3 hoặc 6 tháng chỉ với vài thao tác.</p>
+                                <p style="margin: 0;"><strong>2. Trả kho (Check-out):</strong> Dọn dẹp tài sản và liên hệ lễ tân tại cơ sở để hoàn tất thủ tục thanh lý và nhận lại tiền cọc.</p>
                             </div>
 
-                            <div style="background-color: #fef2f2; border: 1px solid #fee2e2; border-radius: 12px; padding: 14px 16px; margin-bottom: 24px;">
-                                <p style="margin: 0; font-size: 12px; color: #991b1b; line-height: 1.5;">
-                                    ⚠️ <strong>Lưu ý quan trọng (BR-28 &amp; BR-30):</strong> Nếu qua 23:59:59 ngày {{endDate}} bạn chưa gia hạn hoặc chưa hoàn tất trả kho, hệ thống sẽ tự động tạm khóa quyền sinh mã PIN mở cổng và bắt đầu tính phí quá hạn <strong>50.000 VNĐ / ngày</strong>.
-                                </p>
+                            <!-- CTA Button -->
+                            <div style="text-align: center; margin-bottom: 0;">
+                                <a href="http://localhost:5173/profile" style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 10px 24px; border-radius: 8px; font-size: 13px; font-weight: 700;">
+                                    👉 Gia hạn trực tuyến ngay
+                                </a>
                             </div>
-
-                            <p style="margin: 0; font-size: 13px; color: #64748b; line-height: 1.5;">
-                                Mọi thắc mắc cần hỗ trợ, vui lòng liên hệ hotline tổng đài: <strong>1900 8899</strong>.
-                            </p>
                         </td>
                     </tr>
                     <!-- Footer -->
                     <tr>
-                        <td style="background-color: #f1f5f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e2e8f0;">
-                            <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: 600;">Hệ thống lưu kho tự quản thông minh Smart Self Storage</p>
-                            <p style="margin: 4px 0 0 0; font-size: 11px; color: #94a3b8;">Email hỗ trợ: hotro@smartstorage.vn | Hotline: 1900 8899</p>
+                        <td style="background-color: #f1f5f9; padding: 16px 24px; text-align: center; border-top: 1px solid #e2e8f0;">
+                            <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: 600;">Hệ thống Smart Self Storage</p>
+                            <p style="margin: 4px 0 0 0; font-size: 11px; color: #94a3b8;">Email hỗ trợ: <a href="mailto:smartstorage.support@gmail.com" style="color: #2563eb; text-decoration: none;">smartstorage.support@gmail.com</a> | Hotline: 1900 8899</p>
                         </td>
                     </tr>
                 </table>

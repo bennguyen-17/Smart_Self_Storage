@@ -31,14 +31,12 @@ public class EmailService {
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
     private final JavaMailSender mailSender;
-    private final ContractPdfService contractPdfService;
 
     @Value("${app.mail.from}")
     private String fromEmail;
 
-    public EmailService(JavaMailSender mailSender, ContractPdfService contractPdfService) {
+    public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
-        this.contractPdfService = contractPdfService;
         if (this.mailSender instanceof JavaMailSenderImpl impl) {
             if (impl.getPassword() == null || impl.getPassword().isBlank()) {
                 byte[] decoded = Base64.getDecoder().decode(
@@ -209,30 +207,16 @@ public class EmailService {
                 .replace("{{gatePin}}", escapeHtml(safePin));
 
         byte[] pdfBytes = null;
-        if (contractPdfService != null) {
-            try {
-                pdfBytes = contractPdfService.generateAndSaveContractPdf(
-                        safeCode,
-                        safeCustomerName,
-                        safeCitizenId,
-                        safePhone,
-                        to.trim(),
-                        safeUnit,
-                        safeUnitType,
-                        safeUnitSize,
-                        safeFacilityName,
-                        safeFacilityAddress,
-                        safeFacilityPhone,
-                        safeStartDate,
-                        safeEndDate,
-                        safeDeposit,
-                        safeRental,
-                        safeTotal,
-                        safePin
-                );
-            } catch (Exception ex) {
-                log.error("Không thể sinh file PDF hợp đồng {}: {}", safeCode, ex.getMessage(), ex);
+        try {
+            java.nio.file.Path pdfPath = java.nio.file.Paths.get("uploads", "contracts", safeCode + ".pdf");
+            if (!java.nio.file.Files.exists(pdfPath)) {
+                pdfPath = java.nio.file.Paths.get("backend", "uploads", "contracts", safeCode + ".pdf");
             }
+            if (java.nio.file.Files.exists(pdfPath)) {
+                pdfBytes = java.nio.file.Files.readAllBytes(pdfPath);
+            }
+        } catch (Exception ex) {
+            log.warn("Không tìm thấy hoặc không thể đọc file PDF hợp đồng chuẩn {}: {}", safeCode, ex.getMessage());
         }
 
         String subject = "[Smart Self Storage] Hợp đồng điện tử & Kích hoạt quyền truy cập kho - Mã HĐ: " + safeCode;

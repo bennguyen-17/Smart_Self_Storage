@@ -1,4 +1,4 @@
-﻿package com.swp391.backend.controller;
+package com.swp391.backend.controller;
 
 import com.swp391.backend.entity.*;
 import com.swp391.backend.dto.CustomerCancelReservationRequest;
@@ -377,7 +377,7 @@ public class ContractController {
             ticket.setTicketCode(ticketCode);
             ticket.setType("EARLY_TERMINATION");
             ticket.setStatus("SUBMITTED");
-            Integer custId = (reservation != null && reservation.getAccountId() != null) ? reservation.getAccountId() : Integer.valueOf(1);
+            Integer custId = (reservation != null && reservation.getAccountId() != null) ? reservation.getAccountId() : 1;
             ticket.setCustomerId(custId);
             ticket.setContractId(contract.getContractId());
             ticket.setUnitCode(reservation != null ? reservation.getUnitCode() : null);
@@ -685,15 +685,20 @@ public class ContractController {
         // BR-29: Gửi email xác nhận gia hạn hợp đồng trực tuyến thành công
         try {
             if (res.getAccountId() != null) {
-                accountRepository.findById(res.getAccountId()).ifPresent(acc -> {
-                    String customerName = null;
-                    Optional<CustomerProfile> cp = customerProfileRepository.findByAccountId(acc.getAccountId());
-                    if (cp.isPresent() && cp.get().getFullName() != null) {
-                        customerName = cp.get().getFullName();
+                Account acc = accountRepository.findById(Long.valueOf(res.getAccountId())).orElse(null);
+                if (acc != null) {
+                    String customerName = (acc.getFullName() != null) ? acc.getFullName() : "Quý khách";
+                    String facilityName = "Smart Self Storage";
+                    Optional<StorageUnit> suOpt = storageUnitRepository.findById(res.getUnitCode());
+                    if (suOpt.isPresent()) {
+                        Optional<Floor> flOpt = floorRepository.findById(suOpt.get().getFloorId());
+                        if (flOpt.isPresent()) {
+                            Optional<Facility> facOpt = facilityRepository.findById(flOpt.get().getFacilityId());
+                            if (facOpt.isPresent() && facOpt.get().getFacilityName() != null) {
+                                facilityName = facOpt.get().getFacilityName();
+                            }
+                        }
                     }
-                    String facilityName = facilityRepository.findById(res.getFacilityId())
-                            .map(Facility::getFacilityName)
-                            .orElse("Smart Self Storage");
                     emailService.sendRenewalSuccessEmail(
                             acc.getEmail(),
                             customerName,
@@ -705,7 +710,7 @@ public class ContractController {
                             invoiceNumber,
                             finalTotal
                     );
-                });
+                }
             }
         } catch (Exception e) {
             log.error("Không thể gửi email xác nhận gia hạn hợp đồng {}: {}", contractCode, e.getMessage());
