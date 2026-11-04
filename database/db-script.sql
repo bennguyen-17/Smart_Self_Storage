@@ -308,12 +308,11 @@ CREATE TABLE StoredImage (
     fileSize BIGINT UNSIGNED NOT NULL,
     uploadedBy INT NULL COMMENT 'accountId của người tải ảnh lên',
     uploadedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_storedimage_owner_type CHECK (
-        (typeCode = 1 AND facilityId IS NOT NULL AND contractId IS NULL
+    CONSTRAINT chk_storedimage_type_slot CHECK (
+        (typeCode = 1
             AND imageSlot IN ('COVER', 'ALL_UNITS', 'NORMAL_UNIT', 'CLIMATE_UNIT'))
         OR
-        (typeCode = 2 AND contractId IS NOT NULL AND facilityId IS NULL
-            AND imageSlot = 'CHECKOUT_INSPECTION')
+        (typeCode = 2 AND imageSlot = 'CHECKOUT_INSPECTION')
     ),
     CONSTRAINT fk_storedimage_facility FOREIGN KEY (facilityId)
         REFERENCES Facility (facilityId) ON DELETE CASCADE ON UPDATE CASCADE,
