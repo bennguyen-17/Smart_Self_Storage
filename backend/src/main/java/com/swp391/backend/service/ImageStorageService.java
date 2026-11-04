@@ -9,6 +9,7 @@ import com.swp391.backend.entity.Reservation;
 import com.swp391.backend.entity.StorageUnit;
 import com.swp391.backend.entity.StoredImage;
 import com.swp391.backend.repository.ContractRepository;
+import com.swp391.backend.repository.AccountRepository;
 import com.swp391.backend.repository.EmployeeProfileRepository;
 import com.swp391.backend.repository.FacilityRepository;
 import com.swp391.backend.repository.FloorRepository;
@@ -59,6 +60,7 @@ public class ImageStorageService {
     private final FloorRepository floorRepository;
     private final EmployeeProfileRepository employeeProfileRepository;
     private final PaymentRepository paymentRepository;
+    private final AccountRepository accountRepository;
     private final Path uploadRoot;
     private final Path facilityImageDirectory;
     private final Path evidenceDirectory;
@@ -72,6 +74,7 @@ public class ImageStorageService {
             FloorRepository floorRepository,
             EmployeeProfileRepository employeeProfileRepository,
             PaymentRepository paymentRepository,
+            AccountRepository accountRepository,
             @Value("${app.upload.root-dir:uploads}") String uploadRoot,
             @Value("${app.upload.facility-image-dir:${app.upload.root-dir:uploads}/facilities}") String facilityImageDirectory,
             @Value("${app.upload.evidence-dir:${app.upload.root-dir:uploads}/evidence}") String evidenceDirectory) {
@@ -83,6 +86,7 @@ public class ImageStorageService {
         this.floorRepository = floorRepository;
         this.employeeProfileRepository = employeeProfileRepository;
         this.paymentRepository = paymentRepository;
+        this.accountRepository = accountRepository;
         this.uploadRoot = Path.of(uploadRoot).toAbsolutePath().normalize();
         this.facilityImageDirectory = resolveConfiguredDirectory(facilityImageDirectory);
         this.evidenceDirectory = resolveConfiguredDirectory(evidenceDirectory);
@@ -116,7 +120,7 @@ public class ImageStorageService {
         image.setUploadedAt(LocalDateTime.now());
         image.setImageStatus("PENDING");
         try {
-            return new StoredImageResponse(imageRepository.saveAndFlush(image));
+            return toResponse(imageRepository.saveAndFlush(image));
         } catch (RuntimeException ex) {
             deleteFile(destination);
             throw ex;
@@ -200,28 +204,38 @@ public class ImageStorageService {
     public Map<String, String> getFacilityImageUrls(Integer facilityId) {
         Map<String, String> images = new LinkedHashMap<>();
         imageRepository.findByFacilityIdAndImageStatusOrderByCategoryAsc(facilityId, "LINKED")
-                .forEach(image -> images.put(facilityKeyFor(image.getCategory()), imageUrl(image.getImageId())));
+                .forEach(image -> images.put(facilityKeyFor(image.getCategory()), imageUrl(image)));
         return images;
     }
 
     public List<StoredImageResponse> getCheckoutImageResponses(Integer contractId) {
         return imageRepository.findByContractIdAndCategoryOrderByUploadedAtAscImageIdAsc(
                         contractId, "CHECKOUT_INSPECTION").stream()
-                .map(StoredImageResponse::new)
+                .map(this::toResponse)
                 .toList();
     }
 
     public List<StoredImageResponse> getForfeitEvidenceResponses(Integer contractId) {
         return imageRepository.findByContractIdAndCategoryOrderByUploadedAtAscImageIdAsc(
                         contractId, "FORFEIT_EVIDENCE").stream()
-                .map(StoredImageResponse::new)
+                .map(this::toResponse)
                 .toList();
     }
 
     public String getRefundReceiptUrl(Integer paymentId) {
         return imageRepository.findByPaymentIdAndCategoryOrderByUploadedAtAscImageIdAsc(
                         paymentId, "REFUND_RECEIPT").stream()
-                .findFirst().map(image -> imageUrl(image.getImageId())).orElse(null);
+                .findFirst().map(this::imageUrl).orElse(null);
+    }
+
+    public String getImageUrl(Integer imageId) {
+        return imageRepository.findById(imageId)
+                .map(this::imageUrl)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy ảnh."));
+    }
+
+    public List<StoredImageResponse> toResponses(List<StoredImage> images) {
+        return images.stream().map(this::toResponse).toList();
     }
 
     public ImageFile loadImage(Integer imageId, Integer accountId, Collection<String> authorities) {
@@ -230,8 +244,8 @@ public class ImageStorageService {
         if (!canViewImage(image, accountId, authorities)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền xem ảnh này.");
         }
-        Path file = uploadRoot.resolve(image.getStoragePath()).normalize();
-        if (!file.startsWith(uploadRoot) || !Files.isRegularFile(file)) {
+        Path file = fileForStoragePath(image.getStoragePath());
+        if (file == null || !Files.isRegularFile(file)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy file ảnh.");
         }
         try {
@@ -342,8 +356,11 @@ public class ImageStorageService {
                 .findFirst().orElse(category);
     }
 
-    private String imageUrl(Integer imageId) {
-        return "/api/images/" + imageId;
+    private StoredImageResponse toResponse(StoredImage image) {
+        String uploadedBy = image.getUploadedBy() == null ? null
+                : accountRepository.findAccountByAccountId(image.getUploadedBy())
+                        .map(account -> account.getFullName()).orElse(null);
+        return new StoredImageResponse(image, uploadedBy);
     }
 
     private ValidatedImage validateImage(MultipartFile file) {
@@ -392,7 +409,12 @@ public class ImageStorageService {
     }
 
     private String toStoragePath(Path file) {
-        return uploadRoot.relativize(file.toAbsolutePath().normalize()).toString().replace('\\', '/');
+        return uploadRoot.relativize(file.toAbsolutePath().normalize())
+                .toString().replace('\\', '/');
+    }
+
+    private String imageUrl(StoredImage image) {
+        return "/api/images/" + image.getImageId();
     }
 
     private String detectImageExtension(byte[] content) {
@@ -421,9 +443,15 @@ public class ImageStorageService {
         };
     }
 
-    private void deleteStoredFile(String storagePath) {
+    private Path fileForStoragePath(String storagePath) {
+        if (storagePath == null || storagePath.isBlank()) return null;
         Path file = uploadRoot.resolve(storagePath).normalize();
-        if (file.startsWith(uploadRoot)) deleteFile(file);
+        return file.startsWith(uploadRoot) ? file : null;
+    }
+
+    private void deleteStoredFile(String storagePath) {
+        Path file = fileForStoragePath(storagePath);
+        if (file != null) deleteFile(file);
     }
 
     private void deleteFile(Path file) {

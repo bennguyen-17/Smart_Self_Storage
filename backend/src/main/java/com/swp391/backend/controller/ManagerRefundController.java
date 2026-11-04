@@ -129,7 +129,7 @@ public class ManagerRefundController {
 
         if (receiptImageId != null) {
             imageStorageService.attachRefundReceipt(paymentId, receiptImageId, effectiveAccountId);
-            evidenceUrl = "/api/images/" + receiptImageId;
+            evidenceUrl = imageStorageService.getImageUrl(receiptImageId);
         }
 
         boolean success = checkoutSettlementService.confirmRefundExecution(paymentId, effectiveAccountId, evidenceUrl, transactionRef, effectiveFacilityId);

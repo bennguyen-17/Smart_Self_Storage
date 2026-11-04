@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "StoredImage")
+@Table(name = "Image")
 public class StoredImage {
 
     public static final int TYPE_SYSTEM = 1;

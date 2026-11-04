@@ -236,6 +236,11 @@ CREATE TABLE Shift (
     status ENUM('ACTIVE', 'INACTIVE') NOT NULL DEFAULT 'ACTIVE'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+INSERT INTO Shift (shiftId, shiftName, startTime, endTime, status) VALUES
+(1, 'Ca Sáng', '08:00:00', '12:00:00', 'ACTIVE'),
+(2, 'Ca Chiều', '12:00:00', '16:00:00', 'ACTIVE'),
+(3, 'Ca Tối', '16:00:00', '20:00:00', 'ACTIVE');
+
 -- ----------------------------------------------------------------------------
 -- 15. TABLE: StaffShift (Phân công ca trực nhân viên tại cơ sở)
 -- ----------------------------------------------------------------------------
@@ -293,38 +298,6 @@ CREATE TABLE Contract (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 17.1. TABLE: StoredImage (Ảnh cơ sở và ảnh nghiệm thu trả kho)
--- ----------------------------------------------------------------------------
-DROP TABLE IF EXISTS StoredImage;
-CREATE TABLE StoredImage (
-    imageId INT AUTO_INCREMENT PRIMARY KEY,
-    typeCode TINYINT NOT NULL COMMENT '1 = ảnh cấu hình cơ sở, 2 = ảnh nghiệm thu trả kho',
-    facilityId INT NULL,
-    contractId INT NULL,
-    imageSlot VARCHAR(40) NOT NULL,
-    storagePath VARCHAR(500) NOT NULL,
-    originalFileName VARCHAR(255) NOT NULL,
-    contentType VARCHAR(100) NOT NULL,
-    fileSize BIGINT UNSIGNED NOT NULL,
-    uploadedBy INT NULL COMMENT 'accountId của người tải ảnh lên',
-    uploadedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_storedimage_type_slot CHECK (
-        (typeCode = 1
-            AND imageSlot IN ('COVER', 'ALL_UNITS', 'NORMAL_UNIT', 'CLIMATE_UNIT'))
-        OR
-        (typeCode = 2 AND imageSlot = 'CHECKOUT_INSPECTION')
-    ),
-    CONSTRAINT fk_storedimage_facility FOREIGN KEY (facilityId)
-        REFERENCES Facility (facilityId) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_storedimage_contract FOREIGN KEY (contractId)
-        REFERENCES Contract (contractId) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_storedimage_uploader FOREIGN KEY (uploadedBy)
-        REFERENCES Account (accountId) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT uq_storedimage_facility_slot UNIQUE (facilityId, imageSlot),
-    INDEX idx_storedimage_contract_uploaded (contractId, uploadedAt)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------------------------------------------------------
 -- 18. TABLE: Payment (Hóa đơn và Giao dịch thanh toán)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Payment;
@@ -346,6 +319,42 @@ CREATE TABLE Payment (
     gatewayTransactionId VARCHAR(100),
     paidAt DATETIME,
     CONSTRAINT fk_payment_contract FOREIGN KEY (contractId) REFERENCES Contract (contractId) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------------------------------------------
+-- 18.1. TABLE: Image (Ảnh hệ thống và ảnh nghiệp vụ)
+-- ----------------------------------------------------------------------------
+DROP TABLE IF EXISTS Image;
+CREATE TABLE Image (
+    imageId INT AUTO_INCREMENT PRIMARY KEY,
+    typeCode TINYINT NOT NULL COMMENT '1 = ảnh hệ thống, 2 = ảnh nghiệp vụ',
+    category VARCHAR(40) NOT NULL,
+    facilityId INT NULL,
+    contractId INT NULL,
+    paymentId INT NULL,
+    storagePath VARCHAR(500) NOT NULL,
+    originalFileName VARCHAR(255) NOT NULL,
+    contentType VARCHAR(100) NOT NULL,
+    fileSize BIGINT UNSIGNED NOT NULL,
+    uploadedBy INT NULL COMMENT 'accountId của người tải ảnh lên',
+    uploadedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    imageStatus ENUM('PENDING', 'LINKED') NOT NULL DEFAULT 'PENDING',
+    CONSTRAINT chk_image_type_category CHECK (
+        (typeCode = 1 AND category IN ('FACILITY_COVER', 'UNITS_ALL', 'UNIT_STANDARD', 'UNIT_CLIMATE'))
+        OR
+        (typeCode = 2 AND category IN ('CHECKOUT_INSPECTION', 'REFUND_RECEIPT', 'FORFEIT_EVIDENCE'))
+    ),
+    CONSTRAINT fk_image_facility FOREIGN KEY (facilityId)
+        REFERENCES Facility (facilityId) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_image_contract FOREIGN KEY (contractId)
+        REFERENCES Contract (contractId) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_image_payment FOREIGN KEY (paymentId)
+        REFERENCES Payment (paymentId) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_image_uploader FOREIGN KEY (uploadedBy)
+        REFERENCES Account (accountId) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT uq_image_facility_category UNIQUE (facilityId, category),
+    INDEX idx_image_contract_category_uploaded (contractId, category, uploadedAt),
+    INDEX idx_image_payment_category (paymentId, category)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------

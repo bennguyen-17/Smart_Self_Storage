@@ -13,8 +13,9 @@ public class StoredImageResponse {
     private String contentType;
     private Long fileSize;
     private LocalDateTime uploadedAt;
+    private String uploadedBy;
 
-    public StoredImageResponse(StoredImage image) {
+    public StoredImageResponse(StoredImage image, String uploadedBy) {
         this.imageId = image.getImageId();
         this.typeCode = image.getTypeCode();
         this.category = image.getCategory();
@@ -23,6 +24,7 @@ public class StoredImageResponse {
         this.contentType = image.getContentType();
         this.fileSize = image.getFileSize();
         this.uploadedAt = image.getUploadedAt();
+        this.uploadedBy = uploadedBy;
     }
 
     public Integer getImageId() { return imageId; }
@@ -33,4 +35,5 @@ public class StoredImageResponse {
     public String getContentType() { return contentType; }
     public Long getFileSize() { return fileSize; }
     public LocalDateTime getUploadedAt() { return uploadedAt; }
+    public String getUploadedBy() { return uploadedBy; }
 }

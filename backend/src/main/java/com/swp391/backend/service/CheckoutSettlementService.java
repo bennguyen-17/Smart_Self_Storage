@@ -4,7 +4,6 @@ import com.swp391.backend.dto.checkout.CheckoutConfirmRequest;
 import com.swp391.backend.dto.checkout.CheckoutConfirmResponse;
 import com.swp391.backend.dto.checkout.CheckoutPreviewResponse;
 import com.swp391.backend.dto.checkout.RefundListItemResponse;
-import com.swp391.backend.dto.StoredImageResponse;
 import com.swp391.backend.entity.*;
 import com.swp391.backend.repository.*;
 import org.springframework.stereotype.Service;
@@ -455,7 +454,7 @@ public class CheckoutSettlementService {
 
         List<StoredImage> inspectionImages = imageStorageService.attachCheckoutImages(
                 contract.getContractId(), request.getInspectionImageIds(), staffAccountId);
-        resp.setInspectionImages(inspectionImages.stream().map(StoredImageResponse::new).toList());
+        resp.setInspectionImages(imageStorageService.toResponses(inspectionImages));
 
         return resp;
     }
