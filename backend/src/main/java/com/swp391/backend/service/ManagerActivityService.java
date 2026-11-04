@@ -124,7 +124,6 @@ public class ManagerActivityService {
                 actionCounts.computeIfAbsent(accountId, ignored -> new HashMap<>()).put(action, count);
             }
 
-            List<Integer> employeeIds = employees.stream().map(EmployeeProfile::getEmployeeId).toList();
 
             for (Object[] row : supportTicketRepository.findAverageAcceptMinutesByStaffAndShift(
                     facilityId, accountIds, from, to)) {

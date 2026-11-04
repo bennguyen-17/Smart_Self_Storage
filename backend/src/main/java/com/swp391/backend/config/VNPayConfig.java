@@ -14,16 +14,16 @@ import java.util.*;
 @Configuration
 public class VNPayConfig {
 
-    @Value("${vnpay.payUrl}")
+    @Value("${vnpay.pay-url:${vnpay.payUrl}}")
     public String vnp_PayUrl;
 
-    @Value("${vnpay.tmnCode}")
+    @Value("${vnpay.tmn-code:${vnpay.tmnCode}}")
     public String vnp_TmnCode;
 
-    @Value("${vnpay.hashSecret}")
+    @Value("${vnpay.hash-secret:${vnpay.hashSecret}}")
     public String vnp_HashSecret;
 
-    @Value("${vnpay.returnUrl}")
+    @Value("${vnpay.return-url:${vnpay.returnUrl}}")
     public String vnp_ReturnUrl;
 
     public static String hmacSHA512(final String key, final String data) {

@@ -15,6 +15,12 @@ import com.swp391.backend.service.NoShowCronService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.jsonwebtoken.Claims;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -48,6 +54,8 @@ public class ContractController {
     private final SupportTicketRepository supportTicketRepository;
     private final NoShowCronService noShowCronService;
     private final ImageStorageService imageStorageService;
+    @Value("${app.upload.contract-dir:uploads/contracts}")
+    private String contractUploadDir;
 
     public ContractController(ContractRepository contractRepository,
                               ReservationRepository reservationRepository,
@@ -681,6 +689,89 @@ public class ContractController {
         resp.put("amount", finalTotal);
 
         return ResponseEntity.ok(resp);
+    }
+
+    @GetMapping(value = "/contracts/{contractId}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> getContractPdf(@PathVariable String contractId) {
+        if (contractId == null || contractId.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        String rawInput = contractId.trim();
+        Optional<Contract> contractOpt = Optional.empty();
+
+        // 1. Numeric ID
+        try {
+            int numericId = Integer.parseInt(rawInput);
+            contractOpt = contractRepository.findById(numericId);
+        } catch (NumberFormatException ignored) {}
+
+        // 2. Reservation code
+        if (contractOpt.isEmpty()) {
+            Optional<Reservation> resByCode = reservationRepository.findByReservationCode(rawInput);
+            if (resByCode.isPresent()) {
+                contractOpt = contractRepository.findByReservationId(resByCode.get().getReservationId());
+            }
+        }
+
+        // 3. CTR-[num]
+        if (contractOpt.isEmpty() && rawInput.startsWith("CTR-")) {
+            String suffix = rawInput.substring(4);
+            try {
+                int num = Integer.parseInt(suffix);
+                contractOpt = contractRepository.findById(num);
+            } catch (NumberFormatException ignored) {}
+        }
+
+        // 4. Find match in reservations
+        if (contractOpt.isEmpty()) {
+            List<Reservation> allRes = reservationRepository.findAll();
+            for (Reservation r : allRes) {
+                if (r.getReservationCode() != null && (r.getReservationCode().equalsIgnoreCase(rawInput) || r.getReservationCode().endsWith(rawInput))) {
+                    contractOpt = contractRepository.findByReservationId(r.getReservationId());
+                    if (contractOpt.isPresent()) break;
+                }
+            }
+        }
+
+        String fileName = null;
+        if (contractOpt.isPresent()) {
+            Contract c = contractOpt.get();
+            if (c.getContractPdfUrl() != null && !c.getContractPdfUrl().isBlank()) {
+                fileName = Paths.get(c.getContractPdfUrl()).getFileName().toString();
+            } else {
+                Reservation r = reservationRepository.findById(c.getReservationId()).orElse(null);
+                if (r != null && r.getReservationCode() != null) {
+                    fileName = r.getReservationCode() + ".pdf";
+                }
+            }
+        }
+
+        if (fileName == null) {
+            fileName = rawInput.endsWith(".pdf") ? rawInput : (rawInput + ".pdf");
+        }
+
+        Path pdfPath = Paths.get(contractUploadDir, fileName).toAbsolutePath().normalize();
+        if (!Files.exists(pdfPath)) {
+            pdfPath = Paths.get("uploads", "contracts", fileName).toAbsolutePath().normalize();
+        }
+
+        if (!Files.exists(pdfPath)) {
+            log.warn("Không tìm thấy file PDF hợp đồng: {} (đường dẫn: {})", fileName, pdfPath);
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            byte[] bytes = Files.readAllBytes(pdfPath);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(org.springframework.http.ContentDisposition.inline().filename(fileName).build());
+            headers.setContentLength(bytes.length);
+            return ResponseEntity.ok().headers(headers).body(bytes);
+        } catch (Exception e) {
+            log.error("Lỗi khi đọc file PDF hợp đồng {}: {}", fileName, e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     private int getContractStatusPriority(String status) {

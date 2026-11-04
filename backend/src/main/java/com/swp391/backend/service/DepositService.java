@@ -2,6 +2,7 @@ package com.swp391.backend.service;
 
 import com.swp391.backend.dto.*;
 import com.swp391.backend.entity.*;
+import com.swp391.backend.repository.CustomerProfileRepository;
 import com.swp391.backend.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,7 @@ public class DepositService {
     private final FacilityRepository facilityRepository;
     private final AccountRepository accountRepository;
     private final EmailService emailService;
+    private final CustomerProfileRepository customerProfileRepository;
 
     public DepositService(StorageService storageService,
                           ReservationRepository reservationRepository,
@@ -38,7 +40,8 @@ public class DepositService {
                           FloorRepository floorRepository,
                           FacilityRepository facilityRepository,
                           AccountRepository accountRepository,
-                          EmailService emailService) {
+                          EmailService emailService,
+                          CustomerProfileRepository customerProfileRepository) {
         this.storageService = storageService;
         this.reservationRepository = reservationRepository;
         this.contractRepository = contractRepository;
@@ -49,6 +52,7 @@ public class DepositService {
         this.facilityRepository = facilityRepository;
         this.accountRepository = accountRepository;
         this.emailService = emailService;
+        this.customerProfileRepository = customerProfileRepository;
     }
 
     // --- 1. Tạo đơn Đặt cọc 100% Online & Thỏa thuận Clickwrap ---
@@ -128,9 +132,23 @@ public class DepositService {
         reservation = reservationRepository.save(reservation);
 
         // Tạo Hợp đồng dự thảo với trạng thái PENDING_CHECKIN
+        // Snapshot thông tin bất biến của khách hàng vào Hợp đồng
+        Account customerAccount = accountRepository.findAccountByAccountId(request.getAccountId()).orElse(null);
+        String custFullName = (customerAccount != null && customerAccount.getFullName() != null) ? customerAccount.getFullName() : "";
+        String custPhone = (customerAccount != null && customerAccount.getPhone() != null) ? customerAccount.getPhone() : "";
+        String custEmail = (customerAccount != null && customerAccount.getEmail() != null) ? customerAccount.getEmail() : "";
+        String custIdNum = customerProfileRepository.findByAccountId(request.getAccountId())
+                .map(CustomerProfile::getIdentityNumber)
+                .orElse("");
+
         Contract contract = new Contract();
         contract.setReservationId(reservation.getReservationId());
         contract.setStatus("INITIATED");
+        contract.setSignedFullName(custFullName);
+        contract.setSignedPhone(custPhone);
+        contract.setSignedEmail(custEmail);
+        contract.setSignedIdentityNumber(custIdNum);
+        contract.setContractPdfUrl("/uploads/contracts/" + contractCode + ".pdf");
         contract = contractRepository.save(contract);
 
         // Tạo Hóa đơn tiền cọc (Payment): DEP-[Mã Hợp Đồng]

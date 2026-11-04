@@ -36,6 +36,21 @@ public class Contract {
     @Column(length = 100)
     private String refundAccountName;
 
+    @Column(length = 100)
+    private String signedFullName;
+
+    @Column(length = 50)
+    private String signedIdentityNumber;
+
+    @Column(length = 20)
+    private String signedPhone;
+
+    @Column(length = 255)
+    private String signedEmail;
+
+    @Column(length = 255)
+    private String contractPdfUrl;
+
     public Contract() {
     }
 
@@ -127,5 +142,45 @@ public class Contract {
 
     public void setRefundAccountName(String refundAccountName) {
         this.refundAccountName = refundAccountName;
+    }
+
+    public String getSignedFullName() {
+        return signedFullName;
+    }
+
+    public void setSignedFullName(String signedFullName) {
+        this.signedFullName = signedFullName;
+    }
+
+    public String getSignedIdentityNumber() {
+        return signedIdentityNumber;
+    }
+
+    public void setSignedIdentityNumber(String signedIdentityNumber) {
+        this.signedIdentityNumber = signedIdentityNumber;
+    }
+
+    public String getSignedPhone() {
+        return signedPhone;
+    }
+
+    public void setSignedPhone(String signedPhone) {
+        this.signedPhone = signedPhone;
+    }
+
+    public String getSignedEmail() {
+        return signedEmail;
+    }
+
+    public void setSignedEmail(String signedEmail) {
+        this.signedEmail = signedEmail;
+    }
+
+    public String getContractPdfUrl() {
+        return contractPdfUrl;
+    }
+
+    public void setContractPdfUrl(String contractPdfUrl) {
+        this.contractPdfUrl = contractPdfUrl;
     }
 }

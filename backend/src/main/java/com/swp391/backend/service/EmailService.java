@@ -47,6 +47,14 @@ public class EmailService {
         }
     }
 
+    // Helper: Tải template HTML từ thư mục templates/email/
+    private String loadTemplate(String templateName) throws IOException {
+        ClassPathResource resource = new ClassPathResource("templates/email/" + templateName);
+        try (InputStream input = resource.getInputStream()) {
+            return new String(input.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
     // 1. Send plain text email
     public boolean sendTextEmail(String to, String subject, String content) {
         try {
@@ -134,11 +142,7 @@ public class EmailService {
             return;
         }
 
-        String template;
-        ClassPathResource resource = new ClassPathResource("templates/email/check-in-completion.html");
-        try (InputStream input = resource.getInputStream()) {
-            template = new String(input.readAllBytes(), StandardCharsets.UTF_8);
-        }
+        String template = loadTemplate("check-in-completion.html");
 
         String safeCustomerName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
         String safeCitizenId = (citizenId != null && !citizenId.isBlank()) ? citizenId.trim() : "Đã xác thực CCCD";
@@ -224,67 +228,14 @@ public class EmailService {
         String displayName = (recipientName != null && !recipientName.isBlank()) ? recipientName.trim() : "Quý khách";
         String subject = "[Smart Self Storage] Mã xác thực OTP cho " + purpose;
 
-        String html = """
-                <!DOCTYPE html>
-                <html lang="vi">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>%s</title>
-                </head>
-                <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
-                    <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 40px 20px;">
-                        <tr>
-                            <td align="center">
-                                <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
-                                    <!-- Header -->
-                                    <tr>
-                                        <td style="background: linear-gradient(135deg, #1e3a8a 0%%, #2563eb 100%%); padding: 32px 30px; text-align: center;">
-                                            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 0.5px;">SMART SELF STORAGE</h1>
-                                            <p style="color: #bfdbfe; margin: 6px 0 0 0; font-size: 13px; font-weight: 500;">Hệ thống lưu trữ thông minh &amp; tiện ích</p>
-                                        </td>
-                                    </tr>
-                                    <!-- Body -->
-                                    <tr>
-                                        <td style="padding: 36px 32px;">
-                                            <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6;">Xin chào <strong>%s</strong>,</p>
-                                            <p style="margin: 0 0 24px 0; font-size: 14px; line-height: 1.6; color: #475569;">
-                                                Bạn đang thực hiện thao tác <strong>%s</strong> trên hệ thống Smart Self Storage. Dưới đây là mã xác thực OTP của bạn:
-                                            </p>
-                                            
-                                            <!-- OTP Card -->
-                                            <div style="background: #f0f7ff; border: 2px dashed #3b82f6; border-radius: 16px; padding: 24px 20px; text-align: center; margin-bottom: 24px;">
-                                                <span style="display: block; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #1d4ed8; letter-spacing: 1.5px; margin-bottom: 8px;">MÃ XÁC THỰC OTP (HIỆU LỰC 5 PHÚT)</span>
-                                                <div style="font-family: 'Courier New', Courier, monospace; font-size: 38px; font-weight: 900; letter-spacing: 10px; color: #1e40af; margin: 0;">%s</div>
-                                            </div>
-
-                                            <div style="background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 14px 16px; margin-bottom: 24px;">
-                                                <p style="margin: 0; font-size: 12px; color: #92400e; line-height: 1.5;">
-                                                    ⚠️ <strong>Lưu ý bảo mật:</strong> Tuyệt đối không cung cấp mã OTP này cho bất kỳ ai, bao gồm cả nhân viên hỗ trợ Smart Storage, để bảo vệ tài khoản và tài sản lưu trữ của bạn.
-                                                </p>
-                                            </div>
-
-                                            <p style="margin: 0; font-size: 13px; color: #64748b; line-height: 1.5;">
-                                                Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email hoặc liên hệ tổng đài hỗ trợ của chúng tôi ngay lập tức.
-                                            </p>
-                                        </td>
-                                    </tr>
-                                    <!-- Footer -->
-                                    <tr>
-                                        <td style="background-color: #f1f5f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e2e8f0;">
-                                            <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: 600;">Hệ thống lưu kho tự quản Smart Self Storage</p>
-                                            <p style="margin: 4px 0 0 0; font-size: 11px; color: #94a3b8;">Email hỗ trợ: hotro@smartstorage.vn | Hotline: 1900 8899</p>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                </body>
-                </html>
-                """.formatted(subject, displayName, purpose, otpCode);
-
         try {
+            String template = loadTemplate("otp-verification.html");
+            String html = template
+                    .replace("{{subject}}", escapeHtml(subject))
+                    .replace("{{displayName}}", escapeHtml(displayName))
+                    .replace("{{purpose}}", escapeHtml(purpose))
+                    .replace("{{otpCode}}", escapeHtml(otpCode));
+
             sendHtmlEmail(toEmail.trim(), subject, html);
             return true;
         } catch (Exception e) {
@@ -325,111 +276,19 @@ public class EmailService {
 
         String subject = "[Smart Self Storage] Xác nhận đặt cọc giữ chỗ thành công - Mã HĐ: " + displayCode;
 
-        String html = """
-                <!DOCTYPE html>
-                <html lang="vi">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>%s</title>
-                </head>
-                <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
-                    <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 40px 20px;">
-                        <tr>
-                            <td align="center">
-                                <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
-                                    <!-- Header -->
-                                    <tr>
-                                        <td style="background: linear-gradient(135deg, #059669 0%%, #10b981 100%%); padding: 32px 30px; text-align: center;">
-                                            <div style="display: inline-block; background: rgba(255,255,255,0.2); border-radius: 50%%; width: 48px; height: 48px; line-height: 48px; margin-bottom: 12px; font-size: 24px;">✓</div>
-                                            <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px;">ĐẶT CỌC GIỮ CHỖ THÀNH CÔNG</h1>
-                                            <p style="color: #d1fae5; margin: 6px 0 0 0; font-size: 13px; font-weight: 500;">Ô kho của bạn đã được bảo lưu thành công</p>
-                                        </td>
-                                    </tr>
-                                    <!-- Body -->
-                                    <tr>
-                                        <td style="padding: 36px 32px;">
-                                            <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6;">Kính gửi <strong>%s</strong>,</p>
-                                            <p style="margin: 0 0 24px 0; font-size: 14px; line-height: 1.6; color: #475569;">
-                                                Smart Self Storage xin trân trọng thông báo: Giao dịch thanh toán tiền cọc giữ chỗ của bạn đã được hệ thống ghi nhận thành công. Ô kho lưu trữ đã được khóa giữ chỗ độc quyền cho bạn.
-                                            </p>
-                                            
-                                            <!-- Mã Hợp Đồng nổi bật -->
-                                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 24px;">
-                                                <span style="display: block; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b; letter-spacing: 1px; margin-bottom: 6px;">MÃ HỢP ĐỒNG / CHECK-IN</span>
-                                                <div style="font-family: 'Courier New', Courier, monospace; font-size: 24px; font-weight: 900; color: #0f172a; letter-spacing: 2px;">%s</div>
-                                                <span style="display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 700; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; padding: 3px 10px; border-radius: 20px;">Trạng thái: CHỜ CHECK-IN</span>
-                                            </div>
-
-                                            <!-- Chi tiết ô kho -->
-                                            <h3 style="font-size: 14px; font-weight: 700; text-transform: uppercase; color: #334155; margin: 0 0 12px 0; letter-spacing: 0.5px;">Chi tiết đơn đặt giữ chỗ:</h3>
-                                            <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="border: 1px solid #f1f5f9; border-radius: 12px; margin-bottom: 24px; font-size: 13px;">
-                                                <tr style="background: #f8fafc;">
-                                                    <td style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; color: #64748b; width: 45%%;">Mã ô kho:</td>
-                                                    <td style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #0f172a; text-align: right;">%s</td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Cơ sở lưu kho:</td>
-                                                    <td style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #0f172a; text-align: right;">%s</td>
-                                                </tr>
-                                                <tr style="background: #f8fafc;">
-                                                    <td style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Ngày nhận kho (Check-in):</td>
-                                                    <td style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #2563eb; text-align: right;">%s</td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Hạn trả kho (Check-out):</td>
-                                                    <td style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #4f46e5; text-align: right;">%s</td>
-                                                </tr>
-                                                <tr style="background: #f8fafc;">
-                                                    <td style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Tiền thuê dự kiến:</td>
-                                                    <td style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #0f172a; text-align: right;">%s</td>
-                                                </tr>
-                                                <tr style="background: #ecfdf5;">
-                                                    <td style="padding: 12px 14px; font-weight: 700; color: #065f46;">Tiền cọc đã thanh toán:</td>
-                                                    <td style="padding: 12px 14px; font-weight: 800; color: #047857; text-align: right; font-size: 15px;">%s</td>
-                                                </tr>
-                                            </table>
-
-                                            <!-- Hướng dẫn nhận kho -->
-                                            <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 16px; border-radius: 0 12px 12px 0; margin-bottom: 24px;">
-                                                <h4 style="margin: 0 0 6px 0; font-size: 13px; font-weight: 700; color: #065f46;">📌 Hướng dẫn làm thủ tục Check-in tại quầy:</h4>
-                                                <p style="margin: 0; font-size: 13px; color: #166534; line-height: 1.5;">
-                                                    Khi đến cơ sở vào ngày hẹn nhận kho, quý khách vui lòng xuất trình <strong>Mã hợp đồng (%s)</strong> hoặc Số điện thoại đăng ký cho nhân viên lễ tân để ký thỏa thuận thuê kho và nhận quyền truy cập mở ô kho (mã PIN).
-                                                </p>
-                                            </div>
-
-                                            <p style="margin: 0; font-size: 13px; color: #64748b; line-height: 1.5;">
-                                                Bạn có thể đăng nhập vào ứng dụng Smart Storage bất cứ lúc nào để kiểm tra chi tiết hợp đồng hoặc yêu cầu hỗ trợ.
-                                            </p>
-                                        </td>
-                                    </tr>
-                                    <!-- Footer -->
-                                    <tr>
-                                        <td style="background-color: #f1f5f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e2e8f0;">
-                                            <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: 600;">Hệ thống lưu kho thông minh Smart Self Storage</p>
-                                            <p style="margin: 4px 0 0 0; font-size: 11px; color: #94a3b8;">Email hỗ trợ: hotro@smartstorage.vn | Hotline: 1900 8899</p>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                </body>
-                </html>
-                """.formatted(
-                subject,
-                displayName,
-                displayCode,
-                displayUnit,
-                displayFacility,
-                formattedStart,
-                formattedEnd,
-                formattedRental,
-                formattedDeposit,
-                displayCode
-        );
-
         try {
+            String template = loadTemplate("deposit-success.html");
+            String html = template
+                    .replace("{{subject}}", escapeHtml(subject))
+                    .replace("{{displayName}}", escapeHtml(displayName))
+                    .replace("{{displayCode}}", escapeHtml(displayCode))
+                    .replace("{{displayUnit}}", escapeHtml(displayUnit))
+                    .replace("{{displayFacility}}", escapeHtml(displayFacility))
+                    .replace("{{formattedStart}}", escapeHtml(formattedStart))
+                    .replace("{{formattedEnd}}", escapeHtml(formattedEnd))
+                    .replace("{{formattedRental}}", escapeHtml(formattedRental))
+                    .replace("{{formattedDeposit}}", escapeHtml(formattedDeposit));
+
             sendHtmlEmail(toEmail.trim(), subject, html);
             return true;
         } catch (Exception e) {
@@ -438,6 +297,7 @@ public class EmailService {
         }
     }
 
+    // --- 6. Gửi email xác nhận hoàn tất hoàn trả tiền cọc (BR-35) ---
     public boolean sendRefundConfirmationEmail(String toEmail, String customerName, String contractCode, BigDecimal amount, String receiptUrl, String transactionCode) {
         if (toEmail == null || toEmail.isBlank()) return false;
         try {
@@ -448,38 +308,88 @@ public class EmailService {
             String safeReceipt = (receiptUrl != null && !receiptUrl.isBlank()) ? receiptUrl.trim() : null;
 
             String subject = "[Smart Self Storage] Xác nhận hoàn tất hoàn tiền cọc - HĐ: " + safeCode;
-            StringBuilder html = new StringBuilder();
-            html.append("<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">");
-            html.append("<div style=\"background-color: #2563eb; color: #ffffff; padding: 18px; border-radius: 8px; text-align: center;\">");
-            html.append("<h2 style=\"margin: 0; font-size: 20px;\">SMART SELF STORAGE</h2>");
-            html.append("<p style=\"margin: 4px 0 0 0; font-size: 14px;\">Biên lai xác nhận hoàn trả tiền cọc (BR-35)</p>");
-            html.append("</div>");
-            html.append("<div style=\"padding: 20px 0; color: #1e293b; line-height: 1.6;\">");
-            html.append("<p>Xin chào <strong>").append(escapeHtml(safeName)).append("</strong>,</p>");
-            html.append("<p>Bộ phận Quản lý / Kế toán Smart Self Storage đã hoàn tất đối soát và thực hiện lệnh chuyển khoản hoàn trả tiền cọc cho hợp đồng của Quý khách theo đúng quy định tại <strong>BR-35</strong>.</p>");
-            html.append("<div style=\"background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; margin: 16px 0;\">");
-            html.append("<p style=\"margin: 6px 0;\"><strong>Mã hợp đồng:</strong> <span style=\"color: #2563eb; font-weight: bold;\">").append(escapeHtml(safeCode)).append("</span></p>");
-            html.append("<p style=\"margin: 6px 0;\"><strong>Số tiền hoàn trả:</strong> <span style=\"color: #16a34a; font-weight: bold; font-size: 16px;\">").append(escapeHtml(safeAmount)).append("</span></p>");
-            html.append("<p style=\"margin: 6px 0;\"><strong>Mã tham chiếu / Giao dịch:</strong> ").append(escapeHtml(safeTxn)).append("</p>");
-            html.append("<p style=\"margin: 6px 0;\"><strong>Ngày quyết toán:</strong> ").append(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))).append("</p>");
-            html.append("</div>");
-            if (safeReceipt != null) {
-                html.append("<p style=\"margin: 16px 0 8px 0; font-weight: bold;\">Ảnh chứng từ / Biên lai chuyển khoản:</p>");
-                html.append("<p><a href=\"").append(escapeHtml(safeReceipt)).append("\" target=\"_blank\" style=\"display: inline-block; padding: 10px 18px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px;\">Xem ảnh chứng từ chuyển khoản</a></p>");
-            }
-            html.append("<p style=\"margin-top: 20px; font-size: 13px; color: #64748b;\">Tiền sẽ được ghi có vào tài khoản ngân hàng của Quý khách theo thời gian xử lý liên ngân hàng (thường trong vòng 24 giờ).</p>");
-            html.append("<p style=\"margin: 0; font-size: 13px; color: #64748b;\">Cảm ơn Quý khách đã tin tưởng và sử dụng dịch vụ của Smart Self Storage!</p>");
-            html.append("</div>");
-            html.append("<div style=\"border-top: 1px solid #e2e8f0; padding-top: 12px; font-size: 12px; color: #64748b; text-align: center;\">");
-            html.append("<p style=\"margin: 0;\">Smart Self Storage System - Hệ thống kho lưu trữ tự phục vụ thông minh 24/7</p>");
-            html.append("<p style=\"margin: 4px 0 0 0; font-size: 11px; color: #94a3b8;\">Hotline hỗ trợ: 1900 8899 | Email: hotro@smartstorage.vn</p>");
-            html.append("</div>");
-            html.append("</div>");
 
-            sendHtmlEmail(toEmail.trim(), subject, html.toString());
+            String receiptHtml = "";
+            if (safeReceipt != null) {
+                receiptHtml = "<p style=\"margin: 16px 0 8px 0; font-weight: bold;\">Ảnh chứng từ / Biên lai chuyển khoản:</p>"
+                        + "<p><a href=\"" + escapeHtml(safeReceipt) + "\" target=\"_blank\" style=\"display: inline-block; padding: 10px 18px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px;\">Xem ảnh chứng từ chuyển khoản</a></p>";
+            }
+
+            String template = loadTemplate("refund-confirmation.html");
+            String html = template
+                    .replace("{{safeName}}", escapeHtml(safeName))
+                    .replace("{{safeCode}}", escapeHtml(safeCode))
+                    .replace("{{safeAmount}}", escapeHtml(safeAmount))
+                    .replace("{{safeTxn}}", escapeHtml(safeTxn))
+                    .replace("{{settlementDate}}", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                    .replace("{{receiptHtml}}", receiptHtml);
+
+            sendHtmlEmail(toEmail.trim(), subject, html);
             return true;
         } catch (Exception e) {
             log.error("Không thể gửi email xác nhận hoàn cọc tới {}: {}", toEmail, e.getMessage());
+            return false;
+        }
+    }
+
+    // --- 7. Gửi email nhắc sắp hết hạn hợp đồng thuê kho trước 3 ngày (BR-27) ---
+    public boolean sendExpiryReminderEmail(String toEmail, String customerName, String contractCode, String unitCode, String facilityName, String endDate, long daysLeft) {
+        if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
+            return false;
+        }
+        try {
+            String safeName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
+            String safeCode = (contractCode != null && !contractCode.isBlank()) ? contractCode.trim() : "---";
+            String safeUnit = (unitCode != null && !unitCode.isBlank()) ? unitCode.trim() : "---";
+            String safeFacility = (facilityName != null && !facilityName.isBlank()) ? facilityName.trim() : "Hệ thống Smart Self Storage";
+            String safeEnd = (endDate != null && !endDate.isBlank()) ? endDate.trim() : "Sắp tới";
+
+            String subject = "[Smart Self Storage] Nhắc hạn thuê kho - Hợp đồng " + safeCode + " sắp hết hạn sau " + daysLeft + " ngày";
+
+            String template = loadTemplate("expiry-reminder.html");
+            String html = template
+                    .replace("{{displayName}}", escapeHtml(safeName))
+                    .replace("{{contractCode}}", escapeHtml(safeCode))
+                    .replace("{{unitCode}}", escapeHtml(safeUnit))
+                    .replace("{{facilityName}}", escapeHtml(safeFacility))
+                    .replace("{{endDate}}", escapeHtml(safeEnd))
+                    .replace("{{daysLeft}}", String.valueOf(daysLeft));
+
+            sendHtmlEmail(toEmail.trim(), subject, html);
+            return true;
+        } catch (Exception e) {
+            log.error("Không thể gửi email nhắc hạn tới {}: {}", toEmail, e.getMessage());
+            return false;
+        }
+    }
+
+    // --- 8. Gửi email cảnh báo quá hạn hợp đồng & nguy cơ thanh lý (BR-30, BR-32) ---
+    public boolean sendOverdueWarningEmail(String toEmail, String customerName, String contractCode, String unitCode, String facilityName, long overdueDays, BigDecimal totalPenalty) {
+        if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
+            return false;
+        }
+        try {
+            String safeName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
+            String safeCode = (contractCode != null && !contractCode.isBlank()) ? contractCode.trim() : "---";
+            String safeUnit = (unitCode != null && !unitCode.isBlank()) ? unitCode.trim() : "---";
+            String safeFacility = (facilityName != null && !facilityName.isBlank()) ? facilityName.trim() : "Hệ thống Smart Self Storage";
+            String formattedPenalty = totalPenalty != null ? NumberFormat.getInstance(Locale.of("vi", "VN")).format(totalPenalty) + " VNĐ" : "50.000 VNĐ";
+
+            String subject = "[Smart Self Storage - CẢNH BÁO] Hợp đồng " + safeCode + " quá hạn ngày thứ " + overdueDays;
+
+            String template = loadTemplate("overdue-warning.html");
+            String html = template
+                    .replace("{{displayName}}", escapeHtml(safeName))
+                    .replace("{{contractCode}}", escapeHtml(safeCode))
+                    .replace("{{unitCode}}", escapeHtml(safeUnit))
+                    .replace("{{facilityName}}", escapeHtml(safeFacility))
+                    .replace("{{overdueDays}}", String.valueOf(overdueDays))
+                    .replace("{{totalPenalty}}", escapeHtml(formattedPenalty));
+
+            sendHtmlEmail(toEmail.trim(), subject, html);
+            return true;
+        } catch (Exception e) {
+            log.error("Không thể gửi email cảnh báo quá hạn tới {}: {}", toEmail, e.getMessage());
             return false;
         }
     }
