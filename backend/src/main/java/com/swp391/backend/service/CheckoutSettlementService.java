@@ -33,6 +33,7 @@ public class CheckoutSettlementService {
     private final StaffShiftService staffShiftService;
         private final EmailService emailService;
     private final CustomerProfileRepository customerProfileRepository;
+    private final ImageStorageService imageStorageService;
 
     public CheckoutSettlementService(ContractRepository contractRepository,
                                    ReservationRepository reservationRepository,
@@ -47,7 +48,8 @@ public class CheckoutSettlementService {
                                    AccountRepository accountRepository,
                                    StaffShiftService staffShiftService,
                                    EmailService emailService,
-                                   CustomerProfileRepository customerProfileRepository) {
+                                   CustomerProfileRepository customerProfileRepository,
+                                   ImageStorageService imageStorageService) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -62,6 +64,7 @@ public class CheckoutSettlementService {
         this.staffShiftService = staffShiftService;
                 this.emailService = emailService;
         this.customerProfileRepository = customerProfileRepository;
+        this.imageStorageService = imageStorageService;
     }
 
     /**
@@ -193,6 +196,9 @@ public class CheckoutSettlementService {
         Integer staffFacilityId = staffShiftService.requireOnDutyFacility(staffAccountId);
         if (request == null || !request.isConfirmInspection()) {
             return CheckoutConfirmResponse.error("Bắt buộc phải tích xác nhận biên bản kiểm tra thực tế theo quy định trước khi hoàn tất!");
+        }
+        if (request.getInspectionImageIds() == null || request.getInspectionImageIds().isEmpty()) {
+            return CheckoutConfirmResponse.error("Cần tải ảnh nghiệm thu lên trước khi chốt biên bản.");
         }
 
         Optional<Contract> contractOpt = contractRepository.findById(contractId);
@@ -446,6 +452,10 @@ public class CheckoutSettlementService {
         resp.setGatePinDisabled(true);
         resp.setTicketResolved(ticketResolved);
 
+        List<StoredImage> inspectionImages = imageStorageService.attachCheckoutImages(
+                contract.getContractId(), request.getInspectionImageIds(), staffAccountId);
+        resp.setInspectionImages(imageStorageService.toResponses(inspectionImages));
+
         return resp;
     }
 
@@ -675,6 +685,7 @@ public class CheckoutSettlementService {
             item.setRefundedAt(p.getPaidAt());
             item.setTransactionCode(p.getTransactionCode());
             item.setEvidenceUrl(p.getReceiptUrl());
+            item.setReceiptImageUrl(imageStorageService.getRefundReceiptUrl(p.getPaymentId()));
 
             result.add(item);
         }

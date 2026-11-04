@@ -18,6 +18,17 @@
 
 USE smart_storage;
 
+-- Bảo đảm có đủ ca chuẩn; seed này cũng an toàn khi chạy lại.
+INSERT INTO Shift (shiftName, startTime, endTime, status)
+SELECT 'Ca Sáng', '08:00:00', '12:00:00', 'ACTIVE' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Shift WHERE shiftName = 'Ca Sáng');
+INSERT INTO Shift (shiftName, startTime, endTime, status)
+SELECT 'Ca Chiều', '12:00:00', '16:00:00', 'ACTIVE' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Shift WHERE shiftName = 'Ca Chiều');
+INSERT INTO Shift (shiftName, startTime, endTime, status)
+SELECT 'Ca Tối', '16:00:00', '20:00:00', 'ACTIVE' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Shift WHERE shiftName = 'Ca Tối');
+
 SET @today_vn = IFNULL(DATE(CONVERT_TZ(NOW(), @@session.time_zone, '+07:00')), CURDATE());
 SET @week_start = DATE_SUB(@today_vn, INTERVAL WEEKDAY(@today_vn) DAY);  -- thứ Hai tuần này
 SET @week_end = DATE_ADD(@week_start, INTERVAL 27 DAY);                   -- chủ nhật của tuần thứ 4
@@ -25,8 +36,11 @@ SET @week_end = DATE_ADD(@week_start, INTERVAL 27 DAY);                   -- ch�
 -- 1. Ghi đè: xóa lịch CHƯA diễn ra (SCHEDULED) của 3 ca chính trong khoảng ngày.
 --    Giữ nguyên ca đã vào / đã xong (ATTENDED, COMPLETED, ABSENT) để không mất lịch sử làm việc.
 DELETE FROM StaffShift
-WHERE workDate BETWEEN @week_start AND @week_end
-  AND shiftId IN (1, 2, 3)
+WHERE staffShiftId > 0
+  AND workDate BETWEEN @week_start AND @week_end
+  AND shiftId IN (
+      SELECT shiftId FROM Shift WHERE shiftName IN ('Ca Sáng', 'Ca Chiều', 'Ca Tối')
+  )
   AND status = 'SCHEDULED';
 
 -- 2. Xếp lịch nền: mỗi cơ sở mỗi ca 1 người, mọi ngày trong khoảng.
@@ -44,8 +58,13 @@ ranked AS (
     JOIN Account a ON a.accountId = ep.accountId
     WHERE a.roleId = 4 AND a.status = 'ACTIVE' AND ep.facilityId IS NOT NULL
 )
-SELECT r.employeeId, r.facilityId, r.pos AS shiftId, d.workDate, 'SCHEDULED'
+SELECT r.employeeId, r.facilityId, s.shiftId, d.workDate, 'SCHEDULED'
 FROM ranked r
+JOIN Shift s ON s.shiftName = CASE r.pos
+    WHEN 1 THEN 'Ca Sáng'
+    WHEN 2 THEN 'Ca Chiều'
+    WHEN 3 THEN 'Ca Tối'
+END
 JOIN days d
 WHERE r.pos BETWEEN 1 AND 3
   -- Ca đó trong ngày đó đã có người vào ca rồi (ATTENDED...) thì không chèn thêm người thứ 2
@@ -62,6 +81,9 @@ SELECT f.facilityCode,
        MAX(s.workDate) AS den_ngay
 FROM StaffShift s
 JOIN Facility f ON f.facilityId = s.facilityId
-WHERE s.workDate BETWEEN @week_start AND @week_end AND s.shiftId IN (1, 2, 3)
+WHERE s.workDate BETWEEN @week_start AND @week_end
+  AND s.shiftId IN (
+      SELECT shiftId FROM Shift WHERE shiftName IN ('Ca Sáng', 'Ca Chiều', 'Ca Tối')
+  )
 GROUP BY f.facilityCode
 ORDER BY f.facilityCode;

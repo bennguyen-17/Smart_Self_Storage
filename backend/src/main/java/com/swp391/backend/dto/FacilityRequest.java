@@ -1,5 +1,7 @@
 package com.swp391.backend.dto;
 
+import java.util.Map;
+
 public class FacilityRequest {
     private String facilityName;
     private String facilityCode; // HN-03, HCM-04, ...
@@ -11,6 +13,7 @@ public class FacilityRequest {
     private Boolean isAllClimate;
     private String managerName;
     private String managerPhone;
+    private Map<String, Integer> images;
 
     public FacilityRequest() {
     }
@@ -100,5 +103,13 @@ public class FacilityRequest {
 
     public void setManagerPhone(String managerPhone) {
         this.managerPhone = managerPhone;
+    }
+
+    public Map<String, Integer> getImages() {
+        return images;
+    }
+
+    public void setImages(Map<String, Integer> images) {
+        this.images = images;
     }
 }

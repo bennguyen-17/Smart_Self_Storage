@@ -1,0 +1,39 @@
+package com.swp391.backend.dto;
+
+import com.swp391.backend.entity.StoredImage;
+
+import java.time.LocalDateTime;
+
+public class StoredImageResponse {
+    private Integer imageId;
+    private Integer typeCode;
+    private String category;
+    private String url;
+    private String originalFileName;
+    private String contentType;
+    private Long fileSize;
+    private LocalDateTime uploadedAt;
+    private String uploadedBy;
+
+    public StoredImageResponse(StoredImage image, String uploadedBy) {
+        this.imageId = image.getImageId();
+        this.typeCode = image.getTypeCode();
+        this.category = image.getCategory();
+        this.url = "/api/images/" + image.getImageId();
+        this.originalFileName = image.getOriginalFileName();
+        this.contentType = image.getContentType();
+        this.fileSize = image.getFileSize();
+        this.uploadedAt = image.getUploadedAt();
+        this.uploadedBy = uploadedBy;
+    }
+
+    public Integer getImageId() { return imageId; }
+    public Integer getTypeCode() { return typeCode; }
+    public String getCategory() { return category; }
+    public String getUrl() { return url; }
+    public String getOriginalFileName() { return originalFileName; }
+    public String getContentType() { return contentType; }
+    public Long getFileSize() { return fileSize; }
+    public LocalDateTime getUploadedAt() { return uploadedAt; }
+    public String getUploadedBy() { return uploadedBy; }
+}

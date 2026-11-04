@@ -45,7 +45,8 @@ public class CheckoutSettlementController {
             @AuthenticationPrincipal Integer staffAccountId) {
 
         try {
-            CheckoutConfirmResponse response = checkoutSettlementService.confirmCheckout(contractId, request, staffAccountId);
+            CheckoutConfirmResponse response = checkoutSettlementService.confirmCheckout(
+                    contractId, request, staffAccountId);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }

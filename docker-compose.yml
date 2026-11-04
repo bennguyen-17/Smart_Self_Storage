@@ -28,8 +28,11 @@ services:
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/smart_storage?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&useUnicode=true"
       SPRING_DATASOURCE_USERNAME: "root"
       SPRING_DATASOURCE_PASSWORD: "rootpassword"
+      APP_UPLOAD_DIR: "/app/uploads"
     ports:
       - "8080:8080"
+    volumes:
+      - backend-uploads:/app/uploads
     networks:
       - smart-storage-net
 
@@ -48,6 +51,7 @@ services:
 
 volumes:
   mysql-data:
+  backend-uploads:
 
 networks:
   smart-storage-net:

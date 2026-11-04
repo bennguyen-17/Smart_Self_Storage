@@ -31,28 +31,34 @@ public class ForfeitProcessingService {
     private final FloorRepository floorRepository;
     private final EmployeeProfileRepository employeeProfileRepository;
     private final ActivityLogRepository activityLogRepository;
+    private final ImageStorageService imageStorageService;
 
     public ForfeitProcessingService(ContractRepository contractRepository,
                                     ReservationRepository reservationRepository,
                                     StorageUnitRepository storageUnitRepository,
                                     FloorRepository floorRepository,
                                     EmployeeProfileRepository employeeProfileRepository,
-                                    ActivityLogRepository activityLogRepository) {
+                                    ActivityLogRepository activityLogRepository,
+                                    ImageStorageService imageStorageService) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
         this.floorRepository = floorRepository;
         this.employeeProfileRepository = employeeProfileRepository;
         this.activityLogRepository = activityLogRepository;
+        this.imageStorageService = imageStorageService;
     }
 
     @Transactional
-    public void markProcessed(Integer contractId, String note, Integer managerAccountId) {
+    public void markProcessed(Integer contractId, String note, java.util.List<Integer> evidenceImageIds, Integer managerAccountId) {
         if (note == null || note.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ghi chú xử lý tài sản là bắt buộc.");
         }
         if (managerAccountId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+        if (evidenceImageIds == null || evidenceImageIds.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cần tải lên minh chứng thanh lý trước khi xác nhận.");
         }
 
         EmployeeProfile manager = employeeProfileRepository.findByAccountId(managerAccountId)
@@ -77,6 +83,8 @@ public class ForfeitProcessingService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Hợp đồng không thuộc cơ sở của Manager.");
         }
+
+        imageStorageService.attachForfeitEvidence(contractId, evidenceImageIds, managerAccountId);
 
         LocalDateTime processedAt = LocalDateTime.now(VIETNAM_ZONE);
         unit.setStatus("MAINTENANCE");
