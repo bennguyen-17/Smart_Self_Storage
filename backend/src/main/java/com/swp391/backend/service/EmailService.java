@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Locale;
@@ -442,6 +443,73 @@ public class EmailService {
             return true;
         } catch (Exception e) {
             log.error("Không thể gửi email cảnh báo quá hạn tới {}: {}", toEmail, e.getMessage());
+            return false;
+        }
+    }
+
+    // --- 9. Gửi email cảnh báo đăng nhập bất thường & khóa tài khoản 15 phút (BR-03) ---
+    public boolean sendSecurityAlertEmail(String toEmail, String customerName, String ipAddress, LocalDateTime lockUntil) {
+        if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
+            return false;
+        }
+        try {
+            String safeName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
+            String safeIp = (ipAddress != null && !ipAddress.isBlank()) ? ipAddress.trim() : "Không xác định";
+            String timeStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy"));
+            String unlockStr = lockUntil != null
+                    ? lockUntil.format(DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy"))
+                    : LocalDateTime.now().plusMinutes(15).format(DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy"));
+
+            String subject = "[Smart Self Storage - CẢNH BÁO BẢO MẬT] Phát hiện đăng nhập bất thường vào tài khoản";
+
+            String template = loadTemplate("security-alert.html");
+            String html = template
+                    .replace("{{displayName}}", escapeHtml(safeName))
+                    .replace("{{time}}", escapeHtml(timeStr))
+                    .replace("{{ipAddress}}", escapeHtml(safeIp))
+                    .replace("{{unlockTime}}", escapeHtml(unlockStr));
+
+            sendHtmlEmail(toEmail.trim(), subject, html);
+            return true;
+        } catch (Exception e) {
+            log.error("Không thể gửi email cảnh báo bảo mật tới {}: {}", toEmail, e.getMessage());
+            return false;
+        }
+    }
+
+    // --- 10. Gửi email xác nhận gia hạn hợp đồng thành công (BR-29) ---
+    public boolean sendRenewalSuccessEmail(String toEmail, String customerName, String contractCode, String unitCode,
+                                          String facilityName, int effectiveDays, LocalDate newExpiryDate,
+                                          String invoiceNumber, BigDecimal amount) {
+        if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
+            return false;
+        }
+        try {
+            String safeName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
+            String safeCode = (contractCode != null && !contractCode.isBlank()) ? contractCode.trim() : "---";
+            String safeUnit = (unitCode != null && !unitCode.isBlank()) ? unitCode.trim() : "---";
+            String safeFacility = (facilityName != null && !facilityName.isBlank()) ? facilityName.trim() : "Hệ thống Smart Self Storage";
+            String newExpStr = newExpiryDate != null ? newExpiryDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "---";
+            String safeInv = (invoiceNumber != null && !invoiceNumber.isBlank()) ? invoiceNumber.trim() : "---";
+            String formattedAmount = amount != null ? NumberFormat.getInstance(Locale.of("vi", "VN")).format(amount) : "0";
+
+            String subject = "[Smart Self Storage] Gia hạn thành công hợp đồng " + safeCode;
+
+            String template = loadTemplate("renewal-success.html");
+            String html = template
+                    .replace("{{customerName}}", escapeHtml(safeName))
+                    .replace("{{contractCode}}", escapeHtml(safeCode))
+                    .replace("{{unitCode}}", escapeHtml(safeUnit))
+                    .replace("{{facilityName}}", escapeHtml(safeFacility))
+                    .replace("{{effectiveDays}}", String.valueOf(effectiveDays))
+                    .replace("{{newExpiryDate}}", escapeHtml(newExpStr))
+                    .replace("{{invoiceNumber}}", escapeHtml(safeInv))
+                    .replace("{{amount}}", escapeHtml(formattedAmount));
+
+            sendHtmlEmail(toEmail.trim(), subject, html);
+            return true;
+        } catch (Exception e) {
+            log.error("Không thể gửi email gia hạn thành công tới {}: {}", toEmail, e.getMessage());
             return false;
         }
     }

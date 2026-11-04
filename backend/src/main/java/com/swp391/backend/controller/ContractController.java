@@ -1,4 +1,4 @@
-package com.swp391.backend.controller;
+﻿package com.swp391.backend.controller;
 
 import com.swp391.backend.entity.*;
 import com.swp391.backend.dto.CustomerCancelReservationRequest;
@@ -55,6 +55,7 @@ public class ContractController {
     private final SupportTicketRepository supportTicketRepository;
     private final NoShowCronService noShowCronService;
     private final ImageStorageService imageStorageService;
+    private final com.swp391.backend.service.EmailService emailService;
     @Value("${app.upload.contract-dir:uploads/contracts}")
     private String contractUploadDir;
 
@@ -75,7 +76,8 @@ public class ContractController {
                               GatePinService gatePinService,
                               SupportTicketRepository supportTicketRepository,
                               NoShowCronService noShowCronService,
-                              ImageStorageService imageStorageService) {
+                              ImageStorageService imageStorageService,
+                              com.swp391.backend.service.EmailService emailService) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -94,6 +96,7 @@ public class ContractController {
         this.supportTicketRepository = supportTicketRepository;
         this.noShowCronService = noShowCronService;
         this.imageStorageService = imageStorageService;
+        this.emailService = emailService;
     }
 
     @GetMapping("/contracts/my-contracts")
@@ -678,6 +681,35 @@ public class ContractController {
                 contractCode, res.getUnitCode(), effectiveDays, packageLabel, newExpiry, invoiceNumber));
         activityLog.setCreatedAt(LocalDateTime.now());
         activityLogRepository.save(activityLog);
+
+        // BR-29: Gửi email xác nhận gia hạn hợp đồng trực tuyến thành công
+        try {
+            if (res.getAccountId() != null) {
+                accountRepository.findById(res.getAccountId()).ifPresent(acc -> {
+                    String customerName = null;
+                    Optional<CustomerProfile> cp = customerProfileRepository.findByAccountId(acc.getAccountId());
+                    if (cp.isPresent() && cp.get().getFullName() != null) {
+                        customerName = cp.get().getFullName();
+                    }
+                    String facilityName = facilityRepository.findById(res.getFacilityId())
+                            .map(Facility::getFacilityName)
+                            .orElse("Smart Self Storage");
+                    emailService.sendRenewalSuccessEmail(
+                            acc.getEmail(),
+                            customerName,
+                            contractCode,
+                            res.getUnitCode(),
+                            facilityName,
+                            effectiveDays,
+                            newExpiry,
+                            invoiceNumber,
+                            finalTotal
+                    );
+                });
+            }
+        } catch (Exception e) {
+            log.error("Không thể gửi email xác nhận gia hạn hợp đồng {}: {}", contractCode, e.getMessage());
+        }
 
         Map<String, Object> resp = new HashMap<>();
         resp.put("success", true);
