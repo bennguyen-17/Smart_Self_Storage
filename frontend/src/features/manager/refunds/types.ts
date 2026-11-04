@@ -26,7 +26,10 @@ export interface ManagerRefund {
   issuedAt: string
   refundedAt?: string | null
   transactionCode?: string | null
+  /** Link biên lai cũ (dán tay) */
   evidenceUrl?: string | null
+  /** Ảnh biên lai do hệ thống lưu ("/api/images/{id}"), cần token để xem */
+  receiptImageUrl?: string | null
   confirmedByName?: string | null
 }
 
@@ -37,7 +40,9 @@ export interface RefundFilter {
   state: RefundState | "ALL"
 }
 
+/** Gửi ảnh biên lai (receiptImageId, cách chính) hoặc link biên lai (dự phòng); BE nhận một trong hai */
 export interface ConfirmRefundPayload {
-  evidenceUrl: string
+  receiptImageId?: number | null
+  evidenceUrl?: string
   transactionRef?: string
 }

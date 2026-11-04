@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { BanknoteIcon, ExternalLinkIcon, TriangleAlertIcon } from "lucide-react"
+import { BanknoteIcon, ExternalLinkIcon, ImageIcon, TriangleAlertIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -15,6 +15,8 @@ import {
   TableCard,
 } from "@/components/internal/components/PanelKit"
 import { usePagedRows } from "@/components/internal/usePagedRows"
+import AuthImage from "@/components/internal/images/AuthImage"
+import { isExternalUrl } from "@/components/internal/images/imageApi"
 import RefundConfirmForm from "./RefundConfirmForm"
 import { useAsyncData } from "@/hooks/useAsyncData"
 import { formatDateTime, formatVnd } from "@/lib/format"
@@ -42,6 +44,8 @@ function RefundsPanel() {
   const [reloadCount, setReloadCount] = useState(0)
   const [filter, setFilter] = useState<RefundFilter>(EMPTY_FILTER)
   const [selected, setSelected] = useState<ManagerRefund | null>(null)
+  // Ảnh biên lai do hệ thống lưu cần token: xem trong hộp thoại thay vì mở tab mới (tab mới không có token → 403)
+  const [viewingReceipt, setViewingReceipt] = useState<ManagerRefund | null>(null)
   const { data, error, isLoading } = useAsyncData(`refunds:${filter.state}#${reloadCount}`, () =>
     listRefunds(filter.state)
   )
@@ -170,6 +174,15 @@ function RefundsPanel() {
                   >
                     Xác nhận đã hoàn
                   </Button>
+                ) : receiptViewUrl(r) ? (
+                  <button
+                    type="button"
+                    onClick={() => setViewingReceipt(r)}
+                    aria-label={`Xem ảnh biên lai phiếu ${r.invoiceNumber}`}
+                    className="inline-flex cursor-pointer items-center gap-1 font-semibold whitespace-nowrap text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    <ImageIcon aria-hidden="true" className="size-3" /> Biên lai
+                  </button>
                 ) : r.evidenceUrl ? (
                   <a
                     href={r.evidenceUrl}
@@ -189,7 +202,7 @@ function RefundsPanel() {
       {!isLoading && <Pagination {...pagination} unit="phiếu hoàn" />}
 
       <Dialog open={selected !== null} onOpenChange={(open) => !open && setSelected(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogContent className="portal-dialog max-h-[90vh] overflow-y-auto sm:max-w-lg">
           {selected && (
             <>
               <DialogHeader>
@@ -210,8 +223,30 @@ function RefundsPanel() {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={viewingReceipt !== null} onOpenChange={(open) => !open && setViewingReceipt(null)}>
+        <DialogContent className="portal-dialog gap-3 sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Biên lai phiếu {viewingReceipt?.invoiceNumber}</DialogTitle>
+            <DialogDescription>
+              {viewingReceipt?.customerName ?? "Khách hàng"} · {viewingReceipt ? formatVnd(viewingReceipt.refundAmount) : ""}
+              {viewingReceipt?.refundedAt ? ` · hoàn lúc ${formatDateTime(viewingReceipt.refundedAt)}` : ""}
+            </DialogDescription>
+          </DialogHeader>
+          {viewingReceipt && receiptViewUrl(viewingReceipt) && (
+            <AuthImage url={receiptViewUrl(viewingReceipt)!} alt="Ảnh biên lai chuyển khoản" className="max-h-[70vh] w-full rounded-xl object-contain" />
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   )
+}
+
+/** Ảnh biên lai do hệ thống lưu (cần token): ưu tiên receiptImageUrl, hoặc evidenceUrl nội bộ "/api/images/…". Link ngoài trả null */
+function receiptViewUrl(r: ManagerRefund): string | null {
+  if (r.receiptImageUrl) return r.receiptImageUrl
+  if (r.evidenceUrl && !isExternalUrl(r.evidenceUrl)) return r.evidenceUrl
+  return null
 }
 
 export default RefundsPanel

@@ -149,7 +149,7 @@ function CustomersPanel() {
       {!isLoading && <Pagination {...pagination} unit="khách hàng" />}
 
       <Dialog open={unlocking !== null} onOpenChange={(open) => !open && !busy && setUnlocking(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="portal-dialog sm:max-w-md">
           {unlocking && (
             <>
               <DialogHeader>

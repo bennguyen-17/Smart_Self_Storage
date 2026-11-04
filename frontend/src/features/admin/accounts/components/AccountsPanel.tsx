@@ -268,7 +268,7 @@ function AccountsPanel() {
       )}
 
       <Dialog open={dialog !== null} onOpenChange={(open) => !open && setDialog(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="portal-dialog sm:max-w-md">
           {dialog?.kind === "create" && (
             <AccountForm
               mode="create"

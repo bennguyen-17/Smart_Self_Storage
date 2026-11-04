@@ -36,10 +36,10 @@ describe("contractApi: gộp cách viết trạng thái hủy", () => {
 
 describe("contractApi: xác nhận đã xử lý tài sản", () => {
   test("POST đúng đường dẫn, ghi chú đã bỏ khoảng trắng thừa, kèm header cơ sở", async () => {
-    await markForfeitProcessed(CTX, 203, "  Đã cắt khóa, có camera  ")
+    await markForfeitProcessed(CTX, 203, "  Đã cắt khóa, có camera  ", [41, 42])
     expect(http.post).toHaveBeenCalledWith(
       "/manager/contracts/203/forfeit-processed",
-      { note: "Đã cắt khóa, có camera" },
+      { note: "Đã cắt khóa, có camera", evidenceImageIds: [41, 42] },
       { headers: { "X-Facility-Id": "1", "X-Account-Id": "3" } }
     )
   })

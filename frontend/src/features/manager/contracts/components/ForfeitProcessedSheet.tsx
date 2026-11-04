@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { AlertTriangleIcon, GavelIcon, LinkIcon } from "lucide-react"
+import { AlertTriangleIcon, GavelIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -11,11 +11,16 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import type { ManagerContext } from "@/features/manager/units/types"
 import { readableError } from "@/components/internal/readableError"
-import { EVIDENCE_URL_MAX, isValidEvidenceLink } from "@/features/manager/refunds/refundRules"
+import ImagePicker, { type PickedImage } from "@/components/internal/images/ImagePicker"
+import { IMAGE_MAX_PER_ACTION } from "@/components/internal/images/imageApi"
 import { formatDate, formatVnd } from "@/lib/format"
 
 import { markForfeitProcessed } from "../api/contractApi"
+import { FORFEIT_NOTE_MAX } from "../contractRules"
 import type { FacilityContract } from "../types"
+
+/** BE bắt buộc ghi chú; Manager không gõ thì dùng câu mặc định */
+export const DEFAULT_FORFEIT_NOTE = "Đã cắt khóa niêm phong và thanh lý tài sản theo quy định quá hạn 30 ngày."
 
 function ForfeitProcessedSheet({
   contract,
@@ -28,31 +33,26 @@ function ForfeitProcessedSheet({
   onClose: () => void
   onDone: (message: string) => void
 }) {
-  const [imageUrl, setImageUrl] = useState("")
-  const [showErrors, setShowErrors] = useState(false)
+  const [images, setImages] = useState<PickedImage[]>([])
+  const [note, setNote] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
-  // Bắt buộc link ảnh thật (http/https): ghi chú thanh lý là minh chứng, không nhận chữ tùy ý
-  const linkOk = isValidEvidenceLink(imageUrl)
-  // Gõ link sai thì báo ngay (nút xác nhận đang khóa nên không đợi bấm mới báo)
-  const imageError = imageUrl.trim()
-    ? linkOk
-      ? null
-      : `Link ảnh phải bắt đầu bằng http:// hoặc https:// và tối đa ${EVIDENCE_URL_MAX} ký tự`
-    : showErrors
-      ? "Vui lòng dán đường link ảnh hiện trường tài sản hoặc biên bản thanh lý"
-      : null
-  const isFormValid = linkOk
+  // Cô chốt: thanh lý phải có minh chứng rõ ràng → bắt buộc ít nhất 1 ảnh (BE cũng kiểm tra)
+  const noteTooLong = note.trim().length > FORFEIT_NOTE_MAX
+  const isFormValid = images.length > 0 && !noteTooLong
 
   async function submit() {
-    setShowErrors(true)
-    if (!linkOk) return
+    if (!isFormValid) return
     setSubmitting(true)
     setServerError(null)
     try {
-      const fullNote = `Đã cắt khóa niêm phong và thanh lý tài sản. Ảnh bằng chứng: ${imageUrl.trim()}`
-      await markForfeitProcessed(ctx, contract.contractId, fullNote)
+      await markForfeitProcessed(
+        ctx,
+        contract.contractId,
+        note.trim() || DEFAULT_FORFEIT_NOTE,
+        images.map((i) => i.imageId)
+      )
       onDone(`Đã xác nhận thanh lý tài sản hợp đồng ${contract.contractCode}`)
     } catch (err) {
       setServerError(readableError(err))
@@ -63,7 +63,7 @@ function ForfeitProcessedSheet({
 
   return (
     <Dialog open onOpenChange={(open) => !open && !submitting && onClose()}>
-      <DialogContent className="max-w-xl max-h-[92vh] overflow-y-auto rounded-3xl p-6 sm:max-w-xl shadow-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900 gap-5">
+      <DialogContent className="portal-dialog max-w-xl max-h-[92vh] overflow-y-auto rounded-3xl p-6 sm:max-w-xl shadow-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900 gap-5">
         {/* Header */}
         <div className="flex items-start gap-3.5 border-b border-slate-100 pb-4 dark:border-slate-800">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
@@ -115,39 +115,29 @@ function ForfeitProcessedSheet({
           </div>
         </div>
 
-        {/* Input link ảnh */}
-        <div className="space-y-1.5">
-          <label htmlFor="forfeit-image" className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-            <LinkIcon className="size-3.5 text-slate-500" />
-            <span>Đường link ảnh tài sản / biên bản thanh lý</span>
-            <span className="text-rose-500">*</span>
-          </label>
-          <input
-            id="forfeit-image"
-            type="url"
-            value={imageUrl}
+        {/* Ảnh minh chứng (bắt buộc) + ghi chú */}
+        <ImagePicker
+          label="Ảnh minh chứng thanh lý (cắt khóa, niêm phong, tài sản)"
+          category="FORFEIT_EVIDENCE"
+          max={IMAGE_MAX_PER_ACTION}
+          value={images}
+          onChange={setImages}
+          disabled={submitting}
+        />
+        <label className="block space-y-1 text-xs font-bold">
+          <span className="text-title">Ghi chú xử lý tài sản (không bắt buộc)</span>
+          <textarea
+            value={note}
             disabled={submitting}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://... Dán link ảnh hiện trường cắt khóa hoặc biên bản thanh lý"
-            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 shadow-2xs focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+            onChange={(e) => setNote(e.target.value)}
+            rows={2}
+            placeholder={DEFAULT_FORFEIT_NOTE}
+            className="inner-box text-title w-full rounded-xl border px-3 py-2 text-xs font-normal outline-none focus:ring-2 focus:ring-rose-500/20"
           />
-          {imageError && (
-            <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">{imageError}</p>
+          {noteTooLong && (
+            <span className="block text-[11px] font-semibold text-rose-600 dark:text-rose-400">Ghi chú tối đa {FORFEIT_NOTE_MAX} ký tự</span>
           )}
-
-          {imageUrl.trim().startsWith("http") && (
-            <div className="mt-2 relative h-36 w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950 flex items-center justify-center">
-              <img
-                src={imageUrl.trim()}
-                alt="Ảnh tài sản thanh lý"
-                className="h-full w-full object-contain"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = "none"
-                }}
-              />
-            </div>
-          )}
-        </div>
+        </label>
 
         {serverError && (
           <p role="alert" className="[overflow-wrap:anywhere] rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
