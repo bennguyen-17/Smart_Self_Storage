@@ -195,8 +195,8 @@ public class NoShowCronService {
             if (reservation == null || reservation.getEndDate() == null) continue;
 
             long daysLeft = java.time.temporal.ChronoUnit.DAYS.between(today, reservation.getEndDate());
-            // Nhắc hạn trước đúng 3 ngày (đồng bộ quét 00:00 giờ Việt Nam)
-            if (daysLeft == 3) {
+            // Nhắc hạn trước đúng 3 ngày và trước 1 ngày (đồng bộ quét 00:00 giờ Việt Nam)
+            if (daysLeft == 3 || daysLeft == 1) {
                 String contractCode = reservation.getReservationCode() != null
                         ? reservation.getReservationCode()
                         : "CTR-" + contract.getContractId();
@@ -219,13 +219,13 @@ public class NoShowCronService {
                 if (activityLogRepository != null) {
                     ActivityLog activityLog = new ActivityLog();
                     activityLog.setAccountId(reservation.getAccountId());
-                    activityLog.setAction("EXPIRY_REMINDER_T3");
-                    activityLog.setDescription(String.format("Hệ thống tự động gửi email nhắc hạn hợp đồng %s (ô %s) sắp hết hạn sau 3 ngày (hạn: %s).",
-                            contractCode, reservation.getUnitCode(), reservation.getEndDate()));
+                    activityLog.setAction("EXPIRY_REMINDER_T" + daysLeft);
+                    activityLog.setDescription(String.format("Hệ thống tự động gửi email nhắc hạn hợp đồng %s (ô %s) sắp hết hạn sau %d ngày (hạn: %s).",
+                            contractCode, reservation.getUnitCode(), daysLeft, reservation.getEndDate()));
                     activityLog.setCreatedAt(LocalDateTime.now());
                     activityLogRepository.save(activityLog);
                 }
-                log.info("Sent 3-day expiry reminder email for contract #{} (unit {}, daysLeft=3)", contract.getContractId(), reservation.getUnitCode());
+                log.info("Sent {}-day expiry reminder email for contract #{} (unit {}, daysLeft={})", daysLeft, contract.getContractId(), reservation.getUnitCode(), daysLeft);
                 count++;
             }
         }

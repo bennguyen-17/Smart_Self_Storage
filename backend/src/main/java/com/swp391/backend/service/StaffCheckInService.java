@@ -69,6 +69,7 @@ public class StaffCheckInService {
     private final GatePinService gatePinService;
     private final EmailService emailService;
     private final StaffShiftService staffShiftService;
+    private final ContractPdfService contractPdfService;
 
     public StaffCheckInService(
             ReservationRepository reservationRepository,
@@ -84,7 +85,8 @@ public class StaffCheckInService {
             UnitTypeRepository unitTypeRepository,
             GatePinService gatePinService,
             EmailService emailService,
-            StaffShiftService staffShiftService) {
+            StaffShiftService staffShiftService,
+            ContractPdfService contractPdfService) {
         this.reservationRepository = reservationRepository;
         this.contractRepository = contractRepository;
         this.paymentRepository = paymentRepository;
@@ -99,6 +101,7 @@ public class StaffCheckInService {
         this.gatePinService = gatePinService;
         this.emailService = emailService;
         this.staffShiftService = staffShiftService;
+        this.contractPdfService = contractPdfService;
     }
 
     @Transactional
@@ -234,6 +237,13 @@ public class StaffCheckInService {
         storageUnitRepository.save(unit);
 
         GatePinResult gatePin = gatePinService.generatePin(contract);
+
+        // Tự động sinh PDF hợp đồng chính thức và lưu vào đĩa
+        try {
+            contractPdfService.generateAndSaveContractPdf(contract, reservation, unit, gatePin.getPin());
+        } catch (Exception ex) {
+            log.error("Lỗi khi tự động sinh PDF hợp đồng check-in: {}", ex.getMessage());
+        }
 
         writeActivityLog(staffAccountId, "STAFF_RESERVATION_CHECK_IN",
                 "RES " + reservation.getReservationCode() + " (id=" + reservationId

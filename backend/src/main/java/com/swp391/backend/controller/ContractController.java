@@ -56,6 +56,7 @@ public class ContractController {
     private final NoShowCronService noShowCronService;
     private final ImageStorageService imageStorageService;
     private final com.swp391.backend.service.EmailService emailService;
+    private final com.swp391.backend.service.ContractPdfService contractPdfService;
     @Value("${app.upload.contract-dir:uploads/contracts}")
     private String contractUploadDir;
 
@@ -77,7 +78,8 @@ public class ContractController {
                               SupportTicketRepository supportTicketRepository,
                               NoShowCronService noShowCronService,
                               ImageStorageService imageStorageService,
-                              com.swp391.backend.service.EmailService emailService) {
+                              com.swp391.backend.service.EmailService emailService,
+                              com.swp391.backend.service.ContractPdfService contractPdfService) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -97,6 +99,7 @@ public class ContractController {
         this.noShowCronService = noShowCronService;
         this.imageStorageService = imageStorageService;
         this.emailService = emailService;
+        this.contractPdfService = contractPdfService;
     }
 
     @GetMapping("/contracts/my-contracts")
@@ -796,6 +799,20 @@ public class ContractController {
         }
 
         if (!Files.exists(pdfPath)) {
+            if (contractOpt.isPresent()) {
+                try {
+                    byte[] generatedBytes = contractPdfService.generateAndSaveContractPdf(contractOpt.get());
+                    if (generatedBytes != null && generatedBytes.length > 0) {
+                        HttpHeaders headers = new HttpHeaders();
+                        headers.setContentType(MediaType.APPLICATION_PDF);
+                        headers.setContentDisposition(org.springframework.http.ContentDisposition.inline().filename(fileName).build());
+                        headers.setContentLength(generatedBytes.length);
+                        return ResponseEntity.ok().headers(headers).body(generatedBytes);
+                    }
+                } catch (Exception ex) {
+                    log.error("Lỗi khi tự động tạo file PDF hợp đồng {} theo yêu cầu: {}", fileName, ex.getMessage());
+                }
+            }
             log.warn("Không tìm thấy file PDF hợp đồng: {} (đường dẫn: {})", fileName, pdfPath);
             return ResponseEntity.notFound().build();
         }
