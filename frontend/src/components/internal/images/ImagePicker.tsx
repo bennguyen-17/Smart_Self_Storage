@@ -124,18 +124,24 @@ function ImagePicker({
               e.target.value = ""
             }}
           />
-          {/* Nhãn mang kiểu nút: bấm vào là mở hộp chọn file của ô input ẩn */}
+          {/* Nhãn mang kiểu nút: có viền nét đứt rõ ràng dễ nhận diện click */}
           <label
             htmlFor={inputId}
             aria-disabled={disabled || uploading > 0}
-            className={buttonVariants({
-              variant: "outline",
-              size: "sm",
-              className: "cursor-pointer aria-disabled:pointer-events-none aria-disabled:opacity-50",
-            })}
+            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/80 hover:bg-slate-100 hover:border-blue-500 hover:text-blue-600 dark:bg-slate-800/60 dark:hover:bg-slate-800 dark:hover:border-blue-400 py-3 px-4 text-xs font-semibold text-slate-700 dark:text-slate-200 transition shadow-2xs hover:shadow-xs active:scale-[0.99] aria-disabled:pointer-events-none aria-disabled:opacity-50"
           >
-            {uploading > 0 ? <Spinner /> : <ImagePlusIcon aria-hidden="true" />}
-            {uploading > 0 ? `Đang tải ${uploading} ảnh…` : value.length === 0 ? "Tải ảnh lên" : "Thêm ảnh"}
+            {uploading > 0 ? (
+              <Spinner className="size-4" />
+            ) : (
+              <ImagePlusIcon aria-hidden="true" className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
+            )}
+            <span>
+              {uploading > 0
+                ? `Đang tải ${uploading} ảnh…`
+                : value.length === 0
+                  ? "Tải ảnh lên (hoặc click để chọn file)"
+                  : "Thêm ảnh khác"}
+            </span>
           </label>
         </>
       )}

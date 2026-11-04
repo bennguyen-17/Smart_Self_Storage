@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { BanknoteIcon, ExternalLinkIcon, ImageIcon, TriangleAlertIcon } from "lucide-react"
+import { ExternalLinkIcon, ImageIcon, ReceiptTextIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -26,7 +26,6 @@ import {
   bankAccountLabel,
   filterRefunds,
   hoursWaiting,
-  pendingSummary,
   REFUND_SLA_HOURS,
   REFUND_STATE_LABEL,
   refundReasonLabel,
@@ -52,7 +51,6 @@ function RefundsPanel() {
   const all = data ?? []
   const rows = filterRefunds(all, filter)
   const { slice, pagination } = usePagedRows(rows, JSON.stringify(filter))
-  const summary = pendingSummary(all)
   const update = (patch: Partial<RefundFilter>) => setFilter((f) => ({ ...f, ...patch }))
 
   function handleConfirmed() {
@@ -85,21 +83,7 @@ function RefundsPanel() {
         />
       </FilterBar>
 
-      {!isLoading && summary.count > 0 && (
-        <p role="status" className="card-box flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border px-4 py-3 text-xs">
-          <BanknoteIcon aria-hidden="true" className="size-4 text-amber-600 dark:text-amber-400" />
-          <span className="text-title font-bold">
-            {summary.count} phiếu chờ hoàn · tổng {formatVnd(summary.amount)}
-          </span>
-          {summary.late > 0 && (
-            <span className="flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400">
-              <TriangleAlertIcon aria-hidden="true" className="size-3.5" />
-              {summary.late} phiếu đã chờ quá {REFUND_SLA_HOURS} giờ
-            </span>
-          )}
-          <span className="text-muted">Cam kết hoàn trong 24–48 giờ làm việc.</span>
-        </p>
-      )}
+      
 
       <ResultCount shown={rows.length} total={all.length} unit="phiếu hoàn" isLoading={isLoading} />
 
@@ -205,12 +189,27 @@ function RefundsPanel() {
         <DialogContent className="portal-dialog max-h-[90vh] overflow-y-auto sm:max-w-lg">
           {selected && (
             <>
-              <DialogHeader>
-                <DialogTitle>Hoàn tiền phiếu {selected.invoiceNumber}</DialogTitle>
-                <DialogDescription>
-                  {selected.customerName ?? "Khách hàng"} · {refundReasonLabel(selected)} · {formatVnd(selected.refundAmount)}.
-                  Chuyển khoản cho khách qua Internet Banking, sau đó đính kèm biên lai để xác nhận.
-                </DialogDescription>
+              <DialogHeader className="border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-500/20">
+                    <ReceiptTextIcon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <DialogTitle className="text-base font-bold text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
+                      Hoàn tiền phiếu <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-bold">{selected.invoiceNumber}</span>
+                    </DialogTitle>
+                    <DialogDescription className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      {selected.contractCode ? (
+                        <>
+                          Hợp đồng: <span className="font-mono font-semibold text-slate-700 dark:text-slate-200">{selected.contractCode}</span>
+                          {selected.unitCode ? ` (Kho ${selected.unitCode})` : ""} 
+                        </>
+                      ) : (
+                        "Đính kèm ảnh biên lai chuyển khoản ngân hàng để hoàn tất thủ tục."
+                      )}
+                    </DialogDescription>
+                  </div>
+                </div>
               </DialogHeader>
               <RefundConfirmForm
                 paymentId={selected.paymentId}

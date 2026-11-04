@@ -64,6 +64,8 @@ function formatTicketTimeInfo(ticket: TicketItem) {
     return { text: "—", className: "text-slate-400 font-medium" }
   }
 
+  const formattedDate = ticket.desiredDate ? formatDate(ticket.desiredDate) : ""
+
   if (ticket.type === "EARLY_TERMINATION") {
     let isTodayOrPast = true
     if (ticket.desiredDate) {
@@ -83,8 +85,8 @@ function formatTicketTimeInfo(ticket: TicketItem) {
     return {
       text: ticket.desiredDate
         ? isTodayOrPast
-          ? `Đã đến hẹn: ${ticket.desiredDate}`
-          : `Hẹn ngày: ${ticket.desiredDate}`
+          ? `Đã đến hẹn: ${formattedDate}`
+          : `Hẹn ngày: ${formattedDate}`
         : "Hẹn Hôm Nay",
       className: isTodayOrPast
         ? "border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 font-medium"
@@ -94,7 +96,7 @@ function formatTicketTimeInfo(ticket: TicketItem) {
 
   if (ticket.desiredDate) {
     return {
-      text: `Hẹn: ${ticket.desiredDate}`,
+      text: `Hẹn: ${formattedDate}`,
       className: "border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 font-medium",
     }
   }
@@ -107,8 +109,9 @@ function formatTicketTimeInfo(ticket: TicketItem) {
         const mm = String(d.getMinutes()).padStart(2, "0")
         const dd = String(d.getDate()).padStart(2, "0")
         const MM = String(d.getMonth() + 1).padStart(2, "0")
+        const yyyy = d.getFullYear()
         return {
-          text: `${hh}:${mm} - ${dd}/${MM}`,
+          text: `${hh}:${mm} - ${dd}/${MM}/${yyyy}`,
           className: "text-slate-600 dark:text-slate-300 font-medium",
         }
       }
@@ -496,7 +499,7 @@ function StaffTicketPanel() {
                   <th className="px-4 py-3.5 text-center whitespace-nowrap">Vị trí Ô Kho</th>
                   <th className="px-4 py-3.5 text-center whitespace-nowrap">Khách Hàng</th>
                   <th className="min-w-[220px] max-w-[380px] px-4 py-3.5 text-center whitespace-nowrap">Nội Dung Yêu Cầu</th>
-                  <th className="px-4 py-3.5 text-center whitespace-nowrap">Thời Gian / Lịch Hẹn</th>
+                  <th className="px-4 py-3.5 text-center whitespace-nowrap">Thời Gian</th>
                   <th className="px-4 py-3.5 text-center whitespace-nowrap">Trạng Thái</th>
                   <th className="px-4 py-3.5 text-center whitespace-nowrap">Thao Tác</th>
                 </tr>

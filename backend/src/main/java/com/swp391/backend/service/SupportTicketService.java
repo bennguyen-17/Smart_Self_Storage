@@ -208,9 +208,12 @@ public class SupportTicketService {
                     throw new IllegalArgumentException("Hợp đồng ô kho " + unitCode + " đang có yêu cầu trả kho sớm đang chờ xử lý (#" + existing.getTicketCode() + "). Không thể gửi thêm yêu cầu mới!");
                 }
             }
-            LocalDate minDate = LocalDate.now().plusDays(1);
-            if (desiredDate != null && desiredDate.isBefore(minDate)) {
-                throw new IllegalArgumentException("Ngày hẹn trả kho sớm phải báo trước ít nhất 1 ngày (sớm nhất là từ ngày mai " + minDate + ").");
+            if (desiredDate == null) {
+                throw new IllegalArgumentException("Vui lòng chọn ngày hẹn trả kho (phải hẹn trước ít nhất 1 ngày)!");
+            }
+            LocalDate minDate = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")).plusDays(1);
+            if (desiredDate.isBefore(minDate)) {
+                throw new IllegalArgumentException("Ngày hẹn trả kho sớm phải báo trước ít nhất 1 ngày (sớm nhất là từ ngày mai " + minDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ").");
             }
             ticket.setTitle("Yêu cầu trả kho sớm");
             ticket.setDesiredDate(desiredDate != null ? desiredDate : minDate);
@@ -376,6 +379,13 @@ public class SupportTicketService {
         ticket.setUnitCode(reservation != null ? reservation.getUnitCode() : null);
         ticket.setTitle("Yêu cầu trả kho trước hạn");
         ticket.setDescription(req.getReason());
+        if (req.getDesiredDate() == null) {
+            throw new IllegalArgumentException("Vui lòng chọn ngày hẹn trả kho (phải hẹn trước ít nhất 1 ngày)!");
+        }
+        LocalDate minEarlyDate = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")).plusDays(1);
+        if (req.getDesiredDate().isBefore(minEarlyDate)) {
+            throw new IllegalArgumentException("Ngày hẹn trả kho sớm phải báo trước ít nhất 1 ngày (sớm nhất là từ ngày mai " + minEarlyDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")!");
+        }
         ticket.setDesiredDate(req.getDesiredDate());
         ticket.setCreatedAt(LocalDateTime.now());
         ticket.setIsSlaBreached(false);

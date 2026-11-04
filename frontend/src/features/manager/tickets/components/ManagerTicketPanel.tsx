@@ -7,6 +7,7 @@ import {
   WrenchIcon,
 } from "lucide-react"
 import { cn } from "cn"
+import { formatDate } from "@/lib/format"
 import { toast } from "sonner"
 
 import { useAuth } from "@/context/AuthContext"
@@ -106,10 +107,12 @@ export default function ManagerTicketPanel() {
       )
     }
 
+    const formattedDate = ticket.desiredDate ? formatDate(ticket.desiredDate) : ""
+
     if (ticket.type === "EARLY_TERMINATION") {
       return (
         <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
-          {ticket.desiredDate ? `Hẹn: ${ticket.desiredDate}` : "Trả kho sớm"}
+          {ticket.desiredDate ? `Hẹn: ${formattedDate}` : "Trả kho sớm"}
         </span>
       )
     }
@@ -117,22 +120,22 @@ export default function ManagerTicketPanel() {
     if (ticket.desiredDate) {
       return (
         <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
-          Hẹn: {ticket.desiredDate}
+          Hẹn: ${formattedDate}
         </span>
       )
     }
 
     if (ticket.createdAt) {
-      // new Date không ném lỗi; chuỗi sai cho ra ngày không hợp lệ (NaN) thì rơi xuống "—"
       const d = new Date(ticket.createdAt)
       if (!isNaN(d.getTime())) {
         const hh = String(d.getHours()).padStart(2, "0")
         const mm = String(d.getMinutes()).padStart(2, "0")
         const dd = String(d.getDate()).padStart(2, "0")
         const MM = String(d.getMonth() + 1).padStart(2, "0")
+        const yyyy = d.getFullYear()
         return (
           <span className="text-slate-600 dark:text-slate-300 text-xs font-medium">
-            {hh}:{mm} - {dd}/{MM}
+            ${hh}:${mm} - ${dd}/${MM}/${yyyy}
           </span>
         )
       }
@@ -246,7 +249,7 @@ export default function ManagerTicketPanel() {
                 <th className="px-4 py-3.5 text-center whitespace-nowrap">Vị trí / Ô Kho</th>
                 <th className="px-4 py-3.5 text-center whitespace-nowrap">Khách Hàng</th>
                 <th className="min-w-[220px] max-w-[360px] px-4 py-3.5 text-center whitespace-nowrap">Nội Dung Yêu Cầu</th>
-                <th className="px-4 py-3.5 text-center whitespace-nowrap">Thời Gian / Lịch Hẹn</th>
+                <th className="px-4 py-3.5 text-center whitespace-nowrap">Thời Gian</th>
                 <th className="px-4 py-3.5 text-center whitespace-nowrap">Trạng Thái</th>
                 <th className="px-4 py-3.5 text-center whitespace-nowrap">Người Phụ Trách</th>
                 <th className="px-4 py-3.5 text-center whitespace-nowrap">Tiến Độ Xử Lý</th>

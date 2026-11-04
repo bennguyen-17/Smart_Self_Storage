@@ -77,6 +77,24 @@ public class DepositService {
             return DepositInitiateResponse.error("Ô kho này hiện không ở trạng thái trống (có thể đã được người khác giữ chỗ hoặc đang bảo trì)!");
         }
 
+        // BR-17: Giới hạn ngày nhận kho từ hôm nay đến 7 ngày tới. Nếu sau 20:00 (hết ca trực) thì khóa ngày hôm nay, chỉ cho phép từ ngày mai.
+        LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+        java.time.LocalTime nowTime = java.time.LocalTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+        LocalDate minStartDate = (nowTime.getHour() >= 20) ? today.plusDays(1) : today;
+        LocalDate maxStartDate = today.plusDays(7);
+
+        if (request.getStartDate() != null) {
+            if (request.getStartDate().isBefore(minStartDate)) {
+                if (nowTime.getHour() >= 20 && request.getStartDate().isEqual(today)) {
+                    return DepositInitiateResponse.error("Đã quá 20:00 (hết giờ phục vụ của nhân viên tại quầy). Quý khách vui lòng chọn ngày nhận kho từ ngày mai!");
+                }
+                return DepositInitiateResponse.error("Ngày nhận kho không hợp lệ (sớm nhất là " + minStartDate.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")!");
+            }
+            if (request.getStartDate().isAfter(maxStartDate)) {
+                return DepositInitiateResponse.error("Ngày nhận kho chỉ được chọn trong vòng 7 ngày tới (tối đa đến " + maxStartDate.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")!");
+            }
+        }
+
         // Tính toán tiền thuê & tiền cọc chuẩn BR: <30 ngày là DAILY, >=30 ngày là MONTHLY
         long days = 30;
         if (request.getStartDate() != null && request.getEndDate() != null) {

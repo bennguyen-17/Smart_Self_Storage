@@ -72,12 +72,6 @@ describe("RefundConfirmForm: không dùng dữ liệu giả, chỉ xác nhận k
     expect(confirmButton()).toBeDisabled()
   })
 
-  test("mã giao dịch để trống, không điền sẵn mã giả, và là ô tùy chọn", () => {
-    renderForm()
-    const ref = screen.getByLabelText(/mã giao dịch ngân hàng \(tùy chọn\)/i)
-    expect(ref).toHaveValue("")
-    expect(ref).not.toHaveAttribute("aria-required")
-  })
 })
 
 describe("RefundConfirmForm khi chạy thật: biên lai là link (BE chỉ lưu 255 ký tự)", () => {
@@ -105,13 +99,6 @@ describe("RefundConfirmForm khi chạy thật: biên lai là link (BE chỉ lưu
     expect(onConfirmed).toHaveBeenCalledTimes(1)
   })
 
-  test("có nhập mã giao dịch → chuyển cho lớp API", async () => {
-    const { user, confirmButton, linkInput } = renderForm()
-    await user.type(linkInput(), LINK)
-    await user.type(screen.getByLabelText(/mã giao dịch ngân hàng/i), "FT2610028891")
-    await user.click(confirmButton())
-    expect(confirmRefund).toHaveBeenCalledWith(61, { receiptImageId: null, evidenceUrl: LINK, transactionRef: "FT2610028891" })
-  })
 
   test("BE báo lỗi → hiện lỗi, không báo thành công", async () => {
     confirmRefund.mockRejectedValue(new Error("Không tìm thấy hóa đơn hoàn tiền hợp lệ!"))

@@ -99,7 +99,7 @@ export default function ContractDetailModal({
               </div>
               <div>
                 <span className="text-[11px] font-bold tracking-wider uppercase text-slate-500 dark:text-slate-400">
-                  MÃ HỢP ĐỒNG / GIỮ CHỖ
+                  MÃ HỢP ĐỒNG
                 </span>
                 <h3 className="font-mono font-bold text-base sm:text-lg text-slate-900 dark:text-white">
                   {contractCode}
@@ -186,7 +186,7 @@ export default function ContractDetailModal({
             <div className="p-3.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/50 flex items-start gap-2.5 text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
               <i className="fa-solid fa-circle-exclamation text-blue-500 mt-0.5 shrink-0"></i>
               <span>
-                Hợp đồng thuê kho chính thức sẽ được kích hoạt và cấp tại quầy lễ tân khi Quý khách hoàn tất thủ tục nhận kho (Check-in).
+                Hợp đồng thuê kho chính thức sẽ được cấp và kích hoạt khi Quý khách hoàn tất thủ tục nhận kho.
               </span>
             </div>
           </div>

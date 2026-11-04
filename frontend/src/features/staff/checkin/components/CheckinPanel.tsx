@@ -257,6 +257,7 @@ function CheckinPanel() {
         onRetry={refresh}
         onOpenDetail={setDetailContract}
         onCheckin={(item) => navigate(`/staff/checkin/${item.reservationId}`)}
+        onCancel={setCancelContract}
         onCheckout={(item) =>
           setInspection({
             contractId: item.contractId,
