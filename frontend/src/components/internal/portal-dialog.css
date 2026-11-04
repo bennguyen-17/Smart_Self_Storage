@@ -1,0 +1,70 @@
+/*
+ * Hộp thoại của cổng Manager / Admin.
+ * Hộp thoại (Radix / Base UI) được gắn thẳng vào <body>, nằm NGOÀI khung `.staff-portal`, nên các lớp màu
+ * `.staff-portal .inner-box / .text-title / .text-muted / .card-box` trong index.css không áp dụng: ô thông tin
+ * mất nền và viền, lẫn vào nền hộp thoại. Gắn lớp `portal-dialog` lên DialogContent để dùng lại đúng bộ màu đó,
+ * và cho hộp thoại nền / viền rõ ràng để tách khỏi trang phía sau (cả sáng lẫn tối).
+ */
+
+.portal-dialog {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a;
+  box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.35) !important;
+}
+html.dark .portal-dialog {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc;
+}
+
+.portal-dialog .card-box {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+html.dark .portal-dialog .card-box {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+/* Ô thông tin bên trong: đậm hơn nền hộp thoại một bậc để nhìn ra từng ô */
+.portal-dialog .inner-box {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+html.dark .portal-dialog .inner-box {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+.portal-dialog .text-title {
+  color: #0f172a !important;
+}
+html.dark .portal-dialog .text-title {
+  color: #ffffff !important;
+}
+.portal-dialog .text-muted {
+  color: #475569 !important;
+}
+html.dark .portal-dialog .text-muted {
+  color: #94a3b8 !important;
+}
+
+.portal-dialog table thead tr {
+  background-color: #f1f5f9;
+}
+html.dark .portal-dialog table thead tr {
+  background-color: #1e293b;
+}
+.portal-dialog table,
+.portal-dialog table tr {
+  border-color: #e2e8f0;
+}
+html.dark .portal-dialog table,
+html.dark .portal-dialog table tr {
+  border-color: #334155;
+}
