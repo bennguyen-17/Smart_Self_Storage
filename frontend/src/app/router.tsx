@@ -1,10 +1,11 @@
 import React from "react"
-import { Navigate, Route, Routes, useParams } from "react-router-dom"
+import { Navigate, Route, Routes } from "react-router-dom"
 
 // Public & Landing pages
 import LandingPage from "@/features/landing/LandingPage"
 import AuthPage from "@/features/auth/AuthPage"
 import InternalLoginPage from "@/features/auth/InternalLoginPage"
+import ChangePasswordPage from "@/features/auth/ChangePasswordPage"
 import FloorPlanPage from "@/features/floorplan/FloorPlanPage"
 import PaymentResultPage from "@/features/payment/PaymentResultPage"
 
@@ -34,6 +35,7 @@ import BomPricingPage from "@/features/bom/pages/BomPricingPage"
 import BomReportsPage from "@/features/bom/pages/BomReportsPage"
 
 import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
+import PasswordChangeGuard from "@/components/auth/PasswordChangeGuard"
 import { isTokenValid } from "@/lib/http"
 
 // Route Guard độc lập cho Cổng Khách Hàng
@@ -71,6 +73,16 @@ export function AppRouter() {
       <Route path="/internal_login" element={<InternalLoginPage />} />
       <Route path="/staff-login" element={<InternalLoginPage />} />
       <Route path="/staff_login" element={<InternalLoginPage />} />
+
+      {/* Đổi mật khẩu nội bộ (bắt buộc ở lần đăng nhập đầu tiên) */}
+      <Route
+        path="/doi-mat-khau"
+        element={
+          <PasswordChangeGuard>
+            <ChangePasswordPage />
+          </PasswordChangeGuard>
+        }
+      />
 
       {/* Cổng Khách Hàng: Customer Portal */}
       <Route
