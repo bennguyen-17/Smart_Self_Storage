@@ -88,8 +88,9 @@ public class ImageStorageService {
         StoredImage previousImage = storedImageRepository
                 .findByFacilityIdAndImageSlot(facilityId, imageSlot)
                 .orElse(null);
+        String previousStoragePath = previousImage != null ? previousImage.getStoragePath() : null;
 
-        StoredImage storedImage = new StoredImage();
+        StoredImage storedImage = previousImage != null ? previousImage : new StoredImage();
         storedImage.setTypeCode(StoredImage.TYPE_FACILITY);
         storedImage.setFacilityId(facilityId);
         storedImage.setImageSlot(imageSlot);
@@ -102,7 +103,7 @@ public class ImageStorageService {
         try {
             StoredImage savedImage = storedImageRepository.saveAndFlush(storedImage);
             if (previousImage != null) {
-                deleteStoredFile(previousImage.getStoragePath());
+                deleteStoredFile(previousStoragePath);
             }
             return savedImage;
         } catch (RuntimeException ex) {
