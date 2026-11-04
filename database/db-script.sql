@@ -293,6 +293,39 @@ CREATE TABLE Contract (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
+-- 17.1. TABLE: StoredImage (Ảnh cơ sở và ảnh nghiệm thu trả kho)
+-- ----------------------------------------------------------------------------
+DROP TABLE IF EXISTS StoredImage;
+CREATE TABLE StoredImage (
+    imageId INT AUTO_INCREMENT PRIMARY KEY,
+    typeCode TINYINT NOT NULL COMMENT '1 = ảnh cấu hình cơ sở, 2 = ảnh nghiệm thu trả kho',
+    facilityId INT NULL,
+    contractId INT NULL,
+    imageSlot VARCHAR(40) NOT NULL,
+    storagePath VARCHAR(500) NOT NULL,
+    originalFileName VARCHAR(255) NOT NULL,
+    contentType VARCHAR(100) NOT NULL,
+    fileSize BIGINT UNSIGNED NOT NULL,
+    uploadedBy INT NULL COMMENT 'accountId của người tải ảnh lên',
+    uploadedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_storedimage_owner_type CHECK (
+        (typeCode = 1 AND facilityId IS NOT NULL AND contractId IS NULL
+            AND imageSlot IN ('COVER', 'ALL_UNITS', 'NORMAL_UNIT', 'CLIMATE_UNIT'))
+        OR
+        (typeCode = 2 AND contractId IS NOT NULL AND facilityId IS NULL
+            AND imageSlot = 'CHECKOUT_INSPECTION')
+    ),
+    CONSTRAINT fk_storedimage_facility FOREIGN KEY (facilityId)
+        REFERENCES Facility (facilityId) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_storedimage_contract FOREIGN KEY (contractId)
+        REFERENCES Contract (contractId) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_storedimage_uploader FOREIGN KEY (uploadedBy)
+        REFERENCES Account (accountId) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT uq_storedimage_facility_slot UNIQUE (facilityId, imageSlot),
+    INDEX idx_storedimage_contract_uploaded (contractId, uploadedAt)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------------------------------------------
 -- 18. TABLE: Payment (Hóa đơn và Giao dịch thanh toán)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Payment;
