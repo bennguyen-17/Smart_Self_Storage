@@ -435,16 +435,19 @@ export default function StoragePage() {
                   getCancelReasonLabel={getCancelReasonLabel}
                 />
 
-                {/* 3. Pagination */}
-                <StoragePagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  totalItems={totalItems}
-                  onPageChange={setCurrentPage}
-                />
               </>
             )}
           </div>
+
+          {/* 3. Pagination */}
+          {!loading && filteredContracts.length > 0 && (
+            <StoragePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              onPageChange={setCurrentPage}
+            />
+          )}
         </div>
       </motion.div>
 

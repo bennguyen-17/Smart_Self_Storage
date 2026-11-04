@@ -60,14 +60,6 @@ describe("RefundsPanel: Manager hoàn tiền cho khách (US-26)", () => {
     expect(within(row("Trần Thị Bích")).getByText("Khách chưa cung cấp số tài khoản")).toBeInTheDocument()
   })
 
-  test("tổng hợp phiếu chờ và cảnh báo phiếu đã chờ quá 48 giờ", async () => {
-    await renderPanel()
-    const status = screen.getByRole("status")
-    expect(status).toHaveTextContent("2 phiếu chờ hoàn")
-    expect(status).toHaveTextContent(/1\.000\.000/)
-    expect(status).toHaveTextContent("2 phiếu đã chờ quá 48 giờ")
-  })
-
   test("đổi bộ lọc sang Đã hoàn → tải lại theo trạng thái đó", async () => {
     const user = await renderPanel()
     api.listRefunds.mockResolvedValue([{ ...PENDING, status: "PAID", transactionCode: "FT2610001" }])

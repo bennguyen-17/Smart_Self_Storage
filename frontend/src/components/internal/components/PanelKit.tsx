@@ -225,7 +225,7 @@ export function Pagination({
   if (total === 0) return null
   const { page, totalPages } = slice
   return (
-    <nav aria-label="Phân trang" className="flex flex-wrap items-center justify-between gap-3 text-xs">
+    <nav aria-label="Phân trang" className="flex flex-wrap items-center justify-end gap-3 text-xs">
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-1">
           <Button variant="outline" size="icon-sm" aria-label="Trang trước" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>

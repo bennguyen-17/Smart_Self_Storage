@@ -281,6 +281,10 @@ public class CheckoutSettlementService {
         int randomSuffix = (int) (1000 + (Math.random() * 9000));
         String cleanBranch = branchCode.replace("-", "").toUpperCase();
 
+        String contractCode = (res.getReservationCode() != null && !res.getReservationCode().isBlank())
+                ? res.getReservationCode()
+                : String.format("CTR-%s-%s-%04d", cleanBranch, dateStr, contract.getContractId());
+
         // Nếu tiền cọc + hoàn < tổng khấu trừ -> Bị âm tiền (Khách phải nộp thêm truy thu CMP)
         String cmpInvoice = null;
         if (netAmount.compareTo(BigDecimal.ZERO) < 0) {
@@ -298,7 +302,7 @@ public class CheckoutSettlementService {
                 return resp;
             }
 
-            cmpInvoice = String.format("CMP-%s-%s-%04d", cleanBranch, dateStr, randomSuffix);
+            cmpInvoice = "CMP-" + contractCode;
 
             Payment cmpPayment = new Payment();
             cmpPayment.setContractId(contract.getContractId());
@@ -344,7 +348,7 @@ public class CheckoutSettlementService {
         // Sinh lệnh hoàn tiền REF trạng thái PENDING (chờ giải ngân trong 24-48h)
         String refInvoice = null;
         if (netAmount.compareTo(BigDecimal.ZERO) > 0) {
-            refInvoice = String.format("REF-%s-%s-%04d", cleanBranch, dateStr, randomSuffix);
+            refInvoice = "REF-" + contractCode;
             Payment refPayment = new Payment();
             refPayment.setContractId(contract.getContractId());
             refPayment.setInvoiceNumber(refInvoice);

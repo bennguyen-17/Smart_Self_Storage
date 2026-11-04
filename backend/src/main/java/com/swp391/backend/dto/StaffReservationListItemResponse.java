@@ -118,6 +118,14 @@ public class StaffReservationListItemResponse {
         this.reservationStartDate = reservationStartDate;
     }
 
+    public LocalDate getEndDate() {
+        return reservationEndDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.reservationEndDate = endDate;
+    }
+
     public LocalDate getReservationEndDate() {
         return reservationEndDate;
     }
