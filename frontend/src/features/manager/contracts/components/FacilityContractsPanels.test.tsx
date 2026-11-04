@@ -6,6 +6,11 @@ import { resetFacilityContractsMock } from "../api/contractApi.mock"
 import CustomersContractsPanel from "./CustomersContractsPanel"
 
 vi.mock("@/lib/apiClient", () => ({ default: {}, isMockMode: () => true }))
+// Ảnh hợp đồng tải kèm token: giả lập trả object URL
+vi.mock("@/components/internal/images/imageApi", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/internal/images/imageApi")>()),
+  loadImageObjectUrl: vi.fn(async (url: string) => `blob:${url}`),
+}))
 
 beforeEach(() => {
   resetFacilityContractsMock()
@@ -47,7 +52,7 @@ describe("Chi tiết hợp đồng (bấm mã hợp đồng)", () => {
     expect(within(dialog).getByText("Khách đang giữ kho (đã quá hạn)")).toBeInTheDocument()
     expect(within(dialog).getByText("Quá 12 ngày")).toBeInTheDocument()
     expect(within(dialog).getByText("Tiền cọc")).toBeInTheDocument()
-    expect(within(dialog).getByText("Trả kho:")).toBeInTheDocument()
+    expect(within(dialog).getByText("Trạng thái kho hiện tại:")).toBeInTheDocument()
 
     const fees = within(dialog).getByRole("table", { name: /phạt và truy thu/ })
     expect(within(fees).getByText("PEN-7001")).toBeInTheDocument()
@@ -78,5 +83,46 @@ describe("Chi tiết hợp đồng (bấm mã hợp đồng)", () => {
     const dialog = await screen.findByRole("dialog")
     expect(within(dialog).queryByText("Đã kết thúc")).not.toBeInTheDocument()
     expect(within(dialog).getByText(/^Còn [0-9]+ ngày$/)).toBeInTheDocument()
+  })
+
+  test("hợp đồng đã trả kho → có mục ảnh nghiệm thu Staff chụp; bấm ảnh thì phóng to", async () => {
+    const user = userEvent.setup()
+    render(<CustomersContractsPanel />)
+    const ended = (await screen.findByText("Vũ Thị Hương")).closest("tr") as HTMLElement
+    await user.click(within(ended).getByRole("button", { name: /^Xem chi tiết hợp đồng / }))
+    const dialog = await screen.findByRole("dialog")
+    const gallery = within(dialog).getByRole("list", { name: "Ảnh nghiệm thu" })
+    expect(within(gallery).getAllByRole("button")).toHaveLength(2)
+    expect(await within(gallery).findByRole("img", { name: "Ảnh nghiệm thu 1" })).toHaveAttribute("src", "blob:/api/images/901")
+    await user.click(within(gallery).getByRole("button", { name: "Xem ảnh nghiệm thu 1" }))
+    expect(await screen.findByText(/Nguyễn Văn Hùng/)).toBeInTheDocument()
+  })
+
+  test("hợp đồng đang thuê → không hiện mục ảnh nghiệm thu", async () => {
+    const user = userEvent.setup()
+    render(<CustomersContractsPanel />)
+    const active = (await screen.findByText("Nguyễn Văn An")).closest("tr") as HTMLElement
+    await user.click(within(active).getByRole("button", { name: /^Xem chi tiết hợp đồng / }))
+    const dialog = await screen.findByRole("dialog")
+    expect(within(dialog).queryByText("Ảnh nghiệm thu trả kho")).not.toBeInTheDocument()
+  })
+
+  test("từ chi tiết mở được văn bản hợp đồng pháp lý (bản dùng chung với khách, tải PDF)", async () => {
+    const user = userEvent.setup()
+    render(<CustomersContractsPanel />)
+    const row = (await screen.findByText("Nguyễn Văn An")).closest("tr") as HTMLElement
+    await user.click(within(row).getByRole("button", { name: /^Xem chi tiết hợp đồng / }))
+    await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: /xem văn bản hợp đồng/i }))
+    expect(await screen.findByText("Tải PDF")).toBeInTheDocument()
+  })
+
+  test("cột Thao tác luôn có nút Chi tiết ở mọi hàng, bấm mở ngăn chi tiết", async () => {
+    const user = userEvent.setup()
+    render(<CustomersContractsPanel />)
+    await screen.findByText("Nguyễn Văn An")
+    for (const r of bodyRows()) expect(within(r).getByRole("button", { name: /^Chi tiết hợp đồng / })).toBeInTheDocument()
+    const row = screen.getByText("Nguyễn Văn An").closest("tr") as HTMLElement
+    await user.click(within(row).getByRole("button", { name: /^Chi tiết hợp đồng / }))
+    expect(await screen.findByRole("dialog")).toHaveTextContent("Nguyễn Văn An")
   })
 })

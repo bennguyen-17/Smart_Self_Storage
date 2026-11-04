@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { CheckCircle2Icon, GavelIcon, HourglassIcon } from "lucide-react"
+import { CheckCircle2Icon, EyeIcon, GavelIcon, HourglassIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -29,13 +29,15 @@ import {
 import type { ContractStatus, FacilityContract } from "../types"
 import { ContractStatusBadge, DaysLeft } from "./ContractBadges"
 import ContractDetailModal from "@/features/customer/storage/modals/ContractDetailModal"
+import ContractDetailDialog from "./ContractDetailDialog"
 import ForfeitProcessedSheet from "./ForfeitProcessedSheet"
 
 const EMPTY_FILTER: ContractFilter = { query: "", status: "ALL", payment: "ALL", expiringSoon: false }
 
 /**
  * Manager › Quản lí hợp đồng: theo dõi khách, hợp đồng, thời hạn thuê và thanh lý tài sản quá hạn.
- * Bấm mã hợp đồng để xem chi tiết (tiền cọc, tiến độ trả kho, phạt / truy thu).
+ * Bấm mã hợp đồng để xem chi tiết vận hành (tiền cọc, tiến độ trả kho, phạt / truy thu, ảnh nghiệm thu, thanh lý);
+ * từ đó mở được văn bản hợp đồng pháp lý dùng chung với cổng khách (xuất PDF).
  */
 function CustomersContractsPanel() {
   const ctx = useMemo(() => getManagerContext(), [])
@@ -44,6 +46,8 @@ function CustomersContractsPanel() {
   const [filter, setFilter] = useState<ContractFilter>(EMPTY_FILTER)
   const [forfeiting, setForfeiting] = useState<FacilityContract | null>(null)
   const [viewing, setViewing] = useState<FacilityContract | null>(null)
+  // Văn bản hợp đồng pháp lý (dùng chung với cổng khách, xuất PDF) mở từ ngăn chi tiết
+  const [documentOf, setDocumentOf] = useState<FacilityContract | null>(null)
   const { data, error, isLoading } = useAsyncData(`contracts#${reloadCount}`, () => listFacilityContracts(ctx))
   const all = data ?? []
   const rows = filterContracts(all, filter, today)
@@ -154,7 +158,18 @@ function CustomersContractsPanel() {
                 </div>
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-center">
-                <div className="flex justify-center">
+                {/* Luôn có nút Chi tiết; thêm việc thanh lý khi hợp đồng tới bước đó */}
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 rounded-xl px-2.5 text-xs font-semibold"
+                    aria-label={`Chi tiết hợp đồng ${c.contractCode}`}
+                    onClick={() => setViewing(c)}
+                  >
+                    <EyeIcon aria-hidden="true" className="size-3.5" />
+                    Chi tiết
+                  </Button>
                   {forfeit === "READY" ? (
                     <Button
                       variant="outline"
@@ -178,9 +193,7 @@ function CustomersContractsPanel() {
                       <HourglassIcon className="size-4 shrink-0" />
                       Chờ chuyển tịch thu
                     </span>
-                  ) : (
-                    <span className="text-muted text-xs">—</span>
-                  )}
+                  ) : null}
                 </div>
               </td>
             </tr>
@@ -191,11 +204,23 @@ function CustomersContractsPanel() {
       {!isLoading && <Pagination {...pagination} unit="hợp đồng" />}
 
       {viewing && (
-        <ContractDetailModal
+        <ContractDetailDialog
+          key={viewing.contractId}
           contract={viewing}
+          today={today}
           onClose={() => setViewing(null)}
+          onForfeit={(c) => {
+            setViewing(null)
+            setForfeiting(c)
+          }}
+          onViewDocument={(c) => {
+            setViewing(null)
+            setDocumentOf(c)
+          }}
         />
       )}
+
+      {documentOf && <ContractDetailModal contract={documentOf} onClose={() => setDocumentOf(null)} />}
 
       {forfeiting && (
         <ForfeitProcessedSheet

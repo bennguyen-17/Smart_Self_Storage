@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { describe, expect, test, vi } from "vitest"
+import { beforeEach, describe, expect, test, vi } from "vitest"
 
 import { addDays, todayInVietnam } from "@/lib/format"
 
@@ -43,8 +43,32 @@ vi.mock("../api/contractApi", () => ({
   markForfeitProcessed: api.markForfeitProcessed,
 }))
 
+// Tải ảnh lên quầy chung: giả lập BE trả mã ảnh tăng dần
+const images = vi.hoisted(() => ({ uploadImage: vi.fn() }))
+vi.mock("@/components/internal/images/imageApi", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/internal/images/imageApi")>()),
+  uploadImage: images.uploadImage,
+}))
+
+beforeEach(() => {
+  let next = 40
+  images.uploadImage.mockReset().mockImplementation(async () => ({ imageId: ++next, url: `/api/images/${next}` }))
+  vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: vi.fn(() => "blob:preview"), revokeObjectURL: vi.fn() }))
+})
+
 const row = (name: string) => screen.getByText(name).closest("tr") as HTMLElement
-const LINK = "https://drive.example.com/bien-ban-thanh-ly.jpg"
+const photo = (name = "niem-phong.jpg", type = "image/jpeg", bytes = 1024) => new File([new Uint8Array(bytes)], name, { type })
+
+async function openForfeit() {
+  const user = userEvent.setup()
+  render(<CustomersContractsPanel />)
+  await screen.findByText("Khách Ba")
+  await user.click(within(row("Khách Ba")).getByRole("button", { name: /Thanh lý tài sản/ }))
+  const dialog = await screen.findByRole("dialog")
+  const confirm = within(dialog).getByRole("button", { name: "Xác nhận thanh lý tài sản" })
+  const picker = within(dialog).getByLabelText(/chọn ảnh minh chứng thanh lý/i)
+  return { user, dialog, confirm, picker }
+}
 
 describe("Quản lí hợp đồng: thanh lý tài sản quá hạn", () => {
   test("chỉ hợp đồng đã chuyển Tịch thu mới có nút; quá hạn 35 ngày (BE chưa chuyển) ghi 'Chờ chuyển tịch thu'; đã xử lý ghi 'Đã thanh lý'", async () => {
@@ -57,54 +81,56 @@ describe("Quản lí hợp đồng: thanh lý tài sản quá hạn", () => {
     expect(within(row("Khách Bốn")).getByText("Đã thanh lý")).toBeInTheDocument()
   })
 
-  test("chưa dán link ảnh minh chứng thì không xác nhận được; dán link → gọi API kèm link, đóng hộp thoại", async () => {
+  test("chưa có ảnh minh chứng thì không xác nhận được; tải 2 ảnh → gửi kèm 2 mã ảnh và ghi chú mặc định, đóng hộp thoại", async () => {
     api.markForfeitProcessed.mockReset().mockResolvedValue(undefined)
-    const user = userEvent.setup()
-    render(<CustomersContractsPanel />)
-    await user.click(within(await screen.findByText("Khách Ba").then(() => row("Khách Ba"))).getByRole("button", { name: /Thanh lý tài sản/ }))
-    const dialog = await screen.findByRole("dialog")
-    const confirm = within(dialog).getByRole("button", { name: "Xác nhận thanh lý tài sản" })
+    const { user, dialog, confirm, picker } = await openForfeit()
     expect(confirm).toBeDisabled()
-    await user.type(within(dialog).getByLabelText(/link ảnh/i), LINK)
+    await user.upload(picker, [photo("a.jpg"), photo("b.png", "image/png")])
+    expect(await within(dialog).findByRole("list", { name: /đã chọn/ })).toBeInTheDocument()
+    expect(images.uploadImage).toHaveBeenCalledWith(expect.any(File), "FORFEIT_EVIDENCE")
+    await waitFor(() => expect(confirm).toBeEnabled())
     await user.click(confirm)
-    expect(api.markForfeitProcessed).toHaveBeenCalledWith(expect.anything(), 3, expect.stringContaining(LINK))
+    expect(api.markForfeitProcessed).toHaveBeenCalledWith(expect.anything(), 3, expect.stringMatching(/thanh lý tài sản/), [41, 42])
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
   })
 
-  test("dán chữ không phải link → báo ngay, không cho xác nhận", async () => {
+  test("có gõ ghi chú → gửi đúng ghi chú đó", async () => {
     api.markForfeitProcessed.mockReset().mockResolvedValue(undefined)
-    const user = userEvent.setup()
-    render(<CustomersContractsPanel />)
-    await user.click(within(await screen.findByText("Khách Ba").then(() => row("Khách Ba"))).getByRole("button", { name: /Thanh lý tài sản/ }))
-    const dialog = await screen.findByRole("dialog")
-    await user.type(within(dialog).getByLabelText(/link ảnh/i), "da niem phong roi")
-    expect(within(dialog).getByText(/phải bắt đầu bằng http/)).toBeInTheDocument()
-    expect(within(dialog).getByRole("button", { name: "Xác nhận thanh lý tài sản" })).toBeDisabled()
-    expect(api.markForfeitProcessed).not.toHaveBeenCalled()
+    const { user, dialog, confirm, picker } = await openForfeit()
+    await user.upload(picker, photo())
+    await user.type(within(dialog).getByLabelText(/ghi chú xử lý tài sản/i), "Cắt khóa có camera, 2 nhân viên chứng kiến")
+    await waitFor(() => expect(confirm).toBeEnabled())
+    await user.click(confirm)
+    expect(api.markForfeitProcessed).toHaveBeenCalledWith(expect.anything(), 3, "Cắt khóa có camera, 2 nhân viên chứng kiến", [41])
+  })
+
+  test("chọn file không phải ảnh hoặc quá 5 MB → báo ngay, không tải lên, vẫn khóa nút", async () => {
+    const { user, dialog, confirm, picker } = await openForfeit()
+    await user.upload(picker, photo("bien-ban.pdf", "application/pdf"))
+    expect(images.uploadImage).not.toHaveBeenCalled()
+    expect(confirm).toBeDisabled()
+    await user.upload(picker, photo("to-qua.jpg", "image/jpeg", 6 * 1024 * 1024))
+    expect(within(dialog).getByRole("alert")).toHaveTextContent(/lớn hơn 5 MB/)
+    expect(images.uploadImage).not.toHaveBeenCalled()
   })
 
   test("BE trả lỗi SQL → hiện câu dễ hiểu, không lộ câu lệnh", async () => {
     api.markForfeitProcessed.mockReset().mockRejectedValue(new Error("Lỗi hệ thống: could not execute statement [Data too long for column description] [insert into ActivityLog ...]"))
-    const user = userEvent.setup()
-    render(<CustomersContractsPanel />)
-    await user.click(within(await screen.findByText("Khách Ba").then(() => row("Khách Ba"))).getByRole("button", { name: /Thanh lý tài sản/ }))
-    const dialog = await screen.findByRole("dialog")
-    await user.type(within(dialog).getByLabelText(/link ảnh/i), LINK)
-    await user.click(within(dialog).getByRole("button", { name: "Xác nhận thanh lý tài sản" }))
-    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Nội dung nhập quá dài")
+    const { user, dialog, confirm, picker } = await openForfeit()
+    await user.upload(picker, photo())
+    await waitFor(() => expect(confirm).toBeEnabled())
+    await user.click(confirm)
+    expect(await within(dialog).findByText(/Nội dung nhập quá dài/)).toBeInTheDocument()
     expect(within(dialog).queryByText(/could not execute|insert into/)).not.toBeInTheDocument()
   })
 
   test("BE từ chối → giữ hộp thoại mở, hiện nguyên câu lỗi của BE", async () => {
     api.markForfeitProcessed.mockReset().mockRejectedValue(new Error("Hợp đồng đã được xác nhận xử lý tài sản."))
-    const user = userEvent.setup()
-    render(<CustomersContractsPanel />)
-    await screen.findByText("Khách Ba")
-    await user.click(within(row("Khách Ba")).getByRole("button", { name: /Thanh lý tài sản/ }))
-    const dialog = await screen.findByRole("dialog")
-    await user.type(within(dialog).getByLabelText(/link ảnh/i), LINK)
-    await user.click(within(dialog).getByRole("button", { name: "Xác nhận thanh lý tài sản" }))
-    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Hợp đồng đã được xác nhận xử lý tài sản.")
+    const { user, dialog, confirm, picker } = await openForfeit()
+    await user.upload(picker, photo())
+    await waitFor(() => expect(confirm).toBeEnabled())
+    await user.click(confirm)
+    expect(await within(dialog).findByText("Hợp đồng đã được xác nhận xử lý tài sản.")).toBeInTheDocument()
   })
 
   test("từ hộp thoại chi tiết: hợp đồng đã tịch thu có nút thanh lý, bấm thì chuyển sang hộp thoại thanh lý", async () => {
