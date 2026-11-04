@@ -7,13 +7,13 @@ import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
 import { login, type LockedResponse } from "../authApi"
+import { PASSWORD_CHANGE_PATH } from "../passwordChangeRules"
 import { useAuth } from "@/context/AuthContext"
 import {
   getRoleDestination,
   getRolePortalName,
   getRoleTitle,
   normalizeRole,
-  type UserRole,
 } from "@/lib/roles"
 import {
   internalLoginSchema,
@@ -74,6 +74,13 @@ function InternalLoginForm() {
 
       signIn({ token: data.token, user: { ...data.user, role } }, false)
       const destination = getRoleDestination(role)
+
+      if (data.user.mustChangePassword) {
+        toast.info("Vui lòng đổi mật khẩu tạm trước khi sử dụng hệ thống.")
+        navigate(PASSWORD_CHANGE_PATH, { replace: true })
+        return
+      }
+
       toast.success(`Đăng nhập thành công với vai trò ${getRoleTitle(role)}!`)
       navigate(destination)
     } catch (error) {
@@ -114,19 +121,24 @@ function InternalLoginForm() {
 
   if (isAuthenticated && user) {
     const role = normalizeRole(user.role)
-    const destination = getRoleDestination(role)
+    const mustChangePassword = Boolean(user.mustChangePassword)
+    const destination = mustChangePassword ? PASSWORD_CHANGE_PATH : getRoleDestination(role)
     const portalName = getRolePortalName(role)
 
     return (
       <SignedInPanel
         fullName={user.fullName}
-        description={`Bạn đang đăng nhập với vai trò ${getRoleTitle(role)}.`}
+        description={
+          mustChangePassword
+            ? "Tài khoản đang dùng mật khẩu tạm, vui lòng đổi mật khẩu trước khi tiếp tục."
+            : `Bạn đang đăng nhập với vai trò ${getRoleTitle(role)}.`
+        }
         action={
           <Link
             to={destination}
             className="flex w-full items-center justify-center rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-blue-700"
           >
-            Vào {portalName} →
+            {mustChangePassword ? "Đổi mật khẩu ngay →" : `Vào ${portalName} →`}
           </Link>
         }
       />
