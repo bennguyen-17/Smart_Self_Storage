@@ -1,20 +1,16 @@
 import { useId, useState } from "react"
-import { CheckCircle2Icon, FileCheck2Icon, ImageIcon, TriangleAlertIcon, UploadIcon } from "lucide-react"
+import { FileCheck2Icon, TriangleAlertIcon, UploadIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { getStoredUser } from "@/hooks/useAuthSession"
 import { readableError } from "@/components/internal/readableError"
-import { isMockMode } from "@/lib/apiClient"
+import ImagePicker, { type PickedImage } from "@/components/internal/images/ImagePicker"
 import { formatVnd } from "@/lib/format"
 
 import { confirmRefund } from "../api/refundApi"
 import type { ConfirmRefundPayload } from "../types"
 import { EVIDENCE_URL_MAX, getRefundBlockers, REFUND_BLOCKER_LABEL } from "../refundRules"
-
-/** Ảnh biên lai mẫu, CHỈ dùng khi demo ở chế độ mock */
-const MOCK_SAMPLE_EVIDENCE_URL =
-  "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=80"
 
 export interface RefundConfirmFormProps {
   /** paymentId của phiếu hoàn tiền (hóa đơn REF); thiếu thì không xác nhận được */
@@ -31,7 +27,8 @@ export interface RefundConfirmFormProps {
  * Form hoàn cọc back-office: nhân viên chuyển khoản ngoài, đính kèm biên lai rồi xác nhận.
  * Nguyên tắc: thiếu dữ liệu thật (phiếu hoàn, STK khách, biên lai, nhân viên) thì hiện rõ là thiếu
  * và khóa nút xác nhận, không bao giờ tự điền giá trị mẫu.
- * Khi chạy thật, biên lai là LINK (BE chưa có API tải ảnh và chỉ lưu 255 ký tự); chọn file ảnh chỉ có khi demo.
+ * Biên lai: tải ẢNH lên (cô chốt: hoàn cọc cần ảnh chuyển khoản) qua POST /api/uploads, gửi receiptImageId;
+ * dán link chỉ là dự phòng khi không tải được ảnh.
  */
 function RefundConfirmForm({
   paymentId,
@@ -40,13 +37,12 @@ function RefundConfirmForm({
   onConfirmed,
   submit = confirmRefund,
 }: RefundConfirmFormProps) {
-  const demo = isMockMode()
+  const [receipt, setReceipt] = useState<PickedImage[]>([])
   const [evidenceUrl, setEvidenceUrl] = useState("")
   const [transactionRef, setTransactionRef] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const linkInputId = useId()
-  const fileInputId = useId()
   const transactionInputId = useId()
   const staffInputId = useId()
 
@@ -56,32 +52,17 @@ function RefundConfirmForm({
     paymentId,
     bankAccount,
     evidenceUrl,
-    allowDataUrl: demo,
+    receiptImageId: receipt[0]?.imageId ?? null,
     transactionRef,
     staffName,
   })
-  const isImage = evidenceUrl.startsWith("data:image/") || evidenceUrl === MOCK_SAMPLE_EVIDENCE_URL
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setEvidenceUrl(reader.result)
-        setErrorMsg(null)
-      }
-    }
-    reader.readAsDataURL(file)
-  }
-
   const handleSubmit = async () => {
     if (blockers.length > 0 || !paymentId) return
     setIsSubmitting(true)
     setErrorMsg(null)
     try {
       // Mã giao dịch là tùy chọn: lớp API chỉ gửi khi nhân viên có nhập
-      await submit(paymentId, { evidenceUrl, transactionRef })
+      await submit(paymentId, { receiptImageId: receipt[0]?.imageId ?? null, evidenceUrl, transactionRef })
       onConfirmed()
     } catch (err) {
       setErrorMsg(readableError(err))
@@ -101,7 +82,7 @@ function RefundConfirmForm({
           <div>
             <h4 className="text-sm font-bold text-amber-950 dark:text-amber-200">Hoàn tiền cọc cho khách</h4>
             <p className="text-xs text-amber-800/80 dark:text-amber-300/80">
-              Chuyển khoản ngoài hệ thống, đính kèm biên lai rồi xác nhận để hoàn tất phiếu hoàn.
+              Chuyển khoản ngoài hệ thống, tải ảnh biên lai rồi xác nhận để hoàn tất phiếu hoàn.
             </p>
           </div>
         </div>
@@ -129,65 +110,40 @@ function RefundConfirmForm({
       </div>
 
       <div className="space-y-3">
-        <div>
-          <label htmlFor={linkInputId} className="mb-1 block text-xs font-bold text-slate-800 dark:text-slate-200">
-            Link biên lai chuyển khoản <span className="text-rose-500">*</span>
-          </label>
-          <input
-            id={linkInputId}
-            type="url"
-            inputMode="url"
-            value={isImage ? "" : evidenceUrl}
-            maxLength={EVIDENCE_URL_MAX + 50}
-            onChange={(e) => {
-              setEvidenceUrl(e.target.value)
-              setErrorMsg(null)
-            }}
-            placeholder="VD: https://drive.google.com/… (ảnh chụp ủy nhiệm chi)"
-            aria-describedby={`${linkInputId}-hint`}
-            className={inputClass}
-          />
-          <p id={`${linkInputId}-hint`} className="mt-0.5 text-[11px] text-muted-foreground">
-            Tải ảnh biên lai lên Drive hoặc hệ thống lưu trữ của công ty, rồi dán link chia sẻ vào đây.
-          </p>
-        </div>
+        <ImagePicker
+          label="Ảnh biên lai chuyển khoản"
+          category="REFUND_RECEIPT"
+          max={1}
+          value={receipt}
+          onChange={(next) => {
+            setReceipt(next)
+            setErrorMsg(null)
+          }}
+          disabled={isSubmitting}
+        />
 
-        {demo && (
-          <div>
-            <label htmlFor={fileInputId} className="mb-1 block text-[11px] font-semibold text-muted-foreground">
-              Hoặc chọn ảnh biên lai từ máy (chỉ khi chạy demo):
-            </label>
-            <div className="flex flex-wrap items-center gap-2">
+        {receipt.length === 0 && (
+          <details className="text-xs">
+            <summary className="text-muted cursor-pointer font-semibold">Không tải được ảnh? Dán link biên lai</summary>
+            <div className="mt-1.5">
+              <label htmlFor={linkInputId} className="mb-1 block text-xs font-bold text-slate-800 dark:text-slate-200">
+                Link biên lai chuyển khoản
+              </label>
               <input
-                id={fileInputId}
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="text-xs file:mr-2 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-blue-500"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setEvidenceUrl(MOCK_SAMPLE_EVIDENCE_URL)
+                id={linkInputId}
+                type="url"
+                inputMode="url"
+                value={evidenceUrl}
+                maxLength={EVIDENCE_URL_MAX + 50}
+                onChange={(e) => {
+                  setEvidenceUrl(e.target.value)
                   setErrorMsg(null)
                 }}
-                className="text-xs"
-              >
-                <ImageIcon aria-hidden="true" className="mr-1 size-3.5" /> Dùng ảnh biên lai mẫu
-              </Button>
+                placeholder="VD: https://drive.google.com/… (ảnh chụp ủy nhiệm chi)"
+                className={inputClass}
+              />
             </div>
-          </div>
-        )}
-
-        {isImage && (
-          <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
-            <img src={evidenceUrl} alt="Ảnh biên lai" className="h-16 w-24 rounded border object-cover" />
-            <span className="flex items-center gap-1 text-xs font-bold text-emerald-600">
-              <CheckCircle2Icon aria-hidden="true" className="size-3.5" /> Đã chọn ảnh biên lai
-            </span>
-          </div>
+          </details>
         )}
 
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">

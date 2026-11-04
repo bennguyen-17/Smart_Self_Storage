@@ -9,6 +9,12 @@ const env = vi.hoisted(() => ({ mockMode: false }))
 const { confirmRefund } = vi.hoisted(() => ({ confirmRefund: vi.fn() }))
 vi.mock("@/lib/apiClient", () => ({ default: {}, isMockMode: () => env.mockMode }))
 vi.mock("../api/refundApi", () => ({ confirmRefund }))
+// Quầy gửi ảnh chung: giả lập BE trả mã ảnh
+const images = vi.hoisted(() => ({ uploadImage: vi.fn() }))
+vi.mock("@/components/internal/images/imageApi", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/internal/images/imageApi")>()),
+  uploadImage: images.uploadImage,
+}))
 
 const STAFF = { id: 5, fullName: "Nguyễn Văn Nhân Viên 1", role: "STAFF" }
 const LINK = "https://drive.google.com/file/d/1AbC/view"
@@ -30,6 +36,8 @@ function renderForm(props: Partial<RefundConfirmFormProps> = {}) {
 beforeEach(() => {
   env.mockMode = false
   confirmRefund.mockReset().mockResolvedValue(undefined)
+  images.uploadImage.mockReset().mockResolvedValue({ imageId: 41, url: "/api/images/41" })
+  vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: vi.fn(() => "blob:preview"), revokeObjectURL: vi.fn() }))
   localStorage.setItem("user", JSON.stringify(STAFF))
 })
 afterEach(() => localStorage.clear())
@@ -73,10 +81,11 @@ describe("RefundConfirmForm: không dùng dữ liệu giả, chỉ xác nhận k
 })
 
 describe("RefundConfirmForm khi chạy thật: biên lai là link (BE chỉ lưu 255 ký tự)", () => {
-  test("không có ô chọn file và không có ảnh mẫu", () => {
+  test("có nút tải ảnh biên lai, không có ảnh mẫu; link biên lai là cách dự phòng", () => {
     renderForm()
-    expect(screen.queryByLabelText(/chọn ảnh biên lai/i)).not.toBeInTheDocument()
+    expect(screen.getByLabelText(/chọn ảnh biên lai chuyển khoản/i)).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: /ảnh biên lai mẫu/i })).not.toBeInTheDocument()
+    expect(screen.getByText(/không tải được ảnh\? dán link biên lai/i)).toBeInTheDocument()
   })
 
   test("link sai định dạng → báo lỗi link và khóa nút", async () => {
@@ -92,7 +101,7 @@ describe("RefundConfirmForm khi chạy thật: biên lai là link (BE chỉ lưu
     await user.type(linkInput(), LINK)
     expect(confirmButton()).toBeEnabled()
     await user.click(confirmButton())
-    expect(confirmRefund).toHaveBeenCalledWith(61, { evidenceUrl: LINK, transactionRef: "" })
+    expect(confirmRefund).toHaveBeenCalledWith(61, { receiptImageId: null, evidenceUrl: LINK, transactionRef: "" })
     expect(onConfirmed).toHaveBeenCalledTimes(1)
   })
 
@@ -101,7 +110,7 @@ describe("RefundConfirmForm khi chạy thật: biên lai là link (BE chỉ lưu
     await user.type(linkInput(), LINK)
     await user.type(screen.getByLabelText(/mã giao dịch ngân hàng/i), "FT2610028891")
     await user.click(confirmButton())
-    expect(confirmRefund).toHaveBeenCalledWith(61, { evidenceUrl: LINK, transactionRef: "FT2610028891" })
+    expect(confirmRefund).toHaveBeenCalledWith(61, { receiptImageId: null, evidenceUrl: LINK, transactionRef: "FT2610028891" })
   })
 
   test("BE báo lỗi → hiện lỗi, không báo thành công", async () => {
@@ -114,24 +123,31 @@ describe("RefundConfirmForm khi chạy thật: biên lai là link (BE chỉ lưu
   })
 })
 
-describe("RefundConfirmForm khi demo: cho chọn ảnh từ máy", () => {
-  test("chọn file ảnh → mở khóa và gửi ảnh data URL", async () => {
-    env.mockMode = true
+describe("RefundConfirmForm: ảnh biên lai chuyển khoản (cách chính)", () => {
+  test("tải ảnh biên lai → mở khóa, gửi receiptImageId; ô dán link ẩn đi", async () => {
     const { user, confirmButton } = renderForm()
-    const file = new File(["fake-image"], "bien-lai.png", { type: "image/png" })
-    await user.upload(screen.getByLabelText(/chọn ảnh biên lai/i), file)
-    expect(await screen.findByText(/đã chọn ảnh biên lai/i)).toBeInTheDocument()
+    expect(confirmButton()).toBeDisabled()
+    await user.upload(screen.getByLabelText(/chọn ảnh biên lai/i), new File(["x"], "bien-lai.png", { type: "image/png" }))
+    expect(images.uploadImage).toHaveBeenCalledWith(expect.any(File), "REFUND_RECEIPT")
+    expect(await screen.findByRole("img", { name: "bien-lai.png" })).toBeInTheDocument()
+    expect(screen.queryByText(/dán link biên lai/i)).not.toBeInTheDocument()
     expect(confirmButton()).toBeEnabled()
     await user.click(confirmButton())
-    expect(confirmRefund).toHaveBeenCalledWith(61, {
-      evidenceUrl: expect.stringMatching(/^data:image\/png;base64,/),
-      transactionRef: "",
-    })
+    expect(confirmRefund).toHaveBeenCalledWith(61, { receiptImageId: 41, evidenceUrl: "", transactionRef: "" })
   })
 
-  test("có nút ảnh biên lai mẫu", () => {
-    env.mockMode = true
-    renderForm()
-    expect(screen.getByRole("button", { name: /ảnh biên lai mẫu/i })).toBeInTheDocument()
+  test("chỉ được 1 ảnh biên lai: tải xong thì không còn nút thêm ảnh", async () => {
+    const { user } = renderForm()
+    await user.upload(screen.getByLabelText(/chọn ảnh biên lai/i), new File(["x"], "bien-lai.png", { type: "image/png" }))
+    await screen.findByRole("img", { name: "bien-lai.png" })
+    expect(screen.queryByLabelText(/chọn ảnh biên lai/i)).not.toBeInTheDocument()
+  })
+
+  test("tải ảnh lỗi → báo câu dễ hiểu, vẫn khóa nút", async () => {
+    images.uploadImage.mockRejectedValue(new Error("Lỗi hệ thống: could not execute statement [Data too long]"))
+    const { user, confirmButton } = renderForm()
+    await user.upload(screen.getByLabelText(/chọn ảnh biên lai/i), new File(["x"], "bien-lai.png", { type: "image/png" }))
+    expect(await screen.findByText(/Không tải được "bien-lai.png": Nội dung nhập quá dài/)).toBeInTheDocument()
+    expect(confirmButton()).toBeDisabled()
   })
 })

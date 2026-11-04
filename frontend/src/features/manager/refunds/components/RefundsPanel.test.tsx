@@ -84,6 +84,7 @@ describe("RefundsPanel: Manager hoàn tiền cho khách (US-26)", () => {
     await user.type(within(dialog).getByLabelText(/link biên lai/i), "https://drive.google.com/bien-lai-71.png")
     await user.click(within(dialog).getByRole("button", { name: /xác nhận/i }))
     expect(api.confirmRefund).toHaveBeenCalledWith(71, {
+      receiptImageId: null,
       evidenceUrl: "https://drive.google.com/bien-lai-71.png",
       transactionRef: "",
     })
