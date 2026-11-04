@@ -131,6 +131,9 @@ public class AdminAccountController {
         if (accountRepository.findByEmail(email).isPresent()) {
             return ResponseEntity.badRequest().body(Map.of("message", "Email đã được dùng cho một tài khoản khác!"));
         }
+        if (!phone.isBlank() && accountRepository.findByPhone(phone).isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Số điện thoại đã được dùng cho một tài khoản khác!"));
+        }
 
         Long roleId = mapRoleNameToId(roleStr);
 

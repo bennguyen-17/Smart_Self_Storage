@@ -667,7 +667,7 @@ public class SupportTicketService {
         }
         List<SupportTicket> tickets;
         if (facilityId == null || facilityId <= 0) {
-            tickets = supportTicketRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+            tickets = supportTicketRepository.findAllByOrderByCreatedAtDesc();
         } else {
             tickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
         }

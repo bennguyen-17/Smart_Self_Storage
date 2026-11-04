@@ -2,6 +2,7 @@ package com.swp391.backend.controller;
 
 import com.swp391.backend.dto.ManualGateOpenRequest;
 import com.swp391.backend.entity.AuditLog;
+import com.swp391.backend.config.SecurityContextHelper;
 import com.swp391.backend.service.AuditLogService;
 
 import java.util.List;
@@ -17,9 +18,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuditLogController {
 
     private final AuditLogService auditLogService;
+    private final SecurityContextHelper securityContextHelper;
 
-    public AuditLogController(AuditLogService auditLogService) {
+    public AuditLogController(AuditLogService auditLogService, SecurityContextHelper securityContextHelper) {
         this.auditLogService = auditLogService;
+        this.securityContextHelper = securityContextHelper;
     }
 
     @PostMapping("/staff/audit-logs/manual-gate-open")
@@ -45,7 +48,13 @@ public class AuditLogController {
             @RequestParam(value = "method", required = false) String method) {
 
         Integer effectiveAccountId = (authAccountId != null) ? authAccountId : headerAccountId;
-        Integer effectiveFacilityId = (headerFacilityId != null) ? headerFacilityId : queryFacilityId;
+        Integer fallbackFacilityId = (headerFacilityId != null) ? headerFacilityId : queryFacilityId;
+        Integer effectiveFacilityId;
+        try {
+            effectiveFacilityId = securityContextHelper.requireCurrentFacilityId(effectiveAccountId, fallbackFacilityId);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(List.of());
+        }
 
         List<AuditLog> logs = auditLogService.getGateLogs(effectiveAccountId, effectiveFacilityId, method);
 

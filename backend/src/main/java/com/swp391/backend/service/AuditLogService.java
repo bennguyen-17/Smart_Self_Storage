@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -184,7 +185,7 @@ public class AuditLogService {
 
     public List<AuditLog> getGateLogs(Integer accountId, Integer facilityId, String method) {
         Integer targetFacilityId = facilityId;
-        if (targetFacilityId == null && accountId != null) {
+        if ((targetFacilityId == null || targetFacilityId <= 0) && accountId != null) {
             targetFacilityId = employeeProfileRepository.findByAccountId(accountId)
                     .map(EmployeeProfile::getFacilityId)
                     .orElse(null);
@@ -194,7 +195,8 @@ public class AuditLogService {
         if (targetFacilityId != null && targetFacilityId > 0) {
             logs = auditLogRepository.findByFacilityIdOrderByOpenedAtDesc(targetFacilityId);
         } else {
-            logs = auditLogRepository.findAllByOrderByOpenedAtDesc();
+            // Bảo mật phân quyền: Nếu không xác định được cơ sở quản lý, không hiển thị dữ liệu của cơ sở khác
+            logs = Collections.emptyList();
         }
 
         if (method != null && !method.isBlank() && !"ALL".equalsIgnoreCase(method)) {

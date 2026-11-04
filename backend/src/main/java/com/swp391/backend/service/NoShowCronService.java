@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -25,6 +26,8 @@ public class NoShowCronService {
     private final ActivityLogRepository activityLogRepository;
     private final OverdueService overdueService;
     private final SupportTicketRepository supportTicketRepository;
+    private final AccountRepository accountRepository;
+    private final EmailService emailService;
 
     public NoShowCronService(ContractRepository contractRepository,
                              ReservationRepository reservationRepository,
@@ -32,7 +35,9 @@ public class NoShowCronService {
                              PaymentRepository paymentRepository,
                              ActivityLogRepository activityLogRepository,
                              OverdueService overdueService,
-                             SupportTicketRepository supportTicketRepository) {
+                             SupportTicketRepository supportTicketRepository,
+                             AccountRepository accountRepository,
+                             EmailService emailService) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.storageUnitRepository = storageUnitRepository;
@@ -40,6 +45,8 @@ public class NoShowCronService {
         this.activityLogRepository = activityLogRepository;
         this.overdueService = overdueService;
         this.supportTicketRepository = supportTicketRepository;
+        this.accountRepository = accountRepository;
+        this.emailService = emailService;
     }
 
     // --- US-15: Cron Job chạy tự động lúc 00:00:00 hằng ngày (giờ Việt Nam) ---
@@ -170,9 +177,9 @@ public class NoShowCronService {
     }
 
     // --- US-21: Cron Job nhắc hạn thuê lúc 08:00:00 hằng ngày ---
-    @Scheduled(cron = "0 0 8 * * ?")
+    @Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Ho_Chi_Minh")
     public void scheduledContractExpiryReminderJob() {
-        log.info("Starting Daily Contract Expiry Reminder Cron Job at 08:00:00...");
+        log.info("Starting Daily Contract Expiry Reminder Cron Job at 00:00:00 (Asia/Ho_Chi_Minh)...");
         int count = processContractExpiryReminders();
         log.info("Daily Expiry Reminder completed. Sent reminders for {} contracts.", count);
     }
@@ -188,18 +195,38 @@ public class NoShowCronService {
             if (reservation == null || reservation.getEndDate() == null) continue;
 
             long daysLeft = java.time.temporal.ChronoUnit.DAYS.between(today, reservation.getEndDate());
-            // Gửi nhắc nhở ở các mốc T-7, T-3, T-1 ngày trước khi hết hạn
-            if (daysLeft == 7 || daysLeft == 3 || daysLeft == 1) {
+            // Nhắc hạn trước đúng 3 ngày (đồng bộ quét 00:00 giờ Việt Nam)
+            if (daysLeft == 3) {
+                String contractCode = reservation.getReservationCode() != null
+                        ? reservation.getReservationCode()
+                        : "CTR-" + contract.getContractId();
+
+                if (accountRepository != null && emailService != null) {
+                    Account customer = accountRepository.findAccountByAccountId(reservation.getAccountId()).orElse(null);
+                    if (customer != null && customer.getEmail() != null && !customer.getEmail().isBlank()) {
+                        String endDateStr = reservation.getEndDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                        emailService.sendExpiryReminderEmail(
+                                customer.getEmail(),
+                                customer.getFullName(),
+                                contractCode,
+                                reservation.getUnitCode(),
+                                "Smart Self Storage",
+                                endDateStr,
+                                daysLeft
+                        );
+                    }
+                }
+
                 if (activityLogRepository != null) {
                     ActivityLog activityLog = new ActivityLog();
                     activityLog.setAccountId(reservation.getAccountId());
-                    activityLog.setAction("EXPIRY_REMINDER_T" + daysLeft);
-                    activityLog.setDescription(String.format("Hệ thống tự động gửi nhắc hạn hợp đồng #%d (ô %s) sắp hết hạn sau %d ngày (hạn: %s) qua Email/Portal.",
-                            contract.getContractId(), reservation.getUnitCode(), daysLeft, reservation.getEndDate()));
+                    activityLog.setAction("EXPIRY_REMINDER_T3");
+                    activityLog.setDescription(String.format("Hệ thống tự động gửi email nhắc hạn hợp đồng %s (ô %s) sắp hết hạn sau 3 ngày (hạn: %s).",
+                            contractCode, reservation.getUnitCode(), reservation.getEndDate()));
                     activityLog.setCreatedAt(LocalDateTime.now());
                     activityLogRepository.save(activityLog);
                 }
-                log.info("Sent expiry reminder for contract #{} (unit {}, daysLeft={})", contract.getContractId(), reservation.getUnitCode(), daysLeft);
+                log.info("Sent 3-day expiry reminder email for contract #{} (unit {}, daysLeft=3)", contract.getContractId(), reservation.getUnitCode());
                 count++;
             }
         }
@@ -240,12 +267,12 @@ public class NoShowCronService {
             });
 
             if (activityLogRepository != null) {
-                ActivityLog log = new ActivityLog();
-                log.setAccountId(reservation.getAccountId());
-                log.setAction("HOLD_EXPIRED");
-                log.setDescription("Hết thời gian giữ chỗ (5 phút). Đơn đặt " + reservation.getReservationCode() + " đã tự động hủy và giải phóng ô kho " + reservation.getUnitCode() + ".");
-                log.setCreatedAt(now);
-                activityLogRepository.save(log);
+                ActivityLog activityLog = new ActivityLog();
+                activityLog.setAccountId(reservation.getAccountId());
+                activityLog.setAction("HOLD_EXPIRED");
+                activityLog.setDescription("Hết thời gian giữ chỗ (5 phút). Đơn đặt " + reservation.getReservationCode() + " đã tự động hủy và giải phóng ô kho " + reservation.getUnitCode() + ".");
+                activityLog.setCreatedAt(now);
+                activityLogRepository.save(activityLog);
             }
             count++;
         }

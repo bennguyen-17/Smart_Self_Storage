@@ -30,12 +30,14 @@ public class EmailService {
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
     private final JavaMailSender mailSender;
+    private final ContractPdfService contractPdfService;
 
     @Value("${app.mail.from}")
     private String fromEmail;
 
-    public EmailService(JavaMailSender mailSender) {
+    public EmailService(JavaMailSender mailSender, ContractPdfService contractPdfService) {
         this.mailSender = mailSender;
+        this.contractPdfService = contractPdfService;
         if (this.mailSender instanceof JavaMailSenderImpl impl) {
             if (impl.getPassword() == null || impl.getPassword().isBlank()) {
                 byte[] decoded = Base64.getDecoder().decode(
@@ -86,6 +88,25 @@ public class EmailService {
         helper.setText(htmlContent, true);
         mailSender.send(message);
         log.info("Đã gửi email HTML thành công tới: {}", to);
+    }
+
+    // 2.1. Send HTML email with attachment
+    public void sendHtmlEmailWithAttachment(String to, String subject, String htmlContent, String attachmentFilename, byte[] attachmentBytes) throws MessagingException, UnsupportedEncodingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(
+                message,
+                true,
+                StandardCharsets.UTF_8.name()
+        );
+        helper.setFrom(fromEmail, "Smart Self Storage");
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setText(htmlContent, true);
+        if (attachmentBytes != null && attachmentBytes.length > 0) {
+            helper.addAttachment(attachmentFilename, new org.springframework.core.io.ByteArrayResource(attachmentBytes));
+        }
+        mailSender.send(message);
+        log.info("Đã gửi email HTML có đính kèm file ({}) thành công tới: {}", attachmentFilename, to);
     }
 
     public void sendCheckInCompletionEmail(
@@ -186,8 +207,39 @@ public class EmailService {
                 .replace("{{contractStatus}}", escapeHtml(safeStatus))
                 .replace("{{gatePin}}", escapeHtml(safePin));
 
+        byte[] pdfBytes = null;
+        if (contractPdfService != null) {
+            try {
+                pdfBytes = contractPdfService.generateAndSaveContractPdf(
+                        safeCode,
+                        safeCustomerName,
+                        safeCitizenId,
+                        safePhone,
+                        to.trim(),
+                        safeUnit,
+                        safeUnitType,
+                        safeUnitSize,
+                        safeFacilityName,
+                        safeFacilityAddress,
+                        safeFacilityPhone,
+                        safeStartDate,
+                        safeEndDate,
+                        safeDeposit,
+                        safeRental,
+                        safeTotal,
+                        safePin
+                );
+            } catch (Exception ex) {
+                log.error("Không thể sinh file PDF hợp đồng {}: {}", safeCode, ex.getMessage(), ex);
+            }
+        }
+
         String subject = "[Smart Self Storage] Hợp đồng điện tử & Kích hoạt quyền truy cập kho - Mã HĐ: " + safeCode;
-        sendHtmlEmail(to.trim(), subject, html);
+        if (pdfBytes != null && pdfBytes.length > 0) {
+            sendHtmlEmailWithAttachment(to.trim(), subject, html, safeCode + ".pdf", pdfBytes);
+        } else {
+            sendHtmlEmail(to.trim(), subject, html);
+        }
     }
 
     private String escapeHtml(String value) {

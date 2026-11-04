@@ -222,6 +222,10 @@ public class StaffCheckInService {
         // Chuyển đổi trạng thái hợp đồng sang CÓ HIỆU LỰC (ACTIVE)
         contract.setStatus("ACTIVE");
         contract.setActivatedAt(now);
+        String finalCode = (reservation.getReservationCode() != null && !reservation.getReservationCode().isBlank())
+                ? reservation.getReservationCode()
+                : ("CTR-" + contract.getContractId());
+        contract.setContractPdfUrl("/uploads/contracts/" + finalCode + ".pdf");
         unit.setStatus("RENTED");
         reservation.setStatus("CONFIRMED");
 
