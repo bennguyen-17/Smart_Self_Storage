@@ -339,7 +339,7 @@ public class StaffCheckInService {
                             ? reservation.getReservationCode()
                             : ("CTR-" + contract.getContractId());
 
-            emailService.sendCheckInContractEmail(
+            emailService.sendCheckInCompletionEmail(
                     account.getEmail(),
                     account.getFullName(),
                     citizenId,

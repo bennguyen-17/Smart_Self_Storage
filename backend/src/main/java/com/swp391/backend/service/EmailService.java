@@ -1,18 +1,5 @@
 package com.swp391.backend.service;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.stereotype.Service;
-
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -24,6 +11,19 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Locale;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class EmailService {
@@ -48,7 +48,10 @@ public class EmailService {
         }
     }
 
-    // Helper: Tải template HTML từ thư mục templates/email/
+    // ==========================================
+    // 1. TIỆN ÍCH CƠ BẢN (HELPERS & SEND UTILS)
+    // ==========================================
+
     private String loadTemplate(String templateName) throws IOException {
         ClassPathResource resource = new ClassPathResource("templates/email/" + templateName);
         try (InputStream input = resource.getInputStream()) {
@@ -56,24 +59,17 @@ public class EmailService {
         }
     }
 
-    // 1. Send plain text email
-    public boolean sendTextEmail(String to, String subject, String content) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom("Smart Self Storage <" + fromEmail + ">");
-            message.setTo(to);
-            message.setSubject(subject);
-            message.setText(content);
-            mailSender.send(message);
-            log.info("Đã gửi email plain text thành công tới: {}", to);
-            return true;
-        } catch (Exception e) {
-            log.error("Lỗi khi gửi email plain text tới {}: {}", to, e.getMessage());
-            return false;
+    private String escapeHtml(String value) {
+        if (value == null) {
+            return "";
         }
+        return value.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
     }
 
-    // 2. Send HTML email
     public void sendHtmlEmail(String to, String subject, String htmlContent) throws MessagingException, UnsupportedEncodingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(
@@ -89,7 +85,6 @@ public class EmailService {
         log.info("Đã gửi email HTML thành công tới: {}", to);
     }
 
-    // 2.1. Send HTML email with attachment
     public void sendHtmlEmailWithAttachment(String to, String subject, String htmlContent, String attachmentFilename, byte[] attachmentBytes) throws MessagingException, UnsupportedEncodingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(
@@ -102,160 +97,17 @@ public class EmailService {
         helper.setSubject(subject);
         helper.setText(htmlContent, true);
         if (attachmentBytes != null && attachmentBytes.length > 0) {
-            helper.addAttachment(attachmentFilename, new org.springframework.core.io.ByteArrayResource(attachmentBytes));
+            helper.addAttachment(attachmentFilename, new ByteArrayResource(attachmentBytes));
         }
         mailSender.send(message);
         log.info("Đã gửi email HTML có đính kèm file ({}) thành công tới: {}", attachmentFilename, to);
     }
 
-    public void sendCheckInCompletionEmail(
-            String to,
-            String displayName,
-            String reservationCode,
-            String unitCode,
-            String contractStatus,
-            String gatePin) throws IOException, MessagingException, UnsupportedEncodingException {
-        sendCheckInContractEmail(
-                to,
-                displayName,
-                "Đã định danh CCCD",
-                "",
-                reservationCode,
-                unitCode,
-                "Kho tiêu chuẩn",
-                "Theo quy chuẩn cơ sở",
-                "Smart Self Storage - Chi nhánh Hà Nội",
-                "Khu Công Nghệ Cao Hòa Lạc, Hà Nội",
-                "1900 8899",
-                LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
-                "Theo thời hạn đăng ký",
-                "Đã thanh toán",
-                "Đã thanh toán",
-                "Đã hoàn tất thanh toán",
-                contractStatus,
-                gatePin
-        );
-    }
+    // ==========================================
+    // 2. CÁC EMAIL NGHIỆP VỤ HỆ THỐNG
+    // ==========================================
 
-    public void sendCheckInContractEmail(
-            String to,
-            String customerName,
-            String citizenId,
-            String customerPhone,
-            String contractCode,
-            String unitCode,
-            String unitType,
-            String unitSize,
-            String facilityName,
-            String facilityAddress,
-            String facilityPhone,
-            String startDate,
-            String endDate,
-            String depositAmount,
-            String rentalAmount,
-            String totalAmount,
-            String contractStatus,
-            String gatePin) throws IOException, MessagingException, UnsupportedEncodingException {
-
-        if (to == null || to.isBlank() || to.endsWith("@smartstorage.vn")) {
-            log.warn("Bỏ qua gửi email hợp đồng do email trống hoặc là email nội bộ giả lập: {}", to);
-            return;
-        }
-
-        String template = loadTemplate("check-in-completion.html");
-
-        String safeCustomerName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
-        String safeCitizenId = (citizenId != null && !citizenId.isBlank()) ? citizenId.trim() : "Đã xác thực CCCD";
-        String safePhone = (customerPhone != null && !customerPhone.isBlank()) ? customerPhone.trim() : "Chưa cập nhật";
-        String safeCode = (contractCode != null && !contractCode.isBlank()) ? contractCode.trim() : "CTR-ACTIVE";
-        String safeUnit = (unitCode != null && !unitCode.isBlank()) ? unitCode.trim() : "Chưa chỉ định";
-        String safeUnitType = (unitType != null && !unitType.isBlank()) ? unitType.trim() : "Kho lưu trữ thông minh";
-        String safeUnitSize = (unitSize != null && !unitSize.isBlank()) ? unitSize.trim() : "Tiêu chuẩn";
-        String safeFacilityName = (facilityName != null && !facilityName.isBlank()) ? facilityName.trim() : "Hệ thống Smart Self Storage";
-        String safeFacilityAddress = (facilityAddress != null && !facilityAddress.isBlank()) ? facilityAddress.trim() : "Hà Nội, Việt Nam";
-        String safeFacilityPhone = (facilityPhone != null && !facilityPhone.isBlank()) ? facilityPhone.trim() : "1900 8899";
-        String safeStartDate = (startDate != null && !startDate.isBlank()) ? startDate.trim() : LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        String safeEndDate = (endDate != null && !endDate.isBlank()) ? endDate.trim() : "Theo thỏa thuận";
-        String safeDeposit = (depositAmount != null && !depositAmount.isBlank()) ? depositAmount.trim() : "0 VNĐ";
-        String safeRental = (rentalAmount != null && !rentalAmount.isBlank()) ? rentalAmount.trim() : "0 VNĐ";
-        String safeTotal = (totalAmount != null && !totalAmount.isBlank()) ? totalAmount.trim() : "0 VNĐ";
-        String safeStatus = (contractStatus != null && !contractStatus.isBlank()) ? contractStatus.trim() : "ACTIVE";
-        String safePin = (gatePin != null && !gatePin.isBlank()) ? gatePin.trim() : "------";
-        String today = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-
-        String html = template
-                .replace("{{contractCode}}", escapeHtml(safeCode))
-                .replace("{{reservationCode}}", escapeHtml(safeCode))
-                .replace("{{createdDate}}", escapeHtml(today))
-                .replace("{{facilityName}}", escapeHtml(safeFacilityName))
-                .replace("{{facilityAddress}}", escapeHtml(safeFacilityAddress))
-                .replace("{{facilityPhone}}", escapeHtml(safeFacilityPhone))
-                .replace("{{customerName}}", escapeHtml(safeCustomerName))
-                .replace("{{displayName}}", escapeHtml(safeCustomerName))
-                .replace("{{citizenId}}", escapeHtml(safeCitizenId))
-                .replace("{{customerPhone}}", escapeHtml(safePhone))
-                .replace("{{customerEmail}}", escapeHtml(to.trim()))
-                .replace("{{unitCode}}", escapeHtml(safeUnit))
-                .replace("{{unitType}}", escapeHtml(safeUnitType))
-                .replace("{{unitSize}}", escapeHtml(safeUnitSize))
-                .replace("{{startDate}}", escapeHtml(safeStartDate))
-                .replace("{{endDate}}", escapeHtml(safeEndDate))
-                .replace("{{depositAmount}}", escapeHtml(safeDeposit))
-                .replace("{{rentalAmount}}", escapeHtml(safeRental))
-                .replace("{{totalAmount}}", escapeHtml(safeTotal))
-                .replace("{{contractStatus}}", escapeHtml(safeStatus))
-                .replace("{{gatePin}}", escapeHtml(safePin));
-
-        byte[] pdfBytes = null;
-        try {
-            java.nio.file.Path pdfPath = java.nio.file.Paths.get("uploads", "contracts", safeCode + ".pdf");
-            if (!java.nio.file.Files.exists(pdfPath)) {
-                pdfPath = java.nio.file.Paths.get("backend", "uploads", "contracts", safeCode + ".pdf");
-            }
-            if (java.nio.file.Files.exists(pdfPath)) {
-                pdfBytes = java.nio.file.Files.readAllBytes(pdfPath);
-            }
-        } catch (Exception ex) {
-            log.warn("Không tìm thấy hoặc không thể đọc file PDF hợp đồng chuẩn {}: {}", safeCode, ex.getMessage());
-        }
-
-        String subject = "[Smart Self Storage] Hợp đồng điện tử & Kích hoạt quyền truy cập kho - Mã HĐ: " + safeCode;
-        if (pdfBytes != null && pdfBytes.length > 0) {
-            sendHtmlEmailWithAttachment(to.trim(), subject, html, safeCode + ".pdf", pdfBytes);
-        } else {
-            sendHtmlEmail(to.trim(), subject, html);
-        }
-    }
-
-    private String escapeHtml(String value) {
-        if (value == null) {
-            return "";
-        }
-        return value.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;")
-                .replace("'", "&#39;");
-    }
-
-    // 3. Send email with an attachment
-    public void sendEmailWithAttachment(String to, String subject, String content, File attachment) throws MessagingException, UnsupportedEncodingException {
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(
-                message,
-                true,
-                StandardCharsets.UTF_8.name()
-        );
-        helper.setFrom(fromEmail, "Smart Self Storage");
-        helper.setTo(to);
-        helper.setSubject(subject);
-        helper.setText(content, false);
-        helper.addAttachment(attachment.getName(), attachment);
-        mailSender.send(message);
-        log.info("Đã gửi email đính kèm file thành công tới: {}", to);
-    }
-
-    // --- 4. Gửi mã OTP xác thực (Đăng ký tài khoản, Quên mật khẩu, Trả kho) ---
+    // --- 1. Gửi mã OTP xác thực (Đăng ký tài khoản, Quên mật khẩu, Trả kho) ---
     public boolean sendOtpEmail(String toEmail, String recipientName, String otpCode, String purpose) {
         if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
             log.warn("Không thể gửi email OTP do địa chỉ email trống hoặc là email nội bộ giả lập: {}", toEmail);
@@ -281,7 +133,7 @@ public class EmailService {
         }
     }
 
-    // --- 5. Gửi email xác nhận Đặt cọc giữ chỗ ô kho thành công ---
+    // --- 2. Gửi email xác nhận đặt cọc thành công ---
     public boolean sendDepositSuccessEmail(
             String toEmail,
             String customerName,
@@ -311,7 +163,7 @@ public class EmailService {
         String formattedDeposit = depositAmount != null ? nf.format(depositAmount) + " VNĐ" : "0 VNĐ";
         String formattedRental = rentalAmount != null ? nf.format(rentalAmount) + " VNĐ" : "0 VNĐ";
 
-        String subject = "[Smart Self Storage] Xác nhận đặt cọc giữ chỗ thành công - Mã HĐ: " + displayCode;
+        String subject = "[Smart Self Storage] Xác nhận đặt cọc giữ chỗ thành công - Hợp đồng: " + displayCode;
 
         try {
             String template = loadTemplate("deposit-success.html");
@@ -334,43 +186,107 @@ public class EmailService {
         }
     }
 
-    // --- 6. Gửi email xác nhận hoàn tất hoàn trả tiền cọc (BR-35) ---
-    public boolean sendRefundConfirmationEmail(String toEmail, String customerName, String contractCode, BigDecimal amount, String receiptUrl, String transactionCode) {
-        if (toEmail == null || toEmail.isBlank()) return false;
+    // --- 3. Gửi email xác nhận nhận kho thành công ---
+    public boolean sendCheckInCompletionEmail(
+            String toEmail,
+            String customerName,
+            String citizenId,
+            String customerPhone,
+            String contractCode,
+            String unitCode,
+            String unitType,
+            String unitSize,
+            String facilityName,
+            String facilityAddress,
+            String facilityPhone,
+            String startDate,
+            String endDate,
+            String depositAmount,
+            String rentalAmount,
+            String totalAmount,
+            String contractStatus,
+            String gatePin) {
+
+        if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
+            log.warn("Không thể gửi email nhận kho do địa chỉ email không chính xác: {}", toEmail);
+            return false;
+        }
+
         try {
-            String safeName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
-            String safeCode = (contractCode != null && !contractCode.isBlank()) ? contractCode.trim() : "---";
-            String safeAmount = (amount != null) ? NumberFormat.getInstance(Locale.of("vi", "VN")).format(amount) + " VNĐ" : "0 VNĐ";
-            String safeTxn = (transactionCode != null && !transactionCode.isBlank()) ? transactionCode.trim() : "Đã chuyển khoản thành công";
-            String safeReceipt = (receiptUrl != null && !receiptUrl.isBlank()) ? receiptUrl.trim() : null;
+            String safeCustomerName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
+            String safeCitizenId = (citizenId != null && !citizenId.isBlank()) ? citizenId.trim() : "Đã xác thực CCCD";
+            String safePhone = (customerPhone != null && !customerPhone.isBlank()) ? customerPhone.trim() : "Chưa cập nhật";
+            String safeCode = (contractCode != null && !contractCode.isBlank()) ? contractCode.trim() : "CTR-ACTIVE";
+            String safeUnit = (unitCode != null && !unitCode.isBlank()) ? unitCode.trim() : "Chưa chỉ định";
+            String safeUnitType = (unitType != null && !unitType.isBlank()) ? unitType.trim() : "Kho lưu trữ thông minh";
+            String safeUnitSize = (unitSize != null && !unitSize.isBlank()) ? unitSize.trim() : "Tiêu chuẩn";
+            String safeFacilityName = (facilityName != null && !facilityName.isBlank()) ? facilityName.trim() : "Hệ thống Smart Self Storage";
+            String safeFacilityAddress = (facilityAddress != null && !facilityAddress.isBlank()) ? facilityAddress.trim() : "Hà Nội, Việt Nam";
+            String safeFacilityPhone = (facilityPhone != null && !facilityPhone.isBlank()) ? facilityPhone.trim() : "1900 8899";
+            String safeStartDate = (startDate != null && !startDate.isBlank()) ? startDate.trim() : LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            String safeEndDate = (endDate != null && !endDate.isBlank()) ? endDate.trim() : "Theo thỏa thuận";
+            String safeDeposit = (depositAmount != null && !depositAmount.isBlank()) ? depositAmount.trim() : "0 VNĐ";
+            String safeRental = (rentalAmount != null && !rentalAmount.isBlank()) ? rentalAmount.trim() : "0 VNĐ";
+            String safeTotal = (totalAmount != null && !totalAmount.isBlank()) ? totalAmount.trim() : "0 VNĐ";
+            String safeStatus = (contractStatus != null && !contractStatus.isBlank()) ? contractStatus.trim() : "ACTIVE";
+            String safePin = (gatePin != null && !gatePin.isBlank()) ? gatePin.trim() : "------";
+            String today = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
-            String subject = "[Smart Self Storage] Xác nhận hoàn tất hoàn tiền cọc - HĐ: " + safeCode;
+            String subject = "[Smart Self Storage] Xác nhận nhận kho thành công - Mã HĐ: " + safeCode;
 
-            String receiptHtml = "";
-            if (safeReceipt != null) {
-                receiptHtml = "<p style=\"margin: 16px 0 8px 0; font-weight: bold;\">Ảnh chứng từ / Biên lai chuyển khoản:</p>"
-                        + "<p><a href=\"" + escapeHtml(safeReceipt) + "\" target=\"_blank\" style=\"display: inline-block; padding: 10px 18px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px;\">Xem ảnh chứng từ chuyển khoản</a></p>";
+            String template = loadTemplate("check-in-completion.html");
+            String html = template
+                    .replace("{{contractCode}}", escapeHtml(safeCode))
+                    .replace("{{reservationCode}}", escapeHtml(safeCode))
+                    .replace("{{createdDate}}", escapeHtml(today))
+                    .replace("{{facilityName}}", escapeHtml(safeFacilityName))
+                    .replace("{{facilityAddress}}", escapeHtml(safeFacilityAddress))
+                    .replace("{{facilityPhone}}", escapeHtml(safeFacilityPhone))
+                    .replace("{{customerName}}", escapeHtml(safeCustomerName))
+                    .replace("{{displayName}}", escapeHtml(safeCustomerName))
+                    .replace("{{citizenId}}", escapeHtml(safeCitizenId))
+                    .replace("{{customerPhone}}", escapeHtml(safePhone))
+                    .replace("{{customerEmail}}", escapeHtml(toEmail.trim()))
+                    .replace("{{unitCode}}", escapeHtml(safeUnit))
+                    .replace("{{unitType}}", escapeHtml(safeUnitType))
+                    .replace("{{unitSize}}", escapeHtml(safeUnitSize))
+                    .replace("{{startDate}}", escapeHtml(safeStartDate))
+                    .replace("{{formattedStart}}", escapeHtml(safeStartDate))
+                    .replace("{{endDate}}", escapeHtml(safeEndDate))
+                    .replace("{{formattedEnd}}", escapeHtml(safeEndDate))
+                    .replace("{{depositAmount}}", escapeHtml(safeDeposit))
+                    .replace("{{rentalAmount}}", escapeHtml(safeRental))
+                    .replace("{{totalAmount}}", escapeHtml(safeTotal))
+                    .replace("{{contractStatus}}", escapeHtml(safeStatus))
+                    .replace("{{gatePin}}", escapeHtml(safePin));
+
+            byte[] pdfBytes = null;
+            try {
+                java.nio.file.Path pdfPath = java.nio.file.Paths.get("uploads", "contracts", safeCode + ".pdf");
+                if (!java.nio.file.Files.exists(pdfPath)) {
+                    pdfPath = java.nio.file.Paths.get("backend", "uploads", "contracts", safeCode + ".pdf");
+                }
+                if (java.nio.file.Files.exists(pdfPath)) {
+                    pdfBytes = java.nio.file.Files.readAllBytes(pdfPath);
+                }
+            } catch (Exception ex) {
+                log.warn("Không tìm thấy hoặc không thể đọc file PDF hợp đồng chuẩn {}: {}", safeCode, ex.getMessage());
             }
 
-            String template = loadTemplate("refund-confirmation.html");
-            String html = template
-                    .replace("{{safeName}}", escapeHtml(safeName))
-                    .replace("{{safeCode}}", escapeHtml(safeCode))
-                    .replace("{{safeAmount}}", escapeHtml(safeAmount))
-                    .replace("{{safeTxn}}", escapeHtml(safeTxn))
-                    .replace("{{settlementDate}}", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
-                    .replace("{{receiptHtml}}", receiptHtml);
-
-            sendHtmlEmail(toEmail.trim(), subject, html);
+            if (pdfBytes != null && pdfBytes.length > 0) {
+                sendHtmlEmailWithAttachment(toEmail.trim(), subject, html, safeCode + ".pdf", pdfBytes);
+            } else {
+                sendHtmlEmail(toEmail.trim(), subject, html);
+            }
             return true;
         } catch (Exception e) {
-            log.error("Không thể gửi email xác nhận hoàn cọc tới {}: {}", toEmail, e.getMessage());
+            log.error("Không thể gửi email xác nhận check-in tới {}: {}", toEmail, e.getMessage());
             return false;
         }
     }
 
-    // --- 7. Gửi email nhắc sắp hết hạn hợp đồng thuê kho trước 3 ngày (BR-27) ---
-    public boolean sendExpiryReminderEmail(String toEmail, String customerName, String contractCode, String unitCode, String facilityName, String endDate, long daysLeft) {
+    // --- 4. Gửi email nhắc sắp hết hạn hợp đồng thuê kho trước 3 ngày ---
+    public boolean sendExpiryReminderEmail(String toEmail, String customerName, String contractCode, String unitCode, String facilityName, LocalDate expiryDate, long daysLeft) {
         if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
             return false;
         }
@@ -379,7 +295,7 @@ public class EmailService {
             String safeCode = (contractCode != null && !contractCode.isBlank()) ? contractCode.trim() : "---";
             String safeUnit = (unitCode != null && !unitCode.isBlank()) ? unitCode.trim() : "---";
             String safeFacility = (facilityName != null && !facilityName.isBlank()) ? facilityName.trim() : "Hệ thống Smart Self Storage";
-            String safeEnd = (endDate != null && !endDate.isBlank()) ? endDate.trim() : "Sắp tới";
+            String expDateStr = expiryDate != null ? expiryDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "---";
 
             String subject = "[Smart Self Storage] Nhắc hạn thuê kho - Hợp đồng " + safeCode + " sắp hết hạn sau " + daysLeft + " ngày";
 
@@ -389,79 +305,19 @@ public class EmailService {
                     .replace("{{contractCode}}", escapeHtml(safeCode))
                     .replace("{{unitCode}}", escapeHtml(safeUnit))
                     .replace("{{facilityName}}", escapeHtml(safeFacility))
-                    .replace("{{endDate}}", escapeHtml(safeEnd))
+                    .replace("{{expiryDate}}", escapeHtml(expDateStr))
+                    .replace("{{endDate}}", escapeHtml(expDateStr))
                     .replace("{{daysLeft}}", String.valueOf(daysLeft));
 
             sendHtmlEmail(toEmail.trim(), subject, html);
             return true;
         } catch (Exception e) {
-            log.error("Không thể gửi email nhắc hạn tới {}: {}", toEmail, e.getMessage());
+            log.error("Không thể gửi email nhắc hạn thuê kho tới {}: {}", toEmail, e.getMessage());
             return false;
         }
     }
 
-    // --- 8. Gửi email cảnh báo quá hạn hợp đồng & nguy cơ thanh lý (BR-30, BR-32) ---
-    public boolean sendOverdueWarningEmail(String toEmail, String customerName, String contractCode, String unitCode, String facilityName, long overdueDays, BigDecimal totalPenalty) {
-        if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
-            return false;
-        }
-        try {
-            String safeName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
-            String safeCode = (contractCode != null && !contractCode.isBlank()) ? contractCode.trim() : "---";
-            String safeUnit = (unitCode != null && !unitCode.isBlank()) ? unitCode.trim() : "---";
-            String safeFacility = (facilityName != null && !facilityName.isBlank()) ? facilityName.trim() : "Hệ thống Smart Self Storage";
-            String formattedPenalty = totalPenalty != null ? NumberFormat.getInstance(Locale.of("vi", "VN")).format(totalPenalty) + " VNĐ" : "50.000 VNĐ";
-
-            String subject = "[Smart Self Storage - CẢNH BÁO] Hợp đồng " + safeCode + " quá hạn ngày thứ " + overdueDays;
-
-            String template = loadTemplate("overdue-warning.html");
-            String html = template
-                    .replace("{{displayName}}", escapeHtml(safeName))
-                    .replace("{{contractCode}}", escapeHtml(safeCode))
-                    .replace("{{unitCode}}", escapeHtml(safeUnit))
-                    .replace("{{facilityName}}", escapeHtml(safeFacility))
-                    .replace("{{overdueDays}}", String.valueOf(overdueDays))
-                    .replace("{{totalPenalty}}", escapeHtml(formattedPenalty));
-
-            sendHtmlEmail(toEmail.trim(), subject, html);
-            return true;
-        } catch (Exception e) {
-            log.error("Không thể gửi email cảnh báo quá hạn tới {}: {}", toEmail, e.getMessage());
-            return false;
-        }
-    }
-
-    // --- 9. Gửi email cảnh báo đăng nhập bất thường & khóa tài khoản 15 phút (BR-03) ---
-    public boolean sendSecurityAlertEmail(String toEmail, String customerName, String ipAddress, LocalDateTime lockUntil) {
-        if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
-            return false;
-        }
-        try {
-            String safeName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
-            String safeIp = (ipAddress != null && !ipAddress.isBlank()) ? ipAddress.trim() : "Không xác định";
-            String timeStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy"));
-            String unlockStr = lockUntil != null
-                    ? lockUntil.format(DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy"))
-                    : LocalDateTime.now().plusMinutes(15).format(DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy"));
-
-            String subject = "[Smart Self Storage - CẢNH BÁO BẢO MẬT] Phát hiện đăng nhập bất thường vào tài khoản";
-
-            String template = loadTemplate("security-alert.html");
-            String html = template
-                    .replace("{{displayName}}", escapeHtml(safeName))
-                    .replace("{{time}}", escapeHtml(timeStr))
-                    .replace("{{ipAddress}}", escapeHtml(safeIp))
-                    .replace("{{unlockTime}}", escapeHtml(unlockStr));
-
-            sendHtmlEmail(toEmail.trim(), subject, html);
-            return true;
-        } catch (Exception e) {
-            log.error("Không thể gửi email cảnh báo bảo mật tới {}: {}", toEmail, e.getMessage());
-            return false;
-        }
-    }
-
-    // --- 10. Gửi email xác nhận gia hạn hợp đồng thành công (BR-29) ---
+    // --- 5. Gửi email xác nhận gia hạn hợp đồng thành công ---
     public boolean sendRenewalSuccessEmail(String toEmail, String customerName, String contractCode, String unitCode,
                                           String facilityName, int effectiveDays, LocalDate newExpiryDate,
                                           String invoiceNumber, BigDecimal amount) {
@@ -482,6 +338,7 @@ public class EmailService {
             String template = loadTemplate("renewal-success.html");
             String html = template
                     .replace("{{customerName}}", escapeHtml(safeName))
+                    .replace("{{displayName}}", escapeHtml(safeName))
                     .replace("{{contractCode}}", escapeHtml(safeCode))
                     .replace("{{unitCode}}", escapeHtml(safeUnit))
                     .replace("{{facilityName}}", escapeHtml(safeFacility))
@@ -494,6 +351,108 @@ public class EmailService {
             return true;
         } catch (Exception e) {
             log.error("Không thể gửi email gia hạn thành công tới {}: {}", toEmail, e.getMessage());
+            return false;
+        }
+    }
+
+    // --- 6. Gửi email cảnh báo quá hạn hợp đồng ---
+    public boolean sendOverdueWarningEmail(String toEmail, String customerName, String contractCode, String unitCode, String facilityName, long overdueDays, BigDecimal totalPenalty) {
+        if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
+            return false;
+        }
+        try {
+            String safeName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
+            String safeCode = (contractCode != null && !contractCode.isBlank()) ? contractCode.trim() : "---";
+            String safeUnit = (unitCode != null && !unitCode.isBlank()) ? unitCode.trim() : "---";
+            String safeFacility = (facilityName != null && !facilityName.isBlank()) ? facilityName.trim() : "Hệ thống Smart Self Storage";
+            String formattedPenalty = totalPenalty != null ? NumberFormat.getInstance(Locale.of("vi", "VN")).format(totalPenalty) + " VNĐ" : "50.000 VNĐ";
+
+            String subject = "[Smart Self Storage] Cảnh báo hợp đồng " + safeCode + " quá hạn ngày thứ " + overdueDays;
+
+            String template = loadTemplate("overdue-warning.html");
+            String html = template
+                    .replace("{{displayName}}", escapeHtml(safeName))
+                    .replace("{{customerName}}", escapeHtml(safeName))
+                    .replace("{{contractCode}}", escapeHtml(safeCode))
+                    .replace("{{unitCode}}", escapeHtml(safeUnit))
+                    .replace("{{facilityName}}", escapeHtml(safeFacility))
+                    .replace("{{overdueDays}}", String.valueOf(overdueDays))
+                    .replace("{{totalPenalty}}", escapeHtml(formattedPenalty));
+
+            sendHtmlEmail(toEmail.trim(), subject, html);
+            return true;
+        } catch (Exception e) {
+            log.error("Không thể gửi email cảnh báo quá hạn tới {}: {}", toEmail, e.getMessage());
+            return false;
+        }
+    }
+
+    // --- 7. Gửi email xác nhận hoàn tất hoàn trả tiền cọc (BR-35) ---
+    public boolean sendRefundConfirmationEmail(String toEmail, String customerName, String contractCode, BigDecimal amount, String receiptUrl, String transactionCode) {
+        if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) return false;
+        try {
+            String safeName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
+            String safeCode = (contractCode != null && !contractCode.isBlank()) ? contractCode.trim() : "---";
+            String safeAmount = (amount != null) ? NumberFormat.getInstance(Locale.of("vi", "VN")).format(amount) + " VNĐ" : "0 VNĐ";
+            String safeTxn = (transactionCode != null && !transactionCode.isBlank()) ? transactionCode.trim() : "Chuyển khoản liên ngân hàng";
+            String safeReceipt = (receiptUrl != null && !receiptUrl.isBlank()) ? receiptUrl.trim() : null;
+            String settlementDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+            String subject = "[Smart Self Storage] Xác nhận hoàn tất hoàn tiền cọc - Mã HĐ: " + safeCode;
+
+            String receiptHtml = "";
+            if (safeReceipt != null) {
+                receiptHtml = "<div style=\"text-align: center; margin: 18px 0;\">"
+                        + "<a href=\"" + escapeHtml(safeReceipt) + "\" target=\"_blank\" style=\"display: inline-block; padding: 10px 24px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 13px;\">"
+                        + "Xem ảnh minh chứng"
+                        + "</a></div>";
+            }
+
+            String template = loadTemplate("refund-confirmation.html");
+            String html = template
+                    .replace("{{displayName}}", escapeHtml(safeName))
+                    .replace("{{customerName}}", escapeHtml(safeName))
+                    .replace("{{contractCode}}", escapeHtml(safeCode))
+                    .replace("{{refundAmount}}", escapeHtml(safeAmount))
+                    .replace("{{transactionCode}}", escapeHtml(safeTxn))
+                    .replace("{{settlementDate}}", escapeHtml(settlementDate))
+                    .replace("{{receiptSection}}", receiptHtml);
+
+            sendHtmlEmail(toEmail.trim(), subject, html);
+            return true;
+        } catch (Exception e) {
+            log.error("Không thể gửi email xác nhận hoàn cọc tới {}: {}", toEmail, e.getMessage());
+            return false;
+        }
+    }
+
+    // --- 8. Gửi email cảnh báo đăng nhập bất thường & khóa tài khoản 15 phút (BR-03) ---
+    public boolean sendSecurityAlertEmail(String toEmail, String customerName, String ipAddress, LocalDateTime lockUntil) {
+        if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
+            return false;
+        }
+        try {
+            String safeName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
+            String safeIp = (ipAddress != null && !ipAddress.isBlank()) ? ipAddress.trim() : "Không xác định";
+            String timeStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy"));
+            String unlockStr = lockUntil != null
+                    ? lockUntil.format(DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy"))
+                    : LocalDateTime.now().plusMinutes(15).format(DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy"));
+
+            String subject = "[Smart Self Storage] Cảnh báo đăng nhập bất thường vào tài khoản";
+
+            String template = loadTemplate("security-alert.html");
+            String html = template
+                    .replace("{{displayName}}", escapeHtml(safeName))
+                    .replace("{{customerName}}", escapeHtml(safeName))
+                    .replace("{{time}}", escapeHtml(timeStr))
+                    .replace("{{ipAddress}}", escapeHtml(safeIp))
+                    .replace("{{unlockTime}}", escapeHtml(unlockStr));
+
+            sendHtmlEmail(toEmail.trim(), subject, html);
+            return true;
+        } catch (Exception e) {
+            log.error("Không thể gửi email cảnh báo bảo mật tới {}: {}", toEmail, e.getMessage());
             return false;
         }
     }

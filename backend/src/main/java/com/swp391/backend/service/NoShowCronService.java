@@ -204,14 +204,13 @@ public class NoShowCronService {
                 if (accountRepository != null && emailService != null) {
                     Account customer = accountRepository.findAccountByAccountId(reservation.getAccountId()).orElse(null);
                     if (customer != null && customer.getEmail() != null && !customer.getEmail().isBlank()) {
-                        String endDateStr = reservation.getEndDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
                         emailService.sendExpiryReminderEmail(
                                 customer.getEmail(),
                                 customer.getFullName(),
                                 contractCode,
                                 reservation.getUnitCode(),
                                 "Smart Self Storage",
-                                endDateStr,
+                                reservation.getEndDate(),
                                 daysLeft
                         );
                     }

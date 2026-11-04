@@ -1,64 +1,121 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biên lai hoàn tiền cọc - Smart Self Storage</title>
+    <title>Smart Self Storage - Xác nhận hoàn tất hoàn tiền cọc</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
-    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 30px 20px;">
+
+<body
+    style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0"
+        style="background-color: #f8fafc; padding: 30px 20px;">
         <tr>
             <td align="center">
-                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.04);">
+                <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0"
+                    style="max-width: 560px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.04);">
+
                     <!-- Header -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 16px 24px; text-align: center;">
-                            <h1 style="color: #ffffff; margin: 0; font-size: 17px; font-weight: 800; letter-spacing: 0.8px;">SMART SELF STORAGE</h1>
-                            <p style="color: #bfdbfe; margin: 3px 0 0 0; font-size: 11px; font-weight: 500;">Hệ thống lưu trữ thông minh &amp; tiện ích</p>
+                        <td
+                            style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 16px 24px; text-align: center;">
+                            <h1
+                                style="color: #ffffff; margin: 0; font-size: 17px; font-weight: 800; letter-spacing: 0.8px;">
+                                SMART SELF STORAGE</h1>
+                            <p style="color: #bfdbfe; margin: 3px 0 0 0; font-size: 11px; font-weight: 500;">Hệ thống
+                                lưu trữ thông minh &amp; tiện ích</p>
                         </td>
                     </tr>
-                    <!-- Body -->
+
+                    <!-- Nội dung chính -->
                     <tr>
-                        <td style="padding: 26px 32px 18px 32px;">
+                        <td style="padding: 26px 32px 20px 32px;">
+
+                            <!-- Tiêu đề thông báo & Icon căn giữa chuẩn -->
                             <div style="text-align: center; margin-bottom: 20px;">
-                                <div style="display: inline-block; width: 44px; height: 44px; line-height: 44px; border-radius: 50%; background-color: #ecfdf5; color: #059669; font-size: 22px; margin-bottom: 8px;">💸</div>
-                                <h2 style="margin: 0; color: #065f46; font-size: 18px; font-weight: 800; text-transform: uppercase;">XÁC NHẬN HOÀN TIỀN CỌC</h2>
-                                <p style="margin: 4px 0 0 0; color: #64748b; font-size: 12px;">Biên lai quyết toán hoàn trả tiền cọc cho hợp đồng (BR-35)</p>
+                                <table role="presentation" border="0" cellspacing="0" cellpadding="0" align="center"
+                                    style="margin: 0 auto 8px auto;">
+                                    <tr>
+                                        <td align="center" valign="middle"
+                                            style="width: 44px; height: 44px; background-color: #ecfdf5; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                            <span style="font-size: 20px; line-height: 1; display: inline-block;">💸</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <h2
+                                    style="margin: 0; color: #065f46; font-size: 18px; font-weight: 800; text-transform: uppercase;">
+                                    XÁC NHẬN HOÀN TIỀN CỌC</h2>
+                                <p style="margin: 4px 0 0 0; color: #64748b; font-size: 12px;">Thông báo hoàn tất thủ tục hoàn trả tiền đặt cọc hợp đồng</p>
                             </div>
 
-                            <p style="margin: 0 0 12px 0; font-size: 14px; line-height: 1.6;">Xin chào <strong>{{safeName}}</strong>,</p>
-                            <p style="margin: 0 0 18px 0; font-size: 13px; line-height: 1.6; color: #475569;">
-                                Bộ phận Quản lý / Kế toán Smart Self Storage đã hoàn tất đối soát và thực hiện lệnh chuyển khoản hoàn trả tiền cọc cho hợp đồng của Quý khách theo đúng quy định tại <strong>BR-35</strong>.
+                            <p style="margin: 0 0 10px 0; font-size: 14px; color: #334155;">
+                                Kính gửi Quý khách <strong>{{displayName}}</strong>,
                             </p>
-                            
-                            <!-- Bảng thông tin hoàn tiền -->
-                            <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px 20px; margin-bottom: 18px;">
-                                <p style="margin: 4px 0; font-size: 13px;"><strong>Mã hợp đồng:</strong> <span style="color: #2563eb; font-weight: bold;">{{safeCode}}</span></p>
-                                <p style="margin: 4px 0; font-size: 13px;"><strong>Số tiền hoàn trả:</strong> <span style="color: #16a34a; font-weight: bold; font-size: 16px;">{{safeAmount}}</span></p>
-                                <p style="margin: 4px 0; font-size: 13px;"><strong>Mã tham chiếu / Giao dịch:</strong> {{safeTxn}}</p>
-                                <p style="margin: 4px 0; font-size: 13px;"><strong>Ngày quyết toán:</strong> {{settlementDate}}</p>
+                            <p style="margin: 0 0 18px 0; font-size: 13px; color: #334155; line-height: 1.6;">
+                                Bộ phận Kế toán Smart Self Storage xin thông báo: Thủ tục hoàn trả tiền đặt cọc hợp đồng thuê ô kho của Quý khách đã được xử lý hoàn tất.
+                            </p>
+
+                            <!-- Hộp thông tin chi tiết hoàn cọc -->
+                            <div
+                                style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; margin-bottom: 18px;">
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size: 13px;">
+                                    <tr>
+                                        <td style="padding: 7px 0; color: #64748b; width: 45%; border-bottom: 1px dashed #e2e8f0;">Mã hợp đồng:</td>
+                                        <td
+                                            style="padding: 7px 0; font-weight: 700; color: #0f172a; text-align: right; border-bottom: 1px dashed #e2e8f0; white-space: nowrap;">
+                                            {{contractCode}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 7px 0; color: #64748b; border-bottom: 1px dashed #e2e8f0;">Mã giao dịch / Tham chiếu:</td>
+                                        <td
+                                            style="padding: 7px 0; font-weight: 700; color: #2563eb; text-align: right; border-bottom: 1px dashed #e2e8f0; white-space: nowrap;">
+                                            {{transactionCode}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 7px 0; color: #64748b; border-bottom: 1px dashed #e2e8f0;">Ngày quyết toán:</td>
+                                        <td
+                                            style="padding: 7px 0; font-weight: 600; color: #0f172a; text-align: right; border-bottom: 1px dashed #e2e8f0; white-space: nowrap;">
+                                            {{settlementDate}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0 0 0; color: #64748b; font-weight: 600;">Số tiền hoàn trả:</td>
+                                        <td
+                                            style="padding: 8px 0 0 0; font-weight: 800; color: #059669; text-align: right; font-size: 15px; white-space: nowrap;">
+                                            {{refundAmount}}</td>
+                                    </tr>
+                                </table>
                             </div>
 
-                            {{receiptHtml}}
+                            <!-- Phần chứng từ nếu có -->
+                            {{receiptSection}}
 
-                            <p style="margin: 16px 0 4px 0; font-size: 12px; color: #64748b; line-height: 1.5;">
-                                Tiền sẽ được ghi có vào tài khoản ngân hàng của Quý khách theo thời gian xử lý liên ngân hàng (thường trong vòng 24 giờ).
-                            </p>
-                            <p style="margin: 0; font-size: 12px; color: #64748b; line-height: 1.5;">
-                                Cảm ơn Quý khách đã tin tưởng và sử dụng dịch vụ của Smart Self Storage!
-                            </p>
+                            <!-- Lưu ý hỗ trợ -->
+                            <div
+                                style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; margin-bottom: 0; font-size: 12px; color: #475569; line-height: 1.6; text-align: center;">
+                                💬 Nếu Quý khách chưa nhận được tiền vào tài khoản hoặc cần hỗ trợ tra soát, vui lòng liên hệ Email hoặc Hotline của hệ thống để được kiểm tra và xử lý kịp thời.
+                            </div>
+
                         </td>
                     </tr>
+
                     <!-- Footer -->
                     <tr>
-                        <td style="background-color: #f1f5f9; padding: 16px 24px; text-align: center; border-top: 1px solid #e2e8f0;">
-                            <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: 600;">Hệ thống Smart Self Storage</p>
-                            <p style="margin: 4px 0 0 0; font-size: 11px; color: #94a3b8;">Email hỗ trợ: <a href="mailto:smartstorage.support@gmail.com" style="color: #2563eb; text-decoration: none;">smartstorage.support@gmail.com</a> | Hotline: 1900 8899</p>
+                        <td
+                            style="background-color: #f1f5f9; padding: 16px 24px; text-align: center; border-top: 1px solid #e2e8f0;">
+                            <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: 600;">HỆ THỐNG LƯU KHO
+                                THÔNG MINH SMART SELF STORAGE</p>
+                            <p style="margin: 4px 0 0 0; font-size: 11px; color: #94a3b8;">Email hỗ trợ: <a
+                                    href="mailto:smartstorage.support@gmail.com"
+                                    style="color: #2563eb; text-decoration: none;">smartstorage.support@gmail.com</a> |
+                                Hotline: 1900 8899</p>
                         </td>
                     </tr>
+
                 </table>
             </td>
         </tr>
     </table>
 </body>
+
 </html>
