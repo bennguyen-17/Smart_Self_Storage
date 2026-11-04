@@ -29,6 +29,7 @@ export interface FacilityPerformance {
   rentalRevenue?: number
   penaltyRevenue?: number
   monthlyRevenues?: { month: string; label: string; revenue: number; rentalRevenue?: number; penaltyRevenue?: number }[]
+  images?: Record<string, string>
 }
 
 export interface UnitPricing {

@@ -4,8 +4,6 @@ import {
   type FacilityPerformance,
   type UnitPricing,
   type SurchargeItem,
-  INITIAL_PRICING,
-  INITIAL_SURCHARGES,
 } from "../data/bomData"
 import { toast } from "sonner"
 
@@ -46,8 +44,9 @@ interface BomContextType {
     isAllClimate?: boolean
     status?: string
     managerName?: string
+    images?: Record<string, number>
   }) => Promise<boolean>
-  updateFacilityInDb: (facilityId: number, data: { facilityName?: string; address?: string; phone?: string; status?: string; managerName?: string; managerPhone?: string; managerEmail?: string; priceMultiplier?: number }) => Promise<boolean>
+  updateFacilityInDb: (facilityId: number, data: { facilityName?: string; address?: string; phone?: string; status?: string; managerName?: string; managerPhone?: string; managerEmail?: string; priceMultiplier?: number; images?: Record<string, number> }) => Promise<boolean>
   deleteFacilityInDb: (facilityId: number) => Promise<boolean>
 }
 
@@ -70,33 +69,18 @@ function fixMojibake(str?: string): string {
 export function BomProvider({ children }: { children: React.ReactNode }) {
   const [chainOverview, setChainOverview] = useState<ChainDashboardData | null>(null)
   const [facilities, setFacilities] = useState<FacilityPerformance[]>([])
-  const [pricingList, setPricingList] = useState<UnitPricing[]>(INITIAL_PRICING)
-  const [surcharges, setSurcharges] = useState<SurchargeItem[]>(() => {
-    try {
-      if (typeof window !== "undefined") {
-        const saved = localStorage.getItem("smart_storage_surcharges")
-        if (saved) {
-          const parsed = JSON.parse(saved)
-          if (Array.isArray(parsed)) return parsed
-        }
-      }
-    } catch (e) {
-      console.warn("Lỗi đọc surcharges từ localStorage:", e)
-    }
-    return INITIAL_SURCHARGES
-  })
+  const [pricingList, setPricingList] = useState<UnitPricing[]>([])
+  const [surcharges, setSurcharges] = useState<SurchargeItem[]>([])
   const [isLoadingApi, setIsLoadingApi] = useState<boolean>(true)
   const [isApiConnected, setIsApiConnected] = useState<boolean>(false)
 
   useEffect(() => {
     try {
       if (typeof window !== "undefined") {
-        localStorage.setItem("smart_storage_surcharges", JSON.stringify(surcharges))
+        localStorage.removeItem("smart_storage_surcharges")
       }
-    } catch (e) {
-      console.warn("Lỗi lưu surcharges vào localStorage:", e)
-    }
-  }, [surcharges])
+    } catch (e) {}
+  }, [])
 
   const loadLiveData = useCallback(async () => {
     try {
@@ -127,6 +111,8 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
       if (overview) {
         setChainOverview(overview)
         setIsApiConnected(true)
+      } else {
+        setChainOverview(null)
       }
 
       // 0. Cập nhật biểu phí (Fee Policies) từ Database
@@ -184,6 +170,8 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
           }
         })
         setSurcharges(mappedSurcharges)
+      } else {
+        setSurcharges([])
       }
 
       // 1. Cập nhật bảng giá từ Database (nếu API có dữ liệu)
@@ -210,6 +198,8 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
           status: p.status === "ACTIVE" ? "Đang áp dụng" : (p.status || "Đang áp dụng"),
         }))
         setPricingList(mappedPrices)
+      } else {
+        setPricingList([])
       }
 
       // 2. Cập nhật danh sách cơ sở từ Database
@@ -335,6 +325,7 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
             priceMultiplier: savedMgr?.priceMultiplier || 1.0,
             layoutType: f.layoutType || "A",
             floorCount: f.floorCount || 3,
+            images: f.images || undefined,
             note: "Dữ liệu vận hành đồng bộ trực tiếp từ Database",
           }
         })
@@ -536,6 +527,7 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
     isAllClimate?: boolean
     status?: string
     managerName?: string
+    images?: Record<string, number>
   }): Promise<boolean> => {
     try {
       await bomApi.createFacility(data)
@@ -566,6 +558,7 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
       managerPhone?: string
       managerEmail?: string
       priceMultiplier?: number
+      images?: Record<string, number>
     }
   ): Promise<boolean> => {
     try {
@@ -603,7 +596,13 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
   const deleteFacilityInDb = async (facilityId: number): Promise<boolean> => {
     try {
       await bomApi.deleteFacility(facilityId)
+      setFacilities((prev) =>
+        prev.map((f) => (Number(f.id) === Number(facilityId) ? { ...f, status: "INACTIVE" } : f))
+      )
       await loadLiveData()
+      setFacilities((prev) =>
+        prev.map((f) => (Number(f.id) === Number(facilityId) ? { ...f, status: "INACTIVE" } : f))
+      )
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("storage_facilities_updated"))
         window.dispatchEvent(new CustomEvent("storage_units_updated"))

@@ -68,6 +68,14 @@ export interface FacilityApiItem {
   layoutType: string
   isAllClimate: boolean
   status: string
+  images?: Record<string, string>
+}
+
+export interface UploadedFacilityImage {
+  imageId: number
+  typeCode: number
+  category: string
+  url: string
 }
 
 export const bomApi = {
@@ -84,6 +92,17 @@ export const bomApi = {
   getFacilities: async (): Promise<FacilityApiItem[]> => {
     return apiClient.get('/facilities')
   },
+  uploadFacilityImage: async (
+    file: File,
+    category: "FACILITY_COVER" | "UNITS_ALL" | "UNIT_STANDARD" | "UNIT_CLIMATE"
+  ): Promise<UploadedFacilityImage> => {
+    const formData = new FormData()
+    formData.append("file", file)
+    formData.append("category", category)
+    return apiClient.post("/uploads", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+  },
   createFacility: async (data: {
     facilityName: string
     address: string
@@ -94,10 +113,23 @@ export const bomApi = {
     isAllClimate?: boolean
     status?: string
     managerName?: string
+    images?: Record<string, number>
   }): Promise<FacilityApiItem> => {
     return apiClient.post('/facilities', data)
   },
-  updateFacility: async (facilityId: number, data: { facilityName?: string; address?: string; phone?: string; status?: string; managerName?: string; managerPhone?: string; managerEmail?: string }): Promise<FacilityApiItem> => {
+  updateFacility: async (
+    facilityId: number,
+    data: {
+      facilityName?: string
+      address?: string
+      phone?: string
+      status?: string
+      managerName?: string
+      managerPhone?: string
+      managerEmail?: string
+      images?: Record<string, number>
+    }
+  ): Promise<FacilityApiItem> => {
     return apiClient.put(`/facilities/${facilityId}`, data)
   },
   deleteFacility: async (facilityId: number): Promise<any> => {

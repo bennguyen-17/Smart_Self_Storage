@@ -196,6 +196,8 @@ export const getBranches = async () => {
         managerName,
         managerPhone,
         managerEmail,
+        image: f.images?.cover || f.image || undefined,
+        images: f.images || undefined,
       };
 
       if (item.code && item.backendId) {
@@ -211,10 +213,10 @@ export const getBranches = async () => {
       return item;
     });
 
-    return { success: true, data: facilities.length > 0 ? facilities : MOCK_BRANCHES };
+    return { success: true, data: facilities };
   } catch (error) {
-    console.warn('API error, falling back to mock branches:', error);
-    return { success: true, data: MOCK_BRANCHES };
+    console.warn('API /facilities error:', error);
+    return { success: false, data: [] };
   }
 };
 
