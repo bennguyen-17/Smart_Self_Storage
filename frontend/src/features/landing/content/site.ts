@@ -14,8 +14,8 @@ export interface Hotline {
 }
 
 export const HOTLINE: Hotline = {
-  display: "1900 391 391",
-  tel: null,
+  display: "1900 8899",
+  tel: "19008899",
 }
 
 export const ROUTES = {

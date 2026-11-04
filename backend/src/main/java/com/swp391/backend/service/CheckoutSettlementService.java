@@ -561,13 +561,25 @@ public class CheckoutSettlementService {
                                     if (acc.getEmail() != null && !acc.getEmail().isBlank()) {
                                         String contractCode = (r.getReservationCode() != null && !r.getReservationCode().isBlank())
                                                 ? r.getReservationCode() : ("CTR-" + c.getContractId());
+                                        byte[] receiptBytes = null;
+                                        String receiptContentType = "image/png";
+                                        if (receiptUrl != null && imageStorageService != null) {
+                                            var imgFile = imageStorageService.loadReceiptImageFile(receiptUrl);
+                                            if (imgFile != null) {
+                                                receiptBytes = imgFile.content();
+                                                receiptContentType = imgFile.contentType();
+                                            }
+                                        }
+
                                         emailService.sendRefundConfirmationEmail(
                                                 acc.getEmail(),
                                                 acc.getFullName(),
                                                 contractCode,
                                                 p.getAmount(),
                                                 receiptUrl,
-                                                transactionRef
+                                                transactionRef,
+                                                receiptBytes,
+                                                receiptContentType
                                         );
                                     }
                                 });

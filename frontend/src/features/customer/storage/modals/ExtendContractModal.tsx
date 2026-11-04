@@ -157,32 +157,55 @@ export default function ExtendContractModal({
         </div>
 
         {/* Thẻ thông tin ô kho hiện tại */}
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 space-y-2.5 text-xs">
-          <div className="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-700">
-            <div className="flex items-center gap-2">
-              <Boxes className="size-4 text-blue-600 dark:text-blue-400" />
-              <span className="font-extrabold text-slate-900 dark:text-white text-sm font-mono">
-                {unitCode || name}
-              </span>
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                Size {size}
-              </span>
+        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 space-y-3 text-xs">
+          {/* Hàng 1: Mã ô kho (to rõ) + Size bên dưới, Cơ sở bên phải */}
+          <div className="flex items-start justify-between gap-3 pb-2.5 border-b border-slate-200 dark:border-slate-700">
+            <div className="space-y-1.5 min-w-0">
+              <div className="flex items-center gap-2">
+                <Boxes className="size-4.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span className="font-black text-slate-900 dark:text-white text-base font-mono tracking-tight whitespace-nowrap">
+                  {unitCode || name}
+                </span>
+              </div>
+              {size && (
+                <div className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100/90 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 max-w-full">
+                  <span className="truncate">
+                    {size.toLowerCase().startsWith('size') ? size : `Size ${size}`}
+                  </span>
+                </div>
+              )}
             </div>
-            <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
-              Cơ sở {branch}
-            </span>
+
+            <div className="text-right shrink-0 max-w-[50%]">
+              <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                Cơ sở lưu kho
+              </div>
+              <div className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-0.5 line-clamp-2">
+                {branch.replace(/^Cơ sở\s+/i, '')}
+              </div>
+            </div>
           </div>
 
-          <div className="flex justify-between items-center text-slate-600 dark:text-slate-300 pt-0.5">
-            <span className="flex items-center gap-1.5">
-              <Calendar className="size-3.5 text-slate-400" />
+          {/* Hàng 2: Hạn hiện tại & Badge số ngày còn lại */}
+          <div className="flex items-center justify-between gap-2 pt-0.5">
+            <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+              <Calendar className="size-3.5 text-slate-400 shrink-0" />
               <span>Hạn hiện tại:</span>
-              <strong className="text-slate-900 dark:text-white font-mono">{formattedCurrentExpiry}</strong>
+              <strong className="text-slate-900 dark:text-white font-mono whitespace-nowrap">
+                {formattedCurrentExpiry}
+              </strong>
             </span>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
-              <Clock className="size-3" />
-              <span>Còn {daysLeft} ngày</span>
-            </span>
+            {daysLeft < 0 ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800 whitespace-nowrap shrink-0">
+                <Clock className="size-3" />
+                <span>Quá hạn {Math.abs(daysLeft)} ngày</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 whitespace-nowrap shrink-0">
+                <Clock className="size-3" />
+                <span>Còn {daysLeft} ngày</span>
+              </span>
+            )}
           </div>
         </div>
 

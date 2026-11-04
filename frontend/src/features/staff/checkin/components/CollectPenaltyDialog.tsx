@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { CheckCircle2Icon, LockIcon, ReceiptTextIcon } from "lucide-react"
+import { CheckCircle2Icon, ReceiptTextIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { formatVnd } from "@/lib/format"
@@ -125,18 +125,7 @@ function Body({
         </div>
       </div>
 
-      <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
-        <div className="mb-1 flex items-center space-x-1.5 font-black">
-          <LockIcon className="size-3.5" />
-          <span>Lưu ý sau khi thu phạt</span>
-        </div>
-        <p>
-          Toàn bộ ngày phạt được gộp vào <b>1 hóa đơn PEN</b>. Hợp đồng{" "}
-          <b>vẫn giữ trạng thái OVERDUE</b>, mã PIN trên Web vẫn khóa — Staff mở
-          cửa trực tiếp bằng Thẻ Master/chìa cơ. Muốn mở lại PIN, khách cần{" "}
-          <b>gia hạn tại quầy</b>.
-        </p>
-      </div>
+
 
       {!canCollect && (
         <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-xs font-semibold text-rose-700 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-300">
@@ -211,15 +200,9 @@ function SuccessPanel({
         />
       </div>
 
-      <div className="rounded-2xl border border-amber-300 bg-amber-50 p-3.5 text-xs dark:border-amber-700 dark:bg-amber-950/30">
-        <div className="flex items-center space-x-1.5 font-black text-amber-800 dark:text-amber-300">
-          <LockIcon className="size-3.5" />
-          <span>Quyền ra vào</span>
-        </div>
-        <p className="mt-1 text-amber-800/90 dark:text-amber-300/90">
-          Mã PIN trên Web <b>vẫn bị khóa</b>. Staff trực tiếp dùng Thẻ Master /
-          chìa cơ để hỗ trợ khách vào dọn đồ. Nếu khách muốn tiếp tục thuê, thực
-          hiện <b>Gia hạn tại quầy</b> để đưa hợp đồng về ACTIVE.
+      <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-3.5 text-xs text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300">
+        <p>
+          Đã thu đủ tiền phạt quá hạn và xuất hóa đơn. Khách hàng có thể tiếp tục thực hiện <b>Gia hạn tại quầy</b> nếu muốn tiếp tục thuê kho.
         </p>
       </div>
 

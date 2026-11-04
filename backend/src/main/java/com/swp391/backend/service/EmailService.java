@@ -34,6 +34,8 @@ public class EmailService {
 
     @Value("${app.mail.from}")
     private String fromEmail;
+    @Value("${app.backend.base-url:http://localhost:8080}")
+    private String backendBaseUrl;
 
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
@@ -389,6 +391,13 @@ public class EmailService {
 
     // --- 7. Gửi email xác nhận hoàn tất hoàn trả tiền cọc (BR-35) ---
     public boolean sendRefundConfirmationEmail(String toEmail, String customerName, String contractCode, BigDecimal amount, String receiptUrl, String transactionCode) {
+        return sendRefundConfirmationEmail(toEmail, customerName, contractCode, amount, receiptUrl, transactionCode, null, null);
+    }
+
+    public boolean sendRefundConfirmationEmail(
+            String toEmail, String customerName, String contractCode, BigDecimal amount,
+            String receiptUrl, String transactionCode, byte[] receiptImageBytes, String receiptContentType
+    ) {
         if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) return false;
         try {
             String safeName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
@@ -396,12 +405,23 @@ public class EmailService {
             String safeAmount = (amount != null) ? NumberFormat.getInstance(Locale.of("vi", "VN")).format(amount) + " VNĐ" : "0 VNĐ";
             String safeTxn = (transactionCode != null && !transactionCode.isBlank()) ? transactionCode.trim() : "Chuyển khoản liên ngân hàng";
             String safeReceipt = (receiptUrl != null && !receiptUrl.isBlank()) ? receiptUrl.trim() : null;
+            if (safeReceipt != null && safeReceipt.startsWith("/")) {
+                String base = (backendBaseUrl != null && !backendBaseUrl.isBlank()) ? backendBaseUrl.replaceAll("/+$", "") : "http://localhost:8080";
+                safeReceipt = base + safeReceipt;
+            }
             String settlementDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
             String subject = "[Smart Self Storage] Xác nhận hoàn tất hoàn tiền cọc - Mã HĐ: " + safeCode;
 
             String receiptHtml = "";
-            if (safeReceipt != null) {
+            boolean hasInlineImage = (receiptImageBytes != null && receiptImageBytes.length > 0);
+
+            if (hasInlineImage) {
+                receiptHtml = "<div style=\"margin: 20px 0; padding: 14px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; text-align: center;\">"
+                        + "<p style=\"margin: 0 0 10px 0; font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase;\">Biên lai chuyển khoản hoàn tiền</p>"
+                        + "<img src=\"cid:refundReceiptImage\" style=\"max-width: 100%; height: auto; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.06);\" alt=\"Biên lai hoàn tiền\" />"
+                        + "</div>";
+            } else if (safeReceipt != null) {
                 receiptHtml = "<div style=\"text-align: center; margin: 18px 0;\">"
                         + "<a href=\"" + escapeHtml(safeReceipt) + "\" target=\"_blank\" style=\"display: inline-block; padding: 10px 24px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 13px;\">"
                         + "Xem ảnh minh chứng"
@@ -418,7 +438,19 @@ public class EmailService {
                     .replace("{{settlementDate}}", escapeHtml(settlementDate))
                     .replace("{{receiptSection}}", receiptHtml);
 
-            sendHtmlEmail(toEmail.trim(), subject, html);
+            if (hasInlineImage) {
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+                helper.setFrom(fromEmail, "Smart Self Storage");
+                helper.setTo(toEmail.trim());
+                helper.setSubject(subject);
+                helper.setText(html, true);
+                helper.addInline("refundReceiptImage", new org.springframework.core.io.ByteArrayResource(receiptImageBytes), receiptContentType != null ? receiptContentType : "image/png");
+                mailSender.send(message);
+                log.info("Đã gửi email xác nhận hoàn cọc kèm ảnh biên lai trực tiếp tới: {}", toEmail);
+            } else {
+                sendHtmlEmail(toEmail.trim(), subject, html);
+            }
             return true;
         } catch (Exception e) {
             log.error("Không thể gửi email xác nhận hoàn cọc tới {}: {}", toEmail, e.getMessage());

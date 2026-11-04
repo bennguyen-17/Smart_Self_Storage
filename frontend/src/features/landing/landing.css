@@ -90,8 +90,7 @@
 }
 
 .landing .facility-title {
-  white-space: nowrap !important;
-  text-wrap: nowrap !important;
+  text-wrap: pretty;
 }
 
 .landing p {
