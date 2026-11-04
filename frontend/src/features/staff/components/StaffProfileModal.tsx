@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { IdCardIcon, LogOutIcon } from "lucide-react"
+import { IdCardIcon, KeyRoundIcon, LogOutIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { useAuth } from "@/context/AuthContext"
+import { PASSWORD_CHANGE_PATH } from "@/features/auth/passwordChangeRules"
 import {
   getStaffProfile,
   type StaffProfileData,
@@ -145,15 +146,28 @@ export default function StaffProfileModal({
           ))}
         </div>
 
-        {/* Nút Đăng xuất màu đỏ full-width như bên Customer */}
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-rose-600 py-3 text-xs font-bold text-white shadow-md transition hover:bg-rose-700 active:scale-[0.99]"
-        >
-          <LogOutIcon className="size-4" aria-hidden="true" />
-          <span>Đăng xuất</span>
-        </button>
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => {
+              onClose()
+              navigate(PASSWORD_CHANGE_PATH)
+            }}
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border border-slate-300 py-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            <KeyRoundIcon className="size-4" aria-hidden="true" />
+            <span>Đổi mật khẩu</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-rose-600 py-3 text-xs font-bold text-white shadow-md transition hover:bg-rose-700 active:scale-[0.99]"
+          >
+            <LogOutIcon className="size-4" aria-hidden="true" />
+            <span>Đăng xuất</span>
+          </button>
+        </div>
       </DialogContent>
     </Dialog>
   )

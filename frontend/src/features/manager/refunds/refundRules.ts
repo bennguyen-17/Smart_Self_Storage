@@ -90,6 +90,8 @@ export interface RefundFormInput {
   paymentId?: number | null
   bankAccount?: string | null
   evidenceUrl: string
+  /** Ảnh biên lai đã tải lên (cách chính); có thì không cần link */
+  receiptImageId?: number | null
   allowDataUrl?: boolean
   transactionRef?: string
   staffName?: string | null
@@ -100,7 +102,7 @@ export type RefundBlocker = "PAYMENT" | "BANK_ACCOUNT" | "EVIDENCE" | "EVIDENCE_
 export const REFUND_BLOCKER_LABEL: Record<RefundBlocker, string> = {
   PAYMENT: "Chưa có phiếu hoàn tiền trong hệ thống cho đơn này",
   BANK_ACCOUNT: "Khách chưa có số tài khoản nhận hoàn cọc",
-  EVIDENCE: "Chưa có biên lai chuyển khoản",
+  EVIDENCE: "Chưa có ảnh biên lai chuyển khoản",
   EVIDENCE_LINK: `Link biên lai phải bắt đầu bằng http:// hoặc https:// và tối đa ${EVIDENCE_URL_MAX} ký tự`,
   STAFF: "Chưa xác định nhân viên thực hiện (hãy đăng nhập)",
 }
@@ -116,7 +118,9 @@ export function getRefundBlockers(input: RefundFormInput): RefundBlocker[] {
   const blockers: RefundBlocker[] = []
   if (!input.paymentId) blockers.push("PAYMENT")
   if (isBlank(input.bankAccount)) blockers.push("BANK_ACCOUNT")
-  if (isBlank(input.evidenceUrl)) {
+  if (input.receiptImageId) {
+    // Đã có ảnh biên lai: không cần link
+  } else if (isBlank(input.evidenceUrl)) {
     blockers.push("EVIDENCE")
   } else {
     const isDemoImage = input.allowDataUrl === true && input.evidenceUrl.startsWith("data:image/")

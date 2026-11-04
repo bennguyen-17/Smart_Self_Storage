@@ -11,6 +11,7 @@ import apiClient from "@/lib/apiClient"
 import { formatVnd } from "@/lib/format"
 
 import ProtoModal from "@/features/staff/components/ProtoModal"
+import { uploadCheckoutInspectionImage } from "../api/acceptanceImageApi"
 
 export interface InspectionTarget {
   contractId?: number | null
@@ -27,6 +28,9 @@ interface StaffInspectionModalProps {
   onClose: () => void
   onConfirmed?: () => void
 }
+
+/** BE giới hạn mỗi ảnh tối đa 5 MB (ImageStorageService.MAX_IMAGE_SIZE) */
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
 /** Bảng giá hư hại niêm yết */
 const DAMAGE_ITEMS = [
@@ -70,7 +74,9 @@ function Body({
   onConfirmed?: () => void
 }) {
   const [damages, setDamages] = useState<string[]>([])
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photo, setPhoto] = useState<string | null>(null)
+  const [inspectionImageId, setInspectionImageId] = useState<number | null>(null)
   const [isCompensationCollected, setIsCompensationCollected] = useState(false)
 
   const [actualDeposit, setActualDeposit] = useState<number>(target.depositAmount ?? 0)
@@ -148,12 +154,31 @@ function Body({
     )
   }
 
+  useEffect(() => {
+    return () => {
+      if (photo) URL.revokeObjectURL(photo)
+    }
+  }, [photo])
+
   function handlePhoto(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
-    if (file) setPhoto(URL.createObjectURL(file))
+    if (!file) return
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast.error("Ảnh vượt quá 5 MB. Vui lòng chọn ảnh nhỏ hơn.")
+      event.target.value = ""
+      return
+    }
+    setPhotoFile(file)
+    setInspectionImageId(null)
+    setPhoto(URL.createObjectURL(file))
   }
 
   async function submit() {
+    if (!photoFile) {
+      toast.error("Vui lòng tải ít nhất 1 ảnh nghiệm thu hiện trường trước khi chốt biên bản.")
+      return
+    }
+
     setIsSubmitting(true)
     try {
       const damageFee = DAMAGE_ITEMS.filter(
@@ -161,6 +186,13 @@ function Body({
       ).reduce((sum, item) => sum + item.fee, 0)
       const cleaningFee = damages.includes("cleaning") ? 150_000 : 0
       const targetId = target.contractId || target.reservationId
+
+      let imageId = inspectionImageId
+      if (imageId === null) {
+        const uploaded = await uploadCheckoutInspectionImage(photoFile)
+        imageId = uploaded.imageId
+        setInspectionImageId(imageId)
+      }
 
       if (targetId) {
         await apiClient.post(`/staff/checkout/${targetId}/confirm`, {
@@ -174,6 +206,7 @@ function Body({
               : "Ô kho sạch sẽ nguyên vẹn 100%",
           ticketId: target.ticketId || undefined,
           refundPaymentMethod: "BANK_TRANSFER",
+          inspectionImageIds: [imageId],
         })
       }
 
@@ -295,13 +328,13 @@ function Body({
         <div className="flex items-center justify-between text-xs">
           <span className="text-title flex items-center gap-1.5 font-bold">
             <CameraIcon className="size-3.5 text-blue-600 dark:text-blue-400" />
-            <span>Bằng chứng Hình ảnh Hiện trường (Bắt buộc nếu có phạt):</span>
+            <span>Bằng chứng Hình ảnh Hiện trường (Bắt buộc):</span>
           </span>
           <label className="flex cursor-pointer items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1 text-[10px] font-bold text-white hover:bg-blue-500 whitespace-nowrap">
             <UploadIcon className="size-3" /> Tải ảnh chụp
             <input
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               className="hidden"
               onChange={handlePhoto}
             />
@@ -321,7 +354,7 @@ function Body({
             </div>
           ) : (
             <span className="text-[10px] text-muted italic">
-              Chưa có ảnh đính kèm (Nếu kho nguyên vẹn 100%, có thể bỏ qua bước này).
+              Chưa có ảnh đính kèm — bắt buộc tải lên trước khi chốt biên bản.
             </span>
           )}
         </div>
@@ -389,7 +422,7 @@ function Body({
         </button>
         <button
           type="button"
-          disabled={isSubmitting || (balance < 0 && !isCompensationCollected)}
+          disabled={isSubmitting || !photoFile || (balance < 0 && !isCompensationCollected)}
           onClick={submit}
           className="h-11 flex-1 cursor-pointer rounded-xl bg-emerald-600 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-center"
         >

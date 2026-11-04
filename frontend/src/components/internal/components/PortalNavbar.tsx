@@ -7,6 +7,7 @@ import { useTheme } from "@/components/common/theme-provider"
 
 import { initials } from "../initials"
 import PortalProfileModal, { type PortalProfile } from "./PortalProfileModal"
+import "../portal-dialog.css"
 
 export interface PortalNavItem {
   to: string

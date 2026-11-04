@@ -25,6 +25,7 @@ export interface AuthUser {
   facilityId?: number;
   facilityName?: string;
   facilityCode?: string;
+  mustChangePassword?: boolean;
 }
 
 export interface LoginResponse {

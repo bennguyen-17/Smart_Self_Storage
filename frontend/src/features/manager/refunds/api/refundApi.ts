@@ -24,7 +24,10 @@ export async function listRefunds(state: RefundState | "ALL"): Promise<ManagerRe
 
 /** Xác nhận đã chuyển khoản hoàn tiền, kèm biên lai (POST /api/manager/refunds/{paymentId}/confirm) */
 export async function confirmRefund(paymentId: number, payload: ConfirmRefundPayload): Promise<void> {
-  const body: ConfirmRefundPayload = { evidenceUrl: payload.evidenceUrl.trim() }
+  const body: ConfirmRefundPayload = {}
+  if (payload.receiptImageId) body.receiptImageId = payload.receiptImageId
+  const link = payload.evidenceUrl?.trim()
+  if (link) body.evidenceUrl = link
   const ref = payload.transactionRef?.trim()
   if (ref) body.transactionRef = ref
 

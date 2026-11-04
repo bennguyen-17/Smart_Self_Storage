@@ -1,7 +1,8 @@
 import type { ReactNode } from "react"
-import { CheckCircle2Icon, FileTextIcon, GavelIcon, HourglassIcon } from "lucide-react"
+import { CheckCircle2Icon, FileSignatureIcon, FileTextIcon, GavelIcon, HourglassIcon } from "lucide-react"
 
 import { StatusBadge } from "@/components/internal/components/PanelKit"
+import ImageGallery from "@/components/internal/images/ImageGallery"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { formatDate, formatDateTime, formatVnd } from "@/lib/format"
@@ -37,19 +38,26 @@ function ContractDetailDialog({
   today,
   onClose,
   onForfeit,
+  onViewDocument,
 }: {
   contract: FacilityContract
   today: string
   onClose: () => void
   onForfeit: (contract: FacilityContract) => void
+  /** Mở văn bản hợp đồng pháp lý (bản dùng chung với khách, tải PDF được) */
+  onViewDocument?: (contract: FacilityContract) => void
 }) {
   const totals = feeTotals(contract)
   const forfeit = forfeitState(contract, today)
   const fees = [...contract.fees].sort((a, b) => b.issuedAt.localeCompare(a.issuedAt))
+  const inspectionImages = contract.inspectionImages ?? []
+  const forfeitImages = contract.forfeitEvidenceImages ?? []
+  // Ảnh nghiệm thu chỉ có ý nghĩa khi khách đã trả kho; hợp đồng đang thuê thì không hiện mục này
+  const showInspection = inspectionImages.length > 0 || contract.status === "TERMINATED" || contract.status === "COMPLETED"
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[92vh] gap-5 overflow-y-auto rounded-3xl p-6 sm:max-w-2xl">
+      <DialogContent className="portal-dialog max-h-[92vh] gap-5 overflow-y-auto rounded-3xl p-6 sm:max-w-2xl">
         {/* Đầu: mã hợp đồng, trạng thái, khách */}
         <div className="flex items-start gap-3.5 border-b pb-4">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
@@ -65,6 +73,11 @@ function ContractDetailDialog({
               <span className="text-muted"> · {contract.customerPhone}</span>
               {contract.reservationCode && <span className="text-muted font-mono"> · Mã đặt chỗ {contract.reservationCode}</span>}
             </DialogDescription>
+            {onViewDocument && (
+              <Button variant="outline" size="sm" className="mt-1.5" onClick={() => onViewDocument(contract)}>
+                <FileSignatureIcon aria-hidden="true" /> Xem văn bản hợp đồng / Tải PDF
+              </Button>
+            )}
           </div>
         </div>
 
@@ -100,13 +113,23 @@ function ContractDetailDialog({
           </p>
         </section>
 
-        {/* Trả kho */}
+        {/* Trạng thái kho hiện tại (khách đang giữ kho / đã bàn giao / thu hồi…) */}
         <section aria-labelledby="contract-checkout" className="flex flex-wrap items-center gap-2 text-xs">
           <h3 id="contract-checkout" className="text-title text-sm font-black">
-            Trả kho:
+            Trạng thái kho hiện tại:
           </h3>
           <CheckoutProgressBadge status={contract.status} />
         </section>
+
+        {/* Ảnh nghiệm thu Staff chụp lúc trả kho: Manager đối chiếu phí hư hại / vệ sinh */}
+        {showInspection && (
+          <section aria-labelledby="contract-inspection" className="space-y-2">
+            <h3 id="contract-inspection" className="text-title text-sm font-black">
+              Ảnh nghiệm thu trả kho
+            </h3>
+            <ImageGallery images={inspectionImages} label="Ảnh nghiệm thu" emptyText="Chưa có ảnh nghiệm thu cho hợp đồng này." />
+          </section>
+        )}
 
         {/* Phạt / truy thu */}
         <section aria-labelledby="contract-fees" className="space-y-2">
@@ -185,6 +208,11 @@ function ContractDetailDialog({
               <Button size="sm" className="bg-rose-600 text-white hover:bg-rose-500" onClick={() => onForfeit(contract)}>
                 <GavelIcon aria-hidden="true" /> Thanh lý tài sản
               </Button>
+            )}
+            {(forfeit === "DONE" || forfeitImages.length > 0) && (
+              <div className="w-full">
+                <ImageGallery images={forfeitImages} label="Ảnh minh chứng thanh lý" emptyText="Chưa có ảnh minh chứng thanh lý." />
+              </div>
             )}
           </section>
         )}

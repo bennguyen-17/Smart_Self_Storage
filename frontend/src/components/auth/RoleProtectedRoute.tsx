@@ -4,6 +4,7 @@ import { LogOutIcon, ShieldAlertIcon } from "lucide-react"
 
 import { isTokenValid } from "@/lib/http"
 import { useAuth } from "@/context/AuthContext"
+import { PASSWORD_CHANGE_PATH } from "@/features/auth/passwordChangeRules"
 import {
   getRoleBadgeClass,
   getRoleDestination,
@@ -108,7 +109,12 @@ function RoleProtectedRoute({
     )
   }
 
-  // 4. Đúng quyền -> Cho phép truy cập
+  // 4. Tài khoản nội bộ còn dùng mật khẩu tạm phải đổi trước khi vào cổng
+  if (user.mustChangePassword) {
+    return <Navigate to={PASSWORD_CHANGE_PATH} replace />
+  }
+
+  // 5. Đúng quyền -> Cho phép truy cập
   return <>{children}</>
 }
 

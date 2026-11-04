@@ -1,3 +1,5 @@
+import type { StoredImage } from "@/components/internal/images/imageApi"
+
 // Hợp đồng của một cơ sở, nhìn từ phía Facility Manager (US-24, US-25, US-26, US-31).
 // BE CHƯA có API liệt kê: kiểu dưới đây là contract FE đề xuất (GET /api/manager/contracts, xem qa-log).
 
@@ -53,4 +55,8 @@ export interface FacilityContract {
   rentalAmount?: number | null
   rentalType?: "DAILY" | "MONTHLY" | null
   reservationCode?: string | null
+  /** Ảnh nghiệm thu Staff chụp lúc trả kho (BE trả [] khi chưa có) */
+  inspectionImages?: StoredImage[]
+  /** Ảnh minh chứng thanh lý tài sản do Manager tải */
+  forfeitEvidenceImages?: StoredImage[]
 }

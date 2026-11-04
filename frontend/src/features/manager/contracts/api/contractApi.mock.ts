@@ -18,7 +18,11 @@ function build(): FacilityContract[] {
       fees: [{ paymentId: 7002, invoiceNumber: "CMP-7002", type: "CMP", amount: 450_000, status: "UNPAID", issuedAt: iso(-1) }] },
     { contractId: 105, contractCode: "CTR-HN01-0105", customerName: "Phạm Quốc Hùng", customerPhone: "0988123456", unitCode: "HN01-G-XL03", startDate: addDays(t, 2), endDate: addDays(t, 92), status: "PENDING_CHECKIN", depositAmount: 3_000_000, checkoutStage: "NONE", fees: [] },
     { contractId: 106, contractCode: "CTR-HN01-0106", customerName: "Vũ Thị Hương", customerPhone: "0945666777", unitCode: "HN01-F1-S01", startDate: addDays(t, -200), endDate: addDays(t, -20), status: "TERMINATED", depositAmount: 500_000, checkoutStage: "HANDED_OVER",
-      fees: [{ paymentId: 7003, invoiceNumber: "CMP-7003", type: "CMP", amount: 150_000, status: "PAID", issuedAt: iso(-21) }] },
+      fees: [{ paymentId: 7003, invoiceNumber: "CMP-7003", type: "CMP", amount: 150_000, status: "PAID", issuedAt: iso(-21) }],
+      inspectionImages: [
+        { imageId: 901, url: "/api/images/901", uploadedBy: "Nguyễn Văn Hùng", uploadedAt: iso(-20) },
+        { imageId: 902, url: "/api/images/902", uploadedBy: "Nguyễn Văn Hùng", uploadedAt: iso(-20) },
+      ] },
     { contractId: 107, contractCode: "CTR-HN01-0107", customerName: "Công ty SmartRetail", customerPhone: "02439112233", unitCode: "HN01-G-XL01", startDate: addDays(t, -30), endDate: addDays(t, 335), status: "ACTIVE", depositAmount: 3_000_000, checkoutStage: "NONE",
       fees: [{ paymentId: 7004, invoiceNumber: "PEN-7004", type: "PEN", amount: 200_000, status: "UNPAID", issuedAt: iso(-3) }] },
   ]

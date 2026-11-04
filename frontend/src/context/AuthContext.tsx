@@ -23,6 +23,7 @@ interface AuthContextValue {
   token: string | null
   isAuthenticated: boolean
   signIn: (session: AuthSession, remember: boolean) => void
+  updateUser: (patch: Partial<AuthUser>) => void
   signOut: () => Promise<void> | void
 }
 
@@ -86,6 +87,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(nextSession)
   }, [])
 
+  const updateUser = useCallback(
+    (patch: Partial<AuthUser>) => {
+      if (!session) return
+
+      const next: AuthSession = { ...session, user: { ...session.user, ...patch } }
+      const store = localStorage.getItem(STORAGE_KEY) ? localStorage : sessionStorage
+      store.setItem(STORAGE_KEY, JSON.stringify(next))
+      store.setItem("user", JSON.stringify(next.user))
+      setSession(next)
+    },
+    [session]
+  )
+
   const signOut = useCallback(async () => {
     const currentToken = session?.token || localStorage.getItem("token") || sessionStorage.getItem("token")
     if (currentToken) {
@@ -114,9 +128,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       token: session?.token ?? null,
       isAuthenticated: session !== undefined,
       signIn,
+      updateUser,
       signOut,
     }),
-    [session, signIn, signOut]
+    [session, signIn, updateUser, signOut]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -20,10 +20,20 @@ export async function listFacilityContracts(ctx: ManagerContext): Promise<Facili
 }
 
 /**
- * POST /api/manager/contracts/{contractId}/forfeit-processed  body { note } (K1).
- * Chỉ hợp đồng FORFEITED của cơ sở mình; BE chuyển ô kho sang bảo trì và ghi nhật ký.
+ * POST /api/manager/contracts/{contractId}/forfeit-processed  body { note, evidenceImageIds }.
+ * Chỉ hợp đồng FORFEITED của cơ sở mình; BE bắt buộc ghi chú và 1–5 ảnh minh chứng (đã tải qua /api/uploads),
+ * rồi chuyển ô kho sang bảo trì và ghi nhật ký.
  */
-export async function markForfeitProcessed(ctx: ManagerContext, contractId: number, note: string): Promise<void> {
+export async function markForfeitProcessed(
+  ctx: ManagerContext,
+  contractId: number,
+  note: string,
+  evidenceImageIds: number[]
+): Promise<void> {
   if (isMockMode()) return
-  await apiClient.post(`/manager/contracts/${contractId}/forfeit-processed`, { note: note.trim() }, { headers: managerHeaders(ctx) })
+  await apiClient.post(
+    `/manager/contracts/${contractId}/forfeit-processed`,
+    { note: note.trim(), evidenceImageIds },
+    { headers: managerHeaders(ctx) }
+  )
 }
