@@ -280,7 +280,12 @@ public class ContractController {
             map.put("refundBankName", c.getRefundBankName());
             map.put("refundAccountNumber", c.getRefundAccountNumber());
             map.put("refundAccountName", c.getRefundAccountName());
-            map.put("checkoutImages", imageStorageService.getCheckoutImageResponses(c.getContractId()));
+            map.put("inspectionImages", imageStorageService.getCheckoutImageResponses(c.getContractId()));
+            map.put("refundReceiptImages", payments.stream()
+                    .filter(p -> p.getInvoiceNumber() != null && p.getInvoiceNumber().startsWith("REF-"))
+                    .map(p -> imageStorageService.getRefundReceiptUrl(p.getPaymentId()))
+                    .filter(Objects::nonNull)
+                    .toList());
 
             Optional<SupportTicket> activeReturnTicket = supportTicketRepository.findByContractId(c.getContractId()).stream()
                     .filter(t -> "EARLY_TERMINATION".equalsIgnoreCase(t.getType())

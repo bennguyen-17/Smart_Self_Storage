@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
 @Table(name = "StoredImage")
 public class StoredImage {
 
-    public static final int TYPE_FACILITY = 1;
-    public static final int TYPE_CHECKOUT_INSPECTION = 2;
+    public static final int TYPE_SYSTEM = 1;
+    public static final int TYPE_BUSINESS = 2;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,8 +30,11 @@ public class StoredImage {
     @Column(name = "contractId")
     private Integer contractId;
 
-    @Column(name = "imageSlot", nullable = false, length = 40)
-    private String imageSlot;
+    @Column(name = "category", nullable = false, length = 40)
+    private String category;
+
+    @Column(name = "paymentId")
+    private Integer paymentId;
 
     @Column(name = "storagePath", nullable = false, length = 500)
     private String storagePath;
@@ -50,6 +53,9 @@ public class StoredImage {
 
     @Column(name = "uploadedAt", nullable = false)
     private LocalDateTime uploadedAt = LocalDateTime.now();
+
+    @Column(name = "imageStatus", nullable = false, length = 20)
+    private String imageStatus = "PENDING";
 
     public StoredImage() {
     }
@@ -86,12 +92,20 @@ public class StoredImage {
         this.contractId = contractId;
     }
 
-    public String getImageSlot() {
-        return imageSlot;
+    public String getCategory() {
+        return category;
     }
 
-    public void setImageSlot(String imageSlot) {
-        this.imageSlot = imageSlot;
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public Integer getPaymentId() {
+        return paymentId;
+    }
+
+    public void setPaymentId(Integer paymentId) {
+        this.paymentId = paymentId;
     }
 
     public String getStoragePath() {
@@ -140,5 +154,13 @@ public class StoredImage {
 
     public void setUploadedAt(LocalDateTime uploadedAt) {
         this.uploadedAt = uploadedAt;
+    }
+
+    public String getImageStatus() {
+        return imageStatus;
+    }
+
+    public void setImageStatus(String imageStatus) {
+        this.imageStatus = imageStatus;
     }
 }

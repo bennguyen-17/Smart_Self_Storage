@@ -16,7 +16,7 @@ public class FacilityResponse {
     private String managerName;
     private String managerPhone;
     private String managerEmail;
-    private Map<String, StoredImageResponse> images = Map.of();
+    private Map<String, String> images = Map.of();
 
     public FacilityResponse() {
     }
@@ -138,11 +138,11 @@ public class FacilityResponse {
         this.managerEmail = managerEmail;
     }
 
-    public Map<String, StoredImageResponse> getImages() {
+    public Map<String, String> getImages() {
         return images;
     }
 
-    public void setImages(Map<String, StoredImageResponse> images) {
+    public void setImages(Map<String, String> images) {
         this.images = images != null ? images : Map.of();
     }
 }

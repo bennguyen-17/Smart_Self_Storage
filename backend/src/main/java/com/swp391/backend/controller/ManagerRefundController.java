@@ -13,6 +13,7 @@ import com.swp391.backend.repository.PaymentRepository;
 import com.swp391.backend.repository.ReservationRepository;
 import com.swp391.backend.repository.StorageUnitRepository;
 import com.swp391.backend.service.CheckoutSettlementService;
+import com.swp391.backend.service.ImageStorageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,7 @@ public class ManagerRefundController {
     private final StorageUnitRepository storageUnitRepository;
     private final FloorRepository floorRepository;
     private final SecurityContextHelper securityContextHelper;
+    private final ImageStorageService imageStorageService;
 
     public ManagerRefundController(CheckoutSettlementService checkoutSettlementService,
                                    PaymentRepository paymentRepository,
@@ -39,7 +41,8 @@ public class ManagerRefundController {
                                    ReservationRepository reservationRepository,
                                    StorageUnitRepository storageUnitRepository,
                                    FloorRepository floorRepository,
-                                   SecurityContextHelper securityContextHelper) {
+                                   SecurityContextHelper securityContextHelper,
+                                   ImageStorageService imageStorageService) {
         this.checkoutSettlementService = checkoutSettlementService;
         this.paymentRepository = paymentRepository;
         this.contractRepository = contractRepository;
@@ -47,6 +50,7 @@ public class ManagerRefundController {
         this.storageUnitRepository = storageUnitRepository;
         this.floorRepository = floorRepository;
         this.securityContextHelper = securityContextHelper;
+        this.imageStorageService = imageStorageService;
     }
 
     /**
@@ -73,7 +77,7 @@ public class ManagerRefundController {
     @PostMapping("/{paymentId}/confirm")
     public ResponseEntity<?> confirmRefund(
             @PathVariable Integer paymentId,
-            @RequestBody(required = false) Map<String, String> body,
+            @RequestBody(required = false) Map<String, Object> body,
             @AuthenticationPrincipal Integer authAccountId,
             @RequestHeader(value = "X-Account-Id", required = false) Integer managerAccountId,
             @RequestHeader(value = "X-Facility-Id", required = false) Integer managerFacilityId) {
@@ -81,10 +85,15 @@ public class ManagerRefundController {
         Integer effectiveAccountId = authAccountId != null ? authAccountId : managerAccountId;
         Integer effectiveFacilityId = securityContextHelper.requireCurrentFacilityId(effectiveAccountId, managerFacilityId);
 
-        String evidenceUrl = body != null ? (body.get("evidenceUrl") != null ? body.get("evidenceUrl") : body.get("receiptUrl")) : null;
-        String transactionRef = body != null ? body.get("transactionRef") : null;
+        Object evidenceValue = body != null
+                ? body.getOrDefault("evidenceUrl", body.get("receiptUrl")) : null;
+        String evidenceUrl = evidenceValue != null ? evidenceValue.toString() : null;
+        String transactionRef = body != null && body.get("transactionRef") != null
+                ? body.get("transactionRef").toString() : null;
+        Integer receiptImageId = body != null && body.get("receiptImageId") instanceof Number value
+                ? value.intValue() : null;
 
-        if (evidenceUrl == null || evidenceUrl.trim().isEmpty()) {
+        if (receiptImageId == null && (evidenceUrl == null || evidenceUrl.isBlank())) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Thiếu biên lai chuyển khoản"));
         }
 
@@ -94,6 +103,9 @@ public class ManagerRefundController {
         }
 
         Payment payment = paymentOpt.get();
+        if (payment.getInvoiceNumber() == null || !payment.getInvoiceNumber().startsWith("REF-")) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Phiếu không phải khoản hoàn tiền hợp lệ."));
+        }
         if ("REFUNDED".equalsIgnoreCase(payment.getStatus()) || "PAID".equalsIgnoreCase(payment.getStatus())) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Phiếu đã được hoàn"));
         }
@@ -113,6 +125,11 @@ public class ManagerRefundController {
                     }
                 }
             }
+        }
+
+        if (receiptImageId != null) {
+            imageStorageService.attachRefundReceipt(paymentId, receiptImageId, effectiveAccountId);
+            evidenceUrl = "/api/images/" + receiptImageId;
         }
 
         boolean success = checkoutSettlementService.confirmRefundExecution(paymentId, effectiveAccountId, evidenceUrl, transactionRef, effectiveFacilityId);

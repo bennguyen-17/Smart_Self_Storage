@@ -21,7 +21,8 @@ public class FacilityContractResponse {
     private String reservationCode;
     private String customerEmail;
     private String customerIdNumber;
-    private List<StoredImageResponse> checkoutImages = new ArrayList<>();
+    private List<StoredImageResponse> inspectionImages = new ArrayList<>();
+    private List<StoredImageResponse> forfeitEvidenceImages = new ArrayList<>();
 
     public FacilityContractResponse() {
     }
@@ -178,12 +179,20 @@ public class FacilityContractResponse {
         this.reservationCode = reservationCode;
     }
 
-    public List<StoredImageResponse> getCheckoutImages() {
-        return checkoutImages;
+    public List<StoredImageResponse> getInspectionImages() {
+        return inspectionImages;
     }
 
-    public void setCheckoutImages(List<StoredImageResponse> checkoutImages) {
-        this.checkoutImages = checkoutImages != null ? checkoutImages : new ArrayList<>();
+    public void setInspectionImages(List<StoredImageResponse> inspectionImages) {
+        this.inspectionImages = inspectionImages != null ? inspectionImages : new ArrayList<>();
+    }
+
+    public List<StoredImageResponse> getForfeitEvidenceImages() {
+        return forfeitEvidenceImages;
+    }
+
+    public void setForfeitEvidenceImages(List<StoredImageResponse> forfeitEvidenceImages) {
+        this.forfeitEvidenceImages = forfeitEvidenceImages != null ? forfeitEvidenceImages : new ArrayList<>();
     }
 
     public static class FeeInvoiceResponse {

@@ -25,6 +25,7 @@ public class RefundListItemResponse {
     private String transactionCode;
     private String evidenceUrl;
     private String confirmedByName;
+    private String receiptImageUrl;
 
     public RefundListItemResponse() {
     }
@@ -208,5 +209,13 @@ public class RefundListItemResponse {
 
     public void setConfirmedByName(String confirmedByName) {
         this.confirmedByName = confirmedByName;
+    }
+
+    public String getReceiptImageUrl() {
+        return receiptImageUrl;
+    }
+
+    public void setReceiptImageUrl(String receiptImageUrl) {
+        this.receiptImageUrl = receiptImageUrl;
     }
 }

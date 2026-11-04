@@ -193,7 +193,8 @@ public class ManagerContractController {
                 response.setRentalType(res.getRentalType());
             }
             response.setReservationCode(res.getReservationCode());
-            response.setCheckoutImages(imageStorageService.getCheckoutImageResponses(c.getContractId()));
+            response.setInspectionImages(imageStorageService.getCheckoutImageResponses(c.getContractId()));
+            response.setForfeitEvidenceImages(imageStorageService.getForfeitEvidenceResponses(c.getContractId()));
             result.add(response);
         }
 
@@ -207,6 +208,7 @@ public class ManagerContractController {
             @AuthenticationPrincipal Integer managerAccountId) {
         forfeitProcessingService.markProcessed(contractId,
                 request != null ? request.getNote() : null,
+                request != null ? request.getEvidenceImageIds() : null,
                 managerAccountId);
         return ResponseEntity.ok(Map.of(
                 "success", true,

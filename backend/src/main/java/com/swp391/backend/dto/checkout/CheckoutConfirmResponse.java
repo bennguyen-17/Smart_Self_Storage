@@ -19,7 +19,7 @@ public class CheckoutConfirmResponse {
     private BigDecimal settlementAmount;
     private boolean isRefund;
     private boolean ticketResolved;
-    private List<StoredImageResponse> checkoutImages = new ArrayList<>();
+    private List<StoredImageResponse> inspectionImages = new ArrayList<>();
 
     public CheckoutConfirmResponse() {
     }
@@ -127,11 +127,11 @@ public class CheckoutConfirmResponse {
         this.ticketResolved = ticketResolved;
     }
 
-    public List<StoredImageResponse> getCheckoutImages() {
-        return checkoutImages;
+    public List<StoredImageResponse> getInspectionImages() {
+        return inspectionImages;
     }
 
-    public void setCheckoutImages(List<StoredImageResponse> checkoutImages) {
-        this.checkoutImages = checkoutImages != null ? checkoutImages : new ArrayList<>();
+    public void setInspectionImages(List<StoredImageResponse> inspectionImages) {
+        this.inspectionImages = inspectionImages != null ? inspectionImages : new ArrayList<>();
     }
 }

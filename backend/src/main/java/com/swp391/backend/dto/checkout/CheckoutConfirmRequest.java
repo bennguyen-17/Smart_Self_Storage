@@ -1,6 +1,7 @@
 package com.swp391.backend.dto.checkout;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public class CheckoutConfirmRequest {
     private BigDecimal damageFee = BigDecimal.ZERO;
@@ -10,6 +11,7 @@ public class CheckoutConfirmRequest {
     private String refundPaymentMethod = "BANK_TRANSFER";
     private boolean confirmInspection; // Bắt buộc phải tích xác nhận biên bản nghiệm thu
     private boolean collectedCompensation; // Xác nhận nhân viên đã thu đủ tiền bồi thường cọc âm tại quầy
+    private List<Integer> inspectionImageIds;
 
     public CheckoutConfirmRequest() {
     }
@@ -68,5 +70,13 @@ public class CheckoutConfirmRequest {
 
     public void setCollectedCompensation(boolean collectedCompensation) {
         this.collectedCompensation = collectedCompensation;
+    }
+
+    public List<Integer> getInspectionImageIds() {
+        return inspectionImageIds;
+    }
+
+    public void setInspectionImageIds(List<Integer> inspectionImageIds) {
+        this.inspectionImageIds = inspectionImageIds;
     }
 }

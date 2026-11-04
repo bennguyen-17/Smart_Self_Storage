@@ -9,7 +9,6 @@ import com.swp391.backend.entity.*;
 import com.swp391.backend.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -194,26 +193,13 @@ public class CheckoutSettlementService {
      * US-28 & US-29: Xác nhận nhận bàn giao trả kho & chốt quyết toán
      */
     @Transactional
-    public CheckoutConfirmResponse confirmCheckout(
-            Integer contractId, CheckoutConfirmRequest request, Integer staffAccountId,
-            List<MultipartFile> inspectionPhotos) {
-        if (inspectionPhotos == null || inspectionPhotos.isEmpty()) {
-            return CheckoutConfirmResponse.error("Cần tải lên ít nhất một ảnh nghiệm thu trước khi chốt biên bản.");
-        }
-        CheckoutConfirmResponse response = confirmCheckout(contractId, request, staffAccountId);
-        if (response.isSuccess()) {
-            List<StoredImage> savedImages = imageStorageService.storeCheckoutInspectionPhotos(
-                    response.getContractId(), staffAccountId, inspectionPhotos);
-            response.setCheckoutImages(savedImages.stream().map(StoredImageResponse::new).toList());
-        }
-        return response;
-    }
-
-    @Transactional
     public CheckoutConfirmResponse confirmCheckout(Integer contractId, CheckoutConfirmRequest request, Integer staffAccountId) {
         Integer staffFacilityId = staffShiftService.requireOnDutyFacility(staffAccountId);
         if (request == null || !request.isConfirmInspection()) {
             return CheckoutConfirmResponse.error("Bắt buộc phải tích xác nhận biên bản kiểm tra thực tế theo quy định trước khi hoàn tất!");
+        }
+        if (request.getInspectionImageIds() == null || request.getInspectionImageIds().isEmpty()) {
+            return CheckoutConfirmResponse.error("Cần tải ảnh nghiệm thu lên trước khi chốt biên bản.");
         }
 
         Optional<Contract> contractOpt = contractRepository.findById(contractId);
@@ -467,6 +453,10 @@ public class CheckoutSettlementService {
         resp.setGatePinDisabled(true);
         resp.setTicketResolved(ticketResolved);
 
+        List<StoredImage> inspectionImages = imageStorageService.attachCheckoutImages(
+                contract.getContractId(), request.getInspectionImageIds(), staffAccountId);
+        resp.setInspectionImages(inspectionImages.stream().map(StoredImageResponse::new).toList());
+
         return resp;
     }
 
@@ -696,6 +686,7 @@ public class CheckoutSettlementService {
             item.setRefundedAt(p.getPaidAt());
             item.setTransactionCode(p.getTransactionCode());
             item.setEvidenceUrl(p.getReceiptUrl());
+            item.setReceiptImageUrl(imageStorageService.getRefundReceiptUrl(p.getPaymentId()));
 
             result.add(item);
         }

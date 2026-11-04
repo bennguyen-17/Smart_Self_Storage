@@ -2,17 +2,14 @@ package com.swp391.backend.controller;
 
 import com.swp391.backend.dto.FacilityRequest;
 import com.swp391.backend.dto.FacilityResponse;
-import com.swp391.backend.dto.StoredImageResponse;
 import com.swp391.backend.entity.Floor;
-import com.swp391.backend.entity.StoredImage;
 import com.swp391.backend.service.ImageStorageService;
 import com.swp391.backend.service.StorageService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -34,7 +31,7 @@ public class FacilityController {
     public ResponseEntity<List<FacilityResponse>> getAllFacilities() {
         List<FacilityResponse> facilities = storageService.getAllActiveFacilities();
         facilities.forEach(facility -> facility.setImages(
-                imageStorageService.getFacilityImageResponses(facility.getFacilityId())));
+                imageStorageService.getFacilityImageUrls(facility.getFacilityId())));
         return ResponseEntity.ok(facilities);
     }
 
@@ -43,7 +40,7 @@ public class FacilityController {
     public ResponseEntity<FacilityResponse> getFacilityById(@PathVariable Integer facilityId) {
         return storageService.getFacilityById(facilityId)
                 .map(facility -> {
-                    facility.setImages(imageStorageService.getFacilityImageResponses(facilityId));
+                    facility.setImages(imageStorageService.getFacilityImageUrls(facilityId));
                     return ResponseEntity.ok(facility);
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -57,46 +54,38 @@ public class FacilityController {
 
     // --- BOM: Thêm cơ sở kho mới vào Database ---
     @PostMapping
-    public ResponseEntity<FacilityResponse> createFacility(@RequestBody FacilityRequest req) {
+    @Transactional
+    public ResponseEntity<FacilityResponse> createFacility(
+            @RequestBody FacilityRequest req,
+            @AuthenticationPrincipal Integer uploaderAccountId) {
         FacilityResponse created = storageService.createFacility(req);
+        imageStorageService.attachFacilityImages(created.getFacilityId(), req.getImages(), uploaderAccountId);
+        created.setImages(imageStorageService.getFacilityImageUrls(created.getFacilityId()));
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     // --- BOM: Cập nhật thông tin cơ sở kho vào Database ---
     @PutMapping("/{facilityId}")
-    public ResponseEntity<FacilityResponse> updateFacility(@PathVariable Integer facilityId, @RequestBody FacilityRequest req) {
+    @Transactional
+    public ResponseEntity<FacilityResponse> updateFacility(
+            @PathVariable Integer facilityId,
+            @RequestBody FacilityRequest req,
+            @AuthenticationPrincipal Integer uploaderAccountId) {
         FacilityResponse updated = storageService.updateFacility(facilityId, req);
+        imageStorageService.attachFacilityImages(facilityId, req.getImages(), uploaderAccountId);
+        updated.setImages(imageStorageService.getFacilityImageUrls(facilityId));
         return ResponseEntity.ok(updated);
     }
 
-    // --- BOM: Tải/thay một phần hoặc toàn bộ bộ ảnh của cơ sở ---
-    @PutMapping(value = "/{facilityId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Map<String, StoredImageResponse>> uploadFacilityImages(
+    // --- BOM: Gắn các imageId đã upload trước vào cơ sở ---
+    @PutMapping(value = "/{facilityId}/images", consumes = "application/json")
+    @Transactional
+    public ResponseEntity<Map<String, String>> attachFacilityImages(
             @PathVariable Integer facilityId,
-            @RequestParam(value = "cover", required = false) MultipartFile cover,
-            @RequestParam(value = "allUnits", required = false) MultipartFile allUnits,
-            @RequestParam(value = "normalUnit", required = false) MultipartFile normalUnit,
-            @RequestParam(value = "climateUnit", required = false) MultipartFile climateUnit,
+            @RequestBody Map<String, Integer> imageIds,
             @AuthenticationPrincipal Integer uploaderAccountId) {
-
-        Map<String, MultipartFile> imageFiles = new java.util.LinkedHashMap<>();
-        imageFiles.put("COVER", cover);
-        imageFiles.put("ALL_UNITS", allUnits);
-        imageFiles.put("NORMAL_UNIT", normalUnit);
-        imageFiles.put("CLIMATE_UNIT", climateUnit);
-        Map<String, StoredImageResponse> uploadedImages = new java.util.LinkedHashMap<>();
-        imageFiles.forEach((slot, file) -> {
-            if (file != null && !file.isEmpty()) {
-                StoredImage storedImage = imageStorageService.storeFacilityImage(
-                        facilityId, slot, uploaderAccountId, file);
-                uploadedImages.put(slot, new StoredImageResponse(storedImage));
-            }
-        });
-
-        if (uploadedImages.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.ok(uploadedImages);
+        imageStorageService.attachFacilityImages(facilityId, imageIds, uploaderAccountId);
+        return ResponseEntity.ok(imageStorageService.getFacilityImageUrls(facilityId));
     }
 
     // --- BOM: Xóa mềm cơ sở kho trong Database (status = 'INACTIVE') ---

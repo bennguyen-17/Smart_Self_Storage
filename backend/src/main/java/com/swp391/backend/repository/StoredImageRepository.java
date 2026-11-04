@@ -10,9 +10,13 @@ import java.util.Optional;
 @Repository
 public interface StoredImageRepository extends JpaRepository<StoredImage, Integer> {
 
-    List<StoredImage> findByFacilityIdOrderByImageSlotAsc(Integer facilityId);
+    List<StoredImage> findByFacilityIdAndImageStatusOrderByCategoryAsc(Integer facilityId, String imageStatus);
 
-    Optional<StoredImage> findByFacilityIdAndImageSlot(Integer facilityId, String imageSlot);
+    Optional<StoredImage> findByFacilityIdAndCategoryAndImageStatus(Integer facilityId, String category, String imageStatus);
 
-    List<StoredImage> findByContractIdOrderByUploadedAtAscImageIdAsc(Integer contractId);
+    List<StoredImage> findByContractIdAndCategoryOrderByUploadedAtAscImageIdAsc(Integer contractId, String category);
+
+    List<StoredImage> findByContractIdAndCategoryInOrderByUploadedAtAscImageIdAsc(Integer contractId, List<String> categories);
+
+    List<StoredImage> findByPaymentIdAndCategoryOrderByUploadedAtAscImageIdAsc(Integer paymentId, String category);
 }

@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 public class StoredImageResponse {
     private Integer imageId;
     private Integer typeCode;
-    private String imageSlot;
+    private String category;
     private String url;
     private String originalFileName;
     private String contentType;
@@ -17,7 +17,7 @@ public class StoredImageResponse {
     public StoredImageResponse(StoredImage image) {
         this.imageId = image.getImageId();
         this.typeCode = image.getTypeCode();
-        this.imageSlot = image.getImageSlot();
+        this.category = image.getCategory();
         this.url = "/api/images/" + image.getImageId();
         this.originalFileName = image.getOriginalFileName();
         this.contentType = image.getContentType();
@@ -27,7 +27,7 @@ public class StoredImageResponse {
 
     public Integer getImageId() { return imageId; }
     public Integer getTypeCode() { return typeCode; }
-    public String getImageSlot() { return imageSlot; }
+    public String getCategory() { return category; }
     public String getUrl() { return url; }
     public String getOriginalFileName() { return originalFileName; }
     public String getContentType() { return contentType; }
