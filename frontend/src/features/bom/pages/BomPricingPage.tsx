@@ -561,6 +561,12 @@ export default function BomPricingPage() {
               </tbody>
             </table>
           </div>
+
+          {pricingList.length === 0 && (
+            <div className="p-8 text-center text-slate-500 font-bold rounded-2xl bg-slate-50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800">
+              Chưa có dữ liệu khung giá thuê.
+            </div>
+          )}
       </div>
 
       {/* 2. BIỂU PHÍ PHẠT QUÁ HẠN, GIẢM GIÁ & BỒI THƯỜNG */}

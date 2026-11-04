@@ -135,9 +135,9 @@ export default function FacilityCashFlowDashboard({
       { month: "T5", label: "Tháng 05", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
       { month: "T6", label: "Tháng 06", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
       { month: "T7", label: "Tháng 07", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
-      { month: "T8", label: "Tháng 08", revenue: 4200000, rentalRevenue: 4200000, penaltyRevenue: 0 },
-      { month: "T9", label: "Tháng 09", revenue: 18600000, rentalRevenue: 18600000, penaltyRevenue: 0 },
-      { month: "T10", label: "Tháng 10", revenue: penaltyRevenue || netRevenue || 0, rentalRevenue: rentalRevenue || 0, penaltyRevenue: penaltyRevenue || 0 },
+      { month: "T8", label: "Tháng 08", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
+      { month: "T9", label: "Tháng 09", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
+      { month: "T10", label: "Tháng 10", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
     ]
   }, [monthlyRevenues, penaltyRevenue, netRevenue, rentalRevenue])
 

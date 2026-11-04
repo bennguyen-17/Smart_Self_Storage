@@ -1091,6 +1091,31 @@ INSERT INTO SupportTicket (id, ticketCode, type, status, customerId, facilityId,
 (17, 'TCK-202611-017', 'EARLY_TERMINATION', 'SUBMITTED', 5, 6, 'DN01-F1-S01', 35, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 05/11/2026', '2026-11-05', 25, '2026-11-05 18:00:00', 0, 1, NULL, '2026-10-31 14:00:00', NULL),
 (18, 'TCK-202611-018', 'EARLY_TERMINATION', 'SUBMITTED', 6, 7, 'CT01-F1-S02', 36, 'Yêu cầu trả kho trước hạn', 'Khách hàng xin trả kho sớm vào ngày 05/11/2026', '2026-11-05', 28, '2026-11-05 18:00:00', 0, 1, NULL, '2026-10-31 16:30:00', NULL);
 
+DELETE FROM Image WHERE typeCode = 1 AND facilityId IN (1, 2, 3, 4, 5, 6, 7);
+
+INSERT INTO Image (typeCode, category, facilityId, contractId, paymentId, storagePath, originalFileName, contentType, fileSize, uploadedBy, uploadedAt, imageStatus) VALUES
+(1, 'FACILITY_COVER', 1, NULL, NULL, 'facilities/FACILITY_COVER/hn01_cover.jpg', 'hn01_cover.jpg', 'image/jpeg', 99068, 1, NOW(), 'LINKED'),
+(1, 'UNIT_STANDARD', 1, NULL, NULL, 'facilities/UNIT_STANDARD/hn01_standard.jpg', 'hn01_standard.jpg', 'image/jpeg', 110665, 1, NOW(), 'LINKED'),
+(1, 'UNIT_CLIMATE', 1, NULL, NULL, 'facilities/UNIT_CLIMATE/hn01_climate.jpg', 'hn01_climate.jpg', 'image/jpeg', 85989, 1, NOW(), 'LINKED'),
+(1, 'FACILITY_COVER', 2, NULL, NULL, 'facilities/FACILITY_COVER/hn02_cover.jpg', 'hn02_cover.jpg', 'image/jpeg', 85989, 1, NOW(), 'LINKED'),
+(1, 'UNIT_STANDARD', 2, NULL, NULL, 'facilities/UNIT_STANDARD/hn02_standard.jpg', 'hn02_standard.jpg', 'image/jpeg', 110665, 1, NOW(), 'LINKED'),
+(1, 'UNIT_CLIMATE', 2, NULL, NULL, 'facilities/UNIT_CLIMATE/hn02_climate.jpg', 'hn02_climate.jpg', 'image/jpeg', 99068, 1, NOW(), 'LINKED'),
+(1, 'FACILITY_COVER', 3, NULL, NULL, 'facilities/FACILITY_COVER/hcm01_cover.jpg', 'hcm01_cover.jpg', 'image/jpeg', 110665, 1, NOW(), 'LINKED'),
+(1, 'UNIT_STANDARD', 3, NULL, NULL, 'facilities/UNIT_STANDARD/hcm01_standard.jpg', 'hcm01_standard.jpg', 'image/jpeg', 99068, 1, NOW(), 'LINKED'),
+(1, 'UNIT_CLIMATE', 3, NULL, NULL, 'facilities/UNIT_CLIMATE/hcm01_climate.jpg', 'hcm01_climate.jpg', 'image/jpeg', 85989, 1, NOW(), 'LINKED'),
+(1, 'FACILITY_COVER', 4, NULL, NULL, 'facilities/FACILITY_COVER/hcm02_cover.jpg', 'hcm02_cover.jpg', 'image/jpeg', 91573, 1, NOW(), 'LINKED'),
+(1, 'UNIT_STANDARD', 4, NULL, NULL, 'facilities/UNIT_STANDARD/hcm02_standard.jpg', 'hcm02_standard.jpg', 'image/jpeg', 110665, 1, NOW(), 'LINKED'),
+(1, 'UNIT_CLIMATE', 4, NULL, NULL, 'facilities/UNIT_CLIMATE/hcm02_climate.jpg', 'hcm02_climate.jpg', 'image/jpeg', 85989, 1, NOW(), 'LINKED'),
+(1, 'FACILITY_COVER', 5, NULL, NULL, 'facilities/FACILITY_COVER/hcm03_cover.jpg', 'hcm03_cover.jpg', 'image/jpeg', 117386, 1, NOW(), 'LINKED'),
+(1, 'UNIT_STANDARD', 5, NULL, NULL, 'facilities/UNIT_STANDARD/hcm03_standard.jpg', 'hcm03_standard.jpg', 'image/jpeg', 110665, 1, NOW(), 'LINKED'),
+(1, 'UNIT_CLIMATE', 5, NULL, NULL, 'facilities/UNIT_CLIMATE/hcm03_climate.jpg', 'hcm03_climate.jpg', 'image/jpeg', 85989, 1, NOW(), 'LINKED'),
+(1, 'FACILITY_COVER', 6, NULL, NULL, 'facilities/FACILITY_COVER/dn01_cover.jpg', 'dn01_cover.jpg', 'image/jpeg', 56263, 1, NOW(), 'LINKED'),
+(1, 'UNIT_STANDARD', 6, NULL, NULL, 'facilities/UNIT_STANDARD/dn01_standard.jpg', 'dn01_standard.jpg', 'image/jpeg', 110665, 1, NOW(), 'LINKED'),
+(1, 'UNIT_CLIMATE', 6, NULL, NULL, 'facilities/UNIT_CLIMATE/dn01_climate.jpg', 'dn01_climate.jpg', 'image/jpeg', 85989, 1, NOW(), 'LINKED'),
+(1, 'FACILITY_COVER', 7, NULL, NULL, 'facilities/FACILITY_COVER/ct01_cover.jpg', 'ct01_cover.jpg', 'image/jpeg', 117488, 1, NOW(), 'LINKED'),
+(1, 'UNIT_STANDARD', 7, NULL, NULL, 'facilities/UNIT_STANDARD/ct01_standard.jpg', 'ct01_standard.jpg', 'image/jpeg', 110665, 1, NOW(), 'LINKED'),
+(1, 'UNIT_CLIMATE', 7, NULL, NULL, 'facilities/UNIT_CLIMATE/ct01_climate.jpg', 'ct01_climate.jpg', 'image/jpeg', 85989, 1, NOW(), 'LINKED');
+
 -- 20. Biên bản nghiệm thu kiểm tra trả kho (Inspections & InspectionItems)
 -- (Không có biên bản vi phạm phát sinh)
 

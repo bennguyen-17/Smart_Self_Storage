@@ -29,6 +29,8 @@ import {
   BarChart3,
   ArrowLeft,
   Activity,
+  ImagePlus,
+  Upload,
 } from "lucide-react"
 import apiClient from "@/lib/apiClient"
 import { getStorageUnits } from "@/features/customer/rent/rentApi"
@@ -38,6 +40,34 @@ import { bomApi } from "@/features/bom/api/bomApi"
 import FacilityCashFlowDashboard from "@/features/bom/components/FacilityCashFlowDashboard"
 import { listAccounts } from "@/features/admin/accounts/api/accountApi"
 import type { InternalAccount } from "@/features/admin/accounts/types"
+
+type FacilityImageSlotKey = "cover" | "standard" | "climate"
+
+const FACILITY_IMAGE_SLOTS: {
+  key: FacilityImageSlotKey
+  category: "FACILITY_COVER" | "UNIT_STANDARD" | "UNIT_CLIMATE"
+  label: string
+  subLabel: string
+}[] = [
+  {
+    key: "cover",
+    category: "FACILITY_COVER",
+    label: "1. Ảnh Cơ Sở",
+    subLabel: "Ảnh đại diện & Tất cả kho",
+  },
+  {
+    key: "standard",
+    category: "UNIT_STANDARD",
+    label: "2. Kho Thường",
+    subLabel: "Ảnh Kho Tiêu Chuẩn",
+  },
+  {
+    key: "climate",
+    category: "UNIT_CLIMATE",
+    label: "3. Kho Mát",
+    subLabel: "Ảnh Kho Mát Điều Hòa",
+  },
+]
 
 const getInitials = (name: string) => {
   if (!name || !name.trim() || name === "Chưa phân công") return "FM"
@@ -210,6 +240,14 @@ export default function BomFacilitiesPage() {
   const [editManagerPhone, setEditManagerPhone] = useState("")
   const [editManagerEmail, setEditManagerEmail] = useState("")
   const [editFacilityStatus, setEditFacilityStatus] = useState("ACTIVE")
+  const [editFacImages, setEditFacImages] = useState<
+    Record<FacilityImageSlotKey, { file: File | null; previewUrl: string }>
+  >({
+    cover: { file: null, previewUrl: "" },
+    standard: { file: null, previewUrl: "" },
+    climate: { file: null, previewUrl: "" },
+  })
+  const [isSavingConfig, setIsSavingConfig] = useState(false)
 
   // Modal State Thêm cơ sở kho mới
   const [isAddFacilityModalOpen, setIsAddFacilityModalOpen] = useState(false)
@@ -223,6 +261,13 @@ export default function BomFacilitiesPage() {
   const [newFacPhone, setNewFacPhone] = useState("")
   const [newFacMultiplier, setNewFacMultiplier] = useState(1.0)
   const [newFacStatus, setNewFacStatus] = useState("ACTIVE")
+  const [newFacImages, setNewFacImages] = useState<
+    Record<FacilityImageSlotKey, { file: File | null; previewUrl: string }>
+  >({
+    cover: { file: null, previewUrl: "" },
+    standard: { file: null, previewUrl: "" },
+    climate: { file: null, previewUrl: "" },
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Modal State Xóa cơ sở kho
@@ -402,6 +447,53 @@ export default function BomFacilitiesPage() {
     return getEligibleManagers(null, "")
   }, [getEligibleManagers])
 
+  const handleSelectFacilityImage = (
+    slotKey: FacilityImageSlotKey,
+    file: File | null,
+    mode: "add" | "edit"
+  ) => {
+    const setter = mode === "add" ? setNewFacImages : setEditFacImages
+    if (!file) {
+      setter((prev) => ({
+        ...prev,
+        [slotKey]: { file: null, previewUrl: "" },
+      }))
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Kích thước ảnh tối đa 5MB. Vui lòng chọn ảnh nhẹ hơn!")
+      return
+    }
+    const previewUrl = URL.createObjectURL(file)
+    setter((prev) => ({
+      ...prev,
+      [slotKey]: { file, previewUrl },
+    }))
+  }
+
+  const uploadSelectedFacilityImages = async (
+    imageMap: Record<FacilityImageSlotKey, { file: File | null; previewUrl: string }>
+  ): Promise<Record<string, number> | undefined> => {
+    const slotsToUpload = FACILITY_IMAGE_SLOTS.filter((s) => imageMap[s.key]?.file != null)
+    if (slotsToUpload.length === 0) return undefined
+
+    const results = await Promise.all(
+      slotsToUpload.map(async (slot) => {
+        const file = imageMap[slot.key].file!
+        const uploaded = await bomApi.uploadFacilityImage(file, slot.category)
+        return { key: slot.key, imageId: uploaded?.imageId }
+      })
+    )
+
+    const payload: Record<string, number> = {}
+    results.forEach((r) => {
+      if (r.imageId != null) {
+        payload[r.key] = Number(r.imageId)
+      }
+    })
+    return Object.keys(payload).length > 0 ? payload : undefined
+  }
+
   const handleOpenAddModal = () => {
     const defaultCity = "HN"
     setNewFacCity(defaultCity)
@@ -414,6 +506,11 @@ export default function BomFacilitiesPage() {
     setNewFacPhone("")
     setNewFacMultiplier(1.0)
     setNewFacStatus("ACTIVE")
+    setNewFacImages({
+      cover: { file: null, previewUrl: "" },
+      standard: { file: null, previewUrl: "" },
+      climate: { file: null, previewUrl: "" },
+    })
     setIsAddFacilityModalOpen(true)
   }
 
@@ -422,7 +519,7 @@ export default function BomFacilitiesPage() {
     setNewFacCode(getNextFacilityCode(cityPrefix, facilities))
   }
 
-  const handleOpenFacilityModal = (fac: FacilityPerformance) => {
+  const handleOpenFacilityModal = async (fac: FacilityPerformance) => {
     setSelectedFacility(fac)
     setFacilityMultiplier(fac.priceMultiplier || 1.0)
     setEditFacilityStatus(fac.status || "ACTIVE")
@@ -432,7 +529,34 @@ export default function BomFacilitiesPage() {
     setEditManagerName(cleanManager)
     setEditManagerPhone(fac.managerPhone || "")
     setEditManagerEmail(fac.managerEmail || "")
+    setEditFacImages({
+      cover: { file: null, previewUrl: fac.images?.cover || "" },
+      standard: { file: null, previewUrl: fac.images?.standard || "" },
+      climate: { file: null, previewUrl: fac.images?.climate || "" },
+    })
     setIsFacilityModalOpen(true)
+
+    // Luôn gọi API lấy thông tin hình ảnh mới nhất của cơ sở từ bảng Image trong DB
+    try {
+      const facId = Number(fac.id)
+      if (!isNaN(facId) && facId > 0) {
+        const res: any = await apiClient.get(`/facilities/${facId}`)
+        const detail = res?.data ?? res
+        if (detail && detail.images) {
+          const latestImages: Record<string, string> = detail.images
+          setEditFacImages((prev) => ({
+            cover: prev.cover.file ? prev.cover : { file: null, previewUrl: latestImages.cover || prev.cover.previewUrl || "" },
+            standard: prev.standard.file ? prev.standard : { file: null, previewUrl: latestImages.standard || prev.standard.previewUrl || "" },
+            climate: prev.climate.file ? prev.climate : { file: null, previewUrl: latestImages.climate || prev.climate.previewUrl || "" },
+          }))
+          setFacilities((prev) =>
+            prev.map((f) => (Number(f.id) === facId ? { ...f, images: latestImages } : f))
+          )
+        }
+      }
+    } catch (e) {
+      // Nếu lỗi mạng thì giữ ảnh sẵn có trong state
+    }
   }
 
   const handleSaveFacilityModal = async () => {
@@ -456,39 +580,58 @@ export default function BomFacilitiesPage() {
       }
     }
 
-    const success = await updateFacilityInDb(Number(selectedFacility.id), {
-      facilityName: selectedFacility.name,
-      address: selectedFacility.address,
-      phone: finalManagerPhone || selectedFacility.managerPhone,
-      status: editFacilityStatus,
-      managerName: finalManagerName,
-      managerPhone: finalManagerPhone,
-      managerEmail: finalManagerEmail,
-      priceMultiplier: facilityMultiplier,
-    })
+    setIsSavingConfig(true)
+    try {
+      let uploadedImagesPayload: Record<string, number> | undefined
+      try {
+        uploadedImagesPayload = await uploadSelectedFacilityImages(editFacImages)
+      } catch (uploadErr: any) {
+        console.error("Lỗi tải ảnh cơ sở:", uploadErr)
+        toast.error(
+          uploadErr?.response?.data?.message ||
+            "Không thể tải ảnh lên máy chủ. Vui lòng kiểm tra kết nối Backend hoặc định dạng ảnh (JPG/PNG/WebP tối đa 5MB)!"
+        )
+        setIsSavingConfig(false)
+        return
+      }
 
-    setFacilities((prev) =>
-      prev.map((f) =>
-        f.id === selectedFacility.id
-          ? {
-              ...f,
-              status: editFacilityStatus,
-              managerName: finalManagerName,
-              managerPhone: finalManagerPhone,
-              managerEmail: finalManagerEmail,
-              priceMultiplier: facilityMultiplier,
-            }
-          : f
+      const success = await updateFacilityInDb(Number(selectedFacility.id), {
+        facilityName: selectedFacility.name,
+        address: selectedFacility.address,
+        phone: finalManagerPhone || selectedFacility.managerPhone,
+        status: editFacilityStatus,
+        managerName: finalManagerName,
+        managerPhone: finalManagerPhone,
+        managerEmail: finalManagerEmail,
+        priceMultiplier: facilityMultiplier,
+        images: uploadedImagesPayload,
+      })
+
+      setFacilities((prev) =>
+        prev.map((f) =>
+          f.id === selectedFacility.id
+            ? {
+                ...f,
+                status: editFacilityStatus,
+                managerName: finalManagerName,
+                managerPhone: finalManagerPhone,
+                managerEmail: finalManagerEmail,
+                priceMultiplier: facilityMultiplier,
+              }
+            : f
+        )
       )
-    )
 
-    if (success) {
-      toast.success(`Đã lưu cấu hình & trạng thái cơ sở ${selectedFacility.name}!`)
-    } else {
-      toast.success(`Đã cập nhật cấu hình cơ sở ${selectedFacility.name}!`)
+      if (success) {
+        toast.success(`Đã lưu cấu hình, hình ảnh & trạng thái cơ sở ${selectedFacility.name}!`)
+      } else {
+        toast.success(`Đã cập nhật cấu hình cơ sở ${selectedFacility.name}!`)
+      }
+      loadAccounts()
+      setIsFacilityModalOpen(false)
+    } finally {
+      setIsSavingConfig(false)
     }
-    loadAccounts()
-    setIsFacilityModalOpen(false)
   }
 
   const handleQuickUpdateStatus = async (fac: FacilityPerformance, newStatus: string) => {
@@ -541,6 +684,19 @@ export default function BomFacilitiesPage() {
 
     setIsSubmitting(true)
     try {
+      let uploadedImagesPayload: Record<string, number> | undefined
+      try {
+        uploadedImagesPayload = await uploadSelectedFacilityImages(newFacImages)
+      } catch (uploadErr: any) {
+        console.error("Lỗi tải ảnh cơ sở:", uploadErr)
+        toast.error(
+          uploadErr?.response?.data?.message ||
+            "Không thể tải ảnh lên máy chủ. Vui lòng kiểm tra kết nối Backend hoặc định dạng ảnh (JPG/PNG/WebP tối đa 5MB)!"
+        )
+        setIsSubmitting(false)
+        return
+      }
+
       const codeToUse = newFacCode.trim().toUpperCase() || getNextFacilityCode(newFacCity, facilities)
       const success = await createFacilityInDb({
         facilityName: newFacName.trim(),
@@ -551,40 +707,15 @@ export default function BomFacilitiesPage() {
         floorCount: newFacFloors,
         status: newFacStatus,
         managerName: newFacManager.trim() || "Chưa phân công",
+        images: uploadedImagesPayload,
       })
 
       if (success) {
-        toast.success(`Đã thêm cơ sở [${codeToUse}] ${newFacName.trim()} & đồng bộ sơ đồ 2D lên Customer Portal!`)
+        toast.success(`Đã thêm cơ sở [${codeToUse}] ${newFacName.trim()}, lưu hình ảnh vào Database & đồng bộ sơ đồ 2D!`)
         loadAccounts()
         setIsAddFacilityModalOpen(false)
       } else {
-        const newFacility: FacilityPerformance = {
-          id: Date.now(),
-          name: newFacName.trim(),
-          code: codeToUse,
-          address: newFacAddress.trim(),
-          managerName: newFacManager.trim() || "Chưa phân công",
-          managerEmail: "manager@smartstorage.vn",
-          managerPhone: newFacPhone.trim() || "",
-          totalUnits: computedTotalUnits,
-          occupied: 0,
-          rentedUnits: 0,
-          available: computedTotalUnits,
-          maintenance: 0,
-          occupancyRate: 0,
-          floorArea: computedTotalUnits * 12,
-          monthlyRevenue: "₫0",
-          overdueUnits: 0,
-          status: newFacStatus,
-          rating: "5.0 ★",
-          priceMultiplier: Number(newFacMultiplier) || 1.0,
-          layoutType: `Layout ${newFacLayout}`,
-          floorCount: newFacFloors,
-        }
-
-        setFacilities((prev) => [newFacility, ...prev])
-        toast.success(`Đã thêm thành công cơ sở kho mới: ${newFacility.name}`)
-        setIsAddFacilityModalOpen(false)
+        toast.error("Không thể lưu cơ sở kho vào Database. Vui lòng kiểm tra kết nối Backend!")
       }
     } catch (err) {
       console.error(err)
@@ -596,14 +727,25 @@ export default function BomFacilitiesPage() {
 
   const handleConfirmDelete = async () => {
     if (!facilityToDelete) return
-    const success = await deleteFacilityInDb(Number(facilityToDelete.id))
-    if (success) {
-      toast.success(`Đã xóa mềm cơ sở kho ${facilityToDelete.name} trong Database!`)
-    } else {
-      setFacilities((prev) => prev.filter((f) => f.id !== facilityToDelete.id))
-      toast.success(`Đã xóa cơ sở kho: ${facilityToDelete.name}`)
-    }
+    const targetId = facilityToDelete.id
+    const cleanFacName = (facilityToDelete.name || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
+    const targetCode = facilityToDelete.code
+
+    // Cập nhật ngay trạng thái cơ sở trên màn hình sang INACTIVE (Đã xóa / Tạm ngưng) và giữ nguyên dòng trên bảng
+    setFacilities((prev) =>
+      prev.map((f) => (f.id === targetId ? { ...f, status: "INACTIVE" } : f))
+    )
     setFacilityToDelete(null)
+
+    const success = await deleteFacilityInDb(Number(targetId))
+    if (success) {
+      setFacilities((prev) =>
+        prev.map((f) => (f.id === targetId ? { ...f, status: "INACTIVE" } : f))
+      )
+      toast.success(`Đã xóa mềm cơ sở [${targetCode} - ${cleanFacName}] & chuyển trạng thái sang Tạm ngưng / Đã xóa!`)
+    } else {
+      toast.success(`Đã chuyển trạng thái cơ sở [${targetCode} - ${cleanFacName}] sang Đã xóa (Tạm ngưng)!`)
+    }
   }
 
   return (
@@ -1027,19 +1169,34 @@ export default function BomFacilitiesPage() {
                           ? (fac.last3MonthsRevenue || "₫0")
                           : (fac.allTimeRevenue || fac.monthlyRevenue || "₫0")
 
+                    const isInactive = fac.status === "INACTIVE"
+
                     return (
-                      <tr key={fac.id} className="hover:bg-slate-50/90 dark:hover:bg-slate-800/60 transition-colors">
+                      <tr
+                        key={fac.id}
+                        className={`transition-colors ${
+                          isInactive
+                            ? "bg-rose-50/30 dark:bg-rose-950/15 hover:bg-rose-50/50 dark:hover:bg-rose-950/25 opacity-80"
+                            : "hover:bg-slate-50/90 dark:hover:bg-slate-800/60"
+                        }`}
+                      >
                         {/* CỘT 1: CƠ SỞ KHO */}
                         <td className="py-3 px-4 whitespace-nowrap align-middle text-center">
                           <button
                             type="button"
                             onClick={() => navigate(`/bom/facilities/${fac.id}`)}
                             title="Bấm để xem báo cáo dòng tiền & thông số cơ sở"
-                            className="inline-flex items-center justify-center gap-1.5 w-[235px] py-1.5 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-600 font-mono font-semibold text-xs transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer text-center"
+                            className={`inline-flex items-center justify-center gap-1.5 w-[235px] py-1.5 px-2.5 rounded-lg border font-mono font-semibold text-xs transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer text-center ${
+                              isInactive
+                                ? "border-rose-200 dark:border-rose-900/60 bg-rose-50/60 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300"
+                                : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-600"
+                            }`}
                           >
                             <span>{fac.code}</span>
                             <span className="text-slate-400 dark:text-slate-500 font-normal">-</span>
-                            <span className="font-sans font-medium">{cleanName}</span>
+                            <span className={`font-sans font-medium ${isInactive ? "line-through decoration-rose-400/70" : ""}`}>
+                              {cleanName}
+                            </span>
                           </button>
                         </td>
 
@@ -1076,14 +1233,14 @@ export default function BomFacilitiesPage() {
                                 fac.status === "MAINTENANCE"
                                   ? "bg-amber-50/80 hover:bg-amber-100/80 text-amber-700 dark:bg-amber-950/30 dark:hover:bg-amber-950/50 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/60"
                                   : fac.status === "INACTIVE"
-                                  ? "bg-rose-50/80 hover:bg-rose-100/80 text-rose-700 dark:bg-rose-950/30 dark:hover:bg-rose-950/50 dark:text-rose-300 border-rose-200/80 dark:border-rose-800/60"
+                                  ? "bg-rose-50/90 hover:bg-rose-100/90 text-rose-700 dark:bg-rose-950/50 dark:hover:bg-rose-950/70 dark:text-rose-300 border-rose-300 dark:border-rose-700/80 font-bold"
                                   : "bg-emerald-50/80 hover:bg-emerald-100/80 text-emerald-700 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60"
                               }`}
-                              title="Bấm để đổi nhanh trạng thái: Hoạt động / Bảo trì / Tạm ngưng"
+                              title="Bấm để đổi nhanh trạng thái: Hoạt động / Bảo trì / Đã xóa (Tạm ngưng)"
                             >
                               <option value="ACTIVE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">🟢 Hoạt động</option>
                               <option value="MAINTENANCE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">🟠 Bảo trì</option>
-                              <option value="INACTIVE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">🔴 Tạm ngưng</option>
+                              <option value="INACTIVE" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">🔴 Đã xóa (Tạm ngưng)</option>
                             </select>
                           </div>
                         </td>
@@ -1101,9 +1258,14 @@ export default function BomFacilitiesPage() {
                             </button>
                             <button
                               type="button"
+                              disabled={isInactive}
                               onClick={() => setFacilityToDelete(fac)}
-                              className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 dark:hover:bg-rose-900/60 border border-rose-200/80 dark:border-rose-800/80 transition cursor-pointer"
-                              title="Xóa cơ sở kho"
+                              className={`p-1.5 rounded-lg border transition ${
+                                isInactive
+                                  ? "bg-slate-100 text-slate-400 border-slate-200 dark:bg-slate-800/50 dark:text-slate-600 dark:border-slate-800 cursor-not-allowed"
+                                  : "bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 dark:hover:bg-rose-900/60 border-rose-200/80 dark:border-rose-800/80 cursor-pointer"
+                              }`}
+                              title={isInactive ? "Cơ sở này đã bị xóa mềm (Tạm ngưng)" : "Xóa cơ sở kho"}
                             >
                               <Trash2 className="size-3.5" />
                             </button>
@@ -1403,6 +1565,85 @@ export default function BomFacilitiesPage() {
                   />
                 </div>
               </div>
+
+              {/* HÌNH ẢNH CƠ SỞ & LOẠI KHO (LƯU VÀO DATABASE TYPE_CODE = 1) */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] flex items-center gap-1.5">
+                    <ImagePlus className="size-3.5 text-blue-600 dark:text-blue-400" />
+                    <span>Hình Ảnh Cơ Sở &amp; Loại Kho:</span>
+                  </label>
+                </div>
+                <div className="grid grid-cols-3 gap-2.5">
+                  {FACILITY_IMAGE_SLOTS.map((slot) => {
+                    const imgState = editFacImages[slot.key]
+                    const existingDbUrl = selectedFacility?.images?.[slot.key] || ""
+                    return (
+                      <div
+                        key={slot.key}
+                        className={`relative rounded-xl border transition-all overflow-hidden group flex flex-col ${
+                          imgState?.previewUrl
+                            ? "border-blue-500/80 dark:border-blue-500/60 bg-white dark:bg-slate-900 shadow-xs"
+                            : "border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-blue-400"
+                        }`}
+                      >
+                        <label className="cursor-pointer flex flex-col items-center justify-center h-24 w-full relative overflow-hidden bg-slate-100 dark:bg-slate-900">
+                          {imgState?.previewUrl ? (
+                            <>
+                              <img
+                                src={imgState.previewUrl}
+                                alt={slot.label}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                              />
+                              <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center text-white text-[10px] font-bold gap-1">
+                                <Upload className="size-3.5 text-blue-300" />
+                                <span>Bấm để đổi ảnh</span>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-1.5 text-center">
+                              <ImagePlus className="size-4.5 mb-1 text-blue-500" />
+                              <span className="text-[9.5px] font-bold text-slate-600 dark:text-slate-300 leading-tight">
+                                Tải ảnh lên
+                              </span>
+                            </div>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0] || null
+                              handleSelectFacilityImage(slot.key, file, "edit")
+                              e.target.value = ""
+                            }}
+                          />
+                        </label>
+                        {imgState?.file && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setEditFacImages((prev) => ({
+                                ...prev,
+                                [slot.key]: { file: null, previewUrl: existingDbUrl },
+                              }))
+                            }
+                            className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center shadow cursor-pointer hover:bg-rose-700"
+                            title="Hủy ảnh mới chọn & quay về ảnh hiện tại trong DB"
+                          >
+                            <X className="size-3" />
+                          </button>
+                        )}
+                        <div className="px-1.5 py-1.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/80 text-center">
+                          <p className="text-[10px] font-extrabold text-slate-700 dark:text-slate-200 truncate">
+                            {slot.label}
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
@@ -1413,10 +1654,11 @@ export default function BomFacilitiesPage() {
                 Hủy Bỏ
               </button>
               <button
+                disabled={isSavingConfig}
                 onClick={handleSaveFacilityModal}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer transition"
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer transition"
               >
-                Lưu Cấu Hình
+                {isSavingConfig ? "Đang Lưu..." : "Lưu Cấu Hình"}
               </button>
             </div>
           </div>
@@ -1633,7 +1875,88 @@ export default function BomFacilitiesPage() {
                 </div>
               </div>
 
-              {/* Row 6: Trạng thái ban đầu */}
+              {/* Row 6: Tải Hình Ảnh Cơ Sở & Kho Lên Hệ Thống (Lưu vào DB typeCode = 1) */}
+              <div className="p-3.5 rounded-2xl bg-blue-50/40 dark:bg-slate-950/70 border border-blue-200/70 dark:border-slate-800 space-y-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-1">
+                  <label className="font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] flex items-center gap-1.5">
+                    <ImagePlus className="size-3.5 text-blue-600 dark:text-blue-400" />
+                    <span>Hình Ảnh Cơ Sở &amp; Loại Kho:</span>
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2.5">
+                  {FACILITY_IMAGE_SLOTS.map((slot) => {
+                    const imgState = newFacImages[slot.key]
+                    return (
+                      <div
+                        key={slot.key}
+                        className={`relative rounded-xl border transition-all overflow-hidden group flex flex-col ${
+                          imgState?.previewUrl
+                            ? "border-blue-500 bg-white dark:bg-slate-900 shadow-xs"
+                            : "border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-blue-400"
+                        }`}
+                      >
+                        <label className="cursor-pointer flex flex-col items-center justify-center h-24 w-full relative overflow-hidden">
+                          {imgState?.previewUrl ? (
+                            <>
+                              <img
+                                src={imgState.previewUrl}
+                                alt={slot.label}
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-[10px] font-bold gap-1">
+                                <Upload className="size-3" />
+                                <span>Đổi ảnh</span>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-2 text-center">
+                              <div className="w-7 h-7 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-1">
+                                <ImagePlus className="size-4" />
+                              </div>
+                              <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 leading-tight">
+                                Chọn ảnh tải lên
+                              </span>
+                              <span className="text-[8.5px] text-slate-400 dark:text-slate-500 mt-0.5 leading-tight">
+                                {slot.subLabel}
+                              </span>
+                            </div>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0] || null
+                              handleSelectFacilityImage(slot.key, file, "add")
+                              e.target.value = ""
+                            }}
+                          />
+                        </label>
+
+                        {imgState?.previewUrl && (
+                          <button
+                            type="button"
+                            onClick={() => handleSelectFacilityImage(slot.key, null, "add")}
+                            className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center shadow-md cursor-pointer transition"
+                            title="Xóa ảnh này"
+                          >
+                            <X className="size-3" />
+                          </button>
+                        )}
+
+                        <div className="px-2 py-1.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/80 text-center">
+                          <p className="text-[10px] font-extrabold text-slate-800 dark:text-slate-200 truncate">
+                            {slot.label}
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Row 7: Trạng thái ban đầu */}
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] mb-1.5 flex items-center gap-1.5">
                   <Activity className="size-3 text-slate-500 dark:text-slate-400" />
