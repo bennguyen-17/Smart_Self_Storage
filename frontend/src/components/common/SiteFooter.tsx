@@ -33,11 +33,11 @@ function SiteFooter() {
             </Button>
 
             <a
-              href="tel:1900391391"
+              href="tel:19008899"
               className="inline-flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition"
             >
               <i className="fa-solid fa-phone-volume text-blue-500"></i>
-              <span>Hotline: 1900 391 391</span>
+              <span>Hotline: 1900 8899</span>
             </a>
           </div>
         </div>

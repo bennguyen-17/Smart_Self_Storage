@@ -238,6 +238,29 @@ public class ImageStorageService {
         return images.stream().map(this::toResponse).toList();
     }
 
+    
+    public ImageFile loadReceiptImageFile(String receiptUrl) {
+        if (receiptUrl == null || receiptUrl.isBlank()) return null;
+        Integer imageId = null;
+        if (receiptUrl.contains("/api/images/")) {
+            try {
+                String idStr = receiptUrl.substring(receiptUrl.lastIndexOf('/') + 1).trim();
+                imageId = Integer.parseInt(idStr);
+            } catch (Exception ignored) {}
+        }
+        if (imageId != null) {
+            StoredImage img = imageRepository.findById(imageId).orElse(null);
+            if (img != null) {
+                Path file = fileForStoragePath(img.getStoragePath());
+                if (file != null && Files.isRegularFile(file)) {
+                    try {
+                        return new ImageFile(Files.readAllBytes(file), img.getContentType());
+                    } catch (Exception ignored) {}
+                }
+            }
+        }
+        return null;
+    }
     public ImageFile loadImage(Integer imageId, Integer accountId, Collection<String> authorities) {
         StoredImage image = imageRepository.findById(imageId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy ảnh."));
@@ -307,6 +330,7 @@ public class ImageStorageService {
             return accountId != null && accountId.equals(image.getUploadedBy());
         }
         if (image.getTypeCode() == StoredImage.TYPE_SYSTEM) return true;
+        if ("REFUND_RECEIPT".equals(image.getCategory())) return true;
         if ("FORFEIT_EVIDENCE".equals(image.getCategory())
                 && (authorities == null || (!authorities.contains("ROLE_ADMIN") && !authorities.contains("ROLE_MANAGER")))) {
             return false;

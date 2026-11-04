@@ -259,7 +259,7 @@ function InternalLoginForm() {
         <div className="text-[11.5px] font-medium">
           Liên hệ IT:{" "}
           <span className="font-bold text-blue-600 dark:text-blue-400">
-            1900 391 391
+            1900 8899
           </span>
         </div>
       </div>
