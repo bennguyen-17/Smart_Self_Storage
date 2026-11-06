@@ -59,4 +59,7 @@ export interface FacilityContract {
   inspectionImages?: StoredImage[]
   /** Ảnh minh chứng thanh lý tài sản do Manager tải */
   forfeitEvidenceImages?: StoredImage[]
+  overdueLiquidationDays?: number | null
+  forfeitAfterDays?: number | null
+  dailyOverdueFee?: number | null
 }

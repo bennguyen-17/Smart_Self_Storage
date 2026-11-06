@@ -12,23 +12,17 @@ import "../portal-dialog.css"
 export interface PortalNavItem {
   to: string
   label: string
-  /** Mô tả ngắn dưới tên trang */
   hint?: string
   icon: LucideIcon
-  /** Chữ trong chấm đếm mục mới ("3", "99+"); không có thì không hiện chấm */
   badge?: string | null
 }
 
 export interface PortalNavbarProps {
-  /** Tên cổng, ví dụ "Cổng quản lý cơ sở" */
   portalName: string
-  /** Ẩn dòng chữ tên cổng trên Header và Sidebar */
   hidePortalNameText?: boolean
-  /** Mỗi mục là một trang có link riêng (F5 / Back / gửi link đều giữ đúng trang) */
   items: readonly PortalNavItem[]
   profile: PortalProfile
   onLogout: () => void
-  /** Nội dung trang */
   children: ReactNode
 }
 
@@ -38,12 +32,6 @@ function resolveDark(theme: string): boolean {
   return typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches
 }
 
-/**
- * Khung các cổng nội bộ (Manager, Admin), cùng kiểu cổng BOM của Tâm:
- * header tối cố định + thanh điều hướng dọc bên trái; nền vùng nội dung lấy theo cổng khách (/portal):
- * xanh rất nhạt và một vầng sáng xanh mờ phía trên, để trang không trắng trơn.
- * Màn hẹp: thanh dọc ẩn, mở bằng nút ở header (có lớp nền mờ, Esc để đóng).
- */
 function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, onLogout, children }: PortalNavbarProps) {
   const { theme, setTheme } = useTheme()
   const isDark = resolveDark(theme)

@@ -43,8 +43,7 @@ function InternalAuthLayout({ children }: InternalAuthLayoutProps) {
 
       {/* FOOTER */}
       <footer className="relative z-10 flex w-full shrink-0 flex-wrap items-center justify-between gap-y-1 border-t border-slate-200/80 bg-white/70 px-6 py-3 text-xs text-slate-500 dark:border-white/10 dark:bg-slate-950/75 dark:text-slate-400 backdrop-blur-md sm:px-10">
-        <div>© 2026 Smart Storage • Cổng thông tin nội bộ • FPT University</div>
-        <div>• Bảo mật nội bộ</div>
+        <div>© 2026 Smart Storage</div>
       </footer>
     </div>
   )

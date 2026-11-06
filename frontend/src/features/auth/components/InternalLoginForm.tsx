@@ -95,7 +95,7 @@ function InternalLoginForm() {
       if (status === 403) {
         setServerError(
           payload?.message ||
-            "Tài khoản Khách hàng không có quyền truy cập Cổng Nội Bộ!"
+          "Tài khoản Khách hàng không có quyền truy cập Cổng Nội Bộ!"
         )
         return
       }
@@ -108,7 +108,7 @@ function InternalLoginForm() {
       if (status === 423) {
         setServerError(
           payload?.message ||
-            "Tài khoản đang bị tạm khóa do nhập sai quá nhiều lần."
+          "Tài khoản đang bị tạm khóa do nhập sai quá nhiều lần."
         )
         return
       }
@@ -155,7 +155,8 @@ function InternalLoginForm() {
 
         <h1 className="text-xl font-bold text-foreground">Đăng nhập nội bộ</h1>
         <p className="text-xs text-muted-foreground">
-          Dành cho Nhân viên, Quản lý chi nhánh, Ban giám đốc, Quản trị viên
+          Dành cho Nhân viên, Quản lý chi nhánh
+          <br/>Ban giám đốc, Quản trị viên
         </p>
       </div>
 

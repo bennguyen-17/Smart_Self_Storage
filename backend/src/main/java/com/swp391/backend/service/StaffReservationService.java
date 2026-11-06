@@ -70,7 +70,7 @@ public class StaffReservationService {
     private static final String RESERVATION_PENDING = "PENDING";
     private static final String RESERVATION_CONFIRMED = "CONFIRMED";
     private static final BigDecimal DAILY_OVERDUE_FEE = new BigDecimal("50000.00");
-    private static final int MAX_CHARGEABLE_OVERDUE_DAYS = 29;
+    private static final int MAX_CHARGEABLE_OVERDUE_DAYS = 30;
 
     private final ReservationRepository reservationRepository;
     private final AccountRepository accountRepository;
@@ -92,6 +92,20 @@ public class StaffReservationService {
 
     private final FeePolicyRepository feePolicyRepository;
     private final NoShowCronService noShowCronService;
+
+    private BigDecimal getContractDailyOverdueFee(Contract contract) {
+        if (contract != null && contract.getDailyOverdueFee() != null && contract.getDailyOverdueFee().compareTo(BigDecimal.ZERO) > 0) {
+            return contract.getDailyOverdueFee();
+        }
+        return DAILY_OVERDUE_FEE;
+    }
+
+    private int getContractLiquidationDays(Contract contract) {
+        if (contract != null && contract.getOverdueLiquidationDays() != null && contract.getOverdueLiquidationDays() > 0) {
+            return contract.getOverdueLiquidationDays();
+        }
+        return MAX_CHARGEABLE_OVERDUE_DAYS;
+    }
 
     private BigDecimal getDailyOverdueFee() {
         try {
@@ -328,6 +342,7 @@ public class StaffReservationService {
             return changeUnitFailure("Cần có hợp đồng PENDING_CHECKIN để thay đổi kho.");
         }
         Contract contract = contractOpt.get();
+        Contract contractObj = contract;
 
         String oldUnitCode = reservation.getUnitCode();
         if (newUnitCode == null || newUnitCode.isBlank()) {
@@ -442,6 +457,7 @@ public class StaffReservationService {
             return cancelReservationFailure("Cần có hợp đồng PENDING_CHECKIN để hủy đặt chỗ.");
         }
         Contract contract = contractOpt.get();
+        Contract contractObj = contract;
 
         Optional<StorageUnit> unitOpt = storageUnitRepository.findByUnitCodeForUpdate(reservation.getUnitCode());
         if (unitOpt.isEmpty()) {
@@ -625,7 +641,9 @@ public class StaffReservationService {
         item.setDepPaidAmount(defDep);
         item.setDepRemainingAmount(defRent);
 
-        contractRepository.findByReservationId(reservation.getReservationId()).ifPresent(contract -> {
+        Optional<Contract> contractOptForItem = contractRepository.findByReservationId(reservation.getReservationId());
+        Contract contractObj = contractOptForItem.orElse(null);
+        contractOptForItem.ifPresent(contract -> {
             item.setContractId(contract.getContractId());
             item.setContractStatus(contract.getStatus());
             LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
@@ -655,7 +673,7 @@ public class StaffReservationService {
                         BigDecimal paid = payment.getPaidAmount() != null ? payment.getPaidAmount() : BigDecimal.ZERO;
 
                         // Hợp đồng đã chuyển sang trang staff (PENDING_CHECKIN) thì 100% đã cọc đủ
-                        if (paid.compareTo(depAmt) < 0 && CONTRACT_PENDING_CHECKIN.equals(contract.getStatus())) {
+                        if (paid.signum() <= 0 && CONTRACT_PENDING_CHECKIN.equals(contract.getStatus())) {
                             paid = depAmt;
                         }
                         if (CONTRACT_ACTIVE.equals(contract.getStatus())) {
@@ -713,12 +731,12 @@ public class StaffReservationService {
         int overdueDays = 0;
         if (endDate != null && endDate.isBefore(today)) {
             overdueDays = (int) Math.min(
-                    ChronoUnit.DAYS.between(endDate, today), MAX_CHARGEABLE_OVERDUE_DAYS);
+                    ChronoUnit.DAYS.between(endDate, today), getContractLiquidationDays(contractObj));
         }
         item.setOverdueDays(overdueDays);
 
         // 3. Tính tiền phạt quá hạn: Chuẩn 50.000 VNĐ / ngày quá hạn
-        BigDecimal expectedPenalty = getDailyOverdueFee().multiply(BigDecimal.valueOf(overdueDays));
+        BigDecimal expectedPenalty = getContractDailyOverdueFee(contractObj).multiply(BigDecimal.valueOf(overdueDays));
         BigDecimal paidPenalty = BigDecimal.ZERO;
 
         if (item.getContractId() != null) {
@@ -846,6 +864,7 @@ public class StaffReservationService {
             return new CollectPenaltyResponse(false, "Không tìm thấy hợp đồng của đặt chỗ này.");
         }
         Contract contract = contractOpt.get();
+        Contract contractObj = contract;
 
         if (!CONTRACT_OVERDUE.equalsIgnoreCase(contract.getStatus())) {
             return new CollectPenaltyResponse(false, "Chỉ thu phạt cho hợp đồng OVERDUE.");
@@ -870,10 +889,11 @@ public class StaffReservationService {
         LocalDate endDate = reservation.getEndDate();
         int overdueDays = (endDate != null && endDate.isBefore(today))
                 ? (int) Math.min(
-                        ChronoUnit.DAYS.between(endDate, today), MAX_CHARGEABLE_OVERDUE_DAYS)
+                        ChronoUnit.DAYS.between(endDate, today), getContractLiquidationDays(contract))
                 : 0;
 
-        BigDecimal totalExpected = getDailyOverdueFee().multiply(BigDecimal.valueOf(overdueDays));
+        BigDecimal dailyRate = getContractDailyOverdueFee(contract);
+        BigDecimal totalExpected = dailyRate.multiply(BigDecimal.valueOf(overdueDays));
         List<Payment> penPayments = paymentRepository.findByContractId(contract.getContractId()).stream()
                 .filter(p -> "OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType())
                         || (p.getInvoiceNumber() != null && (p.getInvoiceNumber().startsWith("PEN-") || p.getInvoiceNumber().startsWith("OVD-"))))
@@ -885,6 +905,12 @@ public class StaffReservationService {
                 .findFirst()
                 .orElse(null);
 
+        if (penaltyInvoice == null) {
+            penaltyInvoice = penPayments.stream()
+                    .filter(p -> !"PAID".equalsIgnoreCase(p.getStatus()) && !"CANCELLED".equalsIgnoreCase(p.getStatus()))
+                    .findFirst()
+                    .orElse(null);
+        }
         BigDecimal alreadyPaid = penaltyInvoice == null ? BigDecimal.ZERO : zeroIfNull(penaltyInvoice.getPaidAmount());
         BigDecimal collectedAmount = totalExpected.subtract(alreadyPaid).max(BigDecimal.ZERO);
 
@@ -915,17 +941,20 @@ public class StaffReservationService {
             if (p.getPaymentId() != null && !p.getPaymentId().equals(penaltyInvoice.getPaymentId()) && ("PENDING".equalsIgnoreCase(p.getStatus()) || "OVERDUE".equalsIgnoreCase(p.getStatus()))) {
                 p.setStatus("PAID");
                 p.setRemainingAmount(BigDecimal.ZERO);
-                p.setPaidAmount(p.getAmount());
+                p.setStatus("CANCELLED");
+                p.setPaymentStatus("CANCELLED");
+                p.setPaidAmount(BigDecimal.ZERO);
                 p.setPaidAt(now);
                 paymentRepository.save(p);
             }
         }
 
         writeActivityLog(staffAccountId, "COLLECT_PENALTY_AT_COUNTER",
-                "Thu phạt quá hạn tại quầy bằng " + paymentMethod + " cho hợp đồng " + (reservation.getReservationCode() != null ? reservation.getReservationCode() : contract.getContractId()) + ", số tiền: " + collectedAmount + " VND (" + overdueDays + " ngày quá hạn, đơn giá 50.000đ/ngày)",
+                "Thu phạt quá hạn tại quầy bằng " + paymentMethod + " cho hợp đồng " + (reservation.getReservationCode() != null ? reservation.getReservationCode() : contract.getContractId()) + ", số tiền: " + collectedAmount + " VND (" + overdueDays + " ngày quá hạn, đơn giá " + java.text.NumberFormat.getInstance(java.util.Locale.of("vi", "VN")).format(dailyRate) + "đ/ngày)",
                 unitOpt.map(StorageUnit::getFloorId).flatMap(floorRepository::findById).map(Floor::getFacilityId).orElse(null));
 
         CollectPenaltyResponse resp = new CollectPenaltyResponse();
+        String finalInvNum = penaltyInvoice.getInvoiceNumber() != null ? penaltyInvoice.getInvoiceNumber() : invoiceNumber;
         resp.setSuccess(true);
         resp.setMessage("Đã thu phạt quá hạn tại quầy thành công.");
         resp.setReservationId(reservation.getReservationId());
@@ -934,6 +963,7 @@ public class StaffReservationService {
         resp.setUnitStatus(unitOpt.map(StorageUnit::getStatus).orElse(null));
         resp.setInvoiceNumber(invoiceNumber);
         resp.setCollectedAmount(collectedAmount);
+        resp.setInvoiceNumber(finalInvNum);
         resp.setOverdueDays(overdueDays);
         return resp;
     }
@@ -965,6 +995,7 @@ public class StaffReservationService {
             return new RenewAtCounterResponse(false, "Không tìm thấy hợp đồng của đặt chỗ này.");
         }
         Contract contract = contractOpt.get();
+        Contract contractObj = contract;
 
         // 1. Kiểm tra phạt quá hạn chưa nộp (tính chuẩn 50.000đ/ngày quá hạn)
 
@@ -972,9 +1003,9 @@ public class StaffReservationService {
         LocalDate endDate = reservation.getEndDate();
         int overdueDays = (endDate != null && endDate.isBefore(today))
                 ? (int) Math.min(
-                        ChronoUnit.DAYS.between(endDate, today), MAX_CHARGEABLE_OVERDUE_DAYS)
+                        ChronoUnit.DAYS.between(endDate, today), getContractLiquidationDays(contract))
                 : 0;
-        BigDecimal expectedPenalty = getDailyOverdueFee().multiply(BigDecimal.valueOf(overdueDays));
+        BigDecimal expectedPenalty = getContractDailyOverdueFee(contractObj).multiply(BigDecimal.valueOf(overdueDays));
 
         List<Payment> penPayments = paymentRepository.findByContractId(contract.getContractId()).stream()
                 .filter(p -> "OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType())

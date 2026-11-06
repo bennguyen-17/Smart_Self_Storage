@@ -120,7 +120,7 @@ function CheckinPanel() {
       if (item.contractStatus === "PENDING_CHECKIN") return 0
       if (item.contractStatus === "ACTIVE") {
         const isReturn = Boolean(item.returnRequested || item.cancelReason === "EARLY_TERMINATION")
-        return isReturn ? 2 : 1
+        return isReturn ? 1 : 2
       }
       if (item.contractStatus === "OVERDUE") return 3
       return 4
@@ -136,7 +136,18 @@ function CheckinPanel() {
         const pA = getStatusPriority(a)
         const pB = getStatusPriority(b)
         if (pA !== pB) return pA - pB
-        return (a.reservationCode ?? "").localeCompare(b.reservationCode ?? "")
+        // Trong cùng 1 nhóm: Sắp xếp hợp đồng mới nhất lên đầu (Newest first)
+        const timeA = a.depositDate || a.reservationStartDate || a.checkInDate
+        const timeB = b.depositDate || b.reservationStartDate || b.checkInDate
+        const timestampA = timeA ? new Date(timeA).getTime() : 0
+        const timestampB = timeB ? new Date(timeB).getTime() : 0
+        if (timestampA !== timestampB) return timestampB - timestampA
+
+        const idA = a.reservationId ?? 0
+        const idB = b.reservationId ?? 0
+        if (idA !== idB) return idB - idA
+
+        return (b.reservationCode ?? "").localeCompare(a.reservationCode ?? "")
       })
   }, [data])
   const keyword = query.trim().toLowerCase()

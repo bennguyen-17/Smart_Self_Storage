@@ -274,7 +274,23 @@ public class SupportTicketService {
     private SupportTicket logCreatedTicket(SupportTicket ticket, Integer customerAccountId) {
         if (customerAccountId != null) {
             ActivityLog log = new ActivityLog();
-            log.setAccountId(customerAccountId);
+            Integer resolvedAccountId = customerAccountId;
+            Optional<Account> accOpt = accountRepository.findById(Long.valueOf(customerAccountId));
+            if (accOpt.isEmpty() || !Long.valueOf(5L).equals(accOpt.get().getRoleId())) {
+                if (ticket.getContractId() != null) {
+                    resolvedAccountId = contractRepository.findById(ticket.getContractId())
+                            .map(Contract::getReservationId)
+                            .flatMap(reservationRepository::findById)
+                            .map(Reservation::getAccountId)
+                            .orElse(resolvedAccountId);
+                }
+                if (Objects.equals(resolvedAccountId, customerAccountId) && ticket.getCustomerId() != null) {
+                    resolvedAccountId = customerProfileRepository.findById(ticket.getCustomerId())
+                            .map(CustomerProfile::getAccountId)
+                            .orElse(resolvedAccountId);
+                }
+            }
+            log.setAccountId(resolvedAccountId);
             log.setFacilityId(ticket.getFacilityId());
             log.setAction("CUSTOMER_TICKET_CREATED");
             log.setDescription("Khách tạo ticket " + ticket.getTicketCode() + " loại " + ticket.getType());
@@ -296,6 +312,16 @@ public class SupportTicketService {
 
         Long targetAccountId = Long.valueOf(customerId);
         Optional<CustomerProfile> cpOpt = customerProfileRepository.findById(customerId);
+        Optional<Account> directAccOpt = accountRepository.findById(targetAccountId);
+        if (directAccOpt.isPresent() && Long.valueOf(5L).equals(directAccOpt.get().getRoleId())) {
+            cpOpt = Optional.empty();
+        }
+        Reservation contractRes = reservationRepository.findById(contract.getReservationId()).orElse(null);
+        Integer resolvedCallerAccountId = (cpOpt.isPresent() && cpOpt.get().getAccountId() != null)
+                ? cpOpt.get().getAccountId() : targetAccountId.intValue();
+        if (contractRes == null || contractRes.getAccountId() == null || !contractRes.getAccountId().equals(resolvedCallerAccountId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Bạn không có quyền yêu cầu trả kho cho hợp đồng của người khác!");
+        }
         if (cpOpt.isPresent() && cpOpt.get().getAccountId() != null) {
             targetAccountId = Long.valueOf(cpOpt.get().getAccountId());
         }
@@ -341,6 +367,16 @@ public class SupportTicketService {
 
         Long targetAccountId = Long.valueOf(customerId);
         Optional<CustomerProfile> cpOpt = customerProfileRepository.findById(customerId);
+        Optional<Account> directAccOpt = accountRepository.findById(targetAccountId);
+        if (directAccOpt.isPresent() && Long.valueOf(5L).equals(directAccOpt.get().getRoleId())) {
+            cpOpt = Optional.empty();
+        }
+        Reservation contractRes = reservationRepository.findById(contract.getReservationId()).orElse(null);
+        Integer resolvedCallerAccountId = (cpOpt.isPresent() && cpOpt.get().getAccountId() != null)
+                ? cpOpt.get().getAccountId() : targetAccountId.intValue();
+        if (contractRes == null || contractRes.getAccountId() == null || !contractRes.getAccountId().equals(resolvedCallerAccountId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Bạn không có quyền yêu cầu trả kho cho hợp đồng của người khác!");
+        }
         if (cpOpt.isPresent() && cpOpt.get().getAccountId() != null) {
             targetAccountId = Long.valueOf(cpOpt.get().getAccountId());
         }
@@ -391,7 +427,7 @@ public class SupportTicketService {
         ticket.setIsSlaBreached(false);
         ticket.setIdentityVerified(false);
 
-        return logCreatedTicket(supportTicketRepository.save(ticket), customerId);
+        return logCreatedTicket(supportTicketRepository.save(ticket), targetAccountId.intValue());
     }
 
     // --- US-21: 5. Khách xem danh sách ticket của mình ---

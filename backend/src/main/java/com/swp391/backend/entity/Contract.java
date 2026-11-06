@@ -1,6 +1,7 @@
 package com.swp391.backend.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -51,6 +52,12 @@ public class Contract {
     @Column(length = 255)
     private String contractPdfUrl;
 
+    @Column(name = "dailyOverdueFee", precision = 12, scale = 2)
+    private BigDecimal dailyOverdueFee;
+
+    @Column(name = "overdueLiquidationDays")
+    private Integer overdueLiquidationDays;
+
     public Contract() {
     }
 
@@ -77,8 +84,6 @@ public class Contract {
     public void setReservationId(Integer reservationId) {
         this.reservationId = reservationId;
     }
-
-
 
     public LocalDateTime getActivatedAt() {
         return activatedAt;
@@ -182,5 +187,21 @@ public class Contract {
 
     public void setContractPdfUrl(String contractPdfUrl) {
         this.contractPdfUrl = contractPdfUrl;
+    }
+
+    public BigDecimal getDailyOverdueFee() {
+        return dailyOverdueFee;
+    }
+
+    public void setDailyOverdueFee(BigDecimal dailyOverdueFee) {
+        this.dailyOverdueFee = dailyOverdueFee;
+    }
+
+    public Integer getOverdueLiquidationDays() {
+        return overdueLiquidationDays;
+    }
+
+    public void setOverdueLiquidationDays(Integer overdueLiquidationDays) {
+        this.overdueLiquidationDays = overdueLiquidationDays;
     }
 }

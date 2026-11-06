@@ -30,6 +30,7 @@ public class DepositService {
     private final AccountRepository accountRepository;
     private final EmailService emailService;
     private final CustomerProfileRepository customerProfileRepository;
+    private final FeePolicyRepository feePolicyRepository;
 
     public DepositService(StorageService storageService,
                           ReservationRepository reservationRepository,
@@ -41,7 +42,8 @@ public class DepositService {
                           FacilityRepository facilityRepository,
                           AccountRepository accountRepository,
                           EmailService emailService,
-                          CustomerProfileRepository customerProfileRepository) {
+                          CustomerProfileRepository customerProfileRepository,
+                          FeePolicyRepository feePolicyRepository) {
         this.storageService = storageService;
         this.reservationRepository = reservationRepository;
         this.contractRepository = contractRepository;
@@ -53,6 +55,22 @@ public class DepositService {
         this.accountRepository = accountRepository;
         this.emailService = emailService;
         this.customerProfileRepository = customerProfileRepository;
+        this.feePolicyRepository = feePolicyRepository;
+    }
+
+    private BigDecimal getCurrentDailyOverdueFee() {
+        return feePolicyRepository.findByPolicyCode("OVERDUE_DAILY_RATE")
+                .map(FeePolicy::getFeeValue)
+                .filter(v -> v != null && v.compareTo(BigDecimal.ZERO) > 0)
+                .orElse(new BigDecimal("50000"));
+    }
+
+    private int getCurrentOverdueLiquidationDays() {
+        return feePolicyRepository.findByPolicyCode("OVERDUE_LIQUIDATION_DAYS")
+                .map(FeePolicy::getFeeValue)
+                .map(BigDecimal::intValue)
+                .filter(v -> v > 0)
+                .orElse(30);
     }
 
     // --- 1. Tạo đơn Đặt cọc 100% Online & Thỏa thuận Clickwrap ---
@@ -167,6 +185,8 @@ public class DepositService {
         contract.setSignedEmail(custEmail);
         contract.setSignedIdentityNumber(custIdNum);
         contract.setContractPdfUrl("/uploads/contracts/" + contractCode + ".pdf");
+        contract.setDailyOverdueFee(getCurrentDailyOverdueFee());
+        contract.setOverdueLiquidationDays(getCurrentOverdueLiquidationDays());
         contract = contractRepository.save(contract);
 
         // Tạo Hóa đơn tiền cọc (Payment): DEP-[Mã Hợp Đồng]

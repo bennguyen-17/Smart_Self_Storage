@@ -36,10 +36,14 @@ public class SecurityContextHelper {
         if (accId != null) {
             Optional<EmployeeProfile> ep = employeeProfileRepository.findByAccountId(accId);
             if (ep.isPresent() && ep.get().getFacilityId() != null) {
-                return ep.get().getFacilityId();
+                Integer assignedFacilityId = ep.get().getFacilityId();
+                if (fallbackHeaderFacilityId != null && (fallbackHeaderFacilityId <= 0 || !fallbackHeaderFacilityId.equals(assignedFacilityId))) {
+                    throw new AccessDeniedException("Không có quyền truy cập dữ liệu của cơ sở khác!");
+                }
+                return assignedFacilityId;
             }
         }
-        if (fallbackHeaderFacilityId != null) {
+        if (fallbackHeaderFacilityId != null && fallbackHeaderFacilityId > 0) {
             return fallbackHeaderFacilityId;
         }
         throw new AccessDeniedException("Tài khoản chưa được phân công quản lý cơ sở nào!");

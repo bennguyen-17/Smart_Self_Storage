@@ -94,7 +94,19 @@ public class NoShowCronService {
             // Ghi nhận ActivityLog
             if (activityLogRepository != null) {
                 ActivityLog activityLog = new ActivityLog();
-                activityLog.setAccountId(ticket.getCustomerId());
+                Integer customerAccountId = null;
+                if (ticket.getContractId() != null) {
+                    customerAccountId = contractRepository.findById(ticket.getContractId())
+                            .map(Contract::getReservationId)
+                            .flatMap(reservationRepository::findById)
+                            .map(Reservation::getAccountId)
+                            .orElse(null);
+                }
+                if (customerAccountId == null) {
+                    customerAccountId = ticket.getCustomerId();
+                }
+                activityLog.setAccountId(customerAccountId);
+                activityLog.setFacilityId(ticket.getFacilityId());
                 activityLog.setAction("EARLY_TERMINATION_NO_SHOW");
                 activityLog.setDescription(String.format("Hệ thống tự động hủy lịch hẹn trả kho #%s (ô %s) do khách hàng không đến nghiệm thu ngày %s. Hợp đồng #%d vẫn tiếp tục ACTIVE.",
                         ticket.getTicketCode(), ticket.getUnitCode() != null ? ticket.getUnitCode() : "", formattedDate, ticket.getContractId()));

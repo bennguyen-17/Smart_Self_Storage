@@ -31,6 +31,13 @@ export function isClosedContract(status: ContractStatus | string): boolean {
 /** Quá hạn đủ số ngày này thì hợp đồng chuyển FORFEITED, cơ sở được niêm phong và thanh lý tài sản (BE chuyển đúng ngày thứ 30) */
 export const FORFEIT_AFTER_DAYS = 30
 
+export function forfeitAfterDaysOf(
+  contract: Pick<FacilityContract, "overdueLiquidationDays" | "forfeitAfterDays">
+): number {
+  const days = contract.overdueLiquidationDays ?? contract.forfeitAfterDays
+  return typeof days === "number" && days > 0 ? days : FORFEIT_AFTER_DAYS
+}
+
 export const CHECKOUT_STAGE_LABEL: Record<CheckoutStage, string> = {
   NONE: "Chưa trả kho",
   INSPECTED: "Đã nghiệm thu, chờ bàn giao",
@@ -74,11 +81,11 @@ export function overdueDays(contract: Pick<FacilityContract, "status" | "endDate
  * đủ 30 ngày mà tác vụ tự động 00:00 của BE chưa kịp chuyển.
  */
 export function needsForfeitHandling(
-  contract: Pick<FacilityContract, "status" | "endDate" | "forfeitProcessed">,
+  contract: Pick<FacilityContract, "status" | "endDate" | "forfeitProcessed"> & Partial<Pick<FacilityContract, "overdueLiquidationDays" | "forfeitAfterDays">>,
   today: string
 ): boolean {
   if (contract.status === "FORFEITED") return !contract.forfeitProcessed
-  return overdueDays(contract, today) >= FORFEIT_AFTER_DAYS
+  return overdueDays(contract as FacilityContract, today) >= forfeitAfterDaysOf(contract as FacilityContract)
 }
 
 /** Chỉ hợp đồng BE đã chuyển FORFEITED mới được xác nhận (BE trả 409 với trạng thái khác) */
@@ -95,12 +102,12 @@ export function canConfirmForfeitProcessed(contract: Pick<FacilityContract, "sta
 export type ForfeitState = "NONE" | "WAITING" | "READY" | "DONE"
 
 export function forfeitState(
-  contract: Pick<FacilityContract, "status" | "endDate" | "forfeitProcessed">,
+  contract: Pick<FacilityContract, "status" | "endDate" | "forfeitProcessed"> & Partial<Pick<FacilityContract, "overdueLiquidationDays" | "forfeitAfterDays">>,
   today: string
 ): ForfeitState {
   if (contract.forfeitProcessed) return "DONE"
   if (contract.status === "FORFEITED") return "READY"
-  if (overdueDays(contract, today) >= FORFEIT_AFTER_DAYS) return "WAITING"
+  if (overdueDays(contract as FacilityContract, today) >= forfeitAfterDaysOf(contract as FacilityContract)) return "WAITING"
   return "NONE"
 }
 

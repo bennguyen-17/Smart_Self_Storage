@@ -199,7 +199,7 @@ function ContractDetailDialog({
                   {forfeit === "DONE"
                     ? "Đã xác nhận xử lý tài sản, ô kho chuyển sang bảo trì."
                     : forfeit === "WAITING"
-                      ? `Quá hạn đủ ${FORFEIT_AFTER_DAYS} ngày. Hệ thống sẽ chuyển sang "Tịch thu" lúc 00:00, sau đó mới xác nhận thanh lý được.`
+                      ? `Quá hạn đủ ${contract.overdueLiquidationDays ?? contract.forfeitAfterDays ?? FORFEIT_AFTER_DAYS} ngày. Hệ thống sẽ chuyển sang "Tịch thu" lúc 00:00, sau đó mới xác nhận thanh lý được.`
                       : "Hợp đồng đã bị tịch thu. Cắt khóa, niêm phong, xử lý tài sản xong thì xác nhận kèm ảnh minh chứng."}
                 </p>
               </div>

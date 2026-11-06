@@ -5,7 +5,9 @@ import com.swp391.backend.dto.DepositInitiateRequest;
 import com.swp391.backend.dto.DepositInitiateResponse;
 import com.swp391.backend.dto.DepositWebhookRequest;
 import com.swp391.backend.service.DepositService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,7 +22,16 @@ public class DepositController {
 
     // --- US-05: Khởi tạo Đặt cọc 100% Online, thỏa thuận Clickwrap & Sinh mã VietQR ---
     @PostMapping("/initiate")
-    public ResponseEntity<DepositInitiateResponse> initiateDeposit(@RequestBody DepositInitiateRequest request) {
+    public ResponseEntity<DepositInitiateResponse> initiateDeposit(
+            @RequestBody DepositInitiateRequest request,
+            @AuthenticationPrincipal Integer authAccountId) {
+        if (authAccountId != null) {
+            if (request.getAccountId() != null && !request.getAccountId().equals(authAccountId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(DepositInitiateResponse.error("Bạn không có quyền đặt chỗ đứng tên tài khoản của người khác!"));
+            }
+            request.setAccountId(authAccountId);
+        }
         DepositInitiateResponse response = depositService.initiateDeposit(request);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

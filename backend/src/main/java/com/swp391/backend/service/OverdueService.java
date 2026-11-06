@@ -38,7 +38,6 @@ public class OverdueService {
     private final AccountRepository accountRepository;
     private final ActivityLogRepository activityLogRepository;
     private final EmailService emailService;
-
     private final FeePolicyRepository feePolicyRepository;
 
     private BigDecimal getDailyOverdueFee() {
@@ -62,7 +61,21 @@ public class OverdueService {
                 }
             }
         } catch (Exception ignored) {}
-        return 30;
+        return MAX_CHARGEABLE_OVERDUE_DAYS;
+    }
+
+    private BigDecimal getContractDailyOverdueFee(Contract contract) {
+        if (contract != null && contract.getDailyOverdueFee() != null && contract.getDailyOverdueFee().signum() > 0) {
+            return contract.getDailyOverdueFee();
+        }
+        return getDailyOverdueFee();
+    }
+
+    private int getContractLiquidationDays(Contract contract) {
+        if (contract != null && contract.getOverdueLiquidationDays() != null && contract.getOverdueLiquidationDays() > 0) {
+            return contract.getOverdueLiquidationDays();
+        }
+        return getOverdueLiquidationDays();
     }
 
     public OverdueService(ContractRepository contractRepository,
@@ -70,8 +83,8 @@ public class OverdueService {
                           PaymentRepository paymentRepository,
                           AccountRepository accountRepository,
                           ActivityLogRepository activityLogRepository,
-                           EmailService emailService,
-                           FeePolicyRepository feePolicyRepository) {
+                          EmailService emailService,
+                          FeePolicyRepository feePolicyRepository) {
         this.contractRepository = contractRepository;
         this.reservationRepository = reservationRepository;
         this.paymentRepository = paymentRepository;
@@ -119,10 +132,12 @@ public class OverdueService {
             sendMilestoneReminder(contract, reservation, overdueDays);
             createOrUpdateOverdueFine(contract, reservation.getEndDate(), today);
 
-            if (overdueDays >= getOverdueLiquidationDays()) {
+            // Hết số ngày quá hạn cam kết trong hợp đồng (mặc định 30 ngày, sang ngày 31 trở đi) thì chuyển sang FORFEITED
+            int liquidationDays = getContractLiquidationDays(contract);
+            if (overdueDays > liquidationDays) {
                 contract.setStatus("FORFEITED");
                 contractRepository.save(contract);
-                recordForfeiture(contract, reservation);
+                recordForfeiture(contract, reservation, liquidationDays);
                 changed = true;
             }
             if (changed) {
@@ -134,9 +149,10 @@ public class OverdueService {
     }
 
     public Payment createOrUpdateOverdueFine(Contract contract, LocalDate endDate, LocalDate today) {
+        int maxChargeableDays = getContractLiquidationDays(contract);
         long overdueDays = Math.min(
-                ChronoUnit.DAYS.between(endDate, today), MAX_CHARGEABLE_OVERDUE_DAYS);
-        BigDecimal totalFine = getDailyOverdueFee().multiply(BigDecimal.valueOf(overdueDays));
+                ChronoUnit.DAYS.between(endDate, today), maxChargeableDays);
+        BigDecimal totalFine = getContractDailyOverdueFee(contract).multiply(BigDecimal.valueOf(overdueDays));
         String contractCode = "CTR-" + contract.getContractId();
         Optional<Reservation> resOpt = reservationRepository.findById(contract.getReservationId());
         if (resOpt.isPresent() && resOpt.get().getReservationCode() != null && !resOpt.get().getReservationCode().isBlank()) {
@@ -194,20 +210,21 @@ public class OverdueService {
         String contractCode = reservation.getReservationCode() != null
                 ? reservation.getReservationCode()
                 : "CTR-" + contract.getContractId();
-        BigDecimal totalPenalty = getDailyOverdueFee().multiply(BigDecimal.valueOf(Math.min(overdueDays, MAX_CHARGEABLE_OVERDUE_DAYS)));
+        int maxChargeableDays = getContractLiquidationDays(contract);
+        BigDecimal totalPenalty = getContractDailyOverdueFee(contract).multiply(BigDecimal.valueOf(Math.min(overdueDays, maxChargeableDays)));
         if (emailService.sendOverdueWarningEmail(customer.getEmail(), customer.getFullName(), contractCode, reservation.getUnitCode(), "Smart Self Storage", overdueDays, totalPenalty)) {
             saveSystemLog(customer.getAccountId(), action, eventKey + ";email=" + customer.getEmail());
         }
     }
 
-    private void recordForfeiture(Contract contract, Reservation reservation) {
+    private void recordForfeiture(Contract contract, Reservation reservation, int chargeableOverdueDays) {
         BigDecimal forfeitedDeposit = reservation.getDepositAmount() == null
                 ? BigDecimal.ZERO
                 : reservation.getDepositAmount();
         saveSystemLog(reservation.getAccountId(), "CONTRACT_FORFEITED",
                 "contractId=" + contract.getContractId()
                         + ";depositForfeited=" + forfeitedDeposit
-                        + ";chargeableOverdueDays=" + MAX_CHARGEABLE_OVERDUE_DAYS);
+                        + ";chargeableOverdueDays=" + chargeableOverdueDays);
     }
 
     private void saveSystemLog(Integer accountId, String action, String description) {

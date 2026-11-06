@@ -299,6 +299,8 @@ CREATE TABLE Contract (
     signedPhone VARCHAR(20),
     signedEmail VARCHAR(255),
     contractPdfUrl VARCHAR(255),
+    dailyOverdueFee DECIMAL(12, 2) DEFAULT 50000.00,
+    overdueLiquidationDays INT DEFAULT 30,
     CONSTRAINT fk_contract_reservation FOREIGN KEY (reservationId) REFERENCES Reservation (reservationId) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

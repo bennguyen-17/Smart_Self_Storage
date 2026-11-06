@@ -56,9 +56,14 @@ function LoginForm() {
       const data = await login(values.phone, values.password, "CUSTOMER")
 
       if (data?.token) {
+        sessionStorage.removeItem("token")
+        sessionStorage.removeItem("user")
+        sessionStorage.removeItem("auth_session")
+        localStorage.removeItem("auth_session")
         localStorage.setItem("token", data.token)
         if (data?.userInfo || data?.user) {
           localStorage.setItem("user", JSON.stringify(data.userInfo || data.user))
+          localStorage.setItem("auth_session", JSON.stringify({ token: data.token, user: data.userInfo || data.user }))
         }
       }
 

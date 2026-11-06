@@ -312,7 +312,14 @@ export const createDepositTransaction = async (bookingData: any) => {
   try {
     let accountId = 13;
     try {
-      const rawAuth = localStorage.getItem('auth_session') || sessionStorage.getItem('auth_session');
+      const jwtToken = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (jwtToken && jwtToken.split('.').length === 3) {
+        const claims = JSON.parse(atob(jwtToken.split('.')[1]));
+        if (claims?.userId) {
+          accountId = Number(claims.userId);
+        }
+      }
+      const rawAuth = accountId !== 13 ? null : (localStorage.getItem('auth_session') || sessionStorage.getItem('auth_session'));
       if (rawAuth) {
         const parsed = JSON.parse(rawAuth);
         if (parsed?.user?.id || parsed?.user?.accountId) {
