@@ -73,7 +73,6 @@ export default function ManagerTicketPanel() {
   const counts = useMemo(() => {
     return {
       total: tickets.length,
-      escalated: tickets.filter((t) => t.status === "ESCALATED").length,
       submitted: tickets.filter((t) => t.status === "SUBMITTED").length,
       inProgress: tickets.filter((t) => t.status === "IN_PROGRESS").length,
       resolved: tickets.filter((t) => t.status === "RESOLVED").length,
@@ -245,14 +244,14 @@ export default function ManagerTicketPanel() {
           <table className="w-full min-w-[1060px] text-center text-xs">
             <thead className="border-b bg-slate-100 text-[11px] font-bold tracking-wider text-slate-500 uppercase dark:bg-slate-800/80 dark:text-slate-400">
               <tr>
-                <th className="px-4 py-3.5 text-center whitespace-nowrap">Mã &amp; Loại</th>
-                <th className="px-4 py-3.5 text-center whitespace-nowrap">Vị trí / Ô Kho</th>
-                <th className="px-4 py-3.5 text-center whitespace-nowrap">Khách Hàng</th>
-                <th className="min-w-[220px] max-w-[360px] px-4 py-3.5 text-center whitespace-nowrap">Nội Dung Yêu Cầu</th>
-                <th className="px-4 py-3.5 text-center whitespace-nowrap">Thời Gian</th>
-                <th className="px-4 py-3.5 text-center whitespace-nowrap">Trạng Thái</th>
-                <th className="px-4 py-3.5 text-center whitespace-nowrap">Người Phụ Trách</th>
-                <th className="px-4 py-3.5 text-center whitespace-nowrap">Tiến Độ Xử Lý</th>
+                <th scope="col" className="px-4 py-3.5 text-center align-middle whitespace-nowrap">Mã &amp; Loại</th>
+                <th scope="col" className="px-4 py-3.5 text-center align-middle whitespace-nowrap">Vị trí / Ô Kho</th>
+                <th scope="col" className="px-4 py-3.5 text-center align-middle whitespace-nowrap">Khách Hàng</th>
+                <th scope="col" className="min-w-[220px] max-w-[360px] px-4 py-3.5 text-center align-middle whitespace-nowrap">Nội Dung Yêu Cầu</th>
+                <th scope="col" className="px-4 py-3.5 text-center align-middle whitespace-nowrap">Thời Gian</th>
+                <th scope="col" className="px-4 py-3.5 text-center align-middle whitespace-nowrap">Trạng Thái</th>
+                <th scope="col" className="px-4 py-3.5 text-center align-middle whitespace-nowrap">Người Phụ Trách</th>
+                <th scope="col" className="px-4 py-3.5 text-center align-middle whitespace-nowrap">Tiến Độ Xử Lý</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -333,47 +332,46 @@ export default function ManagerTicketPanel() {
 
                     {/* Cột 7: Người phụ trách */}
                     <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
-                      {ticket.assignedStaffName ? (
-                        <div className="flex flex-col items-center">
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">
-                            {ticket.assignedStaffName}
-                          </span>
-                          {(ticket.status === "SUBMITTED" || ticket.status === "ESCALATED") && (
-                            <span className="text-[10px] text-amber-700 dark:text-amber-300">Đã phân, chưa tiếp nhận</span>
-                          )}
-                        </div>
+                      {ticket.status === "SUBMITTED" ? (
+                        <span className="text-amber-700 dark:text-amber-400 text-xs italic">Chưa tiếp nhận</span>
+                      ) : ticket.status === "CANCELLED" ? (
+                        <span className="text-slate-400 italic">—</span>
+                      ) : ticket.assignedStaffName ? (
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          {ticket.assignedStaffName}
+                        </span>
                       ) : (
-                        <span className="text-slate-400 italic">Chưa có</span>
+                        <span className="text-slate-400 italic">—</span>
                       )}
                     </td>
 
-                    {/* Cột 8: Tiến độ (Manager chỉ theo dõi, nhân viên trong ca tiếp nhận và giải quyết) */}
+                    {/* Cột 8: Tiến độ xử lý */}
                     <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
-                      <div className="flex flex-col items-center gap-0.5">
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 text-xs font-semibold",
-                            ticket.status === "RESOLVED"
-                              ? "text-emerald-600 dark:text-emerald-400"
-                              : ticket.status === "IN_PROGRESS"
-                                ? "text-blue-700 dark:text-blue-300"
-                                : ticket.status === "CANCELLED"
-                                  ? "text-slate-500 dark:text-slate-400"
-                                  : "text-amber-700 dark:text-amber-300"
-                          )}
-                        >
-                          {ticket.status === "RESOLVED" && <CheckCircle2Icon className="size-4" />}
-                          <span>{ticketProgress(ticket, today)}</span>
-                        </span>
-                        {ticket.status === "RESOLVED" && ticket.resolutionNote && (
-                          <span
-                            className="max-w-[200px] truncate text-[10px] text-slate-500 italic dark:text-slate-400"
-                            title={ticket.resolutionNote}
-                          >
-                            "{ticket.resolutionNote}"
-                          </span>
+                      <span
+                        className={cn(
+                          "inline-flex items-center justify-center gap-1 text-xs font-semibold",
+                          ticket.status === "RESOLVED"
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : ticket.status === "IN_PROGRESS"
+                              ? "text-blue-700 dark:text-blue-300"
+                              : ticket.status === "CANCELLED"
+                                ? "text-slate-500 dark:text-slate-400"
+                                : "text-amber-700 dark:text-amber-300"
                         )}
-                      </div>
+                      >
+                        {ticket.status === "RESOLVED" && <CheckCircle2Icon className="size-3.5" />}
+                        <span>
+                          {ticket.status === "SUBMITTED"
+                            ? "Chờ tiếp nhận"
+                            : ticket.status === "IN_PROGRESS"
+                              ? "Đang xử lý"
+                              : ticket.status === "RESOLVED"
+                                ? "Đã xong"
+                                : ticket.status === "CANCELLED"
+                                  ? "Đã hủy"
+                                  : ticket.status}
+                        </span>
+                      </span>
                     </td>
                   </tr>
                 )

@@ -375,7 +375,7 @@ public class ContractController {
         List<SupportTicket> existingTickets = supportTicketRepository.findByContractId(contract.getContractId());
         for (SupportTicket existing : existingTickets) {
             if ("EARLY_TERMINATION".equalsIgnoreCase(existing.getType()) &&
-                ("SUBMITTED".equalsIgnoreCase(existing.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existing.getStatus()) || "ESCALATED".equalsIgnoreCase(existing.getStatus()))) {
+                ("SUBMITTED".equalsIgnoreCase(existing.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existing.getStatus()))) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Hợp đồng này đang có yêu cầu trả kho sớm đang chờ xử lý (#" + existing.getTicketCode() + ")!"));
             }
         }

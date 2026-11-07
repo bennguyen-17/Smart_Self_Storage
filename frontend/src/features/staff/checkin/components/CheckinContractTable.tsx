@@ -254,7 +254,7 @@ function StatusBadge({ item }: { item: StaffReservationItem }) {
     return (
       <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium border bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">
         <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-emerald-500"></span>
-        Đang thuê
+        Đang hiệu lực
       </span>
     )
   }
@@ -327,7 +327,7 @@ function ActionButtons({
         <button
           type="button"
           onClick={() => onCheckin(item)}
-          className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-600 hover:text-white border border-blue-200 dark:border-blue-700 transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap active:scale-95"
+          className="inline-flex items-center justify-center w-[84px] h-7.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white font-medium text-xs transition-all shadow-2xs cursor-pointer whitespace-nowrap active:scale-95"
           title="Thực hiện nhận bàn giao và check-in cho khách"
         >
           Check-in
@@ -385,8 +385,7 @@ function ActionButtons({
 
   if (isLiquidation) {
     return (
-      <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 whitespace-nowrap">
-        <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-rose-500 animate-pulse"></span>
+      <span className="text-xs text-slate-400 dark:text-slate-500 font-medium italic whitespace-nowrap select-none" title="Hợp đồng đang chờ Quản lý/BOM duyệt thanh lý">
         Chờ thanh lý
       </span>
     )
@@ -399,7 +398,7 @@ function ActionButtons({
         <button
           type="button"
           onClick={() => onCollectPenalty(item)}
-          className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-600 hover:text-white border border-rose-200 dark:border-rose-800 transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap active:scale-95"
+          className="inline-flex items-center justify-center w-[84px] h-7.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white font-medium text-xs transition-all shadow-2xs cursor-pointer whitespace-nowrap active:scale-95"
         >
           Thu phạt
         </button>

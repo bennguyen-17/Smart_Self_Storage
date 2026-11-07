@@ -1,7 +1,9 @@
+import { toast } from 'sonner';
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { submitSupportTicket, getMySupportTickets } from '../supportApi';
 import { getMyContracts } from '@/features/customer/storage/storageApi';
+import StoragePagination from '@/features/customer/storage/components/StoragePagination';
 import { formatDate, todayInVietnam, addDays } from '@/lib/format';
 import {
   Headset,
@@ -51,7 +53,8 @@ export default function SupportForm() {
   // Danh sách ticket của khách
   const [myTickets, setMyTickets] = useState<any[]>([]);
   const [loadingTickets, setLoadingTickets] = useState(false);
-  const [ticketStatusFilter, setTicketStatusFilter] = useState<'ALL' | 'SUBMITTED' | 'IN_PROGRESS' | 'RESOLVED' | 'ESCALATED' | 'CANCELLED'>('ALL');
+  const [ticketPage, setTicketPage] = useState(1);
+  const [ticketStatusFilter, setTicketStatusFilter] = useState<'ALL' | 'SUBMITTED' | 'IN_PROGRESS' | 'RESOLVED' | 'CANCELLED'>('ALL');
   const [expandedTickets, setExpandedTickets] = useState<Record<string, boolean>>({});
 
   const toggleTicket = (key: string) => {
@@ -125,22 +128,22 @@ export default function SupportForm() {
     (t: any) =>
       t.type === 'EARLY_TERMINATION' &&
       t.unitCode === unitSelect &&
-      (t.status === 'SUBMITTED' || t.status === 'IN_PROGRESS' || t.status === 'ESCALATED')
+      (t.status === 'SUBMITTED' || t.status === 'IN_PROGRESS')
   ) : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!hasActiveContracts) {
-      alert("Chỉ những tài khoản có hợp đồng đang có hiệu lực mới có thể gửi yêu cầu hỗ trợ kỹ thuật!");
+      toast.error("Chỉ những tài khoản có hợp đồng đang có hiệu lực mới có thể gửi yêu cầu hỗ trợ kỹ thuật!");
       return;
     }
     if (!unitSelect) {
-      alert("Vui lòng chọn ô kho có hợp đồng đang có hiệu lực!");
+      toast.error("Vui lòng chọn ô kho có hợp đồng đang có hiệu lực!");
       return;
     }
     const finalDescription = description.trim() || (ticketType === 'EARLY_TERMINATION' ? 'Yêu cầu trả kho sớm' : '');
     if (!finalDescription) {
-      alert("Vui lòng nhập mô tả chi tiết sự cố!");
+      toast.error("Vui lòng nhập mô tả chi tiết sự cố!");
       return;
     }
     if (ticketType === 'EARLY_TERMINATION') {
@@ -148,14 +151,14 @@ export default function SupportForm() {
         (t) =>
           t.type === 'EARLY_TERMINATION' &&
           t.unitCode === unitSelect &&
-          (t.status === 'SUBMITTED' || t.status === 'IN_PROGRESS' || t.status === 'ESCALATED')
+          (t.status === 'SUBMITTED' || t.status === 'IN_PROGRESS')
       );
       if (activeTicket) {
-        alert(`Ô kho ${unitSelect} đã có một yêu cầu trả kho sớm đang chờ xử lý (#${activeTicket.ticketCode || activeTicket.id}). Bạn không thể gửi thêm yêu cầu mới!`);
+        toast.warning(`Ô kho ${unitSelect} đã có một yêu cầu trả kho sớm đang chờ xử lý (#${activeTicket.ticketCode || activeTicket.id}). Bạn không thể gửi thêm yêu cầu mới!`);
         return;
       }
       if (!desiredDate || desiredDate < minReturnDate) {
-        alert("Ngày hẹn trả kho sớm phải cách ít nhất 1 ngày (không được chọn ngày hôm nay) để nhân viên cơ sở kịp sắp xếp lịch nghiệm thu!");
+        toast.warning("Ngày hẹn trả kho sớm phải cách ít nhất 1 ngày (không được chọn ngày hôm nay) để nhân viên cơ sở kịp sắp xếp lịch nghiệm thu!");
         return;
       }
     }
@@ -180,7 +183,7 @@ export default function SupportForm() {
     } catch (err: any) {
       console.error('Lỗi gửi yêu cầu hỗ trợ:', err);
       const msg = err.response?.data?.message || err.message || "Lỗi khi gửi yêu cầu hỗ trợ. Vui lòng thử lại!";
-      alert(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -219,13 +222,7 @@ export default function SupportForm() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'ESCALATED':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-700 border border-rose-500/30 dark:bg-rose-500/15 dark:text-rose-300">
-            <span className="size-1.5 rounded-full bg-rose-500 animate-ping"></span>
-            <span>Đã chuyển Quản lý</span>
-          </span>
-        );
+
       case 'SUBMITTED':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 border border-amber-500/30 dark:bg-amber-500/15 dark:text-amber-300">
@@ -648,7 +645,6 @@ export default function SupportForm() {
                   <div className="flex flex-wrap items-center gap-2">
                     {[
                       { key: 'ALL', label: 'Tất cả', count: myTickets.length },
-                      { key: 'ESCALATED', label: 'Chuyển Quản lý', count: myTickets.filter(t => t.status === 'ESCALATED').length },
                       { key: 'SUBMITTED', label: 'Chờ tiếp nhận', count: myTickets.filter(t => t.status === 'SUBMITTED').length },
                       { key: 'IN_PROGRESS', label: 'Đang xử lý', count: myTickets.filter(t => t.status === 'IN_PROGRESS').length },
                       { key: 'RESOLVED', label: 'Đã hoàn tất', count: myTickets.filter(t => t.status === 'RESOLVED').length },
@@ -657,7 +653,7 @@ export default function SupportForm() {
                       <button
                         key={tab.key}
                         type="button"
-                        onClick={() => setTicketStatusFilter(tab.key as any)}
+                        onClick={() => { setTicketStatusFilter(tab.key as any); setTicketPage(1); }}
                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${ticketStatusFilter === tab.key
                             ? 'bg-blue-600 text-white shadow-xs dark:bg-blue-600 dark:text-slate-950 font-black'
                             : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/80'
@@ -702,9 +698,34 @@ export default function SupportForm() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {myTickets
-                      .filter(t => ticketStatusFilter === 'ALL' || t.status === ticketStatusFilter)
-                      .map((ticket) => {
+                    {(() => {
+                      const getTicketPriority = (status: string) => {
+                        switch (status) {
+                          case 'SUBMITTED': return 1;    // Chờ tiếp nhận (lên trên cùng)
+                          case 'IN_PROGRESS': return 2;  // Đang xử lý
+                                                    case 'RESOLVED': return 3;     // Đã hoàn tất (kết quả thành công)
+                          case 'CANCELLED': return 4;    // Đã hủy / Lỡ hẹn (dưới cùng)
+                          case 'CLOSED': return 5;       // Đã đóng (dưới cùng)
+                          default: return 6;
+                        }
+                      };
+                      const sorted = myTickets
+                        .filter(t => ticketStatusFilter === 'ALL' || t.status === ticketStatusFilter)
+                        .sort((a, b) => {
+                          const pA = getTicketPriority(a.status);
+                          const pB = getTicketPriority(b.status);
+                          if (pA !== pB) {
+                            return pA - pB;
+                          }
+                          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+                        });
+                      const PAGE_SIZE = 10;
+                      const totalPages = Math.ceil(sorted.length / PAGE_SIZE) || 1;
+                      const paged = sorted.slice((ticketPage - 1) * PAGE_SIZE, ticketPage * PAGE_SIZE);
+
+                      return (
+                        <>
+                          {paged.map((ticket) => {
                         const meta = getTypeMeta(ticket.type);
                         const IconComponent = meta.icon;
                         const ticketKey = String(ticket.id || ticket.ticketCode);
@@ -780,20 +801,7 @@ export default function SupportForm() {
                                   </p>
                                 </div>
 
-                                {/* Phản hồi & Kết quả xử lý từ nhân viên / quản lý */}
-                                {ticket.status === 'ESCALATED' && (
-                                  <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-xs text-rose-800 dark:text-rose-300 flex items-start gap-2.5">
-                                    <AlertTriangle className="size-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5 animate-pulse" />
-                                    <div className="space-y-0.5">
-                                      <p className="font-bold text-rose-900 dark:text-rose-200">Đã chuyển tiếp Quản lý cơ sở xử lý trực tiếp</p>
-                                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                                        {ticket.type === 'EARLY_TERMINATION'
-                                          ? 'Yêu cầu hẹn trả kho đã được chuyển tiếp lên Quản lý chi nhánh để hỗ trợ xử lý.'
-                                          : 'Yêu cầu đã quá 15 phút chưa có nhân viên nhận. Hệ thống đã tự động chuyển tiếp lên Quản lý chi nhánh để giải quyết khẩn cấp cho bạn.'}
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
+
 
                                 {ticket.status === 'SUBMITTED' && (
                                   <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
@@ -847,27 +855,6 @@ export default function SupportForm() {
                                   </div>
                                 )}
 
-                                {ticket.status === 'RESOLVED' && (
-                                  <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs space-y-2">
-                                    <div className="flex flex-wrap items-center justify-between gap-2">
-                                      <div className="flex items-center gap-1.5 font-bold text-emerald-800 dark:text-emerald-300">
-                                        <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
-                                        <span>Ghi chú xử lý từ nhân viên</span>
-                                      </div>
-                                      {ticket.resolvedAt && (
-                                        <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                                          Hoàn tất lúc: {formatTicketDate(ticket.resolvedAt)}
-                                        </span>
-                                      )}
-                                    </div>
-                                    {ticket.resolutionNote && (
-                                      <p className="text-xs text-slate-700 dark:text-slate-200 bg-white/80 dark:bg-slate-900/70 p-3 rounded-lg border border-emerald-500/20 leading-relaxed font-medium">
-                                        {ticket.resolutionNote}
-                                      </p>
-                                    )}
-                                  </div>
-                                )}
-
                                 {ticket.status === 'CANCELLED' && (
                                   <div className="p-3.5 rounded-xl bg-slate-500/10 border border-slate-500/25 text-xs space-y-2">
                                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -891,6 +878,19 @@ export default function SupportForm() {
                           </div>
                         );
                       })}
+                          {sorted.length > 0 && (
+                            <div className="pt-2 flex justify-end">
+                              <StoragePagination
+                                currentPage={ticketPage}
+                                totalPages={totalPages}
+                                totalItems={sorted.length}
+                                onPageChange={(p) => setTicketPage(p)}
+                              />
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
               </div>

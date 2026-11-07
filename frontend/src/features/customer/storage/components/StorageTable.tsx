@@ -71,14 +71,12 @@ export default function StorageTable({
                   <span className="text-slate-800 dark:text-slate-200 text-sm font-normal">{formatDate(item.expiryDate || item.endDate)}</span>
                 </td>
                 <td className="py-3 px-3 whitespace-nowrap align-middle text-center">
-                  <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium border ${
-                    isReturnRequested
-                      ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700'
-                      : isActive
+                  <span className={`inline-flex items-center justify-center w-36 h-7 rounded-full text-xs font-semibold border text-center shadow-2xs ${
+                    isActive || isReturnRequested
                       ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                       : isPending
                       ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
-                      : isNoShow || item.status === 'OVERDUE'
+                      : item.status === 'OVERDUE'
                       ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
                       : isCompleted
                       ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
@@ -87,13 +85,11 @@ export default function StorageTable({
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
                   }`}>
                     <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                      isReturnRequested
-                        ? 'bg-amber-500 animate-pulse'
-                        : isActive
+                      isActive || isReturnRequested
                         ? 'bg-emerald-500'
                         : isPending
                         ? 'bg-amber-500'
-                        : isNoShow || item.status === 'OVERDUE'
+                        : item.status === 'OVERDUE'
                         ? 'bg-rose-500'
                         : isCompleted
                         ? 'bg-emerald-500'
@@ -106,7 +102,7 @@ export default function StorageTable({
                       : isPending
                       ? 'Chờ check-in'
                       : isNoShow
-                      ? 'Quá hạn nhận kho (No-Show)'
+                      ? 'Quá hạn nhận'
                       : isActive
                       ? 'Đang hiệu lực'
                       : item.status === 'OVERDUE'

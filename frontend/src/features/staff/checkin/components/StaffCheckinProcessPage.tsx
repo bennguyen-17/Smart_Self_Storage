@@ -811,11 +811,7 @@ export default function StaffCheckinProcessPage() {
                 </span>
               </button>
 
-              {(!verifiedCustomer || !verifiedUnit || !collectedMoney) && (
-                <p className="text-center text-[11px] text-amber-600 dark:text-amber-400">
-                  * Vui lòng tích chọn đủ 3 bước xác nhận bên trên để kích hoạt nút Check-in.
-                </p>
-              )}
+              
               <div className="pt-2">
                 <button
                   type="button"
