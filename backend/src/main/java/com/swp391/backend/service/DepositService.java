@@ -30,6 +30,7 @@ public class DepositService {
     private final AccountRepository accountRepository;
     private final EmailService emailService;
     private final CustomerProfileRepository customerProfileRepository;
+    private final FeePolicyRepository feePolicyRepository;
 
     public DepositService(StorageService storageService,
                           ReservationRepository reservationRepository,
@@ -41,7 +42,8 @@ public class DepositService {
                           FacilityRepository facilityRepository,
                           AccountRepository accountRepository,
                           EmailService emailService,
-                          CustomerProfileRepository customerProfileRepository) {
+                          CustomerProfileRepository customerProfileRepository,
+                          FeePolicyRepository feePolicyRepository) {
         this.storageService = storageService;
         this.reservationRepository = reservationRepository;
         this.contractRepository = contractRepository;
@@ -53,6 +55,22 @@ public class DepositService {
         this.accountRepository = accountRepository;
         this.emailService = emailService;
         this.customerProfileRepository = customerProfileRepository;
+        this.feePolicyRepository = feePolicyRepository;
+    }
+
+    private BigDecimal getCurrentDailyOverdueFee() {
+        return feePolicyRepository.findByPolicyCode("OVERDUE_DAILY_RATE")
+                .map(FeePolicy::getFeeValue)
+                .filter(v -> v != null && v.compareTo(BigDecimal.ZERO) > 0)
+                .orElse(new BigDecimal("50000"));
+    }
+
+    private int getCurrentOverdueLiquidationDays() {
+        return feePolicyRepository.findByPolicyCode("OVERDUE_LIQUIDATION_DAYS")
+                .map(FeePolicy::getFeeValue)
+                .map(BigDecimal::intValue)
+                .filter(v -> v > 0)
+                .orElse(30);
     }
 
     // --- 1. Tạo đơn Đặt cọc 100% Online & Thỏa thuận Clickwrap ---
@@ -77,7 +95,7 @@ public class DepositService {
             return DepositInitiateResponse.error("Ô kho này hiện không ở trạng thái trống (có thể đã được người khác giữ chỗ hoặc đang bảo trì)!");
         }
 
-        // BR-17: Giới hạn ngày nhận kho từ hôm nay đến 7 ngày tới. Nếu sau 20:00 (hết ca trực) thì khóa ngày hôm nay, chỉ cho phép từ ngày mai.
+        // Giới hạn ngày nhận kho từ hôm nay đến tối đa 7 ngày tới. Sau 20:00 chỉ cho phép chọn từ ngày hôm sau.
         LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         java.time.LocalTime nowTime = java.time.LocalTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         LocalDate minStartDate = (nowTime.getHour() >= 20) ? today.plusDays(1) : today;
@@ -113,7 +131,7 @@ public class DepositService {
             return DepositInitiateResponse.error(priceRes.getMessage());
         }
 
-        // Lấy thông tin cơ sở chuẩn BR-07 (HN01, HN02, HCM01, ...)
+        // Lấy thông tin mã cơ sở chuẩn hóa (HN01, HN02, HCM01, ...)
         String facilityCode = "HN01";
         Optional<Floor> floorOpt = floorRepository.findById(unit.getFloorId());
         if (floorOpt.isPresent()) {
@@ -137,7 +155,7 @@ public class DepositService {
         reservation.setRentalAmount(priceRes.getFinalRentalAmount());
         reservation.setDepositAmount(priceRes.getDepositAmount());
         reservation.setStatus("PENDING");
-        reservation.setHoldExpiresAt(LocalDateTime.now().plusMinutes(5)); // Giữ chỗ 5 phút để thanh toán (BR-14)
+        reservation.setHoldExpiresAt(LocalDateTime.now().plusMinutes(5)); // Giữ chỗ tạm thời 5 phút để chờ hoàn tất thanh toán
 
         // Sinh Mã Hợp Đồng theo quy tắc thống nhất: CTR-[Mã Cơ Sở]-[DDMMYY]-[4 số ngẫu nhiên]
         String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyy"));
@@ -167,6 +185,8 @@ public class DepositService {
         contract.setSignedEmail(custEmail);
         contract.setSignedIdentityNumber(custIdNum);
         contract.setContractPdfUrl("/uploads/contracts/" + contractCode + ".pdf");
+        contract.setDailyOverdueFee(getCurrentDailyOverdueFee());
+        contract.setOverdueLiquidationDays(getCurrentOverdueLiquidationDays());
         contract = contractRepository.save(contract);
 
         // Tạo Hóa đơn tiền cọc (Payment): DEP-[Mã Hợp Đồng]

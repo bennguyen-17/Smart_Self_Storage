@@ -1,4 +1,4 @@
-// US-03: Sơ đồ 2D. Dùng lại type khớp DTO backend trong @/types.
+// Định nghĩa sơ đồ kho 2D khớp DTO backend.
 import type {
   Facility,
   Floor,

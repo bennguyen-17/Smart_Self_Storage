@@ -5,7 +5,7 @@ import { toast } from "sonner"
 import { useAuth } from "@/context/AuthContext"
 import { fetchStaffGatePin } from "@/features/staff/checkin/api/checkinApi"
 
-const TTL_TOTAL = 15 // Business Rule: IoT Gate PIN TTL 15s
+const TTL_TOTAL = 15 // Thời gian hiệu lực mã PIN mở cổng: 15 giây
 
 /** Tab LẤY MÃ PIN — PIN cổng động 15s cho Nhân viên cơ sở 24/7 */
 function StaffPinPanel() {

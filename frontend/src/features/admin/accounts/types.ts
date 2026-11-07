@@ -1,4 +1,4 @@
-// US-29: tài khoản nội bộ (Staff, Facility Manager, BOM, Admin) do Admin quản lý.
+// Tài khoản nội bộ (Staff, Facility Manager, BOM, Admin) do Quản trị viên quản lý.
 // Contract FE đề xuất cho BE (chưa có API, xem qa-log). Khi BE làm xong thì chỉ cần khớp lại kiểu ở đây.
 
 export type InternalRole = "ADMIN" | "BOM" | "MANAGER" | "STAFF"

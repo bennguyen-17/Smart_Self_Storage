@@ -1,4 +1,4 @@
-// Luật quản lý tài khoản nội bộ (US-29). Hàm thuần, kiểm bằng bảng DDT trong accountRules.test.ts.
+// Quy tắc quản lý tài khoản nội bộ. Hàm thuần phục vụ kiểm thử.
 
 import type { AccountFilter, AccountFormValues, InternalAccount, InternalRole } from "./types"
 

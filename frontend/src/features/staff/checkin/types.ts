@@ -1,4 +1,4 @@
-// US-16: Check-in tại quầy — types khớp DTO BE-16 (StaffReservationController).
+// Thủ tục check-in tại quầy — định nghĩa kiểu dữ liệu khớp DTO backend.
 // BE: /api/staff/reservations (list, lookup, check-in, change-unit, cancel)
 
 /** Trạng thái hợp đồng (Contract.status) */
@@ -26,7 +26,7 @@ export interface StaffReservationItem {
   depRemainingAmount: number | null
   depositAmount?: number | null
   rentalAmount?: number | null
-  // US-20: thông tin quá hạn & phạt cho tab CHECK-IN
+  // Thông tin quá hạn và tiền phạt hiển thị tại tab check-in
   endDate: string | null // YYYY-MM-DD
   /** BE-16 gửi ngày bắt đầu/kết thúc thật của đơn (endDate phía trên có thể không có) */
   reservationStartDate?: string | null // YYYY-MM-DD
@@ -34,6 +34,7 @@ export interface StaffReservationItem {
   /** BE-16 bổ sung: nhãn thời gian thuê (vd "1 tháng") */
   rentalDuration: string | null
   overdueDays: number | null
+  overdueLiquidationDays?: number | null
   unpaidPenaltyAmount: number | null
   monthlyPrice: number | null
   returnRequested?: boolean | null
@@ -95,7 +96,7 @@ export interface StaffCancelReservationResponse {
   penaltyAmount: number | null
 }
 
-// --- US-20: Thu phạt quá hạn tại quầy ---
+// Thu phạt quá hạn tại quầy
 export interface CollectPenaltyRequest {
   paymentMethod: string // CASH | BANK_TRANSFER
 }
@@ -110,9 +111,10 @@ export interface CollectPenaltyResponse {
   invoiceNumber: string | null // Hóa đơn gộp PEN (PAID)
   collectedAmount: number | null
   overdueDays: number | null
+  overdueLiquidationDays?: number | null
 }
 
-// --- US-20: Gia hạn tại quầy ---
+// Gia hạn hợp đồng tại quầy
 export interface RenewAtCounterRequest {
   months?: number // 1 | 2 | 3 | 6 | 12
   days?: number

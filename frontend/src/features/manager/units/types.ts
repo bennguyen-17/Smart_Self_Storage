@@ -1,4 +1,4 @@
-// US-13 / US-14: quản lý ô kho tại cơ sở (Facility Manager) và bảo trì.
+// Quản lý ô kho tại cơ sở và quy trình bảo trì.
 import type { StorageCondition, UnitDetailResponse } from "@/types"
 
 /** Trạng thái vật lý của ô kho (tách khỏi trạng thái hợp đồng như OVERDUE) */

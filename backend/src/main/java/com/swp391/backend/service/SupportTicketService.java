@@ -65,7 +65,7 @@ public class SupportTicketService {
                 .orElse(null);
     }
 
-    // --- US-21: 1. Danh sách FAQ Help Center ---
+    // Danh sách câu hỏi thường gặp (FAQ)
     public List<Map<String, String>> getFaqs() {
         List<Map<String, String>> faqs = new ArrayList<>();
         faqs.add(Map.of(
@@ -94,7 +94,7 @@ public class SupportTicketService {
         return candidate;
     }
 
-    // --- US-21: 2. Khách tạo Ticket Sự cố (INCIDENT) - Chặn ngoài giờ 08:00 - 20:00 ---
+    // Tiếp nhận yêu cầu báo cáo sự cố trong khung giờ 08:00 - 20:00
     @Transactional
     public SupportTicket createIncidentTicket(CreateIncidentRequest req, Integer customerId) {
         // Khung giờ làm việc của Staff 08:00 - 20:00
@@ -128,7 +128,7 @@ public class SupportTicketService {
         return saveIncidentWithAssignment(ticket, customerId);
     }
 
-    // --- US-21: Tạo Ticket Hỗ trợ kỹ thuật 24/7 (Sự cố, Mở khóa, Bảo trì, Thắc mắc) ---
+    // Tiếp nhận yêu cầu hỗ trợ kỹ thuật trực tuyến 24/7
     @Transactional
     public SupportTicket createTicketGeneric(String type, String unitCode, String title, String description, Integer customerId) {
         SupportTicket ticket = new SupportTicket();
@@ -274,7 +274,23 @@ public class SupportTicketService {
     private SupportTicket logCreatedTicket(SupportTicket ticket, Integer customerAccountId) {
         if (customerAccountId != null) {
             ActivityLog log = new ActivityLog();
-            log.setAccountId(customerAccountId);
+            Integer resolvedAccountId = customerAccountId;
+            Optional<Account> accOpt = accountRepository.findById(Long.valueOf(customerAccountId));
+            if (accOpt.isEmpty() || !Long.valueOf(5L).equals(accOpt.get().getRoleId())) {
+                if (ticket.getContractId() != null) {
+                    resolvedAccountId = contractRepository.findById(ticket.getContractId())
+                            .map(Contract::getReservationId)
+                            .flatMap(reservationRepository::findById)
+                            .map(Reservation::getAccountId)
+                            .orElse(resolvedAccountId);
+                }
+                if (Objects.equals(resolvedAccountId, customerAccountId) && ticket.getCustomerId() != null) {
+                    resolvedAccountId = customerProfileRepository.findById(ticket.getCustomerId())
+                            .map(CustomerProfile::getAccountId)
+                            .orElse(resolvedAccountId);
+                }
+            }
+            log.setAccountId(resolvedAccountId);
             log.setFacilityId(ticket.getFacilityId());
             log.setAction("CUSTOMER_TICKET_CREATED");
             log.setDescription("Khách tạo ticket " + ticket.getTicketCode() + " loại " + ticket.getType());
@@ -284,7 +300,7 @@ public class SupportTicketService {
         return ticket;
     }
 
-    // --- US-21: 3. Gửi OTP xác thực trả kho trước hạn ---
+    // Gửi mã OTP xác thực yêu cầu trả kho trước hạn
     @Transactional
     public Map<String, Object> sendEarlyTerminationOtp(Integer contractId, Integer customerId) {
         Contract contract = contractRepository.findById(contractId)
@@ -296,6 +312,16 @@ public class SupportTicketService {
 
         Long targetAccountId = Long.valueOf(customerId);
         Optional<CustomerProfile> cpOpt = customerProfileRepository.findById(customerId);
+        Optional<Account> directAccOpt = accountRepository.findById(targetAccountId);
+        if (directAccOpt.isPresent() && Long.valueOf(5L).equals(directAccOpt.get().getRoleId())) {
+            cpOpt = Optional.empty();
+        }
+        Reservation contractRes = reservationRepository.findById(contract.getReservationId()).orElse(null);
+        Integer resolvedCallerAccountId = (cpOpt.isPresent() && cpOpt.get().getAccountId() != null)
+                ? cpOpt.get().getAccountId() : targetAccountId.intValue();
+        if (contractRes == null || contractRes.getAccountId() == null || !contractRes.getAccountId().equals(resolvedCallerAccountId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Bạn không có quyền yêu cầu trả kho cho hợp đồng của người khác!");
+        }
         if (cpOpt.isPresent() && cpOpt.get().getAccountId() != null) {
             targetAccountId = Long.valueOf(cpOpt.get().getAccountId());
         }
@@ -320,7 +346,7 @@ public class SupportTicketService {
         );
     }
 
-    // --- US-21: 4. Khách tạo Ticket Trả kho trước hạn (EARLY_TERMINATION) - Gửi được 24/7 ---
+    // Tiếp nhận yêu cầu trả kho trước hạn 24/7
     @Transactional
     public SupportTicket createEarlyTerminationTicket(CreateEarlyTerminationRequest req, Integer customerId) {
         if (req.getContractId() == null) {
@@ -341,6 +367,16 @@ public class SupportTicketService {
 
         Long targetAccountId = Long.valueOf(customerId);
         Optional<CustomerProfile> cpOpt = customerProfileRepository.findById(customerId);
+        Optional<Account> directAccOpt = accountRepository.findById(targetAccountId);
+        if (directAccOpt.isPresent() && Long.valueOf(5L).equals(directAccOpt.get().getRoleId())) {
+            cpOpt = Optional.empty();
+        }
+        Reservation contractRes = reservationRepository.findById(contract.getReservationId()).orElse(null);
+        Integer resolvedCallerAccountId = (cpOpt.isPresent() && cpOpt.get().getAccountId() != null)
+                ? cpOpt.get().getAccountId() : targetAccountId.intValue();
+        if (contractRes == null || contractRes.getAccountId() == null || !contractRes.getAccountId().equals(resolvedCallerAccountId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Bạn không có quyền yêu cầu trả kho cho hợp đồng của người khác!");
+        }
         if (cpOpt.isPresent() && cpOpt.get().getAccountId() != null) {
             targetAccountId = Long.valueOf(cpOpt.get().getAccountId());
         }
@@ -391,10 +427,10 @@ public class SupportTicketService {
         ticket.setIsSlaBreached(false);
         ticket.setIdentityVerified(false);
 
-        return logCreatedTicket(supportTicketRepository.save(ticket), customerId);
+        return logCreatedTicket(supportTicketRepository.save(ticket), targetAccountId.intValue());
     }
 
-    // --- US-21: 5. Khách xem danh sách ticket của mình ---
+    // Xem lịch sử yêu cầu hỗ trợ của khách hàng
     public List<SupportTicket> getCustomerTickets(Integer accountOrCustomerId) {
         if (noShowCronService != null) {
             try {
@@ -502,7 +538,7 @@ public class SupportTicketService {
         // No-op
     }
 
-    // --- US-22: 1. Staff xem hàng đợi Ticket của cơ sở kèm đếm lùi SLA 15 phút ---
+    // Hàng đợi yêu cầu hỗ trợ cần xử lý của cơ sở kèm thời gian cam kết phản hồi 15 phút
     @Transactional
     public List<SupportTicket> getStaffTickets(Integer staffAccountId, String status, String type) {
         if (noShowCronService != null) {
@@ -521,7 +557,7 @@ public class SupportTicketService {
                 .collect(Collectors.toList());
     }
 
-    // --- US-22: 2. Staff bấm Tiếp nhận Ticket (SUBMITTED / ESCALATED -> IN_PROGRESS) ---
+    // Nhân viên tiếp nhận xử lý yêu cầu hỗ trợ
     @Transactional
     public SupportTicket acceptTicket(Long ticketId, Integer staffId) {
         Integer facilityId = staffShiftService.requireOnDutyFacility(staffId);
@@ -556,7 +592,7 @@ public class SupportTicketService {
         return saved;
     }
 
-    // --- US-23: 1. Lấy thông tin đối chiếu CCCD cho màn hình Mở khóa hộ ---
+    // Lấy thông tin đối chiếu giấy tờ tùy thân (CCCD) để mở khóa hộ
     public UnlockDetailResponse getUnlockDetails(Long ticketId, Integer staffAccountId) {
         Integer facilityId = staffShiftService.requireOnDutyFacility(staffAccountId);
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
@@ -587,7 +623,7 @@ public class SupportTicketService {
         return res;
     }
 
-    // --- US-23: 2. Staff xác nhận đối chiếu CCCD và hoàn tất mở khóa hộ ---
+    // Xác nhận đã đối chiếu CCCD trùng khớp và hoàn tất mở khóa
     @Transactional
     public SupportTicket resolveUnlockTicket(Long ticketId, ResolveUnlockRequest req, Integer staffId) {
         Integer facilityId = staffShiftService.requireOnDutyFacility(staffId);

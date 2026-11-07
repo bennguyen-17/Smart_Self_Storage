@@ -145,7 +145,7 @@ export const registerSchema = z
         })
       }
     }),
-    // Thông tin nhận hoàn cọc: bắt buộc nhập ngay khi đăng ký tài khoản (BR-01)
+    // Thông tin nhận hoàn cọc: bắt buộc nhập ngay khi đăng ký tài khoản
     bankName: z.string().max(100, "Tên ngân hàng tối đa 100 ký tự"),
     bankNameCustom: z.string().max(100, "Tên ngân hàng tối đa 100 ký tự"),
     bankAccountNumber: z.string().max(50, "Số tài khoản tối đa 50 ký tự"),

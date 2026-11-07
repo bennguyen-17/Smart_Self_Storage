@@ -68,7 +68,7 @@ public class CheckoutSettlementService {
     }
 
     /**
-     * US-28 & US-29: Tính toán dự thảo quyết toán trả kho & hoàn cọc
+     * Tính toán dự thảo quyết toán trả kho và hoàn tiền cọc
      */
     public CheckoutPreviewResponse calculateCheckoutPreview(Integer contractId, Integer staffAccountId) {
         staffShiftService.requireOnDutyFacility(staffAccountId);
@@ -189,7 +189,7 @@ public class CheckoutSettlementService {
     }
 
     /**
-     * US-28 & US-29: Xác nhận nhận bàn giao trả kho & chốt quyết toán
+     * Xác nhận bàn giao trả kho và chốt quyết toán hoàn tất
      */
     @Transactional
     public CheckoutConfirmResponse confirmCheckout(Integer contractId, CheckoutConfirmRequest request, Integer staffAccountId) {
@@ -210,6 +210,9 @@ public class CheckoutSettlementService {
         }
 
         Contract contract = contractOpt.get();
+        if ("FORFEITED".equalsIgnoreCase(contract.getStatus())) {
+            return CheckoutConfirmResponse.error("Hợp đồng #" + contractId + " đã chuyển sang diện thanh lý tài sản, không thể nhận bàn giao tại quầy!");
+        }
         if (!"ACTIVE".equalsIgnoreCase(contract.getStatus()) && !"OVERDUE".equalsIgnoreCase(contract.getStatus())) {
             return CheckoutConfirmResponse.error("Hợp đồng #" + contractId + " không ở trạng thái ACTIVE hoặc OVERDUE, không thể nhận bàn giao!");
         }
@@ -238,6 +241,14 @@ public class CheckoutSettlementService {
         LocalDate startDate = res.getStartDate() != null ? res.getStartDate() : LocalDate.now();
         LocalDate originalEndDate = res.getEndDate() != null ? res.getEndDate() : startDate.plusDays(30);
         LocalDate returnDate = LocalDate.now();
+        int checkoutLiquidationDays = contract.getOverdueLiquidationDays() != null && contract.getOverdueLiquidationDays() > 0
+                ? contract.getOverdueLiquidationDays() : 30;
+        if ("OVERDUE".equalsIgnoreCase(contract.getStatus()) && originalEndDate.isBefore(returnDate)) {
+            long overdueDays = java.time.temporal.ChronoUnit.DAYS.between(originalEndDate, returnDate);
+            if (overdueDays >= checkoutLiquidationDays) {
+                return CheckoutConfirmResponse.error("Hợp đồng đã quá hạn " + checkoutLiquidationDays + " ngày, đã chuyển Ban Quản lý xử lý thanh lý tài sản. Không thể nhận bàn giao tại quầy!");
+            }
+        }
 
         long totalDays = ChronoUnit.DAYS.between(startDate, originalEndDate);
         if (totalDays <= 0) totalDays = 1;
@@ -428,8 +439,8 @@ public class CheckoutSettlementService {
             act.setAccountId(staffAccountId != null ? staffAccountId : res.getAccountId());
             act.setFacilityId(floorRepository.findById(unit.getFloorId()).map(Floor::getFacilityId).orElse(null));
             act.setAction("CONFIRM_CHECKOUT_TERMINATED");
-            act.setDescription(String.format("Xác nhận bàn giao trả kho #%d (ô %s). HĐ -> TERMINATED, ô -> MAINTENANCE, PIN vô hiệu hóa. Quyết toán: %s (Hóa đơn: %s).",
-                    contract.getContractId(), unit.getUnitCode(), netAmount, cmpInvoice != null ? cmpInvoice : (refInvoice != null ? refInvoice : "0 VNĐ")));
+            act.setDescription(String.format("Xác nhận bàn giao trả kho #%d (ô %s). HĐ -> %s, ô -> MAINTENANCE, PIN vô hiệu hóa. Quyết toán: %s (Hóa đơn: %s).",
+                    contract.getContractId(), unit.getUnitCode(), contract.getStatus(), netAmount, cmpInvoice != null ? cmpInvoice : (refInvoice != null ? refInvoice : "0 VNĐ")));
             act.setCreatedAt(LocalDateTime.now());
             activityLogRepository.save(act);
         }
@@ -437,22 +448,22 @@ public class CheckoutSettlementService {
         CheckoutConfirmResponse resp = new CheckoutConfirmResponse();
         resp.setSuccess(true);
         if (netAmount.compareTo(BigDecimal.ZERO) < 0) {
-            resp.setMessage(String.format("Nhận bàn giao và thu tiền bồi thường thành công! Hợp đồng đã chuyển TERMINATED, ô kho chuyển MAINTENANCE, mã PIN bị vô hiệu. Hóa đơn bồi thường: %s (%s VNĐ).",
-                    cmpInvoice, netAmount.abs()));
+            resp.setMessage(String.format("Nhận bàn giao và thu tiền bồi thường thành công! Hợp đồng đã chuyển %s, ô kho chuyển MAINTENANCE, mã PIN bị vô hiệu. Hóa đơn bồi thường: %s (%s VNĐ).",
+                    contract.getStatus(), cmpInvoice, netAmount.abs()));
             resp.setInvoiceNumber(cmpInvoice);
             resp.setInvoiceType("COMPENSATION");
             resp.setSettlementAmount(netAmount.abs());
             resp.setRefund(false);
         } else {
-            resp.setMessage(String.format("Nhận bàn giao thành công! Hợp đồng đã chuyển TERMINATED, ô kho chuyển MAINTENANCE, mã PIN bị vô hiệu. Lệnh hoàn cọc: %s.",
-                    refInvoice != null ? refInvoice + " (" + netAmount + " VNĐ)" : "0 VNĐ"));
+            resp.setMessage(String.format("Nhận bàn giao thành công! Hợp đồng đã chuyển %s, ô kho chuyển MAINTENANCE, mã PIN bị vô hiệu. Lệnh hoàn cọc: %s.",
+                    contract.getStatus(), refInvoice != null ? refInvoice + " (" + netAmount + " VNĐ)" : "0 VNĐ"));
             resp.setInvoiceNumber(refInvoice);
             resp.setInvoiceType("REFUND");
             resp.setSettlementAmount(netAmount);
             resp.setRefund(refInvoice != null);
         }
         resp.setContractId(contract.getContractId());
-        resp.setContractStatus("TERMINATED");
+        resp.setContractStatus(contract.getStatus());
         resp.setUnitCode(unit.getUnitCode());
         resp.setUnitStatus("MAINTENANCE");
         resp.setGatePinDisabled(true);
@@ -466,7 +477,7 @@ public class CheckoutSettlementService {
     }
 
     /**
-     * US-29: Xác nhận đã hoàn tiền (Staff / Manager chuyển REF từ PENDING -> PAID/REFUNDED)
+     * Xác nhận hoàn tất giải ngân tiền hoàn cọc cho khách hàng
      */
     @Transactional
     public boolean confirmRefundExecution(Integer paymentId, Integer staffAccountId, String receiptUrl) {
@@ -532,6 +543,19 @@ public class CheckoutSettlementService {
         if (activityLogRepository != null) {
             ActivityLog act = new ActivityLog();
             act.setAccountId(staffAccountId != null ? staffAccountId : 1);
+            Integer resolvedFacilityId = facilityId;
+            if (resolvedFacilityId == null && p.getContractId() != null) {
+                resolvedFacilityId = contractRepository.findById(p.getContractId())
+                        .map(Contract::getReservationId)
+                        .flatMap(reservationRepository::findById)
+                        .map(Reservation::getUnitCode)
+                        .flatMap(storageUnitRepository::findById)
+                        .map(StorageUnit::getFloorId)
+                        .flatMap(floorRepository::findById)
+                        .map(Floor::getFacilityId)
+                        .orElse(null);
+            }
+            act.setFacilityId(resolvedFacilityId);
             act.setAction("CONFIRM_REFUND_EXECUTED");
             StringBuilder desc = new StringBuilder();
             if (facilityId != null) {
@@ -550,7 +574,7 @@ public class CheckoutSettlementService {
             activityLogRepository.save(act);
         }
 
-        // Tự động gửi Email xác nhận hoàn cọc kèm ảnh biên lai (BR-35)
+        // Tự động gửi email xác nhận hoàn tất tiền cọc kèm ảnh biên lai giao dịch
         if (emailService != null && p.getContractId() != null) {
             try {
                 contractRepository.findById(p.getContractId()).ifPresent(c -> {
@@ -588,7 +612,7 @@ public class CheckoutSettlementService {
                     }
                 });
             } catch (Exception ex) {
-                System.err.println("Lỗi gửi email xác nhận hoàn cọc BR-35: " + ex.getMessage());
+                System.err.println("Lỗi gửi email xác nhận hoàn cọc: " + ex.getMessage());
             }
         }
 
@@ -598,8 +622,8 @@ public class CheckoutSettlementService {
 
 
     /**
-     * US-26 & B1: Lấy danh sách các đơn cọc chờ hoàn tiền (REF) cho Staff / Manager
-     * Tự động lọc theo X-Facility-Id (cách ly cơ sở theo BR-06), sắp xếp mới nhất lên đầu
+     * Lấy danh sách các khoản hoàn cọc cần xử lý
+     * Tự động lọc theo cơ sở quản lý, sắp xếp mới nhất lên đầu
      */
     public List<RefundListItemResponse> getRefundList(String status) {
         return getRefundList(null, status);
@@ -636,7 +660,7 @@ public class CheckoutSettlementService {
             Contract c = (p.getContractId() != null) ? contractRepository.findById(p.getContractId()).orElse(null) : null;
             Reservation r = (c != null && c.getReservationId() != null) ? reservationRepository.findById(c.getReservationId()).orElse(null) : null;
 
-            // Kiểm tra lọc theo cơ sở nếu có facilityId (BR-06)
+            // Phân quyền dữ liệu theo cơ sở quản lý
             if (facilityId != null && facilityId > 0 && r != null) {
                 StorageUnit unit = (r.getUnitCode() != null) ? storageUnitRepository.findById(r.getUnitCode()).orElse(null) : null;
                 Floor floor = (unit != null && unit.getFloorId() != null) ? floorRepository.findById(unit.getFloorId()).orElse(null) : null;

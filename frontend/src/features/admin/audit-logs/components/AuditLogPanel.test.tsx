@@ -79,7 +79,7 @@ describe("AuditLogPanel: chia 2 tab Khách hàng / Nội bộ", () => {
   })
 })
 
-describe("AuditLogPanel: nhật ký hoạt động khớp bảng ActivityLog (US-30)", () => {
+describe("AuditLogPanel: nhật ký hoạt động khớp bảng ActivityLog", () => {
   test("cột Thời gian, Người thực hiện, Hành động, Mô tả, IP; tác vụ tự động ghi là Hệ thống", async () => {
     await renderOnInternalTab()
     await screen.findByText("Nhắc hạn hợp đồng (còn 7 ngày)")

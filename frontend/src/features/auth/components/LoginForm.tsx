@@ -5,7 +5,6 @@ import { CheckCircle2, Eye, EyeOff } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
 import { Link, useNavigate } from "react-router-dom"
 
-import { toast } from "sonner"
 
 import { login } from "../authApi"
 import ForgotPasswordModal from "./ForgotPasswordModal"
@@ -56,9 +55,14 @@ function LoginForm() {
       const data = await login(values.phone, values.password, "CUSTOMER")
 
       if (data?.token) {
+        sessionStorage.removeItem("token")
+        sessionStorage.removeItem("user")
+        sessionStorage.removeItem("auth_session")
+        localStorage.removeItem("auth_session")
         localStorage.setItem("token", data.token)
         if (data?.userInfo || data?.user) {
           localStorage.setItem("user", JSON.stringify(data.userInfo || data.user))
+          localStorage.setItem("auth_session", JSON.stringify({ token: data.token, user: data.userInfo || data.user }))
         }
       }
 

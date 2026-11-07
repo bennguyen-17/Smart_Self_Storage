@@ -20,7 +20,7 @@ import { UNIT_SIZES, unitSizeOf } from "@/features/floorplan/unitDisplay"
 const CLIMATE_VALUES: ClimateFilter[] = ["ALL", "NORMAL", "CLIMATE_CONTROLLED"]
 
 export interface FloorPlanPageProps {
-  /** Bước tiếp theo khi khách bấm đặt cọc (US-04). Mặc định: về trang chủ kèm ô đã chọn. */
+  /** Bước tiếp theo khi khách bấm đặt cọc. Mặc định: chuyển đến màn hình đặt cọc. */
   onReserve?: (unit: UnitDetailResponse) => void
   /** Thao tác chọn ô (cho staff check-in hoặc custom flow) */
   onSelectUnit?: (unit: UnitDetailResponse) => void
@@ -33,7 +33,7 @@ export interface FloorPlanPageProps {
   subtitle?: string
 }
 
-/** US-03: Sơ đồ 2D chọn ô kho theo cơ sở / tầng / size / loại kho */
+/** Sơ đồ 2D chọn ô kho theo cơ sở / tầng / size / loại kho */
 function FloorPlanPage({
   onReserve,
   onSelectUnit,

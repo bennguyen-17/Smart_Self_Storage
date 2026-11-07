@@ -1,4 +1,4 @@
-// Hoàn tiền cho khách do Manager xác nhận (BR-35, US-26).
+// Hoàn tiền cho khách do Quản lý cơ sở xác nhận.
 // Đã kết nối API B1: /api/manager/refunds và /api/manager/refunds/{paymentId}/confirm
 
 

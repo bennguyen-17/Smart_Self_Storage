@@ -1,4 +1,4 @@
-// US-29: API quản lý tài khoản nội bộ cho Admin.
+// API quản lý tài khoản nội bộ cho Quản trị viên (Admin).
 // BE CHƯA có các API này: path và body dưới đây là contract FE đề xuất (đã ghi vào qa-log để BE làm theo).
 // VITE_USE_MOCK=true → mock; false → BE. Không tự fallback về mock khi lỗi.
 

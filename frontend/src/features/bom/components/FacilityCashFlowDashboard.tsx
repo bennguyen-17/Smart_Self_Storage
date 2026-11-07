@@ -22,6 +22,7 @@ export interface FacilityCashFlowDashboardProps {
   netRevenue?: number
   rentalRevenue?: number
   depositHolding?: number
+  forfeitedDeposit?: number
   totalRefunds?: number
   overdueContracts?: number
   penaltyRevenue?: number
@@ -54,8 +55,7 @@ export default function FacilityCashFlowDashboard({
   netRevenue = 0,
   rentalRevenue = 0,
   depositHolding = 0,
-  totalRefunds = 0,
-  overdueContracts = 0,
+  forfeitedDeposit = 0,
   penaltyRevenue = 0,
   totalUnits = 0,
   occupiedUnits = 0,
@@ -65,7 +65,7 @@ export default function FacilityCashFlowDashboard({
   occupancyRate = 0,
 }: FacilityCashFlowDashboardProps) {
   const [, setHoveredMonthIndex] = useState<number | null>(null)
-  const [selectedMonthIndex, setSelectedMonthIndex] = useState<number | null>(null)
+  const [, setSelectedMonthIndex] = useState<number | null>(null)
 
   const [internalPeriod, setInternalPeriod] = useState<NormalizedCashFlowPeriod>(() =>
     normalizePeriod(period)
@@ -487,15 +487,25 @@ export default function FacilityCashFlowDashboard({
           </div>
         </div>
 
-        {/* 3 THẺ TÀI CHÍNH DƯỚI BIỂU ĐỒ: TIỀN CỌC, TIỀN THUÊ KHO, TIỀN PHẠT */}
-        <div className="grid grid-cols-3 gap-2.5 pt-4 mt-2 border-t border-slate-200/80 dark:border-slate-800/80">
+        {/* 4 THẺ TÀI CHÍNH DƯỚI BIỂU ĐỒ: TIỀN CỌC ĐANG GIỮ, CỌC BỊ TỊCH THU, TIỀN THUÊ KHO, TIỀN PHẠT */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-4 mt-2 border-t border-slate-200/80 dark:border-slate-800/80">
           <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs dark:shadow-none">
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Cọc</span>
-              <span className="text-[9px] text-slate-400 font-medium">Hiện giữ</span>
+              <span className="text-[9px] text-slate-400 font-medium">Đang giữ</span>
             </div>
             <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">
               ₫{depositHolding.toLocaleString("vi-VN")}
+            </span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-rose-50/70 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/50 shadow-xs dark:shadow-none">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-rose-700 dark:text-rose-400 font-bold block truncate">Cọc Tịch Thu</span>
+              <span className="text-[9px] text-rose-600 dark:text-rose-400 font-medium">No-Show / Quá hạn</span>
+            </div>
+            <span className="font-mono font-bold text-rose-700 dark:text-rose-300 text-xs sm:text-sm mt-0.5 block truncate">
+              ₫{forfeitedDeposit.toLocaleString("vi-VN")}
             </span>
           </div>
 
@@ -503,7 +513,7 @@ export default function FacilityCashFlowDashboard({
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Thuê Kho</span>
               <span className="text-[9px] text-blue-600 dark:text-blue-400 font-semibold">
-                {currentPeriod === "all" ? "Tất cả" : currentPeriod === "this_month" ? "Tháng này" : "3 tháng gần nhất"}
+                {currentPeriod === "all" ? "Tất cả" : currentPeriod === "this_month" ? "Tháng này" : "3 tháng"}
               </span>
             </div>
             <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">
@@ -515,7 +525,7 @@ export default function FacilityCashFlowDashboard({
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Phạt</span>
               <span className="text-[9px] text-amber-600 dark:text-amber-400 font-semibold">
-                {currentPeriod === "all" ? "Tất cả" : currentPeriod === "this_month" ? "Tháng này" : "3 tháng gần nhất"}
+                {currentPeriod === "all" ? "Tất cả" : currentPeriod === "this_month" ? "Tháng này" : "3 tháng"}
               </span>
             </div>
             <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">

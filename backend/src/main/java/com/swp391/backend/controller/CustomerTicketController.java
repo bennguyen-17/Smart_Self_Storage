@@ -4,7 +4,9 @@ import com.swp391.backend.dto.ticket.CreateEarlyTerminationRequest;
 import com.swp391.backend.dto.ticket.CreateIncidentRequest;
 import com.swp391.backend.entity.SupportTicket;
 import com.swp391.backend.service.SupportTicketService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +22,7 @@ public class CustomerTicketController {
         this.supportTicketService = supportTicketService;
     }
 
-    // --- US-21: Gửi Ticket Hỗ trợ kỹ thuật tổng hợp 24/7 (Sự cố, Mở khóa, Bảo trì, Khác) ---
+    // Gửi yêu cầu hỗ trợ kỹ thuật trực tuyến 24/7
     @PostMapping("/support/tickets")
     public ResponseEntity<?> submitSupportTicket(
             @RequestBody Map<String, Object> body,
@@ -30,7 +32,7 @@ public class CustomerTicketController {
             Integer accountId = (authentication != null && authentication.getPrincipal() instanceof Integer)
                     ? (Integer) authentication.getPrincipal() : null;
             if (accountId == null) {
-                return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED)
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("message", "Vui lòng đăng nhập để gửi yêu cầu hỗ trợ!"));
             }
 
@@ -60,6 +62,8 @@ public class CustomerTicketController {
                     "unitCode", ticket.getUnitCode() != null ? ticket.getUnitCode() : "",
                     "data", ticket
             ));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("success", false, "message", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         } catch (Exception e) {
@@ -67,21 +71,30 @@ public class CustomerTicketController {
         }
     }
 
-    // --- US-21: 1. Tra cứu FAQ Help Center ---
+    // Tra cứu câu hỏi thường gặp (FAQ)
     @GetMapping("/help/faq")
     public ResponseEntity<?> getFaqs() {
         return ResponseEntity.ok(supportTicketService.getFaqs());
     }
 
-    // --- US-21: 2. Gửi Ticket Báo sự cố (08:00 - 20:00) ---
+    // Gửi yêu cầu báo cáo sự cố (tiếp nhận trong khung giờ 08:00 - 20:00)
     @PostMapping("/customer/tickets/incident")
     public ResponseEntity<?> createIncidentTicket(
             @RequestBody CreateIncidentRequest request,
-            @RequestHeader(value = "X-Account-Id", defaultValue = "1") Integer customerId
+            @RequestHeader(value = "X-Account-Id", required = false) Integer headerCustomerId,
+            Authentication authentication
     ) {
         try {
+            Integer authId = (authentication != null && authentication.getPrincipal() instanceof Integer)
+                    ? (Integer) authentication.getPrincipal() : null;
+            if (authId != null && headerCustomerId != null && !authId.equals(headerCustomerId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Không được phép mạo danh tài khoản khác!");
+            }
+            Integer customerId = authId != null ? authId : (headerCustomerId != null ? headerCustomerId : 1);
             SupportTicket ticket = supportTicketService.createIncidentTicket(request, customerId);
             return ResponseEntity.ok(ticket);
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
@@ -89,14 +102,23 @@ public class CustomerTicketController {
         }
     }
 
-    // --- US-21: 3. Gửi OTP email yêu cầu trả kho trước hạn ---
+    // Gửi mã OTP xác nhận yêu cầu trả kho trước hạn
     @PostMapping("/customer/tickets/early-termination/send-otp")
     public ResponseEntity<?> sendEarlyTerminationOtp(
             @RequestParam Integer contractId,
-            @RequestHeader(value = "X-Account-Id", defaultValue = "1") Integer customerId
+            @RequestHeader(value = "X-Account-Id", required = false) Integer headerCustomerId,
+            Authentication authentication
     ) {
         try {
+            Integer authId = (authentication != null && authentication.getPrincipal() instanceof Integer)
+                    ? (Integer) authentication.getPrincipal() : null;
+            if (authId != null && headerCustomerId != null && !authId.equals(headerCustomerId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Không được phép mạo danh tài khoản khác!");
+            }
+            Integer customerId = authId != null ? authId : (headerCustomerId != null ? headerCustomerId : 1);
             return ResponseEntity.ok(supportTicketService.sendEarlyTerminationOtp(contractId, customerId));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
@@ -104,15 +126,24 @@ public class CustomerTicketController {
         }
     }
 
-    // --- US-21: 4. Gửi Ticket Trả kho trước hạn (24/7) ---
+    // Gửi yêu cầu trả kho trước hạn
     @PostMapping("/customer/tickets/early-termination")
     public ResponseEntity<?> createEarlyTerminationTicket(
             @RequestBody CreateEarlyTerminationRequest request,
-            @RequestHeader(value = "X-Account-Id", defaultValue = "1") Integer customerId
+            @RequestHeader(value = "X-Account-Id", required = false) Integer headerCustomerId,
+            Authentication authentication
     ) {
         try {
+            Integer authId = (authentication != null && authentication.getPrincipal() instanceof Integer)
+                    ? (Integer) authentication.getPrincipal() : null;
+            if (authId != null && headerCustomerId != null && !authId.equals(headerCustomerId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Không được phép mạo danh tài khoản khác!");
+            }
+            Integer customerId = authId != null ? authId : (headerCustomerId != null ? headerCustomerId : 1);
             SupportTicket ticket = supportTicketService.createEarlyTerminationTicket(request, customerId);
             return ResponseEntity.ok(ticket);
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
@@ -120,7 +151,7 @@ public class CustomerTicketController {
         }
     }
 
-    // --- US-21: 5. Khách hàng xem lịch sử ticket của mình ---
+    // Xem lịch sử các yêu cầu hỗ trợ của khách hàng
     @GetMapping("/customer/tickets")
     public ResponseEntity<?> getMyTickets(
             Authentication authentication
@@ -128,7 +159,7 @@ public class CustomerTicketController {
         Integer accountId = (authentication != null && authentication.getPrincipal() instanceof Integer)
                 ? (Integer) authentication.getPrincipal() : null;
         if (accountId == null) {
-            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Vui lòng đăng nhập để xem danh sách ticket!"));
         }
         return ResponseEntity.ok(supportTicketService.getCustomerTickets(accountId));

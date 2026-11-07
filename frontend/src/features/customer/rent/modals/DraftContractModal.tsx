@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 export default function DraftContractModal({ bookingData, onProceedToPayment, onClose, isLoading }: { bookingData: any; onProceedToPayment: () => void; onClose?: () => void; isLoading?: boolean }) {
-  // US-07: bắt buộc tích đủ 2 xác nhận mới được thanh toán cọc
+  // Bắt buộc tích đủ 2 xác nhận mới được thanh toán cọc
   // (1) cam kết không lưu trữ hàng cấm, (2) đồng ý điều khoản hợp đồng clickwrap
   const [noProhibitedGoods, setNoProhibitedGoods] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -129,7 +129,7 @@ export default function DraftContractModal({ bookingData, onProceedToPayment, on
             </div>
           </div>
 
-          {/* Đồng ý điều khoản: 2 xác nhận bắt buộc (US-07) */}
+          {/* Đồng ý điều khoản: 2 xác nhận bắt buộc */}
           <div className="p-3.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70 space-y-2.5">
             <label className="flex items-start space-x-2.5 cursor-pointer select-none">
               <input

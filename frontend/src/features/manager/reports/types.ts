@@ -1,4 +1,4 @@
-// US-33 (phần Manager): số liệu tổng quan của một cơ sở.
+// Số liệu báo cáo tổng quan của một cơ sở.
 // Khớp ManagerDashboardResponse của BE: GET /api/manager/dashboard/overview (header X-Facility-Id).
 
 export interface ManagerDashboard {

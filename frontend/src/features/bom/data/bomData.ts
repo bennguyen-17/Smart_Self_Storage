@@ -243,7 +243,7 @@ export const INITIAL_SURCHARGES: SurchargeItem[] = [
     name: "Phí Kiểm Kê Niêm Phong Tài Sản",
     rate: "₫500,000 / vụ",
     isActive: true,
-    note: "Khi xử lý thanh lý kho quá hạn (BR-21)",
+    note: "Khi xử lý thanh lý kho quá hạn",
   },
   {
     id: "dc-1",

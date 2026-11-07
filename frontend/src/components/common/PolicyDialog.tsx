@@ -3,13 +3,11 @@ import {
   FileTextIcon,
   PhoneCallIcon,
   ShieldCheckIcon,
-  XIcon,
 } from "lucide-react"
 
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -95,7 +93,7 @@ const POLICY_DATA: Record<
 }
 
 function PolicyDialog({ tab, onClose }: PolicyDialogProps) {
-  const [activeTab, setActiveTab] = useState<PolicyTab>("terms")
+  const [activeTab] = useState<PolicyTab>("terms")
 
   // Đồng bộ tab khi dialog mở lên từ bên ngoài
   const currentTab = tab ?? activeTab

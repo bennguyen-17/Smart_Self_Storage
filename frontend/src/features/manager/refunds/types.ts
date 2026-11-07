@@ -1,4 +1,4 @@
-// Hoàn tiền cho khách do Manager xác nhận (BR-35, US-26): phiếu REF chờ chuyển khoản → đã hoàn.
+// Hoàn tiền cho khách do Quản lý cơ sở xác nhận: phiếu hoàn tiền cọc chờ giải ngân → đã hoàn.
 // Khớp RefundListItemResponse hiện có của BE (GET /api/staff/refunds) + các trường đề xuất trong
 // plans/261022-manager-admin-sprint3/viec-cho-be-va-fe-khac.md (B1). Trường đề xuất để tùy chọn.
 
@@ -21,7 +21,7 @@ export interface ManagerRefund {
   refundType?: RefundType | null
   /** "CUSTOMER_REQUEST", "NO_SHOW"… (luồng hủy cọc) */
   cancelReason: string | null
-  /** BE hiện trả PENDING | PAID; theo BR-37 sẽ là PENDING | REFUNDED */
+  /** Trạng thái phiếu hoàn: PENDING | REFUNDED | PAID */
   status: string
   issuedAt: string
   refundedAt?: string | null

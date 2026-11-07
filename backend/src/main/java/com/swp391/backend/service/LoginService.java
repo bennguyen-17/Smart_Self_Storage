@@ -210,6 +210,7 @@ public class LoginService {
                 facilityName,
                 facilityCode);
         userInfo.setMustChangePassword(Boolean.TRUE.equals(account.getMustChangePassword()));
+        userInfo.setDeletionScheduledAt(account.getDeletionScheduledAt());
 
         return LoginResult.success(new LoginResponse(token, userInfo));
     }
@@ -367,7 +368,7 @@ public class LoginService {
 
             accountRepository.save(account);
 
-            // BR-03: Gửi email cảnh báo bảo mật khi bị khóa 15 phút
+            // Gửi email cảnh báo bảo mật khi tài khoản bị tạm khóa 15 phút
             try {
                 String customerName = account.getFullName();
                 emailService.sendSecurityAlertEmail(account.getEmail(), customerName, ipAddress, lockUntil);

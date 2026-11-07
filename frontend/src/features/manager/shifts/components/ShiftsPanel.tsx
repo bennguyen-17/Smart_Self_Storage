@@ -22,7 +22,7 @@ import { planWeekCopy, weekDays } from "../shiftRules"
 import ShiftCard from "./ShiftCard"
 
 /**
- * US-32: ma trận phân ca theo prototype manager_portal: chọn ngày trên dải tuần (thứ 2 → chủ nhật),
+ * Ma trận phân ca trực nhân viên: chọn ngày trên dải tuần (thứ 2 → chủ nhật),
  * mỗi ca (tên, giờ lấy từ bảng Shift) là một thẻ, mỗi ca 1 người trực, đổi người và lưu ngay trong từng thẻ.
  * "Áp dụng cho cả tuần" chép lịch ngày đang xem sang các ngày còn lại trong tuần (T2 → CN), ghi đè lịch cũ.
  */

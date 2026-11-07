@@ -6,11 +6,6 @@ import { getRoleTitle, normalizeRole } from "@/lib/roles"
 import { DEFAULT_ADMIN_TAB, findAdminTab } from "@/features/admin/adminTabs"
 import AdminNavbar from "@/features/admin/components/AdminNavbar"
 
-/**
- * Cổng Quản trị hệ thống (Vỹ). Mỗi trang có link riêng /admin/<trang>, chuyển trang bằng navbar.
- * Chặn quyền do RoleProtectedRoute chung của nhóm đảm nhận (route "/admin/*" trong app/App.tsx).
- * Body chỉ gồm tiêu đề trang, bộ lọc và bảng của trang đó.
- */
 function AdminPortalPage() {
   const navigate = useNavigate()
   const { user, signOut } = useAuth()

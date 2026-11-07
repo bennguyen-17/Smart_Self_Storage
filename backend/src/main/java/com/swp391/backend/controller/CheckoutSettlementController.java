@@ -21,7 +21,7 @@ public class CheckoutSettlementController {
         this.checkoutSettlementService = checkoutSettlementService;
     }
 
-    // --- US-28: Xem dự thảo quyết toán trả kho (Staff) ---
+    // Xem dự thảo quyết toán trả kho và hoàn tiền cọc
     @GetMapping("/staff/checkout/{contractId}/preview")
     public ResponseEntity<CheckoutPreviewResponse> getCheckoutPreview(
             @PathVariable Integer contractId,
@@ -37,7 +37,7 @@ public class CheckoutSettlementController {
         }
     }
 
-    // --- US-28 & US-29: Xác nhận bàn giao trả kho & chốt quyết toán hoàn cọc / truy thu (Staff) ---
+    // Xác nhận bàn giao trả kho và chốt quyết toán hoàn cọc hoặc truy thu chi phí
     @PostMapping("/staff/checkout/{contractId}/confirm")
     public ResponseEntity<CheckoutConfirmResponse> confirmCheckout(
             @PathVariable Integer contractId,
@@ -56,39 +56,4 @@ public class CheckoutSettlementController {
         }
     }
 
-    // --- US-29: Xác nhận đã chi tiền hoàn cọc (REF) cho khách hàng (Staff / Manager) ---
-    @PostMapping("/staff/settlements/{paymentId}/confirm-refund")
-    public ResponseEntity<?> confirmRefund(
-            @PathVariable Integer paymentId,
-            @RequestBody(required = false) Map<String, String> body,
-            @RequestParam(required = false) String receiptUrl,
-            @RequestHeader(value = "X-Account-Id", required = false) Integer staffAccountId) {
-
-        String evidence = receiptUrl;
-        String transactionRef = null;
-        if (body != null) {
-            if (body.containsKey("receiptUrl") && body.get("receiptUrl") != null && !body.get("receiptUrl").isBlank()) {
-                evidence = body.get("receiptUrl");
-            } else if (body.containsKey("evidenceUrl") && body.get("evidenceUrl") != null && !body.get("evidenceUrl").isBlank()) {
-                evidence = body.get("evidenceUrl");
-            }
-            if (body.containsKey("transactionRef") && body.get("transactionRef") != null && !body.get("transactionRef").isBlank()) {
-                transactionRef = body.get("transactionRef");
-            }
-        }
-
-        boolean success = checkoutSettlementService.confirmRefundExecution(paymentId, staffAccountId, evidence, transactionRef);
-        if (success) {
-            return ResponseEntity.ok(Map.of("success", true, "message", "Đã xác nhận giải ngân hoàn tiền thành công!"));
-        }
-        return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Không tìm thấy hóa đơn hoàn tiền hợp lệ!"));
-    }
-
-    // --- US-26: Danh sách đơn cọc chờ hoàn tiền (REF) cho Staff (Q-18) ---
-    @GetMapping({"/staff/refunds", "/staff/settlements/refunds"})
-    public ResponseEntity<java.util.List<com.swp391.backend.dto.checkout.RefundListItemResponse>> getRefundList(
-            @RequestParam(value = "status", required = false, defaultValue = "PENDING") String status
-    ) {
-        return ResponseEntity.ok(checkoutSettlementService.getRefundList(status));
-    }
 }

@@ -54,6 +54,9 @@ public class Account {
     @Column(name = "mustChangePassword")
     private Boolean mustChangePassword = false;
 
+    @Column(name = "deletionScheduledAt")
+    private LocalDateTime deletionScheduledAt;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) createdAt = LocalDateTime.now();
@@ -204,5 +207,13 @@ public class Account {
 
     public void setMustChangePassword(Boolean mustChangePassword) {
         this.mustChangePassword = mustChangePassword;
+    }
+
+    public LocalDateTime getDeletionScheduledAt() {
+        return deletionScheduledAt;
+    }
+
+    public void setDeletionScheduledAt(LocalDateTime deletionScheduledAt) {
+        this.deletionScheduledAt = deletionScheduledAt;
     }
 }

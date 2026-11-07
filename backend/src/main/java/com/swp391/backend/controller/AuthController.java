@@ -19,7 +19,7 @@ public class AuthController {
         this.authService = authService;
     }
 
-    // --- US-01: API Đăng ký ---
+    // Đăng ký tài khoản khách hàng mới và gửi mã OTP qua email
     @PostMapping("/register")
     public ResponseEntity<ApiResponse> register(@RequestBody RegisterRequest request) {
         ApiResponse response = authService.register(request);
@@ -29,7 +29,7 @@ public class AuthController {
         return ResponseEntity.badRequest().body(response);
     }
 
-    // --- US-01: API Xác thực OTP ---
+    // Xác thực mã OTP kích hoạt tài khoản
     @PostMapping("/verify-otp")
     public ResponseEntity<ApiResponse> verifyOtp(@RequestBody VerifyOtpRequest request) {
         ApiResponse response = authService.verifyOtp(request);
@@ -39,7 +39,7 @@ public class AuthController {
         return ResponseEntity.badRequest().body(response);
     }
 
-    // --- US-01: API Gửi lại mã OTP (Resend OTP) ---
+    // Gửi lại mã OTP xác thực tài khoản
     @PostMapping("/resend-otp")
     public ResponseEntity<ApiResponse> resendOtp(@RequestBody ResendOtpRequest request) {
         ApiResponse response = authService.resendOtp(request);
@@ -49,7 +49,7 @@ public class AuthController {
         return ResponseEntity.badRequest().body(response);
     }
 
-    // --- US-02: API Đăng xuất (Logout & Blacklist Token) ---
+    // Đăng xuất và vô hiệu hóa JWT token
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse> logout(
             @RequestHeader(value = "Authorization", required = false) String authHeader,

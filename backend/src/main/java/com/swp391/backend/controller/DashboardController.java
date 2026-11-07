@@ -22,7 +22,7 @@ public class DashboardController {
         this.securityContextHelper = securityContextHelper;
     }
 
-    // --- US-33: Dashboard cơ sở cho Facility Manager ---
+    // Thống kê tổng quan và báo cáo cơ sở cho Quản lý cơ sở
     @GetMapping("/manager/dashboard/overview")
     public ResponseEntity<?> getManagerDashboardOverview(
             @AuthenticationPrincipal Integer authAccountId,

@@ -104,7 +104,8 @@ public class ContractController {
 
     @GetMapping("/contracts/my-contracts")
     public ResponseEntity<List<Map<String, Object>>> getMyContracts(
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @AuthenticationPrincipal Integer authAccountId) {
 
         Integer targetId = null;
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -344,7 +345,9 @@ public class ContractController {
     @PostMapping("/contracts/{contractId}/request-checkout")
     public ResponseEntity<?> requestCheckout(
             @PathVariable Integer contractId,
-            @RequestBody(required = false) Map<String, Object> body) {
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @AuthenticationPrincipal Integer authAccountId) {
         Contract contract = contractRepository.findById(contractId)
                 .orElse(null);
         if (contract == null) {
@@ -352,6 +355,23 @@ public class ContractController {
         }
 
         if (!"ACTIVE".equalsIgnoreCase(contract.getStatus())) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Chỉ hợp đồng ĐANG THUÊ (ACTIVE) mới có thể yêu cầu trả kho"));
+        }
+        Integer callerId = authAccountId;
+        if (callerId == null && authHeader != null && authHeader.startsWith("Bearer ")) {
+            try {
+                Claims claims = jwtService.validateTokenAndGetClaims(authHeader.substring(7));
+                Object uObj = claims.get("userId");
+                if (uObj instanceof Number num) callerId = num.intValue();
+                else if (uObj != null) callerId = Integer.valueOf(uObj.toString());
+            } catch (Exception ignored) {}
+        }
+        Reservation ownerRes = reservationRepository.findById(contract.getReservationId()).orElse(null);
+        if (callerId == null || ownerRes == null || !callerId.equals(ownerRes.getAccountId())) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                    .body(Map.of("success", false, "message", "Bạn không có quyền yêu cầu trả kho cho hợp đồng của người khác!"));
+        }
+        if (false) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Chỉ hợp đồng ĐANG THUÊ (ACTIVE) mới có thể yêu cầu trả kho"));
         }
 
@@ -380,7 +400,14 @@ public class ContractController {
             ticket.setTicketCode(ticketCode);
             ticket.setType("EARLY_TERMINATION");
             ticket.setStatus("SUBMITTED");
-            Integer custId = (reservation != null && reservation.getAccountId() != null) ? reservation.getAccountId() : 1;
+            Integer accId = (reservation != null && reservation.getAccountId() != null) ? reservation.getAccountId() : callerId;
+            Integer custId = accId != null ? customerProfileRepository.findByAccountId(accId).map(CustomerProfile::getCustomerId).orElse(accId) : 1;
+            if (reservation != null && reservation.getUnitCode() != null) {
+                storageUnitRepository.findById(reservation.getUnitCode())
+                        .flatMap(u -> floorRepository.findById(u.getFloorId()))
+                        .map(Floor::getFacilityId)
+                        .ifPresent(ticket::setFacilityId);
+            }
             ticket.setCustomerId(custId);
             ticket.setContractId(contract.getContractId());
             ticket.setUnitCode(reservation != null ? reservation.getUnitCode() : null);
@@ -402,7 +429,7 @@ public class ContractController {
     }
 
     /**
-     * US-06: Sinh mã PIN mở cổng IoT 24/7
+     * Sinh mã PIN mở cổng tự động 24/7
      * QUY TẮC NGHIỆP VỤ BẮT BUỘC:
      * - Chỉ cấp mã PIN nếu khách hàng có hợp đồng đang có HIỆU LỰC (ACTIVE) tại cơ sở đó.
      * - Nếu chỉ có hợp đồng CHỜ CHECK-IN hoặc ĐÃ HỦY CỌC, từ chối cấp mã PIN (hasAccess = false).
@@ -530,7 +557,7 @@ public class ContractController {
     }
 
     /**
-     * US-21: Gia hạn hợp đồng online
+     * Gia hạn hợp đồng thuê kho trực tuyến
      * - Chỉ áp dụng cho hợp đồng ACTIVE (HĐ quá hạn hoặc đã đóng bị từ chối)
      * - Cộng dồn ngày hết hạn nối tiếp ngày cũ
      * - Tạo hóa đơn EXT-... trạng thái PAID/SUCCESS
@@ -540,7 +567,8 @@ public class ContractController {
     public ResponseEntity<?> extendContract(
             @PathVariable String contractId,
             @RequestBody(required = false) Map<String, Object> payload,
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @AuthenticationPrincipal Integer authAccountId) {
 
         if (contractId == null || contractId.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Mã hợp đồng không hợp lệ!"));
@@ -590,7 +618,7 @@ public class ContractController {
         Contract contract = contractOpt.get();
 
         // Chỉ cho phép gia hạn khi hợp đồng đang ACTIVE hoặc PENDING_CHECKIN
-        if (!"ACTIVE".equalsIgnoreCase(contract.getStatus()) && !"PENDING_CHECKIN".equalsIgnoreCase(contract.getStatus())) {
+        if (!"ACTIVE".equalsIgnoreCase(contract.getStatus())) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", "Chỉ hợp đồng đang có HIỆU LỰC (ACTIVE) mới được phép gia hạn trực tuyến. Hợp đồng trạng thái " + contract.getStatus() + " vui lòng liên hệ nhân viên tại quầy!"
@@ -603,6 +631,19 @@ public class ContractController {
         }
 
         Reservation res = resOpt.get();
+        Integer callerId = authAccountId;
+        if (callerId == null && authHeader != null && authHeader.startsWith("Bearer ")) {
+            try {
+                Claims claims = jwtService.validateTokenAndGetClaims(authHeader.substring(7));
+                Object uObj = claims.get("userId");
+                if (uObj instanceof Number num) callerId = num.intValue();
+                else if (uObj != null) callerId = Integer.valueOf(uObj.toString());
+            } catch (Exception ignored) {}
+        }
+        if (callerId == null || !callerId.equals(res.getAccountId())) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                    .body(Map.of("success", false, "message", "Bạn không có quyền gia hạn hợp đồng của người khác!"));
+        }
 
         // Đọc số ngày gia hạn từ payload (mặc định 30 ngày)
         int effectiveDays = 30;
@@ -626,6 +667,44 @@ public class ContractController {
         }
 
         if (effectiveDays < 7) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Thời hạn gia hạn tối thiểu là 7 ngày!"));
+        }
+        boolean clientSentAmount = payload != null && (payload.containsKey("finalTotal") || payload.containsKey("amount"));
+        if (clientSentAmount && finalTotal.compareTo(BigDecimal.ZERO) <= 0) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Số tiền gia hạn phải lớn hơn 0!"));
+        }
+        BigDecimal serverCalcTotal = BigDecimal.ZERO;
+        Optional<StorageUnit> unitForPriceOpt = storageUnitRepository.findById(res.getUnitCode());
+        if (unitForPriceOpt.isPresent()) {
+            String rType = (effectiveDays % 30 == 0) ? "MONTHLY" : "DAILY";
+            int dur = (effectiveDays % 30 == 0) ? (effectiveDays / 30) : effectiveDays;
+            com.swp391.backend.dto.CalculatePriceResponse calcResp = storageService.calculateRentalPrice(
+                    new com.swp391.backend.dto.CalculatePriceRequest(unitForPriceOpt.get().getUnitTypeId(), rType, dur));
+            if (calcResp != null && calcResp.getFinalRentalAmount() != null) {
+                serverCalcTotal = calcResp.getFinalRentalAmount();
+            }
+        }
+        BigDecimal contractMonthlyRate = res.getRentalAmount() != null && res.getRentalAmount().compareTo(BigDecimal.ZERO) > 0
+                ? res.getRentalAmount() : serverCalcTotal;
+        int discPct = (effectiveDays >= 360 && effectiveDays % 30 == 0) ? 15
+                : (effectiveDays >= 180 && effectiveDays % 30 == 0) ? 10
+                : (effectiveDays >= 90 && effectiveDays % 30 == 0) ? 5 : 0;
+        BigDecimal contractRateTotal = contractMonthlyRate
+                .multiply(BigDecimal.valueOf(effectiveDays))
+                .divide(BigDecimal.valueOf(30), 2, java.math.RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100 - discPct))
+                .divide(BigDecimal.valueOf(100), 0, java.math.RoundingMode.HALF_UP);
+        BigDecimal minAcceptable = serverCalcTotal.compareTo(BigDecimal.ZERO) > 0 && contractRateTotal.compareTo(BigDecimal.ZERO) > 0
+                ? serverCalcTotal.min(contractRateTotal)
+                : serverCalcTotal.max(contractRateTotal);
+        if (clientSentAmount && minAcceptable.compareTo(BigDecimal.ZERO) > 0
+                && finalTotal.add(BigDecimal.valueOf(1000)).compareTo(minAcceptable) < 0) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Số tiền gia hạn không hợp lệ so với biểu phí hệ thống!"));
+        }
+        if (!clientSentAmount || finalTotal.compareTo(BigDecimal.ZERO) <= 0) {
+            finalTotal = serverCalcTotal.compareTo(BigDecimal.ZERO) > 0 ? serverCalcTotal : contractRateTotal;
+        }
+        if (false) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Thời hạn gia hạn tối thiểu là 7 ngày!"));
         }
 
@@ -662,7 +741,25 @@ public class ContractController {
             invoiceNumber = payload.get("invoiceNumber").toString().trim();
         }
 
-        Payment payment = paymentRepository.findByInvoiceNumber(invoiceNumber).orElseGet(Payment::new);
+        if (!invoiceNumber.toUpperCase().startsWith("EXT-")) {
+            invoiceNumber = "EXT-" + contractCode + "-" + String.format("%04d", new Random().nextInt(10000));
+        }
+        Optional<Payment> existingPayOpt = paymentRepository.findByInvoiceNumber(invoiceNumber);
+        Payment payment;
+        if (existingPayOpt.isPresent()) {
+            Payment existingPay = existingPayOpt.get();
+            if (!contract.getContractId().equals(existingPay.getContractId())
+                    || (existingPay.getInvoiceType() != null && !"MONTHLY_RENEWAL".equalsIgnoreCase(existingPay.getInvoiceType()))) {
+                invoiceNumber = "EXT-" + contractCode + "-" + String.format("%04d", new Random().nextInt(10000));
+                payment = new Payment();
+            } else {
+                payment = existingPay;
+            }
+        } else {
+            payment = new Payment();
+        }
+        payment.setPaidAmount(finalTotal);
+        payment.setRemainingAmount(BigDecimal.ZERO);
         payment.setContractId(contract.getContractId());
         payment.setInvoiceNumber(invoiceNumber);
         payment.setInvoiceType("MONTHLY_RENEWAL");
@@ -679,13 +776,14 @@ public class ContractController {
         // Ghi nhật ký kiểm toán (ActivityLog)
         ActivityLog activityLog = new ActivityLog();
         activityLog.setAccountId(res.getAccountId());
+        activityLog.setFacilityId(unitOpt.flatMap(u -> floorRepository.findById(u.getFloorId())).map(Floor::getFacilityId).orElse(null));
         activityLog.setAction("EXTEND_CONTRACT");
         activityLog.setDescription(String.format("Gia hạn thành công hợp đồng %s (ô %s) thêm %d ngày (%s). Hạn mới: %s. Hóa đơn: %s",
                 contractCode, res.getUnitCode(), effectiveDays, packageLabel, newExpiry, invoiceNumber));
         activityLog.setCreatedAt(LocalDateTime.now());
         activityLogRepository.save(activityLog);
 
-        // BR-29: Gửi email xác nhận gia hạn hợp đồng trực tuyến thành công
+        // Gửi email xác nhận gia hạn hợp đồng trực tuyến thành công
         try {
             if (res.getAccountId() != null) {
                 Account acc = accountRepository.findById(Long.valueOf(res.getAccountId())).orElse(null);

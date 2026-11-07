@@ -1,4 +1,4 @@
-// Admin tìm và mở khóa tài khoản khách (đề: "Manage user accounts"; BR-03: sai mật khẩu 5 lần bị khóa 15 phút,
+// Quản trị viên tìm và mở khóa tài khoản khách hàng bị tạm khóa do nhập sai mật khẩu nhiều lần,
 // Admin mở khóa sớm được). Khớp AdminCustomerResponse của BE (/api/admin/customers).
 
 export interface AdminCustomer {

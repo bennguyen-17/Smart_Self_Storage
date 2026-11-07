@@ -104,7 +104,7 @@ function Charts({ d }: { d: ManagerDashboard }) {
 }
 
 /**
- * US-33 (phần Manager): số liệu tổng quan của đúng cơ sở mình phụ trách, một dạng duy nhất (thẻ có biểu đồ kèm con số;
+ * Số liệu tổng quan của đúng cơ sở mình phụ trách (thẻ KPI và biểu đồ);
  * góp ý của Tâm 03/11). Đổi khoảng ngày là tự tải lại; muốn số liệu dạng bảng thì Xuất CSV.
  * Doanh thu không gồm tiền cọc; tiền hoàn cho khách là hoàn cọc nên nằm ở thẻ Tiền cọc.
  */

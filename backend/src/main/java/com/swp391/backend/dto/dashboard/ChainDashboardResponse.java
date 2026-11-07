@@ -12,6 +12,7 @@ public class ChainDashboardResponse {
     private BigDecimal chainTotalRefunds = BigDecimal.ZERO;
     private BigDecimal chainNetRevenue = BigDecimal.ZERO;
     private BigDecimal chainDepositHolding = BigDecimal.ZERO;
+    private BigDecimal chainForfeitedDeposit = BigDecimal.ZERO;
     private BigDecimal chainRentalRevenue = BigDecimal.ZERO;
     private BigDecimal chainPenaltyRevenue = BigDecimal.ZERO;
 
@@ -82,6 +83,14 @@ public class ChainDashboardResponse {
 
     public void setChainDepositHolding(BigDecimal chainDepositHolding) {
         this.chainDepositHolding = chainDepositHolding;
+    }
+
+    public BigDecimal getChainForfeitedDeposit() {
+        return chainForfeitedDeposit;
+    }
+
+    public void setChainForfeitedDeposit(BigDecimal chainForfeitedDeposit) {
+        this.chainForfeitedDeposit = chainForfeitedDeposit;
     }
 
     public BigDecimal getChainRentalRevenue() {

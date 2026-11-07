@@ -21,7 +21,7 @@ const EMPTY_FILTER: GateLogFilter = {
 }
 
 /**
- * US-18 (Manager Portal): Nhật ký kiểm soát ra vào cổng cơ sở.
+ * Nhật ký kiểm soát ra vào cổng cơ sở dành cho Quản lý cơ sở.
  * Hiển thị đầy đủ thông tin người ra vào (Họ tên, SĐT, CCCD, vai trò, vị trí cổng, phương thức mở).
  * Nhật ký chỉ đọc, dữ liệu thuộc cơ sở của Manager.
  */

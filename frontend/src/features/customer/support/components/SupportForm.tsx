@@ -5,7 +5,6 @@ import { getMyContracts } from '@/features/customer/storage/storageApi';
 import { formatDate, todayInVietnam, addDays } from '@/lib/format';
 import {
   Headset,
-  PhoneCall,
   ShieldAlert,
   Send,
   CheckCircle2,
@@ -17,13 +16,10 @@ import {
   KeyRound,
   ArrowRight,
   ClipboardList,
-  CheckCircle,
   Wrench,
   HelpCircle,
   Inbox,
   ShieldCheck,
-  Building2,
-  FileCheck,
   ChevronDown,
   PackageOpen,
   CalendarDays,

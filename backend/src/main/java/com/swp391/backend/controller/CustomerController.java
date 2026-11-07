@@ -1,5 +1,17 @@
 package com.swp391.backend.controller;
 
+import com.swp391.backend.entity.Contract;
+import com.swp391.backend.entity.Reservation;
+import com.swp391.backend.entity.Payment;
+import com.swp391.backend.entity.ActivityLog;
+import com.swp391.backend.repository.ContractRepository;
+import com.swp391.backend.repository.ReservationRepository;
+import com.swp391.backend.repository.PaymentRepository;
+import com.swp391.backend.repository.ActivityLogRepository;
+import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
 import com.swp391.backend.dto.ApiResponse;
 import com.swp391.backend.entity.Account;
 import com.swp391.backend.entity.CustomerProfile;
@@ -25,15 +37,27 @@ public class CustomerController {
     private final CustomerProfileRepository customerProfileRepository;
     private final JwtService jwtService;
     private final EmailService emailService;
+    private final ReservationRepository reservationRepository;
+    private final ContractRepository contractRepository;
+    private final PaymentRepository paymentRepository;
+    private final ActivityLogRepository activityLogRepository;
 
     public CustomerController(AccountRepository accountRepository, 
                               CustomerProfileRepository customerProfileRepository, 
                               JwtService jwtService,
-                              EmailService emailService) {
+                              EmailService emailService,
+                              ReservationRepository reservationRepository,
+                              ContractRepository contractRepository,
+                              PaymentRepository paymentRepository,
+                              ActivityLogRepository activityLogRepository) {
         this.accountRepository = accountRepository;
         this.customerProfileRepository = customerProfileRepository;
         this.jwtService = jwtService;
         this.emailService = emailService;
+        this.reservationRepository = reservationRepository;
+        this.contractRepository = contractRepository;
+        this.paymentRepository = paymentRepository;
+        this.activityLogRepository = activityLogRepository;
     }
 
     private Account resolveAccount(String authHeader) {
@@ -91,6 +115,7 @@ public class CustomerController {
         data.put("bankAccountName", profileOpt.map(CustomerProfile::getBankAccountName).orElse("Chưa cập nhật"));
         data.put("isVerified", isActive);
         data.put("verificationBadge", isActive ? "ĐÃ XÁC THỰC THÔNG TIN" : "CHƯA XÁC THỰC THÔNG TIN");
+        data.put("deletionScheduledAt", account.getDeletionScheduledAt());
 
         return ResponseEntity.ok(data);
     }
@@ -228,6 +253,7 @@ public class CustomerController {
         data.put("bankAccountName", profile.getBankAccountName() != null ? profile.getBankAccountName() : "Chưa cập nhật");
         data.put("isVerified", "ACTIVE".equalsIgnoreCase(account.getStatus()));
         data.put("verificationBadge", "ACTIVE".equalsIgnoreCase(account.getStatus()) ? "ĐÃ XÁC THỰC THÔNG TIN" : "CHƯA XÁC THỰC THÔNG TIN");
+        data.put("deletionScheduledAt", account.getDeletionScheduledAt());
 
         Map<String, Object> resp = new HashMap<>();
         resp.put("success", true);
@@ -235,5 +261,100 @@ public class CustomerController {
         resp.put("data", data);
 
         return ResponseEntity.ok(resp);
+    }
+
+    @PostMapping("/request-deletion")
+    public ResponseEntity<?> requestAccountDeletion(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        Account account = resolveAccount(authHeader);
+        if (account == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "Vui lòng đăng nhập."));
+        }
+
+        // 1. Kiểm tra ràng buộc hợp đồng còn hiệu lực / chưa thanh lý / chưa hoàn cọc
+        List<Reservation> reservations = reservationRepository.findByAccountId(account.getAccountId());
+        List<Integer> resIds = reservations.stream().map(Reservation::getReservationId).toList();
+        if (!resIds.isEmpty()) {
+            List<Contract> contracts = contractRepository.findAll().stream()
+                    .filter(c -> c.getReservationId() != null && resIds.contains(c.getReservationId()))
+                    .toList();
+
+            List<String> activeStatuses = List.of("INITIATED", "PENDING_CHECKIN", "ACTIVE", "OVERDUE", "TERMINATED");
+            List<Contract> pendingContracts = contracts.stream()
+                    .filter(c -> c.getStatus() != null && activeStatuses.contains(c.getStatus().toUpperCase()))
+                    .toList();
+
+            if (!pendingContracts.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Không thể xóa tài khoản: Bạn còn " + pendingContracts.size() + " hợp đồng đang hiệu lực, quá hạn hoặc đang chờ hoàn tất thủ tục trả kho / hoàn cọc. Vui lòng hoàn tất trả kho và nhận hoàn cọc trước khi yêu cầu xóa tài khoản."
+                ));
+            }
+
+            // 2. Kiểm tra hóa đơn chưa thanh toán (UNPAID)
+            List<Integer> contractIds = contracts.stream().map(Contract::getContractId).toList();
+            if (!contractIds.isEmpty()) {
+                List<Payment> unpaidPayments = paymentRepository.findAll().stream()
+                        .filter(p -> p.getContractId() != null && contractIds.contains(p.getContractId()))
+                        .filter(p -> "UNPAID".equalsIgnoreCase(p.getStatus()) || ("PENDING".equalsIgnoreCase(p.getPaymentStatus()) && !"REF".equalsIgnoreCase(p.getInvoiceType())))
+                        .filter(p -> p.getRemainingAmount() != null && p.getRemainingAmount().compareTo(BigDecimal.ZERO) > 0)
+                        .toList();
+
+                if (!unpaidPayments.isEmpty()) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                            "success", false,
+                            "message", "Không thể xóa tài khoản: Bạn còn " + unpaidPayments.size() + " khoản hóa đơn chưa thanh toán. Vui lòng thanh toán hết công nợ trước khi yêu cầu xóa tài khoản."
+                    ));
+                }
+            }
+        }
+
+        LocalDateTime scheduledAt = LocalDateTime.now().plusDays(30);
+        account.setDeletionScheduledAt(scheduledAt);
+        accountRepository.save(account);
+
+        ActivityLog log = new ActivityLog();
+        log.setAccountId(account.getAccountId());
+        log.setAction("ACCOUNT_DELETION_REQUESTED");
+        log.setDescription("Khách hàng #" + account.getAccountId() + " (" + account.getFullName() + ") đã yêu cầu xóa tài khoản. Thời gian ân hạn đến: " + scheduledAt);
+        log.setCreatedAt(LocalDateTime.now());
+        activityLogRepository.save(log);
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Yêu cầu xóa tài khoản đã được ghi nhận. Tài khoản của bạn sẽ được xóa vĩnh viễn vào ngày " + scheduledAt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " (thời gian ân hạn 30 ngày). Bạn có thể đăng nhập lại trong thời gian này để hủy yêu cầu.",
+                "deletionScheduledAt", scheduledAt
+        ));
+    }
+
+    @PostMapping("/cancel-deletion")
+    public ResponseEntity<?> cancelAccountDeletion(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        Account account = resolveAccount(authHeader);
+        if (account == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "Vui lòng đăng nhập."));
+        }
+
+        if (account.getDeletionScheduledAt() == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Tài khoản của bạn hiện không có yêu cầu xóa nào."
+            ));
+        }
+
+        account.setDeletionScheduledAt(null);
+        accountRepository.save(account);
+
+        ActivityLog log = new ActivityLog();
+        log.setAccountId(account.getAccountId());
+        log.setAction("ACCOUNT_DELETION_CANCELLED");
+        log.setDescription("Khách hàng #" + account.getAccountId() + " (" + account.getFullName() + ") đã hủy yêu cầu xóa tài khoản, tiếp tục sử dụng hệ thống.");
+        log.setCreatedAt(LocalDateTime.now());
+        activityLogRepository.save(log);
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Đã hủy yêu cầu xóa tài khoản thành công! Bạn có thể tiếp tục sử dụng dịch vụ bình thường."
+        ));
     }
 }

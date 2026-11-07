@@ -1,4 +1,4 @@
-// Báo cáo cơ sở (US-33): chia số liệu thành các bảng và dựng nội dung file CSV. Hàm thuần, kiểm bằng DDT.
+// Báo cáo cơ sở: chia số liệu thành các bảng và dựng nội dung file CSV. Hàm thuần phục vụ kiểm thử.
 
 import type { ManagerDashboard } from "./types"
 

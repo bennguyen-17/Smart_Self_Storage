@@ -23,6 +23,9 @@ public class FacilityContractResponse {
     private String customerIdNumber;
     private List<StoredImageResponse> inspectionImages = new ArrayList<>();
     private List<StoredImageResponse> forfeitEvidenceImages = new ArrayList<>();
+    private Integer overdueLiquidationDays;
+    private Integer forfeitAfterDays;
+    private Double dailyOverdueFee;
 
     public FacilityContractResponse() {
     }
@@ -193,6 +196,30 @@ public class FacilityContractResponse {
 
     public void setForfeitEvidenceImages(List<StoredImageResponse> forfeitEvidenceImages) {
         this.forfeitEvidenceImages = forfeitEvidenceImages != null ? forfeitEvidenceImages : new ArrayList<>();
+    }
+
+    public Integer getOverdueLiquidationDays() {
+        return overdueLiquidationDays;
+    }
+
+    public void setOverdueLiquidationDays(Integer overdueLiquidationDays) {
+        this.overdueLiquidationDays = overdueLiquidationDays;
+    }
+
+    public Integer getForfeitAfterDays() {
+        return forfeitAfterDays;
+    }
+
+    public void setForfeitAfterDays(Integer forfeitAfterDays) {
+        this.forfeitAfterDays = forfeitAfterDays;
+    }
+
+    public Double getDailyOverdueFee() {
+        return dailyOverdueFee;
+    }
+
+    public void setDailyOverdueFee(Double dailyOverdueFee) {
+        this.dailyOverdueFee = dailyOverdueFee;
     }
 
     public static class FeeInvoiceResponse {

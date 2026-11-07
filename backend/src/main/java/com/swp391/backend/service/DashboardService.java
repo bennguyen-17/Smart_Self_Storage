@@ -48,14 +48,14 @@ public class DashboardService {
     }
 
     /**
-     * US-33: Dashboard & Báo cáo cơ sở cho Facility Manager
+     * Báo cáo và thống kê vận hành cơ sở cho Quản lý cơ sở
      */
     public ManagerDashboardResponse getManagerDashboard(Integer facilityId) {
         return getManagerDashboard(facilityId, null, null);
     }
 
     /**
-     * B5 / US-33 / BR-51: Báo cáo lọc theo khoảng thời gian (from, to)
+     * Báo cáo dòng tiền và doanh thu lọc theo khoảng thời gian
      * Doanh thu, hoàn tiền, miễn giảm, ticket tính trong khoảng; số ô, hợp đồng hiệu lực vẫn là snapshot hiện tại.
      */
     public ManagerDashboardResponse getManagerDashboard(Integer facilityId, String fromStr, String toStr) {
@@ -483,7 +483,7 @@ public class DashboardService {
     }
 
     /**
-     * US-33: Báo cáo toàn chuỗi 7 cơ sở cho Ban Giám Đốc (BOM / Admin)
+     * Báo cáo hợp nhất toàn chuỗi cơ sở cho Ban Giám Đốc
      */
     public ChainDashboardResponse getChainDashboard() {
         return getChainDashboard(null, null, null);
@@ -534,6 +534,7 @@ public class DashboardService {
         BigDecimal chainRefunds = BigDecimal.ZERO;
         BigDecimal chainNet = BigDecimal.ZERO;
         BigDecimal chainDeposit = BigDecimal.ZERO;
+        BigDecimal chainForfeitedDeposit = BigDecimal.ZERO;
         BigDecimal chainRental = BigDecimal.ZERO;
         BigDecimal chainPenalty = BigDecimal.ZERO;
 
@@ -549,6 +550,7 @@ public class DashboardService {
                 chainRefunds = chainRefunds.add(mResp.getTotalRefunds());
                 chainNet = chainNet.add(mResp.getNetRevenue());
                 chainDeposit = chainDeposit.add(mResp.getDepositHolding());
+                chainForfeitedDeposit = chainForfeitedDeposit.add(mResp.getForfeitedDeposit() != null ? mResp.getForfeitedDeposit() : BigDecimal.ZERO);
                 chainRental = chainRental.add(mResp.getRentalRevenue());
                 chainPenalty = chainPenalty.add(mResp.getPenaltyRevenue());
             } catch (Exception ignored) {}
@@ -656,6 +658,7 @@ public class DashboardService {
         resp.setChainTotalRefunds(chainRefunds);
         resp.setChainNetRevenue(chainNet);
         resp.setChainDepositHolding(chainDeposit);
+        resp.setChainForfeitedDeposit(chainForfeitedDeposit);
         resp.setChainRentalRevenue(chainRental);
         resp.setChainPenaltyRevenue(chainPenalty);
         resp.setFacilityBreakdown(breakdown);

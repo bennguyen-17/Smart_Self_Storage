@@ -1,4 +1,4 @@
-// Luật phân ca (US-32). Hàm thuần, kiểm bằng bảng DDT.
+// Quy tắc phân ca nhân viên tại cơ sở. Hàm thuần phục vụ kiểm thử.
 
 import type { DayShift, DaySchedule, FacilityStaff, ShiftAssignment } from "./types"
 

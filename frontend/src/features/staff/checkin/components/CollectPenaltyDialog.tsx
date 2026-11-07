@@ -16,7 +16,7 @@ interface CollectPenaltyDialogProps {
   onCollected: (response: CollectPenaltyResponse) => void
 }
 
-/** US-20: Thu tiền phạt quá hạn tại quầy (BR-31). */
+/** Thu tiền phạt quá hạn hợp đồng trực tiếp tại quầy. */
 function CollectPenaltyDialog({
   contract,
   onClose,

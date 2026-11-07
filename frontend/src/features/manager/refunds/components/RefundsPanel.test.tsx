@@ -49,7 +49,7 @@ async function renderPanel() {
 
 const row = (text: string) => screen.getByText(text).closest("tr") as HTMLElement
 
-describe("RefundsPanel: Manager hoàn tiền cho khách (US-26)", () => {
+describe("RefundsPanel: Quản lý hoàn tiền cho khách", () => {
   test("mặc định tải phiếu Chờ hoàn; hiện lý do, số tiền, tài khoản nhận; thiếu STK thì báo rõ", async () => {
     await renderPanel()
     expect(api.listRefunds).toHaveBeenCalledWith("PENDING")

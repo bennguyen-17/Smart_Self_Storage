@@ -53,6 +53,7 @@ export interface ChainDashboardData {
   chainTotalRefunds: number
   chainNetRevenue: number
   chainDepositHolding: number
+  chainForfeitedDeposit?: number
   facilityBreakdown: FacilityBreakdownItem[]
   monthlyRevenues?: MonthlyRevenueItem[]
 }

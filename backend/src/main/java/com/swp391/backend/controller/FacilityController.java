@@ -26,7 +26,7 @@ public class FacilityController {
         this.imageStorageService = imageStorageService;
     }
 
-    // --- US-03: Lấy danh sách toàn bộ cơ sở (kèm mã code, shortCode, layout) ---
+    // Lấy danh sách tất cả các cơ sở trong hệ thống
     @GetMapping
     public ResponseEntity<List<FacilityResponse>> getAllFacilities() {
         List<FacilityResponse> facilities = storageService.getAllActiveFacilities();
@@ -35,7 +35,7 @@ public class FacilityController {
         return ResponseEntity.ok(facilities);
     }
 
-    // --- US-03: Lấy thông tin chi tiết 1 cơ sở ---
+    // Lấy thông tin chi tiết của một cơ sở
     @GetMapping("/{facilityId}")
     public ResponseEntity<FacilityResponse> getFacilityById(@PathVariable Integer facilityId) {
         return storageService.getFacilityById(facilityId)
@@ -46,7 +46,7 @@ public class FacilityController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // --- US-03: Lấy danh sách tầng của cơ sở ---
+    // Lấy danh sách các tầng trực thuộc cơ sở
     @GetMapping("/{facilityId}/floors")
     public ResponseEntity<List<Floor>> getFloorsByFacilityId(@PathVariable Integer facilityId) {
         return ResponseEntity.ok(storageService.getFloorsByFacilityId(facilityId));

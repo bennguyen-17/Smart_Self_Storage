@@ -1,5 +1,4 @@
-// Manager xem nhân viên trong ngày làm được gì (đề: "Assign facility staff…", BR-50) và nhật ký thao tác nội bộ
-// của cơ sở mình (BR-46). Khớp ManagerStaffActivityResponse và AdminActivityLogResponse của BE.
+// Quản lý cơ sở theo dõi hoạt động nhân viên trong ca và nhật ký thao tác nội bộ của cơ sở mình.
 
 import type { ActivityLogEntry } from "@/features/admin/audit-logs/types"
 

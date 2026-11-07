@@ -1,4 +1,4 @@
-// US-32: phân ca nhân viên tại cơ sở (Facility Manager): chỉ cần biết AI trực CA NÀO, NGÀY NÀO.
+// Phân ca trực nhân viên tại cơ sở dành cho Quản lý cơ sở.
 // Không chia việc trong ca (góp ý của Bảo 14/10): nhân viên vào cổng Staff sẽ xử lý mọi việc của ca.
 // Khớp bảng có sẵn trong DB: Shift (ca) và StaffShift (employeeId, facilityId, shiftId, workDate).
 // BE CHƯA có API: path dưới đây là contract FE đề xuất (qa-log Q-31).

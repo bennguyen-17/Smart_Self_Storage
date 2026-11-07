@@ -26,7 +26,7 @@ export const getStoredAccountId = (): number => {
 
 /**
  * Gửi yêu cầu hỗ trợ kỹ thuật (Ticket)
- * SWAGGER ENDPOINT: POST /api/support/tickets
+ * Gửi yêu cầu hỗ trợ kỹ thuật trực tuyến
  */
 export const submitSupportTicket = async (ticketData: any) => {
   if (isMockMode()) {
@@ -55,7 +55,7 @@ export const submitSupportTicket = async (ticketData: any) => {
 
 /**
  * Lấy danh sách ticket hỗ trợ kỹ thuật khách hàng đã gửi
- * SWAGGER ENDPOINT: GET /api/customer/tickets
+ * Lấy danh sách yêu cầu hỗ trợ của khách hàng
  */
 export const getMySupportTickets = async () => {
   if (isMockMode()) {

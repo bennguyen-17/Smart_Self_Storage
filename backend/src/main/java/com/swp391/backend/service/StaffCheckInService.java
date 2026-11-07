@@ -185,7 +185,7 @@ public class StaffCheckInService {
         BigDecimal paidSoFar = deposit != null && deposit.getPaidAmount() != null ? deposit.getPaidAmount()
                 : BigDecimal.ZERO;
 
-        if (paidSoFar.compareTo(depAmount) < 0) {
+        if (paidSoFar.signum() <= 0) {
             paidSoFar = depAmount;
         }
 

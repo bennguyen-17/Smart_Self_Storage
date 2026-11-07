@@ -34,7 +34,7 @@ async function renderPanel() {
 }
 
 // Dữ liệu mẫu (reportApi.mock): thuê 110tr + gia hạn 4,2tr + phạt 1,5tr + truy thu 2tr = 117,7tr; hoàn cọc 3,2tr
-describe("FacilityReportPanel: báo cáo cơ sở một dạng duy nhất (US-33)", () => {
+describe("FacilityReportPanel: báo cáo cơ sở", () => {
   test("thẻ ô kho: vành khuyên, giữa ghi % lấp đầy, chú thích bên cạnh kèm số", async () => {
     await renderPanel()
     const units = screen.getByRole("region", { name: "Ô kho" })

@@ -1,4 +1,4 @@
-// US-18: API nhật ký mở cổng thủ công cho Manager.
+// API nhật ký mở cổng kiểm soát ra vào cho Quản lý cơ sở.
 // VITE_USE_MOCK=true → mock; false → BE. Không tự fallback về mock khi lỗi.
 // BE xác định cơ sở của Manager từ JWT (không cần header), chỉ trả log của cơ sở đó.
 

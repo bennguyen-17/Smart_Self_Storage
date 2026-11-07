@@ -1,4 +1,4 @@
-// Dữ liệu mẫu cho US-03, bám theo seed của database/db-script.sql
+// Dữ liệu mẫu sơ đồ kho 2D phục vụ môi trường thử nghiệm.
 // (7 cơ sở, 18 tầng, 6 loại kho, bảng giá). Dùng khi VITE_USE_MOCK=true.
 
 import type {

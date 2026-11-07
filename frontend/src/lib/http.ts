@@ -62,6 +62,16 @@ http.interceptors.request.use(
       config.headers['X-Facility-Id'] = String(user.facilityId);
     }
     if ((user?.id || user?.accountId) && !config.headers['X-Account-Id']) {
+      let headerAccId = String(user.id || user.accountId);
+      if (token && token.split('.').length === 3) {
+        try {
+          const claims = JSON.parse(atob(token.split('.')[1]));
+          if (claims?.userId) headerAccId = String(claims.userId);
+        } catch {}
+      }
+      config.headers['X-Account-Id'] = headerAccId;
+    }
+    if (false) {
       config.headers['X-Account-Id'] = String(user.id || user.accountId);
     }
 

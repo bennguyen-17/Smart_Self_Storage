@@ -98,4 +98,30 @@ describe("CheckinContractTable: hành động cho hợp đồng quá hạn", () 
     expect(onCheckout).toHaveBeenCalledTimes(1)
     expect(onCheckout).toHaveBeenCalledWith(overduePaidItem)
   })
-})
+
+  test("quá hạn >= 30 ngày → hiện badge Chờ thanh lý, ẩn nút Thu phạt & Gia hạn & Trả kho", () => {
+    const overdue30DaysItem: StaffReservationItem = {
+      ...overdueItem,
+      overdueDays: 30,
+      overdueLiquidationDays: 30,
+    }
+    renderTable(overdue30DaysItem)
+    expect(screen.getAllByText(/chờ thanh lý/i).length).toBeGreaterThanOrEqual(1)
+    expect(screen.queryByRole("button", { name: /thu phạt/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /gia hạn/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /trả kho/i })).not.toBeInTheDocument()
+  })
+
+  test("hợp đồng FORFEITED → hiện badge Chờ thanh lý, ẩn toàn bộ nút thao tác", () => {
+    const forfeitedItem: StaffReservationItem = {
+      ...overdueItem,
+      contractStatus: "FORFEITED",
+      overdueDays: 35,
+    }
+    renderTable(forfeitedItem)
+    expect(screen.getAllByText(/chờ thanh lý/i).length).toBeGreaterThanOrEqual(1)
+    expect(screen.queryByRole("button", { name: /thu phạt/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /gia hạn/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /trả kho/i })).not.toBeInTheDocument()
+  })
+});

@@ -48,10 +48,17 @@ public class AuditLogController {
             @RequestParam(value = "method", required = false) String method) {
 
         Integer effectiveAccountId = (authAccountId != null) ? authAccountId : headerAccountId;
-        Integer fallbackFacilityId = (headerFacilityId != null) ? headerFacilityId : queryFacilityId;
+        if (authAccountId != null && headerAccountId != null && !authAccountId.equals(headerAccountId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(List.of());
+        }
+        Integer fallbackFacilityId = null;
         Integer effectiveFacilityId;
         try {
             effectiveFacilityId = securityContextHelper.requireCurrentFacilityId(effectiveAccountId, fallbackFacilityId);
+            if ((headerFacilityId != null && (headerFacilityId <= 0 || !headerFacilityId.equals(effectiveFacilityId)))
+                    || (queryFacilityId != null && (queryFacilityId <= 0 || !queryFacilityId.equals(effectiveFacilityId)))) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(List.of());
+            }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(List.of());
         }

@@ -4,6 +4,7 @@ import com.swp391.backend.config.SecurityContextHelper;
 import com.swp391.backend.dto.FacilityContractResponse;
 import com.swp391.backend.dto.FacilityContractResponse.FeeInvoiceResponse;
 import com.swp391.backend.dto.ForfeitProcessedRequest;
+import com.swp391.backend.dto.TerminateViolationRequest;
 import com.swp391.backend.entity.*;
 import com.swp391.backend.repository.*;
 import com.swp391.backend.service.ForfeitProcessingService;
@@ -150,7 +151,7 @@ public class ManagerContractController {
                 }
             } catch (Exception ignored) {}
 
-            // Nếu hợp đồng OVERDUE nhưng chưa có hóa đơn phạt trong DB, tự động gắn 1 khoản phạt mẫu để Manager có thể test US-31 (miễn/giảm phí)
+            // Nếu hợp đồng quá hạn nhưng chưa có hóa đơn phạt trong cơ sở dữ liệu, tự động khởi tạo khoản phạt để hiển thị
             if ("OVERDUE".equals(status) && fees.isEmpty()) {
                 fees.add(new FeeInvoiceResponse(
                         7000 + c.getContractId(),
@@ -176,6 +177,10 @@ public class ManagerContractController {
                     fees
             );
             response.setForfeitProcessed(c.isForfeitProcessed());
+            int liqDays = (c.getOverdueLiquidationDays() != null && c.getOverdueLiquidationDays() > 0) ? c.getOverdueLiquidationDays() : 30;
+            response.setOverdueLiquidationDays(liqDays);
+            response.setForfeitAfterDays(liqDays);
+            response.setDailyOverdueFee(c.getDailyOverdueFee() != null ? c.getDailyOverdueFee().doubleValue() : 50000.0);
             if (res.getRentalAmount() != null) {
                 response.setRentalAmount(res.getRentalAmount().doubleValue());
             }
@@ -205,5 +210,20 @@ public class ManagerContractController {
                 "message", "Đã xác nhận xử lý tài sản tịch thu.",
                 "contractId", contractId,
                 "forfeitProcessed", true));
+    }
+
+    @PostMapping("/{contractId}/terminate-violation")
+    public ResponseEntity<?> terminateViolation(
+            @PathVariable Integer contractId,
+            @RequestBody TerminateViolationRequest request,
+            @AuthenticationPrincipal Integer managerAccountId) {
+        forfeitProcessingService.terminateViolation(contractId,
+                request != null ? request.getReason() : null,
+                request != null ? request.getEvidenceImageIds() : null,
+                managerAccountId);
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Đã đơn phương chấm dứt hợp đồng do vi phạm thành công.",
+                "contractId", contractId));
     }
 }

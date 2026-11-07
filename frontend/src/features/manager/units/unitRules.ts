@@ -1,4 +1,4 @@
-// Luật nghiệp vụ quản lý ô kho (US-13, US-14). Hàm thuần, kiểm bằng bảng test trong unitRules.test.ts.
+// Quy tắc nghiệp vụ quản lý ô kho. Hàm thuần phục vụ kiểm thử.
 
 import type { PhysicalUnitStatus } from "./types"
 

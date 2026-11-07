@@ -1,4 +1,4 @@
-// Lọc và xuất nhật ký hoạt động (US-30). Hàm thuần, kiểm bằng bảng DDT.
+// Lọc và xuất nhật ký hoạt động hệ thống. Hàm thuần phục vụ kiểm thử.
 
 import { matchesQuery } from "@/components/internal/textSearch"
 

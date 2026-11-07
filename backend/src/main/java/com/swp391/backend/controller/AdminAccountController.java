@@ -56,6 +56,27 @@ public class AdminAccountController {
         };
     }
 
+    private boolean hasActiveManagerInFacility(Integer facilityId, Integer excludeAccountId) {
+        if (facilityId == null) return false;
+        List<EmployeeProfile> profiles = employeeProfileRepository.findByFacilityId(facilityId);
+        for (EmployeeProfile ep : profiles) {
+            if (ep.getAccountId() == null || Objects.equals(ep.getAccountId(), excludeAccountId)) continue;
+            Optional<Account> accOpt = accountRepository.findAccountByAccountId(ep.getAccountId());
+            if (accOpt.isPresent()) {
+                Account acc = accOpt.get();
+                boolean isLocked = acc.getStatus() != null && ("LOCKED".equalsIgnoreCase(acc.getStatus())
+                        || "SUSPENDED".equalsIgnoreCase(acc.getStatus())
+                        || "CLOSED".equalsIgnoreCase(acc.getStatus())
+                        || "BLOCKED".equalsIgnoreCase(acc.getStatus())
+                        || "INACTIVE".equalsIgnoreCase(acc.getStatus()));
+                if (Long.valueOf(3L).equals(acc.getRoleId()) && !isLocked) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private InternalAccountResponse toResponse(Account account) {
         String roleName = mapRoleIdToName(account.getRoleId());
         Integer facilityId = null;
@@ -113,7 +134,7 @@ public class AdminAccountController {
      * 2. POST /api/admin/accounts: Tạo tài khoản nội bộ mới
      */
     @PostMapping
-    public ResponseEntity<?> createAccount(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> createAccount(@RequestBody Map<String, Object> body, @AuthenticationPrincipal Integer adminAccountId) {
         String email = body.get("email") != null ? body.get("email").toString().trim().toLowerCase() : "";
         String fullName = body.get("fullName") != null ? body.get("fullName").toString().trim() : "";
         String phone = body.get("phone") != null ? body.get("phone").toString().trim().replace(" ", "") : "";
@@ -136,6 +157,9 @@ public class AdminAccountController {
         }
 
         Long roleId = mapRoleNameToId(roleStr);
+        if (Long.valueOf(3L).equals(roleId) && facilityId != null && hasActiveManagerInFacility(facilityId, null)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Cơ sở này đã có Quản lý (Manager) đang hoạt động! Mỗi cơ sở chỉ được phép có 1 Manager."));
+        }
 
         Account account = new Account();
         account.setEmail(email);
@@ -158,7 +182,8 @@ public class AdminAccountController {
         // Ghi log kiểm toán
         try {
             ActivityLog log = new ActivityLog();
-            log.setAccountId(1);
+            log.setAccountId(adminAccountId != null ? adminAccountId : 1);
+            log.setFacilityId(facilityId);
             log.setAction("CREATE_INTERNAL_ACCOUNT");
             log.setDescription("Admin tạo tài khoản nội bộ " + email + " vai trò " + roleStr);
             log.setCreatedAt(LocalDateTime.now());
@@ -193,6 +218,17 @@ public class AdminAccountController {
 
         Integer facilityId = null;
         if (body.containsKey("facilityId") && body.get("facilityId") != null && !body.get("facilityId").toString().isBlank()) {
+            try {
+                facilityId = Integer.parseInt(body.get("facilityId").toString());
+            } catch (Exception ignored) {}
+        }
+        Integer targetFacilityId = facilityId != null ? facilityId : oldFacilityId;
+        boolean isAccountActive = "ACTIVE".equalsIgnoreCase(toResponse(account).getStatus());
+        if (Long.valueOf(3L).equals(account.getRoleId()) && targetFacilityId != null && isAccountActive
+                && hasActiveManagerInFacility(targetFacilityId, accountId)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Cơ sở này đã có Quản lý (Manager) đang hoạt động! Mỗi cơ sở chỉ được phép có 1 Manager."));
+        }
+        if (false && body.containsKey("facilityId")) {
             try {
                 facilityId = Integer.parseInt(body.get("facilityId").toString());
             } catch (Exception ignored) {}
@@ -245,6 +281,16 @@ public class AdminAccountController {
         String oldStatus = account.getStatus();
 
         String status = body.get("status") != null ? body.get("status").toString().trim().toUpperCase() : "ACTIVE";
+        boolean locking = "LOCKED".equals(status) || "SUSPENDED".equals(status);
+        if (locking && adminAccountId != null && adminAccountId.equals(accountId)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Không thể tự khóa tài khoản của chính mình!"));
+        }
+        if (!locking && Long.valueOf(3L).equals(account.getRoleId())) {
+            Integer mgrFacilityId = employeeProfileRepository.findByAccountId(accountId).map(EmployeeProfile::getFacilityId).orElse(null);
+            if (mgrFacilityId != null && hasActiveManagerInFacility(mgrFacilityId, accountId)) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Cơ sở này đã có Quản lý (Manager) đang hoạt động! Mỗi cơ sở chỉ được phép có 1 Manager."));
+            }
+        }
         account.setStatus("LOCKED".equals(status) || "SUSPENDED".equals(status) ? "SUSPENDED" : "ACTIVE");
         account.setUpdatedAt(LocalDateTime.now());
         Account saved = accountRepository.save(account);

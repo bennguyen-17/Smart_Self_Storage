@@ -1,4 +1,4 @@
-// US-30: đọc nhật ký hoạt động cho Admin. Chỉ có API đọc: nhật ký chỉ được ghi thêm, không sửa / xóa.
+// Đọc nhật ký hoạt động cho Quản trị viên. Nhật ký chỉ ghi thêm, không cho phép sửa hoặc xóa.
 // BE đã ghi vào bảng ActivityLog nhưng CHƯA có API đọc: path dưới đây là contract FE đề xuất (qa-log Q-32).
 // VITE_USE_MOCK=true → mock; false → BE. Không tự fallback về mock khi lỗi.
 

@@ -45,7 +45,7 @@ public class AuthService {
         this.jwtService = jwtService;
     }
 
-    // --- US-01: Đăng ký & OTP ---
+    // Đăng ký tài khoản và xử lý mã xác thực OTP
     public ApiResponse register(RegisterRequest request) {
         if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
             return new ApiResponse(false, "Họ và tên không được để trống!");
@@ -78,7 +78,7 @@ public class AuthService {
             return new ApiResponse(false, "Số CCCD phải bao gồm đúng 12 chữ số!");
         }
 
-        // BR-01: Bắt buộc thông tin tài khoản ngân hàng ngay từ lúc đăng ký
+        // Bắt buộc thông tin tài khoản ngân hàng ngay từ lúc đăng ký để phục vụ hoàn cọc tự động
         if (request.getBankName() == null || request.getBankName().trim().isEmpty()) {
             return new ApiResponse(false, "Vui lòng chọn hoặc nhập tên ngân hàng nhận hoàn cọc!");
         }
@@ -95,7 +95,7 @@ public class AuthService {
             return new ApiResponse(false, "Tên chủ tài khoản ngân hàng phải viết in hoa không dấu, không chứa số!");
         }
 
-        // BR-01: Kiểm tra CCCD trùng lặp trong bảng CustomerProfile
+        // Kiểm tra số CCCD đã tồn tại trong hệ thống
         Optional<CustomerProfile> existingCccdProfileOpt = customerProfileRepository.findByIdentityNumber(request.getCccd().trim());
         if (existingCccdProfileOpt.isPresent()) {
             Optional<Account> cccdAccountOpt = accountRepository.findById(Long.valueOf(existingCccdProfileOpt.get().getAccountId()));
@@ -164,7 +164,7 @@ public class AuthService {
         return new ApiResponse(true, "Mã xác thực OTP đã được gửi đến email đăng ký của bạn. Vui lòng kiểm tra hộp thư!");
     }
 
-    // --- US-01: Xác thực mã OTP ---
+    // Xác thực mã OTP kích hoạt tài khoản
     public ApiResponse verifyOtp(VerifyOtpRequest request) {
         if (request.getPhone() == null || request.getPhone().trim().isEmpty()) {
             return new ApiResponse(false, "Số điện thoại không được để trống!");
@@ -193,7 +193,7 @@ public class AuthService {
         return new ApiResponse(true, "Xác thực OTP thành công! Tài khoản đã được kích hoạt.");
     }
 
-    // --- US-01: Gửi lại mã OTP (Resend OTP) ---
+    // Gửi lại mã OTP xác thực tài khoản
     public ApiResponse resendOtp(ResendOtpRequest request) {
         if (request.getPhone() == null || request.getPhone().trim().isEmpty()) {
             return new ApiResponse(false, "Số điện thoại không được để trống!");
@@ -225,7 +225,7 @@ public class AuthService {
         return new ApiResponse(true, "Mã OTP mới đã được gửi lại vào email của bạn. Vui lòng kiểm tra hộp thư!");
     }
 
-    // --- US-02: Đăng xuất & Thu hồi Token (Logout) ---
+    // Đăng xuất và thu hồi hiệu lực của JWT token
     public ApiResponse logout(String authHeader, String ipAddress) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7).trim();

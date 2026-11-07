@@ -1,4 +1,4 @@
-// Dữ liệu mẫu US-13 cho cơ sở HN-01 (3 tầng), dùng khi VITE_USE_MOCK=true.
+// Dữ liệu mẫu ô kho cơ sở phục vụ môi trường thử nghiệm.
 // Trạng thái dùng bộ chuẩn mới; luật đổi loại kho / bảo trì giống BE để demo đúng hành vi.
 
 import type { Floor } from "@/types"
