@@ -128,8 +128,8 @@ describe("Trạng thái đã đóng và quá hạn trên 30 ngày (thanh lý tà
     { name: "đang hiệu lực dù đã qua ngày", status: "ACTIVE", endDate: "2026-09-01", days: 0, forfeit: false },
     { name: "quá hạn 12 ngày", status: "OVERDUE", endDate: "2026-10-10", days: 12, forfeit: false },
     { name: "quá hạn 29 ngày: chưa thanh lý", status: "OVERDUE", endDate: "2026-09-23", days: 29, forfeit: false },
-    { name: "quá hạn đủ 30 ngày: cần thanh lý", status: "OVERDUE", endDate: "2026-09-22", days: 30, forfeit: true },
-    { name: "quá hạn 31 ngày: cần thanh lý", status: "OVERDUE", endDate: "2026-09-21", days: 31, forfeit: true },
+    { name: "quá hạn 30 ngày: chưa thanh lý (vẫn trong hạn <= 30 ngày)", status: "OVERDUE", endDate: "2026-09-22", days: 30, forfeit: false },
+    { name: "quá hạn 31 ngày: cần thanh lý (> 30 ngày)", status: "OVERDUE", endDate: "2026-09-21", days: 31, forfeit: true },
     { name: "BE đã chuyển FORFEITED", status: "FORFEITED", endDate: "2026-08-01", days: 0, forfeit: true },
     { name: "đã hoàn tất", status: "COMPLETED", endDate: "2026-08-01", days: 0, forfeit: false },
   ] as const)("$name → quá $days ngày, cần thanh lý: $forfeit", ({ status, endDate, days, forfeit }) => {
@@ -163,7 +163,7 @@ describe("Xác nhận đã xử lý tài sản (hợp đồng FORFEITED)", () =>
   test.each([
     { name: "FORFEITED chưa xử lý", c: { status: "FORFEITED", forfeitProcessed: false }, can: true, handling: true },
     { name: "FORFEITED đã xử lý", c: { status: "FORFEITED", forfeitProcessed: true }, can: false, handling: false },
-    { name: "OVERDUE đủ 30 ngày, BE chưa chuyển", c: { status: "OVERDUE", forfeitProcessed: false }, can: false, handling: true },
+    { name: "OVERDUE trên 30 ngày, BE chưa chuyển", c: { status: "OVERDUE", forfeitProcessed: false }, can: false, handling: true },
     { name: "ACTIVE", c: { status: "ACTIVE" }, can: false, handling: false },
   ] as const)("$name → được xác nhận: $can, còn cần xử lý: $handling", ({ c, can, handling }) => {
     expect(canConfirmForfeitProcessed(c)).toBe(can)
@@ -191,7 +191,8 @@ describe("forfeitState: nút thanh lý chỉ khi BE đã chuyển Tịch thu", (
   test.each([
     { name: "đang hiệu lực", c: contract(1, { status: "ACTIVE", endDate: "2026-12-01" }), state: "NONE" },
     { name: "quá hạn 5 ngày", c: contract(1, { status: "OVERDUE", endDate: "2026-10-27" }), state: "NONE" },
-    { name: "quá hạn đủ 30 ngày, BE chưa chuyển", c: contract(1, { status: "OVERDUE", endDate: "2026-10-02" }), state: "WAITING" },
+    { name: "quá hạn 30 ngày: chưa thanh lý", c: contract(1, { status: "OVERDUE", endDate: "2026-10-02" }), state: "NONE" },
+    { name: "quá hạn 31 ngày, BE chưa chuyển", c: contract(1, { status: "OVERDUE", endDate: "2026-10-01" }), state: "WAITING" },
     { name: "đã tịch thu, chưa xử lý", c: contract(1, { status: "FORFEITED", endDate: "2026-09-01" }), state: "READY" },
     { name: "đã xử lý tài sản", c: contract(1, { status: "FORFEITED", endDate: "2026-09-01", forfeitProcessed: true }), state: "DONE" },
   ])("$name → $state", ({ c, state }) => {

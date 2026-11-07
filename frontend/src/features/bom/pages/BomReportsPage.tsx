@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import apiClient from "@/lib/apiClient"
@@ -128,8 +128,22 @@ export default function BomReportsPage() {
       }
     }
 
-    const facBreakdown = breakdownList.find((b) => String(b.facilityId) === selectedFacilityId)
-    const facPerformance = facilities.find((f) => String(f.id) === selectedFacilityId)
+    const normalize = (s?: string | number) =>
+      String(s || "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase()
+    const targetNorm = normalize(selectedFacilityId)
+
+    const facBreakdown = breakdownList.find(
+      (b) =>
+        String(b.facilityId) === selectedFacilityId ||
+        normalize(b.facilityCode) === targetNorm ||
+        normalize(b.facilityId) === targetNorm
+    )
+    const facPerformance = facilities.find(
+      (f) =>
+        String(f.id) === selectedFacilityId ||
+        normalize(f.code) === targetNorm ||
+        normalize(f.id) === targetNorm
+    )
 
     const code = facBreakdown?.facilityCode || facPerformance?.code || `FAC-${selectedFacilityId}`
     const rawName = facBreakdown?.facilityName || facPerformance?.name || `Cơ sở ${code}`

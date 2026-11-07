@@ -381,7 +381,7 @@ function ActionButtons({
 
   const isLiquidation =
     item.contractStatus === "FORFEITED" ||
-    (item.contractStatus === "OVERDUE" && (item.overdueDays ?? 0) >= (item.overdueLiquidationDays ?? 30))
+    (item.contractStatus === "OVERDUE" && (item.overdueDays ?? 0) > (item.overdueLiquidationDays ?? 30))
 
   if (isLiquidation) {
     return (

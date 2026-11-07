@@ -85,7 +85,7 @@ export function needsForfeitHandling(
   today: string
 ): boolean {
   if (contract.status === "FORFEITED") return !contract.forfeitProcessed
-  return overdueDays(contract as FacilityContract, today) >= forfeitAfterDaysOf(contract as FacilityContract)
+  return overdueDays(contract as FacilityContract, today) > forfeitAfterDaysOf(contract as FacilityContract)
 }
 
 /** Chỉ hợp đồng BE đã chuyển FORFEITED mới được xác nhận (BE trả 409 với trạng thái khác) */
@@ -96,7 +96,7 @@ export function canConfirmForfeitProcessed(contract: Pick<FacilityContract, "sta
 /**
  * Tình trạng thanh lý để hiện nút / nhãn:
  * - READY: BE đã chuyển FORFEITED, Manager xác nhận được;
- * - WAITING: quá hạn đủ 30 ngày nhưng tác vụ 00:00 của BE chưa chuyển FORFEITED (BE sẽ từ chối nếu xác nhận lúc này);
+ * - WAITING: quá hạn trên 30 ngày nhưng tác vụ 00:00 của BE chưa chuyển FORFEITED;
  * - DONE: đã xác nhận xử lý tài sản; NONE: không liên quan.
  */
 export type ForfeitState = "NONE" | "WAITING" | "READY" | "DONE"
@@ -107,7 +107,7 @@ export function forfeitState(
 ): ForfeitState {
   if (contract.forfeitProcessed) return "DONE"
   if (contract.status === "FORFEITED") return "READY"
-  if (overdueDays(contract as FacilityContract, today) >= forfeitAfterDaysOf(contract as FacilityContract)) return "WAITING"
+  if (overdueDays(contract as FacilityContract, today) > forfeitAfterDaysOf(contract as FacilityContract)) return "WAITING"
   return "NONE"
 }
 

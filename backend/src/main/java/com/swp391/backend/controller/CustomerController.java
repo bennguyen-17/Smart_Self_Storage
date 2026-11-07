@@ -272,14 +272,33 @@ public class CustomerController {
         }
 
         // 1. Kiểm tra ràng buộc hợp đồng còn hiệu lực / chưa thanh lý / chưa hoàn cọc
+        // Hợp đồng hủy do không đến check-in (NO_SHOW / CANCELLED) hoặc chưa check-in quá hạn thì chưa phát sinh hợp đồng hoạt động thực tế
+        java.time.LocalDate today = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         List<Reservation> reservations = reservationRepository.findByAccountId(account.getAccountId());
+        Map<Integer, Reservation> resById = new HashMap<>();
+        for (Reservation r : reservations) {
+            resById.put(r.getReservationId(), r);
+        }
         List<Integer> resIds = reservations.stream().map(Reservation::getReservationId).toList();
         if (!resIds.isEmpty()) {
             List<Contract> contracts = contractRepository.findAll().stream()
                     .filter(c -> c.getReservationId() != null && resIds.contains(c.getReservationId()))
                     .toList();
 
-            List<String> activeStatuses = List.of("INITIATED", "PENDING_CHECKIN", "ACTIVE", "OVERDUE", "TERMINATED");
+            for (Contract c : contracts) {
+                Reservation r = resById.get(c.getReservationId());
+                if ("PENDING_CHECKIN".equalsIgnoreCase(c.getStatus()) && r != null && r.getStartDate() != null && r.getStartDate().isBefore(today)) {
+                    c.setStatus("CANCELLED");
+                    c.setCancelReason("NO_SHOW");
+                    c.setTerminatedAt(LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")));
+                    contractRepository.save(c);
+                    r.setStatus("CANCELLED");
+                    reservationRepository.save(r);
+                }
+            }
+
+            // Chỉ các hợp đồng đã thực sự kích hoạt / đang thuê hoặc đang chờ hoàn cọc sau trả kho mới tính là đang hoạt động
+            List<String> activeStatuses = List.of("ACTIVE", "OVERDUE", "TERMINATED");
             List<Contract> pendingContracts = contracts.stream()
                     .filter(c -> c.getStatus() != null && activeStatuses.contains(c.getStatus().toUpperCase()))
                     .toList();
@@ -291,11 +310,12 @@ public class CustomerController {
                 ));
             }
 
-            // 2. Kiểm tra hóa đơn chưa thanh toán (UNPAID)
-            List<Integer> contractIds = contracts.stream().map(Contract::getContractId).toList();
-            if (!contractIds.isEmpty()) {
+            // 2. Kiểm tra hóa đơn chưa thanh toán (chỉ tính trên các hợp đồng có hoạt động thực tế, bỏ qua hợp đồng CANCELLED / NO_SHOW / FORFEITED / COMPLETED)
+            List<Integer> activeContractIds = pendingContracts.stream().map(Contract::getContractId).toList();
+            if (!activeContractIds.isEmpty()) {
                 List<Payment> unpaidPayments = paymentRepository.findAll().stream()
-                        .filter(p -> p.getContractId() != null && contractIds.contains(p.getContractId()))
+                        .filter(p -> p.getContractId() != null && activeContractIds.contains(p.getContractId()))
+                        .filter(p -> !"CANCELLED".equalsIgnoreCase(p.getStatus()))
                         .filter(p -> "UNPAID".equalsIgnoreCase(p.getStatus()) || ("PENDING".equalsIgnoreCase(p.getPaymentStatus()) && !"REF".equalsIgnoreCase(p.getInvoiceType())))
                         .filter(p -> p.getRemainingAmount() != null && p.getRemainingAmount().compareTo(BigDecimal.ZERO) > 0)
                         .toList();

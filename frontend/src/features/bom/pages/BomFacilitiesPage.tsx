@@ -314,6 +314,7 @@ export default function BomFacilitiesPage() {
             ? {
                 ...prev,
                 depositHolding: Number(facDashboard.depositHolding || 0),
+                forfeitedDeposit: Number(facDashboard.forfeitedDeposit || 0),
                 totalRefunds: Number(facDashboard.totalRefunds || 0),
                 netRevenue: Number(facDashboard.netRevenue || 0),
                 rentalRevenue: Number(facDashboard.rentalRevenue || 0),
@@ -769,7 +770,7 @@ export default function BomFacilitiesPage() {
             (fAny.thisMonthRevenue ? Number(String(fAny.thisMonthRevenue).replace(/[^0-9]/g, "")) : 0)
           )
           const m10Rental = Number(latestM?.rentalRevenue ?? 0)
-          const m10Penalty = Number(latestM?.penaltyRevenue ?? Math.max(0, m10Revenue - m10Rental))
+          const m10Penalty = Number(latestM?.penaltyRevenue ?? 0)
 
           const last3Revs = monthlyRevs.slice(-3)
           const sum3Net = last3Revs.length > 0
@@ -778,7 +779,9 @@ export default function BomFacilitiesPage() {
           const sum3Rental = last3Revs.length > 0
             ? last3Revs.reduce((acc, m) => acc + Number(m.rentalRevenue ?? (m.month === "T10" ? 0 : m.revenue)), 0)
             : Number(fAny.rentalRevenue ?? 0)
-          const sum3Penalty = Math.max(0, sum3Net - sum3Rental)
+          const sum3Penalty = last3Revs.length > 0
+            ? last3Revs.reduce((acc, m) => acc + Number(m.penaltyRevenue ?? 0), 0)
+            : Number(fAny.penaltyRevenue ?? 0)
 
           const allTimeNet = Number(
             fAny.allTimeRevenue != null && typeof fAny.allTimeRevenue === "number"
@@ -786,12 +789,13 @@ export default function BomFacilitiesPage() {
               : (fAny.netRevenue ?? (sum3Net > 0 ? sum3Net : 0))
           )
           const allTimeRental = Number(fAny.rentalRevenue ?? sum3Rental)
-          const allTimePenalty = Number(fAny.penaltyRevenue ?? Math.max(0, allTimeNet - allTimeRental))
+          const allTimePenalty = Number(fAny.penaltyRevenue ?? sum3Penalty)
 
           const netRev = isThisMonth ? m10Revenue : is3Months ? sum3Net : allTimeNet
           const rentalRev = isThisMonth ? m10Rental : is3Months ? sum3Rental : allTimeRental
           const penaltyRev = isThisMonth ? m10Penalty : is3Months ? sum3Penalty : allTimePenalty
           const depHold = Number(fAny.depositHolding ?? 0)
+          const forfeitDep = Number(fAny.forfeitedDeposit ?? 0)
           const totRefund = Number(fAny.totalRefunds ?? 0)
           const overdue = Number(fAny.overdueContracts ?? fAny.overdueUnits ?? 0)
           const tUnits = Number(fAny.totalUnits ?? 22)
@@ -910,6 +914,7 @@ export default function BomFacilitiesPage() {
                 netRevenue={netRev}
                 rentalRevenue={rentalRev}
                 depositHolding={depHold}
+                forfeitedDeposit={forfeitDep}
                 penaltyRevenue={penaltyRev}
                 totalRefunds={totRefund}
                 overdueContracts={overdue}

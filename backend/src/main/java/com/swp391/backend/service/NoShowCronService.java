@@ -156,8 +156,12 @@ public class NoShowCronService {
                 // 4. Hủy hóa đơn cọc DEP (Tịch thu 100% tiền cọc, KHÔNG sinh REF)
                 List<Payment> payments = paymentRepository.findByContractId(contract.getContractId());
                 for (Payment payment : payments) {
-                    if ("PENDING".equalsIgnoreCase(payment.getStatus()) || "PARTIALLY_PAID".equalsIgnoreCase(payment.getStatus())) {
+                    if ("PENDING".equalsIgnoreCase(payment.getStatus()) || "PARTIALLY_PAID".equalsIgnoreCase(payment.getStatus()) || "CANCELLED".equalsIgnoreCase(payment.getStatus())) {
                         payment.setStatus("CANCELLED");
+                        payment.setRemainingAmount(java.math.BigDecimal.ZERO);
+                        if ("PENDING".equalsIgnoreCase(payment.getPaymentStatus())) {
+                            payment.setPaymentStatus("FAILED");
+                        }
                         paymentRepository.save(payment);
                     }
                 }

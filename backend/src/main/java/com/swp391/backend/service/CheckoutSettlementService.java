@@ -245,8 +245,8 @@ public class CheckoutSettlementService {
                 ? contract.getOverdueLiquidationDays() : 30;
         if ("OVERDUE".equalsIgnoreCase(contract.getStatus()) && originalEndDate.isBefore(returnDate)) {
             long overdueDays = java.time.temporal.ChronoUnit.DAYS.between(originalEndDate, returnDate);
-            if (overdueDays >= checkoutLiquidationDays) {
-                return CheckoutConfirmResponse.error("Hợp đồng đã quá hạn " + checkoutLiquidationDays + " ngày, đã chuyển Ban Quản lý xử lý thanh lý tài sản. Không thể nhận bàn giao tại quầy!");
+            if (overdueDays > checkoutLiquidationDays) {
+                return CheckoutConfirmResponse.error("Hợp đồng đã quá hạn trên " + checkoutLiquidationDays + " ngày, đã chuyển Ban Quản lý xử lý thanh lý tài sản. Không thể nhận bàn giao tại quầy!");
             }
         }
 

@@ -268,7 +268,8 @@ public class DashboardService {
                     }
                 } else if ("CANCELLED".equalsIgnoreCase(cStatus) || "FORFEITED".equalsIgnoreCase(cStatus)) {
                     if (r.getDepositAmount() != null) {
-                        Integer cId = cOpt.get().getContractId();
+                        Contract c = cOpt.get();
+                        Integer cId = c.getContractId();
                         BigDecimal refundedForContract = payments.stream()
                                 .filter(p -> cId.equals(p.getContractId()))
                                 .filter(p -> "REF".equalsIgnoreCase(p.getInvoiceType())
@@ -276,7 +277,20 @@ public class DashboardService {
                                 .filter(p -> !"CANCELLED".equalsIgnoreCase(p.getStatus()))
                                 .map(p -> p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-                        forfeitedDeposit = forfeitedDeposit.add(r.getDepositAmount().subtract(refundedForContract).max(BigDecimal.ZERO));
+                        BigDecimal fAmt = r.getDepositAmount().subtract(refundedForContract).max(BigDecimal.ZERO);
+                        forfeitedDeposit = forfeitedDeposit.add(fAmt);
+                        if (fAmt.compareTo(BigDecimal.ZERO) > 0) {
+                            LocalDateTime forfeitTime = getContractForfeitTime(c, r, currentYm);
+                            if (forfeitTime != null) {
+                                if (!forfeitTime.isBefore(startOfThisMonth) && !forfeitTime.isAfter(endOfThisMonth)) {
+                                    thisMonthRevenue = thisMonthRevenue.add(fAmt);
+                                }
+                                if (!forfeitTime.isBefore(startOf3Months) && !forfeitTime.isAfter(endOf3Months)) {
+                                    last3MonthsRevenue = last3MonthsRevenue.add(fAmt);
+                                }
+                            }
+                            allTimeRevenue = allTimeRevenue.add(fAmt);
+                        }
                     }
                 }
             }
@@ -467,7 +481,21 @@ public class DashboardService {
                 }
             }
 
-            BigDecimal mNet = mRental.add(mExtension).add(mPenalty);
+            BigDecimal mForfeited = BigDecimal.ZERO;
+            for (Reservation r : reservations) {
+                Optional<Contract> cOpt = contracts.stream().filter(c -> c.getReservationId().equals(r.getReservationId())).findFirst();
+                if (cOpt.isEmpty()) continue;
+                Contract c = cOpt.get();
+                BigDecimal fAmt = getContractForfeitedDeposit(c, r, payments);
+                if (fAmt.compareTo(BigDecimal.ZERO) > 0) {
+                    LocalDateTime fTime = getContractForfeitTime(c, r, currentYm);
+                    if (fTime != null && ym.equals(java.time.YearMonth.from(fTime))) {
+                        mForfeited = mForfeited.add(fAmt);
+                    }
+                }
+            }
+
+            BigDecimal mNet = mRental.add(mExtension).add(mPenalty).add(mCompensation).add(mForfeited);
             String monthCode = "T" + ym.getMonthValue();
             String monthLabel = String.format("Tháng %02d/%d", ym.getMonthValue(), ym.getYear());
             facilityMonthlyRevenues.add(new com.swp391.backend.dto.dashboard.MonthlyRevenueItemResponse(monthCode, monthLabel, mNet, mRental.add(mExtension), mPenalty));
@@ -643,7 +671,21 @@ public class DashboardService {
                 }
             }
 
-            BigDecimal mNet = mRental.add(mExtension).add(mPenalty);
+            BigDecimal mForfeited = BigDecimal.ZERO;
+            for (Reservation r : allReservations) {
+                Optional<Contract> cOpt = allContracts.stream().filter(c -> c.getReservationId().equals(r.getReservationId())).findFirst();
+                if (cOpt.isEmpty()) continue;
+                Contract c = cOpt.get();
+                BigDecimal fAmt = getContractForfeitedDeposit(c, r, allPayments);
+                if (fAmt.compareTo(BigDecimal.ZERO) > 0) {
+                    LocalDateTime fTime = getContractForfeitTime(c, r, currentYm);
+                    if (fTime != null && ym.equals(java.time.YearMonth.from(fTime))) {
+                        mForfeited = mForfeited.add(fAmt);
+                    }
+                }
+            }
+
+            BigDecimal mNet = mRental.add(mExtension).add(mPenalty).add(mCompensation).add(mForfeited);
             String monthCode = "T" + ym.getMonthValue();
             String monthLabel = String.format("Tháng %02d/%d", ym.getMonthValue(), ym.getYear());
             monthlyRevenueList.add(new com.swp391.backend.dto.dashboard.MonthlyRevenueItemResponse(monthCode, monthLabel, mNet, mRental.add(mExtension), mPenalty));
@@ -665,6 +707,39 @@ public class DashboardService {
         resp.setMonthlyRevenues(monthlyRevenueList);
 
         return resp;
+    }
+
+    private BigDecimal getContractForfeitedDeposit(Contract c, Reservation r, List<Payment> paymentList) {
+        if (c == null || r == null || r.getDepositAmount() == null) {
+            return BigDecimal.ZERO;
+        }
+        String cStatus = c.getStatus();
+        if (!"CANCELLED".equalsIgnoreCase(cStatus) && !"FORFEITED".equalsIgnoreCase(cStatus)) {
+            return BigDecimal.ZERO;
+        }
+        Integer cId = c.getContractId();
+        BigDecimal refundedForContract = paymentList.stream()
+                .filter(p -> cId.equals(p.getContractId()))
+                .filter(p -> "REF".equalsIgnoreCase(p.getInvoiceType())
+                        || (p.getInvoiceNumber() != null && p.getInvoiceNumber().startsWith("REF-")))
+                .filter(p -> !"CANCELLED".equalsIgnoreCase(p.getStatus()))
+                .map(p -> p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return r.getDepositAmount().subtract(refundedForContract).max(BigDecimal.ZERO);
+    }
+
+    private LocalDateTime getContractForfeitTime(Contract c, Reservation r, java.time.YearMonth defaultYm) {
+        if (c != null && c.getTerminatedAt() != null) {
+            return c.getTerminatedAt();
+        }
+        if (c != null && "FORFEITED".equalsIgnoreCase(c.getStatus()) && r != null && r.getEndDate() != null) {
+            int liqDays = c.getOverdueLiquidationDays() != null ? c.getOverdueLiquidationDays() : 30;
+            return r.getEndDate().plusDays(liqDays).atStartOfDay();
+        }
+        if (r != null && r.getStartDate() != null) {
+            return r.getStartDate().atStartOfDay();
+        }
+        return defaultYm.atDay(1).atStartOfDay();
     }
 
     /**

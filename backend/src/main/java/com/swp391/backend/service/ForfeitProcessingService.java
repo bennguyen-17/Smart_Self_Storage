@@ -98,11 +98,11 @@ public class ForfeitProcessingService {
         boolean isForfeited = "FORFEITED".equalsIgnoreCase(contract.getStatus());
         int liquidationDays = contract.getOverdueLiquidationDays() != null && contract.getOverdueLiquidationDays() > 0
                 ? contract.getOverdueLiquidationDays() : 30;
-        boolean isOverdue30 = "OVERDUE".equalsIgnoreCase(contract.getStatus()) && reservation.getEndDate() != null
-                && java.time.temporal.ChronoUnit.DAYS.between(reservation.getEndDate(), LocalDate.now(VIETNAM_ZONE)) >= liquidationDays;
-        if (!isForfeited && !isOverdue30) {
+        boolean isOverdueLiquidation = "OVERDUE".equalsIgnoreCase(contract.getStatus()) && reservation.getEndDate() != null
+                && java.time.temporal.ChronoUnit.DAYS.between(reservation.getEndDate(), LocalDate.now(VIETNAM_ZONE)) > liquidationDays;
+        if (!isForfeited && !isOverdueLiquidation) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Hợp đồng chưa đủ điều kiện thanh lý (phải quá hạn từ " + liquidationDays + " ngày trở lên).");
+                    "Hợp đồng chưa đủ điều kiện thanh lý (phải quá hạn trên " + liquidationDays + " ngày).");
         }
         if (!isForfeited) {
             contract.setStatus("FORFEITED");
@@ -126,6 +126,9 @@ public class ForfeitProcessingService {
         storageUnitRepository.save(unit);
 
         contract.setForfeitProcessed(true);
+        if (contract.getTerminatedAt() == null) {
+            contract.setTerminatedAt(processedAt);
+        }
         contractRepository.save(contract);
 
         // Vô hiệu hóa Gate PIN mở cửa của hợp đồng này ngay lập tức
@@ -144,7 +147,7 @@ public class ForfeitProcessingService {
         for (Payment p : penaltyPayments) {
             if (!"PAID".equalsIgnoreCase(p.getStatus())) {
                 p.setStatus("CANCELLED");
-                p.setPaymentStatus("CANCELLED");
+                p.setPaymentStatus("FAILED");
                 p.setRemainingAmount(BigDecimal.ZERO);
                 paymentRepository.save(p);
             }
@@ -242,7 +245,7 @@ public class ForfeitProcessingService {
         for (Payment p : penaltyPayments) {
             if (!"PAID".equalsIgnoreCase(p.getStatus())) {
                 p.setStatus("CANCELLED");
-                p.setPaymentStatus("CANCELLED");
+                p.setPaymentStatus("FAILED");
                 p.setRemainingAmount(BigDecimal.ZERO);
                 paymentRepository.save(p);
             }

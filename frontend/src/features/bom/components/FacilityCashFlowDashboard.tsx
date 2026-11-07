@@ -103,21 +103,31 @@ export default function FacilityCashFlowDashboard({
     onPeriodChange?.(newP)
   }
 
-  // Đảm bảo có tối thiểu dữ liệu 6 tháng để hiển thị
+  // Đảm bảo có tối thiểu dữ liệu 6 tháng để hiển thị (cộng cả tiền cọc tịch thu vào biểu đồ doanh thu thực thu)
   const monthlyData: MonthlyRevenuePoint[] = useMemo(() => {
     if (monthlyRevenues && monthlyRevenues.length > 0) {
-      return monthlyRevenues.map((m) => {
+      const alreadyIncludedForfeited = monthlyRevenues.reduce((sum, m) => {
         const rev = Number(m.revenue || 0)
+        const rRev = Number(m.rentalRevenue || 0)
+        const pRev = Number(m.penaltyRevenue || 0)
+        return sum + Math.max(0, rev - (rRev + pRev))
+      }, 0)
+      const missingForfeited = Math.max(0, Number(forfeitedDeposit || 0) - alreadyIncludedForfeited)
+
+      return monthlyRevenues.map((m, idx) => {
+        const isLastMonth = idx === monthlyRevenues.length - 1
+        const baseRev = Number(m.revenue || 0)
+        const rev = isLastMonth ? baseRev + missingForfeited : baseRev
         let rRev = m.rentalRevenue != null ? Number(m.rentalRevenue) : undefined
         let pRev = m.penaltyRevenue != null ? Number(m.penaltyRevenue) : undefined
 
         // Fallback tự động phân bổ nếu backend chưa gửi chi tiết thuê/phạt từng tháng
         if (rRev === undefined || pRev === undefined) {
           if (m.month === "T10") {
-            pRev = Math.min(rev, penaltyRevenue || rev)
-            rRev = Math.max(0, rev - pRev)
+            pRev = Math.min(baseRev, penaltyRevenue || baseRev)
+            rRev = Math.max(0, baseRev - pRev)
           } else {
-            rRev = rev
+            rRev = baseRev
             pRev = 0
           }
         }
@@ -137,9 +147,9 @@ export default function FacilityCashFlowDashboard({
       { month: "T7", label: "Tháng 07", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
       { month: "T8", label: "Tháng 08", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
       { month: "T9", label: "Tháng 09", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
-      { month: "T10", label: "Tháng 10", revenue: 0, rentalRevenue: 0, penaltyRevenue: 0 },
+      { month: "T10", label: "Tháng 10", revenue: Number(forfeitedDeposit || 0), rentalRevenue: 0, penaltyRevenue: 0 },
     ]
-  }, [monthlyRevenues, penaltyRevenue, netRevenue, rentalRevenue])
+  }, [monthlyRevenues, penaltyRevenue, netRevenue, rentalRevenue, forfeitedDeposit])
 
   // Xác định khoảng tháng được lọc
   const activeStartIndex = useMemo(() => {
@@ -490,45 +500,29 @@ export default function FacilityCashFlowDashboard({
         {/* 4 THẺ TÀI CHÍNH DƯỚI BIỂU ĐỒ: TIỀN CỌC ĐANG GIỮ, CỌC BỊ TỊCH THU, TIỀN THUÊ KHO, TIỀN PHẠT */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-4 mt-2 border-t border-slate-200/80 dark:border-slate-800/80">
           <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs dark:shadow-none">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Cọc</span>
-              <span className="text-[9px] text-slate-400 font-medium">Đang giữ</span>
-            </div>
-            <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Cọc</span>
+            <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-1 block truncate">
               ₫{depositHolding.toLocaleString("vi-VN")}
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-rose-50/70 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/50 shadow-xs dark:shadow-none">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-rose-700 dark:text-rose-400 font-bold block truncate">Cọc Tịch Thu</span>
-              <span className="text-[9px] text-rose-600 dark:text-rose-400 font-medium">No-Show / Quá hạn</span>
-            </div>
-            <span className="font-mono font-bold text-rose-700 dark:text-rose-300 text-xs sm:text-sm mt-0.5 block truncate">
+            <span className="text-[11px] text-rose-700 dark:text-rose-400 font-bold block truncate">Cọc Tịch Thu</span>
+            <span className="font-mono font-bold text-rose-700 dark:text-rose-300 text-xs sm:text-sm mt-1 block truncate">
               ₫{forfeitedDeposit.toLocaleString("vi-VN")}
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs dark:shadow-none">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Thuê Kho</span>
-              <span className="text-[9px] text-blue-600 dark:text-blue-400 font-semibold">
-                {currentPeriod === "all" ? "Tất cả" : currentPeriod === "this_month" ? "Tháng này" : "3 tháng"}
-              </span>
-            </div>
-            <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Thuê Kho</span>
+            <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-1 block truncate">
               ₫{periodRentalRevenue.toLocaleString("vi-VN")}
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs dark:shadow-none">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Phạt</span>
-              <span className="text-[9px] text-amber-600 dark:text-amber-400 font-semibold">
-                {currentPeriod === "all" ? "Tất cả" : currentPeriod === "this_month" ? "Tháng này" : "3 tháng"}
-              </span>
-            </div>
-            <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block truncate">
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Phạt</span>
+            <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm mt-1 block truncate">
               ₫{periodPenaltyRevenue.toLocaleString("vi-VN")}
             </span>
           </div>

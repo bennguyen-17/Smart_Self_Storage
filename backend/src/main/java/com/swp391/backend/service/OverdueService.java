@@ -136,6 +136,9 @@ public class OverdueService {
             int liquidationDays = getContractLiquidationDays(contract);
             if (overdueDays > liquidationDays) {
                 contract.setStatus("FORFEITED");
+                if (contract.getTerminatedAt() == null) {
+                    contract.setTerminatedAt(LocalDateTime.now(VIETNAM_ZONE));
+                }
                 contractRepository.save(contract);
                 recordForfeiture(contract, reservation, liquidationDays);
                 changed = true;
@@ -184,8 +187,8 @@ public class OverdueService {
         BigDecimal remainingAmount = totalFine.subtract(paidAmount).max(BigDecimal.ZERO);
         payment.setAmount(totalFine);
         payment.setRemainingAmount(remainingAmount);
-        payment.setStatus(remainingAmount.signum() == 0 ? "PAID" : "PENDING");
-        if (remainingAmount.signum() > 0) {
+        payment.setStatus(remainingAmount.signum() == 0 ? "PAID" : (paidAmount.signum() > 0 ? "PARTIALLY_PAID" : "PENDING"));
+        if (remainingAmount.signum() > 0 && paidAmount.signum() == 0) {
             payment.setPaymentStatus("PENDING");
         }
         return paymentRepository.save(payment);
@@ -218,6 +221,19 @@ public class OverdueService {
     }
 
     private void recordForfeiture(Contract contract, Reservation reservation, int chargeableOverdueDays) {
+        List<Payment> penaltyPayments = paymentRepository.findByContractId(contract.getContractId()).stream()
+                .filter(p -> "OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType())
+                        || (p.getInvoiceNumber() != null && (p.getInvoiceNumber().startsWith("PEN-") || p.getInvoiceNumber().startsWith("OVD-"))))
+                .toList();
+        for (Payment p : penaltyPayments) {
+            if (!"PAID".equalsIgnoreCase(p.getStatus())) {
+                p.setStatus("CANCELLED");
+                p.setPaymentStatus("FAILED");
+                p.setRemainingAmount(BigDecimal.ZERO);
+                paymentRepository.save(p);
+            }
+        }
+
         BigDecimal forfeitedDeposit = reservation.getDepositAmount() == null
                 ? BigDecimal.ZERO
                 : reservation.getDepositAmount();

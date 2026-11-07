@@ -729,15 +729,16 @@ public class StaffReservationService {
         LocalDate today = LocalDate.now();
         LocalDate endDate = reservation.getEndDate();
         int overdueDays = 0;
+        int chargeableOverdueDays = 0;
         if (endDate != null && endDate.isBefore(today)) {
-            overdueDays = (int) Math.min(
-                    ChronoUnit.DAYS.between(endDate, today), getContractLiquidationDays(contractObj));
+            overdueDays = (int) ChronoUnit.DAYS.between(endDate, today);
+            chargeableOverdueDays = Math.min(overdueDays, getContractLiquidationDays(contractObj));
         }
         item.setOverdueDays(overdueDays);
         item.setOverdueLiquidationDays(getContractLiquidationDays(contractObj));
 
-        // 3. Tính tiền phạt quá hạn: Chuẩn 50.000 VNĐ / ngày quá hạn
-        BigDecimal expectedPenalty = getContractDailyOverdueFee(contractObj).multiply(BigDecimal.valueOf(overdueDays));
+        // 3. Tính tiền phạt quá hạn: Chuẩn 50.000 VNĐ / ngày quá hạn (tối đa theo số ngày thanh lý)
+        BigDecimal expectedPenalty = getContractDailyOverdueFee(contractObj).multiply(BigDecimal.valueOf(chargeableOverdueDays));
         BigDecimal paidPenalty = BigDecimal.ZERO;
 
         if (item.getContractId() != null) {
@@ -879,8 +880,8 @@ public class StaffReservationService {
         long actualOverdueDays = (endDate != null && endDate.isBefore(today))
                 ? ChronoUnit.DAYS.between(endDate, today)
                 : 0;
-        if (actualOverdueDays >= liquidationDays) {
-            return new CollectPenaltyResponse(false, "Hợp đồng đã quá hạn " + liquidationDays + " ngày. Đã chuyển Ban Quản lý thanh lý tài sản, không thể thu phạt tại quầy.");
+        if (actualOverdueDays > liquidationDays) {
+            return new CollectPenaltyResponse(false, "Hợp đồng đã quá hạn trên " + liquidationDays + " ngày. Đã chuyển Ban Quản lý thanh lý tài sản, không thể thu phạt tại quầy.");
         }
 
         String requestedMethod = request != null && request.getPaymentMethod() != null
@@ -950,10 +951,9 @@ public class StaffReservationService {
 
         for (Payment p : penPayments) {
             if (p.getPaymentId() != null && !p.getPaymentId().equals(penaltyInvoice.getPaymentId()) && ("PENDING".equalsIgnoreCase(p.getStatus()) || "OVERDUE".equalsIgnoreCase(p.getStatus()))) {
-                p.setStatus("PAID");
                 p.setRemainingAmount(BigDecimal.ZERO);
                 p.setStatus("CANCELLED");
-                p.setPaymentStatus("CANCELLED");
+                p.setPaymentStatus("FAILED");
                 p.setPaidAmount(BigDecimal.ZERO);
                 p.setPaidAt(now);
                 paymentRepository.save(p);
@@ -1017,8 +1017,8 @@ public class StaffReservationService {
         long checkActualOverdue = (checkEndDate != null && checkEndDate.isBefore(checkToday))
                 ? ChronoUnit.DAYS.between(checkEndDate, checkToday)
                 : 0;
-        if (checkActualOverdue >= liquidationDays) {
-            return new RenewAtCounterResponse(false, "Hợp đồng đã quá hạn " + liquidationDays + " ngày. Đã chuyển Ban Quản lý thanh lý tài sản, không thể gia hạn tại quầy.");
+        if (checkActualOverdue > liquidationDays) {
+            return new RenewAtCounterResponse(false, "Hợp đồng đã quá hạn trên " + liquidationDays + " ngày. Đã chuyển Ban Quản lý thanh lý tài sản, không thể gia hạn tại quầy.");
         }
 
         // 1. Kiểm tra phạt quá hạn chưa nộp (tính chuẩn 50.000đ/ngày quá hạn)
