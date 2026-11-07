@@ -90,14 +90,14 @@ function RefundsPanel() {
       <TableCard
         caption="Phiếu hoàn tiền cho khách hàng"
         columns={[
-          { header: "Phiếu hoàn" },
-          { header: "Khách hàng" },
-          { header: "Đơn / Ô kho" },
-          { header: "Lý do" },
-          { header: "Số tiền", align: "right" },
-          { header: "Tài khoản nhận" },
-          { header: "Trạng thái" },
-          { header: "Thao tác", srOnly: true },
+          { header: "Phiếu hoàn", align: "center" },
+          { header: "Khách hàng", align: "center" },
+          { header: "Đơn / Ô kho", align: "center" },
+          { header: "Ghi chú", align: "center" },
+          { header: "Số tiền", align: "center" },
+          { header: "Tài khoản nhận", align: "center" },
+          { header: "Trạng thái", align: "center" },
+          { header: "Thao tác", srOnly: true, align: "center" },
         ]}
         minWidth={1100}
         isLoading={isLoading}
@@ -115,40 +115,42 @@ function RefundsPanel() {
           const waited = hoursWaiting(r.issuedAt)
           const account = bankAccountLabel(r)
           return (
-            <tr key={r.paymentId} className="border-b align-top last:border-0">
-              <td className="px-4 py-3">
+            <tr key={r.paymentId} className="border-b align-middle last:border-0">
+              <td className="px-4 py-3 text-center">
                 <p className="text-title font-mono font-semibold whitespace-nowrap">{r.invoiceNumber}</p>
                 <p className="text-muted whitespace-nowrap">{formatDateTime(r.issuedAt)}</p>
                 {pending && waited > REFUND_SLA_HOURS && (
                   <p className="font-semibold whitespace-nowrap text-rose-600 dark:text-rose-400">Đã chờ {waited} giờ</p>
                 )}
               </td>
-              <td className="px-4 py-3">
+              <td className="px-4 py-3 text-center">
                 <p className="text-title font-bold">{r.customerName ?? "—"}</p>
                 <p className="text-muted">{r.customerPhone ?? ""}</p>
               </td>
-              <td className="px-4 py-3 whitespace-nowrap">
+              <td className="px-4 py-3 whitespace-nowrap text-center">
                 <p className="text-title font-mono">{r.contractCode ?? r.reservationCode ?? `#${r.contractId}`}</p>
                 <p className="text-muted font-mono">{r.unitCode ?? ""}</p>
               </td>
-              <td className="text-title px-4 py-3">{refundReasonLabel(r)}</td>
-              <td className="text-title px-4 py-3 text-right font-bold whitespace-nowrap tabular-nums">
+              <td className="text-title px-4 py-3 text-center">{refundReasonLabel(r)}</td>
+              <td className="text-title px-4 py-3 text-center font-bold whitespace-nowrap tabular-nums">
                 {formatVnd(r.refundAmount)}
               </td>
-              <td className="px-4 py-3">
+              <td className="px-4 py-3 text-center">
                 {account ? (
                   <span className="text-title">{account}</span>
                 ) : (
                   <span className="font-semibold text-rose-600 dark:text-rose-400">Khách chưa cung cấp số tài khoản</span>
                 )}
               </td>
-              <td className="px-4 py-3">
-                <StatusBadge tone={pending ? "amber" : "green"}>{REFUND_STATE_LABEL[refundState(r.status)]}</StatusBadge>
-                {!pending && r.transactionCode && (
-                  <p className="text-muted mt-1 font-mono whitespace-nowrap">Mã GD: {r.transactionCode}</p>
-                )}
+              <td className="px-4 py-3 text-center">
+                <div className="flex flex-col items-center justify-center">
+                  <StatusBadge tone={pending ? "amber" : "green"}>{REFUND_STATE_LABEL[refundState(r.status)]}</StatusBadge>
+                  {!pending && r.transactionCode && (
+                    <p className="text-muted mt-1 font-mono whitespace-nowrap">Mã GD: {r.transactionCode}</p>
+                  )}
+                </div>
               </td>
-              <td className="px-4 py-3 text-right">
+              <td className="px-4 py-3 text-center">
                 {pending ? (
                   <Button
                     size="sm"

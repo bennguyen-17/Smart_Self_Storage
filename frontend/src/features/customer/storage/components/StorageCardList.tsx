@@ -49,10 +49,8 @@ export default function StorageCardList({
                 </span>
               </div>
               <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                isReturnRequested
-                  ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700'
-                  : isActive
-                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                isActive || isReturnRequested
+                      ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                   : isPending
                   ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
                   : isCompleted
@@ -62,10 +60,8 @@ export default function StorageCardList({
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
               }`}>
                 <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                  isReturnRequested
-                    ? 'bg-amber-500 animate-pulse'
-                    : isActive
-                    ? 'bg-emerald-500'
+                  isActive || isReturnRequested
+                        ? 'bg-emerald-500'
                     : isPending
                     ? 'bg-amber-500'
                     : isCompleted
@@ -79,7 +75,7 @@ export default function StorageCardList({
                   : isPending
                   ? 'Chờ check-in'
                   : isNoShow
-                  ? 'Quá hạn nhận kho (No-Show)'
+                  ? 'Quá hạn nhận'
                   : isCompleted
                   ? 'Đã hoàn tất'
                   : isTerminated

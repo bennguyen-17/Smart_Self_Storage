@@ -59,7 +59,7 @@ const FILTERS: { key: "ALL" | TicketStatus; label: string }[] = [
 ]
 
 function formatTicketTimeInfo(ticket: TicketItem) {
-  if (ticket.status === "RESOLVED") {
+  if (ticket.status === "RESOLVED" || ticket.status === "CANCELLED" || ticket.status === "CLOSED") {
     return { text: "—", className: "text-slate-400 font-medium" }
   }
 
@@ -410,7 +410,27 @@ function StaffTicketPanel() {
     )
   })
 
-  const { slice, pagination } = usePagedRows(filtered, `${filter}-${query}`)
+  const getTicketPriority = (status: string) => {
+    switch (status) {
+      case "SUBMITTED": return 1    // Chờ tiếp nhận (lên trên cùng)
+      case "IN_PROGRESS": return 2  // Đang xử lý
+      case "RESOLVED": return 3     // Đã hoàn tất (nằm ở dưới)
+      case "CANCELLED": return 4    // Đã hủy / Lỡ hẹn (nằm dưới cùng)
+      case "CLOSED": return 5       // Đã đóng (dưới cùng)
+      default: return 6
+    }
+  }
+
+  const sortedFiltered = [...filtered].sort((a, b) => {
+    const pA = getTicketPriority(a.status)
+    const pB = getTicketPriority(b.status)
+    if (pA !== pB) {
+      return pA - pB
+    }
+    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+  })
+
+  const { slice, pagination } = usePagedRows(sortedFiltered, `${filter}-${query}`)
 
   function countOf(status: TicketStatus): number {
     return tickets.filter((t) => t.status === status).length
@@ -478,7 +498,7 @@ function StaffTicketPanel() {
         {/* TICKET VIEW (LIST OR GRID) */}
         {shiftError ? (
           <StaffShiftRequiredCard onStarted={fetchTickets} />
-        ) : filtered.length === 0 ? (
+        ) : sortedFiltered.length === 0 ? (
           <div className="card-box flex flex-col items-center justify-center rounded-2xl border py-12 text-center text-muted">
             <CheckCircle2Icon className="mb-2 size-10 text-muted" />
             <h4 className="text-title text-sm font-bold">
@@ -693,7 +713,7 @@ function StaffTicketPanel() {
           </div>
         )}
 
-        {filtered.length > 0 && (
+        {sortedFiltered.length > 0 && (
           <Pagination unit="yêu cầu" {...pagination} />
         )}
       </div>

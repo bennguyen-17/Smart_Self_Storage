@@ -24,7 +24,7 @@ public class ManagerTicketController {
     }
 
     /**
-     * GET /api/manager/tickets: Lấy danh sách ticket của cơ sở (ưu tiên ESCALATED quá hạn 15p lên đầu)
+     * GET /api/manager/tickets: Lấy danh sách ticket của cơ sở 
      */
     @GetMapping
     public ResponseEntity<?> getManagerTickets(

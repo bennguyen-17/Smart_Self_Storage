@@ -321,13 +321,13 @@ public class DashboardService {
             return true;
         }).collect(Collectors.toList());
         long totalTickets = tickets.size();
-        long submittedTickets = tickets.stream().filter(t -> "SUBMITTED".equalsIgnoreCase(t.getStatus()) || "ESCALATED".equalsIgnoreCase(t.getStatus())).count();
+        long submittedTickets = tickets.stream().filter(t -> "SUBMITTED".equalsIgnoreCase(t.getStatus())).count();
         long inProgressTickets = tickets.stream().filter(t -> "IN_PROGRESS".equalsIgnoreCase(t.getStatus())).count();
         long resolvedTickets = tickets.stream().filter(t -> "RESOLVED".equalsIgnoreCase(t.getStatus())).count();
 
         LocalDateTime now = LocalDateTime.now();
         long slaBreachedTickets = tickets.stream().filter(t -> {
-            if ("ESCALATED".equalsIgnoreCase(t.getStatus()) || Boolean.TRUE.equals(t.getIsSlaBreached())) {
+            if (Boolean.TRUE.equals(t.getIsSlaBreached())) {
                 return true;
             }
             if (!"RESOLVED".equalsIgnoreCase(t.getStatus()) && t.getSlaDeadline() != null) {

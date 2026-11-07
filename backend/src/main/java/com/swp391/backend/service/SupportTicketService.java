@@ -204,7 +204,7 @@ public class SupportTicketService {
             List<SupportTicket> existingTickets = supportTicketRepository.findByContractId(activeContract.getContractId());
             for (SupportTicket existing : existingTickets) {
                 if ("EARLY_TERMINATION".equalsIgnoreCase(existing.getType()) &&
-                    ("SUBMITTED".equalsIgnoreCase(existing.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existing.getStatus()) || "ESCALATED".equalsIgnoreCase(existing.getStatus()))) {
+                    ("SUBMITTED".equalsIgnoreCase(existing.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existing.getStatus()))) {
                     throw new IllegalArgumentException("Hợp đồng ô kho " + unitCode + " đang có yêu cầu trả kho sớm đang chờ xử lý (#" + existing.getTicketCode() + "). Không thể gửi thêm yêu cầu mới!");
                 }
             }
@@ -572,7 +572,7 @@ public class SupportTicketService {
             throw new AccessDeniedException("Ticket này đã được gán cho nhân viên khác đang trực ca.");
         }
 
-        if (!"SUBMITTED".equalsIgnoreCase(ticket.getStatus()) && !"ESCALATED".equalsIgnoreCase(ticket.getStatus())) {
+        if (!"SUBMITTED".equalsIgnoreCase(ticket.getStatus())) {
             throw new IllegalArgumentException("Ticket này đã được tiếp nhận hoặc đã xử lý xong!");
         }
 
@@ -703,7 +703,7 @@ public class SupportTicketService {
         return saved;
     }
 
-    // --- CÁCH 2: Quản lý chi nhánh xem danh sách ticket cơ sở (Ưu tiên ESCALATED quá hạn 15p) ---
+    // --- CÁCH 2: Quản lý chi nhánh xem danh sách ticket cơ sở  ---
     @Transactional
     public List<SupportTicket> getManagerTickets(Integer facilityId, String status, String type) {
         if (noShowCronService != null) {
@@ -742,7 +742,7 @@ public class SupportTicketService {
         return 4;
     }
 
-    // --- CÁCH 2: Quản lý trực tiếp Tiếp nhận ticket (ESCALATED / SUBMITTED -> IN_PROGRESS) ---
+    // --- CÁCH 2: Quản lý trực tiếp Tiếp nhận ticket (SUBMITTED -> IN_PROGRESS) ---
     @Transactional
     public SupportTicket managerAcceptTicket(Long ticketId, Integer managerAccountId, Integer facilityId) {
         SupportTicket ticket = supportTicketRepository.findById(ticketId)

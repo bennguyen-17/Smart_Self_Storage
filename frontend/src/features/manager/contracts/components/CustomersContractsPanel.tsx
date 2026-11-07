@@ -70,9 +70,13 @@ function CustomersContractsPanel() {
           value={filter.status}
           onChange={(v) => update({ status: v as ContractStatus | "ALL" })}
           options={[
-            { value: "ALL", label: "Tất cả" },
-            ...(Object.keys(CONTRACT_STATUS_LABEL) as ContractStatus[]).map((s) => ({ value: s, label: CONTRACT_STATUS_LABEL[s] })),
-          ]}
+              { value: "ALL", label: "Tất cả" },
+              { value: "PENDING_CHECKIN", label: "Chờ nhận kho" },
+              { value: "ACTIVE", label: "Đang hiệu lực" },
+              { value: "OVERDUE", label: "Quá hạn" },
+              { value: "COMPLETED", label: "Đã hoàn tất" },
+              { value: "CANCELLED", label: "Đã hủy" },
+            ]}
         />
         <SelectFilter
           label="Thời hạn"

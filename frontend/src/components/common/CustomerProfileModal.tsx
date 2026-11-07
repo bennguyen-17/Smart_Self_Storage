@@ -679,65 +679,7 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
           </div>
         )}
 
-        {/* Modal xác nhận yêu cầu xóa tài khoản */}
-        {showDeleteModal && (
-          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-60 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900 rounded-3xl p-5 max-w-md w-full space-y-4 shadow-2xl modal-animate-pop">
-              <div className="text-center space-y-1.5">
-                <div className="w-11 h-11 rounded-2xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto text-xl">
-                  <i className="fa-solid fa-triangle-exclamation"></i>
-                </div>
-                <h4 className="font-black text-base text-slate-900 dark:text-white">Yêu cầu xóa tài khoản</h4>
-                <p className="text-xs text-slate-600 dark:text-slate-300">
-                  Hệ thống áp dụng chính sách <strong>Thời gian ân hạn 30 ngày</strong> để bảo vệ dữ liệu người dùng.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-3.5 space-y-2 text-xs">
-                <p className="font-bold text-slate-800 dark:text-slate-200">Quy định và quyền lợi:</p>
-                <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-600 dark:text-slate-400">
-                  <li>Chỉ được xóa khi <strong>không còn hợp đồng đang hoạt động/quá hạn</strong> và <strong>không còn hóa đơn nợ</strong>.</li>
-                  <li>Tài khoản sẽ được xóa vĩnh viễn và ẩn danh hóa sau <strong>30 ngày</strong> kể từ thời điểm yêu cầu.</li>
-                  <li>Trong 30 ngày này, bạn có thể <strong>đăng nhập lại bất kỳ lúc nào để hủy yêu cầu xóa</strong> và tiếp tục sử dụng bình thường.</li>
-                </ul>
-              </div>
-
-              <div className="flex gap-2 pt-1">
-                <button
-                  type="button"
-                  disabled={isDeleting}
-                  onClick={() => setShowDeleteModal(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition cursor-pointer"
-                >
-                  Hủy bỏ
-                </button>
-                <button
-                  type="button"
-                  disabled={isDeleting}
-                  onClick={handleRequestDeletion}
-                  className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-md"
-                >
-                  {isDeleting ? <i className="fa-solid fa-spinner animate-spin"></i> : <><i className="fa-solid fa-trash-can"></i> Xác nhận xóa</>}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Nút yêu cầu xóa tài khoản */}
-        {!isEditing && !profile?.deletionScheduledAt && (
-          <div className="pt-1 border-t border-slate-100 dark:border-slate-800 text-center">
-            <button
-              type="button"
-              onClick={() => setShowDeleteModal(true)}
-              className="w-full py-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50/60 dark:hover:bg-rose-950/20 text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <i className="fa-solid fa-trash-can text-[11px]"></i> Yêu cầu đóng tài khoản
-            </button>
-          </div>
-        )}
-
-        <div className="pt-2 flex gap-2">
+                <div className="pt-2 flex gap-2.5">
           {isEditing ? (
             <>
               <button
@@ -757,16 +699,81 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
               </button>
             </>
           ) : (
-            <button
-              type="button"
-              onClick={onLogout}
-              className="w-full bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs py-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
-            >
-              <i className="fa-solid fa-arrow-right-from-bracket text-xs"></i> Đăng xuất
-            </button>
+            <>
+              {!profile?.deletionScheduledAt && (
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="flex-1 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-rose-50/70 dark:bg-slate-800/60 dark:hover:bg-rose-950/30 text-slate-600 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 font-bold text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
+                >
+                  <i className="fa-solid fa-trash-can text-[11px]"></i> Yêu cầu xóa tài khoản
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={onLogout}
+                className={`${profile?.deletionScheduledAt ? 'w-full' : 'flex-1'} bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs py-2.5 px-3 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm`}
+              >
+                <i className="fa-solid fa-arrow-right-from-bracket text-xs"></i> Đăng xuất
+              </button>
+            </>
           )}
         </div>
       </div>
+
+      {/* Modal xác nhận yêu cầu xóa tài khoản */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-70 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl modal-animate-pop">
+            <div className="text-center space-y-2">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/50 flex items-center justify-center mx-auto text-xl shadow-xs">
+                <i className="fa-solid fa-triangle-exclamation"></i>
+              </div>
+              <h4 className="font-extrabold text-base text-slate-900 dark:text-white">Yêu cầu xóa tài khoản</h4>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-4 space-y-2.5 text-xs">
+              <p className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <i className="fa-solid fa-shield-halved text-blue-500 text-xs"></i>
+                <span>Quy định và quyền lợi:</span>
+              </p>
+              <ul className="space-y-2 text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                <li className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0"></span>
+                  <span>Chỉ được xóa khi <strong>không còn hợp đồng đang hoạt động/quá hạn</strong> và <strong>không còn hóa đơn nợ</strong>.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0"></span>
+                  <span>Tài khoản sẽ được xóa vĩnh viễn và ẩn danh hóa sau <strong>30 ngày</strong> kể từ thời điểm yêu cầu.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0"></span>
+                  <span>Trong 30 ngày này, bạn có thể <strong>đăng nhập lại bất kỳ lúc nào để hủy yêu cầu xóa</strong> và tiếp tục sử dụng bình thường.</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="flex gap-2.5 pt-1">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition cursor-pointer"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleRequestDeletion}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                {isDeleting ? <i className="fa-solid fa-spinner animate-spin"></i> : <><i className="fa-solid fa-trash-can"></i> Xác nhận xóa</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
