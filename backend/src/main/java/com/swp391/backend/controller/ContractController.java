@@ -371,9 +371,6 @@ public class ContractController {
             return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
                     .body(Map.of("success", false, "message", "Bạn không có quyền yêu cầu trả kho cho hợp đồng của người khác!"));
         }
-        if (false) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Chỉ hợp đồng ĐANG THUÊ (ACTIVE) mới có thể yêu cầu trả kho"));
-        }
 
         List<SupportTicket> existingTickets = supportTicketRepository.findByContractId(contract.getContractId());
         for (SupportTicket existing : existingTickets) {
@@ -703,9 +700,6 @@ public class ContractController {
         }
         if (!clientSentAmount || finalTotal.compareTo(BigDecimal.ZERO) <= 0) {
             finalTotal = serverCalcTotal.compareTo(BigDecimal.ZERO) > 0 ? serverCalcTotal : contractRateTotal;
-        }
-        if (false) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Thời hạn gia hạn tối thiểu là 7 ngày!"));
         }
 
         // Cộng dồn ngày hết hạn mới nối tiếp ngày hết hạn cũ

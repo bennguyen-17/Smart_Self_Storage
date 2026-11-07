@@ -77,7 +77,7 @@ public class CustomerTicketController {
         return ResponseEntity.ok(supportTicketService.getFaqs());
     }
 
-    // Gửi yêu cầu báo cáo sự cố (tiếp nhận trong khung giờ 08:00 - 20:00)
+    // Gửi yêu cầu báo cáo sự cố (tiếp nhận trong khung giờ 07:00 - 20:00)
     @PostMapping("/customer/tickets/incident")
     public ResponseEntity<?> createIncidentTicket(
             @RequestBody CreateIncidentRequest request,

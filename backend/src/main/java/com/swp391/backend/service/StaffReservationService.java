@@ -97,7 +97,7 @@ public class StaffReservationService {
         if (contract != null && contract.getDailyOverdueFee() != null && contract.getDailyOverdueFee().compareTo(BigDecimal.ZERO) > 0) {
             return contract.getDailyOverdueFee();
         }
-        return DAILY_OVERDUE_FEE;
+        return getDailyOverdueFee();
     }
 
     private int getContractLiquidationDays(Contract contract) {
@@ -343,7 +343,6 @@ public class StaffReservationService {
             return changeUnitFailure("Cần có hợp đồng PENDING_CHECKIN để thay đổi kho.");
         }
         Contract contract = contractOpt.get();
-        Contract contractObj = contract;
 
         String oldUnitCode = reservation.getUnitCode();
         if (newUnitCode == null || newUnitCode.isBlank()) {
@@ -458,7 +457,6 @@ public class StaffReservationService {
             return cancelReservationFailure("Cần có hợp đồng PENDING_CHECKIN để hủy đặt chỗ.");
         }
         Contract contract = contractOpt.get();
-        Contract contractObj = contract;
 
         Optional<StorageUnit> unitOpt = storageUnitRepository.findByUnitCodeForUpdate(reservation.getUnitCode());
         if (unitOpt.isEmpty()) {
@@ -866,7 +864,6 @@ public class StaffReservationService {
             return new CollectPenaltyResponse(false, "Không tìm thấy hợp đồng của đặt chỗ này.");
         }
         Contract contract = contractOpt.get();
-        Contract contractObj = contract;
 
         if ("FORFEITED".equalsIgnoreCase(contract.getStatus())) {
             return new CollectPenaltyResponse(false, "Hợp đồng đã chuyển sang diện thanh lý tài sản. Quyền xử lý tại quầy đã kết thúc.");
@@ -1006,7 +1003,6 @@ public class StaffReservationService {
             return new RenewAtCounterResponse(false, "Không tìm thấy hợp đồng của đặt chỗ này.");
         }
         Contract contract = contractOpt.get();
-        Contract contractObj = contract;
 
         if ("FORFEITED".equalsIgnoreCase(contract.getStatus())) {
             return new RenewAtCounterResponse(false, "Hợp đồng đã chuyển sang diện thanh lý tài sản, không thể gia hạn tại quầy.");
@@ -1029,7 +1025,7 @@ public class StaffReservationService {
                 ? (int) Math.min(
                         ChronoUnit.DAYS.between(endDate, today), getContractLiquidationDays(contract))
                 : 0;
-        BigDecimal expectedPenalty = getContractDailyOverdueFee(contractObj).multiply(BigDecimal.valueOf(overdueDays));
+        BigDecimal expectedPenalty = getContractDailyOverdueFee(contract).multiply(BigDecimal.valueOf(overdueDays));
 
         List<Payment> penPayments = paymentRepository.findByContractId(contract.getContractId()).stream()
                 .filter(p -> "OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType())

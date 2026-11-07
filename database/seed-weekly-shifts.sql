@@ -20,7 +20,7 @@ USE smart_storage;
 
 -- Bảo đảm có đủ ca chuẩn; seed này cũng an toàn khi chạy lại.
 INSERT INTO Shift (shiftName, startTime, endTime, status)
-SELECT 'Ca Sáng', '08:00:00', '12:00:00', 'ACTIVE' FROM DUAL
+SELECT 'Ca Sáng', '07:00:00', '12:00:00', 'ACTIVE' FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM Shift WHERE shiftName = 'Ca Sáng');
 INSERT INTO Shift (shiftName, startTime, endTime, status)
 SELECT 'Ca Chiều', '12:00:00', '16:00:00', 'ACTIVE' FROM DUAL

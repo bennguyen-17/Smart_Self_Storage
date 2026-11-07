@@ -289,7 +289,6 @@ public class CheckoutSettlementService {
             branchCode = storageService.mapFacilityToResponse(facOpt.get()).getFacilityCode();
         }
         String dateStr = LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("ddMMyy"));
-        int randomSuffix = (int) (1000 + (Math.random() * 9000));
         String cleanBranch = branchCode.replace("-", "").toUpperCase();
 
         String contractCode = (res.getReservationCode() != null && !res.getReservationCode().isBlank())

@@ -238,7 +238,7 @@ CREATE TABLE Shift (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO Shift (shiftId, shiftName, startTime, endTime, status) VALUES
-(1, 'Ca Sáng', '08:00:00', '12:00:00', 'ACTIVE'),
+(1, 'Ca Sáng', '07:00:00', '12:00:00', 'ACTIVE'),
 (2, 'Ca Chiều', '12:00:00', '16:00:00', 'ACTIVE'),
 (3, 'Ca Tối', '16:00:00', '20:00:00', 'ACTIVE');
 

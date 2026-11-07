@@ -228,11 +228,6 @@ public class AdminAccountController {
                 && hasActiveManagerInFacility(targetFacilityId, accountId)) {
             return ResponseEntity.badRequest().body(Map.of("message", "Cơ sở này đã có Quản lý (Manager) đang hoạt động! Mỗi cơ sở chỉ được phép có 1 Manager."));
         }
-        if (false && body.containsKey("facilityId")) {
-            try {
-                facilityId = Integer.parseInt(body.get("facilityId").toString());
-            } catch (Exception ignored) {}
-        }
 
         account.setUpdatedAt(LocalDateTime.now());
         Account saved = accountRepository.save(account);

@@ -74,7 +74,7 @@ public class SupportTicketService {
         ));
         faqs.add(Map.of(
                 "question", "Khung giờ làm việc của nhân viên hỗ trợ tại cơ sở là khi nào?",
-                "answer", "Nhân viên trực tiếp hỗ trợ tại quầy từ 08:00 đến 20:00 hằng ngày. Ngoài khung giờ trên (20:00 - 08:00 sáng hôm sau), khách hàng vẫn có thể tự do ra vào kho 24/7 bằng Mã PIN động."
+                "answer", "Nhân viên trực tiếp hỗ trợ tại quầy từ 07:00 đến 20:00 hằng ngày. Ngoài khung giờ trên (20:00 - 07:00 sáng hôm sau), khách hàng vẫn có thể tự do ra vào kho 24/7 bằng Mã PIN động."
         ));
         faqs.add(Map.of(
                 "question", "Các mặt hàng nào bị nghiêm cấm lưu trữ tại kho?",
@@ -94,13 +94,13 @@ public class SupportTicketService {
         return candidate;
     }
 
-    // Tiếp nhận yêu cầu báo cáo sự cố trong khung giờ 08:00 - 20:00
+    // Tiếp nhận yêu cầu báo cáo sự cố trong khung giờ 07:00 - 20:00
     @Transactional
     public SupportTicket createIncidentTicket(CreateIncidentRequest req, Integer customerId) {
-        // Khung giờ làm việc của Staff 08:00 - 20:00
+        // Khung giờ làm việc của Staff 07:00 - 20:00
         LocalTime now = LocalTime.now();
-        if (now.isBefore(LocalTime.of(8, 0)) || now.isAfter(LocalTime.of(20, 0))) {
-            throw new IllegalArgumentException("Đã hết giờ làm việc của nhân viên (08:00 - 20:00), vui lòng liên hệ lại sau 08:00 sáng mai");
+        if (now.isBefore(LocalTime.of(7, 0)) || now.isAfter(LocalTime.of(20, 0))) {
+            throw new IllegalArgumentException("Đã hết giờ làm việc của nhân viên (07:00 - 20:00), vui lòng liên hệ lại sau 07:00 sáng mai");
         }
 
         SupportTicket ticket = new SupportTicket();

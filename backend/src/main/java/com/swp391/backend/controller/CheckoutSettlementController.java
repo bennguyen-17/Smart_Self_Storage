@@ -9,10 +9,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/staff/checkout/{contractId}")
 public class CheckoutSettlementController {
 
     private final CheckoutSettlementService checkoutSettlementService;
@@ -22,7 +21,7 @@ public class CheckoutSettlementController {
     }
 
     // Xem dự thảo quyết toán trả kho và hoàn tiền cọc
-    @GetMapping("/staff/checkout/{contractId}/preview")
+    @GetMapping("/preview")
     public ResponseEntity<CheckoutPreviewResponse> getCheckoutPreview(
             @PathVariable Integer contractId,
             @AuthenticationPrincipal Integer staffAccountId) {
@@ -38,7 +37,7 @@ public class CheckoutSettlementController {
     }
 
     // Xác nhận bàn giao trả kho và chốt quyết toán hoàn cọc hoặc truy thu chi phí
-    @PostMapping("/staff/checkout/{contractId}/confirm")
+    @PostMapping("/confirm")
     public ResponseEntity<CheckoutConfirmResponse> confirmCheckout(
             @PathVariable Integer contractId,
             @RequestBody CheckoutConfirmRequest request,

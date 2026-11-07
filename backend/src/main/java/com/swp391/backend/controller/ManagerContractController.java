@@ -177,7 +177,11 @@ public class ManagerContractController {
                     fees
             );
             response.setForfeitProcessed(c.isForfeitProcessed());
-            int liqDays = (c.getOverdueLiquidationDays() != null && c.getOverdueLiquidationDays() > 0) ? c.getOverdueLiquidationDays() : 30;
+            int liqDays = 30;
+            Integer customLiq = c.getOverdueLiquidationDays();
+            if (customLiq != null && customLiq > 0) {
+                liqDays = customLiq;
+            }
             response.setOverdueLiquidationDays(liqDays);
             response.setForfeitAfterDays(liqDays);
             response.setDailyOverdueFee(c.getDailyOverdueFee() != null ? c.getDailyOverdueFee().doubleValue() : 50000.0);

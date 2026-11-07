@@ -44,8 +44,6 @@ import com.swp391.backend.repository.AccountRepository;
 import com.swp391.backend.repository.CustomerProfileRepository;
 import com.swp391.backend.repository.FacilityRepository;
 import com.swp391.backend.repository.FloorRepository;
-import com.swp391.backend.repository.GatePinRepository;
-import com.swp391.backend.repository.PaymentRepository;
 import com.swp391.backend.repository.ReservationRepository;
 import com.swp391.backend.repository.StorageUnitRepository;
 import com.swp391.backend.repository.UnitTypeRepository;
@@ -62,8 +60,6 @@ public class ContractPdfService {
     private final UnitTypeRepository unitTypeRepository;
     private final FloorRepository floorRepository;
     private final FacilityRepository facilityRepository;
-    private final GatePinRepository gatePinRepository;
-    private final PaymentRepository paymentRepository;
 
     public ContractPdfService(ReservationRepository reservationRepository,
             AccountRepository accountRepository,
@@ -71,9 +67,7 @@ public class ContractPdfService {
             StorageUnitRepository storageUnitRepository,
             UnitTypeRepository unitTypeRepository,
             FloorRepository floorRepository,
-            FacilityRepository facilityRepository,
-            GatePinRepository gatePinRepository,
-            PaymentRepository paymentRepository) {
+            FacilityRepository facilityRepository) {
         this.reservationRepository = reservationRepository;
         this.accountRepository = accountRepository;
         this.customerProfileRepository = customerProfileRepository;
@@ -81,8 +75,6 @@ public class ContractPdfService {
         this.unitTypeRepository = unitTypeRepository;
         this.floorRepository = floorRepository;
         this.facilityRepository = facilityRepository;
-        this.gatePinRepository = gatePinRepository;
-        this.paymentRepository = paymentRepository;
     }
 
     private BaseFont getBaseFont(boolean bold, boolean italic) {
@@ -136,7 +128,7 @@ public class ContractPdfService {
         if (amount == null) {
             return "0 đ";
         }
-        DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("vi", "VN"));
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.forLanguageTag("vi-VN"));
         symbols.setGroupingSeparator('.');
         DecimalFormat df = new DecimalFormat("#,###", symbols);
         return df.format(amount) + " đ";
