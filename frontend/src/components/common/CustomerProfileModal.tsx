@@ -75,7 +75,7 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Trạng thái yêu cầu đóng tài khoản với thời gian ân hạn 30 ngày
+  // Trạng thái yêu cầu đóng tài khoản với thời gian hủy trong vòng 30 ngày
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCancellingDelete, setIsCancellingDelete] = useState(false);
@@ -250,9 +250,30 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
 
       const responseData = res?.data || res;
       if (responseData?.success !== false) {
-        const updated = responseData?.data || { ...profile, fullName: trimmedName, phone: trimmedPhone };
-        setProfile((prev: any) => ({ ...prev, ...updated }));
+        const payload = responseData?.data || responseData;
+        const updated = {
+          ...profile,
+          ...(typeof payload === 'object' ? payload : {}),
+          fullName: trimmedName,
+          phone: trimmedPhone,
+          email: trimmedEmail,
+          bankName,
+          bankAccountNumber,
+          bankAccountName
+        };
+        setProfile(updated);
         updateLocalSession(updated);
+        const splitBank = splitBankName(bankName);
+        setFormData(prev => ({
+          ...prev,
+          fullName: trimmedName,
+          phone: trimmedPhone,
+          email: trimmedEmail,
+          bankName: splitBank.bankName,
+          bankNameCustom: splitBank.customBankName,
+          bankAccountNumber,
+          bankAccountName
+        }));
         setIsEditing(false);
         toast.success('Cập nhật hồ sơ thành công!');
       } else {
@@ -297,14 +318,30 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
 
       const responseData = res?.data || res;
       if (responseData?.success !== false) {
-        const updated = responseData?.data || {
+        const payload = responseData?.data || responseData;
+        const updated = {
           ...profile,
+          ...(typeof payload === 'object' ? payload : {}),
           fullName: formData.fullName.trim(),
           phone: formData.phone.trim(),
-          email: formData.email.trim().toLowerCase()
+          email: formData.email.trim().toLowerCase(),
+          bankName,
+          bankAccountNumber,
+          bankAccountName
         };
-        setProfile((prev: any) => ({ ...prev, ...updated }));
+        setProfile(updated);
         updateLocalSession(updated);
+        const splitBank = splitBankName(bankName);
+        setFormData(prev => ({
+          ...prev,
+          fullName: formData.fullName.trim(),
+          phone: formData.phone.trim(),
+          email: formData.email.trim().toLowerCase(),
+          bankName: splitBank.bankName,
+          bankNameCustom: splitBank.customBankName,
+          bankAccountNumber,
+          bankAccountName
+        }));
         setShowOtpModal(false);
         setIsEditing(false);
         toast.success('Xác thực email và cập nhật hồ sơ thành công!');
@@ -695,7 +732,7 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
               onClick={() => setShowDeleteModal(true)}
               className="w-full py-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50/60 dark:hover:bg-rose-950/20 text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <i className="fa-solid fa-trash-can text-[11px]"></i> Yêu cầu đóng tài khoản (Ân hạn 30 ngày)
+              <i className="fa-solid fa-trash-can text-[11px]"></i> Yêu cầu đóng tài khoản
             </button>
           </div>
         )}
