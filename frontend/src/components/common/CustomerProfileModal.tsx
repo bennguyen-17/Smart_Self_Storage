@@ -687,6 +687,19 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
           </div>
         )}
 
+        {/* Nút yêu cầu xóa tài khoản */}
+        {!isEditing && !profile?.deletionScheduledAt && (
+          <div className="pt-1 border-t border-slate-100 dark:border-slate-800 text-center">
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(true)}
+              className="w-full py-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50/60 dark:hover:bg-rose-950/20 text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <i className="fa-solid fa-trash-can text-[11px]"></i> Yêu cầu đóng tài khoản (Ân hạn 30 ngày)
+            </button>
+          </div>
+        )}
+
         <div className="pt-2 flex gap-2">
           {isEditing ? (
             <>

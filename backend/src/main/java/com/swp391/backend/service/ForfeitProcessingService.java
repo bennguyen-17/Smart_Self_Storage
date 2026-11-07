@@ -122,7 +122,7 @@ public class ForfeitProcessingService {
         imageStorageService.attachForfeitEvidence(contractId, evidenceImageIds, managerAccountId);
 
         LocalDateTime processedAt = LocalDateTime.now(VIETNAM_ZONE);
-        unit.setStatus("MAINTENANCE");
+        unit.setStatus("AVAILABLE");
         storageUnitRepository.save(unit);
 
         contract.setForfeitProcessed(true);

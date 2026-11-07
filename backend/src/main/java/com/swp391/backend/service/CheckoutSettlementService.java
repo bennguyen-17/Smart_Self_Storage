@@ -346,7 +346,7 @@ public class CheckoutSettlementService {
         contractRepository.save(contract);
 
         // Ô kho chuyển ngay sang MAINTENANCE để Staff dọn dẹp
-        unit.setStatus("MAINTENANCE");
+        unit.setStatus("AVAILABLE");
         storageUnitRepository.save(unit);
 
         // Vô hiệu hóa toàn bộ mã PIN của khách tại cơ sở này ngay lập tức
