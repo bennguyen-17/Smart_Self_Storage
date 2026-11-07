@@ -1,4 +1,4 @@
-// US-33: số liệu tổng quan cơ sở cho Manager.
+// Báo cáo số liệu tổng quan cơ sở cho Quản lý cơ sở.
 // VITE_USE_MOCK=true → mock; false → BE. Không tự fallback về mock khi lỗi.
 
 import { unwrapApiData } from "@/lib/api"

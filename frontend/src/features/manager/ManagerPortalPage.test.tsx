@@ -46,7 +46,7 @@ beforeEach(() => {
 })
 
 describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
-  test("/manager → chuyển tới trang mặc định /manager/units, navbar đủ 8 trang (đã gỡ Giao việc, Trả kho & công nợ)", async () => {
+  test("/manager → chuyển tới trang mặc định /manager/units, navbar đủ 8 trang", async () => {
     renderAt("/manager")
     expect(screen.getByTestId("location")).toHaveTextContent("/manager/units")
     expect(screen.getByRole("heading", { level: 1, name: "Quản lý ô kho" })).toBeInTheDocument()
@@ -88,7 +88,7 @@ describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
     expect(screen.getByTestId("location")).toHaveTextContent(to)
   })
 
-  test("trang Nhật ký cổng (US-18) đã có chức năng", async () => {
+  test("trang Nhật ký cổng đã có chức năng", async () => {
     renderAt("/manager/gate-logs")
     expect(screen.getByRole("heading", { level: 1, name: "Nhật ký kiểm soát ra vào cổng" })).toBeInTheDocument()
     expect(await screen.findByRole("searchbox")).toBeInTheDocument()

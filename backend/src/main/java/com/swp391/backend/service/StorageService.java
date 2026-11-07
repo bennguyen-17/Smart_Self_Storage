@@ -295,7 +295,7 @@ public class StorageService {
         return res;
     }
 
-    // --- US-13: Lấy danh sách ô kho của cơ sở cho Facility Manager ---
+    // Lấy danh sách ô kho thuộc quyền quản lý của cơ sở
     public List<UnitDetailResponse> getManagerUnits(Integer managerFacilityId, Integer floorId, String status, String size, String storageCondition) {
         if (managerFacilityId == null) {
             throw new AccessDeniedException("Vui lòng cung cấp mã cơ sở của Quản lý!");
@@ -303,7 +303,7 @@ public class StorageService {
         return filterUnits(managerFacilityId, floorId, null, storageCondition, status);
     }
 
-    // --- US-13: Cấu hình đổi loại kho (Thường <=> Điều hòa) kèm ghi log và check size ---
+    // Cấu hình chuyển đổi loại kho (Thường <=> Điều hòa nhiệt độ)
     @Transactional
     public StorageUnit changeUnitType(String unitCode, Integer newUnitTypeId, Integer managerFacilityId, Integer accountId) {
         StorageUnit unit = storageUnitRepository.findById(unitCode)
@@ -346,7 +346,7 @@ public class StorageService {
         return saved;
     }
 
-    // --- US-14: Đưa ô kho vào trạng thái bảo trì / dọn dẹp ---
+    // Đưa ô kho vào trạng thái bảo trì hoặc vệ sinh
     @Transactional
     public StorageUnit putUnderMaintenance(String unitCode, Integer managerFacilityId, Integer accountId) {
         return putUnderMaintenance(unitCode, managerFacilityId, accountId, null);
@@ -388,7 +388,7 @@ public class StorageService {
         return saved;
     }
 
-    // --- US-14: Nghiệm thu hoàn tất dọn dẹp / bảo trì, đưa ô về AVAILABLE ---
+    // Nghiệm thu dọn dẹp hoàn tất, mở lại ô kho sẵn sàng cho thuê
     @Transactional
     public StorageUnit completeMaintenance(String unitCode, Integer staffFacilityId, Integer accountId) {
         StorageUnit unit = storageUnitRepository.findById(unitCode)
@@ -421,7 +421,7 @@ public class StorageService {
         return saved;
     }
 
-    // --- US-14: Lấy danh sách ô kho đang bảo trì của cơ sở ---
+    // Lấy danh sách ô kho đang trong quá trình bảo trì tại cơ sở
     public List<UnitDetailResponse> getMaintenanceUnits(Integer facilityId) {
         return filterUnits(facilityId, null, null, null, "MAINTENANCE");
     }

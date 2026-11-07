@@ -1,4 +1,4 @@
-// US-07: luật nghiệp vụ của form đặt kho. Hàm thuần (không phụ thuộc React, không tự đọc giờ hệ thống)
+// Quy tắc nghiệp vụ form đặt kho. Hàm thuần phục vụ kiểm thử.
 // để kiểm bằng bảng test DDT trong bookingRules.test.ts.
 
 import { addDays, todayInVietnam } from "@/lib/format"
@@ -7,7 +7,7 @@ import { addDays, todayInVietnam } from "@/lib/format"
 export const COUNTER_OPEN_HOUR = 8
 export const COUNTER_CLOSE_HOUR = 20
 
-/** Tối đa 7 ngày kể từ ngày đặt (BR-08) */
+/** Tối đa 7 ngày kể từ ngày đặt kho */
 export const CHECKIN_MAX_OFFSET_DAYS = 7
 
 /** Thuê theo ngày tùy chọn từ 7 đến 29 ngày; từ 30 ngày trở lên dùng gói tháng */

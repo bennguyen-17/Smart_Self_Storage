@@ -429,7 +429,7 @@ public class ContractController {
     }
 
     /**
-     * US-06: Sinh mã PIN mở cổng IoT 24/7
+     * Sinh mã PIN mở cổng tự động 24/7
      * QUY TẮC NGHIỆP VỤ BẮT BUỘC:
      * - Chỉ cấp mã PIN nếu khách hàng có hợp đồng đang có HIỆU LỰC (ACTIVE) tại cơ sở đó.
      * - Nếu chỉ có hợp đồng CHỜ CHECK-IN hoặc ĐÃ HỦY CỌC, từ chối cấp mã PIN (hasAccess = false).
@@ -557,7 +557,7 @@ public class ContractController {
     }
 
     /**
-     * US-21: Gia hạn hợp đồng online
+     * Gia hạn hợp đồng thuê kho trực tuyến
      * - Chỉ áp dụng cho hợp đồng ACTIVE (HĐ quá hạn hoặc đã đóng bị từ chối)
      * - Cộng dồn ngày hết hạn nối tiếp ngày cũ
      * - Tạo hóa đơn EXT-... trạng thái PAID/SUCCESS
@@ -783,7 +783,7 @@ public class ContractController {
         activityLog.setCreatedAt(LocalDateTime.now());
         activityLogRepository.save(activityLog);
 
-        // BR-29: Gửi email xác nhận gia hạn hợp đồng trực tuyến thành công
+        // Gửi email xác nhận gia hạn hợp đồng trực tuyến thành công
         try {
             if (res.getAccountId() != null) {
                 Account acc = accountRepository.findById(Long.valueOf(res.getAccountId())).orElse(null);

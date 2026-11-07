@@ -37,7 +37,7 @@ export function filterCustomers(customers: readonly AdminCustomer[], filter: Cus
     )
 }
 
-/** Còn bao nhiêu phút nữa thì tự mở (BR-03 khóa 15 phút); hết hạn rồi thì 0 */
+/** Số phút còn lại cho đến khi tự mở khóa (tạm khóa 15 phút do nhập sai mật khẩu); hết hạn trả về 0 */
 export function minutesUntilUnlock(lockUntil: string | null, now: Date): number {
   if (!lockUntil) return 0
   const ms = new Date(lockUntil).getTime() - now.getTime()

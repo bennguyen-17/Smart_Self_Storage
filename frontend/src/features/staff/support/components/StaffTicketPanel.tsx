@@ -6,7 +6,6 @@ import {
   ClipboardCheckIcon,
   HeadphonesIcon,
   IdCardIcon,
-  InfoIcon,
   KeyRoundIcon,
   UserCheckIcon,
   WrenchIcon,
@@ -186,7 +185,7 @@ function getTicketTypeDisplayName(ticket: TicketItem): string {
   return title || "Yêu cầu hỗ trợ"
 }
 
-/** TAB 2: Hỗ trợ kỹ thuật & xử lý ticket sự cố động — kết nối API Staff Tickets & SLA (US-22, US-23) */
+/** Hỗ trợ kỹ thuật & xử lý sự cố — kết nối API hàng đợi ticket và thời gian cam kết */
 function StaffTicketPanel() {
   const [tickets, setTickets] = useState<TicketItem[]>([])
   const [filter, setFilter] = useState<"ALL" | TicketStatus>("ALL")

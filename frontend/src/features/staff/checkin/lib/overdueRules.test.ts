@@ -8,8 +8,8 @@ import {
   renewalPackageLabel,
 } from "./overdueRules"
 
-// US-20: phạt quá hạn 50.000đ/ngày (BR-30) & chiết khấu gói gia hạn (BR-29).
-describe("overdueRules: phạt quá hạn (BR-30)", () => {
+// Phạt quá hạn 50.000đ/ngày và chiết khấu gói gia hạn.
+describe("overdueRules: phạt quá hạn", () => {
   test("phí phạt cố định 50.000đ/ngày", () => {
     expect(OVERDUE_PENALTY_PER_DAY).toBe(50_000)
   })
@@ -25,7 +25,7 @@ describe("overdueRules: phạt quá hạn (BR-30)", () => {
   })
 })
 
-describe("overdueRules: chiết khấu & tiền gia hạn (BR-29)", () => {
+describe("overdueRules: chiết khấu & tiền gia hạn", () => {
   test.each([
     [1, 0],
     [2, 0],

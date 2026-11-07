@@ -49,7 +49,7 @@ public class NoShowCronService {
         this.emailService = emailService;
     }
 
-    // --- US-15: Cron Job chạy tự động lúc 00:00:00 hằng ngày (giờ Việt Nam) ---
+    // Tự động kiểm tra khách không đến nhận kho đúng hẹn lúc 00:00 hằng ngày
     @Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Ho_Chi_Minh")
     public void scheduledNoShowJob() {
         log.info("Starting Daily No-Show Cron Job at 00:00:00 (Asia/Ho_Chi_Minh)...");
@@ -60,7 +60,7 @@ public class NoShowCronService {
         log.info("Daily Early Termination No-Show Cron Job completed. Processed {} expired tickets.", cancelledTickets);
     }
 
-    // --- US-22 / BR: Tự động đóng các ticket Trả kho sớm lỡ hẹn khi qua 00:00 ngày hôm sau ---
+    // Tự động đóng các yêu cầu trả kho lỡ hẹn khi qua 00:00 ngày hôm sau
     @Transactional
     public int processExpiredEarlyTerminationTickets() {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
@@ -180,7 +180,7 @@ public class NoShowCronService {
         return count;
     }
 
-    // --- US-27: Cập nhật hợp đồng quá hạn hằng ngày lúc 00:00 giờ Việt Nam ---
+    // Tự động cập nhật trạng thái hợp đồng quá hạn lúc 00:00 hằng ngày
     @Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Ho_Chi_Minh")
     public void scheduledOverdueContractJob() {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
@@ -188,7 +188,7 @@ public class NoShowCronService {
         log.info("Overdue contract job completed. Updated {} contracts for {}.", updatedCount, today);
     }
 
-    // --- US-21: Cron Job nhắc hạn thuê lúc 08:00:00 hằng ngày ---
+    // Tự động gửi thông báo nhắc hạn thuê sắp hết lúc 08:00 hằng ngày
     @Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Ho_Chi_Minh")
     public void scheduledContractExpiryReminderJob() {
         log.info("Starting Daily Contract Expiry Reminder Cron Job at 00:00:00 (Asia/Ho_Chi_Minh)...");
@@ -244,7 +244,7 @@ public class NoShowCronService {
         return count;
     }
 
-    // --- BR-14: Quét và giải phóng các ô kho HOLD quá 5 phút chưa thanh toán ---
+    // Tự động giải phóng các ô kho giữ chỗ quá 5 phút chưa hoàn tất thanh toán
     @Scheduled(fixedRate = 60000)
     @Transactional
     public int processExpiredHolds() {

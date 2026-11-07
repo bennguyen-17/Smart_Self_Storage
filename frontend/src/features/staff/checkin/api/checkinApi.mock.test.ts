@@ -6,8 +6,8 @@ import {
   mockRenewAtCounter,
 } from "./checkinApi.mock"
 
-// US-20: luồng mock end-to-end cho HĐ quá hạn 104 (HD-CG-8812).
-describe("checkinApi.mock: thu phạt & gia hạn tại quầy (US-20)", () => {
+// Luồng mock hoàn chỉnh cho hợp đồng quá hạn.
+describe("checkinApi.mock: thu phạt và gia hạn tại quầy", () => {
   test("HĐ 104 ban đầu: OVERDUE, còn 150.000đ phạt chưa nộp", async () => {
     const items = await mockListReservations()
     const overdue = items.find((item) => item.reservationId === 104)

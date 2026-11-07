@@ -31,15 +31,6 @@ import StaffInspectionModal, {
 import { usePagedRows } from "@/components/internal/usePagedRows"
 import { Pagination } from "@/components/internal/components/PanelKit"
 
-const TAB_COLORS: Record<CheckinTabKey, string> = {
-  all: "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300",
-  pending:
-    "bg-amber-100 text-amber-900 hover:bg-amber-200 dark:bg-amber-950 dark:text-amber-300",
-  active:
-    "bg-emerald-100 text-emerald-900 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-300",
-  overdue:
-    "bg-rose-100 text-rose-900 hover:bg-rose-200 dark:bg-rose-950 dark:text-rose-300",
-}
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING_CHECKIN: "CHỜ CHECK-IN",
@@ -59,7 +50,7 @@ function matches(item: StaffReservationItem, keyword: string): boolean {
   )
 }
 
-/** TAB 1: Dịch vụ khách hàng & hợp đồng — tra cứu, check-in, đổi ô, hủy (US-16/17) */
+/** Dịch vụ khách hàng & hợp đồng — tra cứu, check-in, đổi ô, hủy */
 function CheckinPanel() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -89,7 +80,7 @@ function CheckinPanel() {
     null
   )
   const [inspection, setInspection] = useState<InspectionTarget | null>(null)
-  // US-20: thu phạt quá hạn & gia hạn tại quầy
+  // Thu phạt quá hạn và gia hạn tại quầy
   const [penaltyContract, setPenaltyContract] = useState<CheckinTarget | null>(
     null
   )
@@ -123,12 +114,13 @@ function CheckinPanel() {
         return isReturn ? 1 : 2
       }
       if (item.contractStatus === "OVERDUE") return 3
-      return 4
+      if (item.contractStatus === "FORFEITED") return 4
+      return 5
     }
 
     return (data ?? [])
       .filter((item) =>
-        ["PENDING_CHECKIN", "ACTIVE", "OVERDUE"].includes(
+        ["PENDING_CHECKIN", "ACTIVE", "OVERDUE", "FORFEITED"].includes(
           item.contractStatus ?? ""
         )
       )
@@ -154,16 +146,18 @@ function CheckinPanel() {
   const rows = all
     .filter(
       (item) =>
-        !tab.contractStatus || item.contractStatus === tab.contractStatus
+        !tab.contractStatus || item.contractStatus === tab.contractStatus || (tab.contractStatus === "OVERDUE" && item.contractStatus === "FORFEITED")
     )
     .filter((item) => matches(item, keyword))
 
   const { slice, pagination } = usePagedRows(rows, `${tab.contractStatus ?? "all"}-${keyword}`)
 
   function countOf(status?: string): number {
-    return status
-      ? all.filter((item) => item.contractStatus === status).length
-      : all.length
+    if (!status) return all.length
+    if (status === "OVERDUE") {
+      return all.filter((item) => item.contractStatus === "OVERDUE" || item.contractStatus === "FORFEITED").length
+    }
+    return all.filter((item) => item.contractStatus === status).length
   }
 
   async function handleLookup() {

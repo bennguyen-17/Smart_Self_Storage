@@ -36,7 +36,7 @@ import type { ManagerRefund, RefundFilter, RefundState } from "../types"
 const EMPTY_FILTER: RefundFilter = { query: "", state: "PENDING" }
 
 /**
- * Manager › Hoàn tiền (BR-35, US-26): các phiếu hoàn (REF) của khách: hủy cọc, hủy tại quầy, hoàn cọc khi trả kho.
+ * Quản lý cơ sở › Hoàn tiền: các phiếu hoàn tiền cọc (REF) của khách: hủy cọc, hủy tại quầy, hoàn cọc khi trả kho.
  * Manager chuyển khoản ngoài (Internet Banking), đính kèm biên lai rồi xác nhận → phiếu thành "Đã hoàn".
  */
 function RefundsPanel() {

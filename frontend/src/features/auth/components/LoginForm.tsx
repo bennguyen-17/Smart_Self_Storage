@@ -5,7 +5,6 @@ import { CheckCircle2, Eye, EyeOff } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
 import { Link, useNavigate } from "react-router-dom"
 
-import { toast } from "sonner"
 
 import { login } from "../authApi"
 import ForgotPasswordModal from "./ForgotPasswordModal"

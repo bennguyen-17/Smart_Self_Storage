@@ -1,4 +1,4 @@
-// Mock cho US-16/US-17/US-20, dùng khi VITE_USE_MOCK=true — trả về đúng shape DTO của BE.
+// Dữ liệu mock cho các thao tác check-in và xử lý tại quầy.
 // Dữ liệu bám prototype staff.html (tab CHECK-IN).
 
 import { addDays, todayInVietnam } from "@/lib/format"
@@ -100,7 +100,7 @@ const SEEDS: Seed[] = [
     depRemainingAmount: 0,
   },
   {
-    // HĐ quá hạn 3 ngày — dùng cho luồng Thu phạt & Gia hạn tại quầy (US-20)
+    // Hợp đồng quá hạn — dùng cho luồng thu phạt và gia hạn tại quầy
     facilityCode: "HN-01",
     reservationId: 104,
     reservationCode: "HD-CG-8812",
@@ -320,7 +320,7 @@ export function mockCancelReservation(
   })
 }
 
-/** US-20: thu phạt quá hạn tại quầy — gộp phạt thành hóa đơn PEN (PAID), HĐ vẫn OVERDUE. */
+/** Thu phạt quá hạn tại quầy — tạo hóa đơn thu phạt thành công. */
 export function mockCollectPenalty(
   reservationId: number
 ): Promise<CollectPenaltyResponse> {
@@ -348,7 +348,7 @@ export function mockCollectPenalty(
   })
 }
 
-/** US-20: gia hạn tại quầy — chặn khi còn phạt UNPAID, đưa HĐ về ACTIVE + hóa đơn EXT. */
+/** Gia hạn tại quầy — chặn khi còn nợ phạt, cập nhật hợp đồng về trạng thái hiệu lực. */
 export function mockRenewAtCounter(
   reservationId: number,
   payload: RenewAtCounterRequest

@@ -55,7 +55,7 @@ beforeEach(() => {
 })
 afterEach(() => localStorage.clear())
 
-describe("UnitManagementPanel: bảng ô kho + nút Sửa (US-13)", () => {
+describe("UnitManagementPanel: bảng ô kho và thao tác chỉnh sửa", () => {
   test("mỗi hàng chỉ có nút Sửa; không có Thêm/Xóa ô và không có ô nhập giá", async () => {
     await renderPanel()
     expect(within(row("HN01-F1-M01")).getAllByRole("button")).toHaveLength(1)

@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from "vitest"
 
 import DraftContractModal from "./DraftContractModal"
 
-// US-07 AC: "Chưa tích 2 checkbox → nút thanh toán bị khóa" (cam kết hàng cấm, thỏa thuận clickwrap)
+// Bắt buộc tích đủ 2 xác nhận (hàng cấm và điều khoản hợp đồng) mới được thanh toán cọc
 const bookingData = {
   unitId: "HN01-1-S01",
   facilityName: "SmartStorage Cầu Giấy (HN-01)",
@@ -33,7 +33,7 @@ function renderModal() {
   }
 }
 
-describe("DraftContractModal: 2 xác nhận bắt buộc trước khi thanh toán cọc (US-07)", () => {
+describe("DraftContractModal: 2 xác nhận bắt buộc trước khi thanh toán cọc", () => {
   test("mới mở modal: nút thanh toán bị khóa", () => {
     const { payButton } = renderModal()
     expect(payButton).toBeDisabled()

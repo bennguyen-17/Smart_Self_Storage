@@ -31,6 +31,7 @@ import { ContractStatusBadge, DaysLeft } from "./ContractBadges"
 import ContractDetailModal from "@/features/customer/storage/modals/ContractDetailModal"
 import ContractDetailDialog from "./ContractDetailDialog"
 import ForfeitProcessedSheet from "./ForfeitProcessedSheet"
+import ViolationTerminationModal from "./ViolationTerminationModal"
 
 const EMPTY_FILTER: ContractFilter = { query: "", status: "ALL", payment: "ALL", expiringSoon: false }
 
@@ -45,6 +46,7 @@ function CustomersContractsPanel() {
   const [reloadCount, setReloadCount] = useState(0)
   const [filter, setFilter] = useState<ContractFilter>(EMPTY_FILTER)
   const [forfeiting, setForfeiting] = useState<FacilityContract | null>(null)
+  const [violating, setViolating] = useState<FacilityContract | null>(null)
   const [viewing, setViewing] = useState<FacilityContract | null>(null)
   // Văn bản hợp đồng pháp lý (dùng chung với cổng khách, xuất PDF) mở từ ngăn chi tiết
   const [documentOf, setDocumentOf] = useState<FacilityContract | null>(null)
@@ -235,7 +237,22 @@ function CustomersContractsPanel() {
           }}
         />
       )}
+
+      {violating && (
+        <ViolationTerminationModal
+          key={violating.contractId}
+          contract={violating}
+          ctx={ctx}
+          onClose={() => setViolating(null)}
+          onDone={(message) => {
+            toast.success(message)
+            setViolating(null)
+            setReloadCount((n) => n + 1)
+          }}
+        />
+      )}
     </section>
+
   )
 }
 

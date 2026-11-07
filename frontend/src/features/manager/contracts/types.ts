@@ -1,6 +1,6 @@
 import type { StoredImage } from "@/components/internal/images/imageApi"
 
-// Hợp đồng của một cơ sở, nhìn từ phía Facility Manager (US-24, US-25, US-26, US-31).
+// Danh sách hợp đồng của cơ sở dành cho Quản lý cơ sở.
 // BE CHƯA có API liệt kê: kiểu dưới đây là contract FE đề xuất (GET /api/manager/contracts, xem qa-log).
 
 /**
@@ -17,7 +17,7 @@ export type ContractStatus =
   | "FORFEITED"
   | "CANCELLED"
 
-/** Tiến độ trả kho: chưa trả → đã lập biên bản nghiệm thu (US-24) → đã bàn giao, thu chìa (US-25) */
+/** Tiến độ trả kho: chưa trả → đã lập biên bản nghiệm thu → đã bàn giao, thu hồi chìa khóa */
 export type CheckoutStage = "NONE" | "INSPECTED" | "HANDED_OVER"
 
 /** Khoản phí có thể miễn/giảm: phạt trễ hạn (PEN) hoặc truy thu đền bù (CMP) */

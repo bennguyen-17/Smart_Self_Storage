@@ -64,7 +64,7 @@ type DialogState =
   | { kind: "assign"; account: InternalAccount }
   | { kind: "status"; account: InternalAccount }
 
-/** US-29: Admin tạo tài khoản nội bộ, gán vai trò và cơ sở, khóa / mở khóa */
+/** Quản trị viên tạo tài khoản nội bộ, gán vai trò và cơ sở, khóa / mở khóa tài khoản */
 function AccountsPanel() {
   const currentId = useMemo(() => {
     const id = Number(getStoredUser()?.id)

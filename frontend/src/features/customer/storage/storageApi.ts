@@ -2,7 +2,7 @@ import apiClient, { isMockMode } from '@/lib/apiClient';
 
 /**
  * Lấy danh sách hợp đồng kho đang sở hữu của khách hàng từ Database
- * SWAGGER ENDPOINT: GET /api/contracts/my-contracts
+ * Lấy danh sách hợp đồng kho đang sở hữu của khách hàng
  */
 const getStoredAccountId = (): number => {
   try {
@@ -141,8 +141,8 @@ export const requestCheckoutContract = async (
 };
 
 /**
- * Gia hạn hợp đồng thuê kho (US-21)
- * SWAGGER ENDPOINT: POST /api/contracts/{contractId}/extend
+ * Gia hạn hợp đồng thuê kho trực tuyến
+ * Gửi yêu cầu gia hạn hợp đồng thuê kho
  */
 export const extendStorageContract = async (
   contractId: number | string,

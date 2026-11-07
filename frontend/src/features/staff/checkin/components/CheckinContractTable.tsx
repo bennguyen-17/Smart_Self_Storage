@@ -1,8 +1,6 @@
 import {
   InboxIcon,
 } from "lucide-react"
-import { toast } from "sonner"
-import { getErrorMessage } from "@/lib/api"
 import StaffShiftRequiredCard from "@/features/staff/components/StaffShiftRequiredCard"
 import { cn } from "cn"
 
@@ -22,11 +20,11 @@ interface CheckinContractTableProps {
   onOpenDetail?: (item: StaffReservationItem) => void
   onCheckin: (item: StaffReservationItem) => void
   onCheckout: (item: StaffReservationItem) => void
-  /** BR-20: Mở dialog hủy tại quầy (giữ 50% cọc, hoàn 50%) */
+  /** Mở hộp thoại hủy giữ chỗ tại quầy (bảo lưu 50% tiền cọc, hoàn 50%) */
   onCancel?: (item: StaffReservationItem) => void
-  /** US-20: mở dialog thu phạt quá hạn tại quầy */
+  /** Mở hộp thoại thu phạt quá hạn tại quầy */
   onCollectPenalty: (item: StaffReservationItem) => void
-  /** US-20: mở dialog gia hạn tại quầy */
+  /** Mở hộp thoại gia hạn hợp đồng tại quầy */
   onRenew: (item: StaffReservationItem) => void
   /** unitCode → nhãn "Size M (3m²)" để hiển thị cạnh vị trí kho */
   unitMeta?: Record<string, string>
@@ -270,6 +268,15 @@ function StatusBadge({ item }: { item: StaffReservationItem }) {
     )
   }
 
+  if (item.contractStatus === "FORFEITED") {
+    return (
+      <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium border bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800">
+        <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-rose-500 animate-pulse"></span>
+        Chờ thanh lý
+      </span>
+    )
+  }
+
   if (item.contractStatus === "TERMINATED") {
     return (
       <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium border bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700">
@@ -368,6 +375,19 @@ function ActionButtons({
     return (
       <span className="text-slate-400 dark:text-slate-600 font-mono text-base select-none" title="Không có hành động khả dụng">
         —
+      </span>
+    )
+  }
+
+  const isLiquidation =
+    item.contractStatus === "FORFEITED" ||
+    (item.contractStatus === "OVERDUE" && (item.overdueDays ?? 0) >= (item.overdueLiquidationDays ?? 30))
+
+  if (isLiquidation) {
+    return (
+      <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 whitespace-nowrap">
+        <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-rose-500 animate-pulse"></span>
+        Chờ thanh lý
       </span>
     )
   }

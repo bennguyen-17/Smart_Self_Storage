@@ -40,6 +40,7 @@ public class LoginResponse {
         private String facilityName;
         private String facilityCode;
         private Boolean mustChangePassword;
+        private java.time.LocalDateTime deletionScheduledAt;
 
         public UserInfo() {
         }
@@ -157,6 +158,13 @@ public class LoginResponse {
 
         public void setMustChangePassword(Boolean mustChangePassword) {
             this.mustChangePassword = mustChangePassword;
+        }
+        public java.time.LocalDateTime getDeletionScheduledAt() {
+            return deletionScheduledAt;
+        }
+
+        public void setDeletionScheduledAt(java.time.LocalDateTime deletionScheduledAt) {
+            this.deletionScheduledAt = deletionScheduledAt;
         }
     }
 }

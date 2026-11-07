@@ -3,7 +3,7 @@
 // Mapped 1:1 with Java Spring Boot Backend DTOs & Entities (Strictly /api/...)
 // ============================================================================
 
-// --- 1. US-01 & US-02: Authentication & Account ---
+// 1. Quản lý tài khoản & Xác thực
 export interface RegisterRequest {
   phone: string;
   fullName: string;
@@ -37,7 +37,7 @@ export interface ApiResponse<T = unknown> {
   data?: T;
 }
 
-// --- 2. US-03: Facility, Floors, Units & Pricing ---
+// 2. Cơ sở, Tầng, Ô kho & Bảng giá
 export type FacilityStatus = 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE';
 export type UnitStatus = 'AVAILABLE' | 'HOLD' | 'RENTED' | 'MAINTENANCE' | 'OVERDUE';
 export type StorageCondition = 'NORMAL' | 'CLIMATE_CONTROLLED';
@@ -117,7 +117,7 @@ export interface CalculatePriceResponse {
   totalInitialPayment: number;
 }
 
-// --- 3. US-05: Deposit, VietQR & Clickwrap Agreement ---
+// 3. Đặt cọc, Thanh toán VietQR & Hợp đồng điện tử
 export interface DepositInitiateRequest {
   accountId: number;
   unitCode: string;

@@ -30,7 +30,7 @@ export default function StaffProfileModal({
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
 
-  const [loading, setLoading] = useState(false)
+  const [, setLoading] = useState(false)
   const [profile, setProfile] = useState<StaffProfileData | null>(null)
 
   // Tải dữ liệu thật từ máy chủ
@@ -38,7 +38,6 @@ export default function StaffProfileModal({
     if (!open) return
 
     let isMounted = true
-    setLoading(true)
 
     getStaffProfile()
       .then((data) => {

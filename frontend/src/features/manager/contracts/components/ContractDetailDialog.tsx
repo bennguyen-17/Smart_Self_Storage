@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { CheckCircle2Icon, FileSignatureIcon, FileTextIcon, GavelIcon, HourglassIcon } from "lucide-react"
+import { CheckCircle2Icon, FileSignatureIcon, FileTextIcon, GavelIcon, HourglassIcon, ShieldAlertIcon } from "lucide-react"
 
 import { StatusBadge } from "@/components/internal/components/PanelKit"
 import ImageGallery from "@/components/internal/images/ImageGallery"
@@ -39,6 +39,7 @@ function ContractDetailDialog({
   onClose,
   onForfeit,
   onViewDocument,
+  onTerminateViolation,
 }: {
   contract: FacilityContract
   today: string
@@ -46,6 +47,7 @@ function ContractDetailDialog({
   onForfeit: (contract: FacilityContract) => void
   /** Mở văn bản hợp đồng pháp lý (bản dùng chung với khách, tải PDF được) */
   onViewDocument?: (contract: FacilityContract) => void
+  onTerminateViolation?: (contract: FacilityContract) => void
 }) {
   const totals = feeTotals(contract)
   const forfeit = forfeitState(contract, today)
@@ -216,7 +218,33 @@ function ContractDetailDialog({
             )}
           </section>
         )}
+
+        {/* Xử lý vi phạm hàng cấm / an ninh nghiêm trọng */}
+        {(contract.status === "ACTIVE" || contract.status === "OVERDUE") && onTerminateViolation && (
+          <section aria-labelledby="contract-violation" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50/50 p-4 dark:border-rose-900/60 dark:bg-rose-950/20">
+            <div className="flex items-start gap-2.5">
+              <ShieldAlertIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-rose-600 dark:text-rose-400" />
+              <div>
+                <h3 id="contract-violation" className="text-sm font-bold text-rose-900 dark:text-rose-200">
+                  Xử lý vi phạm hàng cấm / an ninh
+                </h3>
+                <p className="text-muted text-xs">
+                  Đơn phương chấm dứt hợp đồng, tịch thu 100% tiền cọc, thu hồi ô kho và vô hiệu hóa mã PIN khi phát hiện vi phạm.
+                </p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-rose-300 bg-white text-rose-700 hover:bg-rose-100 hover:text-rose-800 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-300 font-bold gap-1.5 cursor-pointer"
+              onClick={() => onTerminateViolation(contract)}
+            >
+              <ShieldAlertIcon className="size-3.5" /> Chấm dứt do vi phạm
+            </Button>
+          </section>
+        )}
       </DialogContent>
+
     </Dialog>
   )
 }

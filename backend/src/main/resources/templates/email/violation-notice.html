@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Self Storage - Thông báo đơn phương chấm dứt hợp đồng do vi phạm</title>
+</head>
+
+<body
+    style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0"
+        style="background-color: #f8fafc; padding: 30px 20px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0"
+                    style="max-width: 560px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.04);">
+
+                    <!-- Header -->
+                    <tr>
+                        <td
+                            style="background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%); padding: 16px 24px; text-align: center;">
+                            <h1
+                                style="color: #ffffff; margin: 0; font-size: 17px; font-weight: 800; letter-spacing: 0.8px;">
+                                SMART SELF STORAGE</h1>
+                            <p style="color: #fecdd3; margin: 3px 0 0 0; font-size: 11px; font-weight: 500;">Hệ thống
+                                lưu trữ thông minh &amp; an ninh</p>
+                        </td>
+                    </tr>
+
+                    <!-- Nội dung chính -->
+                    <tr>
+                        <td style="padding: 26px 32px 20px 32px;">
+
+                            <!-- Tiêu đề thông báo & Icon căn giữa -->
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <table role="presentation" border="0" cellspacing="0" cellpadding="0" align="center"
+                                    style="margin: 0 auto 8px auto;">
+                                    <tr>
+                                        <td align="center" valign="middle"
+                                            style="width: 44px; height: 44px; background-color: #fee2e2; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                            <span style="font-size: 20px; line-height: 1; display: inline-block;">⚠️</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <h2
+                                    style="margin: 0; color: #991b1b; font-size: 18px; font-weight: 800; text-transform: uppercase;">
+                                    THÔNG BÁO CHẤM DỨT HỢP ĐỒNG</h2>
+                                <p style="margin: 4px 0 0 0; color: #64748b; font-size: 12px;">Đơn phương chấm dứt do vi phạm quy chế lưu trữ và an toàn</p>
+                            </div>
+
+                            <p style="margin: 0 0 10px 0; font-size: 14px; color: #334155;">
+                                Kính gửi Quý khách <strong>{{displayName}}</strong>,
+                            </p>
+                            <p style="margin: 0 0 18px 0; font-size: 13px; color: #334155; line-height: 1.6;">
+                                Ban Quản lý hệ thống Smart Self Storage xin thông báo: Cơ sở đã tiến hành kiểm tra và phát hiện hành vi vi phạm nghiêm trọng quy chế an toàn / quy định hàng hóa lưu trữ đối với ô kho thuộc hợp đồng của Quý khách. Căn cứ theo điều khoản hợp đồng đã ký, Ban Quản lý chính thức thực hiện quyền đơn phương chấm dứt hợp đồng.
+                            </p>
+
+                            <!-- Hộp thông tin chi tiết biên bản vi phạm -->
+                            <div
+                                style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; margin-bottom: 18px;">
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size: 13px;">
+                                    <tr>
+                                        <td style="padding: 7px 0; color: #64748b; width: 45%; border-bottom: 1px dashed #e2e8f0;">Mã hợp đồng:</td>
+                                        <td
+                                             style="padding: 7px 0; font-weight: 700; color: #0f172a; text-align: right; border-bottom: 1px dashed #e2e8f0; white-space: nowrap;">
+                                            {{contractCode}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 7px 0; color: #64748b; border-bottom: 1px dashed #e2e8f0;">Ô kho vi phạm:</td>
+                                        <td
+                                            style="padding: 7px 0; font-weight: 700; color: #dc2626; text-align: right; border-bottom: 1px dashed #e2e8f0; white-space: nowrap;">
+                                            {{unitCode}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 7px 0; color: #64748b; border-bottom: 1px dashed #e2e8f0;">Cơ sở:</td>
+                                        <td
+                                            style="padding: 7px 0; font-weight: 600; color: #0f172a; text-align: right; border-bottom: 1px dashed #e2e8f0; white-space: nowrap;">
+                                            {{facilityName}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 7px 0; color: #64748b; border-bottom: 1px dashed #e2e8f0;">Thời điểm lập biên bản:</td>
+                                        <td
+                                            style="padding: 7px 0; font-weight: 600; color: #0f172a; text-align: right; border-bottom: 1px dashed #e2e8f0; white-space: nowrap;">
+                                            {{terminatedAt}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 7px 0; color: #64748b; border-bottom: 1px dashed #e2e8f0;">Lý do vi phạm:</td>
+                                        <td
+                                            style="padding: 7px 0; font-weight: 700; color: #991b1b; text-align: right; border-bottom: 1px dashed #e2e8f0;">
+                                            {{violationReason}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0 0 0; color: #64748b; font-weight: 600;">Tiền cọc xử lý:</td>
+                                        <td
+                                            style="padding: 8px 0 0 0; font-weight: 800; color: #dc2626; text-align: right; font-size: 15px; white-space: nowrap;">
+                                            Tịch thu 100%</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- Cảnh báo an ninh -->
+                            <div
+                                style="background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 12px; padding: 12px 16px; margin-bottom: 18px; font-size: 12px; color: #9f1239; line-height: 1.6;">
+                                🔒 <strong>Các biện pháp đã thực thi:</strong> Mã PIN mở cửa và quyền ra vào khu vực kho thuộc hợp đồng này đã bị vô hiệu hóa lập tức. Toàn bộ tiền đặt cọc bị tịch thu để khắc phục hậu quả vi phạm. Ban Quản lý sẽ phối hợp với cơ quan chức năng để xử lý theo đúng quy định pháp luật nếu có dấu hiệu tàng trữ hàng cấm, chất cháy nổ nguy hiểm.
+                            </div>
+
+                            <!-- Kênh liên hệ hỗ trợ -->
+                            <div
+                                style="background-color: #f1f5f9; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: #475569; text-align: center;">
+                                Mọi khiếu nại xin vui lòng liên hệ Hotline: <strong style="color: #0f172a;">1900 6868</strong> hoặc Email: <strong style="color: #2563eb;">hotline@smartstorage.vn</strong> để được hướng dẫn giải quyết.
+                            </div>
+
+                            <p style="margin: 0; font-size: 13px; color: #64748b; line-height: 1.5; text-align: center;">
+                                Trân trọng,<br>
+                                <strong>Ban Quản lý Smart Self Storage</strong>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td
+                            style="background-color: #f1f5f9; padding: 14px 24px; text-align: center; border-top: 1px solid #e2e8f0;">
+                            <p style="margin: 0; font-size: 11px; color: #64748b; line-height: 1.5;">
+                                Đây là email tự động thông báo thủ tục pháp lý. Vui lòng không trả lời email này.<br>
+                                &copy; 2026 Smart Self Storage Co. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

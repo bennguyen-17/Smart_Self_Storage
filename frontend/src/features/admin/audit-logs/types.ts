@@ -1,4 +1,4 @@
-// US-30: nhật ký hoạt động hệ thống cho Admin.
+// Nhật ký hoạt động hệ thống cho Quản trị viên.
 // Khớp bảng ActivityLog có sẵn trong DB (activityLogId, accountId, action, description, createdAt, ipAddress):
 // BE đã GHI các thao tác vào bảng này, chỉ còn thiếu API ĐỌC (contract FE đề xuất ở qa-log Q-32).
 // actorName / actorRole là BE join từ bảng Account; thao tác tự động của hệ thống thì accountId = null.

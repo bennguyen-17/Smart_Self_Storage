@@ -1,4 +1,4 @@
-// US-32: API phân ca. BE CHƯA có: path và body dưới đây là contract FE đề xuất (qa-log Q-31),
+// API phân ca trực nhân viên tại cơ sở.
 // khớp bảng Shift + StaffShift có sẵn trong DB. Đang chạy mock.
 // VITE_USE_MOCK=true → mock; false → BE. Không tự fallback về mock khi lỗi.
 

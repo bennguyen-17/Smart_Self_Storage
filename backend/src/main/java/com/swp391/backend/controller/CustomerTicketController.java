@@ -22,7 +22,7 @@ public class CustomerTicketController {
         this.supportTicketService = supportTicketService;
     }
 
-    // --- US-21: Gửi Ticket Hỗ trợ kỹ thuật tổng hợp 24/7 (Sự cố, Mở khóa, Bảo trì, Khác) ---
+    // Gửi yêu cầu hỗ trợ kỹ thuật trực tuyến 24/7
     @PostMapping("/support/tickets")
     public ResponseEntity<?> submitSupportTicket(
             @RequestBody Map<String, Object> body,
@@ -71,13 +71,13 @@ public class CustomerTicketController {
         }
     }
 
-    // --- US-21: 1. Tra cứu FAQ Help Center ---
+    // Tra cứu câu hỏi thường gặp (FAQ)
     @GetMapping("/help/faq")
     public ResponseEntity<?> getFaqs() {
         return ResponseEntity.ok(supportTicketService.getFaqs());
     }
 
-    // --- US-21: 2. Gửi Ticket Báo sự cố (08:00 - 20:00) ---
+    // Gửi yêu cầu báo cáo sự cố (tiếp nhận trong khung giờ 08:00 - 20:00)
     @PostMapping("/customer/tickets/incident")
     public ResponseEntity<?> createIncidentTicket(
             @RequestBody CreateIncidentRequest request,
@@ -102,7 +102,7 @@ public class CustomerTicketController {
         }
     }
 
-    // --- US-21: 3. Gửi OTP email yêu cầu trả kho trước hạn ---
+    // Gửi mã OTP xác nhận yêu cầu trả kho trước hạn
     @PostMapping("/customer/tickets/early-termination/send-otp")
     public ResponseEntity<?> sendEarlyTerminationOtp(
             @RequestParam Integer contractId,
@@ -126,7 +126,7 @@ public class CustomerTicketController {
         }
     }
 
-    // --- US-21: 4. Gửi Ticket Trả kho trước hạn (24/7) ---
+    // Gửi yêu cầu trả kho trước hạn
     @PostMapping("/customer/tickets/early-termination")
     public ResponseEntity<?> createEarlyTerminationTicket(
             @RequestBody CreateEarlyTerminationRequest request,
@@ -151,7 +151,7 @@ public class CustomerTicketController {
         }
     }
 
-    // --- US-21: 5. Khách hàng xem lịch sử ticket của mình ---
+    // Xem lịch sử các yêu cầu hỗ trợ của khách hàng
     @GetMapping("/customer/tickets")
     public ResponseEntity<?> getMyTickets(
             Authentication authentication

@@ -57,7 +57,7 @@ function StaffFloorPlanPage() {
             className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-900 dark:text-white"
           >
             <MapIcon className="size-5 text-blue-600 dark:text-blue-400" />
-            <span>Sơ đồ kho 2D</span>
+            <span>Sơ đồ kho 2D{facilityName ? ` - ${facilityName}` : ""}</span>
           </h1>
         </div>
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">

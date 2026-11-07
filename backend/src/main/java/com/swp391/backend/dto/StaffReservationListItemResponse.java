@@ -31,6 +31,7 @@ public class StaffReservationListItemResponse {
     private Integer overdueDays;
     private BigDecimal unpaidPenaltyAmount;
     private BigDecimal monthlyPrice;
+    private Integer overdueLiquidationDays;
     private LocalDate desiredReturnDate;
     private String unitTypeName;
     private String unitSize;
@@ -196,5 +197,13 @@ public class StaffReservationListItemResponse {
 
     public void setMonthlyPrice(BigDecimal monthlyPrice) {
         this.monthlyPrice = monthlyPrice;
+    }
+
+    public Integer getOverdueLiquidationDays() {
+        return overdueLiquidationDays;
+    }
+
+    public void setOverdueLiquidationDays(Integer overdueLiquidationDays) {
+        this.overdueLiquidationDays = overdueLiquidationDays;
     }
 }

@@ -7,25 +7,15 @@ import CounterCancelDialog from "./CounterCancelDialog"
 import {
   ArrowLeftIcon,
   CheckCircle2Icon,
-  ClockIcon,
   KeyRoundIcon,
   PackageIcon,
-  ShieldCheckIcon,
-  UserIcon,
   ChevronRightIcon,
   BanknoteIcon,
-  PrinterIcon,
   AlertCircleIcon,
   RepeatIcon,
   XIcon,
-  SparklesIcon,
-  LayersIcon,
-  CheckIcon,
-  InfoIcon,
-  PencilIcon,
 } from "lucide-react"
 import { toast } from "sonner"
-import { cn } from "cn"
 
 import { formatDate, formatVnd } from "@/lib/format"
 import { unitSizeOf, unitSizeFromCode } from "@/features/floorplan/unitDisplay"
@@ -378,7 +368,7 @@ export default function StaffCheckinProcessPage() {
     }
     setIsSavingCustomer(true)
     try {
-      const res = await updateCustomerCccd(Number(reservationId), cleanCccd, cleanName)
+      await updateCustomerCccd(Number(reservationId), cleanCccd, cleanName)
       setContract({ ...contract, customerName: cleanName, customerIdNumber: cleanCccd })
       toast.success("Hiệu chỉnh thông tin thành công!")
       setIsEditingCustomer(false)
@@ -866,7 +856,7 @@ export default function StaffCheckinProcessPage() {
         getUnitTypeAndClimateDisplay={getUnitTypeAndClimateDisplay}
       />
 
-      {/* DIALOG HỦY TẠI QUẦY (BR-20) */}
+      {/* HỘP THOẠI HỦY TẠI QUẦY */}
       {isCancelDialogOpen && contract && (
         <CounterCancelDialog
           contract={contract as any}

@@ -22,7 +22,7 @@ public class StaffTicketController {
         this.supportTicketService = supportTicketService;
     }
 
-    // --- US-22: 1. Xem hàng đợi Ticket của cơ sở kèm đếm ngược SLA 15 phút ---
+    // Hàng đợi yêu cầu hỗ trợ của cơ sở kèm thời gian phản hồi cam kết 15 phút
     @GetMapping
     public ResponseEntity<?> getStaffTickets(
             @AuthenticationPrincipal Integer staffAccountId,
@@ -39,7 +39,7 @@ public class StaffTicketController {
         }
     }
 
-    // --- US-22: 2. Staff bấm Tiếp nhận Ticket (chuyển sang IN_PROGRESS) ---
+    // Nhân viên tiếp nhận xử lý yêu cầu hỗ trợ
     @PostMapping("/{id}/accept")
     public ResponseEntity<?> acceptTicket(
             @PathVariable Long id,
@@ -57,7 +57,7 @@ public class StaffTicketController {
         }
     }
 
-    // --- US-23: 1. Mở modal đối chiếu CCCD lưu trên Hợp đồng ---
+    // Lấy thông tin đối chiếu giấy tờ tùy thân (CCCD) trên hợp đồng
     @GetMapping("/{id}/unlock-detail")
     public ResponseEntity<?> getUnlockDetails(
             @PathVariable Long id,
@@ -73,7 +73,7 @@ public class StaffTicketController {
         }
     }
 
-    // --- US-23: 2. Hoàn tất mở khóa hộ (bắt buộc identityVerified == true) ---
+    // Hoàn tất mở khóa sau khi đã đối chiếu danh tính khách hàng
     @PostMapping("/{id}/resolve-unlock")
     public ResponseEntity<?> resolveUnlock(
             @PathVariable Long id,
@@ -92,7 +92,7 @@ public class StaffTicketController {
         }
     }
 
-    // --- US-22: 3. Staff hoàn tất xử lý ticket thường (Bảo trì, Nghiệm thu, ...) ---
+    // Hoàn tất xử lý yêu cầu hỗ trợ (bảo trì, vệ sinh, sự cố)
     @PostMapping("/{id}/resolve")
     public ResponseEntity<?> resolveTicket(
             @PathVariable Long id,

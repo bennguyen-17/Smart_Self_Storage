@@ -110,7 +110,7 @@ function ForfeitProcessedSheet({
           <div>
             <p className="font-bold text-amber-900 dark:text-amber-200">Lưu ý nghiệp vụ giải phóng kho</p>
             <p className="mt-0.5 text-amber-800/90 dark:text-amber-300/90">
-              Hợp đồng đã quá hạn trên 30 ngày và khách hàng không đến nhận lại đồ. Cơ sở tiến hành cắt khóa niêm phong và thanh lý tài sản. Sau khi xác nhận, ô kho sẽ chuyển sang <b>bảo trì / vệ sinh</b> để chuẩn bị cho lượt thuê mới. Thao tác này không thể hoàn tác.
+              Hợp đồng đã quá hạn trên 30 ngày và khách hàng không đến nhận lại đồ. Cơ sở tiến hành cắt khóa niêm phong và thanh lý tài sản. Sau khi xác nhận, ô kho sẽ được giải phóng về trạng thái <b>sẵn sàng cho thuê (Còn trống)</b> để chuẩn bị cho lượt thuê mới. Thao tác này không thể hoàn tác.
             </p>
           </div>
         </div>

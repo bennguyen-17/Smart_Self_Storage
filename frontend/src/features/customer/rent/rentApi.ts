@@ -306,7 +306,7 @@ export const getStorageUnits = async (facilityCode: string, floor: number) => {
 
 /**
  * Tạo giao dịch đặt cọc giữ chỗ ô kho
- * SWAGGER ENDPOINT: POST /api/deposits/initiate
+ * Khởi tạo đặt cọc và tạo mã thanh toán VietQR
  */
 export const createDepositTransaction = async (bookingData: any) => {
   try {
@@ -406,7 +406,7 @@ export const createDepositTransaction = async (bookingData: any) => {
 
 /**
  * Kiểm tra trạng thái thanh toán đặt cọc
- * SWAGGER ENDPOINT: GET /api/deposits/status
+ * Kiểm tra trạng thái thanh toán đặt cọc
  */
 export const checkBookingStatus = async (invoiceNumber: string) => {
   if (isMockMode()) {

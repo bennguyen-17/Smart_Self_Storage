@@ -431,7 +431,7 @@ function RegisterForm() {
             </ul>
           )}
 
-          {/* Thông tin tài khoản ngân hàng nhận hoàn cọc (Bắt buộc theo BR-01) */}
+          {/* Thông tin tài khoản ngân hàng nhận hoàn cọc (Bắt buộc) */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
             <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               Tài khoản ngân hàng nhận hoàn cọc <span className="text-rose-500">*</span>

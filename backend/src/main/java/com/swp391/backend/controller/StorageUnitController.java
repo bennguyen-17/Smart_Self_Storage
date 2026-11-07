@@ -24,13 +24,13 @@ public class StorageUnitController {
         this.securityContextHelper = securityContextHelper;
     }
 
-    // --- US-03: Lấy danh sách ô kho theo tầng (để vẽ bản đồ 2D) ---
+    // Lấy danh sách ô kho theo tầng phục vụ hiển thị sơ đồ 2D
     @GetMapping("/floors/{floorId}/units")
     public ResponseEntity<List<UnitDetailResponse>> getUnitsByFloor(@PathVariable Integer floorId) {
         return ResponseEntity.ok(storageService.getUnitsByFloorId(floorId));
     }
 
-    // --- US-03: Bộ lọc ô kho theo nhiều tiêu chí ---
+    // Tra cứu và lọc ô kho theo nhiều tiêu chí
     @GetMapping("/units/filter")
     public ResponseEntity<List<UnitDetailResponse>> filterUnits(
             @RequestParam(required = false) Integer facilityId,
@@ -41,7 +41,7 @@ public class StorageUnitController {
         return ResponseEntity.ok(storageService.filterUnits(facilityId, floorId, unitTypeId, storageCondition, status));
     }
 
-    // --- US-03: API Tính giá thuê & tiền cọc tự động ---
+    // Tính toán tự động giá thuê và tiền cọc theo bảng giá
     @PostMapping({"/pricing/calculate", "/units/pricing/calculate"})
     public ResponseEntity<CalculatePriceResponse> calculatePrice(@RequestBody CalculatePriceRequest request) {
         CalculatePriceResponse response = storageService.calculateRentalPrice(request);
@@ -51,7 +51,7 @@ public class StorageUnitController {
         return ResponseEntity.badRequest().body(response);
     }
 
-    // --- US-13: Lấy danh sách ô kho của cơ sở cho Facility Manager ---
+    // Lấy danh sách ô kho thuộc quyền quản lý của cơ sở
     @GetMapping("/manager/units")
     public ResponseEntity<?> getManagerUnits(
             @AuthenticationPrincipal Integer managerAccountId,
@@ -71,7 +71,7 @@ public class StorageUnitController {
         }
     }
 
-    // --- US-13: Đổi loại kho (Standard <=> Climate-Controlled) (Facility Manager) ---
+    // Chuyển đổi loại kho giữa kho thường và kho điều hòa nhiệt độ
     @PatchMapping("/manager/units/{unitCode}/type")
     public ResponseEntity<?> updateUnitType(
             @PathVariable String unitCode,
@@ -96,7 +96,7 @@ public class StorageUnitController {
         }
     }
 
-    // --- US-14: Đưa ô kho vào bảo trì / vệ sinh ---
+    // Đưa ô kho vào trạng thái bảo trì hoặc vệ sinh
     @PostMapping("/manager/units/{unitCode}/maintenance")
     public ResponseEntity<?> putUnderMaintenance(
             @PathVariable String unitCode,
@@ -118,7 +118,7 @@ public class StorageUnitController {
         }
     }
 
-    // --- US-14: Nghiệm thu dọn dẹp / bảo trì hoàn tất, mở lại AVAILABLE ---
+    // Nghiệm thu dọn dẹp và bảo trì hoàn tất, mở lại ô kho cho thuê
     @PostMapping("/staff/units/{unitCode}/complete-maintenance")
     public ResponseEntity<?> completeMaintenance(
             @PathVariable String unitCode,
@@ -135,7 +135,7 @@ public class StorageUnitController {
         }
     }
 
-    // --- US-14: Lấy danh sách ô kho đang bảo trì tại cơ sở của Staff ---
+    // Lấy danh sách các ô kho đang trong quá trình bảo trì tại cơ sở
     @GetMapping("/staff/units/maintenance")
     public ResponseEntity<?> getMaintenanceUnits(
             @AuthenticationPrincipal Integer staffAccountId,

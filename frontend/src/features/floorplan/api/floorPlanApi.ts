@@ -1,4 +1,4 @@
-﻿// US-03: API sơ đồ 2D, bám theo endpoint backend hiện có (không /v1).
+﻿// API sơ đồ kho 2D kết nối trực tiếp backend.
 // VITE_USE_MOCK=true → mock; false → backend. Không tự fallback về mock khi lỗi.
 
 import { unwrapApiData } from "@/lib/api"

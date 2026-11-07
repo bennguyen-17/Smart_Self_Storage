@@ -389,7 +389,7 @@ public class EmailService {
         }
     }
 
-    // --- 7. Gửi email xác nhận hoàn tất hoàn trả tiền cọc (BR-35) ---
+    // Gửi email xác nhận hoàn tất hoàn trả tiền cọc
     public boolean sendRefundConfirmationEmail(String toEmail, String customerName, String contractCode, BigDecimal amount, String receiptUrl, String transactionCode) {
         return sendRefundConfirmationEmail(toEmail, customerName, contractCode, amount, receiptUrl, transactionCode, null, null);
     }
@@ -458,7 +458,7 @@ public class EmailService {
         }
     }
 
-    // --- 8. Gửi email cảnh báo đăng nhập bất thường & khóa tài khoản 15 phút (BR-03) ---
+    // Gửi email cảnh báo bảo mật khi tài khoản bị tạm khóa 15 phút do nhập sai mật khẩu nhiều lần
     public boolean sendSecurityAlertEmail(String toEmail, String customerName, String ipAddress, LocalDateTime lockUntil) {
         if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
             return false;
@@ -485,6 +485,43 @@ public class EmailService {
             return true;
         } catch (Exception e) {
             log.error("Không thể gửi email cảnh báo bảo mật tới {}: {}", toEmail, e.getMessage());
+            return false;
+        }
+    }
+
+    // Gửi email thông báo đơn phương chấm dứt hợp đồng do vi phạm quy chế an ninh
+    public boolean sendViolationTerminationEmail(
+            String toEmail, String customerName, String contractCode,
+            String unitCode, String facilityName, String violationReason,
+            LocalDateTime terminatedAt
+    ) {
+        if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
+            return false;
+        }
+        try {
+            String safeName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
+            String safeCode = (contractCode != null && !contractCode.isBlank()) ? contractCode.trim() : "---";
+            String safeUnit = (unitCode != null && !unitCode.isBlank()) ? unitCode.trim() : "---";
+            String safeFacility = (facilityName != null && !facilityName.isBlank()) ? facilityName.trim() : "Hệ thống Smart Self Storage";
+            String safeReason = (violationReason != null && !violationReason.isBlank()) ? violationReason.trim() : "Vi phạm quy chế an toàn lưu trữ";
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm - dd/MM/yyyy");
+            String formattedTime = (terminatedAt != null ? terminatedAt : LocalDateTime.now()).format(formatter);
+
+            String subject = "[Smart Self Storage] Thông báo đơn phương chấm dứt hợp đồng do vi phạm - Hợp đồng #" + safeCode;
+
+            String template = loadTemplate("violation-notice.html");
+            String html = template
+                    .replace("{{displayName}}", escapeHtml(safeName))
+                    .replace("{{contractCode}}", escapeHtml(safeCode))
+                    .replace("{{unitCode}}", escapeHtml(safeUnit))
+                    .replace("{{facilityName}}", escapeHtml(safeFacility))
+                    .replace("{{terminatedAt}}", escapeHtml(formattedTime))
+                    .replace("{{violationReason}}", escapeHtml(safeReason));
+
+            sendHtmlEmail(toEmail.trim(), subject, html);
+            return true;
+        } catch (Exception e) {
+            log.error("Không thể gửi email thông báo chấm dứt vi phạm tới {}: {}", toEmail, e.getMessage());
             return false;
         }
     }

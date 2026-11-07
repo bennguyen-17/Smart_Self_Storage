@@ -269,7 +269,7 @@ function Body({
   )
 }
 
-/** US-17: xác nhận bàn giao — PIN đã kích hoạt và biên lai thanh toán. */
+/** Xác nhận bàn giao ô kho — mã PIN đã kích hoạt và in biên lai thanh toán. */
 function SuccessPanel({
   result,
   onDone,
@@ -309,7 +309,7 @@ function SuccessPanel({
           <span className="text-title font-bold">Đã bàn giao</span>
         </div>
         <div className="mt-2 border-t border-blue-200 pt-2 text-[11px] text-blue-800 dark:border-blue-900 dark:text-blue-300">
-          Quyền sinh mã PIN động 15 giây (BR-22/24) đã được tự động kích hoạt trên Web Portal của khách hàng.
+          Quyền sinh mã PIN động 15 giây đã được tự động kích hoạt trên Web Portal của khách hàng.
         </div>
       </div>
 

@@ -200,7 +200,7 @@ public class StaffReservationService {
                 .findByFacilityId(employee.get().getFacilityId()).stream()
                 .map(this::toListItem)
                 .filter(item -> item.getContractStatus() != null &&
-                        List.of(CONTRACT_PENDING_CHECKIN, CONTRACT_ACTIVE, CONTRACT_OVERDUE).contains(item.getContractStatus()))
+                        List.of(CONTRACT_PENDING_CHECKIN, CONTRACT_ACTIVE, CONTRACT_OVERDUE, "FORFEITED").contains(item.getContractStatus()))
                 .filter(item -> !CONTRACT_PENDING_CHECKIN.equals(item.getContractStatus())
                         || item.getCheckInDate() == null
                         || !item.getCheckInDate().isBefore(today))
@@ -209,7 +209,8 @@ public class StaffReservationService {
                             if (CONTRACT_PENDING_CHECKIN.equals(item.getContractStatus())) return 0;
                             if (CONTRACT_ACTIVE.equals(item.getContractStatus())) return 1;
                             if (CONTRACT_OVERDUE.equals(item.getContractStatus())) return 2;
-                            return 3;
+                            if ("FORFEITED".equals(item.getContractStatus())) return 3;
+                            return 4;
                         })
                         .thenComparing(StaffReservationListItemResponse::getCheckInDate,
                                 Comparator.nullsLast(Comparator.naturalOrder())))
@@ -479,7 +480,7 @@ public class StaffReservationService {
         BigDecimal refundAmount = BigDecimal.ZERO;
         BigDecimal penaltyAmount = BigDecimal.ZERO;
         if (paidDeposit.signum() > 0) {
-            BigDecimal refundRate = new BigDecimal("0.50"); // BR-20: Hủy tại quầy giữ 50% cọc, hoàn 50%
+            BigDecimal refundRate = new BigDecimal("0.50"); // Hủy giữ chỗ tại quầy: bảo lưu 50% tiền cọc và hoàn trả 50%
             refundAmount = paidDeposit.multiply(refundRate).setScale(2, java.math.RoundingMode.HALF_UP);
             penaltyAmount = paidDeposit.subtract(refundAmount);
             if (refundAmount.signum() > 0) {
@@ -725,7 +726,6 @@ public class StaffReservationService {
         item.setMonthlyPrice(monthlyPrice);
 
         // 2. Tính số ngày quá hạn (overdueDays)
-
         LocalDate today = LocalDate.now();
         LocalDate endDate = reservation.getEndDate();
         int overdueDays = 0;
@@ -734,6 +734,7 @@ public class StaffReservationService {
                     ChronoUnit.DAYS.between(endDate, today), getContractLiquidationDays(contractObj));
         }
         item.setOverdueDays(overdueDays);
+        item.setOverdueLiquidationDays(getContractLiquidationDays(contractObj));
 
         // 3. Tính tiền phạt quá hạn: Chuẩn 50.000 VNĐ / ngày quá hạn
         BigDecimal expectedPenalty = getContractDailyOverdueFee(contractObj).multiply(BigDecimal.valueOf(overdueDays));
@@ -866,8 +867,20 @@ public class StaffReservationService {
         Contract contract = contractOpt.get();
         Contract contractObj = contract;
 
+        if ("FORFEITED".equalsIgnoreCase(contract.getStatus())) {
+            return new CollectPenaltyResponse(false, "Hợp đồng đã chuyển sang diện thanh lý tài sản. Quyền xử lý tại quầy đã kết thúc.");
+        }
         if (!CONTRACT_OVERDUE.equalsIgnoreCase(contract.getStatus())) {
             return new CollectPenaltyResponse(false, "Chỉ thu phạt cho hợp đồng OVERDUE.");
+        }
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = reservation.getEndDate();
+        int liquidationDays = getContractLiquidationDays(contract);
+        long actualOverdueDays = (endDate != null && endDate.isBefore(today))
+                ? ChronoUnit.DAYS.between(endDate, today)
+                : 0;
+        if (actualOverdueDays >= liquidationDays) {
+            return new CollectPenaltyResponse(false, "Hợp đồng đã quá hạn " + liquidationDays + " ngày. Đã chuyển Ban Quản lý thanh lý tài sản, không thể thu phạt tại quầy.");
         }
 
         String requestedMethod = request != null && request.getPaymentMethod() != null
@@ -885,8 +898,6 @@ public class StaffReservationService {
         }
 
 
-        LocalDate today = LocalDate.now();
-        LocalDate endDate = reservation.getEndDate();
         int overdueDays = (endDate != null && endDate.isBefore(today))
                 ? (int) Math.min(
                         ChronoUnit.DAYS.between(endDate, today), getContractLiquidationDays(contract))
@@ -996,6 +1007,19 @@ public class StaffReservationService {
         }
         Contract contract = contractOpt.get();
         Contract contractObj = contract;
+
+        if ("FORFEITED".equalsIgnoreCase(contract.getStatus())) {
+            return new RenewAtCounterResponse(false, "Hợp đồng đã chuyển sang diện thanh lý tài sản, không thể gia hạn tại quầy.");
+        }
+        int liquidationDays = getContractLiquidationDays(contract);
+        LocalDate checkToday = LocalDate.now();
+        LocalDate checkEndDate = reservation.getEndDate();
+        long checkActualOverdue = (checkEndDate != null && checkEndDate.isBefore(checkToday))
+                ? ChronoUnit.DAYS.between(checkEndDate, checkToday)
+                : 0;
+        if (checkActualOverdue >= liquidationDays) {
+            return new RenewAtCounterResponse(false, "Hợp đồng đã quá hạn " + liquidationDays + " ngày. Đã chuyển Ban Quản lý thanh lý tài sản, không thể gia hạn tại quầy.");
+        }
 
         // 1. Kiểm tra phạt quá hạn chưa nộp (tính chuẩn 50.000đ/ngày quá hạn)
 
@@ -1125,7 +1149,7 @@ public class StaffReservationService {
 
     /**
      * Lấy mã PIN động 15s mở cổng cơ sở 24/7 dành cho nhân viên (Staff Entry Pass)
-     * - Tuân thủ Business Rule TTL 15 giây
+     * - Thời gian hiệu lực mã PIN mở cổng là 15 giây
      * - Tự động liên kết cơ sở nhân viên đang làm việc
      * - Lưu mã PIN vào bảng GatePin để hệ thống IoT và cổng xác thực hợp lệ
      */
@@ -1144,7 +1168,7 @@ public class StaffReservationService {
         String facilityName = facility != null ? facility.getFacilityName() : "Cơ sở Cầu Giấy (Hà Nội)";
         String facilityCode = facility != null && facility.getFacilityCode() != null ? facility.getFacilityCode() : "HN-01";
 
-        // Business Rule: TTL 15s đồng bộ với IoT Gate
+        // Mã PIN mở cổng tự động có hiệu lực trong 15 giây
         int ttlSeconds = 15 - (int) ((System.currentTimeMillis() / 1000) % 15);
         if (ttlSeconds <= 0) ttlSeconds = 15;
 

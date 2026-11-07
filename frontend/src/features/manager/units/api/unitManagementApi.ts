@@ -1,4 +1,4 @@
-// US-13: API quản lý ô kho của Facility Manager.
+// API quản lý danh sách ô kho của Quản lý cơ sở.
 // VITE_USE_MOCK=true → mock; false → BE. Không tự fallback về mock khi lỗi.
 // BE xác định cơ sở và người thao tác qua header X-Facility-Id, X-Account-Id (gắn ở đây, component không cần biết).
 

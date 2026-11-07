@@ -26,7 +26,7 @@ interface RenewAtCounterDialogProps {
 }
 
 /**
- * US-20: Gia hạn hợp đồng tại quầy bằng tiền mặt (CASH).
+ * Gia hạn hợp đồng tại quầy bằng tiền mặt hoặc chuyển khoản.
  * Đồng bộ giao diện và cách tính toán gói gia hạn giống như Cổng Khách hàng (Customer Portal).
  */
 export default function RenewAtCounterDialog({
@@ -210,7 +210,7 @@ function Body({
   const currentExpiryDate = parseDate(contract.reservationEndDate || contract.endDate)
   const formattedCurrentExpiry = currentExpiryDate ? formatDateDisplay(currentExpiryDate) : (contract.reservationEndDate || contract.endDate || "—")
 
-  // Tính ngày hết hạn mới sau gia hạn (Nếu OVERDUE thì tính từ hôm nay theo BR-29)
+  // Tính ngày hết hạn mới sau gia hạn (Nếu quá hạn thì tính từ ngày hiện tại)
   const calculateNewExpiryDate = (): string => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)

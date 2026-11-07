@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { CheckCircle2Icon, IdCardIcon, KeyRoundIcon, ShieldAlertIcon } from "lucide-react"
+import { CheckCircle2Icon, KeyRoundIcon, ShieldAlertIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import apiClient, { isMockMode } from "@/lib/apiClient"
@@ -29,14 +29,14 @@ interface UnlockDetail {
   identityNumber?: string
 }
 
-/** US-23: Modal đối chiếu CCCD khách hàng và xác nhận mở khóa ô kho */
+/** Hộp thoại đối chiếu CCCD khách hàng và xác nhận mở khóa ô kho */
 function StaffUnlockModal({
   ticket,
   onClose,
   onResolved,
 }: StaffUnlockModalProps) {
   const [detail, setDetail] = useState<UnlockDetail | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [, setLoading] = useState(false)
   const [cardChecked, setCardChecked] = useState(false)
   const [matchChecked, setMatchChecked] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -119,7 +119,7 @@ function StaffUnlockModal({
       open={ticket !== null}
       onClose={onClose}
       title="Đối chiếu CCCD & Mở khóa ô kho khẩn cấp"
-      subtitle="Quy trình xác thực danh tính khách hàng nghiêm ngặt (US-23)"
+      subtitle="Quy trình xác thực danh tính khách hàng nghiêm ngặt"
       icon={<KeyRoundIcon className="size-5 text-amber-500" />}
       maxWidth="max-w-lg"
     >

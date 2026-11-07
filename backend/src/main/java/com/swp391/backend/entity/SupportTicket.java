@@ -49,7 +49,7 @@ public class SupportTicket {
     private Boolean isSlaBreached = false;
 
     @Column(nullable = false)
-    private Boolean identityVerified = false; // Bắt buộc cho US-23 mở khóa hộ
+    private Boolean identityVerified = false; // Đã đối chiếu và xác minh danh tính khách hàng
 
     @Column(columnDefinition = "TEXT")
     private String resolutionNote;

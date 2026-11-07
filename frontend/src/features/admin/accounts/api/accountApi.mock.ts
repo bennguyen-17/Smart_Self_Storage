@@ -1,4 +1,4 @@
-// Dữ liệu mẫu tài khoản nội bộ, dùng khi VITE_USE_MOCK=true (BE chưa có API US-29).
+// Dữ liệu mẫu tài khoản nội bộ dùng cho môi trường thử nghiệm.
 
 import { roleNeedsFacility } from "../accountRules"
 import type { AccountStatus, InternalAccount, InternalRole } from "../types"

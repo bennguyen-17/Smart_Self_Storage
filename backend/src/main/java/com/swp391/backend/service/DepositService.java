@@ -95,7 +95,7 @@ public class DepositService {
             return DepositInitiateResponse.error("Ô kho này hiện không ở trạng thái trống (có thể đã được người khác giữ chỗ hoặc đang bảo trì)!");
         }
 
-        // BR-17: Giới hạn ngày nhận kho từ hôm nay đến 7 ngày tới. Nếu sau 20:00 (hết ca trực) thì khóa ngày hôm nay, chỉ cho phép từ ngày mai.
+        // Giới hạn ngày nhận kho từ hôm nay đến tối đa 7 ngày tới. Sau 20:00 chỉ cho phép chọn từ ngày hôm sau.
         LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         java.time.LocalTime nowTime = java.time.LocalTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         LocalDate minStartDate = (nowTime.getHour() >= 20) ? today.plusDays(1) : today;
@@ -131,7 +131,7 @@ public class DepositService {
             return DepositInitiateResponse.error(priceRes.getMessage());
         }
 
-        // Lấy thông tin cơ sở chuẩn BR-07 (HN01, HN02, HCM01, ...)
+        // Lấy thông tin mã cơ sở chuẩn hóa (HN01, HN02, HCM01, ...)
         String facilityCode = "HN01";
         Optional<Floor> floorOpt = floorRepository.findById(unit.getFloorId());
         if (floorOpt.isPresent()) {
@@ -155,7 +155,7 @@ public class DepositService {
         reservation.setRentalAmount(priceRes.getFinalRentalAmount());
         reservation.setDepositAmount(priceRes.getDepositAmount());
         reservation.setStatus("PENDING");
-        reservation.setHoldExpiresAt(LocalDateTime.now().plusMinutes(5)); // Giữ chỗ 5 phút để thanh toán (BR-14)
+        reservation.setHoldExpiresAt(LocalDateTime.now().plusMinutes(5)); // Giữ chỗ tạm thời 5 phút để chờ hoàn tất thanh toán
 
         // Sinh Mã Hợp Đồng theo quy tắc thống nhất: CTR-[Mã Cơ Sở]-[DDMMYY]-[4 số ngẫu nhiên]
         String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyy"));

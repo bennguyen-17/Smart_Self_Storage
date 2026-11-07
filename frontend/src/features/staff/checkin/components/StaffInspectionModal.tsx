@@ -80,7 +80,7 @@ function Body({
   const [isCompensationCollected, setIsCompensationCollected] = useState(false)
 
   const [actualDeposit, setActualDeposit] = useState<number>(target.depositAmount ?? 0)
-  const [unpaidPenalty, setUnpaidPenalty] = useState<number>(0)
+  const [, setUnpaidPenalty] = useState<number>(0)
   const [displayContractCode, setDisplayContractCode] = useState<string>(() => {
     if (target.contractCode && target.contractCode.startsWith("CTR-") && target.contractCode.length > 8) {
       return target.contractCode

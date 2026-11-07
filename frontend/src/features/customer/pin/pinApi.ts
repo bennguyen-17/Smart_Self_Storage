@@ -26,7 +26,7 @@ const getStoredAccountId = (): number => {
 
 /**
  * Lấy mã PIN mở cổng điện tử 24/7 từ Backend theo Cơ sở
- * SWAGGER ENDPOINT: GET /api/gate-pins/live?branchCode={code}&accountId={id}
+ * Lấy mã PIN mở cổng IoT trực tuyến
  */
 export const getGatePin = async (branchCode: string) => {
   try {

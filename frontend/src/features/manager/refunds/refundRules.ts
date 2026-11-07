@@ -4,7 +4,7 @@ import { matchesQuery } from "@/components/internal/textSearch"
 
 import type { ManagerRefund, RefundFilter, RefundState, RefundType } from "./types"
 
-/** BE cũ trả PAID cho phiếu đã hoàn; theo BR-37 là REFUNDED. Cả hai đều là "Đã hoàn" */
+/** Phiếu đã hoàn có trạng thái REFUNDED hoặc PAID. Cả hai đều là "Đã hoàn" */
 export function refundState(status: string): RefundState {
   const s = status.toUpperCase()
   return s === "PAID" || s === "REFUNDED" || s === "SUCCESS" ? "REFUNDED" : "PENDING"
@@ -71,7 +71,7 @@ export function hoursWaiting(issuedAt: string, now: Date = new Date()): number {
   return Math.max(0, Math.floor((now.getTime() - issued) / 3_600_000))
 }
 
-/** Quá hạn cam kết hoàn tiền 48 giờ làm việc (BR-35) */
+/** Quá hạn cam kết hoàn tiền 48 giờ làm việc */
 export const REFUND_SLA_HOURS = 48
 
 export function pendingSummary(refunds: readonly ManagerRefund[], now: Date = new Date()) {

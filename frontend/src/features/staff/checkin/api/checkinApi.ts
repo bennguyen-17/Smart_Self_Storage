@@ -1,4 +1,4 @@
-// US-16: API check-in tại quầy — gọi BE-16 thật (/api/staff/reservations...).
+// API check-in và xử lý thủ tục nhận/trả kho tại quầy.
 // VITE_USE_MOCK=true → dùng mock; false → gọi backend. Không tự fallback về mock khi lỗi.
 
 import { isAxiosError } from "axios"
@@ -96,7 +96,7 @@ export async function counterCancel(
 }
 
 /**
- * US-20: POST /api/staff/reservations/{id}/collect-penalty — thu phạt quá hạn tại quầy.
+ * Thu phạt quá hạn hợp đồng trực tiếp tại quầy.
  * Gộp toàn bộ phạt UNPAID thành 1 hóa đơn PEN (PAID); HĐ vẫn OVERDUE, PIN vẫn khóa.
  */
 export async function collectPenalty(
@@ -111,7 +111,7 @@ export async function collectPenalty(
 }
 
 /**
- * US-20: POST /api/staff/reservations/{id}/renew-at-counter — gia hạn tại quầy khi OVERDUE.
+ * Gia hạn hợp đồng trực tiếp tại quầy khi quá hạn.
  * HĐ về ACTIVE, hóa đơn EXT, khôi phục quyền sinh PIN. BE chặn nếu còn phạt UNPAID.
  */
 export async function renewAtCounter(

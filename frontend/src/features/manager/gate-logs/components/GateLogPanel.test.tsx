@@ -56,7 +56,7 @@ beforeEach(() => {
   listManualGateOpenLogs.mockReset().mockResolvedValue(LOGS)
 })
 
-describe("GateLogPanel: Manager xem nhật ký ra vào cổng của cơ sở (US-18)", () => {
+describe("GateLogPanel: Quản lý xem nhật ký ra vào cổng của cơ sở", () => {
   test("mỗi lượt hiện đủ người ra vào, trạng thái; mới nhất lên đầu; KHÔNG có nút sửa/xóa", async () => {
     await renderPanel()
     const [newest, older] = bodyRows()

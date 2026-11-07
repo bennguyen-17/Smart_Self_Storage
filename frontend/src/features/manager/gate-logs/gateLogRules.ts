@@ -1,4 +1,4 @@
-// Luật lọc nhật ký kiểm soát ra vào cổng cơ sở (US-18).
+// Quy tắc lọc nhật ký kiểm soát ra vào cổng cơ sở. Hàm thuần phục vụ kiểm thử.
 
 import type { GateLog, GateLogFilter } from "./types"
 

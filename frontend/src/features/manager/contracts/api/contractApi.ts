@@ -1,4 +1,4 @@
-// Hợp đồng của cơ sở cho Manager (US-24, 25, 26).
+// Danh sách hợp đồng của cơ sở dành cho Quản lý cơ sở.
 // Miễn / giảm phí đã bỏ (nhóm chốt 28/10, BE xóa API ở PR #100).
 // VITE_USE_MOCK=true → mock; false → BE. Không tự fallback về mock khi lỗi.
 
@@ -34,6 +34,24 @@ export async function markForfeitProcessed(
   await apiClient.post(
     `/manager/contracts/${contractId}/forfeit-processed`,
     { note: note.trim(), evidenceImageIds },
+    { headers: managerHeaders(ctx) }
+  )
+}
+
+/**
+ * POST /api/manager/contracts/{contractId}/terminate-violation  body { reason, evidenceImageIds }.
+ * Đơn phương chấm dứt hợp đồng do vi phạm lưu trữ hàng cấm hoặc quy chế an ninh nghiêm trọng.
+ */
+export async function terminateViolationContract(
+  ctx: ManagerContext,
+  contractId: number,
+  reason: string,
+  evidenceImageIds?: number[]
+): Promise<void> {
+  if (isMockMode()) return
+  await apiClient.post(
+    `/manager/contracts/${contractId}/terminate-violation`,
+    { reason: reason.trim(), evidenceImageIds: evidenceImageIds ?? [] },
     { headers: managerHeaders(ctx) }
   )
 }

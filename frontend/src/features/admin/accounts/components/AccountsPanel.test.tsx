@@ -25,7 +25,7 @@ beforeEach(() => {
 })
 afterEach(() => localStorage.clear())
 
-describe("AccountsPanel: Admin quản lý tài khoản nội bộ (US-29)", () => {
+describe("AccountsPanel: Admin quản lý tài khoản nội bộ", () => {
   test("không tự khóa / tự đổi vai trò của chính mình", async () => {
     await renderPanel()
     const self = row("admin@selfstorage391.vn")

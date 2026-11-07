@@ -46,7 +46,7 @@ const STAFF: FacilityStaff[] = [
     facilityId: 1,
     status: "LOCKED",
   },
-  // Nhân viên cơ sở khác: không được hiện trong danh sách chọn (AC US-32)
+  // Nhân viên cơ sở khác: không được hiển thị trong danh sách phân ca
   {
     employeeId: 2,
     fullName: "Phạm Thị Nhân Viên 2",

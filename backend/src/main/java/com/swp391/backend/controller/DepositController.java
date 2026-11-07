@@ -20,7 +20,7 @@ public class DepositController {
         this.depositService = depositService;
     }
 
-    // --- US-05: Khởi tạo Đặt cọc 100% Online, thỏa thuận Clickwrap & Sinh mã VietQR ---
+    // Khởi tạo đặt cọc trực tuyến, thỏa thuận hợp đồng điện tử và tạo mã thanh toán VietQR
     @PostMapping("/initiate")
     public ResponseEntity<DepositInitiateResponse> initiateDeposit(
             @RequestBody DepositInitiateRequest request,
@@ -39,7 +39,7 @@ public class DepositController {
         return ResponseEntity.badRequest().body(response);
     }
 
-    // --- US-05: Webhook / Callback nhận thông báo thanh toán tiền cọc thành công ---
+    // Webhook nhận thông báo thanh toán tiền cọc từ cổng thanh toán
     @PostMapping("/webhook")
     public ResponseEntity<ApiResponse> handleDepositWebhook(@RequestBody DepositWebhookRequest request) {
         ApiResponse response = depositService.confirmDepositPayment(request);
@@ -49,7 +49,7 @@ public class DepositController {
         return ResponseEntity.badRequest().body(response);
     }
 
-    // --- US-05: API Mock Xác nhận nộp cọc nhanh (dành cho Dev / Demo không cần quét QR thật) ---
+    // Xác nhận nộp cọc nhanh trong môi trường thử nghiệm
     @PostMapping("/mock-pay")
     public ResponseEntity<ApiResponse> mockPayDeposit(@RequestParam String invoiceNumber) {
         DepositWebhookRequest req = new DepositWebhookRequest(
@@ -65,7 +65,7 @@ public class DepositController {
         return ResponseEntity.badRequest().body(response);
     }
 
-    // --- US-05: API Kiểm tra trạng thái nộp cọc theo mã hóa đơn ---
+    // Kiểm tra trạng thái thanh toán đặt cọc theo mã hóa đơn
     @GetMapping("/status")
     public ResponseEntity<ApiResponse> checkDepositStatus(@RequestParam String invoiceNumber) {
         ApiResponse response = depositService.checkDepositStatus(invoiceNumber);
