@@ -18,7 +18,7 @@ import { formatVnd } from "@/lib/format"
 import { terminateViolationContract } from "../api/contractApi"
 import type { FacilityContract } from "../types"
 
-export const DEFAULT_VIOLATION_REASON = "Lưu trữ hàng cấm / vi phạm nghiêm trọng quy chế an toàn theo điều khoản hợp đồng."
+export const DEFAULT_VIOLATION_REASON = "Lưu trữ hàng cấm / vi phạm quy chế an toàn theo điều khoản hợp đồng."
 
 export function ViolationTerminationModal({
   contract,
@@ -49,7 +49,7 @@ export function ViolationTerminationModal({
         reason.trim(),
         images.map((i) => i.imageId)
       )
-      onDone(`Đã đơn phương chấm dứt hợp đồng ${contract.contractCode} do vi phạm quy chế`)
+      onDone(`Đã chấm dứt hợp đồng ${contract.contractCode} do vi phạm.`)
     } catch (err) {
       setServerError(readableError(err))
     } finally {
@@ -59,7 +59,7 @@ export function ViolationTerminationModal({
 
   return (
     <Dialog open onOpenChange={(open) => !open && !submitting && onClose()}>
-      <DialogContent className="portal-dialog max-w-xl max-h-[92vh] overflow-y-auto rounded-3xl p-6 sm:max-w-xl shadow-2xl border border-rose-200/80 bg-white dark:border-rose-900/60 dark:bg-slate-900 gap-5">
+      <DialogContent className="portal-dialog max-w-xl max-h-[92vh] overflow-y-auto rounded-3xl p-6 sm:max-w-xl shadow-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900 gap-5">
         {/* Header */}
         <div className="flex items-start gap-3.5 border-b border-slate-100 pb-4 dark:border-slate-800">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
@@ -84,51 +84,41 @@ export function ViolationTerminationModal({
           </div>
         </div>
 
-        {/* Cảnh báo hậu quả pháp lý */}
-        <div className="rounded-2xl border border-rose-200/80 bg-rose-50/60 p-4 dark:border-rose-950/40 dark:bg-rose-950/20 text-xs text-rose-800 dark:text-rose-300 space-y-1.5">
-          <div className="flex items-center gap-1.5 font-bold text-rose-900 dark:text-rose-200">
+        {/* Lưu ý quan trọng */}
+        <div className="rounded-2xl border border-rose-200/80 bg-rose-50/60 p-4 dark:border-rose-950/40 dark:bg-rose-950/20 text-xs text-rose-800 dark:text-rose-300">
+          <div className="flex items-center gap-1.5 font-bold text-rose-900 dark:text-rose-200 mb-1">
             <AlertTriangleIcon className="size-4 shrink-0" />
-            Hệ thống sẽ tự động thực thi các hành động sau:
+            Lưu ý
           </div>
-          <ul className="list-disc list-inside space-y-1 pl-1 text-[11px] leading-relaxed">
-            <li>Hợp đồng chuyển trạng thái kết thúc hoàn tất (<span className="font-bold">COMPLETED</span>).</li>
-            <li>Tịch thu toàn bộ tiền cọc <span className="font-bold text-rose-600 dark:text-rose-400">{formatVnd(contract.depositAmount)}</span> (không hoàn trả).</li>
-            <li>Vô hiệu hóa toàn bộ mã PIN vào cổng / mở kho của khách hàng tại cơ sở này.</li>
-            <li>Giải phóng ô kho <span className="font-mono font-bold">{contract.unitCode}</span> về trạng thái <span className="font-bold text-emerald-600">AVAILABLE</span>.</li>
-            <li>Tài khoản khách hàng được giữ nguyên không khóa. Gửi email pháp lý thông báo vi phạm.</li>
-          </ul>
+          <p className="leading-relaxed">
+            Khi xác nhận vi phạm, hợp đồng sẽ bị chấm dứt ngay lập tức, toàn bộ tiền cọc <strong className="font-bold text-rose-600 dark:text-rose-400">{formatVnd(contract.depositAmount)}</strong> sẽ bị tịch thu và mã PIN mở kho của khách hàng sẽ bị vô hiệu hóa. Ô kho sẽ được thu hồi để tiếp tục phục vụ khách hàng khác.
+          </p>
         </div>
 
-        {/* Lý do vi phạm */}
+        {/* Mô tả vi phạm */}
         <div className="space-y-1.5">
-          <label htmlFor="violation-reason" className="text-xs font-bold text-slate-700 dark:text-slate-300 flex justify-between">
-            <span>Lý do / Mô tả vi phạm <span className="text-rose-500">*</span></span>
-            <span className="text-[11px] font-normal text-slate-400">Bắt buộc</span>
+          <label htmlFor="violation-reason" className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+            Mô tả vi phạm
           </label>
           <textarea
             id="violation-reason"
             rows={3}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="Ví dụ: Phát hiện lưu trữ hàng cấm, vũ khí, hóa chất cháy nổ trái phép hoặc vi phạm an ninh nghiêm trọng..."
+            placeholder="Nhập nội dung vi phạm thực tế (ví dụ: phát hiện hàng cấm, chất cháy nổ...)"
             className="w-full rounded-2xl border border-slate-200 p-3 text-xs focus:border-rose-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
           />
         </div>
 
         {/* Ảnh bằng chứng biên bản */}
-        <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-            Ảnh bằng chứng / Biên bản kiểm tra (Tùy chọn, tối đa {IMAGE_MAX_PER_ACTION} ảnh)
-          </label>
-          <ImagePicker
-            label="Ảnh bằng chứng vi phạm"
-            category="FORFEIT_EVIDENCE"
-            max={IMAGE_MAX_PER_ACTION}
-            value={images}
-            onChange={setImages}
-            disabled={submitting}
-          />
-        </div>
+        <ImagePicker
+          label="Ảnh biên bản / hiện trường"
+          category="FORFEIT_EVIDENCE"
+          max={IMAGE_MAX_PER_ACTION}
+          value={images}
+          onChange={setImages}
+          disabled={submitting}
+        />
 
         {/* Thông báo lỗi nếu có */}
         {serverError && (
@@ -145,7 +135,7 @@ export function ViolationTerminationModal({
             size="sm"
             disabled={submitting}
             onClick={onClose}
-            className="rounded-xl"
+            className="rounded-xl cursor-pointer"
           >
             Hủy bỏ
           </Button>
@@ -154,10 +144,10 @@ export function ViolationTerminationModal({
             size="sm"
             disabled={!isFormValid || submitting}
             onClick={submit}
-            className="rounded-xl bg-rose-600 text-white hover:bg-rose-700 font-bold gap-1.5"
+            className="rounded-xl bg-rose-600 text-white hover:bg-rose-700 font-bold gap-1.5 cursor-pointer disabled:opacity-50"
           >
             {submitting && <Spinner className="size-3.5" />}
-            Xác nhận chấm dứt do vi phạm
+            Xác nhận vi phạm
           </Button>
         </div>
       </DialogContent>

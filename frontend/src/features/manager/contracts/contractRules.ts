@@ -10,7 +10,7 @@ export const CONTRACT_STATUS_LABEL: Record<ContractStatus, string> = {
   OVERDUE: "Quá hạn",
   TERMINATED: "Đã trả kho (Chờ hoàn cọc)",
   COMPLETED: "Đã hoàn tất",
-  FORFEITED: "Đã tịch thu, thanh lý tài sản",
+  FORFEITED: "Chờ thanh lý",
   CANCELLED: "Đã hủy",
 }
 

@@ -71,14 +71,14 @@ async function openForfeit() {
 }
 
 describe("Quản lí hợp đồng: thanh lý tài sản quá hạn", () => {
-  test("chỉ hợp đồng đã chuyển Tịch thu mới có nút; quá hạn 35 ngày (BE chưa chuyển) ghi 'Chờ chuyển tịch thu'; đã xử lý ghi 'Đã thanh lý'", async () => {
+  test("hợp đồng đang thuê có nút 'Xử lý vi phạm'; quá hạn từ 30 ngày hoặc Tịch thu có nút 'Thanh lý tài sản'; đã xử lý ghi 'Đã thanh lý'", async () => {
     render(<CustomersContractsPanel />)
     await screen.findByText("Khách Một")
-    expect(within(row("Khách Một")).queryByRole("button", { name: /Thanh lý tài sản/ })).not.toBeInTheDocument()
-    expect(within(row("Khách Hai")).queryByRole("button", { name: /Thanh lý tài sản/ })).not.toBeInTheDocument()
-    expect(within(row("Khách Hai")).getByText("Chờ chuyển tịch thu")).toBeInTheDocument()
+    expect(within(row("Khách Một")).getByRole("button", { name: /Xử lý vi phạm/ })).toBeInTheDocument()
+    expect(within(row("Khách Hai")).getByRole("button", { name: /Thanh lý tài sản/ })).toBeInTheDocument()
     expect(within(row("Khách Ba")).getByRole("button", { name: /Thanh lý tài sản/ })).toBeInTheDocument()
     expect(within(row("Khách Bốn")).getByText("Đã thanh lý")).toBeInTheDocument()
+    expect(within(row("Khách Bốn")).getAllByText("—").length).toBeGreaterThanOrEqual(1)
   })
 
   test("chưa có ảnh minh chứng thì không xác nhận được; tải 2 ảnh → gửi kèm 2 mã ảnh và ghi chú mặc định, đóng hộp thoại", async () => {
@@ -94,15 +94,7 @@ describe("Quản lí hợp đồng: thanh lý tài sản quá hạn", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
   })
 
-  test("có gõ ghi chú → gửi đúng ghi chú đó", async () => {
-    api.markForfeitProcessed.mockReset().mockResolvedValue(undefined)
-    const { user, dialog, confirm, picker } = await openForfeit()
-    await user.upload(picker, photo())
-    await user.type(within(dialog).getByLabelText(/ghi chú xử lý tài sản/i), "Cắt khóa có camera, 2 nhân viên chứng kiến")
-    await waitFor(() => expect(confirm).toBeEnabled())
-    await user.click(confirm)
-    expect(api.markForfeitProcessed).toHaveBeenCalledWith(expect.anything(), 3, "Cắt khóa có camera, 2 nhân viên chứng kiến", [41])
-  })
+
 
   test("chọn file không phải ảnh hoặc quá 5 MB → báo ngay, không tải lên, vẫn khóa nút", async () => {
     const { user, dialog, confirm, picker } = await openForfeit()
@@ -143,13 +135,12 @@ describe("Quản lí hợp đồng: thanh lý tài sản quá hạn", () => {
     expect(await screen.findByRole("button", { name: "Xác nhận thanh lý tài sản" })).toBeInTheDocument()
   })
 
-  test("chi tiết hợp đồng quá hạn 35 ngày (chưa chuyển) giải thích phải chờ hệ thống, không có nút", async () => {
+  test("chi tiết hợp đồng quá hạn 35 ngày có nút thanh lý tài sản", async () => {
     const user = userEvent.setup()
     render(<CustomersContractsPanel />)
     await screen.findByText("Khách Hai")
     await user.click(screen.getByRole("button", { name: "Xem chi tiết hợp đồng CTR-HN01-02" }))
     const detail = await screen.findByRole("dialog")
-    expect(within(detail).getByText(/Hệ thống sẽ chuyển sang "Tịch thu" lúc 00:00/)).toBeInTheDocument()
-    expect(within(detail).queryByRole("button", { name: /Thanh lý tài sản/ })).not.toBeInTheDocument()
+    expect(within(detail).getByRole("button", { name: /Thanh lý tài sản/ })).toBeInTheDocument()
   })
 })

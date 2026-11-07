@@ -1,6 +1,16 @@
 package com.swp391.backend.service;
 
-import com.swp391.backend.dto.TerminateViolationRequest;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.swp391.backend.entity.Account;
 import com.swp391.backend.entity.ActivityLog;
 import com.swp391.backend.entity.Contract;
@@ -21,15 +31,6 @@ import com.swp391.backend.repository.GatePinRepository;
 import com.swp391.backend.repository.PaymentRepository;
 import com.swp391.backend.repository.ReservationRepository;
 import com.swp391.backend.repository.StorageUnitRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.List;
 
 @Service
 public class ForfeitProcessingService {
@@ -91,23 +92,31 @@ public class ForfeitProcessingService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN));
         Contract contract = contractRepository.findByIdForUpdate(contractId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy hợp đồng."));
-        if (!"FORFEITED".equalsIgnoreCase(contract.getStatus())) {
+        Reservation reservation = reservationRepository.findById(contract.getReservationId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy đặt chỗ."));
+
+        boolean isForfeited = "FORFEITED".equalsIgnoreCase(contract.getStatus());
+        int liquidationDays = contract.getOverdueLiquidationDays() != null && contract.getOverdueLiquidationDays() > 0
+                ? contract.getOverdueLiquidationDays() : 30;
+        boolean isOverdue30 = "OVERDUE".equalsIgnoreCase(contract.getStatus()) && reservation.getEndDate() != null
+                && java.time.temporal.ChronoUnit.DAYS.between(reservation.getEndDate(), LocalDate.now(VIETNAM_ZONE)) >= liquidationDays;
+        if (!isForfeited && !isOverdue30) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Chỉ hợp đồng FORFEITED mới được xác nhận đã xử lý tài sản.");
+                    "Hợp đồng chưa đủ điều kiện thanh lý (phải quá hạn từ " + liquidationDays + " ngày trở lên).");
+        }
+        if (!isForfeited) {
+            contract.setStatus("FORFEITED");
         }
         if (contract.isForfeitProcessed()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Hợp đồng đã được xác nhận xử lý tài sản.");
         }
-
-        Reservation reservation = reservationRepository.findById(contract.getReservationId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy đặt chỗ."));
         StorageUnit unit = storageUnitRepository.findByUnitCodeForUpdate(reservation.getUnitCode())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy ô kho."));
         Floor floor = floorRepository.findById(unit.getFloorId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tầng kho."));
         if (!manager.getFacilityId().equals(floor.getFacilityId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Hợp đồng không thuộc cơ sở của Manager.");
+                    "Hợp đồng không thuộc cơ sở quản lí.");
         }
 
         imageStorageService.attachForfeitEvidence(contractId, evidenceImageIds, managerAccountId);
@@ -119,6 +128,28 @@ public class ForfeitProcessingService {
         contract.setForfeitProcessed(true);
         contractRepository.save(contract);
 
+        // Vô hiệu hóa Gate PIN mở cửa của hợp đồng này ngay lập tức
+        List<GatePin> pins = gatePinRepository.findByContractId(contractId);
+        for (GatePin p : pins) {
+            p.setStatus("EXPIRED");
+            gatePinRepository.save(p);
+        }
+
+        // Hủy / Xóa nợ các hóa đơn phạt trễ hạn chưa trả (do cọc đã bị tịch thu để trang trải chi phí)
+        List<Payment> penaltyPayments = paymentRepository.findByContractId(contractId).stream()
+                .filter(p -> "OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType())
+                        || "INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())
+                        || (p.getInvoiceNumber() != null && (p.getInvoiceNumber().startsWith("PEN-") || p.getInvoiceNumber().startsWith("OVD-") || p.getInvoiceNumber().startsWith("CMP-"))))
+                .toList();
+        for (Payment p : penaltyPayments) {
+            if (!"PAID".equalsIgnoreCase(p.getStatus())) {
+                p.setStatus("CANCELLED");
+                p.setPaymentStatus("CANCELLED");
+                p.setRemainingAmount(BigDecimal.ZERO);
+                paymentRepository.save(p);
+            }
+        }
+
         ActivityLog log = new ActivityLog();
         log.setAccountId(managerAccountId);
         log.setFacilityId(floor.getFacilityId());
@@ -127,6 +158,30 @@ public class ForfeitProcessingService {
                 + ", ô kho " + unit.getUnitCode() + ". Ghi chú: " + note.trim());
         log.setCreatedAt(processedAt);
         activityLogRepository.save(log);
+
+        // Gửi email thông báo hoàn tất thanh lý tài sản và khấu trừ cọc
+        try {
+            Account customer = accountRepository.findAccountByAccountId(reservation.getAccountId()).orElse(null);
+            if (customer != null && customer.getEmail() != null && !customer.getEmail().isBlank()) {
+                String facilityName = facilityRepository.findById(floor.getFacilityId())
+                        .map(Facility::getFacilityName)
+                        .orElse("Smart Self Storage");
+                String contractCode = reservation.getReservationCode() != null
+                        ? reservation.getReservationCode()
+                        : "CTR-" + contract.getContractId();
+                emailService.sendForfeitNoticeEmail(
+                        customer.getEmail(),
+                        customer.getFullName(),
+                        contractCode,
+                        unit.getUnitCode(),
+                        facilityName,
+                        reservation.getDepositAmount(),
+                        processedAt
+                );
+            }
+        } catch (Exception ignored) {
+            // Lỗi email không làm rollback giao dịch thanh lý
+        }
     }
 
     @Transactional

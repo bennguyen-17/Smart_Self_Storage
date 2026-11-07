@@ -15,8 +15,19 @@ const STATUS_TONE: Record<ContractStatus, BadgeTone> = {
 }
 
 
-export function ContractStatusBadge({ status }: { status: ContractStatus }) {
-  // Trạng thái BE mới thêm mà FE chưa biết: vẫn hiện mã, màu trung tính, không vỡ giao diện
+export function ContractStatusBadge({
+  status,
+  forfeitProcessed,
+}: {
+  status: ContractStatus
+  forfeitProcessed?: boolean
+}) {
+  if (status === "FORFEITED") {
+    if (forfeitProcessed) {
+      return <StatusBadge tone="slate">Đã thanh lý</StatusBadge>
+    }
+    return <StatusBadge tone="red">Chờ thanh lý</StatusBadge>
+  }
   return <StatusBadge tone={STATUS_TONE[status] ?? "slate"}>{CONTRACT_STATUS_LABEL[status] ?? status}</StatusBadge>
 }
 

@@ -68,7 +68,7 @@ function ContractDetailDialog({
           <div className="min-w-0 space-y-1">
             <DialogTitle className="flex flex-wrap items-center gap-2 text-lg font-black tracking-tight">
               <span className="font-mono">{contract.contractCode}</span>
-              <ContractStatusBadge status={contract.status} />
+              <ContractStatusBadge status={contract.status} forfeitProcessed={contract.forfeitProcessed} />
             </DialogTitle>
             <DialogDescription className="text-xs">
               <span className="text-title font-bold">{contract.customerName}</span>
@@ -199,14 +199,12 @@ function ContractDetailDialog({
                 </h3>
                 <p className="text-muted">
                   {forfeit === "DONE"
-                    ? "Đã xác nhận xử lý tài sản, ô kho chuyển sang bảo trì."
-                    : forfeit === "WAITING"
-                      ? `Quá hạn đủ ${contract.overdueLiquidationDays ?? contract.forfeitAfterDays ?? FORFEIT_AFTER_DAYS} ngày. Hệ thống sẽ chuyển sang "Tịch thu" lúc 00:00, sau đó mới xác nhận thanh lý được.`
-                      : "Hợp đồng đã bị tịch thu. Cắt khóa, niêm phong, xử lý tài sản xong thì xác nhận kèm ảnh minh chứng."}
+                    ? "Đã xác nhận xử lý tài sản và thu hồi ô kho."
+                    : "Hợp đồng quá hạn trên 30 ngày, đủ điều kiện tiến hành thanh lý tài sản."}
                 </p>
               </div>
             </div>
-            {forfeit === "READY" && (
+            {(forfeit === "READY" || forfeit === "WAITING") && (
               <Button size="sm" className="bg-rose-600 text-white hover:bg-rose-500" onClick={() => onForfeit(contract)}>
                 <GavelIcon aria-hidden="true" /> Thanh lý tài sản
               </Button>

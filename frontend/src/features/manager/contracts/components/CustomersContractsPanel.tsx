@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { CheckCircle2Icon, EyeIcon, GavelIcon, HourglassIcon } from "lucide-react"
+import { GavelIcon, ShieldAlertIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -109,7 +109,7 @@ function CustomersContractsPanel() {
         caption="Khách hàng và hợp đồng"
         columns={[
           { header: "Khách hàng", align: "center" },
-          { header: "Hợp đồng", align: "center" },
+          { header: "Mã hợp đồng", align: "center" },
           { header: "Ô kho", align: "center" },
           { header: "Thời hạn", align: "center" },
           { header: "Tình trạng", align: "center" },
@@ -141,8 +141,9 @@ function CustomersContractsPanel() {
                 <button
                   type="button"
                   onClick={() => setViewing(c)}
+                  title="Bấm để xem chi tiết hợp đồng"
                   aria-label={`Xem chi tiết hợp đồng ${c.contractCode}`}
-                  className="cursor-pointer font-mono font-semibold text-blue-600 underline-offset-2 hover:underline dark:text-blue-400"
+                  className="inline-flex items-center justify-center w-[185px] py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-600 font-mono font-semibold text-xs transition-all duration-150 shadow-2xs hover:shadow-xs cursor-pointer text-center"
                 >
                   {c.contractCode}
                 </button>
@@ -156,46 +157,37 @@ function CustomersContractsPanel() {
               </td>
               <td className="px-4 py-3 text-center">
                 <div className="flex justify-center">
-                  <ContractStatusBadge status={c.status} />
+                  <ContractStatusBadge status={c.status} forfeitProcessed={c.forfeitProcessed} />
                 </div>
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-center">
-                {/* Luôn có nút Chi tiết; thêm việc thanh lý khi hợp đồng tới bước đó */}
                 <div className="flex items-center justify-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 gap-1.5 rounded-xl px-2.5 text-xs font-semibold"
-                    aria-label={`Chi tiết hợp đồng ${c.contractCode}`}
-                    onClick={() => setViewing(c)}
-                  >
-                    <EyeIcon aria-hidden="true" className="size-3.5" />
-                    Chi tiết
-                  </Button>
-                  {forfeit === "READY" ? (
+                  {forfeit === "READY" || forfeit === "WAITING" ? (
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-8 gap-1.5 rounded-xl border-rose-300 bg-rose-50 px-2.5 text-xs font-bold text-rose-700 hover:bg-rose-100 hover:text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-900/60 cursor-pointer"
+                      className="h-8 gap-1.5 rounded-xl px-2.5 text-xs font-semibold cursor-pointer shadow-2xs"
                       onClick={() => setForfeiting(c)}
+                      title="Thanh lý tài sản quá hạn"
                     >
                       <GavelIcon className="size-3.5" />
                       Thanh lý tài sản
                     </Button>
-                  ) : forfeit === "DONE" ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                      <CheckCircle2Icon className="size-4 shrink-0" />
-                      Đã thanh lý
-                    </span>
-                  ) : forfeit === "WAITING" ? (
-                    <span
-                      className="flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-amber-300"
-                      title="Hệ thống chuyển sang Tịch thu lúc 00:00, sau đó mới xác nhận thanh lý được"
+
+                  ) : c.status === "ACTIVE" || c.status === "OVERDUE" ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 gap-1.5 rounded-xl px-2.5 text-xs font-semibold cursor-pointer shadow-2xs"
+                      onClick={() => setViolating(c)}
+                      title="Xử lý vi phạm"
                     >
-                      <HourglassIcon className="size-4 shrink-0" />
-                      Chờ chuyển tịch thu
-                    </span>
-                  ) : null}
+                      <ShieldAlertIcon className="size-3.5" />
+                      Xử lý vi phạm
+                    </Button>
+                  ) : (
+                    <span className="text-muted">—</span>
+                  )}
                 </div>
               </td>
             </tr>

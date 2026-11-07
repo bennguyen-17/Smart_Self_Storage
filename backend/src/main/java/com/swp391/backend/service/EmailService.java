@@ -525,4 +525,42 @@ public class EmailService {
             return false;
         }
     }
+
+    // Gửi email thông báo hoàn tất thanh lý tài sản và khấu trừ tiền cọc do quá hạn >= 30 ngày
+    public boolean sendForfeitNoticeEmail(
+            String toEmail, String customerName, String contractCode,
+            String unitCode, String facilityName, BigDecimal depositAmount,
+            LocalDateTime processedAt
+    ) {
+        if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
+            return false;
+        }
+        try {
+            String safeName = (customerName != null && !customerName.isBlank()) ? customerName.trim() : "Quý khách";
+            String safeCode = (contractCode != null && !contractCode.isBlank()) ? contractCode.trim() : "---";
+            String safeUnit = (unitCode != null && !unitCode.isBlank()) ? unitCode.trim() : "---";
+            String safeFacility = (facilityName != null && !facilityName.isBlank()) ? facilityName.trim() : "Hệ thống Smart Self Storage";
+            NumberFormat nf = NumberFormat.getInstance(Locale.of("vi", "VN"));
+            String formattedDeposit = depositAmount != null ? nf.format(depositAmount) + " VNĐ" : "0 VNĐ";
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm - dd/MM/yyyy");
+            String formattedTime = (processedAt != null ? processedAt : LocalDateTime.now()).format(formatter);
+
+            String subject = "[Smart Self Storage] Thông báo hoàn tất thanh lý tài sản - Hợp đồng #" + safeCode;
+
+            String template = loadTemplate("forfeit-notice.html");
+            String html = template
+                    .replace("{{displayName}}", escapeHtml(safeName))
+                    .replace("{{contractCode}}", escapeHtml(safeCode))
+                    .replace("{{unitCode}}", escapeHtml(safeUnit))
+                    .replace("{{facilityName}}", escapeHtml(safeFacility))
+                    .replace("{{processedAt}}", escapeHtml(formattedTime))
+                    .replace("{{depositAmount}}", escapeHtml(formattedDeposit));
+
+            sendHtmlEmail(toEmail.trim(), subject, html);
+            return true;
+        } catch (Exception e) {
+            log.error("Không thể gửi email thông báo thanh lý tài sản tới {}: {}", toEmail, e.getMessage());
+            return false;
+        }
+    }
 }

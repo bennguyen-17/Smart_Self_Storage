@@ -90,7 +90,7 @@ function CheckinContractTable({
             <th scope="col" className="py-3 px-3 text-center whitespace-nowrap">Thông Tin Khách Hàng</th>
             <th scope="col" className="py-3 px-3 text-center whitespace-nowrap">Mã Kho</th>
             <th scope="col" className="py-3 px-3 text-center whitespace-nowrap">Trạng Thái</th>
-            <th scope="col" className="py-3 px-3 text-center whitespace-nowrap">Hành Động</th>
+            <th scope="col" className="py-3 px-3 text-center whitespace-nowrap">Thao Tác</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200">

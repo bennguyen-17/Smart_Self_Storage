@@ -116,13 +116,12 @@ describe("Chi tiết hợp đồng (bấm mã hợp đồng)", () => {
     expect(await screen.findByText("Tải PDF")).toBeInTheDocument()
   })
 
-  test("cột Thao tác luôn có nút Chi tiết ở mọi hàng, bấm mở ngăn chi tiết", async () => {
+  test("bấm nút mã hợp đồng mở ngăn chi tiết", async () => {
     const user = userEvent.setup()
     render(<CustomersContractsPanel />)
     await screen.findByText("Nguyễn Văn An")
-    for (const r of bodyRows()) expect(within(r).getByRole("button", { name: /^Chi tiết hợp đồng / })).toBeInTheDocument()
     const row = screen.getByText("Nguyễn Văn An").closest("tr") as HTMLElement
-    await user.click(within(row).getByRole("button", { name: /^Chi tiết hợp đồng / }))
+    await user.click(within(row).getByRole("button", { name: /^Xem chi tiết hợp đồng / }))
     expect(await screen.findByRole("dialog")).toHaveTextContent("Nguyễn Văn An")
   })
 })

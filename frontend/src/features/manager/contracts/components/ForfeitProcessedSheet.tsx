@@ -16,7 +16,6 @@ import { IMAGE_MAX_PER_ACTION } from "@/components/internal/images/imageApi"
 import { formatDate, formatVnd } from "@/lib/format"
 
 import { markForfeitProcessed } from "../api/contractApi"
-import { FORFEIT_NOTE_MAX } from "../contractRules"
 import type { FacilityContract } from "../types"
 
 /** BE bắt buộc ghi chú; Manager không gõ thì dùng câu mặc định */
@@ -34,13 +33,11 @@ function ForfeitProcessedSheet({
   onDone: (message: string) => void
 }) {
   const [images, setImages] = useState<PickedImage[]>([])
-  const [note, setNote] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
   // Cô chốt: thanh lý phải có minh chứng rõ ràng → bắt buộc ít nhất 1 ảnh (BE cũng kiểm tra)
-  const noteTooLong = note.trim().length > FORFEIT_NOTE_MAX
-  const isFormValid = images.length > 0 && !noteTooLong
+  const isFormValid = images.length > 0
 
   async function submit() {
     if (!isFormValid) return
@@ -50,7 +47,7 @@ function ForfeitProcessedSheet({
       await markForfeitProcessed(
         ctx,
         contract.contractId,
-        note.trim() || DEFAULT_FORFEIT_NOTE,
+        DEFAULT_FORFEIT_NOTE,
         images.map((i) => i.imageId)
       )
       onDone(`Đã xác nhận thanh lý tài sản hợp đồng ${contract.contractCode}`)
@@ -108,36 +105,23 @@ function ForfeitProcessedSheet({
         <div className="flex items-start gap-3 rounded-2xl border border-amber-200/70 bg-amber-50/80 p-3.5 text-xs text-amber-900 leading-relaxed dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
           <AlertTriangleIcon className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
           <div>
-            <p className="font-bold text-amber-900 dark:text-amber-200">Lưu ý nghiệp vụ giải phóng kho</p>
+            <p className="font-bold text-amber-900 dark:text-amber-200">Lưu ý</p>
             <p className="mt-0.5 text-amber-800/90 dark:text-amber-300/90">
-              Hợp đồng đã quá hạn trên 30 ngày và khách hàng không đến nhận lại đồ. Cơ sở tiến hành cắt khóa niêm phong và thanh lý tài sản. Sau khi xác nhận, ô kho sẽ được giải phóng về trạng thái <b>sẵn sàng cho thuê (Còn trống)</b> để chuẩn bị cho lượt thuê mới. Thao tác này không thể hoàn tác.
+              Hợp đồng đã quá hạn trên 30 ngày. Sau khi xác nhận thanh lý, tiền cọc sẽ được tịch thu và ô kho sẽ được thu hồi để phục vụ khách hàng mới. Thao tác này không thể hoàn tác.
             </p>
           </div>
         </div>
 
         {/* Ảnh minh chứng (bắt buộc) + ghi chú */}
         <ImagePicker
-          label="Ảnh minh chứng thanh lý (cắt khóa, niêm phong, tài sản)"
+          label="Ảnh minh chứng thanh lý"
           category="FORFEIT_EVIDENCE"
           max={IMAGE_MAX_PER_ACTION}
           value={images}
           onChange={setImages}
           disabled={submitting}
         />
-        <label className="block space-y-1 text-xs font-bold">
-          <span className="text-title">Ghi chú xử lý tài sản (không bắt buộc)</span>
-          <textarea
-            value={note}
-            disabled={submitting}
-            onChange={(e) => setNote(e.target.value)}
-            rows={2}
-            placeholder={DEFAULT_FORFEIT_NOTE}
-            className="inner-box text-title w-full rounded-xl border px-3 py-2 text-xs font-normal outline-none focus:ring-2 focus:ring-rose-500/20"
-          />
-          {noteTooLong && (
-            <span className="block text-[11px] font-semibold text-rose-600 dark:text-rose-400">Ghi chú tối đa {FORFEIT_NOTE_MAX} ký tự</span>
-          )}
-        </label>
+
 
         {serverError && (
           <p role="alert" className="[overflow-wrap:anywhere] rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
