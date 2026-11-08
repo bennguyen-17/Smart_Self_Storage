@@ -3,8 +3,8 @@
 
 import { addDays, todayInVietnam } from "@/lib/format"
 
-/** Giờ làm việc của nhân viên tại quầy cơ sở (08:00 - 20:00 hàng ngày) */
-export const COUNTER_OPEN_HOUR = 8
+/** Giờ làm việc của nhân viên tại quầy cơ sở (07:00 - 20:00 hàng ngày) */
+export const COUNTER_OPEN_HOUR = 7
 export const COUNTER_CLOSE_HOUR = 20
 
 /** Tối đa 7 ngày kể từ ngày đặt kho */
@@ -52,7 +52,7 @@ export function isSameDayCheckIn(dateStr: string, now: Date = new Date()): boole
   return dateStr === todayInVietnam(now)
 }
 
-/** Kiểm tra quầy hiện tại có đang trong khung giờ phục vụ (08:00 - 20:00) hay không */
+/** Kiểm tra quầy hiện tại có đang trong khung giờ phục vụ (07:00 - 20:00) hay không */
 export function isCounterOpenNow(now: Date = new Date()): boolean {
   const hour = getVietnamHour(now)
   return hour >= COUNTER_OPEN_HOUR && hour < COUNTER_CLOSE_HOUR

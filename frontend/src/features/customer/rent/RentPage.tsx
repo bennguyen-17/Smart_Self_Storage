@@ -485,10 +485,10 @@ export default function RentStoragePage() {
                     })}
                   </select>
 
-                  {/* Thông báo ca trực / Giờ làm việc nhân viên quầy 08:00 - 20:00 */}
+                  {/* Thông báo ca trực / Giờ làm việc nhân viên quầy 07:00 - 20:00 */}
                   <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 text-[11px] text-slate-600 dark:text-slate-400 flex items-center gap-2">
                     <Clock className="size-3.5 shrink-0 text-blue-500" />
-                    <span>Nhân viên hỗ trợ check-in tại quầy từ <strong>08:00 đến 20:00</strong> trong ngày hẹn nhận kho.</span>
+                    <span>Nhân viên hỗ trợ check-in tại quầy từ <strong>07:00 đến 20:00</strong> trong ngày hẹn nhận kho.</span>
                   </div>
                 </div>
 

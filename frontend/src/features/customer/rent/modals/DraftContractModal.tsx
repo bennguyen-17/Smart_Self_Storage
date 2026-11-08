@@ -118,7 +118,7 @@ export default function DraftContractModal({ bookingData, onProceedToPayment, on
               <div className="space-y-1">
                 <strong className="text-slate-900 dark:text-white block">3. Quy định nhận kho và không đến nhận:</strong>
                 <ul className="list-disc pl-4 space-y-1">
-                  <li>Giờ nhận kho tiêu chuẩn diễn ra từ 08:00 đến 20:00 trong ngày hẹn check-in ({bookingData.startDate}).</li>
+                  <li>Giờ nhận kho tiêu chuẩn diễn ra từ 07:00 đến 20:00 trong ngày hẹn check-in ({bookingData.startDate}).</li>
                   <li>Nếu sau 00:00 ngày tiếp theo bạn không đến nhận kho và không liên hệ xin gia hạn, hệ thống sẽ tự động hủy lịch đặt và không hoàn lại tiền cọc.</li>
                 </ul>
               </div>

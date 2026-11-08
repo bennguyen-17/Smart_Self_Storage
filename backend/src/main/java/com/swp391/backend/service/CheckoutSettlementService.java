@@ -344,7 +344,7 @@ public class CheckoutSettlementService {
         contract.setTerminatedAt(LocalDateTime.now());
         contractRepository.save(contract);
 
-        // Ô kho chuyển ngay sang MAINTENANCE để Staff dọn dẹp
+        // Ô kho giải phóng trực tiếp về AVAILABLE để sẵn sàng đón khách mới (nếu có hư hại Staff báo Manager chuyển MAINTENANCE thủ công sau)
         unit.setStatus("AVAILABLE");
         storageUnitRepository.save(unit);
 
@@ -438,7 +438,7 @@ public class CheckoutSettlementService {
             act.setAccountId(staffAccountId != null ? staffAccountId : res.getAccountId());
             act.setFacilityId(floorRepository.findById(unit.getFloorId()).map(Floor::getFacilityId).orElse(null));
             act.setAction("CONFIRM_CHECKOUT_TERMINATED");
-            act.setDescription(String.format("Xác nhận bàn giao trả kho #%d (ô %s). HĐ -> %s, ô -> MAINTENANCE, PIN vô hiệu hóa. Quyết toán: %s (Hóa đơn: %s).",
+            act.setDescription(String.format("Xác nhận bàn giao trả kho #%d (ô %s). HĐ -> %s, ô -> AVAILABLE, PIN vô hiệu hóa. Quyết toán: %s (Hóa đơn: %s).",
                     contract.getContractId(), unit.getUnitCode(), contract.getStatus(), netAmount, cmpInvoice != null ? cmpInvoice : (refInvoice != null ? refInvoice : "0 VNĐ")));
             act.setCreatedAt(LocalDateTime.now());
             activityLogRepository.save(act);
@@ -447,14 +447,14 @@ public class CheckoutSettlementService {
         CheckoutConfirmResponse resp = new CheckoutConfirmResponse();
         resp.setSuccess(true);
         if (netAmount.compareTo(BigDecimal.ZERO) < 0) {
-            resp.setMessage(String.format("Nhận bàn giao và thu tiền bồi thường thành công! Hợp đồng đã chuyển %s, ô kho chuyển MAINTENANCE, mã PIN bị vô hiệu. Hóa đơn bồi thường: %s (%s VNĐ).",
+            resp.setMessage(String.format("Nhận bàn giao và thu tiền bồi thường thành công! Hợp đồng đã chuyển %s, ô kho chuyển AVAILABLE, mã PIN bị vô hiệu. Hóa đơn bồi thường: %s (%s VNĐ).",
                     contract.getStatus(), cmpInvoice, netAmount.abs()));
             resp.setInvoiceNumber(cmpInvoice);
             resp.setInvoiceType("COMPENSATION");
             resp.setSettlementAmount(netAmount.abs());
             resp.setRefund(false);
         } else {
-            resp.setMessage(String.format("Nhận bàn giao thành công! Hợp đồng đã chuyển %s, ô kho chuyển MAINTENANCE, mã PIN bị vô hiệu. Lệnh hoàn cọc: %s.",
+            resp.setMessage(String.format("Nhận bàn giao thành công! Hợp đồng đã chuyển %s, ô kho chuyển AVAILABLE, mã PIN bị vô hiệu. Lệnh hoàn cọc: %s.",
                     contract.getStatus(), refInvoice != null ? refInvoice + " (" + netAmount + " VNĐ)" : "0 VNĐ"));
             resp.setInvoiceNumber(refInvoice);
             resp.setInvoiceType("REFUND");
@@ -464,7 +464,7 @@ public class CheckoutSettlementService {
         resp.setContractId(contract.getContractId());
         resp.setContractStatus(contract.getStatus());
         resp.setUnitCode(unit.getUnitCode());
-        resp.setUnitStatus("MAINTENANCE");
+        resp.setUnitStatus("AVAILABLE");
         resp.setGatePinDisabled(true);
         resp.setTicketResolved(ticketResolved);
 

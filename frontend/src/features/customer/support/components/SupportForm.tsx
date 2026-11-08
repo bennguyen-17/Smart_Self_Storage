@@ -48,7 +48,7 @@ export default function SupportForm() {
     unitCode?: string;
   } | null>(null);
   const currentHour = new Date().getHours();
-  const isOutsideWorkingHours = currentHour < 8 || currentHour >= 20;
+  const isOutsideWorkingHours = currentHour < 7 || currentHour >= 20;
 
   // Danh sách ticket của khách
   const [myTickets, setMyTickets] = useState<any[]>([]);
@@ -320,7 +320,7 @@ export default function SupportForm() {
                               <strong className="font-mono text-emerald-950 dark:text-white bg-emerald-100 dark:bg-emerald-900/60 px-1.5 py-0.5 rounded">
                                 {formatDate(lastSubmitted.desiredDate)}
                               </strong>
-                              . Quý khách vui lòng đến cơ sở trong khung giờ làm việc (08:00 – 20:00) ngày đã hẹn để nhân viên tiến hành nghiệm thu và bàn giao ô kho.
+                              . Quý khách vui lòng đến cơ sở trong khung giờ làm việc (07:00 – 20:00) ngày đã hẹn để nhân viên tiến hành nghiệm thu và bàn giao ô kho.
                             </>
                           ) : (
                             'Nhân viên đã tiếp nhận và sẽ có mặt xử lý trong vòng 15 phút.'
@@ -362,7 +362,7 @@ export default function SupportForm() {
                       Tài khoản của bạn hiện chưa có hợp đồng thuê kho nào ở trạng thái <strong className="text-emerald-600 dark:text-emerald-400">đang có hiệu lực</strong> . Chức năng gửi ticket hỗ trợ kỹ thuật và mở khóa khẩn cấp chỉ áp dụng cho khách hàng đang có hợp đồng hoạt động tại cơ sở.
                     </p>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-1">
-                      Nếu hợp đồng của bạn đang chờ check-in nhận kho hoặc cần tư vấn, vui lòng gặp nhân viên tại sảnh cơ sở trong khung giờ trực <strong className="text-blue-600 dark:text-blue-300">(08:00 - 20:00)</strong> hoặc kiểm tra thông tin hợp đồng tại mục Kho của tôi.
+                      Nếu hợp đồng của bạn đang chờ check-in nhận kho hoặc cần tư vấn, vui lòng gặp nhân viên tại sảnh cơ sở trong khung giờ trực <strong className="text-blue-600 dark:text-blue-300">(07:00 - 20:00)</strong> hoặc kiểm tra thông tin hợp đồng tại mục Kho của tôi.
                     </p>
                   </div>
                 )}
@@ -372,10 +372,10 @@ export default function SupportForm() {
                   <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 space-y-1">
                     <div className="flex items-center gap-2 font-bold text-xs text-amber-700 dark:text-amber-300">
                       <Clock className="size-4 shrink-0 text-amber-500" />
-                      <span>LƯU Ý KHUNG GIỜ TRỰC CỦA NHÂN VIÊN (08:00 - 20:00)</span>
+                      <span>LƯU Ý KHUNG GIỜ TRỰC CỦA NHÂN VIÊN (07:00 - 20:00)</span>
                     </div>
                     <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                      Hiện đã ngoài khung giờ trực của nhân viên tại cơ sở. Yêu cầu của bạn sẽ được tiếp nhận và xử lý ưu tiên ngay khi ca trực bắt đầu lúc 08:00 sáng mai. Tòa nhà kho vẫn mở cửa tự động 24/7 bằng mã PIN cá nhân.
+                      Hiện đã ngoài khung giờ trực của nhân viên tại cơ sở. Yêu cầu của bạn sẽ được tiếp nhận và xử lý ưu tiên ngay khi ca trực bắt đầu lúc 07:00 sáng mai. Tòa nhà kho vẫn mở cửa tự động 24/7 bằng mã PIN cá nhân.
                     </p>
                   </div>
                 )}
@@ -459,7 +459,7 @@ export default function SupportForm() {
                       />
                     </div>
                     <p className="text-[11px] text-amber-700/90 dark:text-amber-300/90 leading-relaxed">
-                      Lưu ý: Quý khách cần thông báo trước tối thiểu 1 ngày. Nhân viên cơ sở sẽ có mặt nghiệm thu ô kho trong khung giờ làm việc (08:00 – 20:00) ngày đã hẹn.
+                      Lưu ý: Quý khách cần thông báo trước tối thiểu 1 ngày. Nhân viên cơ sở sẽ có mặt nghiệm thu ô kho trong khung giờ làm việc (07:00 – 20:00) ngày đã hẹn.
                     </p>
                   </div>
                 )}
@@ -549,11 +549,11 @@ export default function SupportForm() {
                     <span>Giờ trực tại cơ sở</span>
                   </span>
                   <span className="font-mono font-bold text-xs text-slate-900 dark:text-white">
-                    08:00 – 20:00
+                    07:00 – 20:00
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Nhân viên có mặt hỗ trợ trực tiếp. Ngoài giờ trực, khách hàng vẫn ra vào kho tự động 24/7 bằng mã PIN; các yêu cầu gửi sau 20:00 sẽ được xử lý vào 08:00 sáng hôm sau.
+                  Nhân viên có mặt hỗ trợ trực tiếp. Ngoài giờ trực, khách hàng vẫn ra vào kho tự động 24/7 bằng mã PIN; các yêu cầu gửi sau 20:00 sẽ được xử lý vào 07:00 sáng hôm sau.
                 </p>
               </div>
 
@@ -594,7 +594,7 @@ export default function SupportForm() {
                 </p>
                 <ul className="text-xs text-emerald-800/90 dark:text-emerald-300/90 leading-relaxed space-y-1">
                   <li>- Báo trước tối thiểu 1 ngày (chọn ngày hẹn từ ngày mai trở đi).</li>
-                  <li>- Đến cơ sở trong khung giờ trực (<strong>08:00 – 20:00</strong>) ngày đã hẹn để cùng nhân viên nghiệm thu ô kho.</li>
+                  <li>- Đến cơ sở trong khung giờ trực (<strong>07:00 – 20:00</strong>) ngày đã hẹn để cùng nhân viên nghiệm thu ô kho.</li>
                   <li>- Hệ thống hoàn lại <strong>100% tiền cọc gốc</strong> (sau khi cấn trừ hư hại nếu có; không hoàn lại tiền thuê chưa sử dụng).</li>
                 </ul>
               </div>
@@ -815,13 +815,13 @@ export default function SupportForm() {
                                       <p className="text-[11px] text-slate-600 dark:text-slate-400">
                                         {ticket.type === 'EARLY_TERMINATION' ? (
                                           <>
-                                            Vui lòng có mặt tại kho trong khung giờ <strong>08:00 – 20:00</strong> {ticket.desiredDate ? (
+                                            Vui lòng có mặt tại kho trong khung giờ <strong>07:00 – 20:00</strong> {ticket.desiredDate ? (
                                               <>ngày <strong>{formatDate(ticket.desiredDate)}</strong></>
                                             ) : 'vào ngày đã hẹn'} để tiến hành nghiệm thu bàn giao ô kho.
                                           </>
                                         ) : (
                                           <>
-                                            Nhân viên trực ca sẽ liên hệ hoặc có mặt xử lý trong vòng <strong>15 phút</strong> (trong khung giờ 08:00 - 20:00).
+                                            Nhân viên trực ca sẽ liên hệ hoặc có mặt xử lý trong vòng <strong>15 phút</strong> (trong khung giờ 07:00 - 20:00).
                                           </>
                                         )}
                                       </p>
@@ -841,7 +841,7 @@ export default function SupportForm() {
                                       <p className="text-[11px] text-slate-600 dark:text-slate-400">
                                         {ticket.type === 'EARLY_TERMINATION' ? (
                                           <>
-                                            Yêu cầu hẹn trả kho đã được nhân viên cơ sở tiếp nhận. Vui lòng có mặt tại kho trong khung giờ <strong>08:00 – 20:00</strong> {ticket.desiredDate ? (
+                                            Yêu cầu hẹn trả kho đã được nhân viên cơ sở tiếp nhận. Vui lòng có mặt tại kho trong khung giờ <strong>07:00 – 20:00</strong> {ticket.desiredDate ? (
                                               <>ngày <strong>{formatDate(ticket.desiredDate)}</strong></>
                                             ) : 'vào ngày đã hẹn'} để bàn giao.
                                           </>
