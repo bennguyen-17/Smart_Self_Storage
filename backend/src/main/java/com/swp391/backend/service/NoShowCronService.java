@@ -191,7 +191,7 @@ public class NoShowCronService {
         log.info("Overdue contract job completed. Updated {} contracts for {}.", updatedCount, today);
     }
 
-    // Tự động gửi thông báo nhắc hạn thuê sắp hết lúc 08:00 hằng ngày
+    // Tự động gửi thông báo nhắc hạn thuê sắp hết lúc 00:00 hằng ngày
     @Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Ho_Chi_Minh")
     public void scheduledContractExpiryReminderJob() {
         log.info("Starting Daily Contract Expiry Reminder Cron Job at 00:00:00 (Asia/Ho_Chi_Minh)...");

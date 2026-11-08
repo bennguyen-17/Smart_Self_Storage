@@ -95,18 +95,14 @@ public class DepositService {
             return DepositInitiateResponse.error("Ô kho này hiện không ở trạng thái trống (có thể đã được người khác giữ chỗ hoặc đang bảo trì)!");
         }
 
-        // Giới hạn ngày nhận kho từ hôm nay đến tối đa 7 ngày tới. Sau 20:00 chỉ cho phép chọn từ ngày hôm sau.
+        // Giới hạn ngày nhận kho từ ngày mai đến tối đa 7 ngày tới (không cho phép nhận kho cùng ngày đặt).
         LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
-        java.time.LocalTime nowTime = java.time.LocalTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
-        LocalDate minStartDate = (nowTime.getHour() >= 20) ? today.plusDays(1) : today;
+        LocalDate minStartDate = today.plusDays(1);
         LocalDate maxStartDate = today.plusDays(7);
 
         if (request.getStartDate() != null) {
             if (request.getStartDate().isBefore(minStartDate)) {
-                if (nowTime.getHour() >= 20 && request.getStartDate().isEqual(today)) {
-                    return DepositInitiateResponse.error("Đã quá 20:00 (hết giờ phục vụ của nhân viên tại quầy). Quý khách vui lòng chọn ngày nhận kho từ ngày mai!");
-                }
-                return DepositInitiateResponse.error("Ngày nhận kho không hợp lệ (sớm nhất là " + minStartDate.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")!");
+                return DepositInitiateResponse.error("Ngày nhận kho phải từ ngày mai trở đi (sớm nhất là " + minStartDate.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")!");
             }
             if (request.getStartDate().isAfter(maxStartDate)) {
                 return DepositInitiateResponse.error("Ngày nhận kho chỉ được chọn trong vòng 7 ngày tới (tối đa đến " + maxStartDate.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")!");

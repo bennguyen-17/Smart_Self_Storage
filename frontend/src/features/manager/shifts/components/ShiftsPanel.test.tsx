@@ -36,7 +36,7 @@ describe("ShiftsPanel: mỗi ca 1 người trực, đổi người (nhóm chốt
     expect(days[0]).toHaveTextContent(/^T2/)
     expect(days[5]).toHaveTextContent(/^T7/)
     expect(days[6]).toHaveTextContent(/^CN/)
-    expect(within(card("Ca Sáng")).getByText("08:00 – 12:00")).toBeInTheDocument()
+    expect(within(card("Ca Sáng")).getByText("07:00 – 12:00")).toBeInTheDocument()
     expect(within(card("Ca Tối")).getByText("16:00 – 20:00")).toBeInTheDocument()
   })
 

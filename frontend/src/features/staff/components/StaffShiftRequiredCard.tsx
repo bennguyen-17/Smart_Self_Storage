@@ -52,7 +52,7 @@ export default function StaffShiftRequiredCard({
 
   const now = new Date()
   const currentHour = now.getHours()
-  const isNormalBusinessHours = currentHour >= 8 && currentHour < 20
+  const isNormalBusinessHours = currentHour >= 7 && currentHour < 20
 
   let displayTitle = title || "Bạn chưa tiếp nhận ca trực được phân công"
   let displaySubtitle =
@@ -94,7 +94,7 @@ export default function StaffShiftRequiredCard({
       if (!isNormalBusinessHours) {
         displayTitle = "Hiện đang ngoài giờ làm việc"
         displaySubtitle =
-          "Khung giờ vận hành quầy dịch vụ là từ 08:00 đến 20:00. Hiện không có ca trực nào đang hoạt động."
+          "Khung giờ vận hành quầy dịch vụ là từ 07:00 đến 20:00. Hiện không có ca trực nào đang hoạt động."
       } else {
         displayTitle = "Chưa có ca trực được phân công"
         displaySubtitle =
@@ -105,7 +105,7 @@ export default function StaffShiftRequiredCard({
   } else if (!isNormalBusinessHours) {
     displayTitle = "Hiện đang ngoài giờ làm việc"
     displaySubtitle =
-      "Khung giờ vận hành quầy dịch vụ là từ 08:00 đến 20:00. Hiện không có ca trực nào đang hoạt động."
+      "Khung giờ vận hành quầy dịch vụ là từ 07:00 đến 20:00. Hiện không có ca trực nào đang hoạt động."
     canStart = false
   }
 

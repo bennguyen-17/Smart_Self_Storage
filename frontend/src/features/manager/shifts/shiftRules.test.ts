@@ -56,7 +56,7 @@ describe("planWeekCopy: áp dụng lịch một ngày cho cả tuần (T2 → CN
   const SOURCE: DaySchedule = {
     date: "2026-11-04",
     shifts: [
-      { shiftId: 1, shiftName: "Ca Sáng", startTime: "08:00", endTime: "12:00", staff: [{ employeeId: 5, fullName: "A" }] },
+      { shiftId: 1, shiftName: "Ca Sáng", startTime: "07:00", endTime: "12:00", staff: [{ employeeId: 5, fullName: "A" }] },
       { shiftId: 2, shiftName: "Ca Chiều", startTime: "12:00", endTime: "16:00", staff: [{ employeeId: 8, fullName: "B" }, { employeeId: 5, fullName: "A" }] },
       { shiftId: 3, shiftName: "Ca Tối", startTime: "16:00", endTime: "20:00", staff: [] },
     ],

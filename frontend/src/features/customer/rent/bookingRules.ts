@@ -3,8 +3,8 @@
 
 import { addDays, todayInVietnam } from "@/lib/format"
 
-/** Giờ làm việc của nhân viên tại quầy cơ sở (08:00 - 20:00 hàng ngày) */
-export const COUNTER_OPEN_HOUR = 8
+/** Giờ làm việc của nhân viên tại quầy cơ sở (07:00 - 20:00 hàng ngày) */
+export const COUNTER_OPEN_HOUR = 7
 export const COUNTER_CLOSE_HOUR = 20
 
 /** Tối đa 7 ngày kể từ ngày đặt kho */
@@ -35,16 +35,13 @@ export function getVietnamHour(now: Date = new Date()): number {
 
 /**
  * Các ngày Check-in hợp lệ (YYYY-MM-DD), tính theo giờ Việt Nam.
- * - Nếu thời gian hiện tại < 20:00: Khách được chọn từ Hôm nay (+0) đến 7 ngày tới (+7).
- * - Nếu thời gian hiện tại >= 20:00 (hết ca trực tại quầy): Ngày Check-in sớm nhất là Ngày mai (+1).
+ * Ngày nhận kho bắt đầu từ Ngày mai (+1) đến 7 ngày tới (+7).
  */
 export function getCheckInDates(now: Date = new Date()): string[] {
   const today = todayInVietnam(now)
-  const hour = getVietnamHour(now)
-  const startOffset = hour >= COUNTER_CLOSE_HOUR ? 1 : 0
 
   const dates: string[] = []
-  for (let i = startOffset; i <= CHECKIN_MAX_OFFSET_DAYS; i++) {
+  for (let i = 1; i <= CHECKIN_MAX_OFFSET_DAYS; i++) {
     dates.push(addDays(today, i))
   }
   return dates
@@ -55,7 +52,7 @@ export function isSameDayCheckIn(dateStr: string, now: Date = new Date()): boole
   return dateStr === todayInVietnam(now)
 }
 
-/** Kiểm tra quầy hiện tại có đang trong khung giờ phục vụ (08:00 - 20:00) hay không */
+/** Kiểm tra quầy hiện tại có đang trong khung giờ phục vụ (07:00 - 20:00) hay không */
 export function isCounterOpenNow(now: Date = new Date()): boolean {
   const hour = getVietnamHour(now)
   return hour >= COUNTER_OPEN_HOUR && hour < COUNTER_CLOSE_HOUR

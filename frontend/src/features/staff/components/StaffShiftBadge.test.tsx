@@ -43,7 +43,7 @@ function makeProfile(status: string): StaffProfileData {
       {
         shiftId: 1,
         shiftName: "Ca Sáng",
-        startTime: "08:00",
+        startTime: "07:00",
         endTime: "12:00",
         isCurrent: true,
         status,

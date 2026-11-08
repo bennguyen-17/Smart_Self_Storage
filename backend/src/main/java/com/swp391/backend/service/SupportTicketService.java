@@ -413,7 +413,7 @@ public class SupportTicketService {
         ticket.setContractId(contract.getContractId());
         ticket.setFacilityId(reservation != null ? getFacilityIdByUnit(reservation.getUnitCode()) : null);
         ticket.setUnitCode(reservation != null ? reservation.getUnitCode() : null);
-        ticket.setTitle("Yêu cầu trả kho trước hạn");
+        ticket.setTitle("Yêu cầu trả kho sớm");
         ticket.setDescription(req.getReason());
         if (req.getDesiredDate() == null) {
             throw new IllegalArgumentException("Vui lòng chọn ngày hẹn trả kho (phải hẹn trước ít nhất 1 ngày)!");
@@ -471,7 +471,7 @@ public class SupportTicketService {
             return b.getCreatedAt().compareTo(a.getCreatedAt());
         });
 
-        checkAndEscalateTickets(results);
+        populateTicketsExtraInfo(results);
         return results;
     }
 
@@ -549,7 +549,7 @@ public class SupportTicketService {
         Integer facilityId = staffShiftService.requireOnDutyFacility(staffAccountId);
         List<SupportTicket> tickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
 
-        checkAndEscalateTickets(tickets);
+        populateTicketsExtraInfo(tickets);
 
         return tickets.stream()
                 .filter(t -> status == null || status.trim().isEmpty() || "ALL".equalsIgnoreCase(status) || t.getStatus().equalsIgnoreCase(status))
@@ -718,7 +718,7 @@ public class SupportTicketService {
             tickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
         }
 
-        checkAndEscalateTickets(tickets);
+        populateTicketsExtraInfo(tickets);
 
         return tickets.stream()
                 .filter(t -> status == null || status.trim().isEmpty() || "ALL".equalsIgnoreCase(status) || t.getStatus().equalsIgnoreCase(status))

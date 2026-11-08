@@ -22,8 +22,8 @@ export function findCheckinTab(key: string | null): CheckinTab {
   return CHECKIN_TABS.find((tab) => tab.key === key) ?? CHECKIN_TABS[0]
 }
 
-/** Khung giờ check-in bàn giao 08:00 – 20:00 hằng ngày */
-export const CHECKIN_HOURS = { start: 8, end: 20 }
+/** Khung giờ check-in bàn giao 07:00 – 20:00 hằng ngày */
+export const CHECKIN_HOURS = { start: 7, end: 20 }
 
 /** Hủy tại quầy (0 ngày < 4 ngày) → khách chịu phí hủy 50% cọc */
 export const CANCEL_FORFEIT_RATE = 0.5

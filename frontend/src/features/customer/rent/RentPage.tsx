@@ -467,7 +467,7 @@ export default function RentStoragePage() {
                       Ngày nhận kho (Check-in):
                     </label>
                     <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                      Hôm nay hoặc một trong 7 ngày tới 
+                      Từ ngày mai (trong vòng 7 ngày tới)
                     </span>
                   </div>
                   <select
@@ -476,33 +476,20 @@ export default function RentStoragePage() {
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white cursor-pointer shadow-xs"
                   >
                     {getCheckInDates(new Date()).map((d) => {
-                      const isToday = isSameDayCheckIn(d);
                       const formatted = d.split('-').reverse().join('/');
                       return (
                         <option key={d} value={d}>
-                          {isToday ? `${formatted} (Nhận kho hôm nay)` : formatted}
+                          {formatted}
                         </option>
                       );
                     })}
                   </select>
 
-                  {/* Thông báo ca trực / Cảnh báo giờ làm việc nhân viên quầy 08:00 - 20:00 */}
-                  {isSameDayCheckIn(startDate) ? (
-                    <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
-                      <Clock className="size-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
-                      <div className="space-y-1">
-                        <p className="font-bold">Lưu ý giờ làm việc tại quầy (08:00 – 20:00):</p>
-                        <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
-                          Bạn đã chọn nhận kho <strong>Hôm nay</strong>. Nhân viên quầy làm việc đến <strong>20:00</strong>. Quý khách vui lòng đến cơ sở trước <strong>20:00 hôm nay</strong> để nhân viên đối soát CCCD, thu tiền thuê và bàn giao kho.
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 text-[11px] text-slate-600 dark:text-slate-400 flex items-center gap-2">
-                      <Clock className="size-3.5 shrink-0 text-blue-500" />
-                      <span>Nhân viên hỗ trợ check-in tại quầy từ <strong>08:00 đến 20:00</strong> trong ngày hẹn nhận kho.</span>
-                    </div>
-                  )}
+                  {/* Thông báo ca trực / Giờ làm việc nhân viên quầy 07:00 - 20:00 */}
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 text-[11px] text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                    <Clock className="size-3.5 shrink-0 text-blue-500" />
+                    <span>Nhân viên hỗ trợ check-in tại quầy từ <strong>07:00 đến 20:00</strong> trong ngày hẹn nhận kho.</span>
+                  </div>
                 </div>
 
                 {/* Bảng tổng tính tiền */}

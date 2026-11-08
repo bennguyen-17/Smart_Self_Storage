@@ -91,7 +91,7 @@ function build(): ActivityLogEntry[] {
       ...staff,
       action: "CONFIRM_CHECKOUT_TERMINATED",
       description:
-        "Xác nhận bàn giao trả kho #88 (ô HN01-F1-M05). HĐ -> TERMINATED, ô -> UNDER_MAINTENANCE, PIN vô hiệu hóa.",
+        "Xác nhận bàn giao trả kho #88 (ô HN01-F1-M05). HĐ -> TERMINATED, ô -> AVAILABLE, PIN vô hiệu hóa.",
       createdAt: at(-3, "10:11:00"),
       ipAddress: "10.10.1.31",
     },

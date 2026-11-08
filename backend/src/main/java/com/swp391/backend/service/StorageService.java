@@ -430,7 +430,7 @@ public class StorageService {
         return units.stream().map(this::mapSingleUnit).collect(Collectors.toList());
     }
 
-    private UnitDetailResponse mapSingleUnit(StorageUnit u) {
+    public UnitDetailResponse mapSingleUnit(StorageUnit u) {
         UnitDetailResponse dto = new UnitDetailResponse();
         dto.setUnitCode(u.getUnitCode());
         dto.setUnitId(u.getUnitCode());
@@ -483,12 +483,22 @@ public class StorageService {
         // Gán mã ô kho chuẩn từ Database (ví dụ: HN01-G-XL01)
         dto.setUnitCode(u.getUnitCode());
 
-        // Lấy thông tin Bảng giá
+        // Lấy thông tin Bảng giá hiện hành (tự động cộng phụ phí điều hòa nếu là kho mát)
         priceRepository.findByUnitTypeIdAndStatus(u.getUnitTypeId(), "ACTIVE").ifPresent(p -> {
-            dto.setDailyPrice(p.getDailyPrice());
-            dto.setMonthlyPrice(p.getMonthlyPrice());
+            BigDecimal daily = p.getDailyPrice() != null ? p.getDailyPrice() : BigDecimal.ZERO;
+            BigDecimal monthly = p.getMonthlyPrice() != null ? p.getMonthlyPrice() : BigDecimal.ZERO;
+            BigDecimal surchargePct = (p.getClimateSurchargePercent() != null && p.getClimateSurchargePercent().compareTo(BigDecimal.ZERO) > 0)
+                    ? p.getClimateSurchargePercent()
+                    : BigDecimal.valueOf(20.00);
+            if (Boolean.TRUE.equals(dto.getIsClimate())) {
+                BigDecimal factor = BigDecimal.ONE.add(surchargePct.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
+                daily = daily.multiply(factor).setScale(0, RoundingMode.HALF_UP);
+                monthly = monthly.multiply(factor).setScale(0, RoundingMode.HALF_UP);
+            }
+            dto.setDailyPrice(daily);
+            dto.setMonthlyPrice(monthly);
             dto.setDepositAmount(p.getDepositAmount());
-            dto.setClimateSurchargePercent(p.getClimateSurchargePercent());
+            dto.setClimateSurchargePercent(surchargePct);
         });
 
         return dto;
@@ -577,7 +587,8 @@ public class StorageService {
     // --- Cập nhật Bảng giá và Mức cọc lưu vào Database ---
     @Transactional
     public PriceDto updatePrice(Integer unitTypeId, PriceDto req) {
-        if (!unitTypeRepository.existsById(unitTypeId)) throw new RuntimeException("Không tìm thấy loại ô kho ID: " + unitTypeId);
+        UnitType targetUt = unitTypeRepository.findById(unitTypeId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy loại ô kho ID: " + unitTypeId));
 
         Optional<Price> existingPriceOpt = priceRepository.findByUnitTypeIdAndStatus(unitTypeId, "ACTIVE");
         Price price;
@@ -595,11 +606,36 @@ public class StorageService {
         if (req.getDepositAmount() != null) price.setDepositAmount(req.getDepositAmount());
         if (req.getClimateSurchargePercent() != null) {
             price.setClimateSurchargePercent(req.getClimateSurchargePercent());
-        } else {
+        } else if (price.getClimateSurchargePercent() == null || price.getClimateSurchargePercent().compareTo(BigDecimal.ZERO) <= 0) {
             price.setClimateSurchargePercent(BigDecimal.valueOf(20.00));
         }
 
         Price saved = priceRepository.save(price);
+
+        // Đồng bộ bảng giá cơ sở sang các UnitType cùng kích thước vật lý (ví dụ: Kho Mát CLIMATE_CONTROLLED cùng Size)
+        if (targetUt.getSize() != null && !targetUt.getSize().isBlank()) {
+            List<UnitType> allTypes = unitTypeRepository.findAll();
+            for (UnitType otherUt : allTypes) {
+                if (!otherUt.getUnitTypeId().equals(unitTypeId)
+                        && otherUt.getSize() != null
+                        && otherUt.getSize().trim().equalsIgnoreCase(targetUt.getSize().trim())) {
+                    Price otherPrice = priceRepository.findByUnitTypeIdAndStatus(otherUt.getUnitTypeId(), "ACTIVE")
+                            .orElseGet(() -> {
+                                Price np = new Price();
+                                np.setUnitTypeId(otherUt.getUnitTypeId());
+                                np.setEffectiveFrom(java.time.LocalDate.now());
+                                np.setStatus("ACTIVE");
+                                return np;
+                            });
+                    otherPrice.setDailyPrice(saved.getDailyPrice());
+                    otherPrice.setMonthlyPrice(saved.getMonthlyPrice());
+                    otherPrice.setDepositAmount(saved.getDepositAmount());
+                    otherPrice.setClimateSurchargePercent(saved.getClimateSurchargePercent());
+                    priceRepository.save(otherPrice);
+                }
+            }
+        }
+
         req.setPriceId(saved.getPriceId());
         req.setUnitTypeId(saved.getUnitTypeId());
         BigDecimal surcharge = saved.getClimateSurchargePercent().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);

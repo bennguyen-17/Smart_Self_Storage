@@ -22,7 +22,7 @@ describe("ShiftsPanel: lỗi tải nhân viên rồi bấm Thử lại", () => {
       .mockResolvedValue([{ employeeId: 3, fullName: "Nguyễn Văn Nhân Viên 1", phone: null, facilityId: 1, status: "ACTIVE" }])
     api.getDaySchedule.mockImplementation(async (_ctx: unknown, date: string) => ({
       date,
-      shifts: [{ shiftId: 1, shiftName: "Ca Sáng", startTime: "08:00", endTime: "12:00", staff: [] }],
+      shifts: [{ shiftId: 1, shiftName: "Ca Sáng", startTime: "07:00", endTime: "12:00", staff: [] }],
     }))
     const user = userEvent.setup()
     render(<ShiftsPanel />)

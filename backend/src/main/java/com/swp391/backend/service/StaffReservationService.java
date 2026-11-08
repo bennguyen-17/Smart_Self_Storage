@@ -707,14 +707,25 @@ public class StaffReservationService {
                     });
         });
 
-        // 1. Tính giá thuê tháng (monthlyPrice) cho ô kho
+        // 1. Tính giá thuê tháng hiện hành (monthlyPrice) cho ô kho (dùng khi gia hạn hợp đồng)
         BigDecimal monthlyPrice = BigDecimal.ZERO;
         if (reservation.getUnitCode() != null) {
             Optional<StorageUnit> uOpt = storageUnitRepository.findById(reservation.getUnitCode());
             if (uOpt.isPresent()) {
-                Optional<Price> pOpt = priceRepository.findByUnitTypeIdAndStatus(uOpt.get().getUnitTypeId(), "ACTIVE");
+                StorageUnit u = uOpt.get();
+                Optional<Price> pOpt = priceRepository.findByUnitTypeIdAndStatus(u.getUnitTypeId(), "ACTIVE");
                 if (pOpt.isPresent() && pOpt.get().getMonthlyPrice() != null) {
                     monthlyPrice = pOpt.get().getMonthlyPrice();
+                    boolean isClimate = unitTypeRepository.findById(u.getUnitTypeId())
+                            .map(ut -> "CLIMATE_CONTROLLED".equalsIgnoreCase(ut.getStorageCondition()))
+                            .orElse(false);
+                    if (isClimate) {
+                        BigDecimal surchargePct = (pOpt.get().getClimateSurchargePercent() != null && pOpt.get().getClimateSurchargePercent().compareTo(BigDecimal.ZERO) > 0)
+                                ? pOpt.get().getClimateSurchargePercent()
+                                : BigDecimal.valueOf(20.00);
+                        BigDecimal factor = BigDecimal.ONE.add(surchargePct.divide(BigDecimal.valueOf(100), 4, java.math.RoundingMode.HALF_UP));
+                        monthlyPrice = monthlyPrice.multiply(factor).setScale(0, java.math.RoundingMode.HALF_UP);
+                    }
                 }
             }
         }
@@ -1045,12 +1056,23 @@ public class StaffReservationService {
             return new RenewAtCounterResponse(false, "Còn tiền phạt quá hạn chưa nộp (50.000đ/ngày). Vui lòng thu phạt trước khi gia hạn.");
         }
 
-        // 2. Lấy giá thuê tháng (monthlyPrice)
+        // 2. Lấy giá thuê tháng hiện hành (monthlyPrice) để tính tiền gia hạn
         BigDecimal monthlyPrice = BigDecimal.ZERO;
         if (unitOpt.isPresent()) {
-            Optional<Price> pOpt = priceRepository.findByUnitTypeIdAndStatus(unitOpt.get().getUnitTypeId(), "ACTIVE");
+            StorageUnit u = unitOpt.get();
+            Optional<Price> pOpt = priceRepository.findByUnitTypeIdAndStatus(u.getUnitTypeId(), "ACTIVE");
             if (pOpt.isPresent() && pOpt.get().getMonthlyPrice() != null) {
                 monthlyPrice = pOpt.get().getMonthlyPrice();
+                boolean isClimate = unitTypeRepository.findById(u.getUnitTypeId())
+                        .map(ut -> "CLIMATE_CONTROLLED".equalsIgnoreCase(ut.getStorageCondition()))
+                        .orElse(false);
+                if (isClimate) {
+                    BigDecimal surchargePct = (pOpt.get().getClimateSurchargePercent() != null && pOpt.get().getClimateSurchargePercent().compareTo(BigDecimal.ZERO) > 0)
+                            ? pOpt.get().getClimateSurchargePercent()
+                            : BigDecimal.valueOf(20.00);
+                    BigDecimal factor = BigDecimal.ONE.add(surchargePct.divide(BigDecimal.valueOf(100), 4, java.math.RoundingMode.HALF_UP));
+                    monthlyPrice = monthlyPrice.multiply(factor).setScale(0, java.math.RoundingMode.HALF_UP);
+                }
             }
         }
         if (monthlyPrice.compareTo(BigDecimal.ZERO) == 0 && reservation.getRentalAmount() != null) {

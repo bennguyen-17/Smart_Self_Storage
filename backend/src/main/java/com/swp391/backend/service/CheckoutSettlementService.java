@@ -114,8 +114,7 @@ public class CheckoutSettlementService {
         if (daysRemaining > 0 && totalDays > 0) {
             BigDecimal dailyRate = rentalPaid.divide(BigDecimal.valueOf(totalDays), 2, RoundingMode.HALF_UP);
             unusedRental = dailyRate.multiply(BigDecimal.valueOf(daysRemaining));
-            // Hoàn 50% tiền thuê chưa dùng (50% còn lại là phí vi phạm hợp đồng trả sớm)
-            // Thong nhat nhom: Khong hoan lai tien thue chua dung khi tra kho som
+            // Thống nhất nhóm & BOM: Không hoàn lại tiền thuê chưa dùng khi trả kho sớm (0%)
             unusedRentalRefund = BigDecimal.ZERO;
         }
 
@@ -137,7 +136,7 @@ public class CheckoutSettlementService {
 
         // Tổng khấu trừ: Chỉ bao gồm phí hư hại / vệ sinh (không cấn trừ phạt trễ hạn vào cọc)
         BigDecimal totalDeductions = damageAndCleaningFee;
-        // Tổng tiền có: (Tiền thuê chưa dùng × 50%) + Tiền cọc gốc
+        // Tổng tiền có: Tiền cọc gốc (tiền thuê chưa dùng không hoàn lại: 0đ)
         BigDecimal totalCredits = unusedRentalRefund.add(depositAmount);
         // Số tiền quyết toán cuối cùng = Tổng tiền có - Tổng khấu trừ
         BigDecimal netAmount = totalCredits.subtract(totalDeductions);
@@ -344,7 +343,7 @@ public class CheckoutSettlementService {
         contract.setTerminatedAt(LocalDateTime.now());
         contractRepository.save(contract);
 
-        // Ô kho chuyển ngay sang MAINTENANCE để Staff dọn dẹp
+        // Ô kho giải phóng trực tiếp về AVAILABLE để sẵn sàng đón khách mới (nếu có hư hại Staff báo Manager chuyển MAINTENANCE thủ công sau)
         unit.setStatus("AVAILABLE");
         storageUnitRepository.save(unit);
 
@@ -438,7 +437,7 @@ public class CheckoutSettlementService {
             act.setAccountId(staffAccountId != null ? staffAccountId : res.getAccountId());
             act.setFacilityId(floorRepository.findById(unit.getFloorId()).map(Floor::getFacilityId).orElse(null));
             act.setAction("CONFIRM_CHECKOUT_TERMINATED");
-            act.setDescription(String.format("Xác nhận bàn giao trả kho #%d (ô %s). HĐ -> %s, ô -> MAINTENANCE, PIN vô hiệu hóa. Quyết toán: %s (Hóa đơn: %s).",
+            act.setDescription(String.format("Xác nhận bàn giao trả kho #%d (ô %s). HĐ -> %s, ô -> AVAILABLE, PIN vô hiệu hóa. Quyết toán: %s (Hóa đơn: %s).",
                     contract.getContractId(), unit.getUnitCode(), contract.getStatus(), netAmount, cmpInvoice != null ? cmpInvoice : (refInvoice != null ? refInvoice : "0 VNĐ")));
             act.setCreatedAt(LocalDateTime.now());
             activityLogRepository.save(act);
@@ -447,14 +446,14 @@ public class CheckoutSettlementService {
         CheckoutConfirmResponse resp = new CheckoutConfirmResponse();
         resp.setSuccess(true);
         if (netAmount.compareTo(BigDecimal.ZERO) < 0) {
-            resp.setMessage(String.format("Nhận bàn giao và thu tiền bồi thường thành công! Hợp đồng đã chuyển %s, ô kho chuyển MAINTENANCE, mã PIN bị vô hiệu. Hóa đơn bồi thường: %s (%s VNĐ).",
+            resp.setMessage(String.format("Nhận bàn giao và thu tiền bồi thường thành công! Hợp đồng đã chuyển %s, ô kho chuyển AVAILABLE, mã PIN bị vô hiệu. Hóa đơn bồi thường: %s (%s VNĐ).",
                     contract.getStatus(), cmpInvoice, netAmount.abs()));
             resp.setInvoiceNumber(cmpInvoice);
             resp.setInvoiceType("COMPENSATION");
             resp.setSettlementAmount(netAmount.abs());
             resp.setRefund(false);
         } else {
-            resp.setMessage(String.format("Nhận bàn giao thành công! Hợp đồng đã chuyển %s, ô kho chuyển MAINTENANCE, mã PIN bị vô hiệu. Lệnh hoàn cọc: %s.",
+            resp.setMessage(String.format("Nhận bàn giao thành công! Hợp đồng đã chuyển %s, ô kho chuyển AVAILABLE, mã PIN bị vô hiệu. Lệnh hoàn cọc: %s.",
                     contract.getStatus(), refInvoice != null ? refInvoice + " (" + netAmount + " VNĐ)" : "0 VNĐ"));
             resp.setInvoiceNumber(refInvoice);
             resp.setInvoiceType("REFUND");
@@ -464,7 +463,7 @@ public class CheckoutSettlementService {
         resp.setContractId(contract.getContractId());
         resp.setContractStatus(contract.getStatus());
         resp.setUnitCode(unit.getUnitCode());
-        resp.setUnitStatus("MAINTENANCE");
+        resp.setUnitStatus("AVAILABLE");
         resp.setGatePinDisabled(true);
         resp.setTicketResolved(ticketResolved);
 
