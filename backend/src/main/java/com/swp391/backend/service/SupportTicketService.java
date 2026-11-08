@@ -475,6 +475,11 @@ public class SupportTicketService {
         return results;
     }
 
+    public void populateTicketsExtraInfo(List<SupportTicket> tickets) {
+        if (tickets == null || tickets.isEmpty()) return;
+        tickets.forEach(this::populateTicketExtraInfo);
+    }
+
     public void populateTicketExtraInfo(SupportTicket t) {
         if (t == null) return;
         if (t.getCustomerId() != null) {

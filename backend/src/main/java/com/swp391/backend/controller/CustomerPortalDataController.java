@@ -135,14 +135,13 @@ public class CustomerPortalDataController {
 
         for (ActivityLog log : logs) {
             String action = log.getAction() != null ? log.getAction() : "";
-            String ip = (log.getIpAddress() != null && !log.getIpAddress().isBlank()) ? log.getIpAddress() : "Không xác định";
-            String timeStr = log.getCreatedAt() != null ? log.getCreatedAt().format(formatter) : "";
+                        String timeStr = log.getCreatedAt() != null ? log.getCreatedAt().format(formatter) : "";
 
             if ("LOGIN_SUCCESS".equalsIgnoreCase(action)) {
                 list.add(new CustomerNotificationResponse(
                         "act-" + log.getActivityLogId(),
                         "Đăng nhập thành công",
-                        "Đăng nhập hệ thống lúc " + timeStr + " (IP: " + ip + ")",
+                        "Đăng nhập hệ thống lúc " + timeStr,
                         "INFO",
                         log.getCreatedAt(),
                         false,
@@ -152,7 +151,7 @@ public class CustomerPortalDataController {
                 list.add(new CustomerNotificationResponse(
                         "act-" + log.getActivityLogId(),
                         "Cảnh báo đăng nhập sai mật khẩu",
-                        "Phát hiện lần thử đăng nhập không thành công lúc " + timeStr + " (IP: " + ip + ")",
+                        "Phát hiện lần thử đăng nhập không thành công lúc " + timeStr,
                         "WARNING",
                         log.getCreatedAt(),
                         false,
@@ -162,7 +161,7 @@ public class CustomerPortalDataController {
                 list.add(new CustomerNotificationResponse(
                         "act-" + log.getActivityLogId(),
                         "Cảnh báo tài khoản tạm khóa",
-                        "Tài khoản bị tạm khóa vì lý do an toàn lúc " + timeStr + " (IP: " + ip + ")",
+                        "Tài khoản bị tạm khóa vì lý do an toàn lúc " + timeStr,
                         "WARNING",
                         log.getCreatedAt(),
                         false,
@@ -172,7 +171,7 @@ public class CustomerPortalDataController {
                 list.add(new CustomerNotificationResponse(
                         "act-" + log.getActivityLogId(),
                         "Bảo mật: Đổi mật khẩu",
-                        "Mật khẩu tài khoản đã được thay đổi lúc " + timeStr + " (IP: " + ip + ")",
+                        "Mật khẩu tài khoản đã được thay đổi lúc " + timeStr,
                         "INFO",
                         log.getCreatedAt(),
                         false,

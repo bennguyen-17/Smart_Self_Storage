@@ -102,26 +102,8 @@ public class AuditLogService {
         String act = log.getAction() != null ? log.getAction() : "";
         String rsn = log.getReason() != null ? log.getReason() : "";
 
-        // Trích xuất tên cổng: ví dụ "GATE_ACCESS_GRANTED - HN-01 Cổng Chính" -> "Cổng Chính"
-        if (act.contains(" - ")) {
-            String[] parts = act.split(" - ");
-            if (parts.length > 1) {
-                String sub = parts[1].trim();
-                sub = sub.replaceAll("^[A-Z0-9-]+[\\s:]+", "");
-                log.setGateName(sub);
-            }
-        }
-        if (log.getGateName() == null || log.getGateName().isBlank()) {
-            if (act.toLowerCase().contains("xe tải") || rsn.toLowerCase().contains("xe tải")) {
-                log.setGateName("Cổng Xe Tải");
-            } else if (act.toLowerCase().contains("vip") || rsn.toLowerCase().contains("vip")) {
-                log.setGateName("Cổng VIP");
-            } else if (act.toLowerCase().contains("thang máy") || rsn.toLowerCase().contains("thang máy")) {
-                log.setGateName("Thang máy hàng");
-            } else {
-                log.setGateName("Cổng Chính");
-            }
-        }
+        // Mỗi cơ sở chỉ có 1 cổng duy nhất là Cổng Chính
+        log.setGateName("Cổng Chính");
 
         // Phương thức mở
         if (act.toUpperCase().contains("MANUAL") || rsn.toLowerCase().contains("thẻ master") || rsn.toLowerCase().contains("thủ công") || rsn.toLowerCase().contains("chìa cơ")) {

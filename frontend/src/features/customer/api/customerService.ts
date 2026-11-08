@@ -131,7 +131,11 @@ export const getCustomerNotifications = async (): Promise<CustomerNotification[]
 
   const res: unknown = await apiClient.get('/customer/notifications');
   const payload = (res as { data?: unknown })?.data ?? res;
-  return Array.isArray(payload) ? (payload as CustomerNotification[]) : [];
+  const list = Array.isArray(payload) ? (payload as CustomerNotification[]) : [];
+  return list.map((n) => ({
+    ...n,
+    message: n.message ? n.message.replace(/\s*\(IP:\s*[^)]+\)/gi, '') : n.message,
+  }));
 };
 
 /**

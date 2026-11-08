@@ -604,9 +604,9 @@ public class StaffReservationService {
         item.setReservationId(reservation.getReservationId());
         item.setReservationCode(reservation.getReservationCode());
         item.setReservationStatus(reservation.getStatus());
-        item.setCheckInDate(LocalDate.now());
         item.setReservationStartDate(reservation.getStartDate());
         item.setReservationEndDate(reservation.getEndDate());
+        item.setCheckInDate(reservation.getStartDate());
         item.setRentalDuration(calculateRentalDuration(reservation.getStartDate(), reservation.getEndDate()));
         accountRepository.findAccountByAccountId(reservation.getAccountId()).ifPresent(account -> {
             item.setCustomerName(account.getFullName());
@@ -645,6 +645,9 @@ public class StaffReservationService {
         contractOptForItem.ifPresent(contract -> {
             item.setContractId(contract.getContractId());
             item.setContractStatus(contract.getStatus());
+            if (contract.getActivatedAt() != null) {
+                item.setCheckInDate(contract.getActivatedAt().toLocalDate());
+            }
             LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
             Optional<SupportTicket> earlyTicket = supportTicketRepository.findByContractId(contract.getContractId()).stream()
                     .filter(t -> "EARLY_TERMINATION".equalsIgnoreCase(t.getType())
