@@ -198,34 +198,6 @@ function CheckinContractTable({
 
 function StatusBadge({ item }: { item: StaffReservationItem }) {
   if (item.contractStatus === "PENDING_CHECKIN") {
-    const rawDate = item.checkInDate || item.reservationStartDate
-    const checkInDay = rawDate ? rawDate.slice(0, 10) : ""
-    const todayStr = todayInVietnam()
-
-    if (checkInDay && checkInDay > todayStr) {
-      return (
-        <span
-          className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium border bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800"
-          title={`Chưa đến ngày check-in. Khách hẹn nhận kho vào ${formatDate(rawDate)}.`}
-        >
-          <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-amber-500"></span>
-          Hẹn nhận: {formatDate(rawDate)}
-        </span>
-      )
-    }
-
-    if (checkInDay && checkInDay < todayStr) {
-      return (
-        <span
-          className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium border bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800"
-          title="Đã quá hạn ngày hẹn check-in (No-Show)."
-        >
-          <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-rose-500"></span>
-          Quá hạn nhận kho
-        </span>
-      )
-    }
-
     return (
       <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium border bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800">
         <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-amber-500"></span>
@@ -310,13 +282,16 @@ function ActionButtons({
   onRenew: (item: StaffReservationItem) => void
 }) {
   if (item.contractStatus === "PENDING_CHECKIN") {
-    const rawDate = item.checkInDate || item.reservationStartDate
+    const rawDate = item.reservationStartDate || item.checkInDate
     const checkInDay = rawDate ? rawDate.slice(0, 10) : ""
     const todayStr = todayInVietnam()
 
     if (checkInDay && checkInDay > todayStr) {
       return (
-        <span className="text-slate-400 dark:text-slate-600 font-mono text-base select-none" title="Không có hành động khả dụng">
+        <span
+          className="text-slate-400 dark:text-slate-600 font-mono text-base select-none"
+          title={`Chưa đến ngày check-in (Hẹn nhận: ${formatDate(rawDate)})`}
+        >
           —
         </span>
       )

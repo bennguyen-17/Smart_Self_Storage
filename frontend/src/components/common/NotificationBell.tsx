@@ -256,7 +256,7 @@ export default function NotificationBell({ onOpenProfile }: NotificationBellProp
                       {isUnread && <span className="mt-1 size-1.5 rounded-full bg-blue-600 shrink-0" />}
                     </span>
                     <span className="block text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-0.5">
-                      {notification.message}
+                      {notification.message ? notification.message.replace(/\s*\(IP:\s*[^)]+\)/gi, '') : ''}
                     </span>
                     <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-1">
                       {relativeTime(notification.timestamp)}

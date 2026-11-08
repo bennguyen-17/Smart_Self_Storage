@@ -1154,9 +1154,11 @@ INSERT INTO GatePin (gatePinId, contractId, pinCode, status, generatedAt, expire
 -- 18. Nhật ký quẹt cổng cơ sở (AuditLogs)
 INSERT INTO AuditLog (auditLogId, accountId, facilityId, customerId, action, openedAt, reason, createdAt) VALUES
 (1, 31, 1, 1, 'GATE_ACCESS_GRANTED - HN-01 Cổng Chính', '2026-10-15 08:30:15', 'Mã PIN động hợp lệ', '2026-10-15 08:30:15'),
-(2, 32, 2, 2, 'GATE_ACCESS_GRANTED - HN-02 Thang máy hàng', '2026-10-16 10:15:40', 'Mã PIN động hợp lệ', '2026-10-16 10:15:40'),
-(3, 33, 3, 3, 'GATE_ACCESS_GRANTED - HCM-01 Cổng VIP', '2026-10-17 14:20:10', 'Mã PIN động hợp lệ', '2026-10-17 14:20:10'),
-(4, 34, 4, 4, 'GATE_ACCESS_GRANTED - HCM-02 Cổng Xe Tải', '2026-10-18 09:45:00', 'Mã PIN động hợp lệ', '2026-10-18 09:45:00');
+(2, 32, 2, 2, 'GATE_ACCESS_GRANTED - HN-02 Cổng Chính', '2026-10-16 10:15:40', 'Mã PIN động hợp lệ', '2026-10-16 10:15:40'),
+(3, 33, 3, 3, 'GATE_ACCESS_GRANTED - HCM-01 Cổng Chính', '2026-10-17 14:20:10', 'Mã PIN động hợp lệ', '2026-10-17 14:20:10'),
+(4, 34, 4, 4, 'GATE_ACCESS_GRANTED - HCM-02 Cổng Chính', '2026-10-18 09:45:00', 'Mã PIN động hợp lệ', '2026-10-18 09:45:00'),
+(5, 35, 5, 5, 'GATE_ACCESS_GRANTED - HCM-03 Cổng Chính', '2026-10-19 11:20:00', 'Mã PIN động hợp lệ', '2026-10-19 11:20:00'),
+(6, 36, 6, 6, 'GATE_ACCESS_GRANTED - DN-01 Cổng Chính', '2026-10-20 14:15:00', 'Mã PIN động hợp lệ', '2026-10-20 14:15:00');
 
 -- 19. Yêu cầu hỗ trợ & Sự cố vận hành SLA (SupportTickets)
 INSERT INTO SupportTicket (id, ticketCode, type, status, customerId, facilityId, unitCode, contractId, title, description, desiredDate, assignedStaffId, slaDeadline, isSlaBreached, identityVerified, resolutionNote, createdAt, resolvedAt) VALUES
