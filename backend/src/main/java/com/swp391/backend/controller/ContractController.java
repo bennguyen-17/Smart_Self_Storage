@@ -222,6 +222,14 @@ public class ContractController {
                 currentCancelReason = "NO_SHOW";
             }
 
+            long overdueDays = 0;
+            if (res.getEndDate() != null && res.getEndDate().isBefore(today)) {
+                overdueDays = ChronoUnit.DAYS.between(res.getEndDate(), today);
+            }
+            int liquidationDays = c.getOverdueLiquidationDays() != null ? c.getOverdueLiquidationDays() : 30;
+            boolean isLiquidation = "FORFEITED".equalsIgnoreCase(currentStatus)
+                    || ("OVERDUE".equalsIgnoreCase(currentStatus) && overdueDays > liquidationDays);
+
             String statusLabel;
             if ("PENDING_CHECKIN".equalsIgnoreCase(currentStatus)) {
                 statusLabel = "Chờ check-in";
@@ -230,7 +238,7 @@ public class ContractController {
             } else if ("INITIATED".equalsIgnoreCase(currentStatus)) {
                 statusLabel = "Khởi tạo";
             } else if ("OVERDUE".equalsIgnoreCase(currentStatus)) {
-                statusLabel = "Quá hạn";
+                statusLabel = isLiquidation ? (c.isForfeitProcessed() ? "Đã thanh lý" : "Chờ thanh lý") : "Quá hạn";
             } else if ("TERMINATED".equalsIgnoreCase(currentStatus)) {
                 statusLabel = "Đã thanh lý";
             } else if ("COMPLETED".equalsIgnoreCase(currentStatus)) {
@@ -242,7 +250,7 @@ public class ContractController {
                     statusLabel = "Đã hủy cọc";
                 }
             } else if ("FORFEITED".equalsIgnoreCase(currentStatus)) {
-                statusLabel = "Mất cọc";
+                statusLabel = c.isForfeitProcessed() ? "Đã thanh lý" : "Chờ thanh lý";
             } else {
                 statusLabel = currentStatus;
             }
@@ -303,6 +311,11 @@ public class ContractController {
             map.put("daysLeft", daysLeft);
             map.put("status", currentStatus);
             map.put("statusLabel", statusLabel);
+
+            map.put("overdueDays", overdueDays);
+            map.put("overdueLiquidationDays", liquidationDays);
+            map.put("isLiquidation", isLiquidation);
+            map.put("forfeitProcessed", c.isForfeitProcessed());
             map.put("cancelReason", currentCancelReason);
             map.put("refundBankName", c.getRefundBankName());
             map.put("refundAccountNumber", c.getRefundAccountNumber());

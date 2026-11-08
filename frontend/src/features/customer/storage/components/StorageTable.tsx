@@ -43,6 +43,16 @@ export default function StorageTable({
             const isTerminated = item.status === 'TERMINATED';
             const isCanceled = (item.status === 'CANCELLED' && !isNoShow);
             const isReturnRequested = isActive && Boolean(item.returnRequested);
+            const isOverdue = item.status === 'OVERDUE';
+            const rawEndDate = (item.endDate || item.expiryDate || '').slice(0, 10);
+            const overdueDays = item.overdueDays !== undefined
+              ? Number(item.overdueDays)
+              : (rawEndDate ? Math.max(0, Math.floor((Date.now() - new Date(rawEndDate).getTime()) / (1000 * 60 * 60 * 24))) : 0);
+            const liquidationDays = Number(item.overdueLiquidationDays ?? 30);
+            const isLiquidation = Boolean(item.isLiquidation) || item.status === 'FORFEITED' || (isOverdue && overdueDays > liquidationDays);
+            const isForfeitProcessed = Boolean(item.forfeitProcessed);
+            const isWaitingLiquidation = (isLiquidation || item.status === 'FORFEITED') && !isForfeitProcessed;
+            const isLiquidated = isForfeitProcessed || item.status === 'TERMINATED';
 
             return (
               <tr key={item.contractId} className="hover:bg-slate-50/90 dark:hover:bg-slate-800/60 transition-colors group">
@@ -76,12 +86,10 @@ export default function StorageTable({
                       ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                       : isPending
                       ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
-                      : item.status === 'OVERDUE'
+                      : isWaitingLiquidation || item.status === 'OVERDUE'
                       ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
                       : isCompleted
                       ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
-                      : isTerminated
-                      ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
                   }`}>
                     <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
@@ -89,12 +97,10 @@ export default function StorageTable({
                         ? 'bg-emerald-500'
                         : isPending
                         ? 'bg-amber-500'
-                        : item.status === 'OVERDUE'
+                        : isWaitingLiquidation || item.status === 'OVERDUE'
                         ? 'bg-rose-500'
                         : isCompleted
                         ? 'bg-emerald-500'
-                        : isTerminated
-                        ? 'bg-slate-500'
                         : 'bg-slate-400'
                     }`}></span>
                     {isReturnRequested
@@ -105,11 +111,11 @@ export default function StorageTable({
                       ? 'Quá hạn nhận'
                       : isActive
                       ? 'Đang hiệu lực'
-                      : item.status === 'OVERDUE'
+                      : (isWaitingLiquidation || item.status === 'OVERDUE')
                       ? 'Quá hạn'
                       : isCompleted
                       ? 'Đã hoàn tất'
-                      : isTerminated
+                      : isLiquidated
                       ? 'Đã thanh lý'
                       : isCanceled
                       ? 'Đã hủy cọc'
@@ -142,21 +148,28 @@ export default function StorageTable({
                       </button>
                     )}
 
-                    {(isCompleted || isTerminated || isCanceled || isNoShow) && (
+                    {(isCompleted || isLiquidated || isCanceled || isNoShow) && (
                       <span className="text-slate-400 dark:text-slate-600 font-mono text-base select-none" title="Không có hành động khả dụng">
                         —
                       </span>
                     )}
 
-                    {/* HĐ OVERDUE */}
-                    {extendModeOf(item.status) === 'AT_COUNTER' && (
+                    {/* HĐ OVERDUE / CHỜ THANH LÝ */}
+                    {isWaitingLiquidation ? (
+                      <span
+                        title="Hợp đồng đang chờ Quản lý/BOM duyệt thanh lý"
+                        className="text-xs text-slate-400 dark:text-slate-500 font-medium italic whitespace-nowrap select-none"
+                      >
+                        Chờ thanh lý
+                      </span>
+                    ) : extendModeOf(item.status) === 'AT_COUNTER' ? (
                       <span
                         title={AT_COUNTER_NOTE}
-                        className="text-xs text-amber-700 dark:text-amber-300 font-medium italic whitespace-nowrap"
+                        className="text-xs text-slate-400 dark:text-slate-500 font-medium italic whitespace-nowrap select-none"
                       >
                         Gia hạn tại quầy
                       </span>
-                    )}
+                    ) : null}
                   </div>
                 </td>
               </tr>
