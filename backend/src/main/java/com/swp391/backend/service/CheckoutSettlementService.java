@@ -114,8 +114,7 @@ public class CheckoutSettlementService {
         if (daysRemaining > 0 && totalDays > 0) {
             BigDecimal dailyRate = rentalPaid.divide(BigDecimal.valueOf(totalDays), 2, RoundingMode.HALF_UP);
             unusedRental = dailyRate.multiply(BigDecimal.valueOf(daysRemaining));
-            // Hoàn 50% tiền thuê chưa dùng (50% còn lại là phí vi phạm hợp đồng trả sớm)
-            // Thong nhat nhom: Khong hoan lai tien thue chua dung khi tra kho som
+            // Thống nhất nhóm & BOM: Không hoàn lại tiền thuê chưa dùng khi trả kho sớm (0%)
             unusedRentalRefund = BigDecimal.ZERO;
         }
 
@@ -137,7 +136,7 @@ public class CheckoutSettlementService {
 
         // Tổng khấu trừ: Chỉ bao gồm phí hư hại / vệ sinh (không cấn trừ phạt trễ hạn vào cọc)
         BigDecimal totalDeductions = damageAndCleaningFee;
-        // Tổng tiền có: (Tiền thuê chưa dùng × 50%) + Tiền cọc gốc
+        // Tổng tiền có: Tiền cọc gốc (tiền thuê chưa dùng không hoàn lại: 0đ)
         BigDecimal totalCredits = unusedRentalRefund.add(depositAmount);
         // Số tiền quyết toán cuối cùng = Tổng tiền có - Tổng khấu trừ
         BigDecimal netAmount = totalCredits.subtract(totalDeductions);

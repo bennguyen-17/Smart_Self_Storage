@@ -21,7 +21,7 @@ public class CheckoutPreviewResponse {
 
     private BigDecimal rentalAmountPaid;
     private BigDecimal unusedRentalAmount;
-    private BigDecimal unusedRentalRefundAmount; // 50% tiền thuê chưa dùng
+    private BigDecimal unusedRentalRefundAmount; // Tiền thuê chưa dùng được hoàn (0đ theo quy định trả kho sớm)
     private BigDecimal depositAmount;
     private BigDecimal unpaidPenalties; // Phạt quá hạn chưa nộp
     private BigDecimal damageAndCleaningFee; // Phí hư hại / vệ sinh

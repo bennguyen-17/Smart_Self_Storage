@@ -471,7 +471,7 @@ public class SupportTicketService {
             return b.getCreatedAt().compareTo(a.getCreatedAt());
         });
 
-        checkAndEscalateTickets(results);
+        populateTicketsExtraInfo(results);
         return results;
     }
 
@@ -549,7 +549,7 @@ public class SupportTicketService {
         Integer facilityId = staffShiftService.requireOnDutyFacility(staffAccountId);
         List<SupportTicket> tickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
 
-        checkAndEscalateTickets(tickets);
+        populateTicketsExtraInfo(tickets);
 
         return tickets.stream()
                 .filter(t -> status == null || status.trim().isEmpty() || "ALL".equalsIgnoreCase(status) || t.getStatus().equalsIgnoreCase(status))
@@ -718,7 +718,7 @@ public class SupportTicketService {
             tickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
         }
 
-        checkAndEscalateTickets(tickets);
+        populateTicketsExtraInfo(tickets);
 
         return tickets.stream()
                 .filter(t -> status == null || status.trim().isEmpty() || "ALL".equalsIgnoreCase(status) || t.getStatus().equalsIgnoreCase(status))
