@@ -536,9 +536,17 @@ public class ContractPdfService {
         table.addCell(cell);
     }
 
+    private Path getContractsDirectory() {
+        Path current = Paths.get("").toAbsolutePath();
+        Path base = (current.getFileName() != null && current.getFileName().toString().equals("backend"))
+                ? current.resolve("uploads")
+                : (Files.exists(current.resolve("backend")) ? current.resolve("backend").resolve("uploads") : current.resolve("uploads"));
+        return base.resolve("contracts");
+    }
+
     private void savePdfToDisk(String filename, byte[] bytes) {
         try {
-            Path targetDir = Paths.get("uploads", "contracts");
+            Path targetDir = getContractsDirectory();
             if (!Files.exists(targetDir)) {
                 Files.createDirectories(targetDir);
             }

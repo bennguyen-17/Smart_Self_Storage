@@ -87,7 +87,16 @@ public class ImageStorageService {
         this.employeeProfileRepository = employeeProfileRepository;
         this.paymentRepository = paymentRepository;
         this.accountRepository = accountRepository;
-        this.uploadRoot = Path.of(uploadRoot).toAbsolutePath().normalize();
+        Path current = Paths.get("").toAbsolutePath();
+        Path baseUploadRoot;
+        if (current.getFileName() != null && current.getFileName().toString().equals("backend")) {
+            baseUploadRoot = current.resolve(uploadRoot);
+        } else if (Files.exists(current.resolve("backend"))) {
+            baseUploadRoot = current.resolve("backend").resolve(uploadRoot.startsWith("uploads") ? uploadRoot : "uploads");
+        } else {
+            baseUploadRoot = current.resolve(uploadRoot);
+        }
+        this.uploadRoot = baseUploadRoot.toAbsolutePath().normalize();
         this.facilityImageDirectory = resolveConfiguredDirectory(facilityImageDirectory);
         this.evidenceDirectory = resolveConfiguredDirectory(evidenceDirectory);
     }

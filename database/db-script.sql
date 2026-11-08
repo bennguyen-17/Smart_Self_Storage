@@ -180,7 +180,7 @@ CREATE TABLE Price (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 11.1. TABLE: FeeItem (Danh mục biểu phí phạt, ưu đãi & bồi thường hư hỏng)
+-- 12. TABLE: FeeItem (Danh mục biểu phí phạt, ưu đãi & bồi thường hư hỏng)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS FeePolicy;
 DROP TABLE IF EXISTS FeeItem;
@@ -199,34 +199,9 @@ CREATE TABLE FeeItem (
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ----------------------------------------------------------------------------
--- 12. TABLE: Promotion (Chương trình khuyến mãi & Chiết khấu)
--- ----------------------------------------------------------------------------
-DROP TABLE IF EXISTS Promotion;
-CREATE TABLE Promotion (
-    promotionId INT AUTO_INCREMENT PRIMARY KEY,
-    promotionName VARCHAR(100) NOT NULL,
-    promotionType ENUM('PERCENTAGE', 'FIXED_AMOUNT') NOT NULL,
-    discountValue DECIMAL(12, 2) NOT NULL,
-    startDate DATE NOT NULL,
-    endDate DATE NOT NULL,
-    status ENUM('ACTIVE', 'INACTIVE', 'EXPIRED') NOT NULL DEFAULT 'ACTIVE'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 13. TABLE: PromotionUnitType (Liên kết Khuyến mãi - Loại kho áp dụng)
--- ----------------------------------------------------------------------------
-DROP TABLE IF EXISTS PromotionUnitType;
-CREATE TABLE PromotionUnitType (
-    promotionId INT NOT NULL,
-    unitTypeId INT NOT NULL,
-    PRIMARY KEY (promotionId, unitTypeId),
-    CONSTRAINT fk_promounit_promotion FOREIGN KEY (promotionId) REFERENCES Promotion (promotionId) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_promounit_unittype FOREIGN KEY (unitTypeId) REFERENCES UnitType (unitTypeId) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------------------------------------------------------
--- 14. TABLE: Shift (Ca trực vận hành)
+-- 13. TABLE: Shift (Ca trực vận hành)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Shift;
 CREATE TABLE Shift (
@@ -243,7 +218,7 @@ INSERT INTO Shift (shiftId, shiftName, startTime, endTime, status) VALUES
 (3, 'Ca Tối', '16:00:00', '20:00:00', 'ACTIVE');
 
 -- ----------------------------------------------------------------------------
--- 15. TABLE: StaffShift (Phân công ca trực nhân viên tại cơ sở)
+-- 14. TABLE: StaffShift (Phân công ca trực nhân viên tại cơ sở)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS StaffShift;
 CREATE TABLE StaffShift (
@@ -259,7 +234,7 @@ CREATE TABLE StaffShift (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 16. TABLE: Reservation (Đơn giữ chỗ / Đặt trước kho)
+-- 15. TABLE: Reservation (Đơn giữ chỗ / Đặt trước kho)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Reservation;
 CREATE TABLE Reservation (
@@ -281,7 +256,7 @@ CREATE TABLE Reservation (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 17. TABLE: Contract (Hợp đồng thuê kho - Chu trình 7 trạng thái)
+-- 16. TABLE: Contract (Hợp đồng thuê kho - Chu trình 7 trạng thái)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Contract;
 CREATE TABLE Contract (
@@ -306,7 +281,7 @@ CREATE TABLE Contract (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 18. TABLE: Payment (Hóa đơn và Giao dịch thanh toán)
+-- 17. TABLE: Payment (Hóa đơn và Giao dịch thanh toán)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Payment;
 CREATE TABLE Payment (
@@ -330,7 +305,7 @@ CREATE TABLE Payment (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 18.1. TABLE: Image (Ảnh hệ thống và ảnh nghiệp vụ)
+-- 18. TABLE: Image (Ảnh hệ thống và ảnh nghiệp vụ)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS Image;
 CREATE TABLE Image (
@@ -365,36 +340,9 @@ CREATE TABLE Image (
     INDEX idx_image_payment_category (paymentId, category)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ----------------------------------------------------------------------------
--- 19. TABLE: StaffTask (Việc được giao theo ca cho Staff)
--- ----------------------------------------------------------------------------
-DROP TABLE IF EXISTS StaffTask;
-CREATE TABLE StaffTask (
-    taskId INT AUTO_INCREMENT PRIMARY KEY,
-    facilityId INT NOT NULL,
-    assignedEmployeeId INT NOT NULL,
-    assignedByAccountId INT NOT NULL,
-    taskType ENUM('MAINTENANCE', 'CHECKOUT_INSPECTION', 'CHECKIN_HANDOVER', 'INCIDENT') NOT NULL,
-    unitCode VARCHAR(50),
-    contractId INT,
-    note TEXT,
-    status ENUM('ASSIGNED', 'DONE', 'CANCELLED') NOT NULL DEFAULT 'ASSIGNED',
-    workDate DATE NOT NULL,
-    shiftId INT NOT NULL,
-    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    doneAt DATETIME,
-    INDEX idx_stafftask_facility_date_shift (facilityId, workDate, shiftId, status),
-    INDEX idx_stafftask_employee_date_shift (assignedEmployeeId, workDate, shiftId, status),
-    CONSTRAINT fk_stafftask_facility FOREIGN KEY (facilityId) REFERENCES Facility (facilityId) ON UPDATE CASCADE,
-    CONSTRAINT fk_stafftask_employee FOREIGN KEY (assignedEmployeeId) REFERENCES EmployeeProfile (employeeId) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_stafftask_assigned_by FOREIGN KEY (assignedByAccountId) REFERENCES Account (accountId) ON UPDATE CASCADE,
-    CONSTRAINT fk_stafftask_shift FOREIGN KEY (shiftId) REFERENCES Shift (shiftId) ON UPDATE CASCADE,
-    CONSTRAINT fk_stafftask_unit FOREIGN KEY (unitCode) REFERENCES StorageUnit (unitCode) ON UPDATE CASCADE,
-    CONSTRAINT fk_stafftask_contract FOREIGN KEY (contractId) REFERENCES Contract (contractId) ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 20. TABLE: GatePin (Mã PIN động mở cổng IoT cơ sở 15s - 30s)
+-- 19. TABLE: GatePin (Mã PIN động mở cổng IoT cơ sở 15s - 30s)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS GatePin;
 CREATE TABLE GatePin (
@@ -411,36 +359,9 @@ CREATE TABLE GatePin (
 -- 20. (Bảng FeeItem đã được hợp nhất tại mục 11.1 phục vụ cả Phụ thu, Phạt, Ưu đãi & Nghiệm thu hư hại)
 -- ----------------------------------------------------------------------------
 
--- ----------------------------------------------------------------------------
--- 21. TABLE: Inspection (Biên bản kiểm tra kho khi bàn giao / trả kho)
--- ----------------------------------------------------------------------------
-DROP TABLE IF EXISTS Inspection;
-CREATE TABLE Inspection (
-    inspectionId INT AUTO_INCREMENT PRIMARY KEY,
-    paymentId INT NOT NULL,
-    employeeId INT NOT NULL,
-    inspectionDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    conditionStatus ENUM('CLEAN_PASS', 'DAMAGED_DIRTY') NOT NULL,
-    CONSTRAINT fk_inspection_payment FOREIGN KEY (paymentId) REFERENCES Payment (paymentId) ON UPDATE CASCADE,
-    CONSTRAINT fk_inspection_employee FOREIGN KEY (employeeId) REFERENCES EmployeeProfile (employeeId) ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 22. TABLE: InspectionItem (Chi tiết các hạng mục bồi thường hư hỏng)
--- ----------------------------------------------------------------------------
-DROP TABLE IF EXISTS InspectionItem;
-CREATE TABLE InspectionItem (
-    inspectionItemId INT AUTO_INCREMENT PRIMARY KEY,
-    inspectionId INT NOT NULL,
-    feeItemId INT NOT NULL,
-    quantity INT NOT NULL DEFAULT 1,
-    amount DECIMAL(12, 2) NOT NULL,
-    CONSTRAINT fk_inspitem_inspection FOREIGN KEY (inspectionId) REFERENCES Inspection (inspectionId) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_inspitem_feeitem FOREIGN KEY (feeItemId) REFERENCES FeeItem (feeItemId) ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------------------------------------------------------
--- 23. TABLE: SupportTicket (Yêu cầu hỗ trợ & Xử lý sự cố kỹ thuật SLA)
+-- 20. TABLE: SupportTicket (Yêu cầu hỗ trợ & Xử lý sự cố kỹ thuật SLA)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS SupportTicket;
 CREATE TABLE SupportTicket (
