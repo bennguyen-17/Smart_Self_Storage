@@ -179,6 +179,19 @@ export default function FacilityCashFlowDashboard({
     return sum > 0 ? sum : currentPeriod === "all" ? penaltyRevenue : 0
   }, [currentPeriod, penaltyRevenue, filteredMonths])
 
+  const periodForfeitedDeposit = useMemo(() => {
+    if (currentPeriod === "all" && forfeitedDeposit > 0) {
+      return forfeitedDeposit
+    }
+    const sum = filteredMonths.reduce((acc, m) => {
+      const rev = Number(m.revenue || 0)
+      const rRev = Number(m.rentalRevenue || 0)
+      const pRev = Number(m.penaltyRevenue || 0)
+      return acc + Math.max(0, rev - (rRev + pRev))
+    }, 0)
+    return sum > 0 ? sum : currentPeriod === "all" ? forfeitedDeposit : 0
+  }, [currentPeriod, forfeitedDeposit, filteredMonths])
+
   const dynamicSubtitle = useMemo(() => {
     if (monthlyData.length === 0) return subtitle
     const lastM = monthlyData[monthlyData.length - 1]
@@ -509,7 +522,7 @@ export default function FacilityCashFlowDashboard({
           <div className="p-3 rounded-xl bg-rose-50/70 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/50 shadow-xs dark:shadow-none">
             <span className="text-[11px] text-rose-700 dark:text-rose-400 font-bold block truncate">Cọc Tịch Thu</span>
             <span className="font-mono font-bold text-rose-700 dark:text-rose-300 text-xs sm:text-sm mt-1 block truncate">
-              ₫{forfeitedDeposit.toLocaleString("vi-VN")}
+              ₫{periodForfeitedDeposit.toLocaleString("vi-VN")}
             </span>
           </div>
 

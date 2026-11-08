@@ -413,7 +413,7 @@ public class SupportTicketService {
         ticket.setContractId(contract.getContractId());
         ticket.setFacilityId(reservation != null ? getFacilityIdByUnit(reservation.getUnitCode()) : null);
         ticket.setUnitCode(reservation != null ? reservation.getUnitCode() : null);
-        ticket.setTitle("Yêu cầu trả kho trước hạn");
+        ticket.setTitle("Yêu cầu trả kho sớm");
         ticket.setDescription(req.getReason());
         if (req.getDesiredDate() == null) {
             throw new IllegalArgumentException("Vui lòng chọn ngày hẹn trả kho (phải hẹn trước ít nhất 1 ngày)!");

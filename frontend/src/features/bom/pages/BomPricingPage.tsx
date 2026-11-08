@@ -66,21 +66,38 @@ export default function BomPricingPage() {
   // Modal 1: Pricing edit modal
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false)
   const [selectedPricingItem, setSelectedPricingItem] = useState<UnitPricing | null>(null)
-  const [editDailyPrice, setEditDailyPrice] = useState<number>(30000)
-  const [editNormPrice, setEditNormPrice] = useState<number>(600000)
-  const [editClimatePercent, setEditClimatePercent] = useState<number>(20)
-  const [editDepositAmount, setEditDepositAmount] = useState<number>(500000)
+  const [editDailyPrice, setEditDailyPrice] = useState<number | "">(30000)
+  const [editNormPrice, setEditNormPrice] = useState<number | "">(600000)
+  const [editClimatePercent, setEditClimatePercent] = useState<number | "">(20)
+  const [editDepositAmount, setEditDepositAmount] = useState<number | "">(500000)
 
   // Modal Thêm loại kho mới
   const [isAddPricingModalOpen, setIsAddPricingModalOpen] = useState(false)
   const [newTypeName, setNewTypeName] = useState("")
   const [newSizeCode, setNewSizeCode] = useState("L")
   const [newDimensions, setNewDimensions] = useState("3.0m x 2.5m x 2.5m")
-  const [newDailyPrice, setNewDailyPrice] = useState<number>(60000)
-  const [newMonthlyPrice, setNewMonthlyPrice] = useState<number>(1200000)
-  const [newClimatePercent, setNewClimatePercent] = useState<number>(20)
-  const [newDepositAmount, setNewDepositAmount] = useState<number>(1000000)
+  const [newDailyPrice, setNewDailyPrice] = useState<number | "">(60000)
+  const [newMonthlyPrice, setNewMonthlyPrice] = useState<number | "">(1200000)
+  const [newClimatePercent, setNewClimatePercent] = useState<number | "">(20)
+  const [newDepositAmount, setNewDepositAmount] = useState<number | "">(1000000)
   const [isCreatingPricing, setIsCreatingPricing] = useState(false)
+
+  const handleNumberInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (val: number | "") => void
+  ) => {
+    const raw = e.target.value
+    if (raw === "") {
+      setter("")
+      return
+    }
+    const cleaned = raw.replace(/^0+(?=\d)/, "")
+    if (cleaned !== raw) {
+      e.target.value = cleaned
+    }
+    const parsed = parseFloat(cleaned)
+    setter(isNaN(parsed) ? "" : parsed)
+  }
 
   // Modal Xác nhận xóa loại kho
   const [pricingToDelete, setPricingToDelete] = useState<UnitPricing | null>(null)
@@ -137,7 +154,7 @@ export default function BomPricingPage() {
           normPrice: Number(newMonthlyPrice) || 0,
           acPrice: Math.round((Number(newMonthlyPrice) || 0) * (1 + (Number(newClimatePercent) || 20) / 100)),
           depositAmount: Number(newDepositAmount) || 0,
-          depositText: `₫${Number(newDepositAmount).toLocaleString("vi-VN")}`,
+          depositText: `₫${(Number(newDepositAmount) || 0).toLocaleString("vi-VN")}`,
           climateSurchargePercent: Number(newClimatePercent) || 20,
           status: "HOẠT ĐỘNG",
         }
@@ -183,22 +200,23 @@ export default function BomPricingPage() {
   const [surchargeCat, setSurchargeCat] = useState<"penalty" | "discount" | "damage">("penalty")
   const [surchargeName, setSurchargeName] = useState("")
   const [surchargeCalcType, setSurchargeCalcType] = useState<"FIXED" | "PERCENT">("FIXED")
-  const [surchargeFeeValue, setSurchargeFeeValue] = useState<number>(100000)
+  const [surchargeFeeValue, setSurchargeFeeValue] = useState<number | "">(100000)
   const [surchargeUnitBasis, setSurchargeUnitBasis] = useState<string>("PER_MONTH")
   const [surchargeWaiveDeposit, setSurchargeWaiveDeposit] = useState<boolean>(false)
   const [surchargeNote, setSurchargeNote] = useState<string>("")
   const [surchargeToDelete, setSurchargeToDelete] = useState<SurchargeItem | null>(null)
 
   const previewRateString = useMemo(() => {
+    const numericFee = Number(surchargeFeeValue) || 0
     let text = ""
     if (surchargeCalcType === "PERCENT") {
-      text = `${surchargeFeeValue}%`
+      text = `${numericFee}%`
       if (surchargeUnitBasis === "PER_DAY") text += " / ngày trễ"
       else if (surchargeUnitBasis === "TOTAL_BILL") text += " Tổng Đơn"
       else if (surchargeUnitBasis === "PER_MONTH") text += " / tháng"
       else text += ` ${surchargeUnitBasis}`
     } else {
-      text = `₫${Number(surchargeFeeValue || 0).toLocaleString("vi-VN")}`
+      text = `₫${numericFee.toLocaleString("vi-VN")}`
       if (surchargeUnitBasis === "PER_MONTH") text += " / tháng"
       else if (surchargeUnitBasis === "PER_HOUR") text += " / giờ"
       else if (surchargeUnitBasis === "PER_DAY") text += " / ngày trễ"
@@ -240,12 +258,16 @@ export default function BomPricingPage() {
       selectedPricingItem.size === "M" ? 2 :
       selectedPricingItem.size === "L" ? 3 : 4
     )
+    const dailyVal = Number(editDailyPrice) || 0
+    const normVal = Number(editNormPrice) || 0
+    const climateVal = editClimatePercent === "" ? 0 : Number(editClimatePercent)
+    const depositVal = Number(editDepositAmount) || 0
 
     const success = await updatePricingInDb(unitTypeId, {
-      dailyPrice: editDailyPrice,
-      monthlyPrice: editNormPrice,
-      depositAmount: editDepositAmount,
-      climateSurchargePercent: editClimatePercent,
+      dailyPrice: dailyVal,
+      monthlyPrice: normVal,
+      depositAmount: depositVal,
+      climateSurchargePercent: climateVal,
     })
 
     if (success) {
@@ -257,12 +279,12 @@ export default function BomPricingPage() {
           p.id === selectedPricingItem.id
             ? {
                 ...p,
-                dailyPrice: editDailyPrice,
-                normPrice: editNormPrice,
-                climateSurchargePercent: editClimatePercent,
-                acPrice: Math.round(editNormPrice * (1 + editClimatePercent / 100)),
-                depositAmount: editDepositAmount,
-                depositText: `₫${editDepositAmount.toLocaleString("vi-VN")}`,
+                dailyPrice: dailyVal,
+                normPrice: normVal,
+                climateSurchargePercent: climateVal,
+                acPrice: Math.round(normVal * (1 + climateVal / 100)),
+                depositAmount: depositVal,
+                depositText: `₫${depositVal.toLocaleString("vi-VN")}`,
               }
             : p
         )
@@ -770,7 +792,7 @@ export default function BomPricingPage() {
                     <input
                       type="number"
                       value={editDailyPrice}
-                      onChange={(e) => setEditDailyPrice(Number(e.target.value))}
+                      onChange={(e) => handleNumberInputChange(e, setEditDailyPrice)}
                       className="w-full p-2.5 pr-14 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 font-bold text-[10px]">VNĐ/ngày</span>
@@ -784,7 +806,7 @@ export default function BomPricingPage() {
                     <input
                       type="number"
                       value={editNormPrice}
-                      onChange={(e) => setEditNormPrice(Number(e.target.value))}
+                      onChange={(e) => handleNumberInputChange(e, setEditNormPrice)}
                       className="w-full p-2.5 pr-14 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 font-bold text-[10px]">VNĐ/tháng</span>
@@ -803,7 +825,7 @@ export default function BomPricingPage() {
                       min={0}
                       max={100}
                       value={editClimatePercent}
-                      onChange={(e) => setEditClimatePercent(Number(e.target.value))}
+                      onChange={(e) => handleNumberInputChange(e, setEditClimatePercent)}
                       className="w-full p-2.5 pr-8 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 font-bold text-[10px]">%</span>
@@ -817,7 +839,7 @@ export default function BomPricingPage() {
                     <input
                       type="number"
                       value={editDepositAmount}
-                      onChange={(e) => setEditDepositAmount(Number(e.target.value))}
+                      onChange={(e) => handleNumberInputChange(e, setEditDepositAmount)}
                       className="w-full p-2.5 pr-12 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 font-bold text-[10px]">VNĐ</span>
@@ -915,7 +937,7 @@ export default function BomPricingPage() {
                     type="button"
                     onClick={() => {
                       setSurchargeCalcType("FIXED")
-                      if (surchargeFeeValue < 1000) setSurchargeFeeValue(100000)
+                      if ((Number(surchargeFeeValue) || 0) < 1000) setSurchargeFeeValue(100000)
                     }}
                     className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                       surchargeCalcType === "FIXED"
@@ -929,7 +951,7 @@ export default function BomPricingPage() {
                     type="button"
                     onClick={() => {
                       setSurchargeCalcType("PERCENT")
-                      if (surchargeFeeValue > 100) setSurchargeFeeValue(10)
+                      if ((Number(surchargeFeeValue) || 0) > 100) setSurchargeFeeValue(10)
                     }}
                     className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                       surchargeCalcType === "PERCENT"
@@ -955,7 +977,7 @@ export default function BomPricingPage() {
                       min={0}
                       step={surchargeCalcType === "PERCENT" ? "0.1" : "1000"}
                       value={surchargeFeeValue}
-                      onChange={(e) => setSurchargeFeeValue(parseFloat(e.target.value) || 0)}
+                      onChange={(e) => handleNumberInputChange(e, setSurchargeFeeValue)}
                       className="w-full p-2.5 pr-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-mono font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
                     <span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400 dark:text-slate-500 pointer-events-none">
@@ -1142,7 +1164,7 @@ export default function BomPricingPage() {
                       required
                       min={0}
                       value={newDailyPrice}
-                      onChange={(e) => setNewDailyPrice(Number(e.target.value))}
+                      onChange={(e) => handleNumberInputChange(e, setNewDailyPrice)}
                       className="w-full p-2.5 pr-14 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 font-bold text-[10px]">VNĐ/ngày</span>
@@ -1158,7 +1180,7 @@ export default function BomPricingPage() {
                       required
                       min={0}
                       value={newMonthlyPrice}
-                      onChange={(e) => setNewMonthlyPrice(Number(e.target.value))}
+                      onChange={(e) => handleNumberInputChange(e, setNewMonthlyPrice)}
                       className="w-full p-2.5 pr-14 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 font-bold text-[10px]">VNĐ/tháng</span>
@@ -1177,7 +1199,7 @@ export default function BomPricingPage() {
                       min={0}
                       max={100}
                       value={newClimatePercent}
-                      onChange={(e) => setNewClimatePercent(Number(e.target.value))}
+                      onChange={(e) => handleNumberInputChange(e, setNewClimatePercent)}
                       className="w-full p-2.5 pr-8 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 font-bold text-[10px]">%</span>
@@ -1193,7 +1215,7 @@ export default function BomPricingPage() {
                       required
                       min={0}
                       value={newDepositAmount}
-                      onChange={(e) => setNewDepositAmount(Number(e.target.value))}
+                      onChange={(e) => handleNumberInputChange(e, setNewDepositAmount)}
                       className="w-full p-2.5 pr-12 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-950 transition"
                     />
                     <span className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 font-bold text-[10px]">VNĐ</span>

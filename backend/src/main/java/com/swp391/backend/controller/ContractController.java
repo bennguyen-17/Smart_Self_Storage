@@ -279,6 +279,17 @@ public class ContractController {
             map.put("rentalAmount", rentAmount);
             map.put("depositAmount", depAmount);
             map.put("totalAmount", totAmount);
+
+            // Lấy giá niêm yết hiện hành của ô kho để áp dụng khi khách hàng gia hạn hợp đồng
+            com.swp391.backend.dto.UnitDetailResponse unitPricing = storageService.mapSingleUnit(unit);
+            BigDecimal currentMonthlyPrice = (unitPricing.getMonthlyPrice() != null && unitPricing.getMonthlyPrice().compareTo(BigDecimal.ZERO) > 0)
+                    ? unitPricing.getMonthlyPrice()
+                    : rentAmount;
+            BigDecimal currentDailyPrice = (unitPricing.getDailyPrice() != null && unitPricing.getDailyPrice().compareTo(BigDecimal.ZERO) > 0)
+                    ? unitPricing.getDailyPrice()
+                    : currentMonthlyPrice.divide(BigDecimal.valueOf(30), 0, java.math.RoundingMode.HALF_UP);
+            map.put("currentMonthlyPrice", currentMonthlyPrice);
+            map.put("currentDailyPrice", currentDailyPrice);
             map.put("customerName", custName);
             map.put("customerPhone", custPhone);
             map.put("customerEmail", custEmail);
@@ -408,7 +419,7 @@ public class ContractController {
             ticket.setCustomerId(custId);
             ticket.setContractId(contract.getContractId());
             ticket.setUnitCode(reservation != null ? reservation.getUnitCode() : null);
-            ticket.setTitle("Yêu cầu trả kho - " + (reservation != null ? reservation.getUnitCode() : ""));
+            ticket.setTitle("Yêu cầu trả kho sớm");
             ticket.setDescription(reason);
             ticket.setCreatedAt(LocalDateTime.now());
             supportTicketRepository.save(ticket);
