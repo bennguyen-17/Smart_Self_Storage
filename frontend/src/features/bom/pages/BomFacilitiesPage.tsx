@@ -406,7 +406,7 @@ export default function BomFacilitiesPage() {
     }
   }
 
-  // Quy mô chuẩn hóa: Layout A = 45 kho (3 tầng), Layout B = 15 kho (2 tầng)
+  // Quy mô chuẩn hóa: Layout A = 22 kho (2 tầng), Layout B = 20 kho (2 tầng)
   const computedTotalUnits = useMemo(() => {
     return newFacLayout === "B" ? 20 : 22
   }, [newFacLayout])
@@ -1218,7 +1218,8 @@ export default function BomFacilitiesPage() {
                       fac.layoutType === "Layout B" ||
                       fac.layoutType === "B" ||
                       [2, 4, 5, 7, 8].includes(Number(fac.id))
-                    const stdUnits = isLayoutB ? 15 : 45
+                    const stdUnits = isLayoutB ? 20 : 22
+                    const totalUnits = Number(fac.totalUnits || stdUnits)
                     const cleanName = (fac.name || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
                     const cleanManager = (fac.managerName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
                     const rented = fac.occupied ?? fac.rentedUnits ?? 0
@@ -1272,7 +1273,7 @@ export default function BomFacilitiesPage() {
                         <td className="py-3 px-4 text-center whitespace-nowrap">
                           <span className="text-sm font-normal text-slate-800 dark:text-slate-200">
                             <span className="font-semibold text-slate-900 dark:text-white">{rented}</span>
-                            <span className="text-slate-500 dark:text-slate-400"> / {stdUnits} Kho</span>
+                            <span className="text-slate-500 dark:text-slate-400"> / {totalUnits} Kho</span>
                           </span>
                         </td>
 
@@ -1808,7 +1809,7 @@ export default function BomFacilitiesPage() {
                   <div
                     onClick={() => {
                       setNewFacLayout("A")
-                      setNewFacFloors(3)
+                      setNewFacFloors(2)
                     }}
                     className={`p-3.5 rounded-2xl border transition-all cursor-pointer relative ${
                       newFacLayout === "A"

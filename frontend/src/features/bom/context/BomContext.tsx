@@ -351,7 +351,7 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
           const rawMgr = b.managerName || "Chưa phân công"
           const cleanMgr = rawMgr.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
           const isLayoutB = [2, 4, 5, 7].includes(Number(b.facilityId)) || String(b.facilityCode).includes("02") || String(b.facilityCode).includes("04") || String(b.facilityCode).includes("05") || String(b.facilityCode).includes("07")
-          const stdUnits = isLayoutB ? 15 : 46
+          const stdUnits = isLayoutB ? 20 : 22
           return {
             id: b.facilityId || idx + 1,
             code: b.facilityCode || `FAC-0${idx + 1}`,
