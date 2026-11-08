@@ -69,6 +69,11 @@
       "name": "vnpay.returnUrl",
       "type": "java.lang.String",
       "description": "VNPay callback return URL (camelCase)"
+    },
+    {
+      "name": "app.backend.base-url",
+      "type": "java.lang.String",
+      "description": "Base URL of the backend API server"
     }
   ]
 }
