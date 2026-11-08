@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Banknote,
   Boxes,
@@ -14,6 +14,7 @@ import {
 import { toast } from "sonner"
 
 import { formatDate, formatVnd } from "@/lib/format"
+import apiClient from "@/lib/apiClient"
 import { checkinErrorMessage, collectPenalty, renewAtCounter } from "../api/checkinApi"
 import type { RenewAtCounterResponse } from "../types"
 import type { CheckinTarget } from "./StaffCustomerDetailModal"
@@ -135,6 +136,7 @@ function Body({
   const [packageLabel, setPackageLabel] = useState("1 Tháng")
   const [isCustomDays, setIsCustomDays] = useState(false)
   const [customDaysInput, setCustomDaysInput] = useState("14")
+  const [liveMonthlyPrice, setLiveMonthlyPrice] = useState<number>(contract.monthlyPrice || 0)
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -143,6 +145,58 @@ function Body({
   const [unpaidPenalty, setUnpaidPenalty] = useState(contract.unpaidPenaltyAmount ?? 0)
   const [isCollectingPenalty, setIsCollectingPenalty] = useState(false)
   const blockedByPenalty = unpaidPenalty > 0
+
+  useEffect(() => {
+    let isMounted = true
+    const fetchLatestPrice = async () => {
+      try {
+        const res: any = await apiClient.get("/prices")
+        const prices = Array.isArray(res) ? res : (res?.data || [])
+        if (!isMounted || !Array.isArray(prices) || prices.length === 0) return
+
+        const upperCode = (contract.unitCode || "").toUpperCase()
+        const upperSize = (contract.unitSize || contract.unitTypeName || "").toUpperCase()
+        let targetSizeCode = "M"
+        if (upperCode.includes("-XL") || upperSize.includes("XL") || upperSize.includes("2.5M")) {
+          targetSizeCode = "XL"
+        } else if (upperCode.includes("-S") || upperSize === "S" || upperSize.includes("SIZE S") || upperSize.includes("1.0M")) {
+          targetSizeCode = "S"
+        } else if (upperCode.includes("-L") || upperSize === "L" || upperSize.includes("SIZE L") || upperSize.includes("2.0M X 3.0M") || upperSize.includes("3.0M X 2.0M")) {
+          targetSizeCode = "L"
+        } else if (upperCode.includes("-M") || upperSize === "M" || upperSize.includes("SIZE M") || upperSize.includes("1.5M")) {
+          targetSizeCode = "M"
+        }
+
+        const matched = prices.find(
+          (p: any) =>
+            String(p.size || "").toUpperCase() === targetSizeCode ||
+            String(p.dimensions || "").toUpperCase() === upperSize
+        )
+        if (matched) {
+          const isClimate =
+            String(contract.storageCondition || "").toUpperCase().includes("CLIMATE") ||
+            String(contract.unitTypeName || "").toUpperCase().includes("CLIMATE") ||
+            String(contract.unitTypeName || "").toUpperCase().includes("KHO MÁT")
+          const surchargePct = Number(matched.climateSurchargePercent) > 0 ? Number(matched.climateSurchargePercent) : 20
+          const factor = isClimate ? 1 + surchargePct / 100 : 1
+          const baseMonthly = Number(matched.monthlyPrice) || 0
+          if (baseMonthly > 0) {
+            setLiveMonthlyPrice(
+              isClimate && Number(matched.acPrice) > 0
+                ? Number(matched.acPrice)
+                : Math.round(baseMonthly * factor)
+            )
+          }
+        }
+      } catch (e) {
+        // Fallback giữ nguyên giá từ contract
+      }
+    }
+    fetchLatestPrice()
+    return () => {
+      isMounted = false
+    }
+  }, [contract.unitCode, contract.unitSize, contract.unitTypeName, contract.storageCondition])
 
   const packages = [
     { days: 30, months: 1, label: "1 Tháng", discountRate: 0, discountText: "" },
@@ -168,9 +222,11 @@ function Body({
     ? Math.max(7, parseInt(customDaysInput, 10) || 7)
     : selectedDays
 
-  // Giá tính theo tháng (30 ngày)
+  // Giá tính theo tháng (30 ngày) áp dụng bảng giá hiện hành mới nhất
   const monthlyRate =
-    (contract.monthlyPrice && contract.monthlyPrice > 0)
+    liveMonthlyPrice > 0
+      ? liveMonthlyPrice
+      : (contract.monthlyPrice && contract.monthlyPrice > 0)
       ? contract.monthlyPrice
       : (contract.rentalAmount && contract.rentalAmount > 0)
       ? contract.rentalAmount

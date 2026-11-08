@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react"
 import { useNavigate } from "react-router-dom"
-import { Eye, EyeOff, KeyRound, Lock, ShieldCheck } from "lucide-react"
+import { ArrowLeft, Eye, EyeOff, KeyRound, Lock, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -36,6 +36,10 @@ function ChangePasswordPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const isFirstLogin = Boolean(user?.mustChangePassword)
+
+  const handleBack = () => {
+    navigate(getRoleDestination(normalizeRole(user?.role)), { replace: true })
+  }
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -79,6 +83,20 @@ function ChangePasswordPage() {
   return (
     <InternalAuthLayout>
       <div className="w-full">
+        {!isFirstLogin && (
+          <div className="mb-3">
+            <button
+              type="button"
+              onClick={handleBack}
+              disabled={isSubmitting}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="size-3.5" />
+              <span>Quay lại giao diện làm việc</span>
+            </button>
+          </div>
+        )}
+
         <div className="mb-6 space-y-1 text-center">
           <div className="mb-1 inline-flex size-11 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600 dark:border-blue-800/60 dark:bg-blue-900/40 dark:text-blue-400">
             {isFirstLogin ? <ShieldCheck className="size-5" /> : <KeyRound className="size-5" />}
@@ -225,6 +243,20 @@ function ChangePasswordPage() {
             {isSubmitting && <Spinner />}
             {isSubmitting ? "Đang cập nhật..." : "Lưu mật khẩu mới"}
           </Button>
+
+          {!isFirstLogin && (
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              onClick={handleBack}
+              disabled={isSubmitting}
+              className="mt-2.5 w-full"
+            >
+              <ArrowLeft className="size-4" />
+              Quay lại giao diện làm việc
+            </Button>
+          )}
         </form>
 
         <div className="mt-4 border-t pt-3 text-center text-xs text-muted-foreground">

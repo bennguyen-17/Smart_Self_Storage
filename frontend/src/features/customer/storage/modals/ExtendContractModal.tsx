@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Boxes,
   RotateCw,
@@ -9,6 +9,7 @@ import {
   Clock,
   Sparkles,
 } from 'lucide-react';
+import apiClient from '@/lib/apiClient';
 
 interface ExtendContractModalProps {
   unitContext: {
@@ -19,6 +20,9 @@ interface ExtendContractModalProps {
     size?: string;
     unitCode?: string;
     rentalFee?: number;
+    currentMonthlyPrice?: number;
+    currentDailyPrice?: number;
+    storageCondition?: string;
   };
   onClose: () => void;
   onConfirmPayment: (data: any) => void;
@@ -37,6 +41,9 @@ export default function ExtendContractModal({
     size = 'XL',
     unitCode = 'HN01-G-XL04',
     rentalFee = 0,
+    currentMonthlyPrice = 0,
+    currentDailyPrice = 0,
+    storageCondition = 'NORMAL',
   } = unitContext || {};
 
   const [selectedDays, setSelectedDays] = useState(30);
@@ -44,6 +51,67 @@ export default function ExtendContractModal({
   const [packageLabel, setPackageLabel] = useState('1 Tháng');
   const [isCustomDays, setIsCustomDays] = useState(false);
   const [customDaysInput, setCustomDaysInput] = useState('14');
+  const [liveMonthlyPrice, setLiveMonthlyPrice] = useState<number>(currentMonthlyPrice || 0);
+  const [liveDailyPrice, setLiveDailyPrice] = useState<number>(currentDailyPrice || 0);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLatestUnitPrice = async () => {
+      try {
+        const res: any = await apiClient.get('/prices');
+        const prices = Array.isArray(res) ? res : (res?.data || []);
+        if (!isMounted || !Array.isArray(prices) || prices.length === 0) return;
+
+        // Xác định mã Size chuẩn (S, M, L, XL) từ size hoặc unitCode
+        const upperCode = (unitCode || '').toUpperCase();
+        const upperSize = (size || '').toUpperCase();
+        let targetSizeCode = 'M';
+        if (upperCode.includes('-XL') || upperSize.includes('XL') || upperSize.includes('2.5M')) {
+          targetSizeCode = 'XL';
+        } else if (upperCode.includes('-S') || upperSize === 'S' || upperSize.includes('SIZE S') || upperSize.includes('1.0M')) {
+          targetSizeCode = 'S';
+        } else if (upperCode.includes('-L') || upperSize === 'L' || upperSize.includes('SIZE L') || upperSize.includes('2.0M X 3.0M') || upperSize.includes('3.0M X 2.0M')) {
+          targetSizeCode = 'L';
+        } else if (upperCode.includes('-M') || upperSize === 'M' || upperSize.includes('SIZE M') || upperSize.includes('1.5M')) {
+          targetSizeCode = 'M';
+        }
+
+        const matched = prices.find(
+          (p: any) =>
+            String(p.size || '').toUpperCase() === targetSizeCode ||
+            String(p.dimensions || '').toUpperCase() === upperSize
+        );
+
+        if (matched) {
+          const isClimate =
+            String(storageCondition || '').toUpperCase().includes('CLIMATE') ||
+            String(storageCondition || '').toUpperCase().includes('MÁT');
+          const surchargePct = Number(matched.climateSurchargePercent) > 0 ? Number(matched.climateSurchargePercent) : 20;
+          const factor = isClimate ? 1 + surchargePct / 100 : 1;
+
+          const baseMonthly = Number(matched.monthlyPrice) || 0;
+          const baseDaily = Number(matched.dailyPrice) || 0;
+
+          if (baseMonthly > 0) {
+            setLiveMonthlyPrice(
+              isClimate && Number(matched.acPrice) > 0
+                ? Number(matched.acPrice)
+                : Math.round(baseMonthly * factor)
+            );
+          }
+          if (baseDaily > 0) {
+            setLiveDailyPrice(Math.round(baseDaily * factor));
+          }
+        }
+      } catch (e) {
+        // Fallback giữ nguyên giá từ unitContext
+      }
+    };
+    fetchLatestUnitPrice();
+    return () => {
+      isMounted = false;
+    };
+  }, [size, unitCode, storageCondition]);
 
   const packages = [
     { days: 30, label: '1 Tháng', discountRate: 0, discountText: '' },
@@ -69,10 +137,14 @@ export default function ExtendContractModal({
     ? Math.max(7, parseInt(customDaysInput, 10) || 7)
     : selectedDays;
 
-  // Giá tính theo tháng (30 ngày)
-  const monthlyRate = rentalFee || 1440000;
-  const rawTotal = (monthlyRate / 30) * effectiveDays;
-  const discountAmount = rawTotal * (isCustomDays ? 0 : discountRate);
+  // Áp dụng bảng giá hiện hành mới nhất khi gia hạn hợp đồng
+  const monthlyRate = liveMonthlyPrice || currentMonthlyPrice || rentalFee || 1440000;
+  const dailyRate = liveDailyPrice || currentDailyPrice || Math.round(monthlyRate / 30);
+  const rawTotal =
+    isCustomDays && effectiveDays < 30 && dailyRate > 0
+      ? dailyRate * effectiveDays
+      : Math.round((monthlyRate / 30) * effectiveDays);
+  const discountAmount = Math.round(rawTotal * (isCustomDays ? 0 : discountRate));
   const finalTotal = Math.round(rawTotal - discountAmount);
 
   // Parse ngày hiện tại hỗ trợ cả YYYY-MM-DD và DD/MM/YYYY

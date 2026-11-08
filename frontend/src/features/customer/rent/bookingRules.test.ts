@@ -2,14 +2,14 @@ import { describe, expect, test } from "vitest"
 
 import { calcRentalTotal, clampRentalDays, getCheckInDates } from "./bookingRules"
 
-describe("getCheckInDates: ngày Check-in từ Hôm nay (nếu trước 20:00) hoặc Ngày mai (nếu từ 20:00) đến +7 ngày", () => {
+describe("getCheckInDates: ngày Check-in từ Ngày mai (+1) đến +7 ngày", () => {
   test.each([
-    { now: "2026-10-07T03:00:00Z", vn: "10:00 07/10", first: "2026-10-07", last: "2026-10-14", len: 8 },
+    { now: "2026-10-07T03:00:00Z", vn: "10:00 07/10", first: "2026-10-08", last: "2026-10-14", len: 7 },
     // 06:30 sáng giờ VN vẫn là ngày 06/10 theo UTC
-    { now: "2026-10-06T23:30:00Z", vn: "06:30 07/10", first: "2026-10-07", last: "2026-10-14", len: 8 },
+    { now: "2026-10-06T23:30:00Z", vn: "06:30 07/10", first: "2026-10-08", last: "2026-10-14", len: 7 },
     { now: "2026-10-07T16:59:00Z", vn: "23:59 07/10", first: "2026-10-08", last: "2026-10-14", len: 7 },
-    { now: "2026-10-07T17:00:00Z", vn: "00:00 08/10", first: "2026-10-08", last: "2026-10-15", len: 8 },
-    { now: "2026-12-28T03:00:00Z", vn: "qua năm mới", first: "2026-12-28", last: "2027-01-04", len: 8 },
+    { now: "2026-10-07T17:00:00Z", vn: "00:00 08/10", first: "2026-10-09", last: "2026-10-15", len: 7 },
+    { now: "2026-12-28T03:00:00Z", vn: "qua năm mới", first: "2026-12-29", last: "2027-01-04", len: 7 },
   ])("$vn → $first … $last", ({ now, first, last, len }) => {
     const dates = getCheckInDates(new Date(now))
     expect(dates).toHaveLength(len)
@@ -17,9 +17,10 @@ describe("getCheckInDates: ngày Check-in từ Hôm nay (nếu trước 20:00) h
     expect(dates[dates.length - 1]).toBe(last)
   })
 
-  test("chứa ngày hôm nay trước 20:00, không chứa sau 20:00", () => {
+  test("luôn bắt đầu từ ngày mai và không chứa ngày hôm nay", () => {
     const beforeClose = new Date("2026-10-07T03:00:00Z") // 10:00 VN
-    expect(getCheckInDates(beforeClose)).toContain("2026-10-07")
+    expect(getCheckInDates(beforeClose)).not.toContain("2026-10-07")
+    expect(getCheckInDates(beforeClose)[0]).toBe("2026-10-08")
 
     const afterClose = new Date("2026-10-07T14:30:00Z") // 21:30 VN
     expect(getCheckInDates(afterClose)).not.toContain("2026-10-07")

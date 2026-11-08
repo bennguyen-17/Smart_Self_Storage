@@ -269,15 +269,7 @@ public class DashboardService {
                 } else if ("CANCELLED".equalsIgnoreCase(cStatus) || "FORFEITED".equalsIgnoreCase(cStatus)) {
                     if (r.getDepositAmount() != null) {
                         Contract c = cOpt.get();
-                        Integer cId = c.getContractId();
-                        BigDecimal refundedForContract = payments.stream()
-                                .filter(p -> cId.equals(p.getContractId()))
-                                .filter(p -> "REF".equalsIgnoreCase(p.getInvoiceType())
-                                         || (p.getInvoiceNumber() != null && p.getInvoiceNumber().startsWith("REF-")))
-                                .filter(p -> !"CANCELLED".equalsIgnoreCase(p.getStatus()))
-                                .map(p -> p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
-                        BigDecimal fAmt = r.getDepositAmount().subtract(refundedForContract).max(BigDecimal.ZERO);
+                        BigDecimal fAmt = getContractForfeitedDeposit(c, r, payments);
                         forfeitedDeposit = forfeitedDeposit.add(fAmt);
                         if (fAmt.compareTo(BigDecimal.ZERO) > 0) {
                             LocalDateTime forfeitTime = getContractForfeitTime(c, r, currentYm);
@@ -715,6 +707,9 @@ public class DashboardService {
         }
         String cStatus = c.getStatus();
         if (!"CANCELLED".equalsIgnoreCase(cStatus) && !"FORFEITED".equalsIgnoreCase(cStatus)) {
+            return BigDecimal.ZERO;
+        }
+        if ("HOLD_EXPIRED".equalsIgnoreCase(c.getCancelReason())) {
             return BigDecimal.ZERO;
         }
         Integer cId = c.getContractId();
