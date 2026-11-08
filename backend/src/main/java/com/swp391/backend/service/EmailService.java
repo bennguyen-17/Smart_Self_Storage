@@ -264,10 +264,11 @@ public class EmailService {
 
             byte[] pdfBytes = null;
             try {
-                java.nio.file.Path pdfPath = java.nio.file.Paths.get("uploads", "contracts", safeCode + ".pdf");
-                if (!java.nio.file.Files.exists(pdfPath)) {
-                    pdfPath = java.nio.file.Paths.get("backend", "uploads", "contracts", safeCode + ".pdf");
-                }
+                java.nio.file.Path current = java.nio.file.Paths.get("").toAbsolutePath();
+                java.nio.file.Path baseDir = (current.getFileName() != null && current.getFileName().toString().equals("backend"))
+                        ? current.resolve("uploads")
+                        : (java.nio.file.Files.exists(current.resolve("backend")) ? current.resolve("backend").resolve("uploads") : current.resolve("uploads"));
+                java.nio.file.Path pdfPath = baseDir.resolve("contracts").resolve(safeCode + ".pdf");
                 if (java.nio.file.Files.exists(pdfPath)) {
                     pdfBytes = java.nio.file.Files.readAllBytes(pdfPath);
                 }

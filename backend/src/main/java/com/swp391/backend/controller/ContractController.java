@@ -896,9 +896,23 @@ public class ContractController {
             fileName = rawInput.endsWith(".pdf") ? rawInput : (rawInput + ".pdf");
         }
 
-        Path pdfPath = Paths.get(contractUploadDir, fileName).toAbsolutePath().normalize();
+        // Chỉ các hợp đồng đã check-in thành công mới có văn bản hợp đồng chính thức
+        // PENDING_CHECKIN (chờ nhận kho) và CANCELLED (hủy cọc / No-Show) tuyệt đối không có file PDF hợp đồng
+        if (contractOpt.isPresent()) {
+            Contract c = contractOpt.get();
+            if ("PENDING_CHECKIN".equalsIgnoreCase(c.getStatus()) || "CANCELLED".equalsIgnoreCase(c.getStatus())) {
+                log.info("Hợp đồng #{} trạng thái {} chưa qua check-in hoặc đã bị hủy, không có file PDF hợp đồng chính thức.", c.getContractId(), c.getStatus());
+                return ResponseEntity.notFound().build();
+            }
+        }
+
+        Path current = Paths.get("").toAbsolutePath();
+        Path baseDir = (current.getFileName() != null && current.getFileName().toString().equals("backend"))
+                ? current.resolve("uploads")
+                : (Files.exists(current.resolve("backend")) ? current.resolve("backend").resolve("uploads") : current.resolve("uploads"));
+        Path pdfPath = baseDir.resolve("contracts").resolve(fileName).toAbsolutePath().normalize();
         if (!Files.exists(pdfPath)) {
-            pdfPath = Paths.get("uploads", "contracts", fileName).toAbsolutePath().normalize();
+            pdfPath = Paths.get(contractUploadDir, fileName).toAbsolutePath().normalize();
         }
 
         if (!Files.exists(pdfPath)) {

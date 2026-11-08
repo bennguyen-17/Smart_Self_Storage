@@ -32,12 +32,19 @@ export default function ContractDetailModal({
   const targetContractId = contract.rawContractId || contract.contractId || contractCode;
   const officialPdfUrl = `/api/contracts/${targetContractId}/pdf`;
 
-  // Kiểm tra trạng thái chờ nhận kho
-  const isPending =
-    contract.status === 'PENDING_CHECKIN' ||
-    contract.contractStatus === 'PENDING_CHECKIN' ||
-    contract.reservationStatus === 'PENDING' ||
-    contract.status === 'PENDING';
+  const rawStatus = (contract.status || contract.contractStatus || '').toUpperCase();
+
+  // Chỉ các hợp đồng đã check-in thành công (ACTIVE, OVERDUE, COMPLETED, TERMINATED) mới có văn bản hợp đồng PDF chính thức
+  const isCheckedIn =
+    (rawStatus === 'ACTIVE' ||
+      rawStatus === 'OVERDUE' ||
+      rawStatus === 'COMPLETED' ||
+      rawStatus === 'TERMINATED') &&
+    rawStatus !== 'CANCELLED' &&
+    rawStatus !== 'PENDING_CHECKIN' &&
+    rawStatus !== 'PENDING' &&
+    rawStatus !== 'INITIATED' &&
+    rawStatus !== 'FORFEITED';
 
   // Thông tin chi tiết đơn
   const customerName = contract.signedFullName || contract.customerName || contract.fullName || 'Khách hàng';
@@ -52,7 +59,7 @@ export default function ContractDetailModal({
   const rentalAmount = Number(contract.rentalFee ?? contract.rentalAmount ?? contract.depRemainingAmount ?? 0);
   const depositAmount = Number(contract.depositFee ?? contract.depositAmount ?? contract.paidAmount ?? contract.depPaidAmount ?? 0);
 
-  // 2. Tải trực tiếp file PDF vật lý từ Backend server (khi hợp đồng ACTIVE)
+  // 2. Tải trực tiếp file PDF vật lý từ Backend server (khi hợp đồng đã check-in)
   const handleDownloadPdf = async () => {
     if (isDownloading) return;
     setIsDownloading(true);
@@ -81,9 +88,65 @@ export default function ContractDetailModal({
     }
   };
 
-  // NẾU LÀ ĐƠN CHỜ NHẬN KHO (PENDING_CHECKIN) -> HIỂN THỊ POPUP PHIẾU XÁC NHẬN GIỮ CHỖ
-  if (isPending) {
-    const pendingModalContent = (
+  // NẾU CHƯA CHECK-IN THÀNH CÔNG (CHỜ NHẬN KHO, ĐÃ HỦY CỌC, QUÁ HẠN NHẬN KHO, MẤT CỌC, KHỞI TẠO) -> HIỂN THỊ POPUP THÔNG TIN CHI TIẾT
+  if (!isCheckedIn) {
+    const isCancelled = rawStatus === 'CANCELLED';
+    const isNoShow =
+      isCancelled &&
+      (String(contract.cancelReason || '').toUpperCase().includes('NO_SHOW') ||
+        String(contract.statusLabel || '').toLowerCase().includes('no-show') ||
+        String(contract.statusLabel || '').toLowerCase().includes('quá hạn'));
+    const isForfeited = rawStatus === 'FORFEITED';
+    const isInitiated = rawStatus === 'INITIATED';
+
+    let statusBadgeLabel = 'CHỜ NHẬN KHO';
+    let statusBadgeStyle = 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30';
+    let statusDotStyle = 'bg-amber-500 animate-pulse';
+    let statusBoxStyle = 'bg-amber-50 dark:bg-amber-950/30 border-amber-200/70 dark:border-amber-800/50';
+    let iconClass = 'fa-receipt text-amber-600 dark:text-amber-400';
+    let iconBoxStyle = 'bg-amber-500/15 border-amber-500/30';
+    let noticeBoxStyle = 'bg-blue-50/80 dark:bg-blue-950/30 border-blue-200/80 dark:border-blue-900/50 text-blue-800 dark:text-blue-300';
+    let noticeIconClass = 'fa-circle-exclamation text-blue-500';
+    let noticeText = 'Hợp đồng thuê kho chính thức sẽ được cấp và kích hoạt khi Quý khách hoàn tất thủ tục nhận kho.';
+
+    if (isCancelled) {
+      if (isNoShow) {
+        statusBadgeLabel = 'QUÁ HẠN NHẬN KHO (NO-SHOW)';
+        noticeText = 'Đơn đặt giữ chỗ đã quá hạn nhận kho (No-Show). Theo quy định tại BR-17, đơn đã tự động bị hủy và không phát hành văn bản hợp đồng.';
+      } else {
+        statusBadgeLabel = 'ĐÃ HỦY CỌC';
+        noticeText = 'Đơn đặt giữ chỗ đã được hủy cọc thành công. Hệ thống không phát hành văn bản hợp đồng thuê kho chính thức đối với đơn đã hủy.';
+      }
+      statusBadgeStyle = 'bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/30';
+      statusDotStyle = 'bg-rose-500';
+      statusBoxStyle = 'bg-rose-50 dark:bg-rose-950/30 border-rose-200/70 dark:border-rose-800/50';
+      iconClass = 'fa-ban text-rose-600 dark:text-rose-400';
+      iconBoxStyle = 'bg-rose-500/15 border-rose-500/30';
+      noticeBoxStyle = 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-200/80 dark:border-rose-900/50 text-rose-800 dark:text-rose-300';
+      noticeIconClass = 'fa-circle-xmark text-rose-500';
+    } else if (isForfeited) {
+      statusBadgeLabel = 'MẤT CỌC';
+      statusBadgeStyle = 'bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/30';
+      statusDotStyle = 'bg-rose-500';
+      statusBoxStyle = 'bg-rose-50 dark:bg-rose-950/30 border-rose-200/70 dark:border-rose-800/50';
+      iconClass = 'fa-triangle-exclamation text-rose-600 dark:text-rose-400';
+      iconBoxStyle = 'bg-rose-500/15 border-rose-500/30';
+      noticeBoxStyle = 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-200/80 dark:border-rose-900/50 text-rose-800 dark:text-rose-300';
+      noticeIconClass = 'fa-triangle-exclamation text-rose-500';
+      noticeText = 'Đơn đặt chỗ đã bị xử lý tịch thu tiền cọc theo quy định. Không phát hành văn bản hợp đồng thuê kho chính thức.';
+    } else if (isInitiated) {
+      statusBadgeLabel = 'CHƯA THANH TOÁN CỌC';
+      statusBadgeStyle = 'bg-slate-500/20 text-slate-700 dark:text-slate-300 border-slate-500/30';
+      statusDotStyle = 'bg-slate-400';
+      statusBoxStyle = 'bg-slate-50 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-700/50';
+      iconClass = 'fa-hourglass-start text-slate-600 dark:text-slate-400';
+      iconBoxStyle = 'bg-slate-500/15 border-slate-500/30';
+      noticeBoxStyle = 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300';
+      noticeIconClass = 'fa-circle-info text-slate-500';
+      noticeText = 'Đơn đặt giữ chỗ chưa hoàn tất thanh toán cọc. Hợp đồng chính thức chỉ được lập sau khi check-in nhận kho thành công.';
+    }
+
+    const infoModalContent = (
       <div
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-200"
         onClick={(e) => {
@@ -94,8 +157,8 @@ export default function ContractDetailModal({
           {/* Header */}
           <div className="px-6 py-4.5 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                <i className="fa-solid fa-receipt text-lg"></i>
+              <div className={`w-10 h-10 rounded-xl ${iconBoxStyle} flex items-center justify-center shrink-0`}>
+                <i className={`fa-solid ${iconClass} text-lg`}></i>
               </div>
               <div>
                 <span className="text-[11px] font-bold tracking-wider uppercase text-slate-500 dark:text-slate-400">
@@ -119,15 +182,15 @@ export default function ContractDetailModal({
           {/* Body */}
           <div className="p-6 space-y-5">
             {/* Trạng thái đơn */}
-            <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-800/50">
+            <div className={`flex items-center justify-between p-3 rounded-xl ${statusBoxStyle}`}>
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                <span className={`w-2.5 h-2.5 rounded-full ${statusDotStyle}`}></span>
                 <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                   Trạng thái:
                 </span>
               </div>
-              <span className="px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                CHỜ NHẬN KHO
+              <span className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${statusBadgeStyle}`}>
+                {statusBadgeLabel}
               </span>
             </div>
 
@@ -179,15 +242,22 @@ export default function ContractDetailModal({
                     {formatVnd(depositAmount)}
                   </span>
                 </div>
+
+                {contract.cancelReason && (
+                  <div className="py-2.5 flex items-start justify-between gap-4">
+                    <span className="text-slate-500 dark:text-slate-400 shrink-0">Lý do hủy / ghi chú:</span>
+                    <span className="font-medium text-rose-600 dark:text-rose-400 text-right text-xs">
+                      {contract.cancelReason === 'NO_SHOW' ? 'Quá hạn nhận kho (No-Show)' : contract.cancelReason}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Thông báo nghiệp vụ */}
-            <div className="p-3.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/50 flex items-start gap-2.5 text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
-              <i className="fa-solid fa-circle-exclamation text-blue-500 mt-0.5 shrink-0"></i>
-              <span>
-                Hợp đồng thuê kho chính thức sẽ được cấp và kích hoạt khi Quý khách hoàn tất thủ tục nhận kho.
-              </span>
+            <div className={`p-3.5 rounded-xl ${noticeBoxStyle} flex items-start gap-2.5 text-xs leading-relaxed`}>
+              <i className={`fa-solid ${noticeIconClass} mt-0.5 shrink-0`}></i>
+              <span>{noticeText}</span>
             </div>
           </div>
 
@@ -204,10 +274,23 @@ export default function ContractDetailModal({
         </div>
       </div>
     );
-    return createPortal(pendingModalContent, document.body);
+    return createPortal(infoModalContent, document.body);
   }
 
-  // NẾU LÀ HỢP ĐỒNG ĐÃ KÍCH HOẠT (ACTIVE) HOẶC CÁC TRẠNG THÁI KHÁC -> HIỂN THỊ VĂN BẢN PDF CHÍNH THỨC
+  // NẾU LÀ HỢP ĐỒNG ĐÃ CHECK-IN THÀNH CÔNG (ACTIVE, OVERDUE, COMPLETED, TERMINATED) -> HIỂN THỊ VĂN BẢN PDF CHÍNH THỨC
+  let pdfBadgeText = 'Có hiệu lực';
+  let pdfBadgeClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+  if (rawStatus === 'OVERDUE') {
+    pdfBadgeText = 'Quá hạn';
+    pdfBadgeClass = 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+  } else if (rawStatus === 'COMPLETED') {
+    pdfBadgeText = 'Đã hoàn tất';
+    pdfBadgeClass = 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+  } else if (rawStatus === 'TERMINATED') {
+    pdfBadgeText = 'Đã thanh lý';
+    pdfBadgeClass = 'bg-purple-500/20 text-purple-300 border-purple-500/30';
+  }
+
   const modalContent = (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-2 sm:p-4 animate-in fade-in duration-200"
@@ -227,8 +310,8 @@ export default function ContractDetailModal({
                 <span className="font-bold text-sm sm:text-base text-white tracking-wide">
                   Hợp đồng thuê kho lưu trữ tự quản
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Có hiệu lực
+                <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase ${pdfBadgeClass}`}>
+                  {pdfBadgeText}
                 </span>
               </div>
               <p className="text-xs text-slate-400 font-mono mt-0.5">
@@ -295,4 +378,3 @@ export default function ContractDetailModal({
 
   return createPortal(modalContent, document.body);
 }
-

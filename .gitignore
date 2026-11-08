@@ -64,3 +64,6 @@ GEMINI.md
 backend/.m2/
 out/
 
+
+# Redundant root uploads directory (all uploads standardized under backend/uploads/)
+/uploads/
