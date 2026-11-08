@@ -111,8 +111,8 @@ export default function ContractDetailModal({
 
     if (isCancelled) {
       if (isNoShow) {
-        statusBadgeLabel = 'QUÁ HẠN NHẬN KHO (NO-SHOW)';
-        noticeText = 'Đơn đặt giữ chỗ đã quá hạn nhận kho (No-Show). Theo quy định tại BR-17, đơn đã tự động bị hủy và không phát hành văn bản hợp đồng.';
+        statusBadgeLabel = 'QUÁ HẠN NHẬN KHO';
+        noticeText = 'Đơn đặt giữ chỗ đã quá hạn nhận kho. Theo quy định đơn đã tự động bị hủy và không phát hành văn bản hợp đồng.';
       } else {
         statusBadgeLabel = 'ĐÃ HỦY CỌC';
         noticeText = 'Đơn đặt giữ chỗ đã được hủy cọc thành công. Hệ thống không phát hành văn bản hợp đồng thuê kho chính thức đối với đơn đã hủy.';
@@ -242,15 +242,6 @@ export default function ContractDetailModal({
                     {formatVnd(depositAmount)}
                   </span>
                 </div>
-
-                {contract.cancelReason && (
-                  <div className="py-2.5 flex items-start justify-between gap-4">
-                    <span className="text-slate-500 dark:text-slate-400 shrink-0">Lý do hủy / ghi chú:</span>
-                    <span className="font-medium text-rose-600 dark:text-rose-400 text-right text-xs">
-                      {contract.cancelReason === 'NO_SHOW' ? 'Quá hạn nhận kho (No-Show)' : contract.cancelReason}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
 
