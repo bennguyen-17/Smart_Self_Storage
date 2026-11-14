@@ -233,21 +233,23 @@ public class LoginService {
             return new ApiResponse(false, "Không tìm thấy tài khoản!");
         }
         Account account = accOpt.get();
-        if (newPassword == null || newPassword.trim().length() < 6) {
-            return new ApiResponse(false, "Mật khẩu mới phải có ít nhất 6 ký tự!");
+        String passwordError = AuthService.validatePasswordStrength(newPassword, true);
+        if (passwordError != null) {
+            return new ApiResponse(false, passwordError);
         }
+        String trimmedNewPassword = newPassword.trim();
         if (oldPassword != null && !oldPassword.isBlank()) {
-            boolean matches = false;
-            try {
-                matches = passwordEncoder.matches(oldPassword, account.getPassword()) || oldPassword.equals(account.getPassword());
-            } catch (Exception e) {
-                matches = oldPassword.equals(account.getPassword());
-            }
-            if (!matches) {
+            if (!matchesCurrentPassword(oldPassword, account.getPassword())) {
                 return new ApiResponse(false, "Mật khẩu hiện tại không chính xác!");
             }
+            if (trimmedNewPassword.equals(oldPassword.trim())) {
+                return new ApiResponse(false, "Mật khẩu mới phải khác mật khẩu hiện tại!");
+            }
         }
-        account.setPassword(passwordEncoder.encode(newPassword.trim()));
+        if (matchesCurrentPassword(trimmedNewPassword, account.getPassword())) {
+            return new ApiResponse(false, "Mật khẩu mới phải khác mật khẩu hiện tại!");
+        }
+        account.setPassword(passwordEncoder.encode(trimmedNewPassword));
         account.setMustChangePassword(false);
         account.setUpdatedAt(LocalDateTime.now());
         accountRepository.save(account);
@@ -262,6 +264,17 @@ public class LoginService {
         } catch (Exception ignored) {}
 
         return new ApiResponse(true, "Đổi mật khẩu thành công!");
+    }
+
+    private boolean matchesCurrentPassword(String rawPassword, String storedPassword) {
+        if (rawPassword == null || storedPassword == null) {
+            return false;
+        }
+        try {
+            return passwordEncoder.matches(rawPassword, storedPassword) || rawPassword.equals(storedPassword);
+        } catch (Exception e) {
+            return rawPassword.equals(storedPassword);
+        }
     }
 
     public ApiResponse forgotPassword(ResendOtpRequest request) {
@@ -318,8 +331,9 @@ public class LoginService {
             return new ApiResponse(false, "Mã OTP đã hết hạn! Vui lòng gửi lại mã mới.");
         }
 
-        if (request.getNewPassword() == null || request.getNewPassword().trim().isEmpty()) {
-            return new ApiResponse(false, "Mật khẩu mới không được để trống!");
+        String passwordError = AuthService.validatePasswordStrength(request.getNewPassword(), false);
+        if (passwordError != null) {
+            return new ApiResponse(false, passwordError);
         }
 
         account.setPassword(passwordEncoder.encode(request.getNewPassword()));

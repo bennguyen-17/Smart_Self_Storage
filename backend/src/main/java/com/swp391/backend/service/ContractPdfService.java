@@ -447,8 +447,8 @@ public class ContractPdfService {
             Paragraph d3Sub = new Paragraph();
             d3Sub.setFont(bodyFont);
             d3Sub.setLeading(12.5f);
-            d3Sub.add("3.2. Hoàn trả tiền cọc: Bên A hoàn lại 100% tiền cọc cho Bên B trong vòng 03 ngày làm việc kể từ ngày thanh lý hợp đồng và nghiệm thu ô kho không hư hại, sau khi khấu trừ (nếu có) phí quá hạn theo Điều 4 hoặc chi phí khắc phục thiệt hại có biên bản xác nhận.\n");
-            d3Sub.add("3.3. Hủy giữ chỗ trước khi nhận kho: Khách hàng hủy trước ngày bắt đầu từ 04 ngày trở lên được hoàn 100% tiền cọc; hủy sát ngày (dưới 04 ngày) hoặc quá hạn nhận kho bị trừ 50% tiền cọc theo quy định hủy giữ chỗ của hệ thống.\n");
+            d3Sub.add("3.2. Hoàn trả tiền cọc: Bên A hoàn lại tiền cọc cho Bên B trong vòng 24 - 48 giờ làm việc kể từ ngày thanh lý hợp đồng và nghiệm thu ô kho, sau khi trừ (nếu có) chi phí khắc phục thiệt hại theo biên bản xác nhận (phí quá hạn theo Điều 4 được thanh toán đầy đủ tại quầy trước khi làm thủ tục trả kho).\n");
+            d3Sub.add("3.3. Hủy giữ chỗ trước khi nhận kho: Khách hàng hủy trước ngày bắt đầu từ 04 ngày trở lên được hoàn 100% tiền cọc; hủy dưới 04 ngày hoặc hủy trực tiếp tại quầy bị trừ 50% tiền cọc; trường hợp không đến nhận kho (No-Show) bị tịch thu 100% tiền cọc theo quy định của hệ thống.\n");
             d3Sub.add("3.4. Thanh toán tiền cọc: Bên B đã thanh toán tiền cọc lúc " + depositPaidTime + ", mã giao dịch: " + txnCode + ".\n");
             d3Sub.add("3.5. Tình trạng thanh toán, thời hạn thuê sau các lần gia hạn và việc bàn giao kho được hệ thống ghi nhận riêng theo thời gian thực và Bên B có thể tra cứu trong tài khoản cá nhân; các ghi nhận này không làm thay đổi nội dung văn bản này.\n");
             d3Sub.setSpacingAfter(6f);

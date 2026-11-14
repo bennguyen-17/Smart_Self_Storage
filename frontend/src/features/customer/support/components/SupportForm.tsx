@@ -569,7 +569,7 @@ export default function SupportForm() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Áp dụng cho các sự cố khẩn cấp (kẹt khóa, an ninh) trong ca trực. Nếu quá 15 phút chưa tiếp nhận, hệ thống tự động bắn cảnh báo lên Quản lý cơ sở.
+                  Áp dụng cho các sự cố khẩn cấp (kẹt khóa, an ninh) trong ca trực (07:00 – 20:00). Yêu cầu được ghi nhận mốc cam kết SLA 15 phút trên hệ thống để nhân viên và Quản lý cơ sở theo dõi xử lý.
                 </p>
               </div>
 
