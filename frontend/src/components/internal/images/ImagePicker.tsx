@@ -1,7 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react"
 import { ImagePlusIcon, XIcon } from "lucide-react"
 
-import { buttonVariants } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { readableError } from "@/components/internal/readableError"
 

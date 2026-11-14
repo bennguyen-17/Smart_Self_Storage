@@ -44,7 +44,7 @@ const RENT_STEPS = [
 export default function RentStoragePage() {
   const navigate = useNavigate();
 
-  // TIẾN TRÌNH 4 BƯỚC: 1: Chọn ô kho -> 2: Bảng giá -> 3: Thỏa thuận cọc -> 4: Thanh toán VietQR
+  // TIẾN TRÌNH 4 BƯỚC: 1: Chọn ô kho -> 2: Bảng giá -> 3: Thỏa thuận cọc -> 4: Thanh toán VNPay
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Dữ liệu cơ sở & sơ đồ ô kho
@@ -64,7 +64,7 @@ export default function RentStoragePage() {
   const [noProhibitedGoods, setNoProhibitedGoods] = useState(false);
   const [agreedTerms, setAgreedTerms] = useState(false);
 
-  // Dữ liệu thanh toán VietQR & VNPay ở Bước 4
+  // Dữ liệu thanh toán VNPay ở Bước 4
   const [bookingCode, setBookingCode] = useState('CTR-HN01-171026-0042');
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [timeLeft, setTimeLeft] = useState(300); // 5:00
@@ -140,7 +140,7 @@ export default function RentStoragePage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Chuyển sang Bước 4 (Tạo mã đơn cọc & VietQR/VNPay)
+  // Chuyển sang Bước 4 (Tạo mã đơn cọc & VNPay)
   const handleProceedToStep4 = async () => {
     if (!noProhibitedGoods || !agreedTerms) return;
 
@@ -654,7 +654,7 @@ export default function RentStoragePage() {
                   </label>
                 </div>
 
-                {/* Nút sang Bước 4: Thanh toán VietQR */}
+                {/* Nút sang Bước 4: Thanh toán VNPay */}
                 <button
                   type="button"
                   disabled={!noProhibitedGoods || !agreedTerms}

@@ -306,7 +306,7 @@ export const getStorageUnits = async (facilityCode: string, floor: number) => {
 
 /**
  * Tạo giao dịch đặt cọc giữ chỗ ô kho
- * Khởi tạo đặt cọc và tạo mã thanh toán VietQR
+ * Khởi tạo đặt cọc giữ chỗ trực tuyến
  */
 export const createDepositTransaction = async (bookingData: any) => {
   try {

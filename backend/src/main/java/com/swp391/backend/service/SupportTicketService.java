@@ -247,10 +247,6 @@ public class SupportTicketService {
         return createSupportFormTicket(accountId, type, unitCode, description, null);
     }
 
-    public SupportTicket saveTicket(SupportTicket ticket) {
-        return supportTicketRepository.save(ticket);
-    }
-
     private SupportTicket saveIncidentWithAssignment(SupportTicket ticket, Integer customerAccountId) {
         SupportTicket saved = supportTicketRepository.save(ticket);
         List<Integer> onDutyStaffIds = staffShiftService.getOnDutyStaffAccountIds(saved.getFacilityId());
@@ -529,18 +525,6 @@ public class SupportTicketService {
                 });
             } catch (Exception ignored) {}
         }
-    }
-
-    public void checkAndEscalateTickets(List<SupportTicket> tickets) {
-        if (tickets == null) return;
-        for (SupportTicket t : tickets) {
-            populateTicketExtraInfo(t);
-        }
-    }
-
-    // Đã loại bỏ logic tự động escalate lên Quản lý theo quy trình tinh gọn 3 trạng thái
-    public void autoEscalateBreachedTickets() {
-        // No-op
     }
 
     // Hàng đợi yêu cầu hỗ trợ cần xử lý của cơ sở kèm thời gian cam kết phản hồi 15 phút

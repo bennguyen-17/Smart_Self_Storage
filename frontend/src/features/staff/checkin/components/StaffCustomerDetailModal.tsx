@@ -8,10 +8,11 @@ import { formatDate, formatVnd } from "@/lib/format"
 import type { StaffReservationItem } from "../types"
 import ProtoModal from "@/features/staff/components/ProtoModal"
 
-/** Item có thể kèm thêm field của lookup (unitStatus, contractPdfUrl). */
+/** Item có thể kèm thêm field của lookup (unitStatus, contractPdfUrl, storageCondition). */
 export type CheckinTarget = StaffReservationItem & {
   unitStatus?: string | null
   contractPdfUrl?: string | null
+  storageCondition?: string | null
 }
 
 interface StaffCustomerDetailModalProps {

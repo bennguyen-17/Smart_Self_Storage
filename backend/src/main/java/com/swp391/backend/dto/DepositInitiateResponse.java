@@ -13,7 +13,6 @@ public class DepositInitiateResponse {
     private String invoiceNumber; // DEP-HN01-20260927-4719
     private BigDecimal depositAmount; // 100% tiền cọc
     private BigDecimal rentalAmount;
-    private String vietQrUrl; // Link ảnh QR thanh toán VietQR
     private String bankAccount;
     private String bankName;
     private String accountHolder;
@@ -107,14 +106,6 @@ public class DepositInitiateResponse {
 
     public void setRentalAmount(BigDecimal rentalAmount) {
         this.rentalAmount = rentalAmount;
-    }
-
-    public String getVietQrUrl() {
-        return vietQrUrl;
-    }
-
-    public void setVietQrUrl(String vietQrUrl) {
-        this.vietQrUrl = vietQrUrl;
     }
 
     public String getBankAccount() {
