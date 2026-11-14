@@ -45,6 +45,23 @@ public class AuthService {
         this.jwtService = jwtService;
     }
 
+    public static final String PASSWORD_REGEX =
+            "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#^()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]).{8,}$";
+    public static final String PASSWORD_POLICY_MESSAGE =
+            "Mật khẩu phải có ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 chữ số và 1 ký tự đặc biệt!";
+
+    /** Kiểm tra độ mạnh mật khẩu dùng chung cho đăng ký, đổi mật khẩu và đặt lại mật khẩu. */
+    public static String validatePasswordStrength(String password, boolean trimInput) {
+        if (password == null || password.trim().isEmpty()) {
+            return "Mật khẩu không được để trống!";
+        }
+        String candidate = trimInput ? password.trim() : password;
+        if (!candidate.matches(PASSWORD_REGEX)) {
+            return PASSWORD_POLICY_MESSAGE;
+        }
+        return null;
+    }
+
     // Đăng ký tài khoản và xử lý mã xác thực OTP
     public ApiResponse register(RegisterRequest request) {
         if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
@@ -65,11 +82,9 @@ public class AuthService {
         if (!request.getEmail().trim().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
             return new ApiResponse(false, "Địa chỉ email không hợp lệ!");
         }
-        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
-            return new ApiResponse(false, "Mật khẩu không được để trống!");
-        }
-        if (!request.getPassword().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#^()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]).{8,}$")) {
-            return new ApiResponse(false, "Mật khẩu phải có ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 chữ số và 1 ký tự đặc biệt!");
+        String passwordError = validatePasswordStrength(request.getPassword(), false);
+        if (passwordError != null) {
+            return new ApiResponse(false, passwordError);
         }
         if (request.getCccd() == null || request.getCccd().trim().isEmpty()) {
             return new ApiResponse(false, "Số CCCD không được để trống!");

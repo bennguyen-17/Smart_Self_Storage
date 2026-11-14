@@ -342,7 +342,7 @@ CREATE TABLE Image (
 
 
 -- ----------------------------------------------------------------------------
--- 19. TABLE: GatePin (Mã PIN động mở cổng IoT cơ sở 15s - 30s)
+-- 19. TABLE: GatePin (Mã PIN động mở cổng cơ sở 15 giây)
 -- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS GatePin;
 CREATE TABLE GatePin (
