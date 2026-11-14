@@ -70,13 +70,12 @@ export async function startMaintenance(
 }
 
 /**
- * POST /api/staff/units/{unitCode}/complete-maintenance: sửa / vệ sinh xong, mở lại ô thành AVAILABLE.
- * BE dùng chung endpoint cho Staff và Manager (SecurityConfig cho MANAGER gọi /api/staff/**),
- * cơ sở lấy từ tài khoản đăng nhập; ghi nhật ký COMPLETE_MAINTENANCE.
+ * POST /api/manager/units/{unitCode}/complete-maintenance: sửa / vệ sinh xong, mở lại ô thành AVAILABLE.
+ * Cơ sở lấy từ tài khoản Manager (hoặc header X-Facility-Id); ghi nhật ký COMPLETE_MAINTENANCE.
  */
 export async function endMaintenance(ctx: ManagerContext, unitCode: string): Promise<ManagerUnit> {
   if (isMockMode()) return mockEndMaintenance(unitCode)
-  const body = await apiClient.post(`/staff/units/${encodeURIComponent(unitCode)}/complete-maintenance`, null, {
+  const body = await apiClient.post(`/manager/units/${encodeURIComponent(unitCode)}/complete-maintenance`, null, {
     headers: contextHeaders(ctx),
   })
   return unwrapApiData<ManagerUnit>(body)

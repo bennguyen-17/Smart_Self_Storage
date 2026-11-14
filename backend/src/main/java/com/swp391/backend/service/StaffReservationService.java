@@ -901,7 +901,6 @@ public class StaffReservationService {
         String paymentMethod = switch (requestedMethod) {
             case "CASH", "" -> "CASH";
             case "TRANSFER", "BANK_TRANSFER" -> "BANK_TRANSFER";
-            case "VIETQR" -> "BANK_TRANSFER";
             default -> null;
         };
         if (paymentMethod == null) {

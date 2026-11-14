@@ -736,13 +736,4 @@ public class DashboardService {
         }
         return defaultYm.atDay(1).atStartOfDay();
     }
-
-    /**
-     * Bỏ hoàn trả 50% tiền thuê khi trả kho trước hạn (theo quy định mới của BOM)
-     */
-    public BigDecimal calculateEarlyTerminationRefund(Contract c, Reservation r, List<Payment> paymentList) {
-        return BigDecimal.ZERO;
-    }
-
-
 }

@@ -53,7 +53,7 @@ public class DashboardController {
         }
     }
 
-    @GetMapping("/admin/dashboard/chain-overview")
+    @GetMapping("/bom/dashboard/overview")
     public ResponseEntity<ChainDashboardResponse> getChainDashboardOverview(
             @RequestParam(required = false) String from,
             @RequestParam(required = false) String to,

@@ -20,7 +20,7 @@ describe("landingApi: chỉ gọi API công khai", () => {
   test("đếm ô trống theo cơ sở", async () => {
     http.get.mockResolvedValue([{ unitCode: "A" }, { unitCode: "B" }])
     await expect(countAvailableUnits(3)).resolves.toBe(2)
-    expect(http.get).toHaveBeenCalledWith("/units/filter", { params: { facilityId: 3, status: "AVAILABLE" } })
+    expect(http.get).toHaveBeenCalledWith("/units", { params: { facilityId: 3, status: "AVAILABLE" } })
   })
 
   test("một cơ sở lỗi thì bỏ qua cơ sở đó, các cơ sở khác vẫn có số", async () => {

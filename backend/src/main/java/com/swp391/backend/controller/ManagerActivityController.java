@@ -28,7 +28,7 @@ public class ManagerActivityController {
         this.securityContextHelper = securityContextHelper;
     }
 
-    @GetMapping("/staff-activity")
+    @GetMapping("/activity-logs/staff")
     public ResponseEntity<ManagerStaffActivityResponse> getStaffActivity(
             @AuthenticationPrincipal Integer managerAccountId,
             @RequestHeader(value = "X-Facility-Id", required = false) Integer facilityId,

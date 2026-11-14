@@ -8,8 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -212,20 +210,15 @@ public class DepositService {
         log.setIpAddress(request.getIpAddress() != null ? request.getIpAddress() : "127.0.0.1");
         activityLogRepository.save(log);
 
-        // Sinh link VietQR chuẩn
-        String bankCode = "MB";
+        // Thông tin thanh toán chuyển khoản ngân hàng
         String accountNumber = "0900000001";
         String accountHolder = "SMART SELF STORAGE CORP";
         String transferContent = invoiceNumber;
-        String encodedHolder = URLEncoder.encode(accountHolder, StandardCharsets.UTF_8);
-        String encodedContent = URLEncoder.encode(transferContent, StandardCharsets.UTF_8);
-        String vietQrUrl = String.format("https://img.vietqr.io/image/%s-%s-compact2.png?amount=%s&addInfo=%s&accountName=%s",
-                bankCode, accountNumber, priceRes.getDepositAmount().toPlainString(), encodedContent, encodedHolder);
 
         // Trả kết quả DTO
         DepositInitiateResponse response = new DepositInitiateResponse();
         response.setSuccess(true);
-        response.setMessage("Tạo đơn đặt cọc thành công! Vui lòng quét mã VietQR để hoàn tất giữ chỗ.");
+        response.setMessage("Tạo đơn đặt cọc thành công! Vui lòng hoàn tất thanh toán để giữ chỗ.");
         response.setReservationId(reservation.getReservationId());
         response.setReservationCode(contractCode);
         response.setContractId(contract.getContractId());
@@ -234,7 +227,6 @@ public class DepositService {
         response.setInvoiceNumber(invoiceNumber);
         response.setDepositAmount(priceRes.getDepositAmount());
         response.setRentalAmount(priceRes.getFinalRentalAmount());
-        response.setVietQrUrl(vietQrUrl);
         response.setBankAccount(accountNumber);
         response.setBankName("Ngân hàng TMCP Quân Đội (MBBank)");
         response.setAccountHolder(accountHolder);
@@ -336,23 +328,7 @@ public class DepositService {
         return new ApiResponse(true, "Xác nhận nộp cọc thành công! Hợp đồng ở trạng thái PENDING_CHECKIN và ô kho đã được bảo lưu giữ chỗ.");
     }
 
-    // --- 3. Kiểm tra trạng thái thanh toán Cọc ---
-    public ApiResponse checkDepositStatus(String invoiceNumber) {
-        if (invoiceNumber == null || invoiceNumber.trim().isEmpty()) {
-            return new ApiResponse(false, "Mã hóa đơn không được để trống!");
-        }
-        Optional<Payment> paymentOpt = paymentRepository.findByInvoiceNumber(invoiceNumber.trim());
-        if (paymentOpt.isEmpty()) {
-            return new ApiResponse(false, "PENDING");
-        }
-        Payment p = paymentOpt.get();
-        boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus())
-                || ("PARTIALLY_PAID".equalsIgnoreCase(p.getStatus())
-                && "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()));
-        return new ApiResponse(true, isPaid ? "PAID" : "PENDING");
-    }
-
-    // --- 4. Webhook / Xác nhận thanh toán Gia hạn Hợp đồng (EXT-) ---
+    // --- 3. Webhook / Xác nhận thanh toán Gia hạn Hợp đồng (EXT-) ---
     @Transactional
     public ApiResponse confirmExtensionPayment(DepositWebhookRequest request) {
         if (request.getInvoiceNumber() == null || request.getInvoiceNumber().trim().isEmpty()) {

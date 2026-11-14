@@ -1,6 +1,7 @@
 package com.swp391.backend.service;
 
-import com.swp391.backend.dto.ticket.*;
+import com.swp391.backend.dto.ticket.ResolveUnlockRequest;
+import com.swp391.backend.dto.ticket.UnlockDetailResponse;
 import com.swp391.backend.entity.*;
 import com.swp391.backend.repository.*;
 import org.springframework.security.access.AccessDeniedException;
@@ -11,7 +12,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,7 +27,6 @@ public class SupportTicketService {
     private final StorageUnitRepository storageUnitRepository;
     private final FloorRepository floorRepository;
     private final FacilityRepository facilityRepository;
-    private final EmailService emailService;
     private final StaffShiftService staffShiftService;
     private final NoShowCronService noShowCronService;
 
@@ -40,7 +39,6 @@ public class SupportTicketService {
                                 StorageUnitRepository storageUnitRepository,
                                 FloorRepository floorRepository,
                                 FacilityRepository facilityRepository,
-                                EmailService emailService,
                                 StaffShiftService staffShiftService,
                                 NoShowCronService noShowCronService) {
         this.supportTicketRepository = supportTicketRepository;
@@ -52,7 +50,6 @@ public class SupportTicketService {
         this.storageUnitRepository = storageUnitRepository;
         this.floorRepository = floorRepository;
         this.facilityRepository = facilityRepository;
-        this.emailService = emailService;
         this.staffShiftService = staffShiftService;
         this.noShowCronService = noShowCronService;
     }
@@ -65,24 +62,6 @@ public class SupportTicketService {
                 .orElse(null);
     }
 
-    // Danh sách câu hỏi thường gặp (FAQ)
-    public List<Map<String, String>> getFaqs() {
-        List<Map<String, String>> faqs = new ArrayList<>();
-        faqs.add(Map.of(
-                "question", "Bảng giá thuê và quy chuẩn kích thước 4 size ô kho như thế nào?",
-                "answer", "Hệ thống có 4 kích thước: Size S (1m x 1m x 2m - 600.000đ/tháng, cọc 500k), Size M (1.5m x 2m x 2m - 1.200.000đ/tháng, cọc 1tr), Size L (2m x 3m x 2m - 2.400.000đ/tháng, cọc 2tr), Size XL (2.5m x 4m x 2m - 4.000.000đ/tháng, cọc 3tr). Kho mát điều hòa cộng thêm 20% vào giá thuê."
-        ));
-        faqs.add(Map.of(
-                "question", "Khung giờ làm việc của nhân viên hỗ trợ tại cơ sở là khi nào?",
-                "answer", "Nhân viên trực tiếp hỗ trợ tại quầy từ 07:00 đến 20:00 hằng ngày. Ngoài khung giờ trên (20:00 - 07:00 sáng hôm sau), khách hàng vẫn có thể tự do ra vào kho 24/7 bằng Mã PIN động."
-        ));
-        faqs.add(Map.of(
-                "question", "Các mặt hàng nào bị nghiêm cấm lưu trữ tại kho?",
-                "answer", "Tuyệt đối cấm: Thực phẩm tươi sống/đông lạnh, động vật sống, chất dễ cháy nổ, hóa chất độc hại, vũ khí và các loại hàng hóa trái pháp luật. Vi phạm sẽ bị hủy hợp đồng và tịch thu cọc."
-        ));
-        return faqs;
-    }
-
     public synchronized String generateTicketCode() {
         String yearMonth = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
         long nextIndex = supportTicketRepository.count() + 1;
@@ -92,40 +71,6 @@ public class SupportTicketService {
             candidate = String.format("TCK-%s-%03d", yearMonth, nextIndex);
         }
         return candidate;
-    }
-
-    // Tiếp nhận yêu cầu báo cáo sự cố trong khung giờ 07:00 - 20:00
-    @Transactional
-    public SupportTicket createIncidentTicket(CreateIncidentRequest req, Integer customerId) {
-        // Khung giờ làm việc của Staff 07:00 - 20:00
-        LocalTime now = LocalTime.now();
-        if (now.isBefore(LocalTime.of(7, 0)) || now.isAfter(LocalTime.of(20, 0))) {
-            throw new IllegalArgumentException("Đã hết giờ làm việc của nhân viên (07:00 - 20:00), vui lòng liên hệ lại sau 07:00 sáng mai");
-        }
-
-        SupportTicket ticket = new SupportTicket();
-        ticket.setTicketCode(generateTicketCode());
-        ticket.setType("INCIDENT");
-        ticket.setStatus("SUBMITTED");
-        Integer targetCustomerId = customerId;
-        if (customerId != null) {
-            targetCustomerId = customerProfileRepository.findByAccountId(customerId)
-                    .map(CustomerProfile::getCustomerId)
-                    .orElse(customerId);
-        }
-        ticket.setCustomerId(targetCustomerId != null ? targetCustomerId : 1);
-        Integer unitFacilityId = getFacilityIdByUnit(req.getUnitCode());
-        ticket.setFacilityId(unitFacilityId != null ? unitFacilityId : req.getFacilityId());
-        ticket.setUnitCode(req.getUnitCode());
-        ticket.setTitle(req.getTitle() != null ? req.getTitle() : "Báo sự cố ô kho");
-        ticket.setDescription(req.getDescription());
-        ticket.setCreatedAt(LocalDateTime.now());
-        // Cam kết phản hồi SLA 15 phút
-        ticket.setSlaDeadline(LocalDateTime.now().plusMinutes(15));
-        ticket.setIsSlaBreached(false);
-        ticket.setIdentityVerified(false);
-
-        return saveIncidentWithAssignment(ticket, customerId);
     }
 
     // Tiếp nhận yêu cầu hỗ trợ kỹ thuật trực tuyến 24/7
@@ -247,10 +192,6 @@ public class SupportTicketService {
         return createSupportFormTicket(accountId, type, unitCode, description, null);
     }
 
-    public SupportTicket saveTicket(SupportTicket ticket) {
-        return supportTicketRepository.save(ticket);
-    }
-
     private SupportTicket saveIncidentWithAssignment(SupportTicket ticket, Integer customerAccountId) {
         SupportTicket saved = supportTicketRepository.save(ticket);
         List<Integer> onDutyStaffIds = staffShiftService.getOnDutyStaffAccountIds(saved.getFacilityId());
@@ -298,136 +239,6 @@ public class SupportTicketService {
             activityLogRepository.save(log);
         }
         return ticket;
-    }
-
-    // Gửi mã OTP xác thực yêu cầu trả kho trước hạn
-    @Transactional
-    public Map<String, Object> sendEarlyTerminationOtp(Integer contractId, Integer customerId) {
-        Contract contract = contractRepository.findById(contractId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy hợp đồng # " + contractId));
-
-        if (!"ACTIVE".equalsIgnoreCase(contract.getStatus())) {
-            throw new IllegalArgumentException("Chỉ có thể yêu cầu trả kho cho hợp đồng đang có hiệu lực (ACTIVE)!");
-        }
-
-        Long targetAccountId = Long.valueOf(customerId);
-        Optional<CustomerProfile> cpOpt = customerProfileRepository.findById(customerId);
-        Optional<Account> directAccOpt = accountRepository.findById(targetAccountId);
-        if (directAccOpt.isPresent() && Long.valueOf(5L).equals(directAccOpt.get().getRoleId())) {
-            cpOpt = Optional.empty();
-        }
-        Reservation contractRes = reservationRepository.findById(contract.getReservationId()).orElse(null);
-        Integer resolvedCallerAccountId = (cpOpt.isPresent() && cpOpt.get().getAccountId() != null)
-                ? cpOpt.get().getAccountId() : targetAccountId.intValue();
-        if (contractRes == null || contractRes.getAccountId() == null || !contractRes.getAccountId().equals(resolvedCallerAccountId)) {
-            throw new org.springframework.security.access.AccessDeniedException("Bạn không có quyền yêu cầu trả kho cho hợp đồng của người khác!");
-        }
-        if (cpOpt.isPresent() && cpOpt.get().getAccountId() != null) {
-            targetAccountId = Long.valueOf(cpOpt.get().getAccountId());
-        }
-
-        Account account = accountRepository.findById(targetAccountId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản khách hàng!"));
-
-        // Sinh mã OTP 6 số thực tế và lưu thời hạn 5 phút vào tài khoản
-        String otp = String.format("%06d", new Random().nextInt(999999));
-        account.setOtpCode(otp);
-        account.setOtpExpiryTime(LocalDateTime.now().plusMinutes(5));
-        accountRepository.save(account);
-
-        if (account.getEmail() != null && !account.getEmail().isBlank()) {
-            emailService.sendOtpEmail(account.getEmail(), account.getFullName(), otp, "Yêu cầu trả kho trước hạn");
-        }
-
-        return Map.of(
-                "success", true,
-                "message", "Mã xác thực OTP đã được gửi đến email đăng ký của bạn. Mã có hiệu lực trong 5 phút.",
-                "contractId", contractId
-        );
-    }
-
-    // Tiếp nhận yêu cầu trả kho trước hạn 24/7
-    @Transactional
-    public SupportTicket createEarlyTerminationTicket(CreateEarlyTerminationRequest req, Integer customerId) {
-        if (req.getContractId() == null) {
-            throw new IllegalArgumentException("Vui lòng chọn hợp đồng cần trả kho!");
-        }
-
-        Contract contract = contractRepository.findById(req.getContractId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy hợp đồng!"));
-
-        if (!"ACTIVE".equalsIgnoreCase(contract.getStatus())) {
-            throw new IllegalArgumentException("Chỉ áp dụng trả kho cho hợp đồng đang hiệu lực (ACTIVE)!");
-        }
-
-        // Kiểm tra OTP thực tế từ tài khoản
-        if (req.getOtpCode() == null || req.getOtpCode().trim().isEmpty()) {
-            throw new IllegalArgumentException("Vui lòng nhập mã OTP xác thực email!");
-        }
-
-        Long targetAccountId = Long.valueOf(customerId);
-        Optional<CustomerProfile> cpOpt = customerProfileRepository.findById(customerId);
-        Optional<Account> directAccOpt = accountRepository.findById(targetAccountId);
-        if (directAccOpt.isPresent() && Long.valueOf(5L).equals(directAccOpt.get().getRoleId())) {
-            cpOpt = Optional.empty();
-        }
-        Reservation contractRes = reservationRepository.findById(contract.getReservationId()).orElse(null);
-        Integer resolvedCallerAccountId = (cpOpt.isPresent() && cpOpt.get().getAccountId() != null)
-                ? cpOpt.get().getAccountId() : targetAccountId.intValue();
-        if (contractRes == null || contractRes.getAccountId() == null || !contractRes.getAccountId().equals(resolvedCallerAccountId)) {
-            throw new org.springframework.security.access.AccessDeniedException("Bạn không có quyền yêu cầu trả kho cho hợp đồng của người khác!");
-        }
-        if (cpOpt.isPresent() && cpOpt.get().getAccountId() != null) {
-            targetAccountId = Long.valueOf(cpOpt.get().getAccountId());
-        }
-
-        Account account = accountRepository.findById(targetAccountId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản khách hàng!"));
-
-        if (account.getOtpCode() == null || !account.getOtpCode().equals(req.getOtpCode().trim())) {
-            throw new IllegalArgumentException("Mã OTP không chính xác!");
-        }
-        if (account.getOtpExpiryTime() != null && account.getOtpExpiryTime().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Mã OTP đã hết hiệu lực, vui lòng yêu cầu mã mới!");
-        }
-
-        // Hủy mã OTP sau khi xác thực thành công
-        account.setOtpCode(null);
-        account.setOtpExpiryTime(null);
-        accountRepository.save(account);
-
-        Reservation reservation = reservationRepository.findById(contract.getReservationId()).orElse(null);
-
-        Integer targetCustomerId = customerId;
-        if (customerId != null) {
-            targetCustomerId = customerProfileRepository.findByAccountId(customerId)
-                    .map(CustomerProfile::getCustomerId)
-                    .orElse(customerId);
-        }
-
-        SupportTicket ticket = new SupportTicket();
-        ticket.setTicketCode(generateTicketCode());
-        ticket.setType("EARLY_TERMINATION");
-        ticket.setStatus("SUBMITTED");
-        ticket.setCustomerId(targetCustomerId != null ? targetCustomerId : 1);
-        ticket.setContractId(contract.getContractId());
-        ticket.setFacilityId(reservation != null ? getFacilityIdByUnit(reservation.getUnitCode()) : null);
-        ticket.setUnitCode(reservation != null ? reservation.getUnitCode() : null);
-        ticket.setTitle("Yêu cầu trả kho sớm");
-        ticket.setDescription(req.getReason());
-        if (req.getDesiredDate() == null) {
-            throw new IllegalArgumentException("Vui lòng chọn ngày hẹn trả kho (phải hẹn trước ít nhất 1 ngày)!");
-        }
-        LocalDate minEarlyDate = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")).plusDays(1);
-        if (req.getDesiredDate().isBefore(minEarlyDate)) {
-            throw new IllegalArgumentException("Ngày hẹn trả kho sớm phải báo trước ít nhất 1 ngày (sớm nhất là từ ngày mai " + minEarlyDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")!");
-        }
-        ticket.setDesiredDate(req.getDesiredDate());
-        ticket.setCreatedAt(LocalDateTime.now());
-        ticket.setIsSlaBreached(false);
-        ticket.setIdentityVerified(false);
-
-        return logCreatedTicket(supportTicketRepository.save(ticket), targetAccountId.intValue());
     }
 
     // Xem lịch sử yêu cầu hỗ trợ của khách hàng
@@ -529,18 +340,6 @@ public class SupportTicketService {
                 });
             } catch (Exception ignored) {}
         }
-    }
-
-    public void checkAndEscalateTickets(List<SupportTicket> tickets) {
-        if (tickets == null) return;
-        for (SupportTicket t : tickets) {
-            populateTicketExtraInfo(t);
-        }
-    }
-
-    // Đã loại bỏ logic tự động escalate lên Quản lý theo quy trình tinh gọn 3 trạng thái
-    public void autoEscalateBreachedTickets() {
-        // No-op
     }
 
     // Hàng đợi yêu cầu hỗ trợ cần xử lý của cơ sở kèm thời gian cam kết phản hồi 15 phút
@@ -745,82 +544,5 @@ public class SupportTicketService {
         if ("IN_PROGRESS".equalsIgnoreCase(status)) return 2;
         if ("RESOLVED".equalsIgnoreCase(status)) return 3;
         return 4;
-    }
-
-    // --- CÁCH 2: Quản lý trực tiếp Tiếp nhận ticket (SUBMITTED -> IN_PROGRESS) ---
-    @Transactional
-    public SupportTicket managerAcceptTicket(Long ticketId, Integer managerAccountId, Integer facilityId) {
-        SupportTicket ticket = supportTicketRepository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy ticket # " + ticketId));
-
-        if (facilityId != null && ticket.getFacilityId() != null && !ticket.getFacilityId().equals(facilityId)) {
-            throw new AccessDeniedException("Bạn không có quyền tiếp nhận ticket của cơ sở khác!");
-        }
-
-        if ("RESOLVED".equalsIgnoreCase(ticket.getStatus())) {
-            throw new IllegalArgumentException("Ticket này đã được giải quyết hoàn tất trước đó!");
-        }
-
-        if ("EARLY_TERMINATION".equalsIgnoreCase(ticket.getType()) && ticket.getDesiredDate() != null) {
-            LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
-            if (ticket.getDesiredDate().isAfter(today)) {
-                String dStr = ticket.getDesiredDate().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-                throw new IllegalArgumentException("Chưa đến ngày hẹn trả kho (" + dStr + "). Chỉ tiếp nhận vào đúng ngày hẹn!");
-            }
-        }
-
-        ticket.setStatus("IN_PROGRESS");
-        ticket.setAssignedStaffId(managerAccountId);
-        SupportTicket saved = supportTicketRepository.save(ticket);
-        populateTicketExtraInfo(saved);
-
-        if (activityLogRepository != null && managerAccountId != null) {
-            ActivityLog log = new ActivityLog();
-            log.setAccountId(managerAccountId);
-            log.setFacilityId(ticket.getFacilityId());
-            log.setAction("MANAGER_ACCEPT_TICKET");
-            log.setDescription(String.format("Quản lý cơ sở #%d trực tiếp tiếp nhận giải quyết ticket %s (Vị trí: %s)",
-                    managerAccountId, ticket.getTicketCode(), ticket.getUnitCode() != null ? ticket.getUnitCode() : "N/A"));
-            log.setCreatedAt(LocalDateTime.now());
-            activityLogRepository.save(log);
-        }
-
-        return saved;
-    }
-
-    // --- CÁCH 2: Quản lý trực tiếp Đóng/Giải quyết ticket cho khách hàng ---
-    @Transactional
-    public SupportTicket managerResolveTicket(Long ticketId, String note, Integer managerAccountId, Integer facilityId) {
-        SupportTicket ticket = supportTicketRepository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy ticket # " + ticketId));
-
-        if (facilityId != null && ticket.getFacilityId() != null && !ticket.getFacilityId().equals(facilityId)) {
-            throw new AccessDeniedException("Bạn không có quyền xử lý ticket của cơ sở khác!");
-        }
-
-        if ("RESOLVED".equalsIgnoreCase(ticket.getStatus())) {
-            throw new IllegalArgumentException("Ticket này đã hoàn tất giải quyết trước đó!");
-        }
-
-        ticket.setStatus("RESOLVED");
-        ticket.setResolutionNote(note != null && !note.trim().isEmpty() ? note : "Quản lý cơ sở đã trực tiếp giải quyết và đóng ticket cho khách hàng");
-        ticket.setAssignedStaffId(managerAccountId);
-        ticket.setResolvedAt(LocalDateTime.now());
-
-        SupportTicket saved = supportTicketRepository.save(ticket);
-        populateTicketExtraInfo(saved);
-
-        if (activityLogRepository != null && managerAccountId != null) {
-            ActivityLog log = new ActivityLog();
-            log.setAccountId(managerAccountId);
-            log.setFacilityId(ticket.getFacilityId());
-            log.setAction("MANAGER_RESOLVE_TICKET");
-            log.setDescription(String.format("Quản lý cơ sở #%d trực tiếp hoàn tất và đóng ticket %s: %s",
-                    managerAccountId, ticket.getTicketCode(), ticket.getResolutionNote()));
-            log.setCreatedAt(LocalDateTime.now());
-            activityLogRepository.save(log);
-        }
-
-        return saved;
     }
 }

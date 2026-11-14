@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping("/api/staff/checkout/{contractId}")
+@RequestMapping("/api/staff/contracts/{contractId}")
 public class CheckoutSettlementController {
 
     private final CheckoutSettlementService checkoutSettlementService;
@@ -21,7 +21,7 @@ public class CheckoutSettlementController {
     }
 
     // Xem dự thảo quyết toán trả kho và hoàn tiền cọc
-    @GetMapping("/preview")
+    @GetMapping("/checkout-preview")
     public ResponseEntity<CheckoutPreviewResponse> getCheckoutPreview(
             @PathVariable Integer contractId,
             @AuthenticationPrincipal Integer staffAccountId) {
@@ -37,7 +37,7 @@ public class CheckoutSettlementController {
     }
 
     // Xác nhận bàn giao trả kho và chốt quyết toán hoàn cọc hoặc truy thu chi phí
-    @PostMapping("/confirm")
+    @PostMapping("/checkout")
     public ResponseEntity<CheckoutConfirmResponse> confirmCheckout(
             @PathVariable Integer contractId,
             @RequestBody CheckoutConfirmRequest request,

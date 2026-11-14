@@ -34,10 +34,10 @@ export async function getPublicFacilities(): Promise<PublicFacilityRow[]> {
   return unwrapApiData<PublicFacilityRow[]>(await apiClient.get("/facilities")) ?? []
 }
 
-/** Số ô còn trống của một cơ sở (GET /api/units/filter?facilityId&status=AVAILABLE) */
+/** Số ô còn trống của một cơ sở (GET /api/units?facilityId&status=AVAILABLE) */
 export async function countAvailableUnits(facilityId: number): Promise<number> {
   const units = unwrapApiData<unknown[]>(
-    await apiClient.get("/units/filter", { params: { facilityId, status: "AVAILABLE" } })
+    await apiClient.get("/units", { params: { facilityId, status: "AVAILABLE" } })
   )
   return Array.isArray(units) ? units.length : 0
 }

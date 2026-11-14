@@ -59,7 +59,7 @@ const FILTERS: { key: "ALL" | TicketStatus; label: string }[] = [
 ]
 
 function formatTicketTimeInfo(ticket: TicketItem) {
-  if (ticket.status === "RESOLVED" || ticket.status === "CANCELLED" || ticket.status === "CLOSED") {
+  if (ticket.status === "RESOLVED" || ticket.status === "CANCELLED") {
     return { text: "—", className: "text-slate-400 font-medium" }
   }
 

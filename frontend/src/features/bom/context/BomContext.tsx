@@ -87,7 +87,7 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
       setIsLoadingApi(true)
       const [overview, apiFacilities, apiUnits, apiPrices, apiFeePolicies] = await Promise.all([
         bomApi.getChainDashboard().catch((err) => {
-          console.warn("API /api/admin/dashboard/chain-overview lỗi:", err)
+          console.warn("API /api/bom/dashboard/overview lỗi:", err)
           return null
         }),
         bomApi.getFacilities().catch((err) => {
@@ -95,7 +95,7 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
           return null
         }),
         bomApi.getUnits().catch((err) => {
-          console.warn("API /api/units/filter lỗi:", err)
+          console.warn("API /api/units lỗi:", err)
           return null
         }),
         bomApi.getPrices().catch((err) => {

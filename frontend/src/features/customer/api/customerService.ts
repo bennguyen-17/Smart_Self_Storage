@@ -62,7 +62,7 @@ export const getCurrentCustomerProfile = async () => {
 
   try {
     const accountId = localUser?.id || localUser?.accountId;
-    const res = await apiClient.get('/customers/profile', {
+    const res = await apiClient.get('/customer/profile', {
       params: accountId ? { accountId } : undefined
     });
     const apiData = res.data || res;
@@ -99,7 +99,7 @@ export const sendEmailOtp = async (newEmail: string, accountId?: number) => {
     return { success: true, message: 'Mã OTP thử nghiệm là 123456' };
   }
 
-  const res = await apiClient.post('/customers/profile/send-email-otp', { newEmail, accountId });
+  const res = await apiClient.post('/customer/profile/send-email-otp', { newEmail, accountId });
   return res.data || res;
 };
 
@@ -108,7 +108,7 @@ export const updateCustomerProfile = async (updateData: any) => {
     return { success: true, data: updateData, message: 'Cập nhật thành công!' };
   }
 
-  const res = await apiClient.put('/customers/profile', updateData);
+  const res = await apiClient.put('/customer/profile', updateData);
   return { success: true, data: res.data || res };
 };
 
@@ -140,24 +140,24 @@ export const getCustomerNotifications = async (): Promise<CustomerNotification[]
 
 /**
  * Yêu cầu đóng tài khoản cá nhân với thời gian ân hạn 30 ngày
- * POST /api/customers/profile/request-deletion
+ * POST /api/customer/profile/request-deletion
  */
 export const requestAccountDeletion = async (): Promise<{ success: boolean; message: string; deletionScheduledAt?: string }> => {
   if (isMockMode()) {
     return { success: true, message: 'Đã ghi nhận yêu cầu xóa tài khoản (Mock).', deletionScheduledAt: new Date(Date.now() + 30 * 86400000).toISOString() };
   }
-  const res: any = await apiClient.post('/customers/profile/request-deletion');
+  const res: any = await apiClient.post('/customer/profile/request-deletion');
   return res?.data ?? res;
 };
 
 /**
  * Hủy yêu cầu đóng tài khoản, khôi phục trạng thái hoạt động bình thường
- * POST /api/customers/profile/cancel-deletion
+ * POST /api/customer/profile/cancel-deletion
  */
 export const cancelAccountDeletion = async (): Promise<{ success: boolean; message: string }> => {
   if (isMockMode()) {
     return { success: true, message: 'Đã hủy yêu cầu xóa tài khoản (Mock).' };
   }
-  const res: any = await apiClient.post('/customers/profile/cancel-deletion');
+  const res: any = await apiClient.post('/customer/profile/cancel-deletion');
   return res?.data ?? res;
 };

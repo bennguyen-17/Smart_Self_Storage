@@ -9,7 +9,7 @@ import type { GateLog } from "../types"
 import { mockListManualGateOpenLogs } from "./gateLogApi.mock"
 
 /** BE đã gỡ tiền tố lồng (trước đây là /staff/audit-logs/manager/…) */
-export const MANUAL_GATE_OPEN_LOGS_PATH = "/manager/audit-logs/manual-gate-open"
+export const MANUAL_GATE_OPEN_LOGS_PATH = "/manager/gate-logs"
 
 /** GET nhật ký mở cổng thủ công của cơ sở Manager đang phụ trách (chỉ đọc) */
 export async function listManualGateOpenLogs(): Promise<GateLog[]> {

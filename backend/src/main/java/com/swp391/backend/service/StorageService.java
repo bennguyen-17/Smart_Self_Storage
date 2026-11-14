@@ -97,12 +97,6 @@ public class StorageService {
         return floorRepository.findByFacilityIdAndStatus(facilityId, "ACTIVE");
     }
 
-    //Lấy danh sách Ô kho theo Tầng (kèm unitCode, kích thước, tải trọng, giá)
-    public List<UnitDetailResponse> getUnitsByFloorId(Integer floorId) {
-        List<StorageUnit> units = storageUnitRepository.findByFloorId(floorId);
-        return mapToUnitDetailResponses(units);
-    }
-
     //Bộ lọc Ô kho
     public List<UnitDetailResponse> filterUnits(Integer facilityId, Integer floorId, Integer unitTypeId, String storageCondition, String status) {
         List<StorageUnit> allUnits;
@@ -419,15 +413,6 @@ public class StorageService {
         }
 
         return saved;
-    }
-
-    // Lấy danh sách ô kho đang trong quá trình bảo trì tại cơ sở
-    public List<UnitDetailResponse> getMaintenanceUnits(Integer facilityId) {
-        return filterUnits(facilityId, null, null, null, "MAINTENANCE");
-    }
-
-    private List<UnitDetailResponse> mapToUnitDetailResponses(List<StorageUnit> units) {
-        return units.stream().map(this::mapSingleUnit).collect(Collectors.toList());
     }
 
     public UnitDetailResponse mapSingleUnit(StorageUnit u) {

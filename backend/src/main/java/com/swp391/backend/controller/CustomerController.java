@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.Random;
 
 @RestController
-@RequestMapping("/api/customers/profile")
+@RequestMapping("/api/customer/profile")
 public class CustomerController {
 
     private final AccountRepository accountRepository;

@@ -77,17 +77,6 @@ public class FacilityController {
         return ResponseEntity.ok(updated);
     }
 
-    // --- BOM: Gắn các imageId đã upload trước vào cơ sở ---
-    @PutMapping(value = "/{facilityId}/images", consumes = "application/json")
-    @Transactional
-    public ResponseEntity<Map<String, String>> attachFacilityImages(
-            @PathVariable Integer facilityId,
-            @RequestBody Map<String, Integer> imageIds,
-            @AuthenticationPrincipal Integer uploaderAccountId) {
-        imageStorageService.attachFacilityImages(facilityId, imageIds, uploaderAccountId);
-        return ResponseEntity.ok(imageStorageService.getFacilityImageUrls(facilityId));
-    }
-
     // --- BOM: Xóa mềm cơ sở kho trong Database (status = 'INACTIVE') ---
     @DeleteMapping("/{facilityId}")
     public ResponseEntity<Map<String, Object>> deleteFacility(@PathVariable Integer facilityId) {

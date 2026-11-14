@@ -47,7 +47,7 @@ export const submitSupportTicket = async (ticketData: any) => {
     ...ticketData
   };
 
-  const res: any = await apiClient.post('/support/tickets', payload, {
+  const res: any = await apiClient.post('/customer/tickets', payload, {
     headers: { 'X-Account-Id': String(accountId) }
   });
   return { success: true, data: res.data || res };

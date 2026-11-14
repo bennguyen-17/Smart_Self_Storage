@@ -8,10 +8,10 @@ import type { ManagerContext } from "@/features/manager/units/types"
 
 import type { FacilityLogEntry, StaffActivityDay } from "../types"
 
-/** GET /api/manager/staff-activity?date=YYYY-MM-DD: theo từng ca, mỗi người trực làm được gì */
+/** GET /api/manager/activity-logs/staff?date=YYYY-MM-DD: theo từng ca, mỗi người trực làm được gì */
 export async function getStaffActivity(ctx: ManagerContext, date: string): Promise<StaffActivityDay> {
   return unwrapApiData<StaffActivityDay>(
-    await apiClient.get("/manager/staff-activity", { params: { date }, headers: managerHeaders(ctx) })
+    await apiClient.get("/manager/activity-logs/staff", { params: { date }, headers: managerHeaders(ctx) })
   )
 }
 

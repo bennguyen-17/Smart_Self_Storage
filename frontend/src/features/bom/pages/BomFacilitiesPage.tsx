@@ -227,7 +227,7 @@ export default function BomFacilitiesPage() {
         }
 
         const res: any = await apiClient
-          .get("/units/filter", { params: { facilityId: facId } })
+          .get("/units", { params: { facilityId: facId } })
           .catch(() => null)
 
         const raw = Array.isArray(res) ? res : res?.data || []
@@ -348,7 +348,7 @@ export default function BomFacilitiesPage() {
       }
 
       const [unitsPromise, facDashboardPromise] = [
-        apiClient.get("/units/filter", { params: { facilityId: facId } }).catch(() => null),
+        apiClient.get("/units", { params: { facilityId: facId } }).catch(() => null),
         bomApi.getFacilityDashboard(facId).catch(() => null),
       ]
 

@@ -24,14 +24,8 @@ public class StorageUnitController {
         this.securityContextHelper = securityContextHelper;
     }
 
-    // Lấy danh sách ô kho theo tầng phục vụ hiển thị sơ đồ 2D
-    @GetMapping("/floors/{floorId}/units")
-    public ResponseEntity<List<UnitDetailResponse>> getUnitsByFloor(@PathVariable Integer floorId) {
-        return ResponseEntity.ok(storageService.getUnitsByFloorId(floorId));
-    }
-
     // Tra cứu và lọc ô kho theo nhiều tiêu chí
-    @GetMapping("/units/filter")
+    @GetMapping("/units")
     public ResponseEntity<List<UnitDetailResponse>> filterUnits(
             @RequestParam(required = false) Integer facilityId,
             @RequestParam(required = false) Integer floorId,
@@ -42,7 +36,7 @@ public class StorageUnitController {
     }
 
     // Tính toán tự động giá thuê và tiền cọc theo bảng giá
-    @PostMapping({"/pricing/calculate", "/units/pricing/calculate"})
+    @PostMapping("/pricing/calculate")
     public ResponseEntity<CalculatePriceResponse> calculatePrice(@RequestBody CalculatePriceRequest request) {
         CalculatePriceResponse response = storageService.calculateRentalPrice(request);
         if (response.isSuccess()) {
@@ -119,33 +113,22 @@ public class StorageUnitController {
     }
 
     // Nghiệm thu dọn dẹp và bảo trì hoàn tất, mở lại ô kho cho thuê
-    @PostMapping("/staff/units/{unitCode}/complete-maintenance")
+    @PostMapping("/manager/units/{unitCode}/complete-maintenance")
     public ResponseEntity<?> completeMaintenance(
             @PathVariable String unitCode,
-            @AuthenticationPrincipal Integer staffAccountId
+            @AuthenticationPrincipal Integer managerAccountId,
+            @RequestHeader(value = "X-Facility-Id", required = false) Integer managerFacilityId,
+            @RequestHeader(value = "X-Account-Id", required = false) Integer accountId
     ) {
+        Integer effectiveAccountId = managerAccountId != null ? managerAccountId : accountId;
         try {
-            Integer effectiveFacilityId = securityContextHelper.requireCurrentFacilityId(staffAccountId, null);
-            StorageUnit updated = storageService.completeMaintenance(unitCode, effectiveFacilityId, staffAccountId);
+            Integer effectiveFacilityId = securityContextHelper.requireCurrentFacilityId(effectiveAccountId, managerFacilityId);
+            StorageUnit updated = storageService.completeMaintenance(unitCode, effectiveFacilityId, effectiveAccountId);
             return ResponseEntity.ok(updated);
         } catch (org.springframework.security.access.AccessDeniedException e) {
             return ResponseEntity.status(403).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    // Lấy danh sách các ô kho đang trong quá trình bảo trì tại cơ sở
-    @GetMapping("/staff/units/maintenance")
-    public ResponseEntity<?> getMaintenanceUnits(
-            @AuthenticationPrincipal Integer staffAccountId,
-            @RequestHeader(value = "X-Facility-Id", required = false) Integer staffFacilityId
-    ) {
-        try {
-            Integer effectiveFacilityId = securityContextHelper.requireCurrentFacilityId(staffAccountId, staffFacilityId);
-            return ResponseEntity.ok(storageService.getMaintenanceUnits(effectiveFacilityId));
-        } catch (org.springframework.security.access.AccessDeniedException e) {
-            return ResponseEntity.status(403).body(e.getMessage());
         }
     }
 }

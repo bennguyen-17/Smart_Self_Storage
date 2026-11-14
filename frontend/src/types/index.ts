@@ -117,7 +117,7 @@ export interface CalculatePriceResponse {
   totalInitialPayment: number;
 }
 
-// 3. Đặt cọc, Thanh toán VietQR & Hợp đồng điện tử
+// 3. Đặt cọc & Hợp đồng điện tử
 export interface DepositInitiateRequest {
   accountId: number;
   unitCode: string;
@@ -139,7 +139,6 @@ export interface DepositInitiateResponse {
   invoiceNumber: string; // DEP-CG-20260927-4719
   depositAmount: number; // 100% tiền cọc
   rentalAmount: number;
-  vietQrUrl: string; // Link ảnh VietQR QuickPay
   bankAccount: string;
   bankName: string;
   accountHolder: string;
