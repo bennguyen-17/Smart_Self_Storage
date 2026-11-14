@@ -50,9 +50,9 @@ describe("unitManagementApi: gọi đúng API BE của Manager", () => {
     })
   })
 
-  test("sửa xong, mở lại cho thuê: POST /staff/units/{mã}/complete-maintenance (BE dùng chung cho Staff và Manager)", async () => {
+  test("sửa xong, mở lại cho thuê: POST /manager/units/{mã}/complete-maintenance", async () => {
     await endMaintenance(CTX, "HN01-G-XL05")
-    expect(http.post).toHaveBeenCalledWith("/staff/units/HN01-G-XL05/complete-maintenance", null, {
+    expect(http.post).toHaveBeenCalledWith("/manager/units/HN01-G-XL05/complete-maintenance", null, {
       headers: { "X-Facility-Id": "1", "X-Account-Id": "3" },
     })
   })

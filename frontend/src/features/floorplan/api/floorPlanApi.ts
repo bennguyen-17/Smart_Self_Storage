@@ -28,7 +28,7 @@ export async function getFloors(facilityId: number): Promise<Floor[]> {
 }
 
 /**
- * GET /api/units/filter?facilityId&floorId&storageCondition
+ * GET /api/units?facilityId&floorId&storageCondition
  * Backend chưa lọc được theo mã size (chỉ có unitTypeId) nên size lọc ở FE.
  */
 export async function getUnits(
@@ -36,6 +36,6 @@ export async function getUnits(
 ): Promise<UnitDetailResponse[]> {
   if (isMockMode()) return mockGetUnits(query)
   return unwrapApiData<UnitDetailResponse[]>(
-    await apiClient.get("/units/filter", { params: query })
+    await apiClient.get("/units", { params: query })
   )
 }

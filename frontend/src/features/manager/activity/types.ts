@@ -29,7 +29,7 @@ export interface ShiftActivity {
   staff: StaffActivity[]
 }
 
-/** GET /api/manager/staff-activity?date=YYYY-MM-DD */
+/** GET /api/manager/activity-logs/staff?date=YYYY-MM-DD */
 export interface StaffActivityDay {
   date: string
   shifts: ShiftActivity[]

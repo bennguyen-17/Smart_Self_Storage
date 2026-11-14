@@ -1,13 +1,11 @@
 package com.swp391.backend.controller;
 
-import com.swp391.backend.dto.ManualGateOpenRequest;
 import com.swp391.backend.entity.AuditLog;
 import com.swp391.backend.config.SecurityContextHelper;
 import com.swp391.backend.service.AuditLogService;
 
 import java.util.List;
 
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,21 +23,7 @@ public class AuditLogController {
         this.securityContextHelper = securityContextHelper;
     }
 
-    @PostMapping("/staff/audit-logs/manual-gate-open")
-    public ResponseEntity<AuditLog> recordManualGateOpen(
-            @AuthenticationPrincipal Integer accountId,
-            @Valid @RequestBody ManualGateOpenRequest request) {
-
-        AuditLog auditLog = auditLogService.recordManualGateOpen(
-                accountId,
-                request);
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(auditLog);
-    }
-
-    @GetMapping({"/manager/audit-logs/manual-gate-open", "/manager/audit-logs/gate-logs"})
+    @GetMapping("/manager/gate-logs")
     public ResponseEntity<List<AuditLog>> getManualGateOpenLogs(
             @AuthenticationPrincipal Integer authAccountId,
             @RequestHeader(value = "X-Account-Id", required = false) Integer headerAccountId,

@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/staff/reservations")
+@RequestMapping("/api/staff")
 public class StaffReservationController {
 
     private final StaffReservationService staffReservationService;
@@ -41,7 +41,7 @@ public class StaffReservationController {
         this.staffCheckInService = staffCheckInService;
     }
 
-    @GetMapping
+    @GetMapping("/reservations")
     public ResponseEntity<StaffReservationListResponse> listReservations() {
         StaffReservationListResponse response = staffReservationService.listReservations();
         return response.isSuccess()
@@ -49,7 +49,7 @@ public class StaffReservationController {
                 : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
     }
 
-    @GetMapping("/lookup")
+    @GetMapping("/reservations/lookup")
     public ResponseEntity<StaffReservationLookupResponse> lookupReservation(
             @RequestParam("code") String reservationCode) {
         StaffReservationLookupResponse response = staffReservationService.lookupReservation(reservationCode);
@@ -58,7 +58,7 @@ public class StaffReservationController {
                 : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
     }
 
-    @GetMapping("/{reservationId}")
+    @GetMapping("/reservations/{reservationId}")
     public ResponseEntity<StaffReservationLookupResponse> getReservationById(
             @PathVariable Integer reservationId) {
         StaffReservationLookupResponse response = staffReservationService.getReservationDetail(reservationId);
@@ -67,7 +67,7 @@ public class StaffReservationController {
                 : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
     }
 
-    @PostMapping("/{reservationId}/check-in")
+    @PostMapping("/reservations/{reservationId}/check-in")
     public ResponseEntity<StaffCheckInResponse> checkIn(
             @PathVariable Integer reservationId,
             @RequestBody StaffCheckInRequest request) {
@@ -77,7 +77,7 @@ public class StaffReservationController {
                 : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
     }
 
-    @PostMapping("/{reservationId}/change-unit")
+    @PostMapping("/reservations/{reservationId}/change-unit")
     public ResponseEntity<StaffChangeUnitResponse> changeUnit(
             @PathVariable Integer reservationId,
             @RequestBody ChangeUnitRequest request) {
@@ -87,7 +87,7 @@ public class StaffReservationController {
                 : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
     }
 
-    @PostMapping("/{reservationId}/cancel")
+    @PostMapping("/reservations/{reservationId}/cancel")
     public ResponseEntity<StaffCancelReservationResponse> cancelReservation(
             @PathVariable Integer reservationId,
             @RequestBody CancelReservationRequest request) {
@@ -97,7 +97,7 @@ public class StaffReservationController {
                 : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
     }
 
-    @PostMapping("/{reservationId}/collect-penalty")
+    @PostMapping("/reservations/{reservationId}/collect-penalty")
     public ResponseEntity<CollectPenaltyResponse> collectPenalty(
             @PathVariable Integer reservationId,
             @RequestBody(required = false) CollectPenaltyRequest request) {
@@ -107,7 +107,7 @@ public class StaffReservationController {
                 : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
     }
 
-    @PostMapping("/{reservationId}/renew-at-counter")
+    @PostMapping("/reservations/{reservationId}/renew-at-counter")
     public ResponseEntity<RenewAtCounterResponse> renewAtCounter(
             @PathVariable Integer reservationId,
             @RequestBody(required = false) RenewAtCounterRequest request) {
@@ -117,13 +117,13 @@ public class StaffReservationController {
                 : ResponseEntity.status(resolveErrorStatus(response.getMessage())).body(response);
     }
 
-    @GetMapping("/gate-pin")
+    @GetMapping("/gate-pins/live")
     public ResponseEntity<StaffGatePinResponse> getStaffGatePin() {
         StaffGatePinResponse response = staffReservationService.getStaffLiveGatePin();
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{reservationId}/customer-cccd")
+    @PutMapping("/reservations/{reservationId}/customer-cccd")
     public ResponseEntity<ApiResponse> updateCustomerCccd(
             @PathVariable Integer reservationId,
             @RequestBody Map<String, String> request) {

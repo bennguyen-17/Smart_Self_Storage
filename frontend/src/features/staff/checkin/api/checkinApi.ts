@@ -68,7 +68,7 @@ export async function changeUnit(
   return unwrapApiData<StaffChangeUnitResponse>(body)
 }
 
-/** POST /api/units/pricing/calculate — Tính giá thuê và cọc động theo loại kho */
+/** POST /api/pricing/calculate — Tính giá thuê và cọc động theo loại kho */
 export async function calculateRentalPrice(payload: {
   unitTypeId: number
   rentalType: string
@@ -126,12 +126,12 @@ export async function renewAtCounter(
 }
 
 /**
- * Lấy toàn bộ ô kho (GET /api/units/filter) để gợi ý ô trống cùng tầng khi đổi ô.
+ * Lấy toàn bộ ô kho (GET /api/units) để gợi ý ô trống cùng tầng khi đổi ô.
  * BE không trả facilityId của Staff nên FE chỉ gợi ý theo tầng của ô hiện tại;
  * ô cuối cùng vẫn do BE validate.
  */
 export async function fetchAllUnits(): Promise<UnitDetailResponse[]> {
-  const body = await apiClient.get("/units/filter")
+  const body = await apiClient.get("/units")
   return unwrapApiData<UnitDetailResponse[]>(body) ?? []
 }
 
@@ -167,9 +167,9 @@ export interface StaffGatePinData {
   message: string
 }
 
-/** GET /api/staff/reservations/gate-pin — Mã PIN động 15s mở cổng cơ sở 24/7 của Staff */
+/** GET /api/staff/gate-pins/live — Mã PIN động 15s mở cổng cơ sở 24/7 của Staff */
 export async function fetchStaffGatePin(): Promise<StaffGatePinData> {
-  const body = await apiClient.get("/staff/reservations/gate-pin")
+  const body = await apiClient.get("/staff/gate-pins/live")
   return unwrapApiData<StaffGatePinData>(body)
 }
 

@@ -12,35 +12,11 @@ const MOCK_BRANCHES = [
 
 const heldUnitsState: Record<string, string> = {};
 
-export const getHeldUnitsMap = (): Record<string, string> => {
-  try {
-    const raw = localStorage.getItem('smart_storage_held_units');
-    const parsed = raw ? JSON.parse(raw) : {};
-    return { ...parsed, ...heldUnitsState };
-  } catch (e) {
-    return { ...heldUnitsState };
-  }
-};
-
 export const markUnitAsHeld = (unitId: string, status = 'HOLD') => {
   if (!unitId) return;
   heldUnitsState[unitId] = status;
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('storage_units_updated', { detail: { unitId, status } }));
-  }
-};
-
-export const releaseUnit = (unitId: string) => {
-  if (!unitId) return;
-  heldUnitsState[unitId] = 'AVAILABLE';
-  try {
-    const current = getHeldUnitsMap();
-    current[unitId] = 'AVAILABLE';
-    localStorage.setItem('smart_storage_held_units', JSON.stringify(current));
-  } catch (e) {}
-
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('storage_units_updated', { detail: { unitId, status: 'AVAILABLE' } }));
   }
 };
 
@@ -220,7 +196,7 @@ export const getBranches = async () => {
   }
 };
 
-export const FACILITY_CODE_TO_ID: Record<string, number> = {
+const FACILITY_CODE_TO_ID: Record<string, number> = {
   'HN01': 1, 'HN-01': 1,
   'HN02': 2, 'HN-02': 2,
   'HCM01': 3, 'HCM-01': 3,
@@ -239,7 +215,7 @@ if (typeof window !== 'undefined') {
 
 /**
  * Lấy danh sách ô kho trên sơ đồ 2D theo cơ sở và tầng
- * BACKEND ENDPOINT: GET /api/units/filter?facilityId=...&floorId=...
+ * BACKEND ENDPOINT: GET /api/units?facilityId=...&floorId=...
  */
 export const getStorageUnits = async (facilityCode: string, floor: number) => {
   if (isMockMode()) {
@@ -257,7 +233,7 @@ export const getStorageUnits = async (facilityCode: string, floor: number) => {
         facilityId = found?.backendId || 1;
       }
     }
-    const res: any = await apiClient.get('/units/filter', {
+    const res: any = await apiClient.get('/units', {
       params: { facilityId, floorId: floor }
     });
     const rawList = Array.isArray(res) ? res : (res?.data || []);
@@ -401,30 +377,6 @@ export const createDepositTransaction = async (bookingData: any) => {
   } catch (error) {
     console.error('API error initiating deposit:', error);
     throw error;
-  }
-};
-
-/**
- * Kiểm tra trạng thái thanh toán đặt cọc
- * Kiểm tra trạng thái thanh toán đặt cọc
- */
-export const checkBookingStatus = async (invoiceNumber: string) => {
-  if (isMockMode()) {
-    return { success: true, status: 'PAID', isPaid: true, data: { status: 'PAID' } };
-  }
-  try {
-    const res: any = await apiClient.get('/deposits/status', {
-      params: { invoiceNumber }
-    });
-    const status = res.status || (res.data && res.data.status);
-    return {
-      success: true,
-      status: status,
-      isPaid: status === 'PAID' || status === 'CONFIRMED' || status === 'SUCCESS',
-      data: { status }
-    };
-  } catch (error) {
-    return { success: false, status: 'PENDING', isPaid: false, data: { status: 'PENDING' } };
   }
 };
 

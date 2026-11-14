@@ -31,7 +31,7 @@ const getStoredAccountId = (): number => {
 export const getGatePin = async (branchCode: string) => {
   try {
     const accountId = getStoredAccountId();
-    const res: any = await apiClient.get('/gate-pins/live', {
+    const res: any = await apiClient.get('/customer/gate-pins/live', {
       params: { branchCode, accountId }
     });
     return res;

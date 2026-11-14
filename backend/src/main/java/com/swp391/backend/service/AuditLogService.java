@@ -1,6 +1,5 @@
 package com.swp391.backend.service;
 
-import com.swp391.backend.dto.ManualGateOpenRequest;
 import com.swp391.backend.entity.AuditLog;
 import com.swp391.backend.entity.EmployeeProfile;
 import com.swp391.backend.repository.AuditLogRepository;
@@ -10,19 +9,13 @@ import com.swp391.backend.repository.CustomerProfileRepository;
 import com.swp391.backend.repository.AccountRepository;
 import com.swp391.backend.repository.FacilityRepository;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
 @Service
 public class AuditLogService {
-
-    private static final String MANUAL_GATE_OPEN = "MANUAL_GATE_OPEN";
 
     private final AuditLogRepository auditLogRepository;
     private final EmployeeProfileRepository employeeProfileRepository;
@@ -41,49 +34,6 @@ public class AuditLogService {
         this.customerProfileRepository = customerProfileRepository;
         this.accountRepository = accountRepository;
         this.facilityRepository = facilityRepository;
-    }
-
-    @Transactional
-    public AuditLog recordManualGateOpen(Integer accountId, ManualGateOpenRequest request) {
-
-        if (accountId == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "User is not authenticated");
-        }
-
-        EmployeeProfile employee = employeeProfileRepository
-                .findByAccountId(accountId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.FORBIDDEN,
-                        "Employee profile not found"));
-
-        if (request == null
-                || request.getCustomerId() == null
-                || request.getOpenedAt() == null
-                || request.getReason() == null
-                || request.getReason().isBlank()
-                || request.getReason().length() > 500) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Customer ID, opening time and valid reason are required");
-        }
-
-        customerProfileRepository.findById(request.getCustomerId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Customer not found"));
-
-        AuditLog log = new AuditLog();
-        log.setAccountId(accountId);
-        log.setFacilityId(employee.getFacilityId());
-        log.setCustomerId(request.getCustomerId());
-        log.setAction(MANUAL_GATE_OPEN);
-        log.setOpenedAt(request.getOpenedAt());
-        log.setReason(request.getReason().trim());
-        log.setCreatedAt(LocalDateTime.now());
-
-        return auditLogRepository.save(log);
     }
 
     public void enrichAuditLog(AuditLog log) {
@@ -199,9 +149,5 @@ public class AuditLogService {
         }
 
         return logs;
-    }
-
-    public List<AuditLog> getManualGateOpenLogs(Integer accountId) {
-        return getGateLogs(accountId, null, null);
     }
 }

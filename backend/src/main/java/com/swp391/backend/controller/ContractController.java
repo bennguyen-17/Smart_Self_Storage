@@ -4,13 +4,11 @@ import com.swp391.backend.entity.*;
 import com.swp391.backend.dto.CustomerCancelReservationRequest;
 import com.swp391.backend.dto.CustomerCancelReservationResponse;
 import com.swp391.backend.dto.ApiResponse;
-import com.swp391.backend.dto.GatePinVerificationRequest;
 import com.swp391.backend.service.ImageStorageService;
 import com.swp391.backend.repository.*;
 import com.swp391.backend.service.JwtService;
 import com.swp391.backend.service.StorageService;
 import com.swp391.backend.service.CustomerReservationService;
-import com.swp391.backend.service.GatePinService;
 import com.swp391.backend.service.NoShowCronService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +48,6 @@ public class ContractController {
     private final PaymentRepository paymentRepository;
     private final ActivityLogRepository activityLogRepository;
     private final CustomerReservationService customerReservationService;
-    private final GatePinService gatePinService;
     private static final Logger log = LoggerFactory.getLogger(ContractController.class);
     private final SupportTicketRepository supportTicketRepository;
     private final NoShowCronService noShowCronService;
@@ -74,7 +71,6 @@ public class ContractController {
                               PaymentRepository paymentRepository,
                               ActivityLogRepository activityLogRepository,
                               CustomerReservationService customerReservationService,
-                              GatePinService gatePinService,
                               SupportTicketRepository supportTicketRepository,
                               NoShowCronService noShowCronService,
                               ImageStorageService imageStorageService,
@@ -94,7 +90,6 @@ public class ContractController {
         this.paymentRepository = paymentRepository;
         this.activityLogRepository = activityLogRepository;
         this.customerReservationService = customerReservationService;
-        this.gatePinService = gatePinService;
         this.supportTicketRepository = supportTicketRepository;
         this.noShowCronService = noShowCronService;
         this.imageStorageService = imageStorageService;
@@ -456,7 +451,7 @@ public class ContractController {
      * - Nếu chỉ có hợp đồng CHỜ CHECK-IN hoặc ĐÃ HỦY CỌC, từ chối cấp mã PIN (hasAccess = false).
      * - Ghi nhận và đồng bộ mã PIN vào bảng gatepin trong MySQL.
      */
-    @GetMapping("/gate-pins/live")
+    @GetMapping("/customer/gate-pins/live")
     public ResponseEntity<Map<String, Object>> getLiveGatePin(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestParam(required = false) String branchCode) {
@@ -566,15 +561,6 @@ public class ContractController {
         data.put("unitCode", activeUnit != null ? activeUnit.getUnitCode() : "");
 
         return ResponseEntity.ok(data);
-    }
-
-    @PostMapping("/gate-pins/verify")
-    public ResponseEntity<ApiResponse> verifyGatePin(@RequestBody GatePinVerificationRequest request) {
-        boolean valid = request != null && gatePinService.verifyPin(request.getPinCode());
-        if (!valid) {
-            return ResponseEntity.status(403).body(new ApiResponse(false, "PIN không hợp lệ, đã hết hạn hoặc hợp đồng không còn hiệu lực."));
-        }
-        return ResponseEntity.ok(new ApiResponse(true, "PIN hợp lệ. Cho phép mở cửa."));
     }
 
     /**

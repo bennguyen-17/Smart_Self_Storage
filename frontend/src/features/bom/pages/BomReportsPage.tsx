@@ -74,7 +74,7 @@ export default function BomReportsPage() {
         }
 
         const res: any = await apiClient
-          .get("/units/filter", { params: { facilityId: facId } })
+          .get("/units", { params: { facilityId: facId } })
           .catch(() => null)
 
         const raw = Array.isArray(res) ? res : res?.data || []

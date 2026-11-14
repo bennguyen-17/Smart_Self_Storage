@@ -92,7 +92,7 @@ function Body({
   useEffect(() => {
     const targetId = target.contractId || target.reservationId
     if (targetId) {
-      apiClient.get(`/staff/checkout/${targetId}/preview`)
+      apiClient.get(`/staff/contracts/${targetId}/checkout-preview`)
         .then((res: any) => {
           const data = (res as any)?.data?.data ?? (res as any)?.data ?? res
           if (data?.depositAmount != null) {
@@ -195,7 +195,7 @@ function Body({
       }
 
       if (targetId) {
-        await apiClient.post(`/staff/checkout/${targetId}/confirm`, {
+        await apiClient.post(`/staff/contracts/${targetId}/checkout`, {
           confirmInspection: true,
           collectedCompensation: balance < 0 ? isCompensationCollected : false,
           damageFee,

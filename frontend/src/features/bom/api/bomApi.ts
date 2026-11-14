@@ -81,7 +81,7 @@ export interface UploadedFacilityImage {
 
 export const bomApi = {
   getChainDashboard: async (period?: string): Promise<ChainDashboardData> => {
-    return apiClient.get('/admin/dashboard/chain-overview', {
+    return apiClient.get('/bom/dashboard/overview', {
       params: period ? { period } : undefined,
     })
   },
@@ -137,7 +137,7 @@ export const bomApi = {
     return apiClient.delete(`/facilities/${facilityId}`)
   },
   getUnits: async (): Promise<any[]> => {
-    return apiClient.get('/units/filter')
+    return apiClient.get('/units')
   },
   getPrices: async (): Promise<any[]> => {
     return apiClient.get('/prices')

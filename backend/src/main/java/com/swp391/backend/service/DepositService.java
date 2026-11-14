@@ -328,23 +328,7 @@ public class DepositService {
         return new ApiResponse(true, "Xác nhận nộp cọc thành công! Hợp đồng ở trạng thái PENDING_CHECKIN và ô kho đã được bảo lưu giữ chỗ.");
     }
 
-    // --- 3. Kiểm tra trạng thái thanh toán Cọc ---
-    public ApiResponse checkDepositStatus(String invoiceNumber) {
-        if (invoiceNumber == null || invoiceNumber.trim().isEmpty()) {
-            return new ApiResponse(false, "Mã hóa đơn không được để trống!");
-        }
-        Optional<Payment> paymentOpt = paymentRepository.findByInvoiceNumber(invoiceNumber.trim());
-        if (paymentOpt.isEmpty()) {
-            return new ApiResponse(false, "PENDING");
-        }
-        Payment p = paymentOpt.get();
-        boolean isPaid = "PAID".equalsIgnoreCase(p.getStatus())
-                || ("PARTIALLY_PAID".equalsIgnoreCase(p.getStatus())
-                && "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()));
-        return new ApiResponse(true, isPaid ? "PAID" : "PENDING");
-    }
-
-    // --- 4. Webhook / Xác nhận thanh toán Gia hạn Hợp đồng (EXT-) ---
+    // --- 3. Webhook / Xác nhận thanh toán Gia hạn Hợp đồng (EXT-) ---
     @Transactional
     public ApiResponse confirmExtensionPayment(DepositWebhookRequest request) {
         if (request.getInvoiceNumber() == null || request.getInvoiceNumber().trim().isEmpty()) {
