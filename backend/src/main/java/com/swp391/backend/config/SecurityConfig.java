@@ -47,6 +47,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/prices", "/api/prices/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/fee-policies", "/api/fee-policies/**").permitAll()
                         .requestMatchers("/api/pricing/calculate").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/gate-pins/verify").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/contracts/*/pdf").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                         .requestMatchers("/error").permitAll()
