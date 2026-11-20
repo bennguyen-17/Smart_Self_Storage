@@ -103,7 +103,7 @@ export default function FacilityCashFlowDashboard({
     onPeriodChange?.(newP)
   }
 
-  // Đảm bảo có tối thiểu dữ liệu 6 tháng để hiển thị (cộng cả tiền cọc tịch thu vào biểu đồ doanh thu thực thu)
+  // Chuẩn hóa dữ liệu 6 tháng và cộng phần cọc tịch thu còn thiếu vào tháng mới nhất
   const monthlyData: MonthlyRevenuePoint[] = useMemo(() => {
     if (monthlyRevenues && monthlyRevenues.length > 0) {
       const alreadyIncludedForfeited = monthlyRevenues.reduce((sum, m) => {
@@ -121,7 +121,7 @@ export default function FacilityCashFlowDashboard({
         let rRev = m.rentalRevenue != null ? Number(m.rentalRevenue) : undefined
         let pRev = m.penaltyRevenue != null ? Number(m.penaltyRevenue) : undefined
 
-        // Fallback tự động phân bổ nếu backend chưa gửi chi tiết thuê/phạt từng tháng
+        // Fallback tách tiền thuê và tiền phạt nếu API chưa trả chi tiết từng tháng
         if (rRev === undefined || pRev === undefined) {
           if (m.month === "T10") {
             pRev = Math.min(baseRev, penaltyRevenue || baseRev)
@@ -151,7 +151,6 @@ export default function FacilityCashFlowDashboard({
     ]
   }, [monthlyRevenues, penaltyRevenue, netRevenue, rentalRevenue, forfeitedDeposit])
 
-  // Xác định khoảng tháng được lọc
   const activeStartIndex = useMemo(() => {
     if (currentPeriod === "this_month") return Math.max(0, monthlyData.length - 1)
     if (currentPeriod === "last_3_months") return Math.max(0, monthlyData.length - 3)
@@ -162,7 +161,6 @@ export default function FacilityCashFlowDashboard({
     return monthlyData.slice(activeStartIndex)
   }, [monthlyData, activeStartIndex])
 
-  // Tính toán doanh thu tiền thuê & phạt tương ứng với filter được chọn
   const periodRentalRevenue = useMemo(() => {
     if (currentPeriod === "all" && rentalRevenue > 0) {
       return rentalRevenue
@@ -206,7 +204,6 @@ export default function FacilityCashFlowDashboard({
     return subtitle || "Xu hướng dòng tiền thực thu toàn thời gian"
   }, [subtitle, currentPeriod, monthlyData])
 
-  // Xác định mốc min và max để vẽ đồ thị đường cong chuẩn xác
   const allRevenues = monthlyData.map((d) => d.revenue)
   const rawMax = Math.max(...allRevenues, netRevenue, 1000000)
   const rawMin = Math.min(...allRevenues, 0)
@@ -300,10 +297,8 @@ export default function FacilityCashFlowDashboard({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
-      {/* CỘT TRÁI: BIỂU ĐỒ ĐƯỜNG DOANH THU QUA CÁC THÁNG */}
       <div className="rounded-2xl border border-slate-200/90 bg-white/90 dark:border-slate-800/90 dark:bg-slate-900/60 p-5 sm:p-6 shadow-sm dark:shadow-xl backdrop-blur-xl flex flex-col justify-between transition-colors">
         <div>
-          {/* Tiêu đề & Bộ lọc khoảng thời gian */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
               <span className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 shadow-xs dark:shadow-inner shrink-0">
@@ -316,7 +311,6 @@ export default function FacilityCashFlowDashboard({
               </div>
             </div>
 
-            {/* BỘ LỌC KHOẢNG THỜI GIAN (DROPDOWN SỔ XUỐNG) */}
             <div className="relative self-start sm:self-center shrink-0" ref={dropdownRef}>
               <button
                 type="button"
@@ -358,7 +352,6 @@ export default function FacilityCashFlowDashboard({
             </div>
           </div>
 
-          {/* BIỂU ĐỒ ĐƯỜNG SVG (LINE CHART) */}
           <div className="relative w-full overflow-hidden pt-1 pb-1">
             <svg viewBox={svgViewBox} className="w-full h-auto overflow-visible">
               <defs>
@@ -368,7 +361,6 @@ export default function FacilityCashFlowDashboard({
                 </linearGradient>
               </defs>
 
-              {/* Các đường lưới ngang (Grid lines) */}
               {gridLines.map((line, idx) => (
                 <g key={idx}>
                   <line
@@ -394,10 +386,8 @@ export default function FacilityCashFlowDashboard({
                 </g>
               ))}
 
-              {/* Vùng đổ bóng Gradient bên dưới đường cong */}
               <path d={revenueAreaPath} fill="url(#facilityRevenueGradient)" className="text-blue-600 dark:text-white" />
 
-              {/* Đường cong doanh thu chính */}
               <path
                 d={revenueLinePath}
                 fill="none"
@@ -407,7 +397,6 @@ export default function FacilityCashFlowDashboard({
                 className="stroke-blue-600 dark:stroke-white"
               />
 
-              {/* Vùng mờ làm nổi bật khung thời gian được lọc */}
               {currentPeriod !== "all" && chartPoints.length > 0 && activeStartIndex < chartPoints.length && (
                 <rect
                   x={chartPoints[activeStartIndex].x - 16}
@@ -420,7 +409,6 @@ export default function FacilityCashFlowDashboard({
                 />
               )}
 
-              {/* Các điểm tròn dữ liệu trên từng tháng & Số tiền hiển thị trực tiếp */}
               {chartPoints.map((p, idx) => {
                 const isNeg = p.revenue < 0
                 const labelY = isNeg ? p.y + 15 : p.y <= 38 ? p.y + 16 : p.y - 9
@@ -470,7 +458,6 @@ export default function FacilityCashFlowDashboard({
                       />
                     )}
 
-                    {/* SỐ TIỀN HIỂN THỊ TRỰC TIẾP TRÊN BIỂU ĐỒ */}
                     <text
                       x={p.x}
                       y={labelY}
@@ -488,7 +475,6 @@ export default function FacilityCashFlowDashboard({
                       {formatShortVnd(p.revenue)}
                     </text>
 
-                    {/* Nhãn tháng ở trục hoành X */}
                     <text
                       x={p.x}
                       y={hasNegative ? "198" : "152"}
@@ -510,7 +496,6 @@ export default function FacilityCashFlowDashboard({
           </div>
         </div>
 
-        {/* 4 THẺ TÀI CHÍNH DƯỚI BIỂU ĐỒ: TIỀN CỌC ĐANG GIỮ, CỌC BỊ TỊCH THU, TIỀN THUÊ KHO, TIỀN PHẠT */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-4 mt-2 border-t border-slate-200/80 dark:border-slate-800/80">
           <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs dark:shadow-none">
             <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block truncate">Tiền Cọc</span>
@@ -542,7 +527,6 @@ export default function FacilityCashFlowDashboard({
         </div>
       </div>
 
-      {/* CỘT PHẢI: QUY MÔ KHAI THÁC & VẬN HÀNH KHO */}
       <div className="rounded-2xl border border-slate-200/90 bg-white/90 dark:border-slate-800/90 dark:bg-slate-900/60 p-5 sm:p-6 shadow-sm dark:shadow-xl backdrop-blur-xl flex flex-col justify-between transition-colors">
         <div>
           <div className="flex items-center gap-3 mb-5">
@@ -555,7 +539,6 @@ export default function FacilityCashFlowDashboard({
           </div>
 
           <div className="grid grid-cols-2 gap-3.5">
-            {/* Ô 1 (Donut Chart - Chiếm 3 hàng): Tỷ Lệ Lấp Đầy */}
             <div className="row-span-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-4 flex flex-col items-center justify-center text-center relative shadow-xs dark:shadow-none">
               <div className="relative size-32 sm:size-36 flex items-center justify-center">
                 <svg className="size-full -rotate-90" viewBox="0 0 100 100">
@@ -592,7 +575,6 @@ export default function FacilityCashFlowDashboard({
               </div>
             </div>
 
-            {/* Ô 2: Tổng Số Ô Kho */}
             <div className="rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-3.5 flex flex-col justify-center shadow-xs dark:shadow-none">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Tổng Số Ô Kho</span>
               <span className="font-mono font-black text-slate-900 dark:text-white text-xl sm:text-2xl mt-0.5">
@@ -600,7 +582,6 @@ export default function FacilityCashFlowDashboard({
               </span>
             </div>
 
-            {/* Ô 3: Kho Đang Cho Thuê */}
             <div className="rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-3.5 flex flex-col justify-center shadow-xs dark:shadow-none">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Kho Đang Cho Thuê</span>
               <span className="font-mono font-black text-slate-900 dark:text-white text-xl sm:text-2xl mt-0.5">
@@ -608,7 +589,6 @@ export default function FacilityCashFlowDashboard({
               </span>
             </div>
 
-            {/* Ô 4: Kho Đang Giữ Chỗ / Đặt Trước */}
             <div className="rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-3.5 flex flex-col justify-center shadow-xs dark:shadow-none">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Giữ Chỗ</span>
               <span className="font-mono font-black text-slate-900 dark:text-white text-xl sm:text-2xl mt-0.5">
@@ -616,7 +596,6 @@ export default function FacilityCashFlowDashboard({
               </span>
             </div>
 
-            {/* Ô 5: Kho Còn Trống */}
             <div className="rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-3.5 flex flex-col justify-center shadow-xs dark:shadow-none">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Kho Còn Trống</span>
               <span className="font-mono font-black text-slate-900 dark:text-white text-xl sm:text-2xl mt-0.5">
@@ -624,7 +603,6 @@ export default function FacilityCashFlowDashboard({
               </span>
             </div>
 
-            {/* Ô 6: Kho Đang Bảo Trì */}
             <div className="rounded-xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 p-3.5 flex flex-col justify-center shadow-xs dark:shadow-none">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Đang Bảo Trì</span>
               <span className="font-mono font-black text-slate-900 dark:text-white text-xl sm:text-2xl mt-0.5">

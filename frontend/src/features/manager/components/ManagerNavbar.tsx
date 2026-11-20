@@ -6,7 +6,6 @@ import { MANAGER_TABS } from "../managerTabs"
 import { badgeText, type UnreadTab } from "../unread/unreadRules"
 import { useUnreadCounts } from "../unread/useUnreadCounts"
 
-/** Navbar riêng của cổng Quản lý cơ sở: các trang vận hành tại một cơ sở, kèm chấm đếm mục mới */
 function ManagerNavbar(props: Omit<PortalNavbarProps, "portalName" | "items">) {
   const activeTab = useLocation().pathname.split("/")[2]
   const counts = useUnreadCounts(activeTab)

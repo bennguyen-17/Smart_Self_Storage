@@ -81,7 +81,6 @@ public class StorageService {
         this.accountRepository = accountRepository;
     }
 
-    //Lấy danh sách Cơ sở kèm mã code, shortCode và layout
     public List<FacilityResponse> getAllActiveFacilities() {
         return facilityRepository.findAll().stream()
                 .map(this::mapFacilityToResponse)
@@ -92,12 +91,10 @@ public class StorageService {
         return facilityRepository.findById(facilityId).map(this::mapFacilityToResponse);
     }
 
-    //Lấy danh sách Tầng theo Cơ sở
     public List<Floor> getFloorsByFacilityId(Integer facilityId) {
         return floorRepository.findByFacilityIdAndStatus(facilityId, "ACTIVE");
     }
 
-    //Bộ lọc Ô kho
     public List<UnitDetailResponse> filterUnits(Integer facilityId, Integer floorId, Integer unitTypeId, String storageCondition, String status) {
         List<StorageUnit> allUnits;
 
@@ -142,7 +139,6 @@ public class StorageService {
                 .collect(Collectors.toList());
     }
 
-    //Tính giá thuê và tiền cọc tự động
     public CalculatePriceResponse calculateRentalPrice(CalculatePriceRequest request) {
         if (request.getUnitTypeId() == null) {
             return CalculatePriceResponse.error("Vui lòng chọn loại kho !");
@@ -175,14 +171,13 @@ public class StorageService {
             baseTotal = baseUnitPrice.multiply(BigDecimal.valueOf(duration));
             discountPercent = BigDecimal.ZERO;
         } else {
-            // MONTHLY
             if (duration < 1) {
                 return CalculatePriceResponse.error("Thời hạn thuê theo tháng tối thiểu là 1 tháng!");
             }
             baseUnitPrice = price.getMonthlyPrice();
             baseTotal = baseUnitPrice.multiply(BigDecimal.valueOf(duration));
 
-            // Chiết khấu gói tháng
+            // Chiết khấu theo gói tháng
             if (duration >= 12) {
                 discountPercent = getDiscountRate("DISCOUNT_12M", BigDecimal.valueOf(15));
             } else if (duration >= 6) {
@@ -194,7 +189,7 @@ public class StorageService {
 
         BigDecimal discountAmount = baseTotal.multiply(discountPercent).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
-        // Phụ phí kho mát (Climate Controlled +20%) nếu có
+        // Kho mát cộng thêm phụ phí điều hòa (mặc định 20%)
         BigDecimal climateSurchargeAmount = BigDecimal.ZERO;
         if ("CLIMATE_CONTROLLED".equalsIgnoreCase(unitType.getStorageCondition())) {
             BigDecimal surchargeRate = price.getClimateSurchargePercent() != null && price.getClimateSurchargePercent().compareTo(BigDecimal.ZERO) > 0
@@ -219,7 +214,7 @@ public class StorageService {
         response.setClimateSurchargeAmount(climateSurchargeAmount);
         response.setFinalRentalAmount(finalRentalAmount);
         response.setDepositAmount(depositAmount);
-        response.setTotalInitialPayment(depositAmount); // Đặt cọc 100% online
+        response.setTotalInitialPayment(depositAmount); // Đặt online chỉ cần đóng trước tiền cọc
 
         return response;
     }
@@ -237,7 +232,6 @@ public class StorageService {
         res.setPhone(f.getPhone());
         res.setStatus(f.getStatus());
 
-        // Lấy mã cơ sở và layout chuẩn hóa trực tiếp từ entity
         String code = f.getFacilityCode();
         String layout = f.getLayoutType();
 
@@ -289,7 +283,6 @@ public class StorageService {
         return res;
     }
 
-    // Lấy danh sách ô kho thuộc quyền quản lý của cơ sở
     public List<UnitDetailResponse> getManagerUnits(Integer managerFacilityId, Integer floorId, String status, String size, String storageCondition) {
         if (managerFacilityId == null) {
             throw new AccessDeniedException("Vui lòng cung cấp mã cơ sở của Quản lý!");
@@ -297,7 +290,6 @@ public class StorageService {
         return filterUnits(managerFacilityId, floorId, null, storageCondition, status);
     }
 
-    // Cấu hình chuyển đổi loại kho (Thường <=> Điều hòa nhiệt độ)
     @Transactional
     public StorageUnit changeUnitType(String unitCode, Integer newUnitTypeId, Integer managerFacilityId, Integer accountId) {
         StorageUnit unit = storageUnitRepository.findById(unitCode)
@@ -340,7 +332,6 @@ public class StorageService {
         return saved;
     }
 
-    // Đưa ô kho vào trạng thái bảo trì hoặc vệ sinh
     @Transactional
     public StorageUnit putUnderMaintenance(String unitCode, Integer managerFacilityId, Integer accountId) {
         return putUnderMaintenance(unitCode, managerFacilityId, accountId, null);
@@ -382,7 +373,6 @@ public class StorageService {
         return saved;
     }
 
-    // Nghiệm thu dọn dẹp hoàn tất, mở lại ô kho sẵn sàng cho thuê
     @Transactional
     public StorageUnit completeMaintenance(String unitCode, Integer staffFacilityId, Integer accountId) {
         StorageUnit unit = storageUnitRepository.findById(unitCode)
@@ -423,7 +413,6 @@ public class StorageService {
         dto.setUnitTypeId(u.getUnitTypeId());
         dto.setStatus(u.getStatus());
 
-        // Lấy thông tin Tầng và Tải trọng sàn
         Optional<Floor> floorOpt = floorRepository.findById(u.getFloorId());
         if (floorOpt.isPresent()) {
             Floor fl = floorOpt.get();
@@ -431,7 +420,6 @@ public class StorageService {
             dto.setMaxLoadKgM2(fl.getMaxLoadPerM2() != null ? fl.getMaxLoadPerM2() : BigDecimal.valueOf(500));
         }
 
-        // Lấy thông tin Loại kho và Kích thước chuẩn
         Optional<UnitType> unitTypeOpt = unitTypeRepository.findById(u.getUnitTypeId());
         if (unitTypeOpt.isPresent()) {
             UnitType ut = unitTypeOpt.get();
@@ -440,7 +428,6 @@ public class StorageService {
             dto.setStorageCondition(ut.getStorageCondition());
             dto.setIsClimate("CLIMATE_CONTROLLED".equalsIgnoreCase(ut.getStorageCondition()));
 
-            // Gán kích thước chuẩn Dài x Rộng x Cao
             String lowerType = ut.getTypeName().toLowerCase();
             if (lowerType.contains("xl")) {
                 dto.setLengthM(4.0);
@@ -465,10 +452,9 @@ public class StorageService {
             }
         }
 
-        // Gán mã ô kho chuẩn từ Database (ví dụ: HN01-G-XL01)
         dto.setUnitCode(u.getUnitCode());
 
-        // Lấy thông tin Bảng giá hiện hành (tự động cộng phụ phí điều hòa nếu là kho mát)
+        // Giá hiển thị của kho mát đã cộng sẵn phụ phí điều hòa
         priceRepository.findByUnitTypeIdAndStatus(u.getUnitTypeId(), "ACTIVE").ifPresent(p -> {
             BigDecimal daily = p.getDailyPrice() != null ? p.getDailyPrice() : BigDecimal.ZERO;
             BigDecimal monthly = p.getMonthlyPrice() != null ? p.getMonthlyPrice() : BigDecimal.ZERO;
@@ -489,7 +475,6 @@ public class StorageService {
         return dto;
     }
 
-    // --- Lấy danh sách bảng giá & mức cọc từ Database ---
     public List<PriceDto> getAllPrices() {
         List<UnitType> unitTypes = unitTypeRepository.findAll();
         List<Price> activePrices = priceRepository.findByStatus("ACTIVE");
@@ -498,7 +483,7 @@ public class StorageService {
 
         return unitTypes.stream()
                 .filter(ut -> "ACTIVE".equalsIgnoreCase(ut.getStatus()))
-                .filter(ut -> !"CLIMATE_CONTROLLED".equalsIgnoreCase(ut.getStorageCondition())) // map 4 size chuẩn
+                .filter(ut -> !"CLIMATE_CONTROLLED".equalsIgnoreCase(ut.getStorageCondition())) // Chỉ lấy loại kho thường làm 4 mốc size chuẩn
                 .map(ut -> {
                     PriceDto dto = new PriceDto();
                     dto.setUnitTypeId(ut.getUnitTypeId());
@@ -569,7 +554,6 @@ public class StorageService {
                 .collect(Collectors.toList());
     }
 
-    // --- Cập nhật Bảng giá và Mức cọc lưu vào Database ---
     @Transactional
     public PriceDto updatePrice(Integer unitTypeId, PriceDto req) {
         UnitType targetUt = unitTypeRepository.findById(unitTypeId)
@@ -597,7 +581,7 @@ public class StorageService {
 
         Price saved = priceRepository.save(price);
 
-        // Đồng bộ bảng giá cơ sở sang các UnitType cùng kích thước vật lý (ví dụ: Kho Mát CLIMATE_CONTROLLED cùng Size)
+        // Đồng bộ giá gốc sang các UnitType cùng kích thước (ví dụ bản kho mát)
         if (targetUt.getSize() != null && !targetUt.getSize().isBlank()) {
             List<UnitType> allTypes = unitTypeRepository.findAll();
             for (UnitType otherUt : allTypes) {
@@ -637,7 +621,6 @@ public class StorageService {
         return typeName.length() <= 6 ? typeName.toUpperCase() : "CUSTOM";
     }
 
-    // --- BOM: Thêm loại ô kho mới kèm bảng giá & mức cọc vào Database ---
     @Transactional
     public PriceDto createPrice(PriceDto req) {
         UnitType ut = new UnitType();
@@ -675,7 +658,6 @@ public class StorageService {
         return req;
     }
 
-    // --- BOM: Xóa mềm loại ô kho & bảng giá khỏi hệ thống ---
     @Transactional
     public void deletePrice(Integer unitTypeId) {
         UnitType ut = unitTypeRepository.findById(unitTypeId).orElse(null);
@@ -692,10 +674,9 @@ public class StorageService {
         }
     }
 
-    // --- Thêm cơ sở kho mới vào Database kèm Tự Động Sinh Tầng & Ô Kho theo Layout ---
     @Transactional
     public FacilityResponse createFacility(FacilityRequest req) {
-        // 1. Tự động sinh mã cơ sở thông minh không trùng lặp nếu chưa có
+        // Tự sinh mã cơ sở theo tiền tố thành phố nếu chưa nhập
         String code = req.getFacilityCode();
         if (code == null || code.trim().isEmpty()) {
             String addr = (req.getAddress() != null ? req.getAddress().toLowerCase() : "") + " " + (req.getFacilityName() != null ? req.getFacilityName().toLowerCase() : "");
@@ -737,7 +718,7 @@ public class StorageService {
             code = code.trim().toUpperCase().replace("-", "");
         }
 
-        // 2. TÊN CƠ SỞ HOÀN TOÀN THUẦN TÚY - KHÔNG GHÉP MÃ VÀO TÊN
+        // Tách bỏ phần mã trong ngoặc nếu có để lưu tên cơ sở gọn
         String rawName = req.getFacilityName() != null ? req.getFacilityName().trim() : "SmartStorage Cơ Sở Mới";
         if (rawName.contains("(") && rawName.contains(")")) {
             rawName = rawName.replaceAll("\\s*\\([^)]*\\)", "").trim();
@@ -754,7 +735,7 @@ public class StorageService {
         f.setStatus(req.getStatus() != null && !req.getStatus().trim().isEmpty() ? req.getStatus().trim().toUpperCase() : "ACTIVE");
         Facility saved = facilityRepository.save(f);
 
-        // 3. Tự động sinh danh sách Tầng (Floor) theo Layout: Thống nhất cả 2 Layout đều 2 tầng (Trệt + Tầng 1)
+        // Khởi tạo tầng mặc định (Trệt + Tầng 1)
         boolean isLayoutB = layout.equalsIgnoreCase("B");
         int floors = (req.getFloorCount() != null && req.getFloorCount() >= 1) ? req.getFloorCount() : 2;
         List<Floor> createdFloors = new java.util.ArrayList<>();
@@ -767,13 +748,10 @@ public class StorageService {
             createdFloors.add(floorRepository.save(floor));
         }
 
-        // 4. Tự động sinh danh sách Ô Kho (StorageUnit) theo Layout A hoặc B
         String cleanCode = code.replace("-", "");
         List<StorageUnit> newUnits = new java.util.ArrayList<>();
 
-        // Floor 1 (Tầng Trệt):
-        // Layout A: 10 ô XL
-        // Layout B: 5 ô XL
+        // Tầng trệt: Layout A có 6 ô XL, Layout B có 8 ô XL
         Floor floor1 = createdFloors.get(0);
         int xlCount = isLayoutB ? 8 : 6;
         for (int i = 1; i <= xlCount; i++) {
@@ -781,9 +759,7 @@ public class StorageService {
             newUnits.add(new StorageUnit(unitCode, floor1.getFloorId(), 4, "AVAILABLE"));
         }
 
-        // Floor 2 (Tầng 1):
-        // Layout A: 8 ô S, 5 ô M, 3 ô L (16 ô) -> Tổng Layout A = 6 XL + 16 = 22 Ô Kho trong 2 Tầng
-        // Layout B: 4 ô S, 5 ô M, 3 ô L (12 ô) -> Tổng Layout B = 8 XL + 12 = 20 Ô Kho trong 2 Tầng
+        // Tầng 1: Layout A có 8S/5M/3L (tổng 22 ô), Layout B có 4S/5M/3L (tổng 20 ô)
         if (createdFloors.size() >= 2) {
             Floor floor2 = createdFloors.get(1);
             if (isLayoutB) {
@@ -830,7 +806,6 @@ public class StorageService {
         return res;
     }
 
-    // --- Cập nhật cơ sở kho vào Database ---
     @Transactional
     public FacilityResponse updateFacility(Integer facilityId, FacilityRequest req) {
         Facility f = facilityRepository.findById(facilityId)
@@ -885,7 +860,6 @@ public class StorageService {
         return mapFacilityToResponse(saved);
     }
 
-    // --- Xóa mềm cơ sở kho vào Database (status = 'INACTIVE') ---
     @Transactional
     public void deleteFacility(Integer facilityId) {
         Facility f = facilityRepository.findById(facilityId)

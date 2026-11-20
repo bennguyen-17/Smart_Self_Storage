@@ -28,11 +28,6 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-/**
- * Manager xem chi tiết một hợp đồng (bấm mã hợp đồng ở trang Quản lí hợp đồng):
- * khách, ô kho, thời hạn, tiền cọc, tiến độ trả kho, các khoản phạt / truy thu và tình trạng thanh lý.
- * Chỉ xem; thao tác thanh lý mở ngăn riêng qua `onForfeit`.
- */
 function ContractDetailDialog({
   contract,
   today,
@@ -45,7 +40,6 @@ function ContractDetailDialog({
   today: string
   onClose: () => void
   onForfeit: (contract: FacilityContract) => void
-  /** Mở văn bản hợp đồng pháp lý (bản dùng chung với khách, tải PDF được) */
   onViewDocument?: (contract: FacilityContract) => void
   onTerminateViolation?: (contract: FacilityContract) => void
 }) {
@@ -54,13 +48,12 @@ function ContractDetailDialog({
   const fees = [...contract.fees].sort((a, b) => b.issuedAt.localeCompare(a.issuedAt))
   const inspectionImages = contract.inspectionImages ?? []
   const forfeitImages = contract.forfeitEvidenceImages ?? []
-  // Ảnh nghiệm thu chỉ có ý nghĩa khi khách đã trả kho; hợp đồng đang thuê thì không hiện mục này
+  // Chỉ hiện ảnh nghiệm thu khi đã trả kho hoặc đã có ảnh sẵn
   const showInspection = inspectionImages.length > 0 || contract.status === "TERMINATED" || contract.status === "COMPLETED"
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="portal-dialog max-h-[92vh] gap-5 overflow-y-auto rounded-3xl p-6 sm:max-w-2xl">
-        {/* Đầu: mã hợp đồng, trạng thái, khách */}
         <div className="flex items-start gap-3.5 border-b pb-4">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
             <FileTextIcon className="size-5" aria-hidden="true" />
@@ -83,7 +76,6 @@ function ContractDetailDialog({
           </div>
         </div>
 
-        {/* Thời hạn và ô kho */}
         <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
           <Field label="Ô kho">
             <span className="font-mono">{contract.unitCode}</span>
@@ -91,7 +83,6 @@ function ContractDetailDialog({
           <Field label="Ngày nhận kho">{formatDate(contract.startDate)}</Field>
           <Field label="Hạn trả kho">{formatDate(contract.endDate)}</Field>
           <Field label="Thời hạn còn lại">
-            {/* Hợp đồng đã đóng: ghi rõ thay vì dấu "—" mờ (trông như ô trống) */}
             {isClosedContract(contract.status) ? (
               <span className="text-muted">Đã kết thúc</span>
             ) : (
@@ -100,7 +91,6 @@ function ContractDetailDialog({
           </Field>
         </dl>
 
-        {/* Tiền */}
         <section aria-labelledby="contract-money" className="space-y-2">
           <h3 id="contract-money" className="text-title text-sm font-black">
             Tiền thuê & tiền cọc
@@ -115,7 +105,6 @@ function ContractDetailDialog({
           </p>
         </section>
 
-                        {/* Xử lý vi phạm hàng cấm / an ninh nghiêm trọng */}
         {(contract.status === "ACTIVE" || contract.status === "OVERDUE") && onTerminateViolation && (
           <section aria-labelledby="contract-violation" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50/50 p-4 dark:border-rose-900/60 dark:bg-rose-950/20">
             <div className="flex items-start gap-2.5">

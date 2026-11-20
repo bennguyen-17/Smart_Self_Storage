@@ -124,13 +124,11 @@ function formatTicketCode(code: string | undefined, ticketId?: string | number):
   if (!code) return "TCK-202610-001"
   let clean = code.trim().replace(/^#/, "")
 
-  // Đã chuẩn định dạng TCK-YYYYMM-XXX
   if (/^TCK-\d{6}-\d{3,4}$/.test(clean)) {
     return clean
   }
 
-  // Nếu là mã cũ dạng TCK-206148 (6 số ngẫu nhiên) hoặc TCK-TRM-xxx, TCK-INC-xxx
-  // Chuẩn hóa đồng nhất theo mã tuần tự TCK-202610-XXX
+  // Chuẩn hóa mã ticket cũ sang dạng TCK-YYYYMM-XXX theo số thứ tự
   if (ticketId !== undefined && ticketId !== null) {
     const parsed = typeof ticketId === "number" ? ticketId : parseInt(String(ticketId), 10)
     if (!isNaN(parsed) && parsed > 0) {
@@ -185,14 +183,12 @@ function getTicketTypeDisplayName(ticket: TicketItem): string {
   return title || "Yêu cầu hỗ trợ"
 }
 
-/** Hỗ trợ kỹ thuật & xử lý sự cố — kết nối API hàng đợi ticket và thời gian cam kết */
 function StaffTicketPanel() {
   const [tickets, setTickets] = useState<TicketItem[]>([])
   const [filter, setFilter] = useState<"ALL" | TicketStatus>("ALL")
   const [searchQuery, setSearchQuery] = useState("")
   const [shiftError, setShiftError] = useState<string | null>(null)
 
-  // Modals state
   const [inspectionTarget, setInspectionTarget] =
     useState<InspectionTarget | null>(null)
   const [inspectionTicketId, setInspectionTicketId] = useState<
@@ -360,13 +356,13 @@ function StaffTicketPanel() {
     })
   }
 
-  // Đóng modal khi bấm Hủy bỏ hoặc dấu X - KHÔNG thanh lý HĐ, KHÔNG đóng ticket
+  // Đóng modal mà không đóng ticket khi staff hủy giữa chừng
   function handleCloseInspection() {
     setInspectionTarget(null)
     setInspectionTicketId(null)
   }
 
-  // Chỉ khi nhân viên bấm "Chốt biên bản & Trả kho" thành công mới đóng ticket và cập nhật
+  // Chỉ đóng ticket sau khi chốt biên bản trả kho thành công
   async function handleConfirmInspection() {
     if (inspectionTicketId !== null) {
       updateStatus(inspectionTicketId, "RESOLVED")
@@ -376,7 +372,7 @@ function StaffTicketPanel() {
             note: "Biên bản nghiệm thu hoàn tất, hợp đồng đã thanh lý cọc.",
           })
         } catch {
-          // ignore error if resolve already handled by checkout confirm
+          // Bỏ qua nếu API checkout đã tự đóng ticket trước đó
         }
       }
     }
@@ -396,7 +392,6 @@ function StaffTicketPanel() {
     })
   }
 
-  // Filter & Search logic
   const query = searchQuery.trim().toLowerCase()
   const filtered = tickets.filter((t) => {
     if (filter !== "ALL" && t.status !== filter) return false
@@ -410,13 +405,14 @@ function StaffTicketPanel() {
     )
   })
 
+  // Ưu tiên ticket chờ tiếp nhận và đang xử lý lên đầu danh sách
   const getTicketPriority = (status: string) => {
     switch (status) {
-      case "SUBMITTED": return 1    // Chờ tiếp nhận (lên trên cùng)
-      case "IN_PROGRESS": return 2  // Đang xử lý
-      case "RESOLVED": return 3     // Đã hoàn tất (nằm ở dưới)
-      case "CANCELLED": return 4    // Đã hủy / Lỡ hẹn (nằm dưới cùng)
-      case "CLOSED": return 5       // Đã đóng (dưới cùng)
+      case "SUBMITTED": return 1
+      case "IN_PROGRESS": return 2
+      case "RESOLVED": return 3
+      case "CANCELLED": return 4
+      case "CLOSED": return 5
       default: return 6
     }
   }
@@ -439,7 +435,6 @@ function StaffTicketPanel() {
   return (
     <>
       <div className="space-y-5">
-        {/* Tiêu đề trang - Nằm trực tiếp trên nền ambient xanh mờ như CheckinPanel */}
         <div>
           <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <HeadphonesIcon className="size-5 text-blue-600 dark:text-blue-400" />
@@ -447,7 +442,6 @@ function StaffTicketPanel() {
           </h1>
         </div>
 
-        {/* Cụm Tìm kiếm - Thẻ card kính mờ độc lập */}
         <div className="card-box flex flex-col justify-between gap-3 rounded-2xl border p-4 shadow-sm md:flex-row md:items-center">
           <div className="flex max-w-xl flex-1 space-x-2">
             <div className="relative flex-1">
@@ -471,7 +465,6 @@ function StaffTicketPanel() {
           <StaffShiftBadge />
         </div>
 
-        {/* Cụm Filter Chips theo trạng thái - Nằm trực tiếp trên nền như CheckinPanel */}
         <div role="group" aria-label="Lọc theo trạng thái ticket" className="flex flex-wrap items-center gap-2">
           {FILTERS.map((f) => {
             const active = f.key === filter
@@ -495,7 +488,6 @@ function StaffTicketPanel() {
           })}
         </div>
 
-        {/* TICKET VIEW (LIST OR GRID) */}
         {shiftError ? (
           <StaffShiftRequiredCard onStarted={fetchTickets} />
         ) : sortedFiltered.length === 0 ? (
@@ -509,7 +501,6 @@ function StaffTicketPanel() {
             </p>
           </div>
         ) : (
-          /* DẠNG DANH SÁCH (TABLE / LIST VIEW) */
           <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm dark:border-slate-800">
             <table className="w-full min-w-[1060px] text-center text-xs">
               <thead className="border-b bg-slate-100 text-[11px] font-bold tracking-wider text-slate-500 uppercase dark:bg-slate-800/80 dark:text-slate-400">
@@ -557,7 +548,6 @@ function StaffTicketPanel() {
                       key={ticket.id}
                       className="transition hover:bg-slate-50/70 dark:hover:bg-slate-800/50"
                     >
-                      {/* Cột 1: Mã & Loại Ticket */}
                       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
                         <div className="flex flex-col items-center justify-center">
                           <span className="font-mono text-xs font-bold text-slate-900 dark:text-white">
@@ -576,12 +566,10 @@ function StaffTicketPanel() {
                         </div>
                       </td>
 
-                      {/* Cột 2: Vị trí Ô Kho */}
                       <td className="px-4 py-3.5 align-middle text-center font-mono font-bold whitespace-nowrap text-slate-800 dark:text-slate-200">
                         {ticket.unitCode || "Cổng / Ra vào"}
                       </td>
 
-                      {/* Cột 3: Khách Hàng */}
                       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
                         <span className="font-bold text-slate-900 dark:text-white">
                           {ticket.customerName ||
@@ -591,7 +579,6 @@ function StaffTicketPanel() {
                         </span>
                       </td>
 
-                      {/* Cột 4: Nội dung yêu cầu (hiển thị đầy đủ, không ẩn) */}
                       <td className="min-w-[220px] max-w-[380px] px-4 py-3.5 align-middle text-center">
                         <p className="text-xs text-slate-600 italic dark:text-slate-300 leading-relaxed break-words">
                           {ticket.description
@@ -600,7 +587,6 @@ function StaffTicketPanel() {
                         </p>
                       </td>
 
-                      {/* Cột 5: Thời gian / Lịch hẹn */}
                       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
                         <span
                           className={cn(
@@ -612,7 +598,6 @@ function StaffTicketPanel() {
                         </span>
                       </td>
 
-                      {/* Cột 6: Trạng thái */}
                       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
                         <div className="flex flex-col items-center">
                           <span
@@ -638,7 +623,6 @@ function StaffTicketPanel() {
                         </div>
                       </td>
 
-                      {/* Cột 7: Thao tác */}
                       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                           {ticket.status === "SUBMITTED" && (
@@ -718,14 +702,12 @@ function StaffTicketPanel() {
         )}
       </div>
 
-      {/* INSPECTION MODAL */}
       <StaffInspectionModal
         target={inspectionTarget}
         onClose={handleCloseInspection}
         onConfirmed={handleConfirmInspection}
       />
 
-      {/* UNLOCK MODAL */}
       <StaffUnlockModal
         ticket={unlockTarget}
         onClose={() => setUnlockTarget(null)}

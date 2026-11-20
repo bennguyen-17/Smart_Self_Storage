@@ -61,8 +61,7 @@ const updateLocalSession = (updatedData: any) => {
 export default function CustomerProfileModal({ onClose, onLogout }: { onClose: () => void; onLogout: () => void }) {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  
-  // Edit state
+
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -75,7 +74,6 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Trạng thái yêu cầu đóng tài khoản với thời gian hủy trong vòng 30 ngày
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCancellingDelete, setIsCancellingDelete] = useState(false);
@@ -118,7 +116,6 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
     }
   };
 
-  // OTP state for email update
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpInput, setOtpInput] = useState('');
   const [countdown, setCountdown] = useState(60);
@@ -151,7 +148,6 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
     fetchProfile();
   }, []);
 
-  // Countdown timer for OTP
   useEffect(() => {
     let timer: any;
     if (showOtpModal && countdown > 0) {
@@ -214,7 +210,7 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
     const currentEmail = (profile?.email || '').trim().toLowerCase();
     const isEmailChanged = trimmedEmail !== currentEmail;
 
-    // Trường hợp 1: Có đổi Email -> Gửi OTP về email mới
+    // Đổi email phải xác thực OTP trước khi lưu
     if (isEmailChanged) {
       setIsSaving(true);
       try {
@@ -235,7 +231,6 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
       return;
     }
 
-    // Trường hợp 2: Không đổi Email (chỉ đổi Họ tên và/hoặc SĐT) -> Lưu trực tiếp
     setIsSaving(true);
     try {
       const res = await updateCustomerProfile({
@@ -406,8 +401,6 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
         ) : (
           <>
             <div className="relative bg-gradient-to-r from-slate-900 to-blue-950 p-4 sm:p-5 rounded-2xl text-white flex items-center space-x-4 border border-slate-800 shadow-inner">
-              
-              {/* Nút Sửa đặt bên trong khối tên khách hàng góc phải */}
               {!isEditing && (
                 <button
                   type="button"
@@ -433,7 +426,6 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
                 {isEditing ? (
                   <div className="space-y-3">
                     <div className="space-y-2.5 text-slate-900 dark:text-white">
-                      {/* Dòng 1: Họ và Tên */}
                       <div>
                         <span className="text-slate-500 block text-[10px] mb-1 font-semibold">Họ và Tên:</span>
                         <input 
@@ -445,7 +437,6 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
                         />
                       </div>
 
-                      {/* Dòng 2: Mã CCCD */}
                       <div>
                         <span className="text-slate-500 flex items-center gap-1 text-[10px] mb-1 font-semibold">
                           <i className="fa-solid text-amber-500 text-[9px]"></i> Mã CCCD:
@@ -459,7 +450,6 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
                         />
                       </div>
 
-                      {/* Dòng 3: Số Điện Thoại */}
                       <div>
                         <span className="text-slate-500 block text-[10px] mb-1 font-semibold">Số Điện Thoại:</span>
                         <input 
@@ -472,7 +462,6 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
                         />
                       </div>
 
-                      {/* Dòng 4: Email */}
                       <div>
                         <span className="text-slate-500 block text-[10px] mb-1 font-semibold">Email:</span>
                         <input 
@@ -484,7 +473,6 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
                         />
                       </div>
 
-                      {/* Dòng 5-7: Thông tin nhận hoàn cọc */}
                       <div className="pt-1 border-t border-slate-200 dark:border-slate-700/70">
                         <span className="text-slate-500 flex items-center gap-1 text-[10px] mb-1 font-semibold">
                           <i className="fa-solid fa-building-columns text-blue-500 text-[9px]"></i> Ngân hàng nhận hoàn cọc:
@@ -543,31 +531,26 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
                   </div>
                 ) : (
                   <div className="space-y-2 text-slate-900 dark:text-white pt-0.5">
-                    {/* Dòng 1: Họ và Tên */}
                     <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
                       <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider shrink-0">Họ và Tên</span>
                       <span className="font-bold text-xs text-slate-900 dark:text-white text-right" title={profile?.fullName || ''}>{profile?.fullName}</span>
                     </div>
 
-                    {/* Dòng 2: Mã CCCD */}
                     <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
                       <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider shrink-0">Mã CCCD</span>
                       <span className="font-bold font-mono text-xs text-slate-900 dark:text-white text-right" title={identityNumber || ''}>{identityNumber}</span>
                     </div>
 
-                    {/* Dòng 3: Số Điện Thoại */}
                     <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
                       <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider shrink-0">Số Điện Thoại</span>
                       <span className="font-bold font-mono text-xs text-slate-900 dark:text-white text-right" title={profile?.phone || ''}>{profile?.phone}</span>
                     </div>
 
-                    {/* Dòng 4: Email */}
                     <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs gap-3">
                       <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider shrink-0">Email</span>
                       <span className="font-bold text-xs text-slate-900 dark:text-white text-right break-all" title={profile?.email || ''}>{profile?.email}</span>
                     </div>
 
-                    {/* Dòng 5-7: Thông tin nhận hoàn cọc */}
                     <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs gap-3">
                       <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider shrink-0">Ngân hàng</span>
                       <span className="font-bold text-xs text-slate-900 dark:text-white text-right" title={normalizeBankValue(profile?.bankName)}>
@@ -595,7 +578,6 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
           </>
         )}
 
-        {/* Modal nhập OTP xác thực email mới */}
         {showOtpModal && (
           <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-60 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl modal-animate-pop">
@@ -655,8 +637,6 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
           </div>
         )}
 
-
-        {/* Banner tài khoản đang chờ xóa */}
         {profile?.deletionScheduledAt && (
           <div className="rounded-2xl border border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40 p-3.5 space-y-2">
             <div className="flex items-start gap-2.5">
@@ -721,7 +701,6 @@ export default function CustomerProfileModal({ onClose, onLogout }: { onClose: (
         </div>
       </div>
 
-      {/* Modal xác nhận yêu cầu xóa tài khoản */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-70 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl modal-animate-pop">

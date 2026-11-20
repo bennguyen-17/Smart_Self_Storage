@@ -1,13 +1,6 @@
 import type { StoredImage } from "@/components/internal/images/imageApi"
 
-// Danh sách hợp đồng của cơ sở dành cho Quản lý cơ sở.
-// BE CHƯA có API liệt kê: kiểu dưới đây là contract FE đề xuất (GET /api/manager/contracts, xem qa-log).
-
-/**
- * TERMINATED = đã bàn giao trả kho, chờ tất toán (hoàn tiền); COMPLETED = đã tất toán xong;
- * FORFEITED = quá hạn > 30 ngày, tịch thu cọc và thanh lý tài sản; CANCELED = hủy trước khi nhận kho.
- * BE hiện chỉ trả 4 trạng thái đầu; 3 trạng thái sau đã đề xuất (B2, K1 trong plans/261022-manager-admin-sprint3).
- */
+// TERMINATED: đã trả kho chờ hoàn cọc; COMPLETED: đã tất toán; FORFEITED: quá hạn tịch thu cọc & thanh lý
 export type ContractStatus =
   | "PENDING_CHECKIN"
   | "ACTIVE"
@@ -17,10 +10,9 @@ export type ContractStatus =
   | "FORFEITED"
   | "CANCELLED"
 
-/** Tiến độ trả kho: chưa trả → đã lập biên bản nghiệm thu → đã bàn giao, thu hồi chìa khóa */
 export type CheckoutStage = "NONE" | "INSPECTED" | "HANDED_OVER"
 
-/** Khoản phí có thể miễn/giảm: phạt trễ hạn (PEN) hoặc truy thu đền bù (CMP) */
+// PEN: phạt trễ hạn, CMP: truy thu đền bù
 export type FeeType = "PEN" | "CMP"
 
 export type FeeStatus = "UNPAID" | "PAID" | "CANCELLED"
@@ -42,22 +34,19 @@ export interface FacilityContract {
   customerEmail?: string
   customerIdNumber?: string
   unitCode: string
-  /** YYYY-MM-DD */
+  // YYYY-MM-DD
   startDate: string
   endDate: string
   status: ContractStatus
   depositAmount: number
   checkoutStage: CheckoutStage
-  /** Hợp đồng FORFEITED: Manager đã xác nhận cắt khóa, xử lý xong tài sản (ô kho chuyển bảo trì) */
+  // Đã xác nhận cắt khóa, xử lý tài sản cho HĐ FORFEITED
   forfeitProcessed?: boolean
   fees: FeeInvoice[]
-  /** Chưa có trong API (đã nhờ BE thêm 01/11); có thì ngăn chi tiết tự hiện */
   rentalAmount?: number | null
   rentalType?: "DAILY" | "MONTHLY" | null
   reservationCode?: string | null
-  /** Ảnh nghiệm thu Staff chụp lúc trả kho (BE trả [] khi chưa có) */
   inspectionImages?: StoredImage[]
-  /** Ảnh minh chứng thanh lý tài sản do Manager tải */
   forfeitEvidenceImages?: StoredImage[]
   overdueLiquidationDays?: number | null
   forfeitAfterDays?: number | null

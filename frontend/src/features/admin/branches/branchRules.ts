@@ -1,5 +1,3 @@
-// Admin › Chi nhánh: phân vùng và lọc danh sách cơ sở. Hàm thuần, kiểm bằng bảng DDT.
-
 import { matchesQuery } from "@/components/internal/textSearch"
 import type { Facility, FacilityStatus } from "@/types"
 
@@ -19,7 +17,7 @@ export const FACILITY_STATUS_LABEL: Record<FacilityStatus, string> = {
   INACTIVE: "Tạm ngưng",
 }
 
-/** Vùng lấy theo tiền tố mã cơ sở: "HCM02" / "HCM-02" → HCM */
+// Xác định khu vực theo tiền tố mã cơ sở (vd: HCM-02 -> HCM)
 export function regionOf(facilityCode: string): Region {
   const norm = facilityCode.trim().toUpperCase().replace("-", "")
   if (norm.startsWith("HCM")) return "HCM"
@@ -35,7 +33,6 @@ export interface BranchFilter {
   status: FacilityStatus | "ALL"
 }
 
-/** Lọc theo từ khóa (mã, tên, địa chỉ, SĐT), vùng, trạng thái; giữ thứ tự theo mã cơ sở */
 export function filterBranches(list: readonly Facility[], filter: BranchFilter): Facility[] {
   return list
     .filter((f) => filter.region === "ALL" || regionOf(f.facilityCode) === filter.region)

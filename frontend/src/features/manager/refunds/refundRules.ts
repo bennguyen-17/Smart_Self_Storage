@@ -1,10 +1,8 @@
-// Luật hiển thị và lọc phiếu hoàn tiền của Manager. Hàm thuần, kiểm bằng bảng DDT.
-
 import { matchesQuery } from "@/components/internal/textSearch"
 
 import type { ManagerRefund, RefundFilter, RefundState, RefundType } from "./types"
 
-/** Phiếu đã hoàn có trạng thái REFUNDED hoặc PAID. Cả hai đều là "Đã hoàn" */
+// Map các trạng thái hoàn tất từ BE (PAID/REFUNDED/SUCCESS) về REFUNDED
 export function refundState(status: string): RefundState {
   const s = status.toUpperCase()
   return s === "PAID" || s === "REFUNDED" || s === "SUCCESS" ? "REFUNDED" : "PENDING"
@@ -22,7 +20,7 @@ export const REFUND_TYPE_LABEL: Record<RefundType, string> = {
   EARLY_TERMINATION: "Trả kho trước hạn",
 }
 
-/** Lý do hoàn: ưu tiên loại BE trả; chưa có thì suy từ lý do hủy cọc */
+// Ưu tiên refundType từ BE, thiếu thì suy từ cancelReason
 export function refundReasonLabel(refund: Pick<ManagerRefund, "refundType" | "cancelReason">): string {
   if (refund.refundType && REFUND_TYPE_LABEL[refund.refundType]) return REFUND_TYPE_LABEL[refund.refundType]
   const reason = (refund.cancelReason ?? "").toUpperCase()
@@ -32,7 +30,6 @@ export function refundReasonLabel(refund: Pick<ManagerRefund, "refundType" | "ca
   return "Hoàn tiền"
 }
 
-/** "0123456789 · Vietcombank · NGUYEN VAN A"; thiếu số tài khoản thì null (khách chưa cung cấp) */
 export function bankAccountLabel(
   refund: Pick<ManagerRefund, "refundAccountNumber" | "refundBankName" | "refundAccountName">
 ): string | null {
@@ -41,7 +38,6 @@ export function bankAccountLabel(
   return [number, refund.refundBankName?.trim(), refund.refundAccountName?.trim()].filter(Boolean).join(" · ")
 }
 
-/** Lọc theo trạng thái và từ khóa (khách, SĐT, mã phiếu, mã đặt chỗ, mã hợp đồng, mã ô); phiếu cũ nhất lên đầu khi đang chờ */
 export function filterRefunds(refunds: readonly ManagerRefund[], filter: RefundFilter): ManagerRefund[] {
   return refunds
     .filter((r) => filter.state === "ALL" || refundState(r.status) === filter.state)
@@ -64,14 +60,13 @@ export function filterRefunds(refunds: readonly ManagerRefund[], filter: RefundF
     })
 }
 
-/** Số giờ một phiếu đã chờ, tính từ lúc tạo phiếu */
 export function hoursWaiting(issuedAt: string, now: Date = new Date()): number {
   const issued = new Date(issuedAt).getTime()
   if (Number.isNaN(issued)) return 0
   return Math.max(0, Math.floor((now.getTime() - issued) / 3_600_000))
 }
 
-/** Quá hạn cam kết hoàn tiền 48 giờ làm việc */
+// Hạn xử lý hoàn cọc 48 giờ
 export const REFUND_SLA_HOURS = 48
 
 export function pendingSummary(refunds: readonly ManagerRefund[], now: Date = new Date()) {
@@ -83,14 +78,14 @@ export function pendingSummary(refunds: readonly ManagerRefund[], now: Date = ne
   }
 }
 
-/** BE lưu link biên lai vào cột VARCHAR(255), nên link dài hơn sẽ bị từ chối */
+// Khớp giới hạn VARCHAR(255) bên DB
 export const EVIDENCE_URL_MAX = 255
 
 export interface RefundFormInput {
   paymentId?: number | null
   bankAccount?: string | null
   evidenceUrl: string
-  /** Ảnh biên lai đã tải lên (cách chính); có thì không cần link */
+  // Có ảnh biên lai upload thì không cần evidenceUrl
   receiptImageId?: number | null
   allowDataUrl?: boolean
   transactionRef?: string

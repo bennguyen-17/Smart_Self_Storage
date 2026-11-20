@@ -20,17 +20,11 @@ const EMPTY_FILTER: GateLogFilter = {
   to: "",
 }
 
-/**
- * Nhật ký kiểm soát ra vào cổng cơ sở dành cho Quản lý cơ sở.
- * Hiển thị đầy đủ thông tin người ra vào (Họ tên, SĐT, CCCD, vai trò, vị trí cổng, phương thức mở).
- * Nhật ký chỉ đọc, dữ liệu thuộc cơ sở của Manager.
- */
 function GateLogPanel() {
   const [reloadCount, setReloadCount] = useState(0)
   const [filter, setFilter] = useState<GateLogFilter>(EMPTY_FILTER)
   const { data, error, isLoading } = useAsyncData(`gate-logs#${reloadCount}`, listManualGateOpenLogs)
 
-  // Giữ cùng một mảng giữa các lần render để useMemo thống kê bên dưới chỉ tính lại khi dữ liệu đổi
   const all = useMemo(() => data ?? [], [data])
   const rows = filterGateLogs(all, filter)
   const { slice, pagination } = usePagedRows(rows, JSON.stringify(filter))
@@ -42,8 +36,6 @@ function GateLogPanel() {
     filter.to !== ""
 
   const update = (patch: Partial<GateLogFilter>) => setFilter((f) => ({ ...f, ...patch }))
-
-  // Thống kê nhanh KPI
 
   return (
     <section aria-label="Nhật ký kiểm soát ra vào cổng" className="space-y-4">
@@ -59,7 +51,6 @@ function GateLogPanel() {
         </Alert>
       ) : (
         <>
-          {/* Bộ lọc */}
           <div className="card-box flex flex-wrap items-end gap-3 rounded-2xl border p-4 shadow-sm">
             <label className="flex min-w-64 flex-1 flex-col gap-1 text-xs font-bold">
               <span className="text-title">Tìm kiếm thông tin người ra vào</span>
@@ -105,7 +96,6 @@ function GateLogPanel() {
             </Button>
           </div>
 
-          {/* Bảng dữ liệu người ra vào cổng */}
           <div className="card-box overflow-x-auto rounded-2xl border shadow-sm">
             <table className="w-full text-left text-xs">
               <caption className="sr-only">Nhật ký kiểm soát người ra vào cổng của cơ sở</caption>
@@ -149,12 +139,10 @@ function GateLogPanel() {
 
                     return (
                       <tr key={log.auditLogId} className="border-b last:border-0 hover:bg-slate-50/60 dark:hover:bg-slate-900/40">
-                        {/* Thời gian */}
                         <td className="text-title px-4 py-3 font-semibold whitespace-nowrap">
                           {formatDateTime(log.openedAt || log.createdAt)}
                         </td>
 
-                        {/* Người ra vào */}
                         <td className="px-4 py-3">
                           <div className="flex flex-col gap-0.5">
                             <div className="flex items-center gap-1.5">
@@ -180,9 +168,6 @@ function GateLogPanel() {
                           </div>
                         </td>
 
-
-
-                        {/* Trạng thái */}
                         <td className="px-4 py-3 whitespace-nowrap">
                           <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
                             <CheckCircle2Icon className="size-3.5" />
@@ -190,7 +175,6 @@ function GateLogPanel() {
                           </span>
                         </td>
 
-                        {/* Lý do / Ghi chú */}
                         <td className="text-title px-4 py-3 max-w-xs truncate text-[11px] text-slate-600 dark:text-slate-300">
                           {log.reason || "Mở cổng tự động qua mã PIN hợp lệ"}
                         </td>

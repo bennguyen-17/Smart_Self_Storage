@@ -60,7 +60,6 @@ export function ViolationTerminationModal({
   return (
     <Dialog open onOpenChange={(open) => !open && !submitting && onClose()}>
       <DialogContent className="portal-dialog max-w-xl max-h-[92vh] overflow-y-auto rounded-3xl p-6 sm:max-w-xl shadow-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900 gap-5">
-        {/* Header */}
         <div className="flex items-start gap-3.5 border-b border-slate-100 pb-4 dark:border-slate-800">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
             <ShieldAlertIcon className="size-5" />
@@ -84,7 +83,6 @@ export function ViolationTerminationModal({
           </div>
         </div>
 
-        {/* Lưu ý quan trọng */}
         <div className="rounded-2xl border border-rose-200/80 bg-rose-50/60 p-4 dark:border-rose-950/40 dark:bg-rose-950/20 text-xs text-rose-800 dark:text-rose-300">
           <div className="flex items-center gap-1.5 font-bold text-rose-900 dark:text-rose-200 mb-1">
             <AlertTriangleIcon className="size-4 shrink-0" />
@@ -95,7 +93,6 @@ export function ViolationTerminationModal({
           </p>
         </div>
 
-        {/* Mô tả vi phạm */}
         <div className="space-y-1.5">
           <label htmlFor="violation-reason" className="block text-xs font-bold text-slate-700 dark:text-slate-300">
             Mô tả vi phạm
@@ -110,7 +107,6 @@ export function ViolationTerminationModal({
           />
         </div>
 
-        {/* Ảnh bằng chứng biên bản */}
         <ImagePicker
           label="Ảnh biên bản / hiện trường"
           category="FORFEIT_EVIDENCE"
@@ -120,14 +116,12 @@ export function ViolationTerminationModal({
           disabled={submitting}
         />
 
-        {/* Thông báo lỗi nếu có */}
         {serverError && (
           <div className="rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
             {serverError}
           </div>
         )}
 
-        {/* Action buttons */}
         <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
           <Button
             type="button"

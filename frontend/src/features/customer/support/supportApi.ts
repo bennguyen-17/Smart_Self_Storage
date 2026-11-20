@@ -24,10 +24,6 @@ export const getStoredAccountId = (): number => {
   return 0;
 };
 
-/**
- * Gửi yêu cầu hỗ trợ kỹ thuật (Ticket)
- * Gửi yêu cầu hỗ trợ kỹ thuật trực tuyến
- */
 export const submitSupportTicket = async (ticketData: any) => {
   if (isMockMode()) {
     return {
@@ -53,10 +49,6 @@ export const submitSupportTicket = async (ticketData: any) => {
   return { success: true, data: res.data || res };
 };
 
-/**
- * Lấy danh sách ticket hỗ trợ kỹ thuật khách hàng đã gửi
- * Lấy danh sách yêu cầu hỗ trợ của khách hàng
- */
 export const getMySupportTickets = async () => {
   if (isMockMode()) {
     return { success: true, data: [] };

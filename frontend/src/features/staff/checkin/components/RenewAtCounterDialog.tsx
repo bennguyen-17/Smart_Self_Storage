@@ -26,10 +26,7 @@ interface RenewAtCounterDialogProps {
   onPenaltyCollected?: () => void
 }
 
-/**
- * Gia hạn hợp đồng tại quầy bằng tiền mặt hoặc chuyển khoản.
- * Đồng bộ giao diện và cách tính toán gói gia hạn giống như Cổng Khách hàng (Customer Portal).
- */
+/** Gia hạn hợp đồng tại quầy, dùng cùng bảng gói và chiết khấu với cổng khách hàng. */
 export default function RenewAtCounterDialog({
   contract,
   onClose,
@@ -76,7 +73,6 @@ function RenewAtCounterBody({
   return (
     <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="w-full max-w-lg rounded-3xl border shadow-2xl overflow-hidden space-y-4 p-5 sm:p-6 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 modal-animate-pop">
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3.5">
           <div className="flex items-center space-x-3">
             <div className="size-10 rounded-2xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs">
@@ -141,7 +137,6 @@ function Body({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  // Tiền phạt quá hạn (nếu có)
   const [unpaidPenalty, setUnpaidPenalty] = useState(contract.unpaidPenaltyAmount ?? 0)
   const [isCollectingPenalty, setIsCollectingPenalty] = useState(false)
   const blockedByPenalty = unpaidPenalty > 0
@@ -222,7 +217,7 @@ function Body({
     ? Math.max(7, parseInt(customDaysInput, 10) || 7)
     : selectedDays
 
-  // Giá tính theo tháng (30 ngày) áp dụng bảng giá hiện hành mới nhất
+  // Ưu tiên bảng giá hiện hành, fallback về giá trên hợp đồng
   const monthlyRate =
     liveMonthlyPrice > 0
       ? liveMonthlyPrice
@@ -236,7 +231,7 @@ function Body({
   const discountAmount = rawTotal * (isCustomDays ? 0 : discountRate)
   const finalTotal = Math.round(rawTotal - discountAmount)
 
-  // Parse ngày hiện tại hỗ trợ YYYY-MM-DD và DD/MM/YYYY
+  // Hỗ trợ cả YYYY-MM-DD và DD/MM/YYYY
   const parseDate = (dStr?: string | null): Date | null => {
     if (!dStr) return null
     if (dStr.includes("-")) {
@@ -266,7 +261,7 @@ function Body({
   const currentExpiryDate = parseDate(contract.reservationEndDate || contract.endDate)
   const formattedCurrentExpiry = currentExpiryDate ? formatDateDisplay(currentExpiryDate) : (contract.reservationEndDate || contract.endDate || "—")
 
-  // Tính ngày hết hạn mới sau gia hạn (Nếu quá hạn thì tính từ ngày hiện tại)
+  // Nếu đã quá hạn thì cộng thêm ngày gia hạn tính từ hôm nay
   const calculateNewExpiryDate = (): string => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -285,7 +280,6 @@ function Body({
 
   const newExpiryFormatted = calculateNewExpiryDate()
 
-  // Thu phạt nhanh nếu có
   async function handleQuickCollectPenalty() {
     setIsCollectingPenalty(true)
     setErrorMsg(null)
@@ -304,7 +298,6 @@ function Body({
     }
   }
 
-  // Xác nhận gia hạn bằng tiền mặt
   async function handleConfirm() {
     if (blockedByPenalty) return
     setIsSubmitting(true)
@@ -336,9 +329,7 @@ function Body({
 
   return (
     <div className="space-y-4">
-      {/* Thông tin hợp đồng & ô kho */}
       <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 space-y-3 text-xs">
-        {/* Hàng 1: Mã ô kho (to rõ) + Size bên dưới, Cơ sở / Tầng bên phải */}
         <div className="flex items-start justify-between gap-3 pb-2.5 border-b border-slate-200 dark:border-slate-700">
           <div className="space-y-1.5 min-w-0">
             <div className="flex items-center gap-2">
@@ -386,7 +377,6 @@ function Body({
         </div>
       </div>
 
-      {/* Chọn Gói Gia Hạn Thêm */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <label className="block text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
@@ -456,7 +446,6 @@ function Body({
         )}
       </div>
 
-      {/* Bảng tính chi tiết tiền gia hạn */}
       <div className="p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/50 space-y-2 text-xs">
         <div className="flex justify-between text-slate-600 dark:text-slate-300">
           <span>Thời gian gia hạn thêm:</span>
@@ -507,7 +496,6 @@ function Body({
         </div>
       </div>
 
-      {/* Cảnh báo nợ phạt quá hạn */}
       {blockedByPenalty && (
         <div className="flex flex-col gap-2 rounded-2xl border border-rose-300 bg-rose-50 p-3.5 text-xs font-semibold text-rose-700 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-300">
           <div className="flex items-start space-x-2">
@@ -533,7 +521,6 @@ function Body({
         </div>
       )}
 
-      {/* Nút hành động */}
       <div className="flex items-center space-x-2 pt-1">
         <button
           type="button"

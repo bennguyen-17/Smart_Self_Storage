@@ -1,4 +1,4 @@
-// Định dạng tiền riêng cho landing, để landing không phụ thuộc @/lib/format (chưa có trên main).
+// Định dạng VND riêng cho module landing
 
 const vndFormatter = new Intl.NumberFormat("vi-VN", {
   style: "currency",

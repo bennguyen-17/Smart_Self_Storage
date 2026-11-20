@@ -1,13 +1,8 @@
-// Quy tắc quản lý tài khoản nội bộ. Hàm thuần phục vụ kiểm thử.
-
 import type { AccountFilter, AccountFormValues, InternalAccount, InternalRole } from "./types"
 
 export const INTERNAL_ROLES: readonly InternalRole[] = ["STAFF", "MANAGER", "BOM", "ADMIN"]
 
-/**
- * Mật khẩu ban đầu BE đặt cho mọi tài khoản nội bộ mới (AdminAccountController.createAccount).
- * Chưa có SMTP gửi mật khẩu tạm, nên Admin báo trực tiếp cho người dùng; đổi ở BE thì sửa ở đây.
- */
+// Mật khẩu mặc định BE cấp cho tài khoản nội bộ mới, cần khớp với AdminAccountController
 export const INITIAL_INTERNAL_PASSWORD = "123456@Test"
 
 export const ROLE_LABEL: Record<InternalRole, string> = {
@@ -17,7 +12,7 @@ export const ROLE_LABEL: Record<InternalRole, string> = {
   ADMIN: "Quản trị hệ thống",
 }
 
-/** Staff và Manager làm việc tại một cơ sở cụ thể; BOM và Admin quản lý toàn hệ thống */
+// Chỉ Staff và Manager gắn với một cơ sở cụ thể
 export function roleNeedsFacility(role: InternalRole): boolean {
   return role === "STAFF" || role === "MANAGER"
 }
@@ -27,15 +22,11 @@ export type AccountFormErrors = Partial<Record<"fullName" | "email" | "phone" | 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_PATTERN = /^0\d{9}$/
 
-/** Độ dài tối đa theo bảng Account (fullName VARCHAR(100), email VARCHAR(255)); dài hơn thì BE báo lỗi SQL */
+// Khớp giới hạn cột VARCHAR bảng Account
 export const FULL_NAME_MAX = 100
 export const EMAIL_MAX = 255
 
-/**
- * Kiểm form tạo / sửa tài khoản. Rỗng nghĩa là hợp lệ.
- * AC: Staff/Manager tạo mà không gán cơ sở → bị chặn.
- * Tạo mới bắt buộc số điện thoại: đăng nhập nội bộ dùng số điện thoại (bỏ trống thì BE tự đặt số ngẫu nhiên, người dùng không đăng nhập được).
- */
+// Tạo mới bắt buộc SĐT vì tài khoản nội bộ đăng nhập bằng SĐT
 export function validateAccountForm(values: AccountFormValues, { requirePhone = false } = {}): AccountFormErrors {
   const errors: AccountFormErrors = {}
   if (values.fullName.trim().length < 2) errors.fullName = "Nhập họ tên (ít nhất 2 ký tự)"
@@ -51,13 +42,13 @@ export function validateAccountForm(values: AccountFormValues, { requirePhone = 
   return errors
 }
 
-/** Cơ sở thực sự lưu: BOM/Admin luôn là toàn hệ thống dù form còn giữ lựa chọn cũ */
+// BOM và Admin luôn lưu facilityId = null dù form còn giữ lựa chọn trước đó
 export function effectiveFacilityId(values: Pick<AccountFormValues, "role" | "facilityId">): number | null {
   if (!roleNeedsFacility(values.role)) return null
   return values.facilityId === "" ? null : values.facilityId
 }
 
-/** Admin không được tự khóa hay tự đổi vai trò của chính mình (tránh mất quyền quản trị) */
+// Chặn Admin tự khóa hoặc tự đổi vai trò của chính mình
 export function isSelf(account: InternalAccount, currentAccountId: number | null): boolean {
   return currentAccountId !== null && account.accountId === currentAccountId
 }
@@ -66,7 +57,6 @@ function normalizeText(value: string): string {
   return value.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLowerCase().trim()
 }
 
-/** Lọc danh sách tài khoản theo từ khóa (tên, email, SĐT), vai trò, cơ sở và trạng thái */
 export function filterAccounts(accounts: readonly InternalAccount[], filter: AccountFilter): InternalAccount[] {
   const q = normalizeText(filter.query)
   return accounts.filter((a) => {

@@ -1,24 +1,9 @@
--- =====================================================================
--- LỊCH TRỰC NỀN: mỗi cơ sở, mỗi ca 1 người, cả tuần (T2 → CN).
--- Chạy SAU db-script.sql. Chạy lại bao nhiêu lần cũng được (chỉ ghi đè lịch chưa diễn ra).
---
--- Nhóm chốt 03/11:
---   - Mỗi ca đúng 1 người trực: sự cố khách gửi trong ca luôn được phân cho đúng người đó.
---   - Cơ sở mở cả T7, CN (khách hay đến cuối tuần).
---   - Đây là lịch nền; Manager vẫn đổi người từng ca ở trang Phân công
---     hoặc "Áp dụng lịch ngày này cho cả tuần".
---
--- Cách xếp: trong mỗi cơ sở, nhân viên (tài khoản Staff đang hoạt động) sắp theo employeeId;
--- người thứ 1 trực Ca Sáng, người thứ 2 Ca Chiều, người thứ 3 Ca Tối.
--- Khoảng ngày: từ thứ Hai của tuần hiện tại (giờ Việt Nam) đến hết 4 tuần.
---
--- Cách chạy (PowerShell, KHÔNG dùng Get-Content | mysql vì hỏng dấu tiếng Việt):
---   cmd /c '"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -u root -p --default-character-set=utf8mb4 smart_storage < D:\SWP391\Smart_Self_Storage\database\seed-weekly-shifts.sql'
--- =====================================================================
+-- Seed lịch trực nền cho 4 tuần (từ thứ Hai tuần hiện tại theo giờ VN).
+-- Mỗi cơ sở xếp 1 Staff/ca (theo thứ tự employeeId: 1 = Sáng, 2 = Chiều, 3 = Tối).
+-- Chạy sau db-script.sql; chỉ ghi đè các ca SCHEDULED, giữ nguyên lịch sử ca đã trực.
 
 USE smart_storage;
 
--- Bảo đảm có đủ ca chuẩn; seed này cũng an toàn khi chạy lại.
 INSERT INTO Shift (shiftName, startTime, endTime, status)
 SELECT 'Ca Sáng', '07:00:00', '12:00:00', 'ACTIVE' FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM Shift WHERE shiftName = 'Ca Sáng');
@@ -30,11 +15,10 @@ SELECT 'Ca Tối', '16:00:00', '20:00:00', 'ACTIVE' FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM Shift WHERE shiftName = 'Ca Tối');
 
 SET @today_vn = IFNULL(DATE(CONVERT_TZ(NOW(), @@session.time_zone, '+07:00')), CURDATE());
-SET @week_start = DATE_SUB(@today_vn, INTERVAL WEEKDAY(@today_vn) DAY);  -- thứ Hai tuần này
-SET @week_end = DATE_ADD(@week_start, INTERVAL 27 DAY);                   -- chủ nhật của tuần thứ 4
+SET @week_start = DATE_SUB(@today_vn, INTERVAL WEEKDAY(@today_vn) DAY);
+SET @week_end = DATE_ADD(@week_start, INTERVAL 27 DAY);
 
--- 1. Ghi đè: xóa lịch CHƯA diễn ra (SCHEDULED) của 3 ca chính trong khoảng ngày.
---    Giữ nguyên ca đã vào / đã xong (ATTENDED, COMPLETED, ABSENT) để không mất lịch sử làm việc.
+-- Chỉ xóa ca chưa diễn ra để giữ lại lịch sử ATTENDED/COMPLETED/ABSENT
 DELETE FROM StaffShift
 WHERE staffShiftId > 0
   AND workDate BETWEEN @week_start AND @week_end
@@ -43,7 +27,6 @@ WHERE staffShiftId > 0
   )
   AND status = 'SCHEDULED';
 
--- 2. Xếp lịch nền: mỗi cơ sở mỗi ca 1 người, mọi ngày trong khoảng.
 INSERT INTO StaffShift (employeeId, facilityId, shiftId, workDate, status)
 WITH RECURSIVE days AS (
     SELECT @week_start AS workDate
@@ -67,13 +50,12 @@ JOIN Shift s ON s.shiftName = CASE r.pos
 END
 JOIN days d
 WHERE r.pos BETWEEN 1 AND 3
-  -- Ca đó trong ngày đó đã có người vào ca rồi (ATTENDED...) thì không chèn thêm người thứ 2
+  -- Tránh chèn trùng nếu ca ngày đó đã có người vào ca
   AND NOT EXISTS (
       SELECT 1 FROM StaffShift s
       WHERE s.facilityId = r.facilityId AND s.shiftId = r.pos AND s.workDate = d.workDate
   );
 
--- 3. Kiểm tra nhanh: mỗi cơ sở, mỗi ngày phải có đủ 3 ca.
 SELECT f.facilityCode,
        COUNT(DISTINCT s.workDate) AS so_ngay,
        COUNT(*) AS so_ca_xep,

@@ -478,7 +478,7 @@ public class StaffReservationService {
         BigDecimal refundAmount = BigDecimal.ZERO;
         BigDecimal penaltyAmount = BigDecimal.ZERO;
         if (paidDeposit.signum() > 0) {
-            BigDecimal refundRate = new BigDecimal("0.50"); // Hủy giữ chỗ tại quầy: bảo lưu 50% tiền cọc và hoàn trả 50%
+            BigDecimal refundRate = new BigDecimal("0.50"); // Hủy tại quầy hoàn 50% cọc, giữ lại 50%
             refundAmount = paidDeposit.multiply(refundRate).setScale(2, java.math.RoundingMode.HALF_UP);
             penaltyAmount = paidDeposit.subtract(refundAmount);
             if (refundAmount.signum() > 0) {
@@ -674,7 +674,7 @@ public class StaffReservationService {
                         BigDecimal rentalAmt = reservation.getRentalAmount() != null ? reservation.getRentalAmount() : BigDecimal.ZERO;
                         BigDecimal paid = payment.getPaidAmount() != null ? payment.getPaidAmount() : BigDecimal.ZERO;
 
-                        // Hợp đồng đã chuyển sang trang staff (PENDING_CHECKIN) thì 100% đã cọc đủ
+                        // Fallback dữ liệu cũ: hợp đồng ở PENDING_CHECKIN coi như đã đóng đủ cọc
                         if (paid.signum() <= 0 && CONTRACT_PENDING_CHECKIN.equals(contract.getStatus())) {
                             paid = depAmt;
                         }
@@ -710,7 +710,7 @@ public class StaffReservationService {
                     });
         });
 
-        // 1. Tính giá thuê tháng hiện hành (monthlyPrice) cho ô kho (dùng khi gia hạn hợp đồng)
+        // Giá thuê tháng hiện hành (đã cộng phụ phí kho mát nếu có) để dùng khi gia hạn
         BigDecimal monthlyPrice = BigDecimal.ZERO;
         if (reservation.getUnitCode() != null) {
             Optional<StorageUnit> uOpt = storageUnitRepository.findById(reservation.getUnitCode());
@@ -737,7 +737,6 @@ public class StaffReservationService {
         }
         item.setMonthlyPrice(monthlyPrice);
 
-        // 2. Tính số ngày quá hạn (overdueDays)
         LocalDate today = LocalDate.now();
         LocalDate endDate = reservation.getEndDate();
         int overdueDays = 0;
@@ -749,7 +748,7 @@ public class StaffReservationService {
         item.setOverdueDays(overdueDays);
         item.setOverdueLiquidationDays(getContractLiquidationDays(contractObj));
 
-        // 3. Tính tiền phạt quá hạn: Chuẩn 50.000 VNĐ / ngày quá hạn (tối đa theo số ngày thanh lý)
+        // Phạt quá hạn tính theo mức snapshot trên hợp đồng, giới hạn tối đa đến hạn thanh lý
         BigDecimal expectedPenalty = getContractDailyOverdueFee(contractObj).multiply(BigDecimal.valueOf(chargeableOverdueDays));
         BigDecimal paidPenalty = BigDecimal.ZERO;
 
@@ -1030,8 +1029,7 @@ public class StaffReservationService {
             return new RenewAtCounterResponse(false, "Hợp đồng đã quá hạn trên " + liquidationDays + " ngày. Đã chuyển Ban Quản lý thanh lý tài sản, không thể gia hạn tại quầy.");
         }
 
-        // 1. Kiểm tra phạt quá hạn chưa nộp (tính chuẩn 50.000đ/ngày quá hạn)
-
+        // Bắt buộc thu hết phạt quá hạn trước khi gia hạn
         LocalDate today = LocalDate.now();
         LocalDate endDate = reservation.getEndDate();
         int overdueDays = (endDate != null && endDate.isBefore(today))
@@ -1058,7 +1056,6 @@ public class StaffReservationService {
             return new RenewAtCounterResponse(false, "Còn tiền phạt quá hạn chưa nộp (50.000đ/ngày). Vui lòng thu phạt trước khi gia hạn.");
         }
 
-        // 2. Lấy giá thuê tháng hiện hành (monthlyPrice) để tính tiền gia hạn
         BigDecimal monthlyPrice = BigDecimal.ZERO;
         if (unitOpt.isPresent()) {
             StorageUnit u = unitOpt.get();
@@ -1081,7 +1078,6 @@ public class StaffReservationService {
             monthlyPrice = reservation.getRentalAmount();
         }
 
-        // 3. Thời gian gia hạn: Hỗ trợ cả gói tháng và số ngày tùy chọn
         Integer reqDays = (request != null) ? request.getDays() : null;
         Integer reqMonths = (request != null) ? request.getMonths() : null;
         boolean isCustomDays = (reqDays != null && reqDays > 0);
@@ -1097,7 +1093,7 @@ public class StaffReservationService {
             finalAmount = dailyPrice.multiply(BigDecimal.valueOf(addedDays)).setScale(0, java.math.RoundingMode.HALF_UP);
         } else {
             addedDays = months * 30;
-            // Chiết khấu: 12 tháng -> 15%, 6 tháng -> 10%, 3 tháng -> 5%, khác -> 0%
+            // Chiết khấu gói tháng: 3 tháng 5%, 6 tháng 10%, 12 tháng 15%
             if (months >= 12) discountPercent = getDiscountRate("DISCOUNT_12M", 15);
             else if (months >= 6) discountPercent = getDiscountRate("DISCOUNT_6M", 10);
             else if (months >= 3) discountPercent = getDiscountRate("DISCOUNT_3M", 5);
@@ -1107,7 +1103,6 @@ public class StaffReservationService {
             finalAmount = rawTotal.multiply(discountFactor).setScale(0, java.math.RoundingMode.HALF_UP);
         }
 
-        // 4. Cập nhật ngày kết thúc của Reservation
         LocalDate currentExpiry = reservation.getEndDate() != null ? reservation.getEndDate() : LocalDate.now();
         if (currentExpiry.isBefore(LocalDate.now())) {
             currentExpiry = LocalDate.now();
@@ -1116,11 +1111,9 @@ public class StaffReservationService {
         reservation.setEndDate(newExpiry);
         reservationRepository.save(reservation);
 
-        // 6. Cập nhật trạng thái hợp đồng về ACTIVE
         contract.setStatus("ACTIVE");
         contractRepository.save(contract);
 
-        // 7. Tạo hóa đơn gia hạn EXT-... thanh toán bằng tiền mặt (CASH)
         LocalDateTime now = LocalDateTime.now();
         String dateStr = now.format(java.time.format.DateTimeFormatter.ofPattern("ddMMyy"));
         String invoiceNumber = "EXT-" + (reservation.getReservationCode() != null ? reservation.getReservationCode() : ("CTR-" + contract.getContractId()))
@@ -1136,13 +1129,12 @@ public class StaffReservationService {
         extPayment.setIssuedAt(now);
         extPayment.setDueAt(now.plusDays(1));
         extPayment.setStatus("PAID");
-        extPayment.setPaymentMethod("CASH"); // Bắt buộc Tiền mặt tại quầy
+        extPayment.setPaymentMethod("CASH");
         extPayment.setPaymentStatus("SUCCESS");
         extPayment.setTransactionCode("CASH_EXT_" + System.currentTimeMillis());
         extPayment.setPaidAt(now);
         paymentRepository.save(extPayment);
 
-        // 8. Cấp/khôi phục Gate PIN cho khách
         String gatePinCode = null;
         try {
             GatePinResult pinResult = gatePinService.generatePin(contract);
@@ -1167,12 +1159,7 @@ public class StaffReservationService {
         return resp;
     }
 
-    /**
-     * Lấy mã PIN động 15s mở cổng cơ sở 24/7 dành cho nhân viên (Staff Entry Pass)
-     * - Thời gian hiệu lực mã PIN mở cổng là 15 giây
-     * - Tự động liên kết cơ sở nhân viên đang làm việc
-     * - Lưu mã PIN vào bảng GatePin để hệ thống IoT và cổng xác thực hợp lệ
-     */
+    // Sinh mã PIN động theo chu kỳ 15s cho nhân viên vào cổng cơ sở
     public StaffGatePinResponse getStaffLiveGatePin() {
         Integer accountId = getAuthenticatedAccountId();
         Integer facilityId = 1;
@@ -1188,7 +1175,6 @@ public class StaffReservationService {
         String facilityName = facility != null ? facility.getFacilityName() : "Cơ sở Cầu Giấy (Hà Nội)";
         String facilityCode = facility != null && facility.getFacilityCode() != null ? facility.getFacilityCode() : "HN-01";
 
-        // Mã PIN mở cổng tự động có hiệu lực trong 15 giây
         int ttlSeconds = 15 - (int) ((System.currentTimeMillis() / 1000) % 15);
         if (ttlSeconds <= 0) ttlSeconds = 15;
 
@@ -1199,7 +1185,7 @@ public class StaffReservationService {
         String rawPin = String.format("%03d%03d", p1, p2);
         String formattedPin = p1 + " " + p2;
 
-        // Tìm một hợp đồng ACTIVE thuộc cơ sở này để gán gatePinId (đáp ứng foreign key constraint của GatePin)
+        // Mượn 1 contractId thuộc cơ sở để lưu bản ghi GatePin (đáp ứng khóa ngoại)
         Integer activeContractId = null;
         List<Reservation> facilityReservations = reservationRepository.findByFacilityId(facilityId);
         for (Reservation res : facilityReservations) {
@@ -1276,7 +1262,6 @@ public class StaffReservationService {
         Reservation reservation = reservationOpt.get();
         Integer customerAccountId = reservation.getAccountId();
 
-        // Check if CCCD belongs to another customer
         Optional<CustomerProfile> existingCccd = customerProfileRepository.findByIdentityNumber(formattedCccd);
         if (existingCccd.isPresent() && !existingCccd.get().getAccountId().equals(customerAccountId)) {
             return new ApiResponse(false, "Số CCCD này đã thuộc về một khách hàng khác trên hệ thống.");
@@ -1296,7 +1281,6 @@ public class StaffReservationService {
             });
         }
 
-        // Ghi nhận ActivityLog
         try {
             Account staffAccount = accountRepository.findById(staffAccountId.longValue()).orElse(null);
             String staffName = staffAccount != null ? staffAccount.getFullName() : "Staff #" + staffAccountId;

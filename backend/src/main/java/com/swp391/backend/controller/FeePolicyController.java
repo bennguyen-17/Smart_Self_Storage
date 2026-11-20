@@ -17,27 +17,24 @@ public class FeePolicyController {
         this.feePolicyService = feePolicyService;
     }
 
-    // --- Lấy danh sách các chính sách biểu phí, phụ thu, phạt, chiết khấu ---
     @GetMapping
     public ResponseEntity<List<FeePolicyDto>> getAllFeePolicies() {
         return ResponseEntity.ok(feePolicyService.getAllFeePolicies());
     }
 
-    // --- BOM: Tạo mới biểu phí ---
     @PostMapping
     public ResponseEntity<FeePolicyDto> createFeePolicy(@RequestBody FeePolicyDto req) {
         FeePolicyDto created = feePolicyService.createFeePolicy(req);
         return ResponseEntity.ok(created);
     }
 
-    // --- BOM: Cập nhật biểu phí ---
     @PutMapping("/{policyId}")
     public ResponseEntity<FeePolicyDto> updateFeePolicy(@PathVariable Integer policyId, @RequestBody FeePolicyDto req) {
         FeePolicyDto updated = feePolicyService.updateFeePolicy(policyId, req);
         return ResponseEntity.ok(updated);
     }
 
-    // --- BOM: Xóa mềm biểu phí (status = INACTIVE) ---
+    // Xóa mềm biểu phí bằng cách chuyển status sang INACTIVE
     @DeleteMapping("/{policyId}")
     public ResponseEntity<Void> deleteFeePolicy(@PathVariable Integer policyId) {
         feePolicyService.deleteFeePolicy(policyId);

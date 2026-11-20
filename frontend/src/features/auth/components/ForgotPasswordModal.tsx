@@ -41,7 +41,7 @@ function ForgotPasswordModal({
   onOpenChange,
   onSuccess,
 }: ForgotPasswordModalProps) {
-  // Step 1: Nhập identifier gửi OTP. Step 2: Nhập OTP & Mật khẩu mới. Step 3: Hoàn tất.
+  // 1: nhập email gửi OTP, 2: nhập OTP và mật khẩu mới, 3: hoàn tất
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [identifier, setIdentifier] = useState("")
   const [otpCode, setOtpCode] = useState("")
@@ -76,7 +76,6 @@ function ForgotPasswordModal({
     }
   }
 
-  // Bắt đầu đếm ngược thời gian gửi lại OTP
   const startCooldown = () => {
     setResendCooldown(60)
     const interval = setInterval(() => {
@@ -90,7 +89,6 @@ function ForgotPasswordModal({
     }, 1000)
   }
 
-  // Bước 1: Yêu cầu gửi mã OTP về email
   const handleRequestOtp = async (e: FormEvent) => {
     e.preventDefault()
     setErrorMessage("")
@@ -132,7 +130,6 @@ function ForgotPasswordModal({
     }
   }
 
-  // Gửi lại mã OTP
   const handleResendOtp = async () => {
     if (resendCooldown > 0 || isResending) return
     setIsResending(true)
@@ -155,7 +152,6 @@ function ForgotPasswordModal({
     }
   }
 
-  // Bước 2: Xác nhận OTP & Đổi mật khẩu mới
   const handleResetPassword = async (e: FormEvent) => {
     e.preventDefault()
     setErrorMessage("")
@@ -171,7 +167,6 @@ function ForgotPasswordModal({
       return
     }
 
-    // Kiểm tra các điều kiện an toàn mật khẩu
     const failedRules = passwordRules.filter((r) => !r.test(newPassword))
     if (failedRules.length > 0) {
       setErrorMessage("Mật khẩu chưa đáp ứng đủ các tiêu chuẩn bảo mật.")
@@ -315,7 +310,6 @@ function ForgotPasswordModal({
             </DialogHeader>
 
             <form onSubmit={handleResetPassword} className="mt-2 space-y-3.5">
-              {/* Nhập mã OTP */}
               <Field data-invalid={Boolean(errorMessage)}>
                 <div className="flex items-center justify-between">
                   <FieldLabel htmlFor="otp-input" className="text-xs font-semibold">
@@ -357,7 +351,6 @@ function ForgotPasswordModal({
                 </InputGroup>
               </Field>
 
-              {/* Mật khẩu mới */}
               <Field>
                 <FieldLabel htmlFor="new-password" className="text-xs font-semibold">
                   Mật khẩu mới
@@ -394,7 +387,6 @@ function ForgotPasswordModal({
                 </InputGroup>
               </Field>
 
-              {/* Checklist độ mạnh mật khẩu */}
               <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-50 p-2.5 text-[10px] dark:bg-slate-900/60">
                 {passwordRules.map((rule) => {
                   const pass = rule.test(newPassword)
@@ -414,7 +406,6 @@ function ForgotPasswordModal({
                 })}
               </div>
 
-              {/* Xác nhận mật khẩu mới */}
               <Field>
                 <FieldLabel htmlFor="confirm-password" className="text-xs font-semibold">
                   Xác nhận lại mật khẩu mới

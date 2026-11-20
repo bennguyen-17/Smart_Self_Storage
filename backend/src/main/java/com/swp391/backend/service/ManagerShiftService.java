@@ -35,7 +35,6 @@ public class ManagerShiftService {
         this.staffShiftRepository = staffShiftRepository;
     }
 
-    // 1. GET /api/manager/staff: Danh sách nhân viên của cơ sở
     public List<ManagerStaffResponse> getFacilityStaff(Integer facilityId) {
         if (facilityId == null) {
             return Collections.emptyList();
@@ -48,7 +47,7 @@ public class ManagerShiftService {
             Optional<Account> accOpt = accountRepository.findById(Long.valueOf(emp.getAccountId()));
             if (accOpt.isPresent()) {
                 Account acc = accOpt.get();
-                // B6: Chỉ trả nhân viên vai trò STAFF (roleId = 4), không trả Manager
+                // Chỉ lọc tài khoản STAFF (roleId = 4), bỏ qua quản lý
                 if (!Long.valueOf(4L).equals(acc.getRoleId())) {
                     continue;
                 }
@@ -64,7 +63,6 @@ public class ManagerShiftService {
         return result;
     }
 
-    // 2. GET /api/manager/shifts?date=YYYY-MM-DD: Các ca trong ngày và ai đang trực
     @Transactional
     public ShiftScheduleResponse getShiftSchedule(Integer facilityId, LocalDate date) {
         if (date == null) {
@@ -78,7 +76,6 @@ public class ManagerShiftService {
             staffShifts = staffShiftRepository.findByFacilityIdAndWorkDateAndStatusNot(facilityId, date, "CANCELLED");
         }
 
-        // Tạo map: shiftId -> list of staff
         Map<Integer, List<ShiftScheduleResponse.StaffMemberDto>> shiftStaffMap = new HashMap<>();
         for (Shift s : shifts) {
             shiftStaffMap.put(s.getShiftId(), new ArrayList<>());
@@ -114,7 +111,6 @@ public class ManagerShiftService {
         return new ShiftScheduleResponse(date.toString(), shiftDetails);
     }
 
-    // 3. PUT /api/manager/shifts/{date}/{shiftId}: Lưu danh sách người trực của 1 ca
     @Transactional
     public ShiftScheduleResponse assignShift(Integer facilityId, LocalDate date, Integer shiftId, List<Integer> employeeIds) {
         if (facilityId == null) {
@@ -139,7 +135,6 @@ public class ManagerShiftService {
             throw new IllegalArgumentException("Không thể thay đổi phân công sau khi Staff đã bắt đầu ca.");
         }
 
-        // Kiểm tra xem tất cả nhân viên có thuộc cơ sở này không
         for (Integer empId : employeeIds) {
             Optional<EmployeeProfile> empOpt = employeeProfileRepository.findById(empId);
             if (empOpt.isEmpty() || !facilityId.equals(empOpt.get().getFacilityId())) {
@@ -152,16 +147,13 @@ public class ManagerShiftService {
             }
         }
 
-        // Xóa / Ghi đè danh sách phân công cũ của ca này
         staffShiftRepository.deleteByFacilityIdAndShiftIdAndWorkDate(facilityId, shiftId, date);
 
-        // Thêm danh sách mới
         for (Integer empId : employeeIds) {
             StaffShift newShift = new StaffShift(empId, facilityId, shiftId, date, "SCHEDULED");
             staffShiftRepository.save(newShift);
         }
 
-        // Trả về lịch cả ngày sau khi lưu
         return getShiftSchedule(facilityId, date);
     }
 }

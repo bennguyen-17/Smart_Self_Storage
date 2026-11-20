@@ -4,11 +4,13 @@ import com.swp391.backend.entity.*;
 import com.swp391.backend.dto.CustomerCancelReservationRequest;
 import com.swp391.backend.dto.CustomerCancelReservationResponse;
 import com.swp391.backend.dto.ApiResponse;
+import com.swp391.backend.dto.GatePinVerificationRequest;
 import com.swp391.backend.service.ImageStorageService;
 import com.swp391.backend.repository.*;
 import com.swp391.backend.service.JwtService;
 import com.swp391.backend.service.StorageService;
 import com.swp391.backend.service.CustomerReservationService;
+import com.swp391.backend.service.GatePinService;
 import com.swp391.backend.service.NoShowCronService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +50,7 @@ public class ContractController {
     private final PaymentRepository paymentRepository;
     private final ActivityLogRepository activityLogRepository;
     private final CustomerReservationService customerReservationService;
+    private final GatePinService gatePinService;
     private static final Logger log = LoggerFactory.getLogger(ContractController.class);
     private final SupportTicketRepository supportTicketRepository;
     private final NoShowCronService noShowCronService;
@@ -71,6 +74,7 @@ public class ContractController {
                               PaymentRepository paymentRepository,
                               ActivityLogRepository activityLogRepository,
                               CustomerReservationService customerReservationService,
+                              GatePinService gatePinService,
                               SupportTicketRepository supportTicketRepository,
                               NoShowCronService noShowCronService,
                               ImageStorageService imageStorageService,
@@ -90,6 +94,7 @@ public class ContractController {
         this.paymentRepository = paymentRepository;
         this.activityLogRepository = activityLogRepository;
         this.customerReservationService = customerReservationService;
+        this.gatePinService = gatePinService;
         this.supportTicketRepository = supportTicketRepository;
         this.noShowCronService = noShowCronService;
         this.imageStorageService = imageStorageService;
@@ -283,7 +288,7 @@ public class ContractController {
             map.put("depositAmount", depAmount);
             map.put("totalAmount", totAmount);
 
-            // Lấy giá niêm yết hiện hành của ô kho để áp dụng khi khách hàng gia hạn hợp đồng
+            // Gia hạn tính theo giá niêm yết hiện tại của ô kho
             com.swp391.backend.dto.UnitDetailResponse unitPricing = storageService.mapSingleUnit(unit);
             BigDecimal currentMonthlyPrice = (unitPricing.getMonthlyPrice() != null && unitPricing.getMonthlyPrice().compareTo(BigDecimal.ZERO) > 0)
                     ? unitPricing.getMonthlyPrice()
@@ -357,10 +362,7 @@ public class ContractController {
         return ResponseEntity.ok(result);
     }
 
-    /**
-     * Khách hàng gửi yêu cầu trả kho trước hạn
-     * Staff sẽ nhìn thấy nút [Xác nhận trả kho] sau khi khách gửi yêu cầu này.
-     */
+    // Khách gửi yêu cầu trả kho sớm để nhân viên xác nhận nghiệm thu
     @PostMapping("/contracts/{contractId}/request-checkout")
     public ResponseEntity<?> requestCheckout(
             @PathVariable Integer contractId,
@@ -444,13 +446,7 @@ public class ContractController {
         return ResponseEntity.ok(customerReservationService.cancelDeposit(contractId, accountId, body));
     }
 
-    /**
-     * Sinh mã PIN mở cổng tự động 24/7
-     * QUY TẮC NGHIỆP VỤ BẮT BUỘC:
-     * - Chỉ cấp mã PIN nếu khách hàng có hợp đồng đang có HIỆU LỰC (ACTIVE) tại cơ sở đó.
-     * - Nếu chỉ có hợp đồng CHỜ CHECK-IN hoặc ĐÃ HỦY CỌC, từ chối cấp mã PIN (hasAccess = false).
-     * - Ghi nhận và đồng bộ mã PIN vào bảng gatepin trong MySQL.
-     */
+    // Chỉ cấp mã PIN 24/7 khi khách có hợp đồng ACTIVE tại đúng cơ sở yêu cầu
     @GetMapping("/customer/gate-pins/live")
     public ResponseEntity<Map<String, Object>> getLiveGatePin(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
@@ -475,7 +471,6 @@ public class ContractController {
 
         String targetBranch = branchCode != null ? branchCode.trim().replace("-", "").toUpperCase() : "HN01";
 
-        // Tìm tất cả đặt chỗ của tài khoản trong MySQL
         List<Reservation> reservations = reservationRepository.findByAccountId(targetId);
         Contract activeContract = null;
         StorageUnit activeUnit = null;
@@ -485,7 +480,6 @@ public class ContractController {
             if (contractOpt.isEmpty()) continue;
             Contract c = contractOpt.get();
 
-            // QUY TẮC BẮT BUỘC: Hợp đồng PHẢI ở trạng thái ACTIVE (HIỆU LỰC)
             if (!"ACTIVE".equalsIgnoreCase(c.getStatus())) {
                 continue;
             }
@@ -503,7 +497,6 @@ public class ContractController {
                 }
             }
 
-            // Kiểm tra khớp mã cơ sở
             String normTarget = targetBranch.replace("-", "").toUpperCase();
             String normBranch = cBranchCode.replace("-", "").toUpperCase();
 
@@ -514,7 +507,6 @@ public class ContractController {
             }
         }
 
-        // Nếu cơ sở này KHÔNG CÓ hợp đồng nào ACTIVE -> TUYỆT ĐỐI KHÔNG CẤP MÃ PIN
         if (activeContract == null) {
             Map<String, Object> errorResp = new HashMap<>();
             errorResp.put("success", false);
@@ -524,7 +516,7 @@ public class ContractController {
             return ResponseEntity.status(403).body(errorResp);
         }
 
-        // Khi có hợp đồng ACTIVE: Sinh mã PIN 6 số an toàn và lưu/cập nhật vào bảng gatepin trong MySQL
+        // Tạo mã PIN 6 số xoay vòng theo chu kỳ 15 giây
         long sec = System.currentTimeMillis() / 15000;
         int seed = Math.abs((int) (sec ^ (targetBranch.hashCode() + activeContract.getContractId() * 31)));
         int p1 = (seed % 900) + 100;
@@ -563,13 +555,17 @@ public class ContractController {
         return ResponseEntity.ok(data);
     }
 
-    /**
-     * Gia hạn hợp đồng thuê kho trực tuyến
-     * - Chỉ áp dụng cho hợp đồng ACTIVE (HĐ quá hạn hoặc đã đóng bị từ chối)
-     * - Cộng dồn ngày hết hạn nối tiếp ngày cũ
-     * - Tạo hóa đơn EXT-... trạng thái PAID/SUCCESS
-     * - Ghi ActivityLog kiểm toán
-     */
+    // Xác minh mã PIN nhập từ cổng (mô phỏng bàn phím IoT Gate Simulator)
+    @PostMapping("/gate-pins/verify")
+    public ResponseEntity<ApiResponse> verifyGatePin(@RequestBody GatePinVerificationRequest request) {
+        boolean valid = request != null && gatePinService.verifyPin(request.getPinCode());
+        if (!valid) {
+            return ResponseEntity.status(403).body(new ApiResponse(false, "PIN không hợp lệ, đã hết hạn hoặc hợp đồng không còn hiệu lực."));
+        }
+        return ResponseEntity.ok(new ApiResponse(true, "PIN hợp lệ. Cho phép mở cửa."));
+    }
+
+    // Gia hạn trực tuyến chỉ áp dụng cho hợp đồng ACTIVE, cộng dồn ngày nối tiếp hạn cũ
     @PostMapping("/contracts/{contractId}/extend")
     public ResponseEntity<?> extendContract(
             @PathVariable String contractId,
@@ -584,13 +580,12 @@ public class ContractController {
         String rawInput = contractId.trim();
         Optional<Contract> contractOpt = Optional.empty();
 
-        // 1. Thử parse ID số nguyên (ví dụ: 1, 2, 104)
+        // Hỗ trợ tra cứu hợp đồng theo ID số, mã đặt chỗ hoặc định dạng CTR-<id>
         try {
             int numericId = Integer.parseInt(rawInput);
             contractOpt = contractRepository.findById(numericId);
         } catch (NumberFormatException ignored) {}
 
-        // 2. Tìm theo reservationCode (ví dụ: CTR-HN01-171026-0042)
         if (contractOpt.isEmpty()) {
             Optional<Reservation> resByCode = reservationRepository.findByReservationCode(rawInput);
             if (resByCode.isPresent()) {
@@ -598,7 +593,6 @@ public class ContractController {
             }
         }
 
-        // 3. Nếu có dạng CTR-[id số] (ví dụ: CTR-1)
         if (contractOpt.isEmpty() && rawInput.startsWith("CTR-")) {
             String suffix = rawInput.substring(4);
             try {
@@ -607,7 +601,6 @@ public class ContractController {
             } catch (NumberFormatException ignored) {}
         }
 
-        // 4. Tìm kiếm tương đối reservationCode chứa mã hoặc ID
         if (contractOpt.isEmpty()) {
             List<Reservation> allRes = reservationRepository.findAll();
             for (Reservation r : allRes) {
@@ -624,7 +617,6 @@ public class ContractController {
 
         Contract contract = contractOpt.get();
 
-        // Chỉ cho phép gia hạn khi hợp đồng đang ACTIVE hoặc PENDING_CHECKIN
         if (!"ACTIVE".equalsIgnoreCase(contract.getStatus())) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
@@ -652,7 +644,6 @@ public class ContractController {
                     .body(Map.of("success", false, "message", "Bạn không có quyền gia hạn hợp đồng của người khác!"));
         }
 
-        // Đọc số ngày gia hạn từ payload (mặc định 30 ngày)
         int effectiveDays = 30;
         String packageLabel = "1 Tháng";
         BigDecimal finalTotal = BigDecimal.ZERO;
@@ -712,7 +703,6 @@ public class ContractController {
             finalTotal = serverCalcTotal.compareTo(BigDecimal.ZERO) > 0 ? serverCalcTotal : contractRateTotal;
         }
 
-        // Cộng dồn ngày hết hạn mới nối tiếp ngày hết hạn cũ
         LocalDate currentExpiry = res.getEndDate() != null ? res.getEndDate() : LocalDate.now();
         if (currentExpiry.isBefore(LocalDate.now())) {
             currentExpiry = LocalDate.now();
@@ -721,7 +711,6 @@ public class ContractController {
         res.setEndDate(newExpiry);
         reservationRepository.save(res);
 
-        // Sinh hóa đơn EXT-[Mã hợp đồng] theo chuẩn DDMMYY
         String branchCode = "HN01";
         Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitCode());
         if (unitOpt.isPresent()) {
@@ -777,7 +766,6 @@ public class ContractController {
         payment.setPaidAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
-        // Ghi nhật ký kiểm toán (ActivityLog)
         ActivityLog activityLog = new ActivityLog();
         activityLog.setAccountId(res.getAccountId());
         activityLog.setFacilityId(unitOpt.flatMap(u -> floorRepository.findById(u.getFloorId())).map(Floor::getFacilityId).orElse(null));
@@ -787,7 +775,6 @@ public class ContractController {
         activityLog.setCreatedAt(LocalDateTime.now());
         activityLogRepository.save(activityLog);
 
-        // Gửi email xác nhận gia hạn hợp đồng trực tuyến thành công
         try {
             if (res.getAccountId() != null) {
                 Account acc = accountRepository.findById(Long.valueOf(res.getAccountId())).orElse(null);
@@ -844,13 +831,11 @@ public class ContractController {
         String rawInput = contractId.trim();
         Optional<Contract> contractOpt = Optional.empty();
 
-        // 1. Numeric ID
         try {
             int numericId = Integer.parseInt(rawInput);
             contractOpt = contractRepository.findById(numericId);
         } catch (NumberFormatException ignored) {}
 
-        // 2. Reservation code
         if (contractOpt.isEmpty()) {
             Optional<Reservation> resByCode = reservationRepository.findByReservationCode(rawInput);
             if (resByCode.isPresent()) {
@@ -858,7 +843,6 @@ public class ContractController {
             }
         }
 
-        // 3. CTR-[num]
         if (contractOpt.isEmpty() && rawInput.startsWith("CTR-")) {
             String suffix = rawInput.substring(4);
             try {
@@ -867,7 +851,6 @@ public class ContractController {
             } catch (NumberFormatException ignored) {}
         }
 
-        // 4. Find match in reservations
         if (contractOpt.isEmpty()) {
             List<Reservation> allRes = reservationRepository.findAll();
             for (Reservation r : allRes) {
@@ -895,8 +878,7 @@ public class ContractController {
             fileName = rawInput.endsWith(".pdf") ? rawInput : (rawInput + ".pdf");
         }
 
-        // Chỉ các hợp đồng đã check-in thành công mới có văn bản hợp đồng chính thức
-        // PENDING_CHECKIN (chờ nhận kho) và CANCELLED (hủy cọc / No-Show) tuyệt đối không có file PDF hợp đồng
+        // Chỉ hợp đồng đã check-in mới có PDF chính thức, không xuất file cho PENDING_CHECKIN hoặc CANCELLED
         if (contractOpt.isPresent()) {
             Contract c = contractOpt.get();
             if ("PENDING_CHECKIN".equalsIgnoreCase(c.getStatus()) || "CANCELLED".equalsIgnoreCase(c.getStatus())) {

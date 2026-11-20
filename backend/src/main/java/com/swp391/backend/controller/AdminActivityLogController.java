@@ -31,7 +31,6 @@ public class AdminActivityLogController {
         this.facilityRepository = facilityRepository;
     }
 
-    // --- 4. GET /api/admin/activity-logs: Nhật ký hoạt động hệ thống cho Admin ---
     @GetMapping("/activity-logs")
     public ResponseEntity<List<AdminActivityLogResponse>> getActivityLogs(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,

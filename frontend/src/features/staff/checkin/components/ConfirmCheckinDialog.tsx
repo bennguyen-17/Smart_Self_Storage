@@ -133,7 +133,6 @@ function Body({
 
   return (
     <div className="space-y-4">
-      {/* THÔNG TIN KHÁCH HÀNG & Ô KHO BÀN GIAO */}
       <div className="flex items-center justify-between rounded-xl border border-slate-200/90 bg-slate-50/70 p-3 text-xs dark:border-slate-800 dark:bg-slate-900/50">
         <div className="flex items-center gap-2">
           <UserIcon className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
@@ -165,7 +164,6 @@ function Body({
         </div>
       )}
 
-      {/* KHỐI THU TIỀN TẠI QUẦY (HERO CARD) */}
       {collectAmount > 0 ? (
         <div className="rounded-2xl border border-blue-500/30 bg-gradient-to-br from-blue-50/80 via-indigo-50/40 to-white p-4 shadow-xs dark:from-blue-950/40 dark:via-slate-900 dark:to-slate-900 space-y-3">
           <div className="flex items-center justify-between">
@@ -182,7 +180,6 @@ function Body({
             {formatVnd(collectAmount)}
           </div>
 
-          {/* Chi tiết khấu trừ cọc */}
           <div className="pt-2.5 border-t border-slate-200/70 dark:border-slate-800/80 space-y-1.5 text-xs">
             <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
               <span>Tổng giá trị hợp đồng:</span>
@@ -217,7 +214,6 @@ function Body({
         </div>
       )}
 
-      {/* CẢNH BÁO NGOÀI KHUNG GIỜ QUY CHUẨN (NẾU CÓ) */}
       {outsideHours && (
         <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-300">
           <ClockIcon className="size-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
@@ -234,7 +230,6 @@ function Body({
         </div>
       )}
 
-      {/* CỤM NÚT THAO TÁC RÕ RÀNG, KHÔNG BỊ NHẢY DÒNG */}
       <div className="flex items-center gap-3 pt-2">
         <button
           type="button"
@@ -269,7 +264,6 @@ function Body({
   )
 }
 
-/** Xác nhận bàn giao ô kho — mã PIN đã kích hoạt và in biên lai thanh toán. */
 function SuccessPanel({
   result,
   onDone,

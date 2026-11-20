@@ -50,7 +50,6 @@ export default function SupportForm() {
   const currentHour = new Date().getHours();
   const isOutsideWorkingHours = currentHour < 7 || currentHour >= 20;
 
-  // Danh sách ticket của khách
   const [myTickets, setMyTickets] = useState<any[]>([]);
   const [loadingTickets, setLoadingTickets] = useState(false);
   const [ticketPage, setTicketPage] = useState(1);
@@ -103,7 +102,7 @@ export default function SupportForm() {
         const res = await getMyContracts();
         const list = Array.isArray(res) ? res : (res?.data || []);
         if (Array.isArray(list)) {
-          // CHỈ LẤY CÁC Ô KHO CÓ HỢP ĐỒNG ĐÃ ĐƯỢC ACTIVE
+          // Chỉ lấy các ô kho thuộc hợp đồng đang ACTIVE
           const activeUnits = list.filter((c: any) => c.status === 'ACTIVE');
           setMyUnits(activeUnits);
           if (activeUnits.length > 0) {
@@ -262,7 +261,6 @@ export default function SupportForm() {
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6">
-      {/* Banner Tiêu Đề - Chỉ hiển thị bên trang Gửi yêu cầu mới */}
       {activeSubTab === 'create' && (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-3.5">
@@ -281,12 +279,9 @@ export default function SupportForm() {
         </div>
       )}
 
-      {/* NỘI DUNG TAB 1: FORM GỬI YÊU CẦU MỚI */}
       {activeSubTab === 'create' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* CỘT TRÁI: FORM GỬI YÊU CẦU HỖ TRỢ */}
           <div className="lg:col-span-7 flex flex-col bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm">
-            {/* Header đồng bộ với cột phải */}
             <div className="flex items-center space-x-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
                 <MessageSquare className="size-5" />
@@ -351,7 +346,6 @@ export default function SupportForm() {
                   </div>
                 )}
 
-                {/* CẢNH BÁO KHI TÀI KHOẢN CHƯA CÓ HỢP ĐỒNG ACTIVE */}
                 {!loadingContracts && !hasActiveContracts && (
                   <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 space-y-2">
                     <div className="flex items-center space-x-2.5 font-bold text-amber-700 dark:text-amber-200 text-sm">
@@ -367,7 +361,6 @@ export default function SupportForm() {
                   </div>
                 )}
 
-                {/* THÔNG BÁO KHUNG GIỜ LÀM VIỆC CỦA NHÂN VIÊN */}
                 {isOutsideWorkingHours && (
                   <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 space-y-1">
                     <div className="flex items-center gap-2 font-bold text-xs text-amber-700 dark:text-amber-300">
@@ -380,7 +373,6 @@ export default function SupportForm() {
                   </div>
                 )}
 
-                {/* Loại sự cố */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                     Loại sự cố / Yêu cầu:
@@ -411,7 +403,6 @@ export default function SupportForm() {
                   </div>
                 </div>
 
-                {/* Chọn Ô kho liên quan / Ô kho muốn trả sớm */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                     {ticketType === 'EARLY_TERMINATION' ? 'Chọn ô kho muốn trả sớm:' : 'Vị trí / Ô kho liên quan:'}
@@ -435,7 +426,6 @@ export default function SupportForm() {
                   </select>
                 </div>
 
-                {/* Chọn Ngày đến trả kho khi là Trả kho sớm */}
                 {ticketType === 'EARLY_TERMINATION' && (
                   <div className="space-y-1.5 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 animate-in fade-in duration-200">
                     <label className="block text-xs font-black text-amber-700 dark:text-amber-300 uppercase tracking-wide flex items-center gap-1.5">
@@ -464,7 +454,6 @@ export default function SupportForm() {
                   </div>
                 )}
 
-                {/* Nội dung mô tả / Ghi chú - Tự động giãn đều chiều cao theo thẻ */}
                 <div className="space-y-1.5 flex-1 flex flex-col min-h-[130px]">
                   <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                     {ticketType === 'EARLY_TERMINATION' ? 'Ghi chú:' : 'Mô tả chi tiết sự cố:'}
@@ -486,7 +475,6 @@ export default function SupportForm() {
                 </div>
               </div>
 
-              {/* Cảnh báo nếu ô kho đã có ticket trả kho đang xử lý */}
               {existingEarlyTicket && (
                 <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-900 dark:text-amber-200 space-y-1.5 animate-in fade-in">
                   <div className="flex items-center gap-2 font-bold text-xs text-amber-800 dark:text-amber-300">
@@ -499,7 +487,6 @@ export default function SupportForm() {
                 </div>
               )}
 
-              {/* Nút gửi ở cuối */}
               <div className="pt-2">
                 <button
                   type="submit"
@@ -524,7 +511,6 @@ export default function SupportForm() {
             </form>
           </div>
 
-          {/* CỘT PHẢI: QUY TRÌNH HỖ TRỢ & TIÊU CHUẨN DỊCH VỤ */}
           <div className="lg:col-span-5 h-fit flex flex-col space-y-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm">
             <div className="flex items-center space-x-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
@@ -541,7 +527,6 @@ export default function SupportForm() {
             </div>
 
             <div className="space-y-3">
-              {/* 1. KHUNG GIỜ LÀM VIỆC CỦA NHÂN VIÊN */}
               <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-blue-700 dark:text-blue-400 uppercase font-semibold tracking-wider flex items-center gap-1.5">
@@ -557,7 +542,6 @@ export default function SupportForm() {
                 </p>
               </div>
 
-              {/* 2. CAM KẾT PHẢN HỒI SỰ CỐ SLA 15 PHÚT */}
               <div className="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-amber-700 dark:text-amber-300 uppercase font-semibold tracking-wider flex items-center gap-1.5">
@@ -573,7 +557,6 @@ export default function SupportForm() {
                 </p>
               </div>
 
-              {/* 3. XÁC THỰC DANH TÍNH MỞ KHÓA */}
               <div className="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/50 space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-blue-700 dark:text-blue-400 uppercase font-semibold tracking-wider flex items-center gap-1.5">
@@ -586,7 +569,6 @@ export default function SupportForm() {
                 </p>
               </div>
 
-              {/* HƯỚNG DẪN TRẢ KHO TRƯỚC HẠN CHUẨN XÁC */}
               <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-900 dark:text-emerald-200 space-y-1.5">
                 <p className="font-bold text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
                   <HelpCircle className="size-4 text-emerald-600 dark:text-emerald-400" />
@@ -603,10 +585,8 @@ export default function SupportForm() {
         </div>
       )}
 
-            {/* NỘI DUNG TAB 2: DANH SÁCH YÊU CẦU ĐÃ GỬI (TIẾN ĐỘ XỬ LÝ) */}
             {activeSubTab === 'history' && (
               <div className="space-y-6">
-                {/* Banner Tiêu Đề của Danh sách yêu cầu - Đồng bộ phong cách với trang Gửi hỗ trợ */}
                 <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex items-center space-x-3.5">
                     <div className="p-3 rounded-2xl bg-blue-500/15 text-blue-600 dark:text-blue-300 border border-blue-400/30">
@@ -640,7 +620,6 @@ export default function SupportForm() {
                   </button>
                 </div>
 
-                {/* BỘ LỌC TRẠNG THÁI NHANH */}
                 {myTickets.length > 0 && (
                   <div className="flex flex-wrap items-center gap-2">
                     {[
@@ -699,13 +678,14 @@ export default function SupportForm() {
                 ) : (
                   <div className="space-y-3">
                     {(() => {
+                      // Ưu tiên hiển thị ticket đang chờ và đang xử lý lên trên
                       const getTicketPriority = (status: string) => {
                         switch (status) {
-                          case 'SUBMITTED': return 1;    // Chờ tiếp nhận (lên trên cùng)
-                          case 'IN_PROGRESS': return 2;  // Đang xử lý
-                                                    case 'RESOLVED': return 3;     // Đã hoàn tất (kết quả thành công)
-                          case 'CANCELLED': return 4;    // Đã hủy / Lỡ hẹn (dưới cùng)
-                          case 'CLOSED': return 5;       // Đã đóng (dưới cùng)
+                          case 'SUBMITTED': return 1;
+                          case 'IN_PROGRESS': return 2;
+                          case 'RESOLVED': return 3;
+                          case 'CANCELLED': return 4;
+                          case 'CLOSED': return 5;
                           default: return 6;
                         }
                       };
@@ -739,7 +719,6 @@ export default function SupportForm() {
                                 : 'border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs'
                               }`}
                           >
-                            {/* Hàng Header có thể click để đóng/mở */}
                             <div
                               role="button"
                               tabIndex={0}
@@ -752,7 +731,6 @@ export default function SupportForm() {
                               }}
                               className="w-full text-left p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none"
                             >
-                              {/* Cụm thông tin chính bên trái: Thuận mắt, không rối */}
                               <div className="flex items-center gap-3">
                                 <div className={`p-2 rounded-xl border ${meta.bg} ${meta.color} shrink-0`}>
                                   <IconComponent className="size-4.5" />
@@ -776,7 +754,6 @@ export default function SupportForm() {
                                 </div>
                               </div>
 
-                              {/* Cụm trạng thái + Chevron bên phải */}
                               <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
                                 {getStatusBadge(ticket.status)}
                                 <div
@@ -788,10 +765,8 @@ export default function SupportForm() {
                               </div>
                             </div>
 
-                            {/* Chi tiết yêu cầu & Phản hồi khi mở rộng */}
                             {isExpanded && (
                               <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-1 border-t border-slate-100 dark:border-slate-800/80 space-y-3">
-                                {/* Nội dung yêu cầu của bạn */}
                                 <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800/70">
                                   <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
                                     Nội dung yêu cầu của bạn:

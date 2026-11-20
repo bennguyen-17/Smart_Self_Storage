@@ -1,6 +1,3 @@
-// Tài khoản nội bộ (Staff, Facility Manager, BOM, Admin) do Quản trị viên quản lý.
-// Contract FE đề xuất cho BE (chưa có API, xem qa-log). Khi BE làm xong thì chỉ cần khớp lại kiểu ở đây.
-
 export type InternalRole = "ADMIN" | "BOM" | "MANAGER" | "STAFF"
 
 export type AccountStatus = "ACTIVE" | "LOCKED"
@@ -11,10 +8,9 @@ export interface InternalAccount {
   email: string
   phone: string | null
   role: InternalRole
-  /** Cơ sở được gán; null = toàn hệ thống (BOM, Admin) */
+  // null với BOM và Admin (toàn hệ thống)
   facilityId: number | null
   status: AccountStatus
-  /** Tài khoản mới tạo phải đổi mật khẩu tạm ở lần đăng nhập đầu */
   mustChangePassword: boolean
   lastLoginAt: string | null
 }
@@ -24,7 +20,7 @@ export interface AccountFormValues {
   email: string
   phone: string
   role: InternalRole
-  /** "" khi chưa chọn */
+  // "" khi chưa chọn
   facilityId: number | ""
 }
 

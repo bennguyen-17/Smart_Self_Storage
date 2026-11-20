@@ -44,12 +44,10 @@ export function FaqSection() {
       aria-labelledby="faq-title"
       className="relative overflow-hidden border-y border-border/40 bg-gradient-to-b from-slate-100/60 via-slate-100/90 to-slate-100/60 py-(--l-section-space) dark:from-slate-900/60 dark:via-slate-900/90 dark:to-slate-900/60"
     >
-      {/* Ambient Lighting Glows */}
       <div className="pointer-events-none absolute -top-24 left-1/4 -z-10 size-96 rounded-full bg-blue-500/10 blur-3xl dark:bg-blue-600/15" />
       <div className="pointer-events-none absolute -bottom-24 right-1/4 -z-10 size-96 rounded-full bg-indigo-500/10 blur-3xl dark:bg-indigo-600/15" />
 
       <div className="relative z-10 mx-auto grid w-full max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-[1fr_1.6fr] lg:gap-12 lg:px-8">
-        {/* Left Column: Heading */}
         <div>
           <SectionHeading
             id="faq-title"
@@ -65,7 +63,6 @@ export function FaqSection() {
           />
         </div>
 
-        {/* Right Column: Clean Accordion List */}
         <Reveal>
           <ul className="flex flex-col gap-3">
             {FAQ_SECTION.items.map((item) => {

@@ -52,9 +52,8 @@ public class VNPayService {
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-        // Sanitize orderInfo to avoid special character mismatch with VNPay
+        // Bỏ dấu tiếng Việt và ký tự đặc biệt trong orderInfo để khớp chữ ký phía VNPay
         String cleanOrderInfo = (orderInfo != null && !orderInfo.isBlank()) ? orderInfo : ("Thanh toan hoa don " + invoiceNumber);
-        // Normalize Vietnamese characters without accents for maximum gateway compatibility
         cleanOrderInfo = java.text.Normalizer.normalize(cleanOrderInfo, java.text.Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "")
                 .replaceAll("[^a-zA-Z0-9\\s_-]", " ");
@@ -84,7 +83,7 @@ public class VNPayService {
                         hashData.append('&');
                     }
                 } catch (UnsupportedEncodingException e) {
-                    // Fallback
+                    // UTF-8 luôn được hỗ trợ
                 }
             }
         }

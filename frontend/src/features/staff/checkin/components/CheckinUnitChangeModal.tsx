@@ -45,7 +45,6 @@ export default function CheckinUnitChangeModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-2 sm:p-4 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="relative flex max-h-[95vh] w-full max-w-[1380px] flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-        {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/90 px-6 py-4 dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center gap-3">
             <div className="flex size-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-950/70 dark:text-indigo-400">
@@ -73,7 +72,6 @@ export default function CheckinUnitChangeModal({
           </button>
         </div>
 
-        {/* Modal Body: Sơ đồ kho 2D */}
         <div className="flex-1 overflow-y-auto p-3.5 sm:p-5">
           <StorageMap2D
             compact
@@ -94,7 +92,6 @@ export default function CheckinUnitChangeModal({
           />
         </div>
 
-        {/* Modal Footer: Thanh đối soát & chốt chọn ô */}
         {confirmingUnit && (
           <div className="border-t border-slate-200 bg-white p-3.5 sm:px-6 dark:border-slate-800 dark:bg-slate-900 animate-in slide-in-from-bottom-2 duration-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

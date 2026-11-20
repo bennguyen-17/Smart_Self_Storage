@@ -1,9 +1,5 @@
 import apiClient, { isMockMode } from '@/lib/apiClient';
 
-/**
- * Lấy danh sách hợp đồng kho đang sở hữu của khách hàng từ Database
- * Lấy danh sách hợp đồng kho đang sở hữu của khách hàng
- */
 const getStoredAccountId = (): number => {
   try {
     const rawAuth = localStorage.getItem('auth_session') || sessionStorage.getItem('auth_session');
@@ -72,7 +68,7 @@ export const getMyContracts = async () => {
           };
         });
 
-      // Sắp xếp: Cái nào đặt sau (mới nhất) thì hiện lên đầu danh sách
+      // Sắp xếp hợp đồng mới nhất lên đầu
       mappedApiData.sort((a: any, b: any) => {
         const idA = Number(a.rawContractId || (typeof a.contractId === 'number' ? a.contractId : 0));
         const idB = Number(b.rawContractId || (typeof b.contractId === 'number' ? b.contractId : 0));
@@ -98,9 +94,6 @@ export const getMyContracts = async () => {
   }
 };
 
-/**
- * Hủy đặt cọc hợp đồng & hoàn tiền
- */
 export const cancelDepositContract = async (
   contract: any,
   bankInfo?: { bankName?: string; bankAccountNumber?: string; bankAccountName?: string }
@@ -116,10 +109,7 @@ export const cancelDepositContract = async (
   };
 };
 
-/**
- * Gửi yêu cầu trả kho trước hạn (Check-out request)
- * Sau khi gửi, hợp đồng sẽ hiển thị nút [Xác nhận trả kho] bên phía nhân viên (Staff).
- */
+// Tạo yêu cầu trả kho trước hạn để nhân viên cơ sở nghiệm thu
 export const requestCheckoutContract = async (
   contract: any,
   data?: { reason?: string; desiredDate?: string }
@@ -140,10 +130,6 @@ export const requestCheckoutContract = async (
   }
 };
 
-/**
- * Gia hạn hợp đồng thuê kho trực tuyến
- * Gửi yêu cầu gia hạn hợp đồng thuê kho
- */
 export const extendStorageContract = async (
   contractId: number | string,
   extendData: {

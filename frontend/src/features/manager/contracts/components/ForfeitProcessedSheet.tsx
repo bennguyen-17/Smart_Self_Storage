@@ -18,7 +18,7 @@ import { formatDate, formatVnd } from "@/lib/format"
 import { markForfeitProcessed } from "../api/contractApi"
 import type { FacilityContract } from "../types"
 
-/** BE bắt buộc ghi chú; Manager không gõ thì dùng câu mặc định */
+// BE bắt buộc trường note khi xác nhận thanh lý
 export const DEFAULT_FORFEIT_NOTE = "Đã cắt khóa niêm phong và thanh lý tài sản theo quy định quá hạn 30 ngày."
 
 function ForfeitProcessedSheet({
@@ -36,7 +36,7 @@ function ForfeitProcessedSheet({
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
-  // Cô chốt: thanh lý phải có minh chứng rõ ràng → bắt buộc ít nhất 1 ảnh (BE cũng kiểm tra)
+  // Bắt buộc ít nhất 1 ảnh minh chứng thanh lý
   const isFormValid = images.length > 0
 
   async function submit() {
@@ -61,7 +61,6 @@ function ForfeitProcessedSheet({
   return (
     <Dialog open onOpenChange={(open) => !open && !submitting && onClose()}>
       <DialogContent className="portal-dialog max-w-xl max-h-[92vh] overflow-y-auto rounded-3xl p-6 sm:max-w-xl shadow-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900 gap-5">
-        {/* Header */}
         <div className="flex items-start gap-3.5 border-b border-slate-100 pb-4 dark:border-slate-800">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
             <GavelIcon className="size-5" />
@@ -85,7 +84,6 @@ function ForfeitProcessedSheet({
           </div>
         </div>
 
-        {/* Thông tin cọc & Hạn */}
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
             <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Hết hạn hợp đồng từ</p>
@@ -101,7 +99,6 @@ function ForfeitProcessedSheet({
           </div>
         </div>
 
-        {/* Thông báo nghiệp vụ */}
         <div className="flex items-start gap-3 rounded-2xl border border-amber-200/70 bg-amber-50/80 p-3.5 text-xs text-amber-900 leading-relaxed dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
           <AlertTriangleIcon className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
           <div>
@@ -112,7 +109,6 @@ function ForfeitProcessedSheet({
           </div>
         </div>
 
-        {/* Ảnh minh chứng (bắt buộc) + ghi chú */}
         <ImagePicker
           label="Ảnh minh chứng thanh lý"
           category="FORFEIT_EVIDENCE"
@@ -122,14 +118,12 @@ function ForfeitProcessedSheet({
           disabled={submitting}
         />
 
-
         {serverError && (
           <p role="alert" className="[overflow-wrap:anywhere] rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
             {serverError}
           </p>
         )}
 
-        {/* Footer */}
         <div className="flex items-center justify-end gap-2.5 border-t border-slate-100 pt-3 dark:border-slate-800">
           <Button
             type="button"

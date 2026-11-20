@@ -125,10 +125,6 @@ const generateMockUnits = (facilityCode: string, currentFloor: number) => {
   return units;
 };
 
-/**
- * Lấy danh sách toàn bộ chi nhánh cơ sở
- * BACKEND ENDPOINT: GET /api/facilities
- */
 export const getBranches = async () => {
   if (isMockMode()) {
     return { success: true, data: MOCK_BRANCHES };
@@ -206,17 +202,13 @@ const FACILITY_CODE_TO_ID: Record<string, number> = {
   'CT01': 7, 'CT-01': 7,
 };
 
-// Xóa bộ đệm mock cũ khỏi localStorage để 100% dữ liệu hiển thị đúng chuẩn Database
+// Xóa cache hold cũ trong localStorage để ưu tiên trạng thái từ server
 if (typeof window !== 'undefined') {
   try {
     localStorage.removeItem('smart_storage_held_units');
   } catch (e) {}
 }
 
-/**
- * Lấy danh sách ô kho trên sơ đồ 2D theo cơ sở và tầng
- * BACKEND ENDPOINT: GET /api/units?facilityId=...&floorId=...
- */
 export const getStorageUnits = async (facilityCode: string, floor: number) => {
   if (isMockMode()) {
     return { success: true, data: generateMockUnits(facilityCode, floor) };
@@ -280,10 +272,6 @@ export const getStorageUnits = async (facilityCode: string, floor: number) => {
   }
 };
 
-/**
- * Tạo giao dịch đặt cọc giữ chỗ ô kho
- * Khởi tạo đặt cọc giữ chỗ trực tuyến
- */
 export const createDepositTransaction = async (bookingData: any) => {
   try {
     let accountId = 13;

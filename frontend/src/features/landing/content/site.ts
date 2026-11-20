@@ -1,4 +1,4 @@
-// Thông tin chung của landing: sửa ở đây khi có feedback về CTA, hotline, SEO.
+// Cấu hình chung của trang landing (thương hiệu, hotline, route, CTA)
 
 export const SITE = {
   brand: "Smart Self Storage",
@@ -9,7 +9,7 @@ export const SITE = {
 
 export interface Hotline {
   display: string
-  /** null = số giả, chưa gọi được: nút "Gọi tư vấn" chỉ hiện số. Có số thật thì điền dạng "0901234567". */
+  // null nếu chưa có số thật (nút gọi sẽ cuộn xuống FAQ thay vì gọi)
   tel: string | null
 }
 

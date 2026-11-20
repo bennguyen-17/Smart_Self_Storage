@@ -5,9 +5,8 @@ import { toast } from "sonner"
 import { useAuth } from "@/context/AuthContext"
 import { fetchStaffGatePin } from "@/features/staff/checkin/api/checkinApi"
 
-const TTL_TOTAL = 15 // Thời gian hiệu lực mã PIN mở cổng: 15 giây
+const TTL_TOTAL = 15 // giây
 
-/** Tab LẤY MÃ PIN — PIN cổng động 15s cho Nhân viên cơ sở 24/7 */
 function StaffPinPanel() {
   const { user } = useAuth()
   const [pin, setPin] = useState<string>("--- ---")
@@ -23,7 +22,7 @@ function StaffPinPanel() {
       const data = await fetchStaffGatePin()
       if (data && data.success) {
         const raw = data.pin || data.rawPin || ""
-        // Chuẩn hóa định dạng "XXX XXX" cho khớp với giao diện mẫu
+        // Format thành "XXX XXX" cho dễ đọc
         const clean = raw.replace(/\s+/g, "")
         const formatted = clean.length === 6 ? `${clean.slice(0, 3)} ${clean.slice(3)}` : (raw || "--- ---")
         setPin(formatted)
@@ -39,12 +38,10 @@ function StaffPinPanel() {
     }
   }, [])
 
-  // Initial load
   useEffect(() => {
     loadLivePin()
   }, [loadLivePin])
 
-  // Countdown timer & auto-refresh
   useEffect(() => {
     const timer = setInterval(() => {
       setSeconds((prev) => {
@@ -68,7 +65,6 @@ function StaffPinPanel() {
   return (
     <div className="mx-auto my-6 max-w-xl">
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-6 relative overflow-hidden">
-        {/* Header Status */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 text-xs font-mono font-bold">
             <Clock className="size-3.5 text-blue-600 dark:text-blue-400" />
@@ -76,7 +72,6 @@ function StaffPinPanel() {
           </div>
         </div>
 
-        {/* Dãy Số PIN 6 Chữ Số Lớn */}
         <div className="py-6 sm:py-8 text-center space-y-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
           <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold">
             MÃ BÀN PHÍM CỬA CHÍNH (6 CHỮ SỐ)
@@ -94,7 +89,6 @@ function StaffPinPanel() {
           </p>
         </div>
 
-        {/* Footer info bar */}
         <div className="border-t border-slate-200 dark:border-slate-800 pt-4 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
             CƠ SỞ: {facilityCode}

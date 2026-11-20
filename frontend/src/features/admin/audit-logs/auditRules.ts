@@ -1,10 +1,7 @@
-// Lọc và xuất nhật ký hoạt động hệ thống. Hàm thuần phục vụ kiểm thử.
-
 import { matchesQuery } from "@/components/internal/textSearch"
 
 import type { ActivityFilter, ActivityLogEntry } from "./types"
 
-/** Nhãn tiếng Việt cho các mã hành động BE đang ghi vào bảng ActivityLog */
 export const ACTION_LABEL: Record<string, string> = {
   LOGIN_SUCCESS: "Đăng nhập",
   LOGIN_FAILED: "Đăng nhập thất bại",
@@ -42,12 +39,12 @@ export const ACTION_LABEL: Record<string, string> = {
   FORFEIT_ASSET_PROCESSED: "Xác nhận đã xử lý tài sản (thanh lý)",
 }
 
-/** Gộp các mã có hậu tố số về một nhóm: "EXPIRY_REMINDER_T7" → "EXPIRY_REMINDER" */
+// Gộp các mã nhắc hạn có hậu tố số (vd: EXPIRY_REMINDER_T7) về một nhóm
 export function actionGroup(action: string): string {
   return action.startsWith("EXPIRY_REMINDER_T") ? "EXPIRY_REMINDER" : action
 }
 
-/** Nhãn hiển thị; mã lạ (BE thêm sau) thì giữ nguyên mã để Admin vẫn đọc được */
+// Mã chưa khai báo nhãn thì hiển thị nguyên mã gốc
 export function actionLabel(action: string): string {
   const label = ACTION_LABEL[actionGroup(action)]
   if (!label) return action
@@ -56,7 +53,7 @@ export function actionLabel(action: string): string {
     : label
 }
 
-/** Thao tác cần chú ý (an ninh, tiền) để tô màu nổi bật */
+// Nhóm thao tác liên quan bảo mật hoặc tài chính để highlight
 export function isSensitive(action: string): boolean {
   return [
     "LOGIN_FAILED",
@@ -67,13 +64,12 @@ export function isSensitive(action: string): boolean {
   ].includes(action)
 }
 
-/** Người thực hiện: thao tác tự động (không có tài khoản) ghi là "Hệ thống" */
 export function actorLabel(log: ActivityLogEntry): string {
   if (log.accountId === null) return "Hệ thống"
   return log.actorName ?? `Tài khoản #${log.accountId}`
 }
 
-/** Nhật ký chia 2 loại (nhóm chốt 22/10): hoạt động của khách hàng và hoạt động nội bộ (Staff, Manager, Admin, BOM, hệ thống tự động) */
+// Phân loại nhật ký khách hàng và nội bộ (gồm cả tác vụ tự động)
 export type LogAudience = "CUSTOMER" | "INTERNAL"
 
 export const AUDIENCE_LABEL: Record<LogAudience, string> = {
@@ -85,13 +81,10 @@ export function logAudience(log: Pick<ActivityLogEntry, "actorRole">): LogAudien
   return log.actorRole?.toUpperCase() === "CUSTOMER" ? "CUSTOMER" : "INTERNAL"
 }
 
-/** Khoảng ngày hợp lệ khi chưa chọn đủ 2 đầu, hoặc ngày bắt đầu không sau ngày kết thúc */
 export function isRangeValid(from: string, to: string): boolean {
   return !from || !to || from <= to
 }
 
-/** Lọc theo người (tên, vai trò), mô tả, IP; nhóm hành động; khoảng ngày (gồm 2 đầu). Mới nhất lên đầu */
-/** Giá trị bộ lọc "Lịch sử đăng nhập": gộp các mã đăng nhập / đăng xuất (đề: "Track login history") */
 export const LOGIN_HISTORY_FILTER = "LOGIN_HISTORY"
 export const LOGIN_HISTORY_ACTIONS = ["LOGIN_SUCCESS", "LOGIN_FAILED", "LOGOUT"]
 

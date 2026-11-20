@@ -1,10 +1,8 @@
-// Dữ liệu thật cho Landing: bảng giá, cơ sở, số ô còn trống. Cả 3 API đều công khai (khách chưa đăng nhập gọi được).
-// Đề: khách "view storage facilities, unit types, unit sizes, rental prices, and available units".
+// API công khai cho trang landing (không cần đăng nhập)
 
 import { unwrapApiData } from "@/lib/api"
 import apiClient from "@/lib/apiClient"
 
-/** Một dòng GET /api/prices (bảng giá BOM đặt theo loại kho) */
 export interface PublicPrice {
   unitTypeId: number
   size: string | null
@@ -16,10 +14,9 @@ export interface PublicPrice {
   status?: string | null
 }
 
-/** Một dòng GET /api/facilities */
 export interface PublicFacilityRow {
   facilityId: number
-  /** "HN-01", "HCM-02"… */
+  // vd: "HN-01", "HCM-02"
   facilityCode: string
   facilityName: string | null
   address: string | null
@@ -34,7 +31,6 @@ export async function getPublicFacilities(): Promise<PublicFacilityRow[]> {
   return unwrapApiData<PublicFacilityRow[]>(await apiClient.get("/facilities")) ?? []
 }
 
-/** Số ô còn trống của một cơ sở (GET /api/units?facilityId&status=AVAILABLE) */
 export async function countAvailableUnits(facilityId: number): Promise<number> {
   const units = unwrapApiData<unknown[]>(
     await apiClient.get("/units", { params: { facilityId, status: "AVAILABLE" } })
@@ -42,7 +38,7 @@ export async function countAvailableUnits(facilityId: number): Promise<number> {
   return Array.isArray(units) ? units.length : 0
 }
 
-/** Số ô trống theo mã cơ sở; cơ sở nào gọi lỗi thì bỏ qua (Landing vẫn hiện, chỉ không ghi số ô) */
+// Đếm ô trống theo mã cơ sở; bỏ qua cơ sở lỗi để không làm hỏng trang landing
 export async function availabilityByFacility(facilities: readonly PublicFacilityRow[]): Promise<Record<string, number>> {
   const results = await Promise.allSettled(facilities.map((f) => countAvailableUnits(f.facilityId)))
   const map: Record<string, number> = {}

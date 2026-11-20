@@ -22,10 +22,6 @@ const PERIOD_ICON: Record<ShiftPeriod, LucideIcon> = {
 const fieldClass =
   "inner-box text-title w-full rounded-lg border px-2.5 py-1.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500"
 
-/**
- * Một ca trong ngày: tên + giờ ca lấy từ bảng Shift, **một người trực** (nhóm chốt 03/11), đổi người bằng ô chọn rồi "Lưu".
- * Mỗi ca 1 người nên sự cố khách gửi trong ca luôn được phân cho đúng người đang trực.
- */
 function ShiftCard({
   ctx,
   schedule,
@@ -38,7 +34,7 @@ function ShiftCard({
   schedule: DaySchedule
   shift: DayShift
   staff: readonly FacilityStaff[]
-  /** Ngày đã qua: chỉ xem ai đã trực, không sửa (tránh làm sai lịch sử ca và số liệu Hoạt động nhân viên) */
+  // Ngày đã qua chỉ cho xem, tránh làm sai lịch sử ca
   readOnly?: boolean
   onSaved: (message: string) => void
 }) {

@@ -48,7 +48,7 @@ public class NoShowCronService {
         this.emailService = emailService;
     }
 
-    // Tự động kiểm tra khách không đến nhận kho đúng hẹn lúc 00:00 hằng ngày
+    // Chạy 00:00 giờ VN hằng ngày để hủy đơn no-show và đóng lịch trả kho quá hẹn
     @Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Ho_Chi_Minh")
     public void scheduledNoShowJob() {
         log.info("Starting Daily No-Show Cron Job at 00:00:00 (Asia/Ho_Chi_Minh)...");
@@ -59,7 +59,7 @@ public class NoShowCronService {
         log.info("Daily Early Termination No-Show Cron Job completed. Processed {} expired tickets.", cancelledTickets);
     }
 
-    // Tự động đóng các yêu cầu trả kho lỡ hẹn khi qua 00:00 ngày hôm sau
+    // Đóng các lịch hẹn trả kho sớm đã quá ngày hẹn nhưng khách không tới
     @Transactional
     public int processExpiredEarlyTerminationTickets() {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
@@ -80,7 +80,6 @@ public class NoShowCronService {
             ticket.setResolutionNote(String.format("Khách hàng không đến cơ sở nghiệm thu vào ngày hẹn %s. Lịch hẹn trả kho đã tự động đóng. Hợp đồng tiếp tục duy trì.", formattedDate));
             supportTicketRepository.save(ticket);
 
-            // Giữ hợp đồng ACTIVE và reset cancelReason nếu có
             if (ticket.getContractId() != null) {
                 contractRepository.findById(ticket.getContractId()).ifPresent(contract -> {
                     if ("ACTIVE".equalsIgnoreCase(contract.getStatus()) && "EARLY_TERMINATION".equalsIgnoreCase(contract.getCancelReason())) {
@@ -90,7 +89,6 @@ public class NoShowCronService {
                 });
             }
 
-            // Ghi nhận ActivityLog
             if (activityLogRepository != null) {
                 ActivityLog activityLog = new ActivityLog();
                 Integer customerAccountId = null;
@@ -118,7 +116,6 @@ public class NoShowCronService {
         return count;
     }
 
-    // --- Logic cốt lõi: Quét và hủy các đơn No-Show quá hạn ---
     @Transactional
     public int processNoShowContracts() {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
@@ -131,19 +128,16 @@ public class NoShowCronService {
                 continue;
             }
 
-            // Nếu đến 00:00 ngày hôm sau mà khách vẫn chưa đến Check-in (startDate < today)
+            // Quá ngày hẹn nhận kho mà chưa check-in -> hủy đơn, nhả ô và tịch thu toàn bộ cọc (không tạo phiếu REF)
             if (reservation.getStartDate() != null && reservation.getStartDate().isBefore(today)) {
-                // 1. Chuyển hợp đồng sang CANCELLED
                 contract.setStatus("CANCELLED");
                 contract.setCancelReason("NO_SHOW");
                 contract.setTerminatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
                 contractRepository.save(contract);
 
-                // 2. Chuyển Reservation sang CANCELLED
                 reservation.setStatus("CANCELLED");
                 reservationRepository.save(reservation);
 
-                // 3. Giải phóng ô kho về AVAILABLE
                 if (reservation.getUnitCode() != null) {
                     StorageUnit unit = storageUnitRepository.findById(reservation.getUnitCode()).orElse(null);
                     if (unit != null && !"RENTED".equalsIgnoreCase(unit.getStatus())) {
@@ -152,7 +146,6 @@ public class NoShowCronService {
                     }
                 }
 
-                // 4. Hủy hóa đơn cọc DEP (Tịch thu 100% tiền cọc, KHÔNG sinh REF)
                 List<Payment> payments = paymentRepository.findByContractId(contract.getContractId());
                 for (Payment payment : payments) {
                     if ("PENDING".equalsIgnoreCase(payment.getStatus()) || "PARTIALLY_PAID".equalsIgnoreCase(payment.getStatus()) || "CANCELLED".equalsIgnoreCase(payment.getStatus())) {
@@ -165,7 +158,6 @@ public class NoShowCronService {
                     }
                 }
 
-                // 5. Ghi nhận ActivityLog
                 if (activityLogRepository != null) {
                     ActivityLog activityLog = new ActivityLog();
                     activityLog.setAccountId(reservation.getAccountId());
@@ -183,7 +175,6 @@ public class NoShowCronService {
         return count;
     }
 
-    // Tự động cập nhật trạng thái hợp đồng quá hạn lúc 00:00 hằng ngày
     @Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Ho_Chi_Minh")
     public void scheduledOverdueContractJob() {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
@@ -191,7 +182,6 @@ public class NoShowCronService {
         log.info("Overdue contract job completed. Updated {} contracts for {}.", updatedCount, today);
     }
 
-    // Tự động gửi thông báo nhắc hạn thuê sắp hết lúc 00:00 hằng ngày
     @Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Ho_Chi_Minh")
     public void scheduledContractExpiryReminderJob() {
         log.info("Starting Daily Contract Expiry Reminder Cron Job at 00:00:00 (Asia/Ho_Chi_Minh)...");
@@ -210,7 +200,7 @@ public class NoShowCronService {
             if (reservation == null || reservation.getEndDate() == null) continue;
 
             long daysLeft = java.time.temporal.ChronoUnit.DAYS.between(today, reservation.getEndDate());
-            // Nhắc hạn trước đúng 3 ngày và trước 1 ngày (đồng bộ quét 00:00 giờ Việt Nam)
+            // Gửi nhắc hạn trước 3 ngày và 1 ngày
             if (daysLeft == 3 || daysLeft == 1) {
                 String contractCode = reservation.getReservationCode() != null
                         ? reservation.getReservationCode()
@@ -247,7 +237,7 @@ public class NoShowCronService {
         return count;
     }
 
-    // Tự động giải phóng các ô kho giữ chỗ quá 5 phút chưa hoàn tất thanh toán
+    // Quét mỗi phút để nhả các ô kho giữ chỗ quá 5 phút chưa thanh toán
     @Scheduled(fixedRate = 60000)
     @Transactional
     public int processExpiredHolds() {

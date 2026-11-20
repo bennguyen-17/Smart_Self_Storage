@@ -26,11 +26,7 @@ public class SecurityContextHelper {
         return null;
     }
 
-    /**
-     * Lấy FacilityId của tài khoản đang đăng nhập từ Database/EmployeeProfile.
-     * Tuyệt đối không phụ thuộc hay tin tưởng Header do client tự gửi lên.
-     * Nếu có fallbackHeaderFacilityId (cho môi trường test/dev), chỉ dùng khi accountId chưa gán.
-     */
+    // Ưu tiên lấy facilityId từ EmployeeProfile trong DB để tránh client giả mạo header; chỉ fallback header khi tài khoản chưa gán cơ sở
     public Integer requireCurrentFacilityId(Integer accountId, Integer fallbackHeaderFacilityId) {
         Integer accId = accountId != null ? accountId : getCurrentAccountId();
         if (accId != null) {

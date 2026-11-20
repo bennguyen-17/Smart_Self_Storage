@@ -25,7 +25,7 @@ vi.mock("@/lib/apiClient", () => ({
   isTokenValid: () => true,
 }))
 
-/** Bảng cố định 10 ô mỗi trang: test cần một ô cụ thể thì tìm theo mã, giống người dùng thật */
+// Bảng phân trang 10 ô nên test tìm trực tiếp theo mã ô
 async function renderPanel() {
   const user = userEvent.setup()
   render(<UnitManagementPanel />)
@@ -34,7 +34,7 @@ async function renderPanel() {
 }
 
 function row(unitCode: string) {
-  // Chỉ tìm trong bảng (tiêu đề ngăn Sửa cũng có mã ô); bảng bị ẩn với trình đọc màn hình khi ngăn đang mở
+  // Bảng bị ẩn với accessibility tree khi dialog đang mở nên cần hidden: true
   return within(screen.getByRole("table", { hidden: true })).getByText(unitCode).closest("tr") as HTMLElement
 }
 

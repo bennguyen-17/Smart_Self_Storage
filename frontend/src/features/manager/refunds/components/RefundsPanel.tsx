@@ -35,15 +35,11 @@ import type { ManagerRefund, RefundFilter, RefundState } from "../types"
 
 const EMPTY_FILTER: RefundFilter = { query: "", state: "PENDING" }
 
-/**
- * Quản lý cơ sở › Hoàn tiền: các phiếu hoàn tiền cọc (REF) của khách: hủy cọc, hủy tại quầy, hoàn cọc khi trả kho.
- * Manager chuyển khoản ngoài (Internet Banking), đính kèm biên lai rồi xác nhận → phiếu thành "Đã hoàn".
- */
 function RefundsPanel() {
   const [reloadCount, setReloadCount] = useState(0)
   const [filter, setFilter] = useState<RefundFilter>(EMPTY_FILTER)
   const [selected, setSelected] = useState<ManagerRefund | null>(null)
-  // Ảnh biên lai do hệ thống lưu cần token: xem trong hộp thoại thay vì mở tab mới (tab mới không có token → 403)
+  // Xem ảnh biên lai trong dialog vì ảnh lưu trên BE cần Authorization header (mở tab mới bị 403)
   const [viewingReceipt, setViewingReceipt] = useState<ManagerRefund | null>(null)
   const { data, error, isLoading } = useAsyncData(`refunds:${filter.state}#${reloadCount}`, () =>
     listRefunds(filter.state)
@@ -243,7 +239,7 @@ function RefundsPanel() {
   )
 }
 
-/** Ảnh biên lai do hệ thống lưu (cần token): ưu tiên receiptImageUrl, hoặc evidenceUrl nội bộ "/api/images/…". Link ngoài trả null */
+// Trả về URL ảnh nội bộ cần kèm token; link ngoài trả null để mở bằng thẻ <a>
 function receiptViewUrl(r: ManagerRefund): string | null {
   if (r.receiptImageUrl) return r.receiptImageUrl
   if (r.evidenceUrl && !isExternalUrl(r.evidenceUrl)) return r.evidenceUrl

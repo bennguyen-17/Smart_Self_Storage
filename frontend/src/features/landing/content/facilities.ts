@@ -1,5 +1,4 @@
-// Danh sách 7 cơ sở vận hành.
-// Chỉ giữ thông tin public: không đưa bố trí bên trong kho (xem docs) lên trang.
+// Dữ liệu cơ sở mặc định hiển thị trên landing (chỉ gồm thông tin công khai)
 
 export type CityId = "HN" | "HCM" | "DN" | "CT"
 

@@ -1,6 +1,3 @@
-// Các trang của Manager Portal, mỗi trang một link riêng /manager/<key> trên navbar.
-// Từ 14/10 cả cổng Manager thuộc Vỹ (chia việc theo trang). Trang chưa có `component` hiện ô "Đang phát triển".
-
 import type { ComponentType } from "react"
 import {
   ActivityIcon,
@@ -35,14 +32,10 @@ export type ManagerTabKey =
 
 export interface ManagerTab {
   key: ManagerTabKey
-  /** Tên ngắn trên navbar */
   label: string
-  /** Tiêu đề đầy đủ của trang (thẻ h1) */
   title: string
-  /** Mô tả ngắn dưới tên trang trên thanh điều hướng dọc */
   hint: string
   icon: LucideIcon
-  /** User story và người phụ trách chức năng của trang */
   stories: string
   owner: string
   description: string

@@ -4,7 +4,6 @@ import confetti from 'canvas-confetti';
 export default function ExtendSuccessModal({ successData, onGoHome }) {
   const { bookingCode } = successData || {};
 
-  // Bắn pháo hoa chúc mừng
   useEffect(() => {
     try {
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
@@ -28,7 +27,6 @@ export default function ExtendSuccessModal({ successData, onGoHome }) {
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Hợp đồng thuê ô kho của bạn đã được gia hạn thời gian thành công.</p>
         </div>
 
-        {/* Thẻ hiển thị nổi bật Mã Gia Hạn & Hạn mới */}
         {bookingCode && (
           <div className="p-4 rounded-2xl bg-slate-900 text-white shadow-xl space-y-2">
             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">MÃ GIA HẠN HỢP ĐỒNG</span>
@@ -41,7 +39,6 @@ export default function ExtendSuccessModal({ successData, onGoHome }) {
           </div>
         )}
 
-        {/* Nút Hoàn tất */}
         <button
           onClick={onGoHome}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs py-3.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 cursor-pointer"

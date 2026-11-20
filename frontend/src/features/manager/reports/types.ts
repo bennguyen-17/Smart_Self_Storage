@@ -1,6 +1,3 @@
-// Số liệu báo cáo tổng quan của một cơ sở.
-// Khớp ManagerDashboardResponse của BE: GET /api/manager/dashboard/overview (header X-Facility-Id).
-
 export interface ManagerDashboard {
   facilityId: number
   facilityName: string
@@ -11,7 +8,6 @@ export interface ManagerDashboard {
   occupiedUnits: number
   reservedUnits: number
   maintenanceUnits: number
-  /** % lấp đầy, ví dụ 84.5 */
   occupancyRate: number
 
   activeContracts: number
@@ -24,10 +20,10 @@ export interface ManagerDashboard {
   penaltyRevenue: number
   compensationRevenue: number
   totalRefunds: number
-  /** (Thuê + Gia hạn + Phạt + Truy thu) − Hoàn tiền; không gồm tiền cọc */
+  // (Thuê + gia hạn + phạt + đền bù) - hoàn tiền
   netRevenue: number
 
-  /** Cọc đang giữ: KHÔNG phải doanh thu */
+  // Tiền cọc đang giữ, không tính vào doanh thu
   depositHolding: number
   forfeitedDeposit: number
   waivedAmount: number

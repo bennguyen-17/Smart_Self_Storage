@@ -44,7 +44,7 @@ import {
 } from "../accountRules"
 import type { AccountFilter, AccountFormValues, InternalAccount, InternalRole } from "../types"
 
-/** Tên cơ sở thường đã chứa mã, ví dụ "SmartStorage Cầu Giấy (HN-01)": chỉ ghép mã khi tên chưa có */
+// Chỉ ghép thêm mã khi tên cơ sở chưa chứa sẵn mã đó
 function facilityDisplayName(f: Facility): string {
   return f.facilityName.includes(f.facilityCode) ? f.facilityName : `${f.facilityCode} · ${f.facilityName}`
 }
@@ -64,7 +64,6 @@ type DialogState =
   | { kind: "assign"; account: InternalAccount }
   | { kind: "status"; account: InternalAccount }
 
-/** Quản trị viên tạo tài khoản nội bộ, gán vai trò và cơ sở, khóa / mở khóa tài khoản */
 function AccountsPanel() {
   const currentId = useMemo(() => {
     const id = Number(getStoredUser()?.id)

@@ -5,7 +5,6 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 import { resetAccountsMock } from "../api/accountApi.mock"
 import AccountsPanel from "./AccountsPanel"
 
-// Chạy bằng dữ liệu mẫu để kiểm cả luồng tạo / phân quyền / khóa
 vi.mock("@/lib/apiClient", () => ({ default: {}, isMockMode: () => true }))
 
 const ADMIN = { id: 1, fullName: "Quản Trị Viên Hệ Thống", role: "ADMIN" }
@@ -50,7 +49,7 @@ describe("AccountsPanel: Admin quản lý tài khoản nội bộ", () => {
     const { user } = await renderPanel()
     await user.click(screen.getByRole("button", { name: /tạo tài khoản/i }))
     const dialog = await screen.findByRole("dialog")
-    // Chưa có email gửi mật khẩu: form nói rõ mật khẩu ban đầu để Admin báo người dùng
+    // Form hiển thị sẵn mật khẩu mặc định để Admin bàn giao cho nhân viên
     expect(within(dialog).getByText(/mật khẩu ban đầu 123456@Test/i)).toBeInTheDocument()
     expect(within(dialog).queryByText(/gửi mật khẩu tạm tới email/i)).not.toBeInTheDocument()
     await user.type(within(dialog).getByLabelText(/họ và tên/i), "Nguyễn Văn Mới")

@@ -1,6 +1,3 @@
-// Báo cáo số liệu tổng quan cơ sở cho Quản lý cơ sở.
-// VITE_USE_MOCK=true → mock; false → BE. Không tự fallback về mock khi lỗi.
-
 import { unwrapApiData } from "@/lib/api"
 import apiClient, { isMockMode } from "@/lib/apiClient"
 import { managerHeaders } from "@/features/manager/managerContext"
@@ -10,10 +7,7 @@ import type { ReportRange } from "../reportRules"
 import type { ManagerDashboard } from "../types"
 import { mockGetManagerDashboard } from "./reportApi.mock"
 
-/**
- * GET /api/manager/dashboard/overview?from=&to= (BE lọc theo cơ sở trong header X-Facility-Id).
- * from/to (YYYY-MM-DD) chỉ áp cho doanh thu, hoàn tiền, miễn giảm, ticket; số ô kho và hợp đồng là số hiện tại.
- */
+// from/to (YYYY-MM-DD) chỉ áp dụng cho doanh thu, hoàn tiền và ticket; số ô kho và hợp đồng là snapshot hiện tại
 export async function getManagerDashboard(ctx: ManagerContext, range?: ReportRange): Promise<ManagerDashboard> {
   if (isMockMode()) return mockGetManagerDashboard()
   const params: Record<string, string> = {}

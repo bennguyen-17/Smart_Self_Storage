@@ -29,7 +29,6 @@ export function LandingFooter({ onSelectCity }: LandingFooterProps) {
   return (
     <footer className="relative overflow-hidden border-t border-border/80 bg-gradient-to-b from-transparent via-muted/30 to-muted/70 pb-24 md:pb-0 dark:via-card/20 dark:to-card/50">
       <div className="relative z-10 mx-auto grid w-full max-w-6xl gap-8 px-4 py-12 sm:px-6 sm:grid-cols-2 lg:grid-cols-12 lg:gap-7 lg:px-8">
-        {/* Cột 1: Thương hiệu & Giới thiệu */}
         <div className="flex flex-col gap-3.5 lg:col-span-4">
           <div className="flex items-center gap-2.5">
             <span className="flex size-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/30">
@@ -50,7 +49,6 @@ export function LandingFooter({ onSelectCity }: LandingFooterProps) {
           </div>
         </div>
 
-        {/* Cột 2: Khám phá dịch vụ */}
         <div className="flex flex-col gap-3.5 lg:col-span-3">
           <p className="text-xs font-bold tracking-wider uppercase text-foreground">
             Khám phá dịch vụ
@@ -72,7 +70,6 @@ export function LandingFooter({ onSelectCity }: LandingFooterProps) {
           </nav>
         </div>
 
-        {/* Cột 3: Mạng lưới chi nhánh */}
         <div className="flex flex-col gap-3.5 lg:col-span-3">
           <p className="text-xs font-bold tracking-wider uppercase text-foreground">
             Mạng lưới cơ sở
@@ -93,7 +90,6 @@ export function LandingFooter({ onSelectCity }: LandingFooterProps) {
           </ul>
         </div>
 
-        {/* Cột 4: Truy cập nhanh */}
         <div className="flex flex-col gap-3.5 lg:col-span-2">
           <p className="text-xs font-bold tracking-wider uppercase text-foreground">
             Tài khoản & Đặt kho
@@ -137,7 +133,6 @@ export function LandingFooter({ onSelectCity }: LandingFooterProps) {
         </div>
       </div>
 
-      {/* Bottom Copyright Bar */}
       <div className="relative z-10 border-t border-border/70">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-4 py-5 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
           <p>{FOOTER.copyright}</p>

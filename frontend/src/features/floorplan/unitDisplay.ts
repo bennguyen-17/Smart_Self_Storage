@@ -4,7 +4,7 @@ import type { StatusGroup, UnitDetailResponse, UnitSize } from "./types"
 
 export const UNIT_SIZES: UnitSize[] = ["S", "M", "L", "XL"]
 
-/** Diện tích chuẩn, dùng làm nhãn bộ lọc và giá trị dự phòng */
+// Diện tích chuẩn theo size, dùng cho bộ lọc và fallback
 export const SIZE_AREA_M2: Record<UnitSize, number> = {
   S: 1,
   M: 3,
@@ -12,10 +12,7 @@ export const SIZE_AREA_M2: Record<UnitSize, number> = {
   XL: 10,
 }
 
-/**
- * Lấy mã size từ typeName ("Size M - Climate (Kho mát VIP)" → "M").
- * Không dựa vào việc chuỗi có chứa "l"/"s", vì "Size S (Locker…)" sẽ bị nhận nhầm.
- */
+// Tách size sau chữ "Size" để tránh nhận nhầm chữ L/S trong từ khác (vd "Locker")
 export function unitSizeOf(unit: UnitDetailResponse): UnitSize | null {
   const match = /size\s*(XL|S|M|L)\b/i.exec(unit.typeName ?? "")
   return match ? (match[1].toUpperCase() as UnitSize) : null
@@ -27,17 +24,14 @@ export function unitAreaOf(unit: UnitDetailResponse): number | null {
   return size ? SIZE_AREA_M2[size] : null
 }
 
-/**
- * Suy size từ mã ô kho khi chưa tải được dữ liệu ô ("F2-M205" → "M", "HN01-G-XL05" → "XL").
- * Chỉ là fallback hiển thị; dữ liệu từ API ô kho luôn được ưu tiên.
- */
+// Fallback suy size từ mã ô (vd "HN01-G-XL05" -> "XL") khi chưa có dữ liệu API
 export function unitSizeFromCode(unitCode: string): UnitSize | null {
   const match = /([A-Za-z]{1,2})\d+$/.exec(unitCode.trim())
   const size = match?.[1]?.toUpperCase() as UnitSize | undefined
   return size && UNIT_SIZES.includes(size) ? size : null
 }
 
-/** Dài × Rộng × Cao (m). Nếu thiếu thì tách từ chuỗi size "2m x 2m x 2.5m". */
+// Trả về [dài, rộng, cao] theo mét, fallback parse từ chuỗi size
 export function unitDimensionsOf(
   unit: UnitDetailResponse
 ): [number, number, number] | null {
@@ -50,10 +44,7 @@ export function unitDimensionsOf(
   return [l, w, h]
 }
 
-/**
- * Gom trạng thái backend về 4 màu. Enum main: AVAILABLE | HOLD | RENTED | MAINTENANCE | OVERDUE.
- * Chấp nhận thêm tên chuẩn (OCCUPIED, RESERVED, UNDER_MAINTENANCE) để không vỡ khi BE đổi enum.
- */
+// Gom trạng thái BE về nhóm hiển thị; giữ thêm alias cũ (OCCUPIED, UNDER_MAINTENANCE) để tương thích
 export function statusGroupOf(status: string): StatusGroup {
   switch (status) {
     case "AVAILABLE":

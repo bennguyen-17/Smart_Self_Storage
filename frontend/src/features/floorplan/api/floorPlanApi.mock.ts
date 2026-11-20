@@ -1,5 +1,4 @@
-// Dữ liệu mẫu sơ đồ kho 2D phục vụ môi trường thử nghiệm.
-// (7 cơ sở, 18 tầng, 6 loại kho, bảng giá). Dùng khi VITE_USE_MOCK=true.
+// Dữ liệu mock cho sơ đồ kho 2D khi bật VITE_USE_MOCK=true
 
 import type {
   Facility,
@@ -133,7 +132,7 @@ interface MockUnitType {
   climateSurchargePercent: number
 }
 
-// Giá lấy theo bảng Price trong seed DB. FE chỉ hiển thị, không tự tính.
+// Giá khớp seed DB
 const UNIT_TYPES: Record<number, MockUnitType> = {
   1: {
     unitTypeId: 1,
@@ -230,7 +229,7 @@ const STATUS_CYCLE = [
   "AVAILABLE",
 ] as const
 
-/** Số ô theo loại kho cho từng tầng: [unitTypeId, số lượng][] */
+// Trả về danh sách [unitTypeId, số lượng] cho từng tầng
 function floorComposition(
   floor: Floor,
   facility: Facility

@@ -1,7 +1,3 @@
-// API quản lý danh sách ô kho của Quản lý cơ sở.
-// VITE_USE_MOCK=true → mock; false → BE. Không tự fallback về mock khi lỗi.
-// BE xác định cơ sở và người thao tác qua header X-Facility-Id, X-Account-Id (gắn ở đây, component không cần biết).
-
 import { unwrapApiData } from "@/lib/api"
 import apiClient, { isMockMode } from "@/lib/apiClient"
 import { getFloors } from "@/features/floorplan/api/floorPlanApi"
@@ -19,14 +15,13 @@ import {
 
 export { MissingFacilityError }
 
-/** GET /api/facilities/{facilityId}/floors */
 export async function getManagerFloors(ctx: ManagerContext): Promise<Floor[]> {
   if (isMockMode()) return mockGetManagerFloors()
   if (ctx.facilityId === null) throw new MissingFacilityError()
   return getFloors(ctx.facilityId)
 }
 
-/** GET /api/manager/units?floorId&status&storageCondition (BE chưa lọc theo size, FE tự lọc) */
+// BE chưa hỗ trợ lọc theo size nên FE tự lọc phía client
 export async function getManagerUnits(
   ctx: ManagerContext,
   filter: ManagerUnitFilter
@@ -39,7 +34,6 @@ export async function getManagerUnits(
   return unwrapApiData<ManagerUnit[]>(body)
 }
 
-/** PATCH /api/manager/units/{unitCode}/type  body { unitTypeId } */
 export async function changeUnitType(
   ctx: ManagerContext,
   unitCode: string,
@@ -54,7 +48,6 @@ export async function changeUnitType(
   return unwrapApiData<ManagerUnit>(body)
 }
 
-/** POST /api/manager/units/{unitCode}/maintenance  body { note }: ghi chú sự cố, BE lưu vào nhật ký */
 export async function startMaintenance(
   ctx: ManagerContext,
   unitCode: string,
@@ -69,10 +62,6 @@ export async function startMaintenance(
   return unwrapApiData<ManagerUnit>(body)
 }
 
-/**
- * POST /api/manager/units/{unitCode}/complete-maintenance: sửa / vệ sinh xong, mở lại ô thành AVAILABLE.
- * Cơ sở lấy từ tài khoản Manager (hoặc header X-Facility-Id); ghi nhật ký COMPLETE_MAINTENANCE.
- */
 export async function endMaintenance(ctx: ManagerContext, unitCode: string): Promise<ManagerUnit> {
   if (isMockMode()) return mockEndMaintenance(unitCode)
   const body = await apiClient.post(`/manager/units/${encodeURIComponent(unitCode)}/complete-maintenance`, null, {

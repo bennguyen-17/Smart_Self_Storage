@@ -20,7 +20,6 @@ public class VNPayController {
         this.vnPayService = vnPayService;
     }
 
-    // --- 1. Tạo liên kết chuyển hướng sang cổng VNPay Sandbox ---
     @PostMapping("/create-payment-url")
     public ResponseEntity<?> createPaymentUrl(
             HttpServletRequest request,
@@ -48,7 +47,6 @@ public class VNPayController {
         }
     }
 
-    // --- 2. API cho Frontend gọi xác thực thông số thanh toán trả về ---
     @PostMapping("/verify")
     public ResponseEntity<ApiResponse> verifyPaymentResult(@RequestBody Map<String, String> queryParams) {
         ApiResponse response = vnPayService.processCallback(queryParams);

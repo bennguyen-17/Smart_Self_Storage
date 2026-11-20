@@ -33,7 +33,6 @@ export default function StaffProfileModal({
   const [, setLoading] = useState(false)
   const [profile, setProfile] = useState<StaffProfileData | null>(null)
 
-  // Tải dữ liệu thật từ máy chủ
   useEffect(() => {
     if (!open) return
 
@@ -57,7 +56,7 @@ export default function StaffProfileModal({
     }
   }, [open])
 
-  // Dữ liệu hiển thị (Lấy từ API hồ sơ, fallback từ phiên đăng nhập thực tế của tài khoản)
+  // Ưu tiên dữ liệu từ API hồ sơ, fallback sang thông tin phiên đăng nhập
   const staffName = profile?.fullName || user?.fullName || "Chưa cập nhật"
   const staffEmail = profile?.email || user?.email || "Chưa cập nhật"
   const staffPhone = profile?.phone || user?.phone || "Chưa cập nhật"
@@ -100,7 +99,6 @@ export default function StaffProfileModal({
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-w-md gap-4 rounded-3xl p-5 sm:max-w-md sm:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl">
-        {/* Header tiêu đề */}
         <div className="flex items-center gap-2.5 border-b border-slate-200 dark:border-slate-800 pb-3 pr-8">
           <div className="flex size-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow">
             <IdCardIcon className="size-4" aria-hidden="true" />
@@ -111,7 +109,6 @@ export default function StaffProfileModal({
         </div>
         <DialogDescription className="sr-only">Thông tin hồ sơ nhân sự</DialogDescription>
 
-        {/* Banner đại diện */}
         <div className="relative flex items-center space-x-4 rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900 to-blue-950 p-4 text-white shadow-inner sm:p-5">
           <div className="flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-blue-300 bg-gradient-to-tr from-blue-500 to-indigo-400 text-xl font-black text-white shadow-lg">
             {initials}
@@ -124,7 +121,6 @@ export default function StaffProfileModal({
           </div>
         </div>
 
-        {/* Khung danh sách thông tin kiểu các dòng thẻ ngang như Customer */}
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 space-y-2 text-slate-900 dark:border-slate-800 dark:bg-slate-800/50 dark:text-white pt-0.5">
           {fields.map((f) => (
             <div

@@ -9,7 +9,7 @@ const env = vi.hoisted(() => ({ mockMode: false }))
 const { confirmRefund } = vi.hoisted(() => ({ confirmRefund: vi.fn() }))
 vi.mock("@/lib/apiClient", () => ({ default: {}, isMockMode: () => env.mockMode }))
 vi.mock("../api/refundApi", () => ({ confirmRefund }))
-// Quầy gửi ảnh chung: giả lập BE trả mã ảnh
+// Mock uploadImage trả về imageId giả
 const images = vi.hoisted(() => ({ uploadImage: vi.fn() }))
 vi.mock("@/components/internal/images/imageApi", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/components/internal/images/imageApi")>()),

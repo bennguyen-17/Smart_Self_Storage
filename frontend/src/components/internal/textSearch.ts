@@ -1,4 +1,4 @@
-/** Bỏ dấu tiếng Việt, viết thường, cắt khoảng trắng: để gõ "cau giay" vẫn tìm ra "Cầu Giấy" */
+// Chuẩn hóa chuỗi bỏ dấu tiếng Việt để tìm kiếm không phân biệt dấu và hoa thường
 export function normalizeText(value: string): string {
   return value
     .normalize("NFD")
@@ -9,7 +9,6 @@ export function normalizeText(value: string): string {
     .trim()
 }
 
-/** Từ khóa rỗng thì khớp tất cả; ngược lại một trong các trường chứa từ khóa là khớp */
 export function matchesQuery(query: string, fields: readonly (string | number | null | undefined)[]): boolean {
   const q = normalizeText(query)
   if (!q) return true

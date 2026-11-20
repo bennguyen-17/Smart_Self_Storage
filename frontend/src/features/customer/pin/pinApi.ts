@@ -24,10 +24,6 @@ const getStoredAccountId = (): number => {
   return 0;
 };
 
-/**
- * Lấy mã PIN mở cổng điện tử 24/7 từ Backend theo Cơ sở
- * Lấy mã PIN mở cổng IoT trực tuyến
- */
 export const getGatePin = async (branchCode: string) => {
   try {
     const accountId = getStoredAccountId();

@@ -42,10 +42,6 @@ const EMPTY_FILTER: ActivityFilter = {
   to: "",
 }
 
-/**
- * Quản trị viên tra cứu nhật ký hoạt động toàn hệ thống (bảng ActivityLog). Chỉ xem và xuất CSV;
- * không có nút sửa hay xóa vì nhật ký chỉ được ghi thêm.
- */
 function AuditLogPanel() {
   const [reloadCount, setReloadCount] = useState(0)
   const [filter, setFilter] = useState<ActivityFilter>(EMPTY_FILTER)

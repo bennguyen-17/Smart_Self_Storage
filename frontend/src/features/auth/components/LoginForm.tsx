@@ -133,7 +133,6 @@ function LoginForm() {
 
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
         <FieldGroup className="space-y-3.5">
-          {/* Phone / Email */}
           <Controller
             name="phone"
             control={form.control}
@@ -158,7 +157,6 @@ function LoginForm() {
             )}
           />
 
-          {/* Password */}
           <Controller
             name="password"
             control={form.control}
@@ -215,7 +213,6 @@ function LoginForm() {
           {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
         </Button>
 
-        {/* Lỗi từ Backend */}
         {serverError && (
           <Alert variant="destructive" className="mt-3 py-2 text-xs">
             <AlertDescription>{serverError}</AlertDescription>

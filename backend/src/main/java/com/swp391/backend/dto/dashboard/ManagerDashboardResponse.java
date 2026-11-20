@@ -11,37 +11,32 @@ public class ManagerDashboardResponse {
     private String managerEmail;
     private String managerPhone;
 
-    // 1. Thống kê Ô kho & Tỷ lệ lấp đầy
     private long totalUnits;
     private long availableUnits;
     private long occupiedUnits;
     private long reservedUnits;
     private long maintenanceUnits;
-    private double occupancyRate; // % lấp đầy
+    private double occupancyRate;
 
-    // 2. Thống kê Hợp đồng
     private long activeContracts;
     private long pendingCheckinContracts;
     private long overdueContracts;
     private long terminatedContracts;
 
-    // 3. Thống kê Doanh thu
     private BigDecimal rentalRevenue = BigDecimal.ZERO;
     private BigDecimal extensionRevenue = BigDecimal.ZERO;
     private BigDecimal penaltyRevenue = BigDecimal.ZERO;
     private BigDecimal compensationRevenue = BigDecimal.ZERO;
     private BigDecimal totalRefunds = BigDecimal.ZERO;
     private BigDecimal netRevenue = BigDecimal.ZERO; // (Rental + Ext + Penalty + CMP) - TotalRefunds
-    private BigDecimal thisMonthRevenue = BigDecimal.ZERO; // Doanh thu tháng này
-    private BigDecimal last3MonthsRevenue = BigDecimal.ZERO; // Doanh thu 3 tháng gần nhất
-    private BigDecimal allTimeRevenue = BigDecimal.ZERO; // Doanh thu toàn thời gian
+    private BigDecimal thisMonthRevenue = BigDecimal.ZERO;
+    private BigDecimal last3MonthsRevenue = BigDecimal.ZERO;
+    private BigDecimal allTimeRevenue = BigDecimal.ZERO;
 
-    // Các dòng báo cáo riêng
-    private BigDecimal depositHolding = BigDecimal.ZERO; // Tiền cọc đang bảo lưu
-    private BigDecimal forfeitedDeposit = BigDecimal.ZERO; // Tiền cọc tịch thu (No-Show)
-    private BigDecimal waivedAmount = BigDecimal.ZERO; // Tiền phí được miễn/giảm
+    private BigDecimal depositHolding = BigDecimal.ZERO; // Tiền cọc đang giữ, không tính vào doanh thu
+    private BigDecimal forfeitedDeposit = BigDecimal.ZERO; // Tiền cọc tịch thu do No-Show
+    private BigDecimal waivedAmount = BigDecimal.ZERO;
 
-    // 4. Thống kê Support Ticket & SLA
     private long totalTickets;
     private long submittedTickets;
     private long inProgressTickets;

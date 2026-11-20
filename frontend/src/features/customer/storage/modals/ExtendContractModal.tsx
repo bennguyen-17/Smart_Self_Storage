@@ -62,7 +62,7 @@ export default function ExtendContractModal({
         const prices = Array.isArray(res) ? res : (res?.data || []);
         if (!isMounted || !Array.isArray(prices) || prices.length === 0) return;
 
-        // Xác định mã Size chuẩn (S, M, L, XL) từ size hoặc unitCode
+        // Chuẩn hóa mã size (S/M/L/XL) từ unitCode hoặc kích thước
         const upperCode = (unitCode || '').toUpperCase();
         const upperSize = (size || '').toUpperCase();
         let targetSizeCode = 'M';
@@ -137,7 +137,7 @@ export default function ExtendContractModal({
     ? Math.max(7, parseInt(customDaysInput, 10) || 7)
     : selectedDays;
 
-  // Áp dụng bảng giá hiện hành mới nhất khi gia hạn hợp đồng
+  // Gia hạn tính theo bảng giá hiện hành; dưới 30 ngày tính theo đơn giá ngày
   const monthlyRate = liveMonthlyPrice || currentMonthlyPrice || rentalFee || 1440000;
   const dailyRate = liveDailyPrice || currentDailyPrice || Math.round(monthlyRate / 30);
   const rawTotal =
@@ -147,7 +147,7 @@ export default function ExtendContractModal({
   const discountAmount = Math.round(rawTotal * (isCustomDays ? 0 : discountRate));
   const finalTotal = Math.round(rawTotal - discountAmount);
 
-  // Parse ngày hiện tại hỗ trợ cả YYYY-MM-DD và DD/MM/YYYY
+  // Hỗ trợ parse cả YYYY-MM-DD và DD/MM/YYYY
   const parseDate = (dStr: string): Date | null => {
     if (!dStr) return null;
     if (dStr.includes('-')) {
@@ -166,7 +166,6 @@ export default function ExtendContractModal({
     return isNaN(d.getTime()) ? null : d;
   };
 
-  // Định dạng ngày hiển thị DD/MM/YYYY
   const formatDateDisplay = (d: Date | null): string => {
     if (!d) return '';
     const day = String(d.getDate()).padStart(2, '0');
@@ -175,11 +174,9 @@ export default function ExtendContractModal({
     return `${day}/${month}/${year}`;
   };
 
-  // Ngày hết hạn hiện tại hiển thị đẹp
   const currentExpiryDate = parseDate(expiry);
   const formattedCurrentExpiry = currentExpiryDate ? formatDateDisplay(currentExpiryDate) : expiry;
 
-  // Tính ngày hết hạn mới sau gia hạn
   const calculateNewExpiryDate = (): string => {
     const baseDate = currentExpiryDate || new Date();
     const newDate = new Date(baseDate);
@@ -203,8 +200,6 @@ export default function ExtendContractModal({
   return (
     <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="w-full max-w-lg rounded-3xl border shadow-2xl overflow-hidden space-y-4 p-5 sm:p-6 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 modal-animate-pop">
-        
-        {/* Header đồng bộ với Portal */}
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3.5">
           <div className="flex items-center space-x-3">
             <div className="size-10 rounded-2xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs">
@@ -228,9 +223,7 @@ export default function ExtendContractModal({
           </button>
         </div>
 
-        {/* Thẻ thông tin ô kho hiện tại */}
         <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 space-y-3 text-xs">
-          {/* Hàng 1: Mã ô kho (to rõ) + Size bên dưới, Cơ sở bên phải */}
           <div className="flex items-start justify-between gap-3 pb-2.5 border-b border-slate-200 dark:border-slate-700">
             <div className="space-y-1.5 min-w-0">
               <div className="flex items-center gap-2">
@@ -258,7 +251,6 @@ export default function ExtendContractModal({
             </div>
           </div>
 
-          {/* Hàng 2: Hạn hiện tại & Badge số ngày còn lại */}
           <div className="flex items-center justify-between gap-2 pt-0.5">
             <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
               <Calendar className="size-3.5 text-slate-400 shrink-0" />
@@ -281,7 +273,6 @@ export default function ExtendContractModal({
           </div>
         </div>
 
-        {/* Chọn Gói Gia Hạn Thêm (Đồng bộ nút bấm với Bước 2 Đặt Cọc) */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="block text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
@@ -348,7 +339,6 @@ export default function ExtendContractModal({
           )}
         </div>
 
-        {/* Bảng tổng tính tiền (Đồng bộ 100% với khung giá lúc đặt cọc) */}
         <div className="p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/50 space-y-2 text-xs">
           <div className="flex justify-between text-slate-600 dark:text-slate-300">
             <span>Thời gian gia hạn thêm:</span>
@@ -391,7 +381,6 @@ export default function ExtendContractModal({
           </div>
         </div>
 
-        {/* Nút bấm chuyển sang thanh toán */}
         <button
           type="button"
           onClick={handleConfirm}

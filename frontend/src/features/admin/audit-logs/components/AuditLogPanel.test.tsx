@@ -27,7 +27,7 @@ beforeEach(async () => {
   vi.mocked(listActivityLogs).mockImplementation(actual.listActivityLogs)
 })
 
-/** 45 lần đăng nhập, mới nhất là #45 */
+// 45 bản ghi đăng nhập để kiểm tra phân trang, mới nhất là #45
 const MANY: ActivityLogEntry[] = Array.from({ length: 45 }, (_, i) => ({
   activityLogId: i + 1,
   accountId: 3,
@@ -42,7 +42,7 @@ const MANY: ActivityLogEntry[] = Array.from({ length: 45 }, (_, i) => ({
 const bodyRows = () =>
   within(screen.getByRole("table")).getAllByRole("row").slice(1)
 
-/** Phần lớn dữ liệu mẫu là thao tác nội bộ (Manager, Staff, hệ thống) → mở tab Nội bộ */
+// Chuyển sang tab Nội bộ nơi chứa phần lớn dữ liệu mock
 async function renderOnInternalTab() {
   const user = userEvent.setup()
   render(<AuditLogPanel />)

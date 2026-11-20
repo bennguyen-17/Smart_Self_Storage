@@ -83,7 +83,6 @@ export default function CancelDepositModal({
     };
   }, []);
 
-  // Tính số ngày còn lại đến ngày nhận kho
   const daysUntilStart = (() => {
     if (!contract?.startDate) return 0;
     const today = new Date();
@@ -94,6 +93,7 @@ export default function CancelDepositModal({
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   })();
 
+  // Hủy trước >= 4 ngày hoàn 100% cọc, dưới 4 ngày hoàn 50%
   const isRefundEligible = daysUntilStart >= 4;
   const depositVal = contract?.depositAmount ?? contract?.depositFee ?? 500000;
   const refundAmount = isRefundEligible ? depositVal : Math.round(depositVal * 0.5);
@@ -131,7 +131,6 @@ export default function CancelDepositModal({
     return createPortal(
       <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-3xl shadow-2xl p-6 text-center space-y-4 modal-animate-pop">
-          {/* Icon success */}
           <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-3xl mx-auto flex items-center justify-center shadow-lg">
             <i className="fa-solid fa-circle-check text-3xl"></i>
           </div>
@@ -145,7 +144,6 @@ export default function CancelDepositModal({
             </p>
           </div>
 
-          {/* KHUNG THÔNG BÁO: CHỜ MANAGER HOÀN CỌC TRONG 24-48H */}
           <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 text-left space-y-2.5">
             <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-extrabold text-xs uppercase tracking-wide">
               <i className="fa-solid fa-clock-rotate-left text-sm"></i>
@@ -195,7 +193,6 @@ export default function CancelDepositModal({
   return createPortal(
     <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md max-h-[92vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden modal-animate-pop my-auto">
-        {/* Header - Fixed */}
         <div className="p-5 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center space-x-3 text-rose-600 dark:text-rose-400 shrink-0">
           <div className="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center text-base font-bold shrink-0">
             <i className="fa-solid fa-triangle-exclamation"></i>
@@ -206,10 +203,7 @@ export default function CancelDepositModal({
           </div>
         </div>
 
-        {/* Scrollable Body */}
         <div className="p-5 space-y-3.5 overflow-y-auto flex-1 text-xs">
-
-        {/* THÔNG TIN HỢP ĐỒNG */}
         <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-xs space-y-2 text-slate-700 dark:text-slate-300">
           <div className="flex justify-between">
             <span className="text-slate-500 dark:text-slate-400">Hợp đồng:</span>
@@ -225,7 +219,6 @@ export default function CancelDepositModal({
           </div>
         </div>
 
-        {/* CHÍNH SÁCH HOÀN TIỀN (Bố cục cái cũ nhưng màu dịu, sạch) */}
         <div className={`p-3.5 rounded-xl border text-xs space-y-2.5 ${isRefundEligible
             ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60'
             : 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60'
@@ -255,7 +248,6 @@ export default function CancelDepositModal({
           </div>
         </div>
 
-        {/* FORM THÔNG TIN NGÂN HÀNG */}
         <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
           <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
             Thông tin tài khoản nhận tiền hoàn cọc
@@ -336,7 +328,6 @@ export default function CancelDepositModal({
 
         </div>
 
-        {/* Footer - Fixed */}
         <div className="p-4 px-5 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-end space-x-2.5 shrink-0">
           <button
             type="button"

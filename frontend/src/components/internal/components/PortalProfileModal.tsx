@@ -14,15 +14,10 @@ export interface PortalProfile {
   roleLabel: string
   email: string | null
   phone: string | null
-  /** null = toàn hệ thống (Admin, BOM) */
+  // null với Admin và BOM
   facilityId: number | null
 }
 
-/**
- * Popup hồ sơ nhân sự của cổng nội bộ (BOM, Manager, Admin),
- * đồng bộ thiết kế giống "Hồ sơ khách hàng":
- * icon thẻ ID, dải tên gradient, danh sách các dòng thẻ ngang bo góc, và nút Đăng xuất đỏ.
- */
 function PortalProfileModal({
   profile,
   onClose,
@@ -62,7 +57,6 @@ function PortalProfileModal({
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md gap-4 rounded-3xl p-5 sm:max-w-md sm:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl">
-        {/* Header tiêu đề */}
         <div className="flex items-center gap-2.5 border-b border-slate-200 dark:border-slate-800 pb-3 pr-8">
           <div className="flex size-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow">
             <IdCardIcon className="size-4" aria-hidden="true" />
@@ -73,7 +67,6 @@ function PortalProfileModal({
         </div>
         <DialogDescription className="sr-only">Thông tin tài khoản nội bộ đang đăng nhập</DialogDescription>
 
-        {/* Banner đại diện */}
         <div className="relative flex items-center space-x-4 rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900 to-blue-950 p-4 text-white shadow-inner sm:p-5">
           <div className="flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-blue-300 bg-gradient-to-tr from-blue-500 to-indigo-400 text-xl font-black text-white shadow-lg">
             {initials(profile.fullName)}
@@ -86,7 +79,6 @@ function PortalProfileModal({
           </div>
         </div>
 
-        {/* Khung danh sách thông tin kiểu các dòng thẻ ngang như Customer */}
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 space-y-2 text-slate-900 dark:border-slate-800 dark:bg-slate-800/50 dark:text-white pt-0.5">
           {fields.map((f) => (
             <div

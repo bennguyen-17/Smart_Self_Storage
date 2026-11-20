@@ -22,7 +22,6 @@ public class StaffTicketController {
         this.supportTicketService = supportTicketService;
     }
 
-    // Hàng đợi yêu cầu hỗ trợ của cơ sở kèm thời gian phản hồi cam kết 15 phút
     @GetMapping
     public ResponseEntity<?> getStaffTickets(
             @AuthenticationPrincipal Integer staffAccountId,
@@ -39,7 +38,6 @@ public class StaffTicketController {
         }
     }
 
-    // Nhân viên tiếp nhận xử lý yêu cầu hỗ trợ
     @PostMapping("/{id}/accept")
     public ResponseEntity<?> acceptTicket(
             @PathVariable Long id,
@@ -57,7 +55,7 @@ public class StaffTicketController {
         }
     }
 
-    // Lấy thông tin đối chiếu giấy tờ tùy thân (CCCD) trên hợp đồng
+    // Lấy thông tin CCCD trên hợp đồng để đối chiếu trước khi mở khóa
     @GetMapping("/{id}/unlock-detail")
     public ResponseEntity<?> getUnlockDetails(
             @PathVariable Long id,
@@ -73,7 +71,6 @@ public class StaffTicketController {
         }
     }
 
-    // Hoàn tất mở khóa sau khi đã đối chiếu danh tính khách hàng
     @PostMapping("/{id}/resolve-unlock")
     public ResponseEntity<?> resolveUnlock(
             @PathVariable Long id,
@@ -92,7 +89,6 @@ public class StaffTicketController {
         }
     }
 
-    // Hoàn tất xử lý yêu cầu hỗ trợ (bảo trì, vệ sinh, sự cố)
     @PostMapping("/{id}/resolve")
     public ResponseEntity<?> resolveTicket(
             @PathVariable Long id,

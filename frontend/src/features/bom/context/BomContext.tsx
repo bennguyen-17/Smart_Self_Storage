@@ -115,7 +115,6 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
         setChainOverview(null)
       }
 
-      // 0. Cập nhật biểu phí (Fee Policies) từ Database
       if (apiFeePolicies && Array.isArray(apiFeePolicies) && apiFeePolicies.length > 0) {
         setIsApiConnected(true)
         const mappedSurcharges: SurchargeItem[] = apiFeePolicies
@@ -174,7 +173,6 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
         setSurcharges([])
       }
 
-      // 1. Cập nhật bảng giá từ Database (nếu API có dữ liệu)
       if (apiPrices && Array.isArray(apiPrices) && apiPrices.length > 0) {
         setIsApiConnected(true)
         const mappedPrices: UnitPricing[] = apiPrices.map((p: any) => ({
@@ -202,7 +200,6 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
         setPricingList([])
       }
 
-      // 2. Cập nhật danh sách cơ sở từ Database
       if (apiFacilities && apiFacilities.length > 0) {
         setIsApiConnected(true)
         const breakdownMap = new Map<number, FacilityBreakdownItem>(
@@ -255,7 +252,7 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
           const cleanName = fixedName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
           const fixedAddress = fixMojibake(f.address || "Hệ thống cơ sở kho")
 
-          // Ưu tiên thông tin Quản lý từ DB (f.managerName từ API /api/facilities kết nối bảng EmployeeProfile & Account)
+          // Ưu tiên tên quản lý từ /api/facilities, fallback sang breakdown
           const dbMgrName = (f.managerName && f.managerName !== "Chưa phân công" && f.managerName.trim())
             ? fixMojibake(f.managerName).replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
             : ""
@@ -416,14 +413,13 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
     }
   }, [loadLiveData])
 
-  // Cập nhật giá & cọc lưu trực tiếp vào Database
   const updatePricingInDb = async (
     unitTypeId: number,
     data: { dailyPrice?: number; monthlyPrice?: number; depositAmount?: number; climateSurchargePercent?: number }
   ): Promise<boolean> => {
     try {
       await bomApi.updatePrice(unitTypeId, data)
-      // Cập nhật state local ngay để giao diện phản hồi tức thì
+      // Cập nhật state ngay để UI phản hồi không cần chờ reload
       setPricingList((prev) =>
         prev.map((item) => {
           if (item.unitTypeId === unitTypeId) {
@@ -450,7 +446,6 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Thêm loại kho mới vào Database
   const createPricingInDb = async (data: {
     name: string
     size?: string
@@ -470,7 +465,6 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Xóa mềm loại kho khỏi Database
   const deletePricingInDb = async (unitTypeId: number): Promise<boolean> => {
     try {
       await bomApi.deletePrice(unitTypeId)
@@ -482,7 +476,6 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Thêm biểu phí mới vào Database
   const createFeePolicyInDb = async (data: Partial<FeePolicyItem>): Promise<boolean> => {
     try {
       await bomApi.createFeePolicy(data)
@@ -494,7 +487,6 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Cập nhật biểu phí vào Database
   const updateFeePolicyInDb = async (policyId: number, data: Partial<FeePolicyItem>): Promise<boolean> => {
     try {
       await bomApi.updateFeePolicy(policyId, data)
@@ -506,7 +498,6 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Xóa mềm biểu phí khỏi Database (status = 'INACTIVE')
   const deleteFeePolicyInDb = async (policyId: number): Promise<boolean> => {
     try {
       await bomApi.deleteFeePolicy(policyId)
@@ -518,7 +509,6 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Thêm cơ sở kho lưu trực tiếp vào Database
   const createFacilityInDb = async (data: {
     facilityName: string
     address: string
@@ -548,7 +538,6 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Cập nhật cơ sở kho lưu trực tiếp vào Database
   const updateFacilityInDb = async (
     facilityId: number,
     data: {
@@ -594,7 +583,6 @@ export function BomProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Xóa mềm cơ sở kho trong Database (status = 'INACTIVE')
   const deleteFacilityInDb = async (facilityId: number): Promise<boolean> => {
     try {
       await bomApi.deleteFacility(facilityId)

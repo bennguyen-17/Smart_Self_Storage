@@ -1,7 +1,3 @@
-// Danh sách hợp đồng của cơ sở dành cho Quản lý cơ sở.
-// Miễn / giảm phí đã bỏ (nhóm chốt 28/10, BE xóa API ở PR #100).
-// VITE_USE_MOCK=true → mock; false → BE. Không tự fallback về mock khi lỗi.
-
 import { unwrapApiData } from "@/lib/api"
 import apiClient, { isMockMode } from "@/lib/apiClient"
 import { managerHeaders } from "@/features/manager/managerContext"
@@ -11,19 +7,13 @@ import { normalizeContractStatus } from "../contractRules"
 import type { FacilityContract } from "../types"
 import { mockListFacilityContracts } from "./contractApi.mock"
 
-/** GET /api/manager/contracts (đề xuất): hợp đồng của cơ sở trong header X-Facility-Id, kèm các khoản phí PEN/CMP */
 export async function listFacilityContracts(ctx: ManagerContext): Promise<FacilityContract[]> {
   if (isMockMode()) return mockListFacilityContracts()
   const body = await apiClient.get("/manager/contracts", { headers: managerHeaders(ctx) })
-  // DB có thể trả "CANCELLED" (2 chữ L): gộp về một cách viết trước khi tới giao diện
   return (unwrapApiData<FacilityContract[]>(body) ?? []).map((c) => ({ ...c, status: normalizeContractStatus(c.status) }))
 }
 
-/**
- * POST /api/manager/contracts/{contractId}/forfeit-processed  body { note, evidenceImageIds }.
- * Chỉ hợp đồng FORFEITED của cơ sở mình; BE bắt buộc ghi chú và 1–5 ảnh minh chứng (đã tải qua /api/uploads),
- * rồi chuyển ô kho sang bảo trì và ghi nhật ký.
- */
+// BE yêu cầu note và 1–5 ảnh minh chứng, sau đó chuyển ô sang bảo trì
 export async function markForfeitProcessed(
   ctx: ManagerContext,
   contractId: number,
@@ -38,10 +28,6 @@ export async function markForfeitProcessed(
   )
 }
 
-/**
- * POST /api/manager/contracts/{contractId}/terminate-violation  body { reason, evidenceImageIds }.
- * Đơn phương chấm dứt hợp đồng do vi phạm lưu trữ hàng cấm hoặc quy chế an ninh nghiêm trọng.
- */
 export async function terminateViolationContract(
   ctx: ManagerContext,
   contractId: number,

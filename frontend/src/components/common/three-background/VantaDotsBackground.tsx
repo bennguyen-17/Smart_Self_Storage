@@ -11,9 +11,6 @@ interface VantaDotsBackgroundProps {
   spacing?: number;
 }
 
-/**
- * Tạo texture hạt sắc nét, tương phản cao thích ứng theo chế độ Sáng / Tối
- */
 function createParticleTexture(isDark: boolean): THREE.Texture {
   const canvas = document.createElement("canvas");
   canvas.width = 64;
@@ -22,18 +19,16 @@ function createParticleTexture(isDark: boolean): THREE.Texture {
   if (ctx) {
     const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
     if (isDark) {
-      // Chế độ Tối: Tâm trắng phát sáng, lan tỏa xanh cyan-sky
       gradient.addColorStop(0, "rgba(255, 255, 255, 1)");
       gradient.addColorStop(0.22, "rgba(125, 211, 252, 0.95)");
       gradient.addColorStop(0.5, "rgba(56, 189, 248, 0.65)");
       gradient.addColorStop(0.8, "rgba(14, 165, 233, 0.15)");
       gradient.addColorStop(1, "rgba(2, 132, 199, 0)");
     } else {
-      // Chế độ Sáng: Hạt màu Xanh Sapphire / Royal Blue đậm đặc, viền sắc nét, cực kỳ nổi bật
-      gradient.addColorStop(0, "rgba(29, 78, 216, 1)");        // Blue-700 đậm đà
-      gradient.addColorStop(0.35, "rgba(37, 99, 235, 0.98)");   // Blue-600 rực rỡ
-      gradient.addColorStop(0.65, "rgba(2, 132, 199, 0.75)");   // Sky-600
-      gradient.addColorStop(0.85, "rgba(56, 189, 248, 0.35)");  // Sky-400
+      gradient.addColorStop(0, "rgba(29, 78, 216, 1)");
+      gradient.addColorStop(0.35, "rgba(37, 99, 235, 0.98)");
+      gradient.addColorStop(0.65, "rgba(2, 132, 199, 0.75)");
+      gradient.addColorStop(0.85, "rgba(56, 189, 248, 0.35)");
       gradient.addColorStop(1, "rgba(56, 189, 248, 0)");
     }
 
@@ -47,10 +42,6 @@ function createParticleTexture(isDark: boolean): THREE.Texture {
   return texture;
 }
 
-/**
- * Hiệu ứng màn sóng tâm tỏa tròn (Radial Wave Field)
- * Tự động đồng bộ màu sắc hạt và màu nền theo chế độ Sáng / Tối (Theme Mode)
- */
 export default function VantaDotsBackground({
   backgroundColor,
   color,
@@ -66,8 +57,6 @@ export default function VantaDotsBackground({
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-  // Chế độ Tối: Nền 0x090e17 (đen xanh sâu), Hạt 0x38bdf8 (Sky Blue)
-  // Chế độ Sáng: Nền 0xf0f4f8 (Xám trắng ngọc), Hạt 0x1d4ed8 (Xanh Royal Blue đậm nổi bật)
   const effectiveBg = backgroundColor ?? (isDark ? 0x090e17 : 0xf0f4f8);
   const effectiveColor = color ?? (isDark ? 0x38bdf8 : 0x1d4ed8);
 
@@ -75,7 +64,6 @@ export default function VantaDotsBackground({
     const container = containerRef.current;
     if (!container) return;
 
-    // 1. Scene & Camera
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
       48,
@@ -96,7 +84,6 @@ export default function VantaDotsBackground({
       rotY: 0,
     };
 
-    // 2. Renderer
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: true,
@@ -108,7 +95,6 @@ export default function VantaDotsBackground({
 
     container.replaceChildren(renderer.domElement);
 
-    // 3. Tạo mạng lưới hạt dạng vòm tỏa tròn từ tâm
     const particleTexture = createParticleTexture(isDark);
     const gridX = 48;
     const gridZ = 48;
@@ -142,12 +128,13 @@ export default function VantaDotsBackground({
     const waveGeometry = new THREE.BufferGeometry();
     waveGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
 
+    // Nền sáng dùng NormalBlending và hạt lớn hơn vì AdditiveBlending bị chìm trên nền trắng
     const waveMaterial = new THREE.PointsMaterial({
       color: new THREE.Color(effectiveColor),
-      size: isDark ? size : size * 1.35, // Tăng kích cỡ hạt ở chế độ sáng để nổi bật rõ ràng
+      size: isDark ? size : size * 1.35,
       map: particleTexture,
       transparent: true,
-      opacity: isDark ? 0.88 : 0.95,     // Tăng opacity tối đa trên nền sáng
+      opacity: isDark ? 0.88 : 0.95,
       blending: isDark ? THREE.AdditiveBlending : THREE.NormalBlending,
       depthWrite: false,
     });
@@ -155,7 +142,6 @@ export default function VantaDotsBackground({
     const waveField = new THREE.Points(waveGeometry, waveMaterial);
     scene.add(waveField);
 
-    // 4. Theo dõi chuột góc độ nhẹ nhàng
     const handleMouseMove = (e: MouseEvent) => {
       const normX = (e.clientX / window.innerWidth) * 2 - 1;
       const normY = (e.clientY / window.innerHeight) * 2 - 1;
@@ -168,7 +154,6 @@ export default function VantaDotsBackground({
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
 
-    // 5. Window Resize
     const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
@@ -177,7 +162,6 @@ export default function VantaDotsBackground({
 
     window.addEventListener("resize", handleResize);
 
-    // 6. Animation Loop & Entrance Ripple
     let animationFrameId: number;
     let time = 0;
     let entranceRadius = 0;
@@ -222,7 +206,6 @@ export default function VantaDotsBackground({
 
     animate();
 
-    // 7. Cleanup khi unmount
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("mousemove", handleMouseMove);

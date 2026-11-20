@@ -50,11 +50,7 @@ function clearStoredSession() {
   sessionStorage.removeItem("user")
 }
 
-/**
- * "Ghi nhớ đăng nhập" -> localStorage (giữ qua các lần mở trình duyệt).
- * Không tick -> sessionStorage (mất khi đóng tab).
- * Tự động hủy phiên và đăng xuất nếu JWT token đã hết hạn.
- */
+// Ưu tiên localStorage (ghi nhớ đăng nhập), fallback sessionStorage; tự xóa phiên nếu JWT hết hạn
 function readStoredSession(): AuthSession | undefined {
   const session =
     parseSession(localStorage.getItem(STORAGE_KEY)) ??

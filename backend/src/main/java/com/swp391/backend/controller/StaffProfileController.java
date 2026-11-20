@@ -74,7 +74,7 @@ public class StaffProfileController {
             if (accOpt.isPresent()) return accOpt.get();
         }
 
-        // Fallback: nhân viên vận hành đầu tiên nếu không có token (hỗ trợ test)
+        // Fallback lấy nhân viên đầu tiên nếu request không truyền token
         return accountRepository.findAll().stream()
                 .filter(a -> a.getRoleId() != null && (a.getRoleId() == 4L || a.getRoleId() == 3L))
                 .findFirst()
@@ -106,7 +106,6 @@ public class StaffProfileController {
         res.setEmail(account.getEmail());
         res.setDate(date.toString());
 
-        // Vai trò: Kéo trực tiếp từ bảng Role trong Database lên
         Long roleId = account.getRoleId();
         String roleStr = "STAFF";
         String roleTitle = "Nhân viên cơ sở";
@@ -121,7 +120,6 @@ public class StaffProfileController {
         res.setRole(roleStr);
         res.setRoleTitle(roleTitle);
 
-        // Hồ sơ nhân viên & cơ sở
         Optional<EmployeeProfile> empOpt = employeeProfileRepository.findByAccountId(account.getAccountId());
         Integer employeeId = empOpt.map(EmployeeProfile::getEmployeeId).orElse(null);
         Integer facilityId = empOpt.map(EmployeeProfile::getFacilityId).orElse(null);
@@ -147,7 +145,6 @@ public class StaffProfileController {
             res.setFacilityName("SmartStorage Cầu Giấy");
         }
 
-        // Lấy danh sách ca trực được Quản lý phân công
         DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
         LocalDateTime now = LocalDateTime.now();
 

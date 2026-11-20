@@ -1,7 +1,6 @@
 import React from "react"
 import { Navigate, Route, Routes } from "react-router-dom"
 
-// Public & Landing pages
 import LandingPage from "@/features/landing/LandingPage"
 import AuthPage from "@/features/auth/AuthPage"
 import InternalLoginPage from "@/features/auth/InternalLoginPage"
@@ -9,14 +8,12 @@ import ChangePasswordPage from "@/features/auth/ChangePasswordPage"
 import FloorPlanPage from "@/features/floorplan/FloorPlanPage"
 import PaymentResultPage from "@/features/payment/PaymentResultPage"
 
-// Customer Portal & Feature pages
 import PortalPage from "@/features/customer/portal/PortalPage"
 import RentPage from "@/features/customer/rent/RentPage"
 import StoragePage from "@/features/customer/storage/StoragePage"
 import PinPage from "@/features/customer/pin/PinPage"
 import SupportPage from "@/features/customer/support/SupportPage"
 
-// Staff pages
 import StaffPortalLayout from "@/features/staff/StaffPortalLayout"
 import CheckinPanel from "@/features/staff/checkin/components/CheckinPanel"
 import StaffCheckinProcessPage from "@/features/staff/checkin/components/StaffCheckinProcessPage"
@@ -24,11 +21,9 @@ import StaffTicketPanel from "@/features/staff/support/components/StaffTicketPan
 import StaffPinPanel from "@/features/staff/pin/components/StaffPinPanel"
 import StaffFloorPlanPage from "@/features/staff/floorplan/StaffFloorPlanPage"
 
-// Manager & Admin pages
 import ManagerPortalPage from "@/features/manager/ManagerPortalPage"
 import AdminPortalPage from "@/features/admin/AdminPortalPage"
 
-// BOM pages
 import BomLayout from "@/features/bom/BomLayout"
 import BomFacilitiesPage from "@/features/bom/pages/BomFacilitiesPage"
 import BomPricingPage from "@/features/bom/pages/BomPricingPage"
@@ -38,7 +33,6 @@ import RoleProtectedRoute from "@/components/auth/RoleProtectedRoute"
 import PasswordChangeGuard from "@/components/auth/PasswordChangeGuard"
 import { isTokenValid } from "@/lib/http"
 
-// Route Guard độc lập cho Cổng Khách Hàng
 export function CustomerProtectedRoute({ children }: { children: React.ReactNode }) {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null
@@ -57,24 +51,19 @@ export function CustomerProtectedRoute({ children }: { children: React.ReactNode
 export function AppRouter() {
   return (
     <Routes>
-      {/* Trang chủ: Landing Page */}
       <Route path="/" element={<LandingPage />} />
 
-      {/* Sơ đồ kho 2D trực quan */}
       <Route path="/storage-plan" element={<FloorPlanPage />} />
       <Route path="/floorplan" element={<FloorPlanPage />} />
 
-      {/* Đăng nhập / Đăng ký Khách Hàng */}
       <Route path="/customer_login" element={<AuthPage />} />
       <Route path="/login" element={<AuthPage />} />
 
-      {/* Đăng nhập Cán bộ Nội bộ */}
       <Route path="/internal-login" element={<InternalLoginPage />} />
       <Route path="/internal_login" element={<InternalLoginPage />} />
       <Route path="/staff-login" element={<InternalLoginPage />} />
       <Route path="/staff_login" element={<InternalLoginPage />} />
 
-      {/* Đổi mật khẩu nội bộ (bắt buộc ở lần đăng nhập đầu tiên) */}
       <Route
         path="/doi-mat-khau"
         element={
@@ -84,7 +73,6 @@ export function AppRouter() {
         }
       />
 
-      {/* Cổng Khách Hàng: Customer Portal */}
       <Route
         path="/portal"
         element={
@@ -126,7 +114,6 @@ export function AppRouter() {
         }
       />
 
-      {/* Cổng Nhân Viên: Staff Portal (Role STAFF) */}
       <Route
         path="/staff"
         element={
@@ -143,7 +130,6 @@ export function AppRouter() {
         <Route path="floorplan" element={<StaffFloorPlanPage />} />
       </Route>
 
-      {/* Cổng Quản Lý Cơ Sở: Manager Portal (Role MANAGER) */}
       <Route
         path="/manager/*"
         element={
@@ -153,7 +139,6 @@ export function AppRouter() {
         }
       />
 
-      {/* Cổng Ban Giám Đốc: BOM Portal (Role BOM) */}
       <Route
         path="/bom"
         element={
@@ -170,10 +155,8 @@ export function AppRouter() {
         <Route path="reports" element={<BomReportsPage />} />
       </Route>
 
-      {/* Alias /bom-portal tự động chuyển tiếp về /bom */}
       <Route path="/bom-portal" element={<Navigate to="/bom" replace />} />
 
-      {/* Cổng Quản Trị Hệ Thống: Admin Portal (Role ADMIN) */}
       <Route
         path="/admin/*"
         element={
@@ -183,12 +166,10 @@ export function AppRouter() {
         }
       />
 
-      {/* Kết quả thanh toán từ Cổng VNPay */}
       <Route path="/payment/result" element={<PaymentResultPage />} />
       <Route path="/payment_result" element={<PaymentResultPage />} />
       <Route path="/payment-result" element={<PaymentResultPage />} />
 
-      {/* Đường dẫn lạ tự động quay về trang đăng nhập */}
       <Route path="*" element={<Navigate to="/customer_login" replace />} />
     </Routes>
   )

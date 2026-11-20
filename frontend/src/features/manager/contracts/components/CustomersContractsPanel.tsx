@@ -35,11 +35,6 @@ import ViolationTerminationModal from "./ViolationTerminationModal"
 
 const EMPTY_FILTER: ContractFilter = { query: "", status: "ALL", payment: "ALL", expiringSoon: false }
 
-/**
- * Manager › Quản lí hợp đồng: theo dõi khách, hợp đồng, thời hạn thuê và thanh lý tài sản quá hạn.
- * Bấm mã hợp đồng để xem chi tiết vận hành (tiền cọc, tiến độ trả kho, phạt / truy thu, ảnh nghiệm thu, thanh lý);
- * từ đó mở được văn bản hợp đồng pháp lý dùng chung với cổng khách (xuất PDF).
- */
 function CustomersContractsPanel() {
   const ctx = useMemo(() => getManagerContext(), [])
   const today = todayInVietnam()
@@ -48,7 +43,6 @@ function CustomersContractsPanel() {
   const [forfeiting, setForfeiting] = useState<FacilityContract | null>(null)
   const [violating, setViolating] = useState<FacilityContract | null>(null)
   const [viewing, setViewing] = useState<FacilityContract | null>(null)
-  // Văn bản hợp đồng pháp lý (dùng chung với cổng khách, xuất PDF) mở từ ngăn chi tiết
   const [documentOf, setDocumentOf] = useState<FacilityContract | null>(null)
   const { data, error, isLoading } = useAsyncData(`contracts#${reloadCount}`, () => listFacilityContracts(ctx))
   const all = data ?? []
@@ -132,7 +126,6 @@ function CustomersContractsPanel() {
         }
       >
         {slice.rows.map((c) => {
-          // BE chỉ nhận xác nhận thanh lý khi hợp đồng đã FORFEITED; quá hạn đủ 30 ngày mà chưa chuyển thì chờ hệ thống
           const forfeit = forfeitState(c, today)
 
           return (

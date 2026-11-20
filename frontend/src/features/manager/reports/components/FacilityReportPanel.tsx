@@ -103,11 +103,6 @@ function Charts({ d }: { d: ManagerDashboard }) {
   )
 }
 
-/**
- * Số liệu tổng quan của đúng cơ sở mình phụ trách (thẻ KPI và biểu đồ);
- * góp ý của Tâm 03/11). Đổi khoảng ngày là tự tải lại; muốn số liệu dạng bảng thì Xuất CSV.
- * Doanh thu không gồm tiền cọc; tiền hoàn cho khách là hoàn cọc nên nằm ở thẻ Tiền cọc.
- */
 function FacilityReportPanel() {
   const ctx = useMemo(() => getManagerContext(), [])
   const [reloadCount, setReloadCount] = useState(0)

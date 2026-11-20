@@ -1,6 +1,4 @@
-// Dữ liệu mẫu phân ca cơ sở HN-01, dùng khi VITE_USE_MOCK=true.
-// Giờ ca chép đúng bảng Shift trong database/db-script.sql. Dữ liệu chỉ nằm trong bộ nhớ:
-// tải lại trang là về ban đầu (nhóm chốt 14/10: không lưu tạm, chờ BE làm API Q-31).
+// Dữ liệu mock phân ca lưu trong bộ nhớ, dùng khi VITE_USE_MOCK=true
 
 import type {
   DaySchedule,

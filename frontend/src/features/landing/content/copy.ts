@@ -1,5 +1,4 @@
-// Toàn bộ chữ hiển thị trên landing page. Sửa copy theo feedback ở file này.
-// Quy tắc: không nêu tên đối tác, chứng chỉ, hay số liệu chưa kiểm chứng.
+// Nội dung văn bản hiển thị trên trang landing
 
 import type { UnitSize } from "./units"
 

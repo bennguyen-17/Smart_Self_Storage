@@ -24,7 +24,6 @@ public class StorageUnitController {
         this.securityContextHelper = securityContextHelper;
     }
 
-    // Tra cứu và lọc ô kho theo nhiều tiêu chí
     @GetMapping("/units")
     public ResponseEntity<List<UnitDetailResponse>> filterUnits(
             @RequestParam(required = false) Integer facilityId,
@@ -35,7 +34,6 @@ public class StorageUnitController {
         return ResponseEntity.ok(storageService.filterUnits(facilityId, floorId, unitTypeId, storageCondition, status));
     }
 
-    // Tính toán tự động giá thuê và tiền cọc theo bảng giá
     @PostMapping("/pricing/calculate")
     public ResponseEntity<CalculatePriceResponse> calculatePrice(@RequestBody CalculatePriceRequest request) {
         CalculatePriceResponse response = storageService.calculateRentalPrice(request);
@@ -45,7 +43,6 @@ public class StorageUnitController {
         return ResponseEntity.badRequest().body(response);
     }
 
-    // Lấy danh sách ô kho thuộc quyền quản lý của cơ sở
     @GetMapping("/manager/units")
     public ResponseEntity<?> getManagerUnits(
             @AuthenticationPrincipal Integer managerAccountId,
@@ -65,7 +62,6 @@ public class StorageUnitController {
         }
     }
 
-    // Chuyển đổi loại kho giữa kho thường và kho điều hòa nhiệt độ
     @PatchMapping("/manager/units/{unitCode}/type")
     public ResponseEntity<?> updateUnitType(
             @PathVariable String unitCode,
@@ -90,7 +86,6 @@ public class StorageUnitController {
         }
     }
 
-    // Đưa ô kho vào trạng thái bảo trì hoặc vệ sinh
     @PostMapping("/manager/units/{unitCode}/maintenance")
     public ResponseEntity<?> putUnderMaintenance(
             @PathVariable String unitCode,
@@ -112,7 +107,6 @@ public class StorageUnitController {
         }
     }
 
-    // Nghiệm thu dọn dẹp và bảo trì hoàn tất, mở lại ô kho cho thuê
     @PostMapping("/manager/units/{unitCode}/complete-maintenance")
     public ResponseEntity<?> completeMaintenance(
             @PathVariable String unitCode,

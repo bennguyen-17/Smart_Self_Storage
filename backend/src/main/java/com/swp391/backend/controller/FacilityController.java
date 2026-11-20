@@ -26,7 +26,6 @@ public class FacilityController {
         this.imageStorageService = imageStorageService;
     }
 
-    // Lấy danh sách tất cả các cơ sở trong hệ thống
     @GetMapping
     public ResponseEntity<List<FacilityResponse>> getAllFacilities() {
         List<FacilityResponse> facilities = storageService.getAllActiveFacilities();
@@ -35,7 +34,6 @@ public class FacilityController {
         return ResponseEntity.ok(facilities);
     }
 
-    // Lấy thông tin chi tiết của một cơ sở
     @GetMapping("/{facilityId}")
     public ResponseEntity<FacilityResponse> getFacilityById(@PathVariable Integer facilityId) {
         return storageService.getFacilityById(facilityId)
@@ -46,13 +44,11 @@ public class FacilityController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Lấy danh sách các tầng trực thuộc cơ sở
     @GetMapping("/{facilityId}/floors")
     public ResponseEntity<List<Floor>> getFloorsByFacilityId(@PathVariable Integer facilityId) {
         return ResponseEntity.ok(storageService.getFloorsByFacilityId(facilityId));
     }
 
-    // --- BOM: Thêm cơ sở kho mới vào Database ---
     @PostMapping
     @Transactional
     public ResponseEntity<FacilityResponse> createFacility(
@@ -64,7 +60,6 @@ public class FacilityController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    // --- BOM: Cập nhật thông tin cơ sở kho vào Database ---
     @PutMapping("/{facilityId}")
     @Transactional
     public ResponseEntity<FacilityResponse> updateFacility(
@@ -77,7 +72,7 @@ public class FacilityController {
         return ResponseEntity.ok(updated);
     }
 
-    // --- BOM: Xóa mềm cơ sở kho trong Database (status = 'INACTIVE') ---
+    // Xóa mềm cơ sở bằng cách chuyển status sang INACTIVE
     @DeleteMapping("/{facilityId}")
     public ResponseEntity<Map<String, Object>> deleteFacility(@PathVariable Integer facilityId) {
         storageService.deleteFacility(facilityId);

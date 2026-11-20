@@ -18,7 +18,6 @@ public class DepositController {
         this.depositService = depositService;
     }
 
-    // Khởi tạo đặt cọc trực tuyến, thỏa thuận hợp đồng điện tử và tạo đơn thanh toán đặt cọc
     @PostMapping("/initiate")
     public ResponseEntity<DepositInitiateResponse> initiateDeposit(
             @RequestBody DepositInitiateRequest request,

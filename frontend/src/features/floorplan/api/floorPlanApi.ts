@@ -1,5 +1,4 @@
-﻿// API sơ đồ kho 2D kết nối trực tiếp backend.
-// VITE_USE_MOCK=true → mock; false → backend. Không tự fallback về mock khi lỗi.
+﻿// API sơ đồ kho 2D (chỉ dùng mock khi bật VITE_USE_MOCK=true, không fallback khi lỗi)
 
 import { unwrapApiData } from "@/lib/api"
 import apiClient, { isMockMode } from "@/lib/apiClient"
@@ -11,13 +10,12 @@ import {
   mockGetUnits,
 } from "./floorPlanApi.mock"
 
-/** GET /api/facilities */
 export async function getFacilities(): Promise<Facility[]> {
   if (isMockMode()) return mockGetFacilities()
   return unwrapApiData<Facility[]>(await apiClient.get("/facilities"))
 }
 
-/** GET /api/facilities/{facilityId}/floors (sắp theo floorId: Trệt → Tầng 1 → Tầng 2) */
+// Sắp theo floorId để giữ thứ tự Trệt -> Tầng 1 -> Tầng 2
 export async function getFloors(facilityId: number): Promise<Floor[]> {
   const floors = isMockMode()
     ? await mockGetFloors(facilityId)
@@ -27,10 +25,7 @@ export async function getFloors(facilityId: number): Promise<Floor[]> {
   return [...floors].sort((a, b) => a.floorId - b.floorId)
 }
 
-/**
- * GET /api/units?facilityId&floorId&storageCondition
- * Backend chưa lọc được theo mã size (chỉ có unitTypeId) nên size lọc ở FE.
- */
+// BE chưa hỗ trợ lọc theo mã size nên lọc size phía FE
 export async function getUnits(
   query: UnitQuery
 ): Promise<UnitDetailResponse[]> {

@@ -33,10 +33,6 @@ const getCccd = (obj: any) => {
   return obj.identityNumber || obj.cccd || obj.identityCard || obj.citizenId || obj.idCard || obj.cardId || null;
 };
 
-/**
- * Lấy thông tin hồ sơ khách hàng hiện tại từ Database
- * Lấy thông tin hồ sơ cá nhân của khách hàng
- */
 export const getCurrentCustomerProfile = async () => {
   const localUser = getStoredUser();
 
@@ -90,10 +86,6 @@ export const getCurrentCustomerProfile = async () => {
   }
 };
 
-/**
- * Cập nhật thông tin hồ sơ khách hàng xuống Database
- * Cập nhật thông tin cá nhân của khách hàng
- */
 export const sendEmailOtp = async (newEmail: string, accountId?: number) => {
   if (isMockMode()) {
     return { success: true, message: 'Mã OTP thử nghiệm là 123456' };
@@ -122,10 +114,7 @@ export interface CustomerNotification {
   link: string | null;
 }
 
-/**
- * Lịch sử đăng nhập & cảnh báo an toàn tài khoản (đọc từ ActivityLog)
- * Lấy danh sách thông báo hoạt động của khách hàng
- */
+// Thông báo hoạt động và cảnh báo đăng nhập từ ActivityLog
 export const getCustomerNotifications = async (): Promise<CustomerNotification[]> => {
   if (isMockMode()) return [];
 
@@ -138,10 +127,7 @@ export const getCustomerNotifications = async (): Promise<CustomerNotification[]
   }));
 };
 
-/**
- * Yêu cầu đóng tài khoản cá nhân với thời gian ân hạn 30 ngày
- * POST /api/customer/profile/request-deletion
- */
+// Đóng tài khoản với thời gian ân hạn 30 ngày
 export const requestAccountDeletion = async (): Promise<{ success: boolean; message: string; deletionScheduledAt?: string }> => {
   if (isMockMode()) {
     return { success: true, message: 'Đã ghi nhận yêu cầu xóa tài khoản (Mock).', deletionScheduledAt: new Date(Date.now() + 30 * 86400000).toISOString() };
@@ -150,10 +136,6 @@ export const requestAccountDeletion = async (): Promise<{ success: boolean; mess
   return res?.data ?? res;
 };
 
-/**
- * Hủy yêu cầu đóng tài khoản, khôi phục trạng thái hoạt động bình thường
- * POST /api/customer/profile/cancel-deletion
- */
 export const cancelAccountDeletion = async (): Promise<{ success: boolean; message: string }> => {
   if (isMockMode()) {
     return { success: true, message: 'Đã hủy yêu cầu xóa tài khoản (Mock).' };

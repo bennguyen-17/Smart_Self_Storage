@@ -131,14 +131,13 @@ public class ForfeitProcessingService {
         }
         contractRepository.save(contract);
 
-        // Vô hiệu hóa Gate PIN mở cửa của hợp đồng này ngay lập tức
         List<GatePin> pins = gatePinRepository.findByContractId(contractId);
         for (GatePin p : pins) {
             p.setStatus("EXPIRED");
             gatePinRepository.save(p);
         }
 
-        // Hủy / Xóa nợ các hóa đơn phạt trễ hạn chưa trả (do cọc đã bị tịch thu để trang trải chi phí)
+        // Hủy các khoản phạt chưa thanh toán vì cọc và tài sản đã chuyển thanh lý
         List<Payment> penaltyPayments = paymentRepository.findByContractId(contractId).stream()
                 .filter(p -> "OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType())
                         || "INSPECTION_DAMAGE".equalsIgnoreCase(p.getInvoiceType())
@@ -162,7 +161,6 @@ public class ForfeitProcessingService {
         log.setCreatedAt(processedAt);
         activityLogRepository.save(log);
 
-        // Gửi email thông báo hoàn tất thanh lý tài sản và khấu trừ cọc
         try {
             Account customer = accountRepository.findAccountByAccountId(reservation.getAccountId()).orElse(null);
             if (customer != null && customer.getEmail() != null && !customer.getEmail().isBlank()) {
@@ -220,24 +218,21 @@ public class ForfeitProcessingService {
 
         LocalDateTime processedAt = LocalDateTime.now(VIETNAM_ZONE);
 
-        // 1. Chuyển hợp đồng sang COMPLETED (lý do: PROHIBITED_GOODS_VIOLATION), tịch thu 100% tiền cọc (không hoàn tiền)
+        // Chấm dứt do vi phạm hàng cấm: chốt COMPLETED và tịch thu toàn bộ cọc (không tạo phiếu REF)
         contract.setStatus("COMPLETED");
         contract.setCancelReason("PROHIBITED_GOODS_VIOLATION: " + reason.trim());
         contract.setTerminatedAt(processedAt);
         contractRepository.save(contract);
 
-        // 2. Ô kho trả về AVAILABLE
         unit.setStatus("AVAILABLE");
         storageUnitRepository.save(unit);
 
-        // 3. Vô hiệu hóa Gate PIN mở cửa của hợp đồng này ngay lập tức
         List<GatePin> pins = gatePinRepository.findByContractId(contractId);
         for (GatePin p : pins) {
             p.setStatus("EXPIRED");
             gatePinRepository.save(p);
         }
 
-        // 4. Hủy các hóa đơn phạt nợ nếu có
         List<Payment> penaltyPayments = paymentRepository.findByContractId(contractId).stream()
                 .filter(p -> "OVERDUE_FEE".equalsIgnoreCase(p.getInvoiceType())
                         || (p.getInvoiceNumber() != null && (p.getInvoiceNumber().startsWith("PEN-") || p.getInvoiceNumber().startsWith("OVD-"))))
@@ -251,7 +246,6 @@ public class ForfeitProcessingService {
             }
         }
 
-        // 5. Ghi vết kiểm toán
         ActivityLog log = new ActivityLog();
         log.setAccountId(managerAccountId);
         log.setFacilityId(floor.getFacilityId());
@@ -260,7 +254,6 @@ public class ForfeitProcessingService {
         log.setCreatedAt(processedAt);
         activityLogRepository.save(log);
 
-        // 6. Gửi email thông báo đơn phương chấm dứt hợp đồng do vi phạm
         try {
             Account customer = accountRepository.findAccountByAccountId(reservation.getAccountId()).orElse(null);
             if (customer != null && customer.getEmail() != null && !customer.getEmail().isBlank()) {

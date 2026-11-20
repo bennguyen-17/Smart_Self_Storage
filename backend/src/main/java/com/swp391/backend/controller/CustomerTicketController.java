@@ -20,7 +20,6 @@ public class CustomerTicketController {
         this.supportTicketService = supportTicketService;
     }
 
-    // Gửi yêu cầu hỗ trợ kỹ thuật trực tuyến 24/7
     @PostMapping
     public ResponseEntity<?> submitSupportTicket(
             @RequestBody Map<String, Object> body,
@@ -69,7 +68,6 @@ public class CustomerTicketController {
         }
     }
 
-    // Xem lịch sử các yêu cầu hỗ trợ của khách hàng
     @GetMapping
     public ResponseEntity<?> getMyTickets(
             Authentication authentication

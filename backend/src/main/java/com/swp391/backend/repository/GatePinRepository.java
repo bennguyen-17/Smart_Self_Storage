@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface GatePinRepository extends JpaRepository<GatePin, Integer> {
     List<GatePin> findByContractId(Integer contractId);
     Optional<GatePin> findTopByContractIdAndStatusOrderByGeneratedAtDesc(Integer contractId, String status);
+    List<GatePin> findByPinCodeAndStatus(String pinCode, String status);
 }

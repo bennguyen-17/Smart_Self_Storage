@@ -1,10 +1,4 @@
-/*
- * Hộp thoại của cổng Manager / Admin.
- * Hộp thoại (Radix / Base UI) được gắn thẳng vào <body>, nằm NGOÀI khung `.staff-portal`, nên các lớp màu
- * `.staff-portal .inner-box / .text-title / .text-muted / .card-box` trong index.css không áp dụng: ô thông tin
- * mất nền và viền, lẫn vào nền hộp thoại. Gắn lớp `portal-dialog` lên DialogContent để dùng lại đúng bộ màu đó,
- * và cho hộp thoại nền / viền rõ ràng để tách khỏi trang phía sau (cả sáng lẫn tối).
- */
+/* Dialog render qua portal vào <body> nên nằm ngoài .staff-portal; định nghĩa lại bộ màu để dùng chung class card-box và inner-box */
 
 .portal-dialog {
   background-color: #ffffff !important;
@@ -29,7 +23,6 @@ html.dark .portal-dialog .card-box {
   color: #f8fafc !important;
 }
 
-/* Ô thông tin bên trong: đậm hơn nền hộp thoại một bậc để nhìn ra từng ô */
 .portal-dialog .inner-box {
   background-color: #f1f5f9 !important;
   border-color: #cbd5e1 !important;

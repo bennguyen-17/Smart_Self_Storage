@@ -39,7 +39,6 @@ public class AuditLogService {
     public void enrichAuditLog(AuditLog log) {
         if (log == null) return;
 
-        // 1. Tên cơ sở
         if (log.getFacilityId() != null && facilityRepository != null) {
             try {
                 facilityRepository.findById(log.getFacilityId()).ifPresent(f -> {
@@ -48,21 +47,18 @@ public class AuditLogService {
             } catch (Exception ignored) {}
         }
 
-        // 2. Tên cổng & Phương thức từ action & reason
         String act = log.getAction() != null ? log.getAction() : "";
         String rsn = log.getReason() != null ? log.getReason() : "";
 
         // Mỗi cơ sở chỉ có 1 cổng duy nhất là Cổng Chính
         log.setGateName("Cổng Chính");
 
-        // Phương thức mở
         if (act.toUpperCase().contains("MANUAL") || rsn.toLowerCase().contains("thẻ master") || rsn.toLowerCase().contains("thủ công") || rsn.toLowerCase().contains("chìa cơ")) {
             log.setAccessMethod("Thẻ Master thủ công");
         } else {
             log.setAccessMethod("Mã PIN động IoT");
         }
 
-        // 3. Thông tin người ra vào (Khách hàng hoặc Người quẹt thẻ)
         if (log.getCustomerId() != null) {
             try {
                 customerProfileRepository.findById(log.getCustomerId()).ifPresent(cp -> {
@@ -85,7 +81,6 @@ public class AuditLogService {
             } catch (Exception ignored) {}
         }
 
-        // Nếu người mở là Nhân viên (accountId):
         if (log.getAccountId() != null) {
             try {
                 accountRepository.findById(Long.valueOf(log.getAccountId())).ifPresent(acc -> {
@@ -127,7 +122,7 @@ public class AuditLogService {
         if (targetFacilityId != null && targetFacilityId > 0) {
             logs = auditLogRepository.findByFacilityIdOrderByOpenedAtDesc(targetFacilityId);
         } else {
-            // Bảo mật phân quyền: Nếu không xác định được cơ sở quản lý, không hiển thị dữ liệu của cơ sở khác
+            // Không xác định được cơ sở thì trả rỗng để tránh lộ log cơ sở khác
             logs = Collections.emptyList();
         }
 

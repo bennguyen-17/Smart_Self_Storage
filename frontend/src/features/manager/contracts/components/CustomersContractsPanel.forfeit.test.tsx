@@ -43,7 +43,7 @@ vi.mock("../api/contractApi", () => ({
   markForfeitProcessed: api.markForfeitProcessed,
 }))
 
-// Tải ảnh lên quầy chung: giả lập BE trả mã ảnh tăng dần
+// Mock upload ảnh trả về imageId tăng dần
 const images = vi.hoisted(() => ({ uploadImage: vi.fn() }))
 vi.mock("@/components/internal/images/imageApi", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/components/internal/images/imageApi")>()),

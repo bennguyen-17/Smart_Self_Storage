@@ -112,9 +112,6 @@ public class AdminAccountController {
         );
     }
 
-    /**
-     * 1. GET /api/admin/accounts: Danh sách mọi tài khoản nội bộ
-     */
     @GetMapping
     public ResponseEntity<List<InternalAccountResponse>> listAccounts() {
         List<Account> all = accountRepository.findAll();
@@ -130,9 +127,6 @@ public class AdminAccountController {
         return ResponseEntity.ok(responses);
     }
 
-    /**
-     * 2. POST /api/admin/accounts: Tạo tài khoản nội bộ mới
-     */
     @PostMapping
     public ResponseEntity<?> createAccount(@RequestBody Map<String, Object> body, @AuthenticationPrincipal Integer adminAccountId) {
         String email = body.get("email") != null ? body.get("email").toString().trim().toLowerCase() : "";
@@ -179,7 +173,6 @@ public class AdminAccountController {
             employeeProfileRepository.save(ep);
         }
 
-        // Ghi log kiểm toán
         try {
             ActivityLog log = new ActivityLog();
             log.setAccountId(adminAccountId != null ? adminAccountId : 1);
@@ -193,9 +186,6 @@ public class AdminAccountController {
         return ResponseEntity.ok(toResponse(saved));
     }
 
-    /**
-     * 3. PATCH /api/admin/accounts/{id}: Cập nhật vai trò hoặc cơ sở
-     */
     @PatchMapping("/{accountId}")
     public ResponseEntity<?> updateAccountAssignment(
             @PathVariable Integer accountId,
@@ -259,9 +249,6 @@ public class AdminAccountController {
         return ResponseEntity.ok(toResponse(saved));
     }
 
-    /**
-     * 4. PATCH /api/admin/accounts/{id}/status: Khóa / mở khóa tài khoản
-     */
     @PatchMapping("/{accountId}/status")
     public ResponseEntity<?> setAccountStatus(
             @PathVariable Integer accountId,

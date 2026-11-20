@@ -32,12 +32,10 @@ export function ContractStatusBadge({
   return <StatusBadge tone={STATUS_TONE[status] ?? "slate"}>{CONTRACT_STATUS_LABEL[status] ?? status}</StatusBadge>
 }
 
-/** Tiến độ giữ / trả kho theo trạng thái hợp đồng */
 export function CheckoutProgressBadge({ status }: { status: ContractStatus }) {
   return <StatusBadge tone={STATUS_TONE[status] ?? "slate"}>{CHECKOUT_PROGRESS_LABEL[status] ?? status}</StatusBadge>
 }
 
-/** "Còn 30 ngày" / "Hết hạn hôm nay" / "Quá 4 ngày" với màu theo mức độ gấp */
 export function DaysLeft({ contract, today }: { contract: FacilityContract; today: string }) {
   if (isClosedContract(contract.status)) return <span className="text-muted">—</span>
   const days = daysRemaining(contract.endDate, today)

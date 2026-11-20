@@ -57,7 +57,6 @@ public class LoginService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // Đăng nhập bằng Email hoặc Số điện thoại
         String identifier = (request.getEmail() != null && !request.getEmail().trim().isEmpty())
                 ? request.getEmail().trim()
                 : (request.getPhone() != null ? request.getPhone().trim() : null);
@@ -77,8 +76,7 @@ public class LoginService {
 
         Account account = result;
 
-        // Phân quyền Cổng Đăng nhập theo Role
-        // roleId: 1 = ADMIN, 2 = BOM, 3 = MANAGER, 4 = STAFF, 5 = CUSTOMER
+        // Chặn đăng nhập chéo cổng (roleId 1..4 là nội bộ, 5 là khách hàng)
         boolean isInternalRole = account.getRoleId() != null && account.getRoleId() >= 1L && account.getRoleId() <= 4L;
         if ("CUSTOMER".equalsIgnoreCase(request.getPortalType()) && isInternalRole) {
             return LoginResult.failure(
@@ -106,7 +104,6 @@ public class LoginService {
                     403);
         }
 
-        // account suspended check
         if ("SUSPENDED".equals(account.getStatus())) {
 
             if (account.getLockUntil() != null
@@ -117,7 +114,6 @@ public class LoginService {
                         423);
             }
 
-            // unlock
             account.setStatus("ACTIVE");
             account.setFailedAttempts(0);
             account.setFirstFailedAt(null);
@@ -126,7 +122,7 @@ public class LoginService {
             accountRepository.save(account);
         }
 
-        // check password (hỗ trợ BCrypt hash và fallback chuỗi thường cho dữ liệu cũ)
+        // Kiểm tra BCrypt, fallback so sánh plain text cho dữ liệu seed cũ
         boolean passwordCorrect = false;
         if (request.getPassword() != null && account.getPassword() != null) {
             try {
@@ -161,14 +157,11 @@ public class LoginService {
                     401);
         }
 
-        // login successfully
-
         account.setLockUntil(null);
         account.setStatus("ACTIVE");
 
         accountRepository.save(account);
 
-        // log
         saveActivityLog(
                 account,
                 "LOGIN_SUCCESS",
@@ -183,7 +176,6 @@ public class LoginService {
                 .map(com.swp391.backend.entity.EmployeeProfile::getFacilityId)
                 .orElse(null);
 
-        // create JWT with facilityId
         String token = jwtService.generateToken(account, facilityId);
 
         String facilityName = null;
@@ -350,29 +342,25 @@ public class LoginService {
             LocalDateTime now,
             String ipAddress) {
 
-        // Save failed login
         saveActivityLog(
                 account,
                 "LOGIN_FAILED",
                 "Incorrect password",
                 ipAddress);
 
-        // Find latest successful login
+        // Đếm số lần sai trong cửa sổ 10 phút tính từ lần đăng nhập thành công gần nhất; đủ 5 lần thì khóa 15 phút
         LocalDateTime lastSuccess = activityLogRepository.findLastLoginSuccess(
                 account.getAccountId(),
                 ipAddress);
 
-        // Start of 10-minute window
         LocalDateTime from = now.minusMinutes(ATTEMPT_WINDOW_MINUTES);
 
-        // Count failed login attempts
         long failedAttempts = activityLogRepository.countFailedLogs(
                 account.getAccountId(),
                 ipAddress,
                 from,
                 lastSuccess);
 
-        // Lock account after 5 failed attempts
         if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
 
             account.setStatus("SUSPENDED");
@@ -382,7 +370,6 @@ public class LoginService {
 
             accountRepository.save(account);
 
-            // Gửi email cảnh báo bảo mật khi tài khoản bị tạm khóa 15 phút
             try {
                 String customerName = account.getFullName();
                 emailService.sendSecurityAlertEmail(account.getEmail(), customerName, ipAddress, lockUntil);

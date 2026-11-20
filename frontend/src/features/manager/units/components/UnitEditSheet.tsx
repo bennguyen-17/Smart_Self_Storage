@@ -97,7 +97,6 @@ function UnitEditSheet({ unit, ctx, onClose, onSaved }: UnitEditSheetProps) {
         </DialogHeader>
 
         <div className="flex-1 space-y-6 overflow-y-auto p-5">
-          {/* Section 1: Cấu hình loại kho */}
           <fieldset className="space-y-3" disabled={submitting}>
             <div className="flex items-center justify-between">
               <legend className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -132,7 +131,6 @@ function UnitEditSheet({ unit, ctx, onClose, onSaved }: UnitEditSheetProps) {
             {typeBlock && <LockedReason>{typeBlock}</LockedReason>}
           </fieldset>
 
-          {/* Section 2: Tình trạng ô kho */}
           <fieldset className="space-y-3" disabled={submitting}>
             <div className="flex items-center justify-between">
               <legend className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">

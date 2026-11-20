@@ -53,10 +53,6 @@ public class ManagerRefundController {
         this.imageStorageService = imageStorageService;
     }
 
-    /**
-     * B1: GET /api/manager/refunds?status=PENDING|REFUNDED|ALL
-     * Tự động lấy facilityId từ token/hồ sơ của Manager
-     */
     @GetMapping
     public ResponseEntity<List<RefundListItemResponse>> getManagerRefunds(
             @AuthenticationPrincipal Integer authAccountId,
@@ -70,10 +66,6 @@ public class ManagerRefundController {
         return ResponseEntity.ok(list);
     }
 
-    /**
-     * B1: POST /api/manager/refunds/{paymentId}/confirm
-     * Body: { evidenceUrl, transactionRef? }
-     */
     @PostMapping("/{paymentId}/confirm")
     public ResponseEntity<?> confirmRefund(
             @PathVariable Integer paymentId,
@@ -110,7 +102,7 @@ public class ManagerRefundController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Phiếu đã được hoàn"));
         }
 
-        // Kiểm tra cơ sở
+        // Chỉ cho phép xác nhận phiếu hoàn thuộc cơ sở của Manager
         if (effectiveFacilityId != null && effectiveFacilityId > 0 && payment.getContractId() != null) {
             Optional<Contract> cOpt = contractRepository.findById(payment.getContractId());
             if (cOpt.isPresent() && cOpt.get().getReservationId() != null) {

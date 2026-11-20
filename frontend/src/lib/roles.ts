@@ -1,9 +1,6 @@
 export type UserRole = "ADMIN" | "BOM" | "MANAGER" | "STAFF" | "CUSTOMER"
 
-/**
- * Chuẩn hóa giá trị role từ backend (hỗ trợ cả chuỗi "STAFF", "MANAGER", "BOM", "ADMIN", "CUSTOMER"
- * và số ID "1", "2", "3", "4", "5", hoặc "ROLE_...").
- */
+// Chuẩn hóa role từ BE (hỗ trợ dạng tên, ROLE_* hoặc roleId số)
 export function normalizeRole(raw?: string | number | null): UserRole {
   if (!raw) return "CUSTOMER"
   const str = String(raw).toUpperCase().trim()
@@ -16,9 +13,6 @@ export function normalizeRole(raw?: string | number | null): UserRole {
   return "CUSTOMER"
 }
 
-/**
- * Xác định đường dẫn portal tương ứng theo vai trò.
- */
 export function getRoleDestination(role: UserRole): string {
   switch (role) {
     case "STAFF":
@@ -35,9 +29,6 @@ export function getRoleDestination(role: UserRole): string {
   }
 }
 
-/**
- * Tên hiển thị tiếng Việt của vai trò.
- */
 export function getRoleTitle(role: UserRole): string {
   switch (role) {
     case "ADMIN":
@@ -54,9 +45,6 @@ export function getRoleTitle(role: UserRole): string {
   }
 }
 
-/**
- * Tên Cổng (Portal Name) tương ứng.
- */
 export function getRolePortalName(role: UserRole): string {
   switch (role) {
     case "ADMIN":
@@ -73,9 +61,6 @@ export function getRolePortalName(role: UserRole): string {
   }
 }
 
-/**
- * Màu sắc badge theo vai trò.
- */
 export function getRoleBadgeClass(role: UserRole): string {
   switch (role) {
     case "ADMIN":

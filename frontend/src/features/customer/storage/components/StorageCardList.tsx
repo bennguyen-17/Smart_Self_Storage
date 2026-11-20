@@ -43,7 +43,6 @@ export default function StorageCardList({
 
         return (
           <div key={item.contractId} className="p-4 sm:p-5 space-y-3 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-            {/* Top Row: Mã hợp đồng, Mã ô kho, Trạng thái */}
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
                 <button
@@ -100,7 +99,6 @@ export default function StorageCardList({
               </span>
             </div>
 
-            {/* Middle Grid: Cơ sở, Kích cỡ, Ngày trả kho */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800">
               <div className="col-span-2 sm:col-span-1">
                 <span className="text-slate-400 dark:text-slate-400 block text-xs font-medium">Cơ sở</span>
@@ -122,7 +120,6 @@ export default function StorageCardList({
               </div>
             </div>
 
-            {/* Bottom Row: Nút hành động */}
             <div className="flex items-center justify-end pt-1 gap-1.5">
               {isPending && (
                 <button
@@ -152,7 +149,6 @@ export default function StorageCardList({
                 </span>
               )}
 
-              {/* HĐ OVERDUE / CHỜ THANH LÝ */}
               {isWaitingLiquidation ? (
                 <span
                   title="Hợp đồng đang chờ Quản lý/BOM duyệt thanh lý"

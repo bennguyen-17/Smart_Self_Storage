@@ -22,7 +22,6 @@ export default function ContractDetailModal({
   if (!contract) return null;
   if (typeof document === 'undefined') return null;
 
-  // 1. Mã hợp đồng / mã giữ chỗ & đường dẫn PDF vật lý
   const contractCode =
     contract.contractCode ||
     contract.reservationCode ||
@@ -34,7 +33,7 @@ export default function ContractDetailModal({
 
   const rawStatus = (contract.status || contract.contractStatus || '').toUpperCase();
 
-  // Chỉ các hợp đồng đã check-in thành công (ACTIVE, OVERDUE, COMPLETED, TERMINATED) mới có văn bản hợp đồng PDF chính thức
+  // Chỉ hợp đồng đã check-in mới có bản PDF chính thức
   const isCheckedIn =
     (rawStatus === 'ACTIVE' ||
       rawStatus === 'OVERDUE' ||
@@ -46,7 +45,6 @@ export default function ContractDetailModal({
     rawStatus !== 'INITIATED' &&
     rawStatus !== 'FORFEITED';
 
-  // Thông tin chi tiết đơn
   const customerName = contract.signedFullName || contract.customerName || contract.fullName || 'Khách hàng';
   const unitCode = contract.unitCode || contract.unitId || '—';
   const facilityName = contract.facilityName || contract.branchName || 'Smart Self Storage';
@@ -59,7 +57,6 @@ export default function ContractDetailModal({
   const rentalAmount = Number(contract.rentalFee ?? contract.rentalAmount ?? contract.depRemainingAmount ?? 0);
   const depositAmount = Number(contract.depositFee ?? contract.depositAmount ?? contract.paidAmount ?? contract.depPaidAmount ?? 0);
 
-  // 2. Tải trực tiếp file PDF vật lý từ Backend server (khi hợp đồng đã check-in)
   const handleDownloadPdf = async () => {
     if (isDownloading) return;
     setIsDownloading(true);
@@ -88,7 +85,6 @@ export default function ContractDetailModal({
     }
   };
 
-  // NẾU CHƯA CHECK-IN THÀNH CÔNG (CHỜ NHẬN KHO, ĐÃ HỦY CỌC, QUÁ HẠN NHẬN KHO, MẤT CỌC, KHỞI TẠO) -> HIỂN THỊ POPUP THÔNG TIN CHI TIẾT
   if (!isCheckedIn) {
     const isCancelled = rawStatus === 'CANCELLED';
     const isNoShow =
@@ -154,7 +150,6 @@ export default function ContractDetailModal({
         }}
       >
         <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transform transition-all animate-in zoom-in-95 duration-150">
-          {/* Header */}
           <div className="px-6 py-4.5 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-xl ${iconBoxStyle} flex items-center justify-center shrink-0`}>
@@ -179,9 +174,7 @@ export default function ContractDetailModal({
             </button>
           </div>
 
-          {/* Body */}
           <div className="p-6 space-y-5">
-            {/* Trạng thái đơn */}
             <div className={`flex items-center justify-between p-3 rounded-xl ${statusBoxStyle}`}>
               <div className="flex items-center gap-2">
                 <span className={`w-2.5 h-2.5 rounded-full ${statusDotStyle}`}></span>
@@ -194,7 +187,6 @@ export default function ContractDetailModal({
               </span>
             </div>
 
-            {/* Chi tiết đơn đặt giữ chỗ */}
             <div className="space-y-3">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
                 <i className="fa-solid fa-circle-info text-blue-500"></i> Chi tiết đơn đặt giữ chỗ:
@@ -245,14 +237,12 @@ export default function ContractDetailModal({
               </div>
             </div>
 
-            {/* Thông báo nghiệp vụ */}
             <div className={`p-3.5 rounded-xl ${noticeBoxStyle} flex items-start gap-2.5 text-xs leading-relaxed`}>
               <i className={`fa-solid ${noticeIconClass} mt-0.5 shrink-0`}></i>
               <span>{noticeText}</span>
             </div>
           </div>
 
-          {/* Footer actions */}
           <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-200 dark:border-slate-800 flex justify-end">
             <button
               type="button"
@@ -268,7 +258,6 @@ export default function ContractDetailModal({
     return createPortal(infoModalContent, document.body);
   }
 
-  // NẾU LÀ HỢP ĐỒNG ĐÃ CHECK-IN THÀNH CÔNG (ACTIVE, OVERDUE, COMPLETED, TERMINATED) -> HIỂN THỊ VĂN BẢN PDF CHÍNH THỨC
   let pdfBadgeText = 'Có hiệu lực';
   let pdfBadgeClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
   if (rawStatus === 'OVERDUE') {
@@ -290,7 +279,6 @@ export default function ContractDetailModal({
       }}
     >
       <div className="w-full max-w-5xl h-[92vh] flex flex-col bg-slate-900 text-white rounded-2xl shadow-2xl border border-slate-800 overflow-hidden">
-        {/* THANH ĐIỀU KHIỂN NỔI */}
         <div className="w-full bg-slate-900/95 px-4 py-3 sm:px-6 sm:py-3.5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 text-blue-400 flex items-center justify-center shrink-0">
@@ -355,7 +343,6 @@ export default function ContractDetailModal({
           </div>
         </div>
 
-        {/* KHUNG HIỂN THỊ FILE PDF CỨNG 100% TỪ BACKEND STORAGE */}
         <div className="flex-1 w-full bg-neutral-900 overflow-hidden relative">
           <iframe
             src={`${officialPdfUrl}#toolbar=1&navpanes=0`}

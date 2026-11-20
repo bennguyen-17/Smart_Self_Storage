@@ -39,7 +39,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Các API công khai không cần đăng nhập
+                        // API công khai
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/facilities", "/api/facilities/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/images/**").permitAll()
@@ -47,11 +47,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/prices", "/api/prices/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/fee-policies", "/api/fee-policies/**").permitAll()
                         .requestMatchers("/api/pricing/calculate").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/gate-pins/verify").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/contracts/*/pdf").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                         .requestMatchers("/error").permitAll()
 
-                        // 2. Quyền Ban Giám Đốc (BOM) & Quản Trị Hệ Thống (ADMIN)
+                        // BOM và Admin
                         .requestMatchers("/api/bom/**").hasAnyRole("BOM", "ADMIN")
                         .requestMatchers("/api/admin/accounts/**").hasAnyRole("BOM", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/facilities/**").hasAnyRole("BOM", "ADMIN")
@@ -64,16 +65,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/fee-policies/**").hasAnyRole("BOM", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/fee-policies/**").hasAnyRole("BOM", "ADMIN")
 
-                        // 3. Quyền Quản trị viên (ADMIN)
+                        // Admin
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // 4. Quyền Quản lý cơ sở (MANAGER)
+                        // Manager
                         .requestMatchers("/api/manager/**").hasAnyRole("MANAGER", "ADMIN")
 
-                        // 5. Quyền Nhân viên quầy (STAFF)
+                        // Staff
                         .requestMatchers("/api/staff/**").hasAnyRole("STAFF", "MANAGER", "ADMIN")
 
-                        // 6. Quyền Khách hàng & Người dùng đã đăng nhập (AUTHENTICATED)
+                        // Người dùng đã đăng nhập
                         .requestMatchers("/api/customer/**").authenticated()
                         .requestMatchers("/api/contracts/**").authenticated()
                         .requestMatchers("/api/deposits/**").authenticated()

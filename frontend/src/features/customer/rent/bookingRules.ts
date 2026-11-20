@@ -1,5 +1,4 @@
-// Quy tắc nghiệp vụ form đặt kho. Hàm thuần phục vụ kiểm thử.
-// để kiểm bằng bảng test DDT trong bookingRules.test.ts.
+// Quy tắc tính giá và kiểm tra điều kiện đặt thuê kho
 
 import { addDays, todayInVietnam } from "@/lib/format"
 
@@ -23,7 +22,6 @@ const PACKAGE_DISCOUNT: Record<number, number> = {
   360: 0.15,
 }
 
-/** Lấy giờ hiện tại theo múi giờ Việt Nam (0 - 23) */
 export function getVietnamHour(now: Date = new Date()): number {
   const hourStr = new Intl.DateTimeFormat("en-US", {
     timeZone: "Asia/Ho_Chi_Minh",
@@ -33,10 +31,7 @@ export function getVietnamHour(now: Date = new Date()): number {
   return Number.parseInt(hourStr, 10)
 }
 
-/**
- * Các ngày Check-in hợp lệ (YYYY-MM-DD), tính theo giờ Việt Nam.
- * Ngày nhận kho bắt đầu từ Ngày mai (+1) đến 7 ngày tới (+7).
- */
+// Danh sách ngày nhận kho hợp lệ (YYYY-MM-DD): từ ngày mai đến 7 ngày tới theo giờ VN
 export function getCheckInDates(now: Date = new Date()): string[] {
   const today = todayInVietnam(now)
 
@@ -47,18 +42,16 @@ export function getCheckInDates(now: Date = new Date()): string[] {
   return dates
 }
 
-/** Kiểm tra ngày được chọn có phải là ngày hôm nay theo giờ VN hay không */
 export function isSameDayCheckIn(dateStr: string, now: Date = new Date()): boolean {
   return dateStr === todayInVietnam(now)
 }
 
-/** Kiểm tra quầy hiện tại có đang trong khung giờ phục vụ (07:00 - 20:00) hay không */
 export function isCounterOpenNow(now: Date = new Date()): boolean {
   const hour = getVietnamHour(now)
   return hour >= COUNTER_OPEN_HOUR && hour < COUNTER_CLOSE_HOUR
 }
 
-/** Số ngày thuê tùy chọn hợp lệ: ép về khoảng 7–29; nhập rỗng, chữ hoặc số âm thì về 7 */
+// Ép số ngày thuê tùy chọn về khoảng 7-29; giá trị rỗng hoặc không hợp lệ trả về 7
 export function clampRentalDays(input: string): number {
   const days = Math.floor(Number(input))
   if (!Number.isFinite(days) || days < MIN_CUSTOM_DAYS) return MIN_CUSTOM_DAYS
@@ -72,13 +65,7 @@ export interface RentalTotal {
   total: number
 }
 
-/**
- * Tổng tiền thuê ước tính.
- * - 7–29 ngày: số ngày × giá ngày, không chiết khấu.
- * - Gói 30/60/90/180/360 ngày: giá tháng × số tháng, giảm 0/0/5/10/15%.
- * Giá ngày và giá tháng nhận từ dữ liệu ô kho (đã gồm phụ thu điều hòa 20%).
- * Đây là số ƯỚC TÍNH để hiển thị; số chính thức do BE tính khi tạo đơn.
- */
+// Ước tính tiền thuê (7-29 ngày tính theo đơn giá ngày; gói tháng giảm 0/0/5/10/15%). Số chính thức do BE tính khi tạo đơn.
 export function calcRentalTotal(params: {
   dailyPrice: number
   monthlyPrice: number

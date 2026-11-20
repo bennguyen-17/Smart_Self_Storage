@@ -54,7 +54,6 @@ describe("ManagerPortalPage: navbar + mỗi trang một link riêng", () => {
     expect(within(desktopNav()).queryByRole("link", { name: /^Giao việc/ })).not.toBeInTheDocument()
     expect(within(desktopNav()).queryByRole("link", { name: /^Trả kho/ })).not.toBeInTheDocument()
     expect(within(desktopNav()).getByRole("link", { name: /^Hoạt động nhân viên/ })).toHaveAttribute("href", "/manager/activity")
-    // Trang sự cố cơ sở: theo dõi & hỗ trợ xử lý ticket
     expect(within(desktopNav()).getByRole("link", { name: /^Sự cố cơ sở/ })).toHaveAttribute("href", "/manager/tickets")
     expect(within(desktopNav()).getByRole("link", { name: /^Quản lý ô kho/ })).toHaveAttribute("aria-current", "page")
     expect(await screen.findByText("HN01-F1-M01")).toBeInTheDocument()

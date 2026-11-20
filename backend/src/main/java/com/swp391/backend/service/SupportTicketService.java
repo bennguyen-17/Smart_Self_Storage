@@ -73,7 +73,6 @@ public class SupportTicketService {
         return candidate;
     }
 
-    // Tiếp nhận yêu cầu hỗ trợ kỹ thuật trực tuyến 24/7
     @Transactional
     public SupportTicket createTicketGeneric(String type, String unitCode, String title, String description, Integer customerId) {
         SupportTicket ticket = new SupportTicket();
@@ -111,7 +110,6 @@ public class SupportTicketService {
             throw new IllegalArgumentException("Vui lòng chọn ô kho có hợp đồng đang có hiệu lực (ACTIVE)!");
         }
 
-        // Kiểm tra xem ô kho này có hợp đồng ACTIVE của account này hay không
         List<Reservation> reservations = reservationRepository.findByAccountId(accountId);
         Contract activeContract = null;
         for (Reservation res : reservations) {
@@ -241,7 +239,6 @@ public class SupportTicketService {
         return ticket;
     }
 
-    // Xem lịch sử yêu cầu hỗ trợ của khách hàng
     public List<SupportTicket> getCustomerTickets(Integer accountOrCustomerId) {
         if (noShowCronService != null) {
             try {
@@ -250,14 +247,13 @@ public class SupportTicketService {
         }
         if (accountOrCustomerId == null) return Collections.emptyList();
 
+        // Tham số đầu vào có thể là accountId hoặc customerId nên gom cả hai để không sót ticket
         Set<Integer> targetCustomerIds = new LinkedHashSet<>();
         targetCustomerIds.add(accountOrCustomerId);
 
-        // Trường hợp accountOrCustomerId là accountId: tìm customerProfile.customerId
         customerProfileRepository.findByAccountId(accountOrCustomerId)
                 .ifPresent(cp -> targetCustomerIds.add(cp.getCustomerId()));
 
-        // Trường hợp accountOrCustomerId là customerId: tìm customerProfile tương ứng
         customerProfileRepository.findById(accountOrCustomerId)
                 .ifPresent(cp -> {
                     targetCustomerIds.add(cp.getCustomerId());
@@ -342,7 +338,6 @@ public class SupportTicketService {
         }
     }
 
-    // Hàng đợi yêu cầu hỗ trợ cần xử lý của cơ sở kèm thời gian cam kết phản hồi 15 phút
     @Transactional
     public List<SupportTicket> getStaffTickets(Integer staffAccountId, String status, String type) {
         if (noShowCronService != null) {
@@ -361,7 +356,6 @@ public class SupportTicketService {
                 .collect(Collectors.toList());
     }
 
-    // Nhân viên tiếp nhận xử lý yêu cầu hỗ trợ
     @Transactional
     public SupportTicket acceptTicket(Long ticketId, Integer staffId) {
         Integer facilityId = staffShiftService.requireOnDutyFacility(staffId);
@@ -396,7 +390,6 @@ public class SupportTicketService {
         return saved;
     }
 
-    // Lấy thông tin đối chiếu giấy tờ tùy thân (CCCD) để mở khóa hộ
     public UnlockDetailResponse getUnlockDetails(Long ticketId, Integer staffAccountId) {
         Integer facilityId = staffShiftService.requireOnDutyFacility(staffAccountId);
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
@@ -427,7 +420,6 @@ public class SupportTicketService {
         return res;
     }
 
-    // Xác nhận đã đối chiếu CCCD trùng khớp và hoàn tất mở khóa
     @Transactional
     public SupportTicket resolveUnlockTicket(Long ticketId, ResolveUnlockRequest req, Integer staffId) {
         Integer facilityId = staffShiftService.requireOnDutyFacility(staffId);
@@ -438,7 +430,6 @@ public class SupportTicketService {
             throw new AccessDeniedException("Bạn không có quyền xử lý ticket của cơ sở khác!");
         }
 
-        // Bắt buộc phải tích xác nhận CCCD trùng khớp 100%
         if (!Boolean.TRUE.equals(req.getIdentityVerified())) {
             throw new IllegalArgumentException("Bắt buộc phải tích xác nhận 'Đã kiểm tra và đối chiếu CCCD trùng khớp 100%' trước khi mở khóa hộ!");
         }
@@ -455,7 +446,6 @@ public class SupportTicketService {
 
         SupportTicket saved = supportTicketRepository.save(ticket);
 
-        // Ghi nhận ActivityLog
         if (activityLogRepository != null && staffId != null) {
             ActivityLog log = new ActivityLog();
             log.setAccountId(staffId);
@@ -470,7 +460,6 @@ public class SupportTicketService {
         return saved;
     }
 
-    // --- Staff hoàn tất và đóng ticket thông thường (Sự cố bảo trì, nghiệm thu xong, ...) ---
     @Transactional
     public SupportTicket resolveTicket(Long ticketId, String note, Integer staffId) {
         Integer facilityId = staffShiftService.requireOnDutyFacility(staffId);
@@ -507,7 +496,6 @@ public class SupportTicketService {
         return saved;
     }
 
-    // --- CÁCH 2: Quản lý chi nhánh xem danh sách ticket cơ sở  ---
     @Transactional
     public List<SupportTicket> getManagerTickets(Integer facilityId, String status, String type) {
         if (noShowCronService != null) {
