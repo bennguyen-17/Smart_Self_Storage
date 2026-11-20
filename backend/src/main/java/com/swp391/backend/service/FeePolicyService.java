@@ -1,15 +1,16 @@
 package com.swp391.backend.service;
 
-import com.swp391.backend.dto.FeePolicyDto;
-import com.swp391.backend.entity.FeePolicy;
-import com.swp391.backend.repository.FeePolicyRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.swp391.backend.dto.FeePolicyDto;
+import com.swp391.backend.entity.FeePolicy;
+import com.swp391.backend.repository.FeePolicyRepository;
 
 @Service
 public class FeePolicyService {
@@ -86,7 +87,7 @@ public class FeePolicyService {
     public void deleteFeePolicy(Integer policyId) {
         FeePolicy policy = feePolicyRepository.findById(policyId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy biểu phí có ID: " + policyId));
-        // Xóa mềm: chuyển trạng thái thành INACTIVE để bảo lưu lịch sử
+        // Xóa mềm
         policy.setStatus("INACTIVE");
         feePolicyRepository.save(policy);
     }

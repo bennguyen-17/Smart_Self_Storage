@@ -1,11 +1,19 @@
 package com.swp391.backend.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.swp391.backend.dto.FeePolicyDto;
 import com.swp391.backend.service.FeePolicyService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/fee-policies")
@@ -34,7 +42,6 @@ public class FeePolicyController {
         return ResponseEntity.ok(updated);
     }
 
-    // Xóa mềm biểu phí bằng cách chuyển status sang INACTIVE
     @DeleteMapping("/{policyId}")
     public ResponseEntity<Void> deleteFeePolicy(@PathVariable Integer policyId) {
         feePolicyService.deleteFeePolicy(policyId);
