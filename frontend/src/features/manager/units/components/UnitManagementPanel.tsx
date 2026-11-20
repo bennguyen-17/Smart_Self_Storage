@@ -33,7 +33,6 @@ function UnitManagementPanel() {
     getManagerUnits(ctx, {})
   )
 
-  // useCallback: useMemo tìm kiếm bên dưới dùng hàm này, giữ cùng một hàm khi danh sách tầng không đổi
   const floorName = useCallback(
     (id: number) => shortFloorName(floors.data?.find((f) => f.floorId === id)?.floorName ?? `Tầng ${id}`),
     [floors.data]
@@ -95,7 +94,6 @@ function UnitManagementPanel() {
         </Alert>
       ) : (
         <>
-          {/* Cụm Tìm kiếm ô kho - đặt phía trên */}
           <div className="card-box flex flex-col justify-between gap-3 rounded-2xl border p-4 shadow-sm md:flex-row md:items-center">
             <div className="flex max-w-xl flex-1 space-x-2">
               <div className="relative flex-1">
@@ -120,7 +118,6 @@ function UnitManagementPanel() {
             </div>
           </div>
 
-          {/* Dàn chip lọc theo trạng thái - nằm ngay phía dưới thanh tìm kiếm (chuẩn như Check-in) */}
           <div role="group" aria-label="Lọc theo trạng thái ô kho" className="flex flex-wrap items-center gap-2">
             <StatusChip active={status === "ALL"} onClick={() => setStatus("ALL")} label={`Tất cả (${searchedUnits.length})`} />
             {STATUS_ORDER.map((s) => (
@@ -208,28 +205,24 @@ function UnitRow({ unit, floorLabel, onEdit }: { unit: ManagerUnit; floorLabel: 
 
   return (
     <tr className="transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
-      {/* Cột 1: Mã ô */}
       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
         <span className="block font-mono text-sm font-bold tracking-tight text-slate-900 dark:text-white">
           {unit.unitCode}
         </span>
       </td>
 
-      {/* Cột 2: Vị trí tầng */}
       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
         <div className="text-sm font-normal text-slate-700 dark:text-slate-300">
           {floorLabel}
         </div>
       </td>
 
-      {/* Cột 3: Kích thước */}
       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
         <span className="text-sm font-normal text-slate-700 dark:text-slate-300">
           {sizeLabel}
         </span>
       </td>
 
-      {/* Cột 4: Loại kho */}
       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
         <div className="flex items-center justify-center">
           <span
@@ -244,7 +237,6 @@ function UnitRow({ unit, floorLabel, onEdit }: { unit: ManagerUnit; floorLabel: 
         </div>
       </td>
 
-      {/* Cột 5: Giá thuê (chỉ xem; giá do BOM đặt theo loại kho, đã gồm phụ phí kho điều hòa) */}
       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
         {price ? (
           <div className="text-sm">
@@ -262,7 +254,6 @@ function UnitRow({ unit, floorLabel, onEdit }: { unit: ManagerUnit; floorLabel: 
         )}
       </td>
 
-      {/* Cột 6: Trạng thái */}
       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
         <div className="flex items-center justify-center">
           <span
@@ -276,7 +267,6 @@ function UnitRow({ unit, floorLabel, onEdit }: { unit: ManagerUnit; floorLabel: 
         </div>
       </td>
 
-      {/* Cột 7: Thao tác */}
       <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
         <div className="flex items-center justify-center">
           <button

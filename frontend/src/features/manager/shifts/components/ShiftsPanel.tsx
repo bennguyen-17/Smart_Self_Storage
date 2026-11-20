@@ -21,18 +21,13 @@ import { getDaySchedule, listFacilityStaff, saveShift } from "../api/shiftApi"
 import { planWeekCopy, weekDays } from "../shiftRules"
 import ShiftCard from "./ShiftCard"
 
-/**
- * Ma trận phân ca trực nhân viên: chọn ngày trên dải tuần (thứ 2 → chủ nhật),
- * mỗi ca (tên, giờ lấy từ bảng Shift) là một thẻ, mỗi ca 1 người trực, đổi người và lưu ngay trong từng thẻ.
- * "Áp dụng cho cả tuần" chép lịch ngày đang xem sang các ngày còn lại trong tuần (T2 → CN), ghi đè lịch cũ.
- */
 function ShiftsPanel() {
   const ctx = useMemo(() => getManagerContext(), [])
   const today = todayInVietnam()
   const [date, setDate] = useState(today)
   const [reloadCount, setReloadCount] = useState(0)
 
-  // Có reloadCount trong key để nút "Thử lại" tải lại cả danh sách nhân viên khi lần đầu bị lỗi
+  // Đưa reloadCount vào key để nút Thử lại tải lại cả danh sách nhân viên khi lỗi
   const staff = useAsyncData(`facility-staff#${reloadCount}`, () => listFacilityStaff(ctx))
   const schedule = useAsyncData(`shifts:${date}#${reloadCount}`, () =>
     getDaySchedule(ctx, date)

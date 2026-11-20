@@ -16,7 +16,6 @@ interface CollectPenaltyDialogProps {
   onCollected: (response: CollectPenaltyResponse) => void
 }
 
-/** Thu tiền phạt quá hạn hợp đồng trực tiếp tại quầy. */
 function CollectPenaltyDialog({
   contract,
   onClose,

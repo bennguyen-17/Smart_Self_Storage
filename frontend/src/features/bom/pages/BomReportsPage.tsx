@@ -15,11 +15,9 @@ export default function BomReportsPage() {
   const initialFacId = searchParams.get("facilityId") || "ALL"
   const [selectedFacilityId, setSelectedFacilityId] = useState<string>(initialFacId)
 
-  // Lưu trữ danh sách ô kho của cơ sở đang chọn để hiển thị bảng cơ cấu
   const [facilityUnits, setFacilityUnits] = useState<any[]>([])
   const [isLoadingUnits, setIsLoadingUnits] = useState(false)
 
-  // Đồng bộ param trên url nếu người dùng chuyển trang vào
   useEffect(() => {
     const p = searchParams.get("facilityId")
     if (p) {
@@ -31,7 +29,6 @@ export default function BomReportsPage() {
 
   const isAll = selectedFacilityId === "ALL"
 
-  // Lấy dữ liệu cơ sở đang chọn (nếu có)
   const currentFac = useMemo(() => {
     if (isAll) return null
     const normalize = (s?: string | number) =>
@@ -55,7 +52,6 @@ export default function BomReportsPage() {
     )
   }, [isAll, selectedFacilityId, breakdownList, facilities])
 
-  // Tải danh sách ô kho khi chọn cơ sở cụ thể để phân tích cơ cấu
   useEffect(() => {
     if (isAll || !selectedFacilityId) {
       setFacilityUnits([])
@@ -105,7 +101,6 @@ export default function BomReportsPage() {
     }
   }, [isAll, selectedFacilityId, currentFac])
 
-  // Chuẩn bị dữ liệu hiển thị truyền cho FacilityCashFlowDashboard
   const dashboardProps = useMemo(() => {
     if (isAll || !currentFac) {
       return {
@@ -195,7 +190,6 @@ export default function BomReportsPage() {
 
   return (
     <div className="space-y-5">
-      {/* HEADER BÁO CÁO - Chuẩn Staff & Manager */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           {!isAll && (
@@ -218,10 +212,8 @@ export default function BomReportsPage() {
         </div>
       </div>
 
-      {/* KHỐI EXECUTIVE DASHBOARD DÒNG TIỀN VÀ QUY MÔ VẬN HÀNH */}
       <FacilityCashFlowDashboard {...dashboardProps} />
 
-      {/* NẾU ĐANG CHỌN CƠ SỞ CỤ THỂ: HIỂN THỊ THÊM BẢNG CƠ CẤU Ô KHO THEO SIZE */}
       {!isAll && (
         <div className="rounded-2xl border border-slate-200/90 bg-white/90 dark:border-slate-800/90 dark:bg-slate-900/60 p-5 sm:p-6 shadow-sm dark:shadow-xl space-y-4 transition-colors">
           <div className="flex items-center justify-between">

@@ -344,7 +344,6 @@ function RegisterForm() {
 
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
         <div className="space-y-2">
-          {/* Hàng 1: Họ và tên + Số CCCD */}
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             <TextField
               control={form.control}
@@ -363,7 +362,6 @@ function RegisterForm() {
             />
           </div>
 
-          {/* Hàng 2: Số điện thoại + Email */}
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             <TextField
               control={form.control}
@@ -385,7 +383,6 @@ function RegisterForm() {
             />
           </div>
 
-          {/* Hàng 3: Mật khẩu + Xác nhận mật khẩu */}
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             <PasswordField
               control={form.control}
@@ -408,7 +405,6 @@ function RegisterForm() {
             />
           </div>
 
-          {/* Checklist quy tắc mật khẩu */}
           {showPasswordRules && (
             <ul className="space-y-0.5">
               {passwordRuleResults.map((rule) => (
@@ -431,7 +427,6 @@ function RegisterForm() {
             </ul>
           )}
 
-          {/* Thông tin tài khoản ngân hàng nhận hoàn cọc (Bắt buộc) */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
             <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               Tài khoản ngân hàng nhận hoàn cọc <span className="text-rose-500">*</span>
@@ -461,7 +456,6 @@ function RegisterForm() {
             />
           </div>
 
-          {/* Điều khoản */}
           <div className="pt-0.5">
             <label className="flex cursor-pointer items-start gap-2">
               <Checkbox
@@ -503,7 +497,6 @@ function RegisterForm() {
           </div>
         </div>
 
-        {/* Register Button */}
         <Button
           type="submit"
           disabled={isSubmitting}
@@ -514,7 +507,6 @@ function RegisterForm() {
           {isSubmitting ? "Đang đăng ký..." : "Hoàn tất đăng ký"}
         </Button>
 
-        {/* Lỗi từ Backend */}
         {serverError && (
           <Alert variant="destructive" className="mt-2.5 py-1.5 text-xs">
             <AlertDescription>{serverError}</AlertDescription>

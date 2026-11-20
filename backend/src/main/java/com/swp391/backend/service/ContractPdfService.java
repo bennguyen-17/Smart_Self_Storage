@@ -158,7 +158,6 @@ public class ContractPdfService {
                 ? reservation.getReservationCode()
                 : ("CTR-" + contract.getContractId());
 
-        // Lấy thông tin khách hàng
         String custName = contract.getSignedFullName();
         String custPhone = contract.getSignedPhone();
         String custEmail = contract.getSignedEmail();
@@ -189,7 +188,6 @@ public class ContractPdfService {
         custEmail = (custEmail != null && !custEmail.isBlank()) ? custEmail : "—";
         custCccd = (custCccd != null && !custCccd.isBlank()) ? custCccd : "—";
 
-        // Lấy thông tin ô kho & cơ sở
         String unitCode = (reservation != null && reservation.getUnitCode() != null) ? reservation.getUnitCode() : "—";
         if (unit == null && !"—".equals(unitCode)) {
             unit = storageUnitRepository.findById(unitCode).orElse(null);
@@ -234,7 +232,6 @@ public class ContractPdfService {
             }
         }
 
-        // Chi phí & thời hạn
         LocalDate startDate = (reservation != null && reservation.getStartDate() != null) ? reservation.getStartDate() : LocalDate.now();
         LocalDate endDate = (reservation != null && reservation.getEndDate() != null) ? reservation.getEndDate() : startDate.plusDays(30);
         long rentalDays = ChronoUnit.DAYS.between(startDate, endDate);
@@ -246,7 +243,6 @@ public class ContractPdfService {
         BigDecimal depositAmount = (reservation != null && reservation.getDepositAmount() != null) ? reservation.getDepositAmount() : BigDecimal.valueOf(1000000);
         BigDecimal totalAmount = rentalAmount.add(depositAmount);
 
-        // Ngày lập hợp đồng
         int signDay = startDate.getDayOfMonth();
         int signMonth = startDate.getMonthValue();
         int signYear = startDate.getYear();
@@ -263,7 +259,6 @@ public class ContractPdfService {
             BaseFont regularBf = getBaseFont(false, false);
             BaseFont boldBf = getBaseFont(true, false);
 
-            // Footer chỉ hiển thị mã hợp đồng bên trái, số trang bên phải
             writer.setPageEvent(new PdfPageEventHelper() {
                 @Override
                 public void onEndPage(PdfWriter w, Document d) {
@@ -280,9 +275,8 @@ public class ContractPdfService {
 
             document.open();
 
-            // Font chữ điều chỉnh độ đậm vừa phải
-            Color primaryDark = new Color(30, 41, 59);      // Slate 800
-            Color textBody = new Color(51, 65, 85);          // Slate 700
+            Color primaryDark = new Color(30, 41, 59);
+            Color textBody = new Color(51, 65, 85);
 
             Font nationalHeaderFont = new Font(boldBf, 10.5f, Font.BOLD, primaryDark);
             Font nationalMottoFont = new Font(regularBf, 9.5f, Font.NORMAL, textBody);
@@ -296,10 +290,6 @@ public class ContractPdfService {
             Font bodyFont = new Font(regularBf, 8.8f, Font.NORMAL, textBody);
             Font bodyBoldFont = new Font(boldBf, 8.8f, Font.BOLD, primaryDark);
 
-            // ==========================================
-            // TRANG 1 & TRANG 2 TỰ NHIÊN
-            // ==========================================
-            // Quốc hiệu & tiêu ngữ
             Paragraph nationalHeader = new Paragraph("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", nationalHeaderFont);
             nationalHeader.setAlignment(Element.ALIGN_CENTER);
             document.add(nationalHeader);
@@ -314,7 +304,6 @@ public class ContractPdfService {
             cityDate.setSpacingAfter(7f);
             document.add(cityDate);
 
-            // Tiêu đề hợp đồng
             Paragraph mainTitle = new Paragraph("HỢP ĐỒNG THUÊ KHO LƯU TRỮ TỰ QUẢN", contractTitleFont);
             mainTitle.setAlignment(Element.ALIGN_CENTER);
             document.add(mainTitle);
@@ -324,7 +313,6 @@ public class ContractPdfService {
             codeSub.setSpacingAfter(8f);
             document.add(codeSub);
 
-            // BÊN CHO THUÊ (BÊN A)
             Paragraph pA = new Paragraph("BÊN CHO THUÊ (BÊN A):", sectionHeaderFont);
             pA.setSpacingAfter(2f);
             document.add(pA);
@@ -339,7 +327,6 @@ public class ContractPdfService {
             pAContent.setSpacingAfter(4f);
             document.add(pAContent);
 
-            // BÊN THUÊ (BÊN B)
             Paragraph pB = new Paragraph("BÊN THUÊ (BÊN B):", sectionHeaderFont);
             pB.setSpacingAfter(2f);
             document.add(pB);
@@ -359,7 +346,6 @@ public class ContractPdfService {
             intro.setSpacingAfter(4f);
             document.add(intro);
 
-            // ĐIỀU 1
             Paragraph d1Title = new Paragraph("ĐIỀU 1: ĐỐI TƯỢNG THỎA THUẬN VÀ THÔNG TIN Ô KHO", sectionHeaderFont);
             d1Title.setSpacingAfter(2f);
             document.add(d1Title);
@@ -369,7 +355,6 @@ public class ContractPdfService {
             d1Intro.setSpacingAfter(4f);
             document.add(d1Intro);
 
-            // Bảng Điều 1: 4 hàng (Đã bỏ trang thiết bị đi kèm, sửa Loại kho)
             PdfPTable tableD1 = new PdfPTable(2);
             tableD1.setWidthPercentage(100);
             tableD1.setWidths(new float[]{28f, 72f});
@@ -381,7 +366,6 @@ public class ContractPdfService {
             addD1Row(tableD1, "Cơ sở chi nhánh", facilityBranch, bodyBoldFont, bodyFont);
             document.add(tableD1);
 
-            // ĐIỀU 2
             Paragraph d2Title = new Paragraph("ĐIỀU 2: THỜI HẠN THUÊ VÀ QUYỀN TRUY CẬP KHO", sectionHeaderFont);
             d2Title.setSpacingAfter(2f);
             document.add(d2Title);
@@ -397,7 +381,6 @@ public class ContractPdfService {
             d2Content.setSpacingAfter(6f);
             document.add(d2Content);
 
-            // ĐIỀU 3
             Paragraph d3Title = new Paragraph("ĐIỀU 3: GIÁ THUÊ, TIỀN CỌC VÀ PHƯƠNG THỨC THANH TOÁN", sectionHeaderFont);
             d3Title.setSpacingAfter(2f);
             document.add(d3Title);
@@ -406,7 +389,6 @@ public class ContractPdfService {
             d3Intro.setSpacingAfter(3f);
             document.add(d3Intro);
 
-            // Bảng Điều 3: 3 cột (Bỏ cột Ghi chú & hoàn trả, bỏ chữ trực tuyến)
             PdfPTable tableD3 = new PdfPTable(3);
             tableD3.setWidthPercentage(100);
             tableD3.setWidths(new float[]{45f, 25f, 30f});
@@ -424,7 +406,6 @@ public class ContractPdfService {
             addTableBodyCell(tableD3, formatVnd(depositAmount), bodyFont, Element.ALIGN_RIGHT);
             addTableBodyCell(tableD3, "Khi đặt giữ chỗ", bodyFont, Element.ALIGN_LEFT);
 
-            // Hàng Tổng giá trị
             PdfPCell totalCellLabel = new PdfPCell(new Phrase("TỔNG GIÁ TRỊ", bodyBoldFont));
             totalCellLabel.setPadding(4.5f);
             totalCellLabel.setBorderColor(new Color(180, 190, 205));
@@ -443,7 +424,6 @@ public class ContractPdfService {
 
             document.add(tableD3);
 
-            // Các khoản 3.2, 3.3, 3.4, 3.5 (Loại bỏ toàn bộ chữ BR-...)
             Paragraph d3Sub = new Paragraph();
             d3Sub.setFont(bodyFont);
             d3Sub.setLeading(12.5f);
@@ -454,7 +434,6 @@ public class ContractPdfService {
             d3Sub.setSpacingAfter(6f);
             document.add(d3Sub);
 
-            // ĐIỀU 4
             document.newPage();
             Paragraph d4Title = new Paragraph("ĐIỀU 4: QUY ĐỊNH PHẠT QUÁ HẠN VÀ XỬ LÝ TÀI SẢN TỒN ĐỌNG", sectionHeaderFont);
             d4Title.setSpacingAfter(2f);
@@ -470,7 +449,6 @@ public class ContractPdfService {
             d4Content.setSpacingAfter(6f);
             document.add(d4Content);
 
-            // ĐIỀU 5
             Paragraph d5Title = new Paragraph("ĐIỀU 5: CAM KẾT AN TOÀN PHÒNG CHÁY CHỮA CHÁY VÀ HÀNG HÓA", sectionHeaderFont);
             d5Title.setSpacingAfter(2f);
             document.add(d5Title);
@@ -484,7 +462,6 @@ public class ContractPdfService {
             d5Content.setSpacingAfter(6f);
             document.add(d5Content);
 
-            // ĐIỀU 6 (Đầy đủ 6.1 và 6.2, đã bỏ khung ký tên)
             Paragraph d6Title = new Paragraph("ĐIỀU 6: ĐIỀU KHOẢN CHUNG VÀ HIỆU LỰC", sectionHeaderFont);
             d6Title.setSpacingAfter(2f);
             document.add(d6Title);

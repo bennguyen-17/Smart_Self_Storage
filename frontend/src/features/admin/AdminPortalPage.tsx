@@ -30,8 +30,7 @@ function AdminPortalPage() {
   }
 
   return (
-    // Dùng Inter (font của dự án) cho cả trang: class chung .staff-portal ưu tiên Plus Jakarta Sans,
-    // trong khi popup / ngăn bên được gắn ra ngoài trang nên chỉ có Inter → 2 font trên một màn hình.
+    // Ép dùng font chung của dự án để khớp với modal/drawer render qua portal bên ngoài .staff-portal
     <div className="staff-portal antialiased" style={{ fontFamily: "var(--font-sans)" }}>
       <AdminNavbar
         profile={{

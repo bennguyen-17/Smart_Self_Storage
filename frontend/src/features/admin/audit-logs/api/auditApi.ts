@@ -1,14 +1,10 @@
-// Đọc nhật ký hoạt động cho Quản trị viên. Nhật ký chỉ ghi thêm, không cho phép sửa hoặc xóa.
-// BE đã ghi vào bảng ActivityLog nhưng CHƯA có API đọc: path dưới đây là contract FE đề xuất (qa-log Q-32).
-// VITE_USE_MOCK=true → mock; false → BE. Không tự fallback về mock khi lỗi.
-
 import { unwrapApiData } from "@/lib/api"
 import apiClient, { isMockMode } from "@/lib/apiClient"
 
 import type { ActivityLogEntry } from "../types"
 import { mockListActivityLogs } from "./auditApi.mock"
 
-/** GET /api/admin/activity-logs?from=YYYY-MM-DD&to=YYYY-MM-DD (BE lọc theo ngày; FE lọc thêm theo người, hành động) */
+// BE lọc theo khoảng ngày (YYYY-MM-DD), phần tìm kiếm còn lại lọc ở FE
 export async function listActivityLogs(range: {
   from: string
   to: string

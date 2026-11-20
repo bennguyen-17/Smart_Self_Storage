@@ -19,11 +19,6 @@ interface RoleProtectedRouteProps {
   children: ReactNode
 }
 
-/**
- * Route Guard bảo vệ route theo vai trò (RBAC):
- * - Chưa đăng nhập hoặc token đã hết hạn -> đăng xuất & redirect về cổng đăng nhập tương ứng.
- * - Đã đăng nhập nhưng sai vai trò -> hiển thị màn hình 403 Access Denied với nút về đúng portal.
- */
 function RoleProtectedRoute({
   allowedRoles,
   children,
@@ -31,7 +26,6 @@ function RoleProtectedRoute({
   const { user, token, isAuthenticated, signOut } = useAuth()
   const navigate = useNavigate()
 
-  // 1. Kiểm tra trạng thái đăng nhập và tính hợp lệ của token
   if (!isAuthenticated || !user || !isTokenValid(token)) {
     if (isAuthenticated) signOut()
     const isCustomerRoute = allowedRoles.includes("CUSTOMER")
@@ -43,10 +37,8 @@ function RoleProtectedRoute({
     )
   }
 
-  // 2. Chuẩn hóa vai trò người dùng
   const userRole = normalizeRole(user.role)
 
-  // 3. Kiểm tra quyền truy cập
   if (!allowedRoles.includes(userRole)) {
     const userRoleTitle = getRoleTitle(userRole)
     const userPortalName = getRolePortalName(userRole)
@@ -109,12 +101,11 @@ function RoleProtectedRoute({
     )
   }
 
-  // 4. Tài khoản nội bộ còn dùng mật khẩu tạm phải đổi trước khi vào cổng
+  // Tài khoản nội bộ dùng mật khẩu tạm bắt buộc đổi trước khi vào portal
   if (user.mustChangePassword) {
     return <Navigate to={PASSWORD_CHANGE_PATH} replace />
   }
 
-  // 5. Đúng quyền -> Cho phép truy cập
   return <>{children}</>
 }
 

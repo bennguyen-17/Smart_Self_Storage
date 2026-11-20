@@ -6,10 +6,7 @@ import { isExternalUrl, loadImageObjectUrl } from "./imageApi"
 
 type LoadState = { url: string; src: string | null; failed: boolean }
 
-/**
- * Hiện ảnh do hệ thống lưu (cần token): tải bằng apiClient rồi gắn object URL vào <img>.
- * Link ngoài (http…) thì dùng thẳng. Đang tải → khung xám nhấp nháy; lỗi → "Không tải được ảnh".
- */
+// Ảnh nội bộ tải qua apiClient để đính kèm token, link ngoài dùng trực tiếp
 function AuthImage({ url, alt, className }: { url: string; alt: string; className?: string }) {
   const external = isExternalUrl(url)
   const [state, setState] = useState<LoadState | null>(null)

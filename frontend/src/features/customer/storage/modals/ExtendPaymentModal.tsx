@@ -47,7 +47,7 @@ export default function ExtendPaymentModal({
   const handleVNPayPayment = async () => {
     setIsRedirecting(true);
     try {
-      // Ensure unique transaction reference per click to prevent VNPay duplicate error
+      // Tạo mã giao dịch mới mỗi lần bấm để tránh lỗi trùng mã bên VNPay
       const uniqueTxnRef = `EXT-${bookingCode}-${Date.now().toString().slice(-6)}`;
       const res: any = await apiClient.post('/payment/vnpay/create-payment-url', {
         invoiceNumber: uniqueTxnRef,
@@ -75,8 +75,6 @@ export default function ExtendPaymentModal({
   return (
     <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-3xl shadow-2xl p-6 sm:p-7 space-y-5 modal-animate-pop">
-        
-        {/* Header cổng VNPay */}
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
           <div className="flex items-center space-x-2">
             <button
@@ -98,7 +96,6 @@ export default function ExtendPaymentModal({
           </span>
         </div>
 
-        {/* Chi tiết đơn gia hạn */}
         <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 space-y-3 text-xs">
           <div className="flex justify-between items-center">
             <span className="text-slate-500 dark:text-slate-400">Mã giao dịch gia hạn:</span>
@@ -151,7 +148,6 @@ export default function ExtendPaymentModal({
           </div>
         </div>
 
-        {/* Huy hiệu bảo mật */}
         <div className="flex items-center justify-center gap-3 text-[11px] text-slate-500 dark:text-slate-400">
           <span className="flex items-center gap-1">
             <Lock className="size-3 text-emerald-500" />
@@ -164,7 +160,6 @@ export default function ExtendPaymentModal({
           </span>
         </div>
 
-        {/* Nút thanh toán */}
         <div className="pt-1 border-t border-slate-200 dark:border-slate-800 space-y-2.5">
           <button
             type="button"

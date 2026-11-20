@@ -198,10 +198,8 @@ function VietnamMap() {
       transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
       className="relative flex h-full w-full items-center justify-center"
     >
-      {/* Dynamic Ambient Glow */}
       <div className="pointer-events-none absolute inset-0 animate-pulse rounded-full bg-blue-500/5 blur-3xl dark:bg-blue-500/10" />
 
-      {/* Floating S-Map Wrapper */}
       <motion.div
         animate={{ y: [-4, 4, -4] }}
         transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
@@ -285,12 +283,10 @@ function VietnamMap() {
       </g>
 
 
-      {/* HOÀNG SA ISLAND GROUP */}
       <g id="hoang-sa">
         <text x="483" y="383" fontSize="24" fontWeight="900" fill="#d97706" textAnchor="middle">★</text>
       </g>
 
-      {/* TRƯỜNG SA ISLAND GROUP */}
       <g id="truong-sa">
         <text x="574" y="732" fontSize="24" fontWeight="900" fill="#059669" textAnchor="middle">★</text>
       </g>
@@ -320,7 +316,6 @@ function VietnamMap() {
               }
             }}
           >
-            {/* Radar Wave Ping */}
             <circle
               cx={pin.cx}
               cy={pin.cy}

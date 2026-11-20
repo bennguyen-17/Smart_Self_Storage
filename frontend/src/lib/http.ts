@@ -1,17 +1,14 @@
 import axios, { isAxiosError } from 'axios';
 import type { ApiResponse } from '@/types';
 
-// Base URL lấy từ biến môi trường .env hoặc mặc định Spring Boot (/api)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
-// Cờ bật tắt Mock Data: Luôn gọi Backend thật 100%
 export const isMockMode = () => false;
 
-// Hàm kiểm tra token JWT hợp lệ
 export const isTokenValid = (token: string | null) => {
   if (!token) return false;
   const parts = token.split('.');
-  if (parts.length !== 3) return true; // Có thể là mock token, bỏ qua check JWT
+  if (parts.length !== 3) return true; // Bỏ qua check exp nếu token không theo dạng JWT 3 phần
   try {
     const payload = JSON.parse(atob(parts[1]));
     if (payload.exp) {
@@ -24,7 +21,6 @@ export const isTokenValid = (token: string | null) => {
   }
 };
 
-// Tạo Axios instance dùng chung cho toàn bộ dự án
 export const http = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
@@ -33,7 +29,6 @@ export const http = axios.create({
   },
 });
 
-// Request Interceptor: Tự động đính kèm Token, X-Facility-Id và X-Account-Id khi gọi API
 http.interceptors.request.use(
   (config) => {
     let token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -80,7 +75,6 @@ http.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Xử lý dữ liệu và lỗi chung (401, 403, 500)
 http.interceptors.response.use(
   (response) => response.data,
   (error) => {
@@ -110,10 +104,7 @@ http.interceptors.response.use(
   }
 );
 
-/**
- * `http` đã trả về `response.data`. Backend có thể bọc dữ liệu trong
- * ApiResponse { success, message, data } hoặc trả thẳng, nên bóc lớp bọc nếu có.
- */
+// Interceptor đã trả response.data, bóc thêm lớp ApiResponse nếu BE có bọc
 export function unwrapApiData<T>(body: unknown): T {
   if (
     body !== null &&
@@ -126,7 +117,6 @@ export function unwrapApiData<T>(body: unknown): T {
   return body as T;
 }
 
-/** Lấy thông báo lỗi dễ đọc cho người dùng từ lỗi axios hoặc lỗi bất kỳ */
 function cleanErrorMessage(raw: string): string {
   if (!raw) return '';
   let msg = raw.trim();

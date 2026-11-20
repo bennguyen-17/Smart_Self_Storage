@@ -50,7 +50,7 @@ public class AuthService {
     public static final String PASSWORD_POLICY_MESSAGE =
             "Mật khẩu phải có ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 chữ thường, 1 chữ số và 1 ký tự đặc biệt!";
 
-    /** Kiểm tra độ mạnh mật khẩu dùng chung cho đăng ký, đổi mật khẩu và đặt lại mật khẩu. */
+    // Dùng chung cho đăng ký, đổi mật khẩu và đặt lại mật khẩu
     public static String validatePasswordStrength(String password, boolean trimInput) {
         if (password == null || password.trim().isEmpty()) {
             return "Mật khẩu không được để trống!";
@@ -62,7 +62,6 @@ public class AuthService {
         return null;
     }
 
-    // Đăng ký tài khoản và xử lý mã xác thực OTP
     public ApiResponse register(RegisterRequest request) {
         if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
             return new ApiResponse(false, "Họ và tên không được để trống!");
@@ -93,7 +92,7 @@ public class AuthService {
             return new ApiResponse(false, "Số CCCD phải bao gồm đúng 12 chữ số!");
         }
 
-        // Bắt buộc thông tin tài khoản ngân hàng ngay từ lúc đăng ký để phục vụ hoàn cọc tự động
+        // Yêu cầu nhập sẵn tài khoản ngân hàng khi đăng ký để dùng cho hoàn cọc
         if (request.getBankName() == null || request.getBankName().trim().isEmpty()) {
             return new ApiResponse(false, "Vui lòng chọn hoặc nhập tên ngân hàng nhận hoàn cọc!");
         }
@@ -110,7 +109,6 @@ public class AuthService {
             return new ApiResponse(false, "Tên chủ tài khoản ngân hàng phải viết in hoa không dấu, không chứa số!");
         }
 
-        // Kiểm tra số CCCD đã tồn tại trong hệ thống
         Optional<CustomerProfile> existingCccdProfileOpt = customerProfileRepository.findByIdentityNumber(request.getCccd().trim());
         if (existingCccdProfileOpt.isPresent()) {
             Optional<Account> cccdAccountOpt = accountRepository.findById(Long.valueOf(existingCccdProfileOpt.get().getAccountId()));
@@ -119,7 +117,6 @@ public class AuthService {
             }
         }
 
-        // Kiểm tra email trùng với tài khoản ACTIVE khác
         Optional<Account> existingEmailOpt = accountRepository.findByEmail(request.getEmail().trim());
         if (existingEmailOpt.isPresent() && !existingEmailOpt.get().getPhone().equals(request.getPhone().trim()) && "ACTIVE".equalsIgnoreCase(existingEmailOpt.get().getStatus())) {
             return new ApiResponse(false, "Địa chỉ Email này đã được đăng ký cho tài khoản khác!");
@@ -130,11 +127,10 @@ public class AuthService {
         Account account;
         if (existingAccountOpt.isPresent()) {
             account = existingAccountOpt.get();
-            // Nếu đã kích hoạt rồi thì báo trùng số điện thoại
             if ("ACTIVE".equalsIgnoreCase(account.getStatus())) {
                 return new ApiResponse(false, "Số điện thoại này đã được đăng ký và kích hoạt!");
             }
-            // Nếu CHƯA kích hoạt (UNVERIFIED), cho phép cập nhật lại thông tin & cấp OTP mới
+            // Tài khoản UNVERIFIED đăng ký lại sẽ ghi đè thông tin và cấp OTP mới
             account.setStatus("UNVERIFIED");
             account.setPassword(passwordEncoder.encode(request.getPassword()));
             account.setFullName(request.getFullName().trim());
@@ -149,14 +145,12 @@ public class AuthService {
             account.setEmail(request.getEmail().trim());
         }
 
-        // Sinh mã OTP 6 số ngẫu nhiên mới
         String otpCode = String.format("%06d", new Random().nextInt(999999));
         account.setOtpCode(otpCode);
         account.setOtpExpiryTime(LocalDateTime.now().plusMinutes(5));
 
         Account savedAccount = accountRepository.save(account);
 
-        // Lưu thông tin khách hàng vào CustomerProfile (CCCD & Tài khoản ngân hàng nếu FE có gửi)
         String cccd = (request.getCccd() != null && !request.getCccd().trim().isEmpty()) ? request.getCccd().trim() : null;
         String bankName = (request.getBankName() != null && !request.getBankName().trim().isEmpty()) ? request.getBankName().trim() : null;
         String bankAccountNumber = (request.getBankAccountNumber() != null && !request.getBankAccountNumber().trim().isEmpty()) ? request.getBankAccountNumber().trim() : null;
@@ -179,7 +173,6 @@ public class AuthService {
         return new ApiResponse(true, "Mã xác thực OTP đã được gửi đến email đăng ký của bạn. Vui lòng kiểm tra hộp thư!");
     }
 
-    // Xác thực mã OTP kích hoạt tài khoản
     public ApiResponse verifyOtp(VerifyOtpRequest request) {
         if (request.getPhone() == null || request.getPhone().trim().isEmpty()) {
             return new ApiResponse(false, "Số điện thoại không được để trống!");
@@ -202,13 +195,12 @@ public class AuthService {
         }
 
         account.setStatus("ACTIVE");
-        account.setOtpCode(null); // Hủy OTP sau khi kích hoạt
+        account.setOtpCode(null);
         accountRepository.save(account);
 
         return new ApiResponse(true, "Xác thực OTP thành công! Tài khoản đã được kích hoạt.");
     }
 
-    // Gửi lại mã OTP xác thực tài khoản
     public ApiResponse resendOtp(ResendOtpRequest request) {
         if (request.getPhone() == null || request.getPhone().trim().isEmpty()) {
             return new ApiResponse(false, "Số điện thoại không được để trống!");
@@ -226,13 +218,11 @@ public class AuthService {
             return new ApiResponse(false, "Tài khoản đã được kích hoạt trước đó, vui lòng đăng nhập!");
         }
 
-        // Sinh mã OTP 6 số ngẫu nhiên mới & gia hạn 5 phút
         String otpCode = String.format("%06d", new Random().nextInt(999999));
         account.setOtpCode(otpCode);
         account.setOtpExpiryTime(LocalDateTime.now().plusMinutes(5));
         accountRepository.save(account);
 
-        // Gửi mã OTP mới qua Email
         if (account.getEmail() != null && !account.getEmail().isBlank()) {
             emailService.sendOtpEmail(account.getEmail(), account.getFullName(), otpCode, "Gửi lại mã xác thực");
         }
@@ -240,7 +230,6 @@ public class AuthService {
         return new ApiResponse(true, "Mã OTP mới đã được gửi lại vào email của bạn. Vui lòng kiểm tra hộp thư!");
     }
 
-    // Đăng xuất và thu hồi hiệu lực của JWT token
     public ApiResponse logout(String authHeader, String ipAddress) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7).trim();

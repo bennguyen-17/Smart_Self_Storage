@@ -12,7 +12,6 @@ export function UseCasesSection() {
   const scrollLeftStart = useRef(0)
   const scrollPosRef = useRef(0)
 
-  // Danh sách các thẻ kho bãi & công nghệ thông minh (Mã PIN, Kho tự quản, Thùng đồ, Pallet...)
   const baseCards = [
     {
       title: "Khám phá sơ đồ kho 2D, chọn vị trí ô kho ưng ý",
@@ -48,19 +47,15 @@ export function UseCasesSection() {
     },
   ]
 
-  // Nhân bản danh sách 3 lần để tạo hiệu ứng cuộn vô tận mượt mà tuyệt đối
+  // Lặp 3 lần để cuộn vòng lặp liên tục không bị khựng ở 2 đầu
   const loopCards = [...baseCards, ...baseCards, ...baseCards]
 
-  // Tính toán phối cảnh 3 mặt cắt liền khối theo dạng bình phong vòm cong:
-  // - Mặt cắt chính giữa: Ảnh nằm ngay ngắn 0 độ, to nhất, rõ nét nhất
-  // - Mặt cắt bên phải: Xoay nghiêng dương (+Y) để mép ngoài lùi về sau, hướng vào tâm
-  // - Mặt cắt bên trái: Xoay nghiêng âm (-Y) để mép ngoài lùi về sau, hướng vào tâm
+  // Cập nhật góc xoay 3D và tỷ lệ từng thẻ theo khoảng cách tới tâm khung nhìn
   const updateCardCurves = useCallback(() => {
     const container = scrollRef.current
     if (!container) return
 
     const containerCenter = container.scrollLeft + container.clientWidth / 2
-    // Khoảng cách chuẩn giữa các thẻ để tính chính xác tâm và 2 bên
     const stepDist = Math.max(container.clientWidth * 0.28, 250)
 
     cardRefs.current.forEach((el) => {
@@ -71,15 +66,9 @@ export function UseCasesSection() {
       const absOffset = Math.abs(offset)
       const clampedAbs = Math.min(absOffset, 2.2)
 
-      // Hệ số thu nhỏ tỉ lệ theo hình vòm: Tâm to nhất (1.02), hai bên nhỏ dần
       const scale = Math.max(0.72, 1.02 - clampedAbs * 0.16)
-      // Góc xoay phối cảnh 3D cánh cung chuẩn xác:
-      // Thẻ bên phải (offset > 0) xoay dương (+Y) để mép ngoài nghiêng lùi về sau
-      // Thẻ bên trái (offset < 0) xoay âm (-Y) để mép ngoài nghiêng lùi về sau
       const rotateY = Math.sign(offset) * Math.min(Math.abs(offset) * 20, 30)
-      // Độ trong suốt nhẹ nhàng tạo chiều sâu
       const opacity = Math.max(0.48, 1 - clampedAbs * 0.24)
-      // Thứ tự zIndex: Thẻ giữa luôn nổi trên các thẻ bên cạnh
       const zIndex = Math.round((3 - clampedAbs) * 10)
 
       el.style.transform = `perspective(1000px) rotateY(${rotateY.toFixed(2)}deg) scale(${scale.toFixed(3)})`
@@ -88,7 +77,7 @@ export function UseCasesSection() {
     })
   }, [])
 
-  // Khởi tạo vị trí cuộn ban đầu ở giữa danh sách
+  // Đặt vị trí cuộn ban đầu vào đoạn giữa của 3 bản sao
   useEffect(() => {
     const container = scrollRef.current
     if (container) {
@@ -99,7 +88,6 @@ export function UseCasesSection() {
     }
   }, [updateCardCurves])
 
-  // Tự động cuộn liên tục qua các ảnh với tốc độ êm ái dùng biến float accumulator (không dừng khi hover chuột)
   useEffect(() => {
     const container = scrollRef.current
     if (!container) return
@@ -108,7 +96,7 @@ export function UseCasesSection() {
 
     const step = () => {
       if (!isDragging.current && container) {
-        // Cộng dồn vào biến float để tránh lỗi trình duyệt làm tròn số nguyên của scrollLeft
+        // Cộng dồn vào ref số thực vì scrollLeft trên trình duyệt tự làm tròn thành số nguyên
         scrollPosRef.current += 0.65
 
         const oneThird = container.scrollWidth / 3
@@ -127,7 +115,6 @@ export function UseCasesSection() {
     return () => cancelAnimationFrame(animationFrameId)
   }, [updateCardCurves])
 
-  // Kéo chuột hoặc chạm vuốt sang ngang (Drag / Swipe to scroll)
   const handleStart = (pageX: number) => {
     const container = scrollRef.current
     if (!container) return
@@ -163,7 +150,6 @@ export function UseCasesSection() {
       className="relative overflow-hidden py-(--l-section-space)"
     >
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
-        {/* TIÊU ĐỀ SECTION */}
         <SectionHeading
           id="use-cases-title"
           title={
@@ -177,7 +163,6 @@ export function UseCasesSection() {
           lead={USE_CASES_SECTION.lead}
         />
 
-        {/* DÃY CUỘN 3D VÒM CONG 3 MẶT CẮT LIÊN KẾT (TỰ CUỘN LIÊN TỤC KHÔNG BỊ DỪNG KHI DÍ CHUỘT) */}
         <div
           ref={scrollRef}
           onMouseLeave={handleEnd}
@@ -202,7 +187,6 @@ export function UseCasesSection() {
               }}
               className="group relative h-[320px] w-[230px] shrink-0 sm:h-[355px] sm:w-[255px] md:h-[385px] md:w-[285px] overflow-hidden rounded-[1.9rem] border border-slate-200/80 bg-slate-100 text-left shadow-2xl transition-[box-shadow,border-color] duration-300 dark:border-slate-800 dark:bg-slate-900"
             >
-              {/* Background Image with Zoom on Hover */}
               <img
                 src={card.src}
                 alt={card.title}
@@ -211,10 +195,8 @@ export function UseCasesSection() {
                 className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
               />
 
-              {/* Ambient Dark Gradient for Contrast */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent pointer-events-none" />
 
-              {/* Bottom Title */}
               <div className="relative z-10 flex h-full flex-col justify-end p-4.5 sm:p-5 pb-5">
                 <h3 className="text-sm sm:text-base font-bold leading-snug text-white drop-shadow-md [text-wrap:balance]">
                   {card.title}

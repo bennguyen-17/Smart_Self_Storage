@@ -13,20 +13,15 @@ import type { ConfirmRefundPayload } from "../types"
 import { EVIDENCE_URL_MAX, getRefundBlockers, REFUND_BLOCKER_LABEL } from "../refundRules"
 
 export interface RefundConfirmFormProps {
-  /** paymentId của phiếu hoàn tiền (hóa đơn REF); thiếu thì không xác nhận được */
   paymentId: number | null | undefined
   refundAmount: number
-  /** "STK (Ngân hàng) - Chủ TK" lấy từ BE; null nghĩa là khách chưa cung cấp */
+  // "STK (Ngân hàng) - Chủ TK", null nếu khách chưa cung cấp
   bankAccount: string | null | undefined
   onConfirmed: () => void
-  /** Hàm gửi xác nhận; mặc định là API của Staff. Cổng Manager truyền hàm của mình */
+  // Mặc định dùng API Staff, cổng Manager truyền hàm riêng
   submit?: (paymentId: number, payload: ConfirmRefundPayload) => Promise<void>
 }
 
-/**
- * Form hoàn cọc: Chuyển khoản ngoài hệ thống, đính kèm biên lai rồi xác nhận.
- * Bố cục gọn gàng, tinh tế, bỏ trường mã giao dịch ngân hàng theo yêu cầu.
- */
 function RefundConfirmForm({
   paymentId,
   refundAmount,
@@ -41,7 +36,6 @@ function RefundConfirmForm({
   const linkInputId = useId()
   const staffInputId = useId()
 
-  // Nhân viên thực hiện lấy từ phiên đăng nhập
   const staffName = getStoredUser()?.fullName ?? null
   const blockers = getRefundBlockers({
     paymentId,
@@ -75,7 +69,6 @@ function RefundConfirmForm({
 
   return (
     <div className="space-y-4 pt-1">
-      {/* 1. Thẻ tóm tắt thông tin hoàn cọc */}
       <div className="rounded-2xl border border-amber-200/80 bg-gradient-to-br from-amber-50/70 to-amber-100/40 p-4 dark:border-amber-800/60 dark:from-amber-950/30 dark:to-amber-900/20 space-y-3.5 shadow-2xs">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -96,7 +89,6 @@ function RefundConfirmForm({
           </span>
         </div>
 
-        {/* Thông tin tài khoản nhận tiền */}
         <div className="rounded-xl bg-white/90 p-3.5 text-xs dark:bg-slate-900/80 border border-amber-200/60 dark:border-amber-900/40 shadow-2xs">
           <span className="font-semibold text-slate-500 dark:text-slate-400 block mb-1">
             Tài khoản thụ hưởng của khách:
@@ -114,7 +106,6 @@ function RefundConfirmForm({
         </div>
       </div>
 
-      {/* 2. Khu vực tải ảnh biên lai */}
       <div className="space-y-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-4 shadow-2xs">
         <ImagePicker
           label="Ảnh biên lai chuyển khoản"
@@ -154,7 +145,6 @@ function RefundConfirmForm({
           </details>
         )}
 
-        {/* Thông tin nhân viên thực hiện */}
         <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
           <label htmlFor={staffInputId} className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">
             Nhân viên thực hiện:
@@ -169,7 +159,6 @@ function RefundConfirmForm({
         </div>
       </div>
 
-      {/* 3. Cảnh báo bổ sung nếu còn thiếu */}
       {blockers.length > 0 && (
         <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-xs dark:border-amber-800 dark:bg-amber-950/30">
           <p className="font-bold text-amber-900 dark:text-amber-200">Cần bổ sung trước khi xác nhận:</p>
@@ -187,7 +176,6 @@ function RefundConfirmForm({
         </p>
       )}
 
-      {/* 4. Nút bấm Xác nhận */}
       <Button
         type="button"
         onClick={handleSubmit}

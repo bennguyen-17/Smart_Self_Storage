@@ -1,5 +1,3 @@
-// Nhật ký kiểm soát ra vào cổng cơ sở (Mã PIN động IoT 24/7 và Thẻ Master thủ công)
-
 export interface GateLog {
   auditLogId: number
   accountId: number | null
@@ -9,8 +7,6 @@ export interface GateLog {
   openedAt: string
   reason: string | null
   createdAt: string
-  
-  // Thông tin người ra vào cổng:
   personName?: string
   personPhone?: string
   personRole?: string
@@ -22,11 +18,9 @@ export interface GateLog {
 }
 
 export interface GateLogFilter {
-  /** Tìm theo tên khách, SĐT, CCCD, mã khách, nhân viên hoặc vị trí cổng */
   query: string
-  /** Lọc theo phương thức: ALL | PIN | MANUAL */
   method: "ALL" | "PIN" | "MANUAL"
-  /** YYYY-MM-DD, tính theo ngày mở cổng, gồm cả 2 đầu; "" là không giới hạn */
+  // YYYY-MM-DD (gồm cả 2 đầu), chuỗi rỗng là không giới hạn
   from: string
   to: string
 }

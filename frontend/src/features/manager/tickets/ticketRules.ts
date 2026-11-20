@@ -1,23 +1,16 @@
-// Luật hiển thị trang "Sự cố cơ sở" của Manager. Manager chỉ theo dõi: nhân viên trong ca tiếp nhận và giải quyết ticket.
-// Hàm thuần, kiểm bằng bảng test trong ticketRules.test.ts.
-
 import { formatDate } from "@/lib/format"
 
 import type { ManagerTicketItem } from "./types"
 
 type TicketLike = Pick<ManagerTicketItem, "status" | "type" | "desiredDate" | "assignedStaffId">
 
-/** Ticket trả kho sớm có ngày hẹn sau hôm nay: nhân viên chỉ tiếp nhận được đúng ngày hẹn */
+// Ticket trả kho sớm chỉ tiếp nhận được từ ngày hẹn trở đi
 export function isWaitingForReturnDate(ticket: TicketLike, today: string): boolean {
   if (ticket.type !== "EARLY_TERMINATION" || !ticket.desiredDate) return false
   return ticket.desiredDate.slice(0, 10) > today
 }
 
-/**
- * Câu mô tả ticket đang ở bước nào, để Manager theo dõi mà không thao tác.
- * Sự cố (INCIDENT) được BE tự phân cho nhân viên trong ca ít việc nhất lúc khách gửi,
- * nhưng vẫn ở "Chờ tiếp nhận" cho tới khi nhân viên đó bấm tiếp nhận.
- */
+// Sự cố INCIDENT được BE gán sẵn cho nhân viên trong ca nhưng vẫn giữ trạng thái chờ tiếp nhận
 export function ticketProgress(ticket: TicketLike, today: string): string {
   switch (ticket.status) {
     case "RESOLVED":
@@ -33,11 +26,7 @@ export function ticketProgress(ticket: TicketLike, today: string): string {
   }
 }
 
-/**
- * Chỉ giữ ticket của cơ sở Manager đang phụ trách. BE hiện trả ticket MỌI cơ sở khi cơ sở mình chưa có ticket nào
- * (SupportTicketService.getManagerTickets dùng findAll làm dự phòng); lọc lại ở FE để không lộ dữ liệu cơ sở khác.
- * Chưa biết cơ sở của Manager thì không hiện ticket nào.
- */
+// Lọc theo cơ sở phía FE phòng trường hợp API trả dư dữ liệu cơ sở khác
 export function ticketsOfFacility<T extends { facilityId?: number | null }>(tickets: readonly T[], facilityId: number | null): T[] {
   if (facilityId === null) return []
   return tickets.filter((t) => t.facilityId === facilityId)

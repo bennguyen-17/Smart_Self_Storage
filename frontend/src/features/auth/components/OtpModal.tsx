@@ -47,7 +47,6 @@ function OtpModal({ phone, email, onClose }: OtpModalProps) {
   const [resendLoading, setResendLoading] = useState(false)
   const [error, setError] = useState("")
 
-  // Đếm ngược OTP và thời gian chờ gửi lại
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prev) => Math.max(prev - 1, 0))
@@ -133,7 +132,6 @@ function OtpModal({ phone, email, onClose }: OtpModalProps) {
       }}
     >
       <DialogContent>
-        {/* Header */}
         <DialogHeader className="items-center text-center">
           <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
             <ShieldCheck className="size-6" />
@@ -147,7 +145,6 @@ function OtpModal({ phone, email, onClose }: OtpModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-        {/* 6 ô OTP */}
         <Field data-invalid={Boolean(error)}>
           <InputOTP
             id="otp"
@@ -167,7 +164,6 @@ function OtpModal({ phone, email, onClose }: OtpModalProps) {
           <FieldError>{error}</FieldError>
         </Field>
 
-        {/* Countdown */}
         <FieldDescription className="text-center">
           {timeLeft > 0 ? (
             <>
@@ -181,7 +177,6 @@ function OtpModal({ phone, email, onClose }: OtpModalProps) {
           )}
         </FieldDescription>
 
-        {/* Verify */}
         <Button
           type="button"
           onClick={handleVerifyOtp}
@@ -195,7 +190,6 @@ function OtpModal({ phone, email, onClose }: OtpModalProps) {
 
         <Separator />
 
-        {/* Resend */}
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
             Bạn chưa nhận được mã?

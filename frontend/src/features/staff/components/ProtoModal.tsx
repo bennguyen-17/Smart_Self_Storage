@@ -12,7 +12,6 @@ interface ProtoModalProps {
   children: ReactNode
 }
 
-/** Khung modal bám prototype staff.html (card-box + backdrop tối) */
 function ProtoModal({
   open,
   onClose,

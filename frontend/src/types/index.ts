@@ -1,9 +1,3 @@
-// ============================================================================
-// TYPESCRIPT DEFINITIONS: SMART SELF STORAGE SYSTEM
-// Mapped 1:1 with Java Spring Boot Backend DTOs & Entities (Strictly /api/...)
-// ============================================================================
-
-// 1. Quản lý tài khoản & Xác thực
 export interface RegisterRequest {
   phone: string;
   fullName: string;
@@ -37,7 +31,6 @@ export interface ApiResponse<T = unknown> {
   data?: T;
 }
 
-// 2. Cơ sở, Tầng, Ô kho & Bảng giá
 export type FacilityStatus = 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE';
 export type UnitStatus = 'AVAILABLE' | 'HOLD' | 'RENTED' | 'MAINTENANCE' | 'OVERDUE';
 export type StorageCondition = 'NORMAL' | 'CLIMATE_CONTROLLED';
@@ -45,14 +38,14 @@ export type RentalType = 'DAILY' | 'MONTHLY';
 
 export interface Facility {
   facilityId: number;
-  facilityCode: string; // HN01, HN02, HCM01, ...
-  shortCode: string;    // CG, TX, Q1, Q7, TD, HC, NK
+  facilityCode: string; // vd: HN01, HCM01
+  shortCode: string;    // vd: CG, TX, Q1
   facilityName: string;
   address: string;
   phone: string;
-  floorCount: number;   // 2 hoặc 3
-  layoutType: 'A' | 'B'; // 'A' (Urban) hoặc 'B' (Logistics)
-  isAllClimate: boolean; // true nếu là HCM01 (100% kho mát)
+  floorCount: number;
+  layoutType: 'A' | 'B'; // A: Urban, B: Logistics
+  isAllClimate: boolean; // true với cơ sở 100% kho mát
   status: FacilityStatus;
 }
 
@@ -66,15 +59,15 @@ export interface Floor {
 
 export interface UnitType {
   unitTypeId: number;
-  typeName: string; // Size S, Size M, Size L, Size XL
-  size: string; // 1m x 1m x 1.2m
+  typeName: string;
+  size: string;
   storageCondition: StorageCondition;
   status: string;
 }
 
 export interface UnitDetailResponse {
   unitId: string | number;
-  unitCode: string; // Mã ô kho: "HN01-G-XL05", "XL05"
+  unitCode: string; // vd: HN01-G-XL05
   floorId: number;
   floorName?: string;
   unitTypeId: number;
@@ -84,9 +77,9 @@ export interface UnitDetailResponse {
   widthM?: number;
   heightM?: number;
   areaM2?: number;
-  maxLoadKgM2?: number; // Tải trọng tối đa kg/m2
+  maxLoadKgM2?: number;
   storageCondition?: StorageCondition;
-  isClimate?: boolean; // true nếu là kho mát
+  isClimate?: boolean;
   dailyPrice?: number;
   monthlyPrice?: number;
   depositAmount?: number;
@@ -117,14 +110,13 @@ export interface CalculatePriceResponse {
   totalInitialPayment: number;
 }
 
-// 3. Đặt cọc & Hợp đồng điện tử
 export interface DepositInitiateRequest {
   accountId: number;
   unitCode: string;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
   rentalType: RentalType;
-  agreedClickwrap: boolean; // Bắt buộc true
+  agreedClickwrap: boolean;
   ipAddress?: string;
 }
 
@@ -132,12 +124,12 @@ export interface DepositInitiateResponse {
   success: boolean;
   message: string;
   reservationId: number;
-  reservationCode: string; // RES-CG-8899-K7X2
+  reservationCode: string;
   contractId: number;
-  contractDraftUrl: string; // /contracts/DRAFT-RES-XXXX.pdf
+  contractDraftUrl: string;
   paymentId: number;
-  invoiceNumber: string; // DEP-CG-20260927-4719
-  depositAmount: number; // 100% tiền cọc
+  invoiceNumber: string;
+  depositAmount: number;
   rentalAmount: number;
   bankAccount: string;
   bankName: string;

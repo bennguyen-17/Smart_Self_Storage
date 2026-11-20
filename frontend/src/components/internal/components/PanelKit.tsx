@@ -1,5 +1,4 @@
-// Khối dựng dùng chung cho các trang "bộ lọc + bảng" của cổng Manager và Admin,
-// để mọi trang có cùng cách trình bày (cùng ô lọc, cùng bảng, cùng trạng thái đang tải / trống / lỗi).
+// Component bộ lọc, bảng và phân trang dùng chung cho cổng Manager / Admin
 
 import type { ReactNode } from "react"
 import { ChevronLeftIcon, ChevronRightIcon, InboxIcon, RotateCwIcon } from "lucide-react"
@@ -104,14 +103,10 @@ export function DateFilter({
 export interface TableColumn {
   header: string
   align?: "right" | "center"
-  /** Chỉ cho trình đọc màn hình (cột thao tác) */
   srOnly?: boolean
 }
 
-/**
- * Bảng trong khung có cuộn ngang. Khung để `relative` để chữ `sr-only` không "thoát" ra ngoài
- * làm cả trang tràn ngang trên điện thoại.
- */
+// Đặt relative ở khung cuộn ngang để phần tử sr-only không làm tràn chiều rộng trang trên mobile
 export function TableCard({
   caption,
   columns,
@@ -199,7 +194,6 @@ export function StatusBadge({ tone, children }: { tone: BadgeTone; children: Rea
   )
 }
 
-/** Dòng "x / y kết quả" dưới thanh lọc; đọc lại cho trình đọc màn hình khi kết quả đổi */
 export function ResultCount({ shown, total, unit, isLoading }: { shown: number; total: number; unit: string; isLoading: boolean }) {
   return (
     <p className="text-muted text-xs" aria-live="polite">
@@ -208,9 +202,6 @@ export function ResultCount({ shown, total, unit, isLoading }: { shown: number; 
   )
 }
 
-/**
- * Thanh phân trang dưới bảng: nút trang trước / sau và số trang, cố định 10 dòng mỗi trang (theo kiểu bảng hợp đồng ở cổng khách hàng).
- */
 export function Pagination({
   slice,
   total,
@@ -218,7 +209,7 @@ export function Pagination({
 }: {
   slice: PageSlice<unknown>
   total: number
-  /** Giữ cho các trang đang truyền; dòng "Hiển thị x – y trong tổng số N" đã bỏ nên chưa dùng */
+  // Giữ lại để tương thích chữ ký props ở các trang đang truyền
   unit: string
   onPageChange: (page: number) => void
 }) {

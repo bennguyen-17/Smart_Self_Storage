@@ -134,7 +134,7 @@ public class StaffCheckInService {
             return checkInFailure("Không tìm thấy thông tin đặt chỗ.");
         }
         Reservation reservation = reservationOpt.get();
-        // Hợp đồng đã chuyển sang trang staff (PENDING_CHECKIN) thì 100% đã cọc đủ
+        // Chấp nhận cả PENDING và CONFIRMED vì điều kiện cọc được kiểm tiếp qua trạng thái hợp đồng PENDING_CHECKIN
         if (!"CONFIRMED".equalsIgnoreCase(reservation.getStatus())
                 && !"PENDING".equalsIgnoreCase(reservation.getStatus())) {
             return checkInFailure("Đơn đặt chỗ không ở trạng thái hợp lệ để làm thủ tục check-in.");
@@ -198,8 +198,7 @@ public class StaffCheckInService {
                 ? BigDecimal.ZERO
                 : request.getCollectedAmount();
 
-        // Kiểm tra số tiền thu tại quầy: chấp nhận số tiền còn lại (tiền thuê) hoặc
-        // tổng tiền
+        // Cho phép thu đúng phần tiền thuê còn lại hoặc toàn bộ tổng hóa đơn tại quầy
         if (remainingAmount.signum() > 0) {
             if (collectedAmount.compareTo(remainingAmount) != 0 && collectedAmount.compareTo(totalAmount) != 0) {
                 return checkInFailure("Số tiền thu tại quầy (" + collectedAmount
@@ -222,7 +221,6 @@ public class StaffCheckInService {
             paymentRepository.save(deposit);
         }
 
-        // Chuyển đổi trạng thái hợp đồng sang CÓ HIỆU LỰC (ACTIVE)
         contract.setStatus("ACTIVE");
         contract.setActivatedAt(now);
         String finalCode = (reservation.getReservationCode() != null && !reservation.getReservationCode().isBlank())
@@ -238,7 +236,6 @@ public class StaffCheckInService {
 
         GatePinResult gatePin = gatePinService.generatePin(contract);
 
-        // Tự động sinh PDF hợp đồng chính thức và lưu vào đĩa
         try {
             contractPdfService.generateAndSaveContractPdf(contract, reservation, unit, gatePin.getPin());
         } catch (Exception ex) {
@@ -251,6 +248,7 @@ public class StaffCheckInService {
                         + "; contract=ACTIVE; unit=OCCUPIED; result=SUCCESS",
                 floorRepository.findById(unit.getFloorId()).map(Floor::getFacilityId).orElse(null));
 
+        // Gửi mail async để lỗi SMTP không làm chậm hoặc rollback giao dịch check-in
         CompletableFuture.runAsync(() -> {
             try {
                 sendCheckInEmail(reservation, contract, gatePin.getPin(), unit);
@@ -281,13 +279,11 @@ public class StaffCheckInService {
 
         Account account = accountOpt.get();
         try {
-            // Lấy CCCD
             String citizenId = customerProfileRepository.findByAccountId(reservation.getAccountId())
                     .map(CustomerProfile::getIdentityNumber)
                     .filter(id -> !id.isBlank())
                     .orElse("Đã xác thực CCCD");
 
-            // Lấy thông tin cơ sở
             String facilityName = "Smart Self Storage - Chi nhánh Hà Nội";
             String facilityAddress = "Hà Nội, Việt Nam";
             String facilityPhone = "1900 8899";
@@ -310,7 +306,6 @@ public class StaffCheckInService {
                 }
             }
 
-            // Lấy thông tin loại kho
             String unitTypeName = "Kho lưu trữ thông minh";
             String unitSize = "Tiêu chuẩn";
             if (unit != null && unit.getUnitTypeId() != null) {
@@ -326,7 +321,6 @@ public class StaffCheckInService {
                 }
             }
 
-            // Format ngày tháng & số tiền
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             String startStr = reservation.getStartDate() != null ? reservation.getStartDate().format(dtf)
                     : "Từ ngày nhận kho";

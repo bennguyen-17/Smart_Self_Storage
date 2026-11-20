@@ -1,14 +1,11 @@
-// Câu lỗi hiển thị trong cổng Manager / Admin: không bao giờ đưa câu lệnh SQL hay lỗi Java của BE lên giao diện.
-// Câu lỗi tiếng Việt BE đã viết sẵn ("Không tìm thấy ô kho…") giữ nguyên.
+// Chuyển lỗi kỹ thuật (SQL/Hibernate/Spring) sang câu tiếng Việt, giữ nguyên lỗi nghiệp vụ từ BE
 
 import { getErrorMessage } from "@/lib/api"
 
 export const GENERIC_ERROR = "Hệ thống gặp lỗi khi xử lý yêu cầu. Vui lòng thử lại; nếu vẫn lỗi, báo quản trị hệ thống."
 
-/** Dấu hiệu câu lỗi kỹ thuật (SQL, Hibernate, Spring, Java) */
 const TECHNICAL = /could not execute|SQL \[|constraint \[|Duplicate entry|Data too long|Data truncat|foreign key|JDBC|Hibernate|java\.|org\.springframework|Exception|Failed to convert|Required request|Cannot invoke|NullPointer/i
 
-/** Đổi câu lỗi kỹ thuật thành câu người dùng hiểu được */
 export function sanitizeErrorMessage(message: string | null | undefined): string {
   const text = (message ?? "").trim()
   if (!text) return "Không xử lý được yêu cầu. Vui lòng thử lại."
@@ -29,7 +26,6 @@ export function sanitizeErrorMessage(message: string | null | undefined): string
   return GENERIC_ERROR
 }
 
-/** Lỗi từ API (axios hoặc Error) → câu hiển thị an toàn */
 export function readableError(err: unknown): string {
   return sanitizeErrorMessage(getErrorMessage(err))
 }

@@ -5,7 +5,7 @@ import { STATUS_STYLES, statusGroupOf } from "../unitDisplay"
 
 const ORDER: StatusGroup[] = ["AVAILABLE", "HOLD", "RESERVED", "RENTED", "MAINTENANCE"]
 
-/** Chú thích 4 màu trạng thái, kèm số ô mỗi loại trên tầng đang xem */
+// Chú thích màu trạng thái kèm số lượng ô trên tầng đang xem
 function StatusLegend({ units }: { units: UnitDetailResponse[] }) {
   const counts = units.reduce<Record<string, number>>((acc, u) => {
     const group = statusGroupOf(u.status)

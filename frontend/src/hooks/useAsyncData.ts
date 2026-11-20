@@ -8,11 +8,7 @@ interface AsyncState<T> {
   error?: string
 }
 
-/**
- * Tải dữ liệu theo `key`. Đổi key → tải lại; key = null → không tải.
- * Bỏ qua kết quả của request cũ nếu key đã đổi (tránh race condition khi đổi tab nhanh).
- * Muốn "Thử lại" với cùng tham số thì đưa thêm bộ đếm reload vào key.
- */
+// Tải dữ liệu theo key (null = không tải); bỏ qua response cũ để tránh race condition khi đổi tab nhanh
 export function useAsyncData<T>(key: string | null, load: () => Promise<T>) {
   const [state, setState] = useState<AsyncState<T> | null>(null)
   const loadRef = useRef(load)

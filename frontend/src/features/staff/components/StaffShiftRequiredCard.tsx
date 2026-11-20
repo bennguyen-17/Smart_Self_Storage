@@ -113,7 +113,6 @@ export default function StaffShiftRequiredCard({
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-blue-200/80 bg-gradient-to-br from-blue-50/90 via-sky-50/50 to-indigo-50/80 p-8 shadow-sm backdrop-blur-md dark:border-blue-900/60 dark:from-slate-900/90 dark:via-blue-950/40 dark:to-slate-900/90 text-center">
-      {/* Icon đồng hồ viền xanh chuẩn thiết kế (hoặc mặt trăng khi ngoài giờ không có ca) */}
       <div className="mx-auto mb-4 flex items-center justify-center text-blue-600 dark:text-blue-400">
         {showMoonIcon ? (
           <MoonIcon className="size-12 stroke-[2.5]" />

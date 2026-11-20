@@ -29,7 +29,6 @@ interface UnlockDetail {
   identityNumber?: string
 }
 
-/** Hộp thoại đối chiếu CCCD khách hàng và xác nhận mở khóa ô kho */
 function StaffUnlockModal({
   ticket,
   onClose,
@@ -52,7 +51,7 @@ function StaffUnlockModal({
     setCardChecked(false)
     setMatchChecked(false)
 
-    // Fallback data from ticket
+    // Dùng dữ liệu có sẵn trên ticket làm fallback khi API chi tiết lỗi
     const initialData: UnlockDetail = {
       ticketId: ticket.id,
       ticketCode: ticket.ticketCode,
@@ -80,7 +79,7 @@ function StaffUnlockModal({
           }
         })
         .catch(() => {
-          // Keep initialData on error
+          // Giữ initialData nếu gọi API lỗi
         })
         .finally(() => {
           setLoading(false)
@@ -125,7 +124,6 @@ function StaffUnlockModal({
     >
       {detail && (
         <div className="space-y-4 text-xs">
-          {/* HEADER ALERT */}
           <div className="flex items-start gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-amber-900 dark:text-amber-200">
             <ShieldAlertIcon className="size-5 shrink-0 text-amber-500" />
             <div className="text-[11px] leading-relaxed">
@@ -133,7 +131,6 @@ function StaffUnlockModal({
             </div>
           </div>
 
-          {/* CUSTOMER & CONTRACT INFO */}
           <div className="inner-box space-y-2.5 rounded-2xl border p-4">
             <div className="flex items-center justify-between border-b pb-2">
               <span className="font-bold tracking-wider text-muted uppercase text-[10px]">
@@ -172,7 +169,6 @@ function StaffUnlockModal({
             </div>
           </div>
 
-          {/* VERIFICATION CHECKLIST */}
           <div className="space-y-2 rounded-2xl border border-blue-500/20 bg-blue-50/50 p-4 dark:bg-blue-950/20">
             <div className="text-[11px] font-black tracking-wide text-blue-900 uppercase dark:text-blue-300">
               Biên bản đối chiếu tại chỗ:
@@ -203,7 +199,6 @@ function StaffUnlockModal({
             </label>
           </div>
 
-          {/* ACTIONS */}
           <div className="flex items-center space-x-2 pt-2">
             <button
               type="button"

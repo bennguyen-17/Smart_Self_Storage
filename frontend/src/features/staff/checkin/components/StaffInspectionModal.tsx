@@ -29,10 +29,9 @@ interface StaffInspectionModalProps {
   onConfirmed?: () => void
 }
 
-/** BE giới hạn mỗi ảnh tối đa 5 MB (ImageStorageService.MAX_IMAGE_SIZE) */
+// Khớp giới hạn 5 MB từ BE
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
-/** Bảng giá hư hại niêm yết */
 const DAMAGE_ITEMS = [
   { id: "cleaning", label: "1. Vệ sinh kho (rác/bẩn nặng)", fee: 150_000 },
   { id: "key", label: "2. Mất chìa khóa cơ", fee: 200_000 },
@@ -88,7 +87,7 @@ function Body({
     return target.contractCode || "—"
   })
 
-  // 1. Ưu tiên lấy từ API preview quyết toán
+  // Lấy tiền cọc và mã HĐ mới nhất từ API preview quyết toán
   useEffect(() => {
     const targetId = target.contractId || target.reservationId
     if (targetId) {
@@ -115,7 +114,7 @@ function Body({
     }
   }, [target.contractId, target.reservationId])
 
-  // 2. Dự phòng: nếu mã hợp đồng chưa đầy đủ CTR-..., tra cứu từ danh sách hợp đồng cơ sở
+  // Fallback tra mã HĐ đầy đủ từ danh sách nếu preview chưa có
   useEffect(() => {
     if (!displayContractCode || displayContractCode.length <= 8 || !displayContractCode.startsWith("CTR-")) {
       apiClient.get("/staff/reservations")
@@ -238,7 +237,6 @@ function Body({
 
   return (
     <div className="space-y-4">
-      {/* CỤM THÔNG TIN HỢP ĐỒNG & Ô KHO (CĂN GIỮA, KHÔNG BỊ TRUNCATE) */}
       <div className="inner-box grid grid-cols-2 sm:grid-cols-4 gap-3.5 rounded-2xl border p-4 bg-slate-50/60 dark:bg-slate-800/40 text-center">
         <div className="flex flex-col items-center justify-center space-y-1 text-center">
           <span className="block text-[10px] font-bold text-muted uppercase tracking-wider text-center">
@@ -283,7 +281,6 @@ function Body({
         </div>
       </div>
 
-      {/* DANH MỤC KIỂM TRA HƯ HẠI */}
       <div className="space-y-2.5">
         <div className="flex items-center justify-between">
           <span className="text-title flex items-center gap-1.5 text-xs font-black tracking-wide uppercase">
@@ -323,7 +320,6 @@ function Body({
         </div>
       </div>
 
-      {/* BẰNG CHỨNG HÌNH ẢNH */}
       <div className="inner-box space-y-2 rounded-2xl border p-3">
         <div className="flex items-center justify-between text-xs">
           <span className="text-title flex items-center gap-1.5 font-bold">
@@ -360,7 +356,6 @@ function Body({
         </div>
       </div>
 
-      {/* TỔNG KẾT QUYẾT TOÁN CỌC (GỌN GÀNG, BỎ CHỮ 24-48H, KHÔNG XUỐNG DÒNG LỞ DỞ) */}
       <div className="space-y-2 rounded-2xl border border-blue-500/30 bg-blue-50/40 p-4 text-xs dark:bg-blue-950/20">
         <div className="flex items-center justify-between text-muted">
           <span className="text-title flex items-center gap-1.5 font-bold whitespace-nowrap" >Tiền cọc gốc ban đầu:</span>
@@ -393,7 +388,6 @@ function Body({
         </div>
       </div>
 
-      {/* XÁC NHẬN ĐÃ THU TIỀN TẠI QUẦY KHI CỌC ÂM */}
       {balance < 0 && (
         <label className="inner-box flex cursor-pointer items-center space-x-2.5 rounded-xl border border-rose-300 bg-rose-50/70 p-3 text-xs text-rose-900 transition hover:border-rose-400 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-200">
           <input
@@ -411,7 +405,6 @@ function Body({
         </label>
       )}
 
-      {/* NÚT THAO TÁC */}
       <div className="flex items-center space-x-3 pt-1">
         <button
           type="button"

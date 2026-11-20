@@ -6,17 +6,13 @@ import { readableError } from "@/components/internal/readableError"
 
 import { IMAGE_ACCEPT, imageFileError, uploadImage, type ImageCategory } from "./imageApi"
 
-/** Ảnh đã tải lên BE (PENDING): mã ảnh để gửi kèm API nghiệp vụ + ảnh xem trước trên máy */
+// Ảnh đã upload tạm lên BE, kèm previewUrl tạo từ file cục bộ
 export interface PickedImage {
   imageId: number
   name: string
   previewUrl: string
 }
 
-/**
- * Chọn ảnh minh chứng: chọn file → kiểm tra (JPG / PNG / WEBP, ≤ 5 MB) → tải lên ngay → hiện ảnh xem trước.
- * Ảnh xem trước lấy từ chính file trên máy (không cần gọi BE). `onChange` nhận danh sách ảnh đã tải xong.
- */
 function ImagePicker({
   label,
   category,
@@ -41,7 +37,7 @@ function ImagePicker({
   }, [value])
   const slotsLeft = max - value.length
 
-  // Rời form thì dọn ảnh xem trước khỏi bộ nhớ trình duyệt
+  // Thu hồi object URL preview khi unmount
   useEffect(() => () => latest.current.forEach((p) => URL.revokeObjectURL(p.previewUrl)), [])
 
   async function pick(files: FileList | null) {
@@ -123,7 +119,6 @@ function ImagePicker({
               e.target.value = ""
             }}
           />
-          {/* Nhãn mang kiểu nút: có viền nét đứt rõ ràng dễ nhận diện click */}
           <label
             htmlFor={inputId}
             aria-disabled={disabled || uploading > 0}

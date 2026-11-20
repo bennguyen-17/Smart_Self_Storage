@@ -1,5 +1,3 @@
-// Dữ liệu mẫu tài khoản nội bộ dùng cho môi trường thử nghiệm.
-
 import { roleNeedsFacility } from "../accountRules"
 import type { AccountStatus, InternalAccount, InternalRole } from "../types"
 
@@ -46,7 +44,7 @@ export function mockCreateAccount(input: {
   if (roleNeedsFacility(input.role) && input.facilityId === null) {
     return fail("Nhân viên và quản lý cơ sở phải được gán một cơ sở")
   }
-  // Giống BE hiện tại: chưa tự kiểm trùng số điện thoại, MySQL trả nguyên câu lỗi ràng buộc
+  // Mô phỏng lỗi constraint MySQL khi trùng SĐT để kiểm tra readableError
   if (input.phone && store.some((a) => a.phone === input.phone)) {
     return fail(`could not execute statement [Duplicate entry '${input.phone}' for key 'account.phone'] [insert into Account (...)]; constraint [account.phone]`)
   }
@@ -81,7 +79,6 @@ export function mockSetAccountStatus(accountId: number, status: AccountStatus): 
   return delay(store[i])
 }
 
-/** Chỉ dùng trong test: đưa dữ liệu mẫu về ban đầu */
 export function resetAccountsMock() {
   store = SEED.map((a) => ({ ...a }))
 }

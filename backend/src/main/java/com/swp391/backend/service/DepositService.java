@@ -71,10 +71,8 @@ public class DepositService {
                 .orElse(30);
     }
 
-    // --- 1. Tạo đơn Đặt cọc 100% Online & Thỏa thuận Clickwrap ---
     @Transactional
     public DepositInitiateResponse initiateDeposit(DepositInitiateRequest request) {
-        // Kiểm tra Clickwrap bắt buộc
         if (request.getAgreedClickwrap() == null || !request.getAgreedClickwrap()) {
             return DepositInitiateResponse.error("Bạn bắt buộc phải tích chọn đồng ý với Điều khoản Hợp đồng thuê kho (Clickwrap) theo quy định!");
         }
@@ -93,7 +91,7 @@ public class DepositService {
             return DepositInitiateResponse.error("Ô kho này hiện không ở trạng thái trống (có thể đã được người khác giữ chỗ hoặc đang bảo trì)!");
         }
 
-        // Giới hạn ngày nhận kho từ ngày mai đến tối đa 7 ngày tới (không cho phép nhận kho cùng ngày đặt).
+        // Chỉ cho nhận kho từ ngày mai đến tối đa 7 ngày tới
         LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         LocalDate minStartDate = today.plusDays(1);
         LocalDate maxStartDate = today.plusDays(7);
@@ -107,7 +105,7 @@ public class DepositService {
             }
         }
 
-        // Tính toán tiền thuê & tiền cọc chuẩn BR: <30 ngày là DAILY, >=30 ngày là MONTHLY
+        // Dưới 30 ngày tính theo gói ngày, từ 30 ngày trở lên tính theo gói tháng
         long days = 30;
         if (request.getStartDate() != null && request.getEndDate() != null) {
             days = Math.max(1, java.time.temporal.ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()));
@@ -125,7 +123,6 @@ public class DepositService {
             return DepositInitiateResponse.error(priceRes.getMessage());
         }
 
-        // Lấy thông tin mã cơ sở chuẩn hóa (HN01, HN02, HCM01, ...)
         String facilityCode = "HN01";
         Optional<Floor> floorOpt = floorRepository.findById(unit.getFloorId());
         if (floorOpt.isPresent()) {
@@ -135,11 +132,9 @@ public class DepositService {
             }
         }
 
-        // Khóa tạm ô kho sang HOLD
         unit.setStatus("HOLD");
         storageUnitRepository.save(unit);
 
-        // Tạo bản ghi Đặt chỗ (Reservation)
         Reservation reservation = new Reservation();
         reservation.setAccountId(request.getAccountId());
         reservation.setUnitCode(unit.getUnitCode());
@@ -149,9 +144,9 @@ public class DepositService {
         reservation.setRentalAmount(priceRes.getFinalRentalAmount());
         reservation.setDepositAmount(priceRes.getDepositAmount());
         reservation.setStatus("PENDING");
-        reservation.setHoldExpiresAt(LocalDateTime.now().plusMinutes(5)); // Giữ chỗ tạm thời 5 phút để chờ hoàn tất thanh toán
+        reservation.setHoldExpiresAt(LocalDateTime.now().plusMinutes(5)); // Giữ chỗ tạm 5 phút chờ thanh toán
 
-        // Sinh Mã Hợp Đồng theo quy tắc thống nhất: CTR-[Mã Cơ Sở]-[DDMMYY]-[4 số ngẫu nhiên]
+        // Mã hợp đồng theo mẫu CTR-<mã cơ sở>-<ddMMyy>-<4 số>
         String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyy"));
         String contractCode;
         do {
@@ -161,8 +156,7 @@ public class DepositService {
         reservation.setReservationCode(contractCode);
         reservation = reservationRepository.save(reservation);
 
-        // Tạo Hợp đồng dự thảo với trạng thái PENDING_CHECKIN
-        // Snapshot thông tin bất biến của khách hàng vào Hợp đồng
+        // Lưu snapshot thông tin khách hàng và chính sách phạt tại thời điểm đặt cọc
         Account customerAccount = accountRepository.findAccountByAccountId(request.getAccountId()).orElse(null);
         String custFullName = (customerAccount != null && customerAccount.getFullName() != null) ? customerAccount.getFullName() : "";
         String custPhone = (customerAccount != null && customerAccount.getPhone() != null) ? customerAccount.getPhone() : "";
@@ -183,7 +177,6 @@ public class DepositService {
         contract.setOverdueLiquidationDays(getCurrentOverdueLiquidationDays());
         contract = contractRepository.save(contract);
 
-        // Tạo Hóa đơn tiền cọc (Payment): DEP-[Mã Hợp Đồng]
         String invoiceNumber = "DEP-" + contractCode;
 
         Payment payment = new Payment();
@@ -202,7 +195,6 @@ public class DepositService {
         payment.setPaymentStatus("PENDING");
         payment = paymentRepository.save(payment);
 
-        // Lưu vết Clickwrap Audit Log
         ActivityLog log = new ActivityLog();
         log.setAccountId(request.getAccountId());
         log.setAction("CLICKWRAP_E_CONTRACT_SIGNED");
@@ -210,12 +202,10 @@ public class DepositService {
         log.setIpAddress(request.getIpAddress() != null ? request.getIpAddress() : "127.0.0.1");
         activityLogRepository.save(log);
 
-        // Thông tin thanh toán chuyển khoản ngân hàng
         String accountNumber = "0900000001";
         String accountHolder = "SMART SELF STORAGE CORP";
         String transferContent = invoiceNumber;
 
-        // Trả kết quả DTO
         DepositInitiateResponse response = new DepositInitiateResponse();
         response.setSuccess(true);
         response.setMessage("Tạo đơn đặt cọc thành công! Vui lòng hoàn tất thanh toán để giữ chỗ.");
@@ -235,7 +225,6 @@ public class DepositService {
         return response;
     }
 
-    // --- 2. Webhook / Xác nhận thanh toán Cọc thành công ---
     @Transactional
     public ApiResponse confirmDepositPayment(DepositWebhookRequest request) {
         if (request.getInvoiceNumber() == null || request.getInvoiceNumber().trim().isEmpty()) {
@@ -275,7 +264,6 @@ public class DepositService {
         }
         StorageUnit unit = unitOpt.get();
 
-        // Cập nhật Payment
         payment.setAmount(totalAmount);
         payment.setPaidAmount(depositAmount);
         payment.setRemainingAmount(initialRentalAmount);
@@ -287,16 +275,13 @@ public class DepositService {
         payment.setPaidAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
-        // Cập nhật Contract sang PENDING_CHECKIN (Chờ nhận kho tại cơ sở)
-        contract.setStatus("PENDING_CHECKIN"); // Khách đã cọc online, chờ nhận kho
+        contract.setStatus("PENDING_CHECKIN");
         contract.setActivatedAt(LocalDateTime.now());
         contractRepository.save(contract);
 
-        // Cập nhật Reservation sang CONFIRMED
         res.setStatus("CONFIRMED");
         reservationRepository.save(res);
 
-        // Ô kho chuyển từ HOLD sang RESERVED sau khi cọc online thành công.
         unit.setStatus("RESERVED");
         storageUnitRepository.save(unit);
 
@@ -328,7 +313,6 @@ public class DepositService {
         return new ApiResponse(true, "Xác nhận nộp cọc thành công! Hợp đồng ở trạng thái PENDING_CHECKIN và ô kho đã được bảo lưu giữ chỗ.");
     }
 
-    // --- 3. Webhook / Xác nhận thanh toán Gia hạn Hợp đồng (EXT-) ---
     @Transactional
     public ApiResponse confirmExtensionPayment(DepositWebhookRequest request) {
         if (request.getInvoiceNumber() == null || request.getInvoiceNumber().trim().isEmpty()) {
@@ -336,7 +320,7 @@ public class DepositService {
         }
 
         String invoiceNumber = request.getInvoiceNumber().trim();
-        // Lấy mã hợp đồng từ invoiceNumber (ví dụ: EXT-CTR-HN01-171026-0042-8821 -> CTR-HN01-171026-0042)
+        // Tách mã hợp đồng từ mã hóa đơn gia hạn (EXT-CTR-...-<suffix>)
         String contractCode = invoiceNumber.startsWith("EXT-") ? invoiceNumber.substring(4) : invoiceNumber;
         java.util.regex.Matcher m = java.util.regex.Pattern.compile("(CTR-[A-Z0-9]+-\\d{6}-\\d{4})").matcher(invoiceNumber);
         if (m.find()) {
@@ -361,7 +345,6 @@ public class DepositService {
                 res = reservationRepository.findById(contract.getReservationId()).orElse(null);
             }
         } else {
-            // Tìm contract theo mã hợp đồng
             Optional<Reservation> resOpt = reservationRepository.findByReservationCode(contractCode);
             if (resOpt.isPresent()) {
                 res = resOpt.get();
@@ -377,7 +360,7 @@ public class DepositService {
                 } catch (Exception ignored) {}
             }
 
-            // Fallback: Tìm kiếm trong tất cả reservation
+            // Fallback quét danh sách reservation nếu mã hóa đơn không khớp trực tiếp
             if (contract == null) {
                 for (Reservation r : reservationRepository.findAll()) {
                     if (r.getReservationCode() != null && !r.getReservationCode().isBlank()) {
@@ -410,7 +393,7 @@ public class DepositService {
             return new ApiResponse(true, "Hóa đơn gia hạn này đã được ghi nhận thanh toán trước đó!");
         }
 
-        // Cộng dồn thời hạn thuê (30 ngày)
+        // Nếu hợp đồng đã hết hạn thì tính mốc gia hạn từ hôm nay
         int days = 30;
         LocalDate currentEnd = res.getEndDate() != null ? res.getEndDate() : LocalDate.now();
         if (currentEnd.isBefore(LocalDate.now())) {
@@ -420,13 +403,11 @@ public class DepositService {
         res.setEndDate(newEnd);
         reservationRepository.save(res);
 
-        // Đảm bảo Contract duy trì trạng thái ACTIVE
         if (!"ACTIVE".equalsIgnoreCase(contract.getStatus())) {
             contract.setStatus("ACTIVE");
             contractRepository.save(contract);
         }
 
-        // Cập nhật Payment sang PAID & SUCCESS
         payment.setStatus("PAID");
         payment.setPaymentStatus("SUCCESS");
         payment.setPaidAmount(payment.getAmount());
@@ -437,7 +418,6 @@ public class DepositService {
         payment.setPaidAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
-        // Ghi nhật ký kiểm toán (ActivityLog)
         ActivityLog log = new ActivityLog();
         log.setAccountId(res.getAccountId());
         log.setFacilityId(res.getUnitCode() == null ? null : storageUnitRepository.findById(res.getUnitCode())

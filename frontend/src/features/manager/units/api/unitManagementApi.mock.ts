@@ -1,5 +1,4 @@
-// Dữ liệu mẫu ô kho cơ sở phục vụ môi trường thử nghiệm.
-// Trạng thái dùng bộ chuẩn mới; luật đổi loại kho / bảo trì giống BE để demo đúng hành vi.
+// Dữ liệu mock ô kho cơ sở, dùng khi VITE_USE_MOCK=true
 
 import type { Floor } from "@/types"
 

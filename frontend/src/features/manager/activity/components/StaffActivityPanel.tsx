@@ -31,10 +31,6 @@ import {
   WORK_COUNTS,
 } from "../activityRules"
 
-/**
- * Manager › Hoạt động nhân viên: theo từng ca, ai đã vào ca và làm được những gì (nhận kho, trả kho, ticket,
- * bảo trì, việc được giao); bên dưới là nhật ký thao tác nội bộ của cơ sở trong ngày, lọc được theo người.
- */
 function StaffActivityPanel() {
   const ctx = useMemo(() => getManagerContext(), [])
   const today = todayInVietnam()

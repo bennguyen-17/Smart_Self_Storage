@@ -1,5 +1,4 @@
-// API check-in và xử lý thủ tục nhận/trả kho tại quầy.
-// VITE_USE_MOCK=true → dùng mock; false → gọi backend. Không tự fallback về mock khi lỗi.
+// API check-in, đổi ô, thu phạt và gia hạn tại quầy.
 
 import { isAxiosError } from "axios"
 
@@ -20,13 +19,12 @@ import type {
   StaffReservationLookup,
 } from "../types"
 
-/** GET /api/staff/reservations — BE tự lọc theo cơ sở của Staff. */
+// BE tự lọc danh sách theo cơ sở của staff
 export async function listCheckinContracts(): Promise<StaffReservationItem[]> {
   const body = await apiClient.get("/staff/reservations")
   return unwrapApiData<StaffReservationItem[]>(body) ?? []
 }
 
-/** GET /api/staff/reservations/lookup?code= — 404 nếu không thuộc cơ sở. */
 export async function lookupContract(
   code: string
 ): Promise<StaffReservationLookup> {
@@ -36,7 +34,6 @@ export async function lookupContract(
   return unwrapApiData<StaffReservationLookup>(body)
 }
 
-/** GET /api/staff/reservations/{id} — Lấy chi tiết hợp đồng theo reservationId */
 export async function getReservationDetail(
   reservationId: number
 ): Promise<StaffReservationLookup> {
@@ -44,7 +41,6 @@ export async function getReservationDetail(
   return unwrapApiData<StaffReservationLookup>(body)
 }
 
-/** POST /api/staff/reservations/{id}/check-in — thu tiền, HĐ → ACTIVE, ô → RENTED. */
 export async function confirmCheckin(
   reservationId: number,
   payload: StaffCheckInRequest
@@ -56,7 +52,6 @@ export async function confirmCheckin(
   return unwrapApiData<StaffCheckInResponse>(body)
 }
 
-/** POST /api/staff/reservations/{id}/change-unit — đổi ô, BE tính lại tiền/cọc. */
 export async function changeUnit(
   reservationId: number,
   payload: { newUnitCode: string }
@@ -68,7 +63,6 @@ export async function changeUnit(
   return unwrapApiData<StaffChangeUnitResponse>(body)
 }
 
-/** POST /api/pricing/calculate — Tính giá thuê và cọc động theo loại kho */
 export async function calculateRentalPrice(payload: {
   unitTypeId: number
   rentalType: string
@@ -84,7 +78,6 @@ export async function calculateRentalPrice(payload: {
   return unwrapApiData(body)
 }
 
-/** POST /api/staff/reservations/{id}/cancel — hủy tại quầy. */
 export async function counterCancel(
   reservationId: number
 ): Promise<StaffCancelReservationResponse> {
@@ -95,10 +88,7 @@ export async function counterCancel(
   return unwrapApiData<StaffCancelReservationResponse>(body)
 }
 
-/**
- * Thu phạt quá hạn hợp đồng trực tiếp tại quầy.
- * Gộp toàn bộ phạt UNPAID thành 1 hóa đơn PEN (PAID); HĐ vẫn OVERDUE, PIN vẫn khóa.
- */
+// Gộp phạt UNPAID thành 1 hóa đơn PEN; HĐ vẫn OVERDUE và PIN vẫn khóa cho tới khi gia hạn
 export async function collectPenalty(
   reservationId: number,
   payload: CollectPenaltyRequest
@@ -110,10 +100,7 @@ export async function collectPenalty(
   return unwrapApiData<CollectPenaltyResponse>(body)
 }
 
-/**
- * Gia hạn hợp đồng trực tiếp tại quầy khi quá hạn.
- * HĐ về ACTIVE, hóa đơn EXT, khôi phục quyền sinh PIN. BE chặn nếu còn phạt UNPAID.
- */
+// Đưa HĐ về ACTIVE và mở lại quyền sinh PIN; BE chặn nếu còn phạt chưa đóng
 export async function renewAtCounter(
   reservationId: number,
   payload: RenewAtCounterRequest
@@ -125,17 +112,12 @@ export async function renewAtCounter(
   return unwrapApiData<RenewAtCounterResponse>(body)
 }
 
-/**
- * Lấy toàn bộ ô kho (GET /api/units) để gợi ý ô trống cùng tầng khi đổi ô.
- * BE không trả facilityId của Staff nên FE chỉ gợi ý theo tầng của ô hiện tại;
- * ô cuối cùng vẫn do BE validate.
- */
+// BE không trả facilityId của staff nên FE gợi ý theo tầng của ô hiện tại, BE sẽ kiểm tra lại khi đổi
 export async function fetchAllUnits(): Promise<UnitDetailResponse[]> {
   const body = await apiClient.get("/units")
   return unwrapApiData<UnitDetailResponse[]>(body) ?? []
 }
 
-/** Thông báo lỗi thân thiện theo HTTP status của BE (404 = không thuộc cơ sở, 409 = sai trạng thái). */
 export function checkinErrorMessage(error: unknown): string {
   if (isAxiosError(error)) {
     const status = error.response?.status
@@ -167,13 +149,12 @@ export interface StaffGatePinData {
   message: string
 }
 
-/** GET /api/staff/gate-pins/live — Mã PIN động 15s mở cổng cơ sở 24/7 của Staff */
+// Mã PIN mở cổng của staff, xoay vòng mỗi 15 giây
 export async function fetchStaffGatePin(): Promise<StaffGatePinData> {
   const body = await apiClient.get("/staff/gate-pins/live")
   return unwrapApiData<StaffGatePinData>(body)
 }
 
-/** PUT /api/staff/reservations/{reservationId}/customer-cccd — Staff hiệu chỉnh số CCCD khách khi đối chiếu thẻ gốc */
 export async function updateCustomerCccd(
   reservationId: number,
   identityNumber: string,

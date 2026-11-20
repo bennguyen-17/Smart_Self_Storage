@@ -22,9 +22,6 @@ public class ManagerTicketController {
         this.securityContextHelper = securityContextHelper;
     }
 
-    /**
-     * GET /api/manager/tickets: Lấy danh sách ticket của cơ sở 
-     */
     @GetMapping
     public ResponseEntity<?> getManagerTickets(
             @AuthenticationPrincipal Integer authAccountId,

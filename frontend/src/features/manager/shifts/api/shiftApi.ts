@@ -1,7 +1,3 @@
-// API phân ca trực nhân viên tại cơ sở.
-// khớp bảng Shift + StaffShift có sẵn trong DB. Đang chạy mock.
-// VITE_USE_MOCK=true → mock; false → BE. Không tự fallback về mock khi lỗi.
-
 import { unwrapApiData } from "@/lib/api"
 import apiClient, { isMockMode } from "@/lib/apiClient"
 import { managerHeaders } from "@/features/manager/managerContext"
@@ -14,7 +10,6 @@ import {
   mockSaveShift,
 } from "./shiftApi.mock"
 
-/** GET /api/manager/staff: nhân viên thuộc cơ sở trong header X-Facility-Id */
 export async function listFacilityStaff(
   ctx: ManagerContext
 ): Promise<FacilityStaff[]> {
@@ -26,7 +21,6 @@ export async function listFacilityStaff(
   )
 }
 
-/** GET /api/manager/shifts?date=YYYY-MM-DD: các ca (giờ lấy từ bảng Shift) và người trực trong ngày */
 export async function getDaySchedule(
   ctx: ManagerContext,
   date: string
@@ -40,7 +34,6 @@ export async function getDaySchedule(
   )
 }
 
-/** PUT /api/manager/shifts/{date}/{shiftId}  body { employeeIds: [...] }: thay danh sách người trực của một ca */
 export async function saveShift(
   ctx: ManagerContext,
   date: string,

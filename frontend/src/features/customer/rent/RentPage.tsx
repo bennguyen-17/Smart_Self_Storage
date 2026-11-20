@@ -44,30 +44,25 @@ const RENT_STEPS = [
 export default function RentStoragePage() {
   const navigate = useNavigate();
 
-  // TIẾN TRÌNH 4 BƯỚC: 1: Chọn ô kho -> 2: Bảng giá -> 3: Thỏa thuận cọc -> 4: Thanh toán VNPay
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
-  // Dữ liệu cơ sở & sơ đồ ô kho
   const [facility, setFacility] = useState<string>('');
   const [currentFloor, setCurrentFloor] = useState(1);
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [branches, setBranches] = useState<any[]>([]);
   const [mapRefreshTrigger, setMapRefreshTrigger] = useState(0);
 
-  // Dữ liệu đặt cọc & gói thuê ở Bước 2
-  const [selectedPkgDays, setSelectedPkgDays] = useState(30); // 30, 60, 90, 180, 360
+  const [selectedPkgDays, setSelectedPkgDays] = useState(30);
   const [isCustomDays, setIsCustomDays] = useState(false);
   const [customDaysVal, setCustomDaysVal] = useState('7');
   const [startDate, setStartDate] = useState(() => getCheckInDates(new Date())[0]);
 
-  // Checkboxes ở Bước 3 (Thỏa thuận cọc)
   const [noProhibitedGoods, setNoProhibitedGoods] = useState(false);
   const [agreedTerms, setAgreedTerms] = useState(false);
 
-  // Dữ liệu thanh toán VNPay ở Bước 4
   const [bookingCode, setBookingCode] = useState('CTR-HN01-171026-0042');
   const [invoiceNumber, setInvoiceNumber] = useState('');
-  const [timeLeft, setTimeLeft] = useState(300); // 5:00
+  const [timeLeft, setTimeLeft] = useState(300); // Giữ chỗ tối đa 5 phút khi thanh toán
   const [isPaymentCompleted, setIsPaymentCompleted] = useState(false);
 
   useEffect(() => {
@@ -98,7 +93,6 @@ export default function RentStoragePage() {
     };
   }, []);
 
-  // Đếm ngược 5 phút ở Bước 4
   useEffect(() => {
     if (step !== 4 || isPaymentCompleted) return;
     const timer = setInterval(() => {
@@ -107,7 +101,6 @@ export default function RentStoragePage() {
     return () => clearInterval(timer);
   }, [step, isPaymentCompleted]);
 
-  // Tính số ngày và ngày kết thúc
   const effectiveDays = isCustomDays ? clampRentalDays(customDaysVal) : selectedPkgDays;
   const checkOutDateIso = startDate ? addDays(startDate, effectiveDays) : '';
 
@@ -126,21 +119,18 @@ export default function RentStoragePage() {
   const currentBranch = branches.find((b) => b.code === facility || b.id === facility);
   const facilityDisplayName = currentBranch?.name || `SmartStorage (${facility})`;
 
-  // Chuyển sang Bước 2
   const handleProceedToStep2 = () => {
     if (!selectedUnit) return;
     setStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Chuyển sang Bước 3
   const handleProceedToStep3 = () => {
     if (!selectedUnit) return;
     setStep(3);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Chuyển sang Bước 4 (Tạo mã đơn cọc & VNPay)
   const handleProceedToStep4 = async () => {
     if (!noProhibitedGoods || !agreedTerms) return;
 
@@ -174,7 +164,7 @@ export default function RentStoragePage() {
 
   const handleOpenVNPay = async () => {
     setIsRedirectingVNPay(true);
-    // Lưu trước hợp đồng để khi VNPay redirect về có sẵn thông tin chính xác
+    // Lưu tạm hợp đồng trước khi redirect sang VNPay để trang kết quả hiển thị đầy đủ thông tin
     const bookingPayload = {
       facilityName: facilityDisplayName,
       unitId: selectedUnit?.id,
@@ -233,7 +223,6 @@ export default function RentStoragePage() {
                 />
               </div>
 
-              {/* Các điểm bước tròn 1 - 2 - 3 - 4 */}
               <div className="relative z-10 flex items-center justify-between">
                 {RENT_STEPS.map((s) => {
                   const isPassed = step > s.id;
@@ -287,13 +276,7 @@ export default function RentStoragePage() {
           </div>
         </div>
 
-        {/* ========================================================
-            NỘI DUNG TỪNG BƯỚC RIÊNG BIỆT
-           ======================================================== */}
         <AnimatePresence mode="wait">
-          {/* ========================================================
-              BƯỚC 1: SƠ ĐỒ MẶT BẰNG 2D + NÚT TIẾP TỤC
-             ======================================================== */}
           {step === 1 && (
             <motion.div
               key="step-1-storage-map"
@@ -321,7 +304,6 @@ export default function RentStoragePage() {
                 />
               </div>
 
-              {/* Chỉ 1 nút Tiếp theo */}
               <div className="flex justify-end pt-2">
                 <button
                   type="button"
@@ -339,9 +321,6 @@ export default function RentStoragePage() {
             </motion.div>
           )}
 
-          {/* ========================================================
-              BƯỚC 2: BẢNG GIÁ & CHỌN THỜI HẠN THUÊ KHO
-             ======================================================== */}
           {step === 2 && selectedUnit && (
             <motion.div
               key="step-2-pricing-package"
@@ -365,7 +344,6 @@ export default function RentStoragePage() {
                 </span>
               </div>
 
-              {/* Thẻ thông tin ô kho đã chọn */}
               <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md space-y-4">
                 <div className="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-slate-800">
                   <h3 className="font-black text-sm text-slate-900 dark:text-white flex items-center tracking-wider">
@@ -377,7 +355,6 @@ export default function RentStoragePage() {
                   </span>
                 </div>
 
-                {/* Chi tiết ô kho */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
                   <div>
                     <span className="text-slate-500 dark:text-slate-400 text-[11px] block">Loại kho</span>
@@ -399,7 +376,6 @@ export default function RentStoragePage() {
                   </div>
                 </div>
 
-                {/* Chọn thời hạn thuê kho */}
                 <div className="space-y-2 pt-2">
                   <label className="block text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
                     Thời hạn thuê kho:
@@ -460,7 +436,6 @@ export default function RentStoragePage() {
                   )}
                 </div>
 
-                {/* Chọn ngày nhận kho */}
                 <div className="space-y-2 pt-2">
                   <div className="flex justify-between items-center">
                     <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
@@ -485,14 +460,12 @@ export default function RentStoragePage() {
                     })}
                   </select>
 
-                  {/* Thông báo ca trực / Giờ làm việc nhân viên quầy 07:00 - 20:00 */}
                   <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 text-[11px] text-slate-600 dark:text-slate-400 flex items-center gap-2">
                     <Clock className="size-3.5 shrink-0 text-blue-500" />
                     <span>Nhân viên hỗ trợ check-in tại quầy từ <strong>07:00 đến 20:00</strong> trong ngày hẹn nhận kho.</span>
                   </div>
                 </div>
 
-                {/* Bảng tổng tính tiền */}
                 <div className="p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/50 space-y-2 text-xs">
                   <div className="flex justify-between text-slate-600 dark:text-slate-300">
                     <span>Hạn trả kho dự kiến:</span>
@@ -510,7 +483,6 @@ export default function RentStoragePage() {
                   </div>
                 </div>
 
-                {/* Nút sang Bước 3 */}
                 <button
                   type="button"
                   onClick={handleProceedToStep3}
@@ -523,9 +495,6 @@ export default function RentStoragePage() {
             </motion.div>
           )}
 
-          {/* ========================================================
-              BƯỚC 3: THỎA THUẬN ĐẶT CỌC KHO (ĐIỀU KHOẢN & 2 CHECKBOX)
-             ======================================================== */}
           {step === 3 && selectedUnit && (
             <motion.div
               key="step-3-contract-agreement"
@@ -549,7 +518,6 @@ export default function RentStoragePage() {
                 </span>
               </div>
 
-              {/* Khung Thỏa thuận đặt cọc kho */}
               <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-5">
                 <div>
                   <h3 className="font-extrabold text-slate-900 dark:text-white text-lg flex items-center gap-2">
@@ -561,7 +529,6 @@ export default function RentStoragePage() {
                   </p>
                 </div>
 
-                {/* Thông tin tóm tắt ô kho */}
                 <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3">
                   <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200 dark:border-slate-700/60">
                     <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
@@ -604,7 +571,6 @@ export default function RentStoragePage() {
                   </div>
                 </div>
 
-                {/* Hộp điều khoản thuê kho */}
                 <div className="space-y-2">
                   <label className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     <ShieldAlert className="size-4 text-blue-500" /> Điều khoản thuê & Quy định hủy cọc:
@@ -627,7 +593,6 @@ export default function RentStoragePage() {
                   </div>
                 </div>
 
-                {/* 2 Checkbox cam kết bắt buộc */}
                 <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3 text-xs">
                   <label className="flex items-start gap-2.5 cursor-pointer select-none">
                     <input
@@ -654,7 +619,6 @@ export default function RentStoragePage() {
                   </label>
                 </div>
 
-                {/* Nút sang Bước 4: Thanh toán VNPay */}
                 <button
                   type="button"
                   disabled={!noProhibitedGoods || !agreedTerms}
@@ -671,9 +635,6 @@ export default function RentStoragePage() {
             </motion.div>
           )}
 
-          {/* ========================================================
-              BƯỚC 4: THANH TOÁN TIỀN CỌC QUA CỔNG VNPAY
-             ======================================================== */}
           {step === 4 && selectedUnit && (
             <motion.div
               key="step-4-vnpay-payment"
@@ -700,7 +661,6 @@ export default function RentStoragePage() {
                   </div>
 
                   <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl p-6 sm:p-7 space-y-5">
-                    {/* Header */}
                     <div className="text-center pb-3 border-b border-slate-100 dark:border-slate-800 space-y-1.5">
                       <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-xs font-bold">
                         <span>Thanh toán trực tuyến bảo mật</span>
@@ -713,7 +673,6 @@ export default function RentStoragePage() {
                       </p>
                     </div>
 
-                    {/* Chi tiết đơn đặt cọc */}
                     <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 space-y-3 text-xs">
                       <div className="flex justify-between items-center">
                         <span className="text-slate-500 dark:text-slate-400">Mã giao dịch:</span>
@@ -749,7 +708,6 @@ export default function RentStoragePage() {
                       </div>
                     </div>
 
-                    {/* Nút Mở Cổng VNPay */}
                     <div className="space-y-2 pt-1">
                       <button
                         type="button"
@@ -780,7 +738,6 @@ export default function RentStoragePage() {
                   </div>
                 </>
               ) : (
-                /* THÔNG BÁO HOÀN TẤT ĐẶT CỌC */
                 <div className="bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-800/80 rounded-3xl shadow-2xl p-6 sm:p-8 text-center space-y-4">
                   <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
                     <CheckCircle2 className="size-10" />

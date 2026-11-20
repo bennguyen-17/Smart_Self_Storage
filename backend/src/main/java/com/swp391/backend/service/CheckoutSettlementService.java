@@ -67,9 +67,6 @@ public class CheckoutSettlementService {
         this.imageStorageService = imageStorageService;
     }
 
-    /**
-     * Tính toán dự thảo quyết toán trả kho và hoàn tiền cọc
-     */
     public CheckoutPreviewResponse calculateCheckoutPreview(Integer contractId, Integer staffAccountId) {
         staffShiftService.requireOnDutyFacility(staffAccountId);
         Optional<Contract> contractOpt = contractRepository.findById(contractId);
@@ -81,7 +78,6 @@ public class CheckoutSettlementService {
         }
 
         Contract contract = contractOpt.get();
-        // Cho phép trả kho khi hợp đồng ACTIVE hoặc OVERDUE
         if (!"ACTIVE".equalsIgnoreCase(contract.getStatus()) && !"OVERDUE".equalsIgnoreCase(contract.getStatus())) {
             return CheckoutPreviewResponse.error("Hợp đồng #" + contractId + " đang ở trạng thái " + contract.getStatus() + ", không thể thực hiện thủ tục trả kho!");
         }
@@ -108,17 +104,15 @@ public class CheckoutSettlementService {
         BigDecimal rentalPaid = res.getRentalAmount() != null ? res.getRentalAmount() : BigDecimal.ZERO;
         BigDecimal depositAmount = res.getDepositAmount() != null ? res.getDepositAmount() : BigDecimal.ZERO;
 
-        // Tiền thuê chưa dùng = Tiền thuê đã trả ÷ Tổng số ngày × Số ngày còn lại
         BigDecimal unusedRental = BigDecimal.ZERO;
         BigDecimal unusedRentalRefund = BigDecimal.ZERO;
         if (daysRemaining > 0 && totalDays > 0) {
             BigDecimal dailyRate = rentalPaid.divide(BigDecimal.valueOf(totalDays), 2, RoundingMode.HALF_UP);
             unusedRental = dailyRate.multiply(BigDecimal.valueOf(daysRemaining));
-            // Thống nhất nhóm & BOM: Không hoàn lại tiền thuê chưa dùng khi trả kho sớm (0%)
+            // Không hoàn tiền thuê chưa dùng khi trả kho sớm
             unusedRentalRefund = BigDecimal.ZERO;
         }
 
-        // Quét các khoản phạt còn nợ (UNPAID) của hợp đồng này
         List<Payment> payments = paymentRepository.findByContractId(contractId);
         BigDecimal unpaidPenalties = BigDecimal.ZERO;
         for (Payment p : payments) {
@@ -127,18 +121,16 @@ public class CheckoutSettlementService {
             }
         }
 
-        // BẮT BUỘC: Nếu còn nợ phạt trễ hạn -> Chặn không cho trả kho, bắt buộc khách phải nộp phạt tại quầy trước
+        // Chặn trả kho nếu còn nợ phạt quá hạn, phải thu riêng tại quầy trước
         if (unpaidPenalties.compareTo(BigDecimal.ZERO) > 0) {
             return CheckoutPreviewResponse.error(String.format("Hợp đồng còn nợ phạt quá hạn %s VNĐ. Khách hàng phải thanh toán tiền phạt tại quầy trước khi làm thủ tục trả kho!", unpaidPenalties));
         }
 
-        BigDecimal damageAndCleaningFee = BigDecimal.ZERO; // Mặc định preview là 0, Staff sẽ nhập khi xác nhận
+        BigDecimal damageAndCleaningFee = BigDecimal.ZERO; // Mặc định 0 ở bước preview, nhân viên nhập thực tế khi xác nhận
 
-        // Tổng khấu trừ: Chỉ bao gồm phí hư hại / vệ sinh (không cấn trừ phạt trễ hạn vào cọc)
+        // Khấu trừ vào cọc chỉ tính phí hư hại và vệ sinh, không cấn trừ phạt quá hạn
         BigDecimal totalDeductions = damageAndCleaningFee;
-        // Tổng tiền có: Tiền cọc gốc (tiền thuê chưa dùng không hoàn lại: 0đ)
         BigDecimal totalCredits = unusedRentalRefund.add(depositAmount);
-        // Số tiền quyết toán cuối cùng = Tổng tiền có - Tổng khấu trừ
         BigDecimal netAmount = totalCredits.subtract(totalDeductions);
 
         boolean isRefund = netAmount.compareTo(BigDecimal.ZERO) >= 0;
@@ -187,9 +179,6 @@ public class CheckoutSettlementService {
         return resp;
     }
 
-    /**
-     * Xác nhận bàn giao trả kho và chốt quyết toán hoàn tất
-     */
     @Transactional
     public CheckoutConfirmResponse confirmCheckout(Integer contractId, CheckoutConfirmRequest request, Integer staffAccountId) {
         Integer staffFacilityId = staffShiftService.requireOnDutyFacility(staffAccountId);
@@ -223,7 +212,6 @@ public class CheckoutSettlementService {
 
         Reservation res = resOpt.get();
 
-        // 1. Kiểm tra thẩm quyền cơ sở của Staff nếu có
         Optional<StorageUnit> unitOpt = storageUnitRepository.findById(res.getUnitCode());
         if (unitOpt.isEmpty()) {
             return CheckoutConfirmResponse.error("Không tìm thấy ô kho " + res.getUnitCode());
@@ -236,7 +224,6 @@ public class CheckoutSettlementService {
             return CheckoutConfirmResponse.error("Bạn không có quyền tiếp nhận trả kho của cơ sở khác!");
         }
 
-        // 2. Tính toán tài chính quyết toán
         LocalDate startDate = res.getStartDate() != null ? res.getStartDate() : LocalDate.now();
         LocalDate originalEndDate = res.getEndDate() != null ? res.getEndDate() : startDate.plusDays(30);
         LocalDate returnDate = LocalDate.now();
@@ -256,10 +243,10 @@ public class CheckoutSettlementService {
 
         BigDecimal depositAmount = res.getDepositAmount() != null ? res.getDepositAmount() : BigDecimal.ZERO;
 
-        // Thong nhat nhom: Khong hoan lai tien thue chua dung khi tra kho som
+        // Không hoàn tiền thuê chưa dùng khi trả kho sớm
         BigDecimal unusedRentalRefund = BigDecimal.ZERO;
 
-        // Kiểm tra phạt quá hạn chưa nộp (Bắt buộc phải thu phạt trước tại quầy)
+        // Chặn trả kho nếu còn nợ phạt quá hạn
         List<Payment> payments = paymentRepository.findByContractId(contractId);
         BigDecimal unpaidPenalties = BigDecimal.ZERO;
         for (Payment p : payments) {
@@ -277,7 +264,6 @@ public class CheckoutSettlementService {
 
         BigDecimal damageFee = request.getDamageFee();
         BigDecimal cleaningFee = request.getCleaningFee();
-        // Tổng khấu trừ: Chỉ bao gồm phí hư hại / vệ sinh (không cấn trừ phạt trễ hạn vào cọc)
         BigDecimal totalDeductions = damageFee.add(cleaningFee);
         BigDecimal totalCredits = unusedRentalRefund.add(depositAmount);
         BigDecimal netAmount = totalCredits.subtract(totalDeductions);
@@ -294,7 +280,7 @@ public class CheckoutSettlementService {
                 ? res.getReservationCode()
                 : String.format("CTR-%s-%s-%04d", cleanBranch, dateStr, contract.getContractId());
 
-        // Nếu tiền cọc + hoàn < tổng khấu trừ -> Bị âm tiền (Khách phải nộp thêm truy thu CMP)
+        // Nếu phí hư hại/vệ sinh vượt quá tiền cọc thì thu thêm phần chênh lệch (CMP)
         String cmpInvoice = null;
         if (netAmount.compareTo(BigDecimal.ZERO) < 0) {
             BigDecimal compensationDue = netAmount.abs();
@@ -329,9 +315,7 @@ public class CheckoutSettlementService {
             paymentRepository.save(cmpPayment);
         }
 
-        // Chuyển trạng thái hợp đồng sang TERMINATED / COMPLETED
-        // Nếu có khoản hoàn tiền cọc (netAmount > 0) -> Để TERMINATED và chờ Manager duyệt hoàn cọc (phiếu REF) mới lên COMPLETED.
-        // Nếu không có hoàn cọc (netAmount <= 0) -> Không sinh phiếu REF, mọi khoản bồi thường (nếu có) đã thu tại quầy -> Chuyển thẳng COMPLETED.
+        // Còn tiền hoàn cọc -> để TERMINATED chờ duyệt phiếu REF mới lên COMPLETED; ngược lại chốt COMPLETED luôn
         if (netAmount.compareTo(BigDecimal.ZERO) > 0) {
             contract.setStatus("TERMINATED");
         } else {
@@ -343,18 +327,17 @@ public class CheckoutSettlementService {
         contract.setTerminatedAt(LocalDateTime.now());
         contractRepository.save(contract);
 
-        // Ô kho giải phóng trực tiếp về AVAILABLE để sẵn sàng đón khách mới (nếu có hư hại Staff báo Manager chuyển MAINTENANCE thủ công sau)
+        // Mở lại ô kho về AVAILABLE; nếu cần bảo trì thì báo quản lý chuyển MAINTENANCE riêng
         unit.setStatus("AVAILABLE");
         storageUnitRepository.save(unit);
 
-        // Vô hiệu hóa toàn bộ mã PIN của khách tại cơ sở này ngay lập tức
         List<GatePin> pins = gatePinRepository.findByContractId(contract.getContractId());
         for (GatePin p : pins) {
             p.setStatus("EXPIRED");
             gatePinRepository.save(p);
         }
 
-        // Sinh lệnh hoàn tiền REF trạng thái PENDING (chờ giải ngân trong 24-48h)
+        // Tạo phiếu hoàn cọc REF ở trạng thái PENDING (hạn xử lý 2 ngày)
         String refInvoice = null;
         if (netAmount.compareTo(BigDecimal.ZERO) > 0) {
             refInvoice = "REF-" + contractCode;
@@ -364,14 +347,14 @@ public class CheckoutSettlementService {
             refPayment.setInvoiceType("REF");
             refPayment.setAmount(netAmount);
             refPayment.setIssuedAt(LocalDateTime.now());
-            refPayment.setDueAt(LocalDateTime.now().plusDays(2)); // 24-48h làm việc
+            refPayment.setDueAt(LocalDateTime.now().plusDays(2));
             refPayment.setStatus("PENDING");
             refPayment.setPaymentStatus("PENDING");
             refPayment.setPaymentMethod(request.getRefundPaymentMethod());
             paymentRepository.save(refPayment);
         }
 
-        // Đóng ticket EARLY_TERMINATION liên quan sang RESOLVED nếu có
+        // Tự động đóng các ticket yêu cầu trả kho sớm liên quan
         boolean ticketResolved = false;
         if (request.getTicketId() != null) {
             Optional<SupportTicket> ticketOpt = supportTicketRepository.findById(request.getTicketId().longValue());
@@ -431,7 +414,6 @@ public class CheckoutSettlementService {
             }
         } catch (Exception ignored) {}
 
-        // Ghi nhật ký kiểm toán
         if (activityLogRepository != null) {
             ActivityLog act = new ActivityLog();
             act.setAccountId(staffAccountId != null ? staffAccountId : res.getAccountId());
@@ -474,9 +456,6 @@ public class CheckoutSettlementService {
         return resp;
     }
 
-    /**
-     * Xác nhận hoàn tất giải ngân tiền hoàn cọc cho khách hàng
-     */
     @Transactional
     public boolean confirmRefundExecution(Integer paymentId, Integer staffAccountId, String receiptUrl) {
         return confirmRefundExecution(paymentId, staffAccountId, receiptUrl, null, null);
@@ -508,7 +487,7 @@ public class CheckoutSettlementService {
         }
         paymentRepository.save(p);
 
-        // B2: Nếu hợp đồng đã TERMINATED và không còn phiếu REF / CMP nào chưa xong -> hợp đồng sang COMPLETED
+        // Khi hợp đồng đang TERMINATED và không còn phiếu REF/CMP treo thì chuyển sang COMPLETED
         if (p.getContractId() != null) {
             Optional<Contract> contractOpt = contractRepository.findById(p.getContractId());
             if (contractOpt.isPresent()) {
@@ -572,7 +551,6 @@ public class CheckoutSettlementService {
             activityLogRepository.save(act);
         }
 
-        // Tự động gửi email xác nhận hoàn tất tiền cọc kèm ảnh biên lai giao dịch
         if (emailService != null && p.getContractId() != null) {
             try {
                 contractRepository.findById(p.getContractId()).ifPresent(c -> {
@@ -619,10 +597,6 @@ public class CheckoutSettlementService {
 
 
 
-    /**
-     * Lấy danh sách các khoản hoàn cọc cần xử lý
-     * Tự động lọc theo cơ sở quản lý, sắp xếp mới nhất lên đầu
-     */
     public List<RefundListItemResponse> getRefundList(String status) {
         return getRefundList(null, status);
     }
@@ -658,7 +632,6 @@ public class CheckoutSettlementService {
             Contract c = (p.getContractId() != null) ? contractRepository.findById(p.getContractId()).orElse(null) : null;
             Reservation r = (c != null && c.getReservationId() != null) ? reservationRepository.findById(c.getReservationId()).orElse(null) : null;
 
-            // Phân quyền dữ liệu theo cơ sở quản lý
             if (facilityId != null && facilityId > 0 && r != null) {
                 StorageUnit unit = (r.getUnitCode() != null) ? storageUnitRepository.findById(r.getUnitCode()).orElse(null) : null;
                 Floor floor = (unit != null && unit.getFloorId() != null) ? floorRepository.findById(unit.getFloorId()).orElse(null) : null;

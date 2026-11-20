@@ -60,7 +60,6 @@ interface StaffSidebarProps {
   onToggleTheme: () => void
 }
 
-/** Sidebar điều hướng cổng nhân viên vận hành — phong cách portal đồng bộ. */
 function StaffSidebar({ isDark, onToggleTheme }: StaffSidebarProps) {
   const { user } = useAuth()
   const [profileOpen, setProfileOpen] = useState(false)

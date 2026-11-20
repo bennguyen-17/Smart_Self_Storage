@@ -50,10 +50,6 @@ public class EmailService {
         }
     }
 
-    // ==========================================
-    // 1. TIỆN ÍCH CƠ BẢN (HELPERS & SEND UTILS)
-    // ==========================================
-
     private String loadTemplate(String templateName) throws IOException {
         ClassPathResource resource = new ClassPathResource("templates/email/" + templateName);
         try (InputStream input = resource.getInputStream()) {
@@ -105,11 +101,6 @@ public class EmailService {
         log.info("Đã gửi email HTML có đính kèm file ({}) thành công tới: {}", attachmentFilename, to);
     }
 
-    // ==========================================
-    // 2. CÁC EMAIL NGHIỆP VỤ HỆ THỐNG
-    // ==========================================
-
-    // --- 1. Gửi mã OTP xác thực (Đăng ký tài khoản, Quên mật khẩu, Trả kho) ---
     public boolean sendOtpEmail(String toEmail, String recipientName, String otpCode, String purpose) {
         if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
             log.warn("Không thể gửi email OTP do địa chỉ email trống hoặc là email nội bộ giả lập: {}", toEmail);
@@ -135,7 +126,6 @@ public class EmailService {
         }
     }
 
-    // --- 2. Gửi email xác nhận đặt cọc thành công ---
     public boolean sendDepositSuccessEmail(
             String toEmail,
             String customerName,
@@ -188,7 +178,6 @@ public class EmailService {
         }
     }
 
-    // --- 3. Gửi email xác nhận nhận kho thành công ---
     public boolean sendCheckInCompletionEmail(
             String toEmail,
             String customerName,
@@ -288,7 +277,6 @@ public class EmailService {
         }
     }
 
-    // --- 4. Gửi email nhắc sắp hết hạn hợp đồng thuê kho trước 3 ngày ---
     public boolean sendExpiryReminderEmail(String toEmail, String customerName, String contractCode, String unitCode, String facilityName, LocalDate expiryDate, long daysLeft) {
         if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
             return false;
@@ -320,7 +308,6 @@ public class EmailService {
         }
     }
 
-    // --- 5. Gửi email xác nhận gia hạn hợp đồng thành công ---
     public boolean sendRenewalSuccessEmail(String toEmail, String customerName, String contractCode, String unitCode,
                                           String facilityName, int effectiveDays, LocalDate newExpiryDate,
                                           String invoiceNumber, BigDecimal amount) {
@@ -358,7 +345,6 @@ public class EmailService {
         }
     }
 
-    // --- 6. Gửi email cảnh báo quá hạn hợp đồng ---
     public boolean sendOverdueWarningEmail(String toEmail, String customerName, String contractCode, String unitCode, String facilityName, long overdueDays, BigDecimal totalPenalty) {
         if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
             return false;
@@ -390,7 +376,6 @@ public class EmailService {
         }
     }
 
-    // Gửi email xác nhận hoàn tất hoàn trả tiền cọc
     public boolean sendRefundConfirmationEmail(String toEmail, String customerName, String contractCode, BigDecimal amount, String receiptUrl, String transactionCode) {
         return sendRefundConfirmationEmail(toEmail, customerName, contractCode, amount, receiptUrl, transactionCode, null, null);
     }
@@ -459,7 +444,6 @@ public class EmailService {
         }
     }
 
-    // Gửi email cảnh báo bảo mật khi tài khoản bị tạm khóa 15 phút do nhập sai mật khẩu nhiều lần
     public boolean sendSecurityAlertEmail(String toEmail, String customerName, String ipAddress, LocalDateTime lockUntil) {
         if (toEmail == null || toEmail.isBlank() || toEmail.endsWith("@smartstorage.vn")) {
             return false;
@@ -490,7 +474,6 @@ public class EmailService {
         }
     }
 
-    // Gửi email thông báo đơn phương chấm dứt hợp đồng do vi phạm quy chế an ninh
     public boolean sendViolationTerminationEmail(
             String toEmail, String customerName, String contractCode,
             String unitCode, String facilityName, String violationReason,
@@ -527,7 +510,6 @@ public class EmailService {
         }
     }
 
-    // Gửi email thông báo hoàn tất thanh lý tài sản và khấu trừ tiền cọc do quá hạn >= 30 ngày
     public boolean sendForfeitNoticeEmail(
             String toEmail, String customerName, String contractCode,
             String unitCode, String facilityName, BigDecimal depositAmount,

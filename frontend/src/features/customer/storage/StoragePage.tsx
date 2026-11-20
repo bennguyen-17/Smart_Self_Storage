@@ -17,15 +17,12 @@ export default function StoragePage() {
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Bộ lọc trạng thái & Tìm kiếm
   const [activeTab, setActiveTab] = useState<ContractFilterTab>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  // Thống kê số lượng từng loại
   const counts = useMemo(() => {
     return {
       all: contracts.length,
@@ -42,10 +39,9 @@ export default function StoragePage() {
     };
   }, [contracts]);
 
-  // Lọc và sắp xếp danh sách hợp đồng
   const filteredContracts = useMemo(() => {
     const list = contracts.filter((c) => {
-      // 1. Lọc theo tab
+      // Đơn chờ check-in đã quá ngày hẹn coi như đã hủy
       const isPastCheckin = Boolean(c.startDate) && new Date(c.startDate).setHours(23, 59, 59, 999) < Date.now();
       const effectiveStatus = (c.status === 'PENDING_CHECKIN' && isPastCheckin) ? 'CANCELLED' : c.status;
 
@@ -59,7 +55,6 @@ export default function StoragePage() {
         return false;
       }
 
-      // 2. Lọc theo từ khóa tìm kiếm
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const code = (c.reservationCode || c.bookingCode || c.contractId || '').toLowerCase();
@@ -72,9 +67,7 @@ export default function StoragePage() {
       return true;
     });
 
-    // 3. Sắp xếp:
-    // Nhóm hiệu lực / chờ check-in lên đầu, quá hạn và đã hủy nằm phía dưới
-    // Trong cùng nhóm: cái nào mới nhất (rawContractId lớn hơn hoặc ngày bắt đầu mới hơn) nằm trên
+    // Ưu tiên đơn chờ check-in và đang hiệu lực lên đầu, cùng nhóm xếp mới nhất trước
     const getContractPriority = (c: any) => {
       const isPastCheckin = Boolean(c.startDate) && new Date(c.startDate).setHours(23, 59, 59, 999) < Date.now();
       const status = (c.status === 'PENDING_CHECKIN' && isPastCheckin) ? 'CANCELLED' : c.status;
@@ -118,16 +111,13 @@ export default function StoragePage() {
     return filteredContracts.slice(start, start + pageSize);
   }, [filteredContracts, currentPage, pageSize]);
 
-  // State các Modals
   const [viewContract, setViewContract] = useState<any>(null);
   const [cancelModalContract, setCancelModalContract] = useState<any>(null);
   const [isCancelling, setIsCancelling] = useState(false);
 
-  // Modal Trả kho
   const [returnModalContract, setReturnModalContract] = useState<any>(null);
   const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
 
-  // Modal Gia hạn
   const [showExtendModal, setShowExtendModal] = useState(false);
   const [extendUnitContext, setExtendUnitContext] = useState<any>(null);
   const [showExtendPaymentFlow, setShowExtendPaymentFlow] = useState(false);
@@ -262,7 +252,6 @@ export default function StoragePage() {
         className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 space-y-5 sm:space-y-6"
       >
         <div className="w-full space-y-4">
-          {/* Header Tiêu đề trang */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
@@ -275,9 +264,7 @@ export default function StoragePage() {
           </div>
 
           <div className="card-box rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md shadow-slate-300/40 dark:shadow-sm overflow-hidden">
-            {/* THANH BỘ LỌC TABS & TÌM KIẾM */}
             <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-900/50">
-              {/* Tab lọc trạng thái */}
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <button
                   type="button"
@@ -368,7 +355,6 @@ export default function StoragePage() {
                 </button>
               </div>
 
-              {/* Ô tìm kiếm */}
               <div className="relative w-full md:w-72">
                 <i className="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
                 <input
@@ -418,7 +404,6 @@ export default function StoragePage() {
               </div>
             ) : (
               <>
-                {/* 1. Mobile Cards */}
                 <StorageCardList
                   contracts={paginatedContracts}
                   onViewContract={setViewContract}
@@ -428,7 +413,6 @@ export default function StoragePage() {
                   getCancelReasonLabel={getCancelReasonLabel}
                 />
 
-                {/* 2. Desktop Table */}
                 <StorageTable
                   contracts={paginatedContracts}
                   onViewContract={setViewContract}
@@ -442,7 +426,6 @@ export default function StoragePage() {
             )}
           </div>
 
-          {/* 3. Pagination */}
           {!loading && filteredContracts.length > 0 && (
             <StoragePagination
               currentPage={currentPage}
@@ -454,7 +437,6 @@ export default function StoragePage() {
         </div>
       </motion.div>
 
-      {/* Modal Hủy cọc */}
       {cancelModalContract && (
         <CancelDepositModal
           contract={cancelModalContract}
@@ -464,7 +446,6 @@ export default function StoragePage() {
         />
       )}
 
-      {/* Modal Xem chi tiết hợp đồng */}
       {viewContract && (
         <ContractDetailModal
           contract={viewContract}
@@ -472,7 +453,6 @@ export default function StoragePage() {
         />
       )}
 
-      {/* Modal Yêu cầu Trả kho */}
       {returnModalContract && (
         <ReturnStorageModal
           contract={returnModalContract}
@@ -482,7 +462,6 @@ export default function StoragePage() {
         />
       )}
 
-      {/* Modal Gia hạn */}
       {showExtendModal && (
         <ExtendContractModal
           unitContext={extendUnitContext}
@@ -491,7 +470,6 @@ export default function StoragePage() {
         />
       )}
 
-      {/* Flow Thanh toán Gia hạn */}
       {showExtendPaymentFlow && extendPaymentData && (
         <ExtendPaymentFlow
           initialBookingData={extendPaymentData}

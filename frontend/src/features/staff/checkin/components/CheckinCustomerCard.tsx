@@ -34,7 +34,6 @@ export default function CheckinCustomerCard({
           <span>Thông tin khách hàng</span>
         </h2>
 
-        {/* Nút thao tác góc phải */}
         {isEditingCustomer ? (
           <div className="flex items-center gap-2">
             <button

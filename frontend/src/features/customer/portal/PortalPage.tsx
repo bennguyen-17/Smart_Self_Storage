@@ -131,7 +131,6 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
 
   return (
     <CustomerLayout activeNav="home">
-      {/* 1. KHU VỰC HERO DASHBOARD (TIÊU ĐỀ + CHÀO HỎI) */}
       <motion.div
         key="hero-dashboard-headline"
         initial={{ opacity: 0, scale: 0.96 }}
@@ -140,7 +139,6 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
         className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center pt-10 sm:pt-14 pb-2 text-center"
       >
         <div className="relative flex flex-col items-center select-none w-full max-w-5xl">
-          {/* Ambient glow */}
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-full max-w-3xl h-40 bg-gradient-to-r from-blue-500/20 via-blue-400/25 to-indigo-500/20 blur-3xl rounded-full pointer-events-none -z-10" />
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight uppercase text-center leading-[1.15]">
@@ -157,7 +155,6 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
           </h1>
         </div>
 
-        {/* Customer Greeting */}
         <div className="flex items-center justify-center mt-6 sm:mt-8">
           <div className="inline-flex items-center gap-3 px-6 py-2.5 sm:px-7 sm:py-3 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-sm sm:text-base font-bold text-slate-700 dark:text-slate-200">
             <span className="flex h-3 w-3 relative">
@@ -171,7 +168,6 @@ export default function CustomerPortal({ initialTab = 'home' }: CustomerPortalPr
         </div>
       </motion.div>
 
-      {/* 2. HÀNG 4 NÚT ĐIỀU HƯỚNG TỚI 4 TRANG RIÊNG BIỆT */}
       <motion.div
         key="home-action-cards"
         initial={{ opacity: 0, y: 20 }}

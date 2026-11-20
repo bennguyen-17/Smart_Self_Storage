@@ -1,15 +1,10 @@
-// Ảnh nghiệp vụ của cổng Manager / Admin, theo luồng "tải ảnh trước" của BE (ImageStorageService):
-//   1. POST /api/uploads (multipart: file + category) → { imageId, url } ở trạng thái PENDING
-//   2. API nghiệp vụ nhận mã ảnh (receiptImageId, evidenceImageIds…) thì ảnh mới gắn vào phiếu / hợp đồng
-// Ảnh hợp đồng / thanh toán (typeCode 2) BE chỉ trả khi có token đúng quyền, nên KHÔNG dùng thẳng <img src>
-// (trình duyệt không gửi Authorization): tải về bằng apiClient (có token) rồi hiện bằng object URL.
+// Luồng upload ảnh: tải lên /uploads (PENDING) trước để lấy imageId rồi gửi kèm API nghiệp vụ.
+// Ảnh cần xác thực không gắn thẳng vào <img src> vì trình duyệt không gửi Authorization header, mà tải blob qua apiClient.
 
 import apiClient from "@/lib/apiClient"
 
-/** Loại ảnh Manager được tải (BE kiểm quyền theo loại) */
 export type ImageCategory = "REFUND_RECEIPT" | "FORFEIT_EVIDENCE" | "CHECKOUT_INSPECTION"
 
-/** StoredImageResponse của BE */
 export interface StoredImage {
   imageId: number
   url: string
@@ -19,31 +14,28 @@ export interface StoredImage {
   uploadedBy?: string | null
 }
 
-/** Giống giới hạn của BE: JPG / PNG / WEBP, tối đa 5 MB mỗi ảnh, tối đa 5 ảnh mỗi lần xác nhận */
+// Khớp giới hạn upload phía BE: JPG/PNG/WEBP, tối đa 5 MB và 5 ảnh mỗi lần
 export const IMAGE_MAX_BYTES = 5 * 1024 * 1024
 export const IMAGE_MAX_PER_ACTION = 5
 export const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp"
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
 
-/** Kiểm tra trước ở FE để báo ngay (BE vẫn kiểm tra lại). null = hợp lệ */
 export function imageFileError(file: { name: string; type: string; size: number }): string | null {
   if (!ALLOWED_TYPES.includes(file.type)) return `"${file.name}" không phải ảnh JPG, PNG hoặc WEBP`
   if (file.size > IMAGE_MAX_BYTES) return `"${file.name}" lớn hơn 5 MB`
   return null
 }
 
-/** BE trả url dạng "/api/images/12"; apiClient đã có tiền tố /api nên bỏ đi. Link ngoài (http…) giữ nguyên */
+// Bỏ tiền tố /api vì apiClient đã cấu hình baseURL, giữ nguyên link ngoài
 export function apiPathOf(url: string): string {
   if (/^https?:\/\//i.test(url)) return url
   return url.replace(/^\/api(?=\/)/, "")
 }
 
-/** Link ngoài (ví dụ biên lai cũ dán từ Drive) thì mở thẳng được; ảnh do hệ thống lưu thì phải tải kèm token */
 export function isExternalUrl(url: string): boolean {
   return /^https?:\/\//i.test(url)
 }
 
-/** POST /api/uploads: lưu ảnh tạm (PENDING), trả mã ảnh để gửi kèm API nghiệp vụ */
 export async function uploadImage(file: File, category: ImageCategory): Promise<StoredImage> {
   const form = new FormData()
   form.append("file", file)
@@ -55,7 +47,7 @@ export async function uploadImage(file: File, category: ImageCategory): Promise<
   return res
 }
 
-/** Tải ảnh kèm token rồi trả object URL để gắn vào <img>; nhớ URL.revokeObjectURL khi không dùng nữa */
+// Caller cần gọi URL.revokeObjectURL khi không còn dùng để tránh leak bộ nhớ
 export async function loadImageObjectUrl(url: string): Promise<string> {
   const blob = (await apiClient.get(apiPathOf(url), { responseType: "blob" })) as unknown as Blob
   return URL.createObjectURL(blob)

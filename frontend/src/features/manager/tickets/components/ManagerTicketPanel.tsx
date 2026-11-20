@@ -38,8 +38,7 @@ export default function ManagerTicketPanel() {
 
   const [reloadCount, setReloadCount] = useState(0)
 
-  // Tải ngay và tự tải lại mỗi 30s. Chỉ đổi state trong callback khi API trả về (không setState ngay trong effect);
-  // `ignore` bỏ qua kết quả về muộn sau khi đã rời trang hoặc đổi cơ sở.
+  // Tự refresh mỗi 30s; dùng cờ ignore để bỏ kết quả về muộn khi unmount hoặc đổi cơ sở
   useEffect(() => {
     let ignore = false
     const load = () =>
@@ -63,13 +62,12 @@ export default function ManagerTicketPanel() {
     }
   }, [facilityId, reloadCount])
 
-  // Nút "Làm mới": quay biểu tượng trong lúc tải; lần tải tự động 30s chạy ngầm, không quay
+  // Chỉ bật spinner khi bấm làm mới thủ công, poll ngầm 30s không quay
   function refreshTickets() {
     setLoading(true)
     setReloadCount((n) => n + 1)
   }
 
-  // Thống kê số lượng theo nhóm
   const counts = useMemo(() => {
     return {
       total: tickets.length,
@@ -79,7 +77,6 @@ export default function ManagerTicketPanel() {
     }
   }, [tickets])
 
-  // Lọc và tìm kiếm
   const filteredTickets = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
     return tickets.filter((t) => {
@@ -153,7 +150,6 @@ export default function ManagerTicketPanel() {
 
   return (
     <section aria-label="Theo dõi ticket sự cố của cơ sở" className="space-y-4">
-      {/* Filter and Search Bar */}
       <div className="card-box flex flex-col justify-between gap-3 rounded-2xl border p-4 shadow-sm md:flex-row md:items-center">
         <div className="flex max-w-xl flex-1 space-x-2">
           <div className="relative flex-1">
@@ -201,7 +197,6 @@ export default function ManagerTicketPanel() {
         </div>
       </div>
 
-      {/* Dàn Filter Chips lọc theo trạng thái ticket - nằm ngay phía dưới thanh tìm kiếm */}
       <div role="group" aria-label="Lọc theo trạng thái ticket" className="flex flex-wrap items-center gap-2">
         {STATUS_FILTERS.map((f) => {
           const active = f.key === statusFilter
@@ -232,7 +227,6 @@ export default function ManagerTicketPanel() {
         })}
       </div>
 
-      {/* Table List View */}
       {filteredTickets.length === 0 ? (
         <div className="card-box flex flex-col items-center justify-center rounded-2xl border py-12 text-center text-muted">
           <CheckCircle2Icon className="mb-2 size-10 text-emerald-500/70" />
@@ -261,7 +255,6 @@ export default function ManagerTicketPanel() {
                     key={ticket.id}
                     className="transition hover:bg-slate-50/70 dark:hover:bg-slate-800/50"
                   >
-                    {/* Cột 1: Mã & Loại Ticket */}
                     <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
                       <div className="flex flex-col items-center justify-center">
                         <span className="font-mono text-xs font-bold text-slate-900 dark:text-white">
@@ -274,7 +267,6 @@ export default function ManagerTicketPanel() {
                       </div>
                     </td>
 
-                    {/* Cột 2: Vị trí / Ô kho */}
                     <td className="px-4 py-3.5 align-middle text-center font-mono font-bold whitespace-nowrap text-slate-800 dark:text-slate-200">
                       {ticket.unitCode || "Cơ sở / Cổng"}
                       {ticket.facilityName && (
@@ -284,7 +276,6 @@ export default function ManagerTicketPanel() {
                       )}
                     </td>
 
-                    {/* Cột 3: Khách hàng */}
                     <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
                       <div className="font-bold text-slate-900 dark:text-white">
                         {ticket.customerName || `Khách hàng #${ticket.customerId}`}
@@ -294,19 +285,16 @@ export default function ManagerTicketPanel() {
                       </div>
                     </td>
 
-                    {/* Cột 4: Nội dung */}
                     <td className="min-w-[220px] max-w-[360px] px-4 py-3.5 align-middle text-center">
                       <p className="text-xs text-slate-600 italic dark:text-slate-300 leading-relaxed break-words">
                         {ticket.description ? `"${ticket.description}"` : "—"}
                       </p>
                     </td>
 
-                    {/* Cột 5: SLA & Thời hạn */}
                     <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
                       {getSlaBadge(ticket)}
                     </td>
 
-                    {/* Cột 6: Trạng thái */}
                     <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
                       <span
                         className={cn(
@@ -330,7 +318,6 @@ export default function ManagerTicketPanel() {
                       </span>
                     </td>
 
-                    {/* Cột 7: Người phụ trách */}
                     <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
                       {ticket.status === "SUBMITTED" ? (
                         <span className="text-amber-700 dark:text-amber-400 text-xs italic">Chưa tiếp nhận</span>
@@ -345,7 +332,6 @@ export default function ManagerTicketPanel() {
                       )}
                     </td>
 
-                    {/* Cột 8: Tiến độ xử lý */}
                     <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
                       <span
                         className={cn(

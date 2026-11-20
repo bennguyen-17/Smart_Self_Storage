@@ -14,7 +14,6 @@ export function FinalCtaSection() {
     >
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         <Reveal className="relative overflow-hidden flex flex-col items-start gap-6 rounded-(--l-radius-panel) bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 px-6 py-10 text-white shadow-2xl shadow-blue-500/30 sm:px-10 lg:flex-row lg:items-center lg:justify-between lg:py-13">
-          {/* Subtle background glow circles */}
           <div
             aria-hidden
             className="absolute -top-24 -right-24 size-80 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none"

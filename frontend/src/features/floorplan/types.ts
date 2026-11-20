@@ -13,7 +13,7 @@ export type UnitSize = "S" | "M" | "L" | "XL"
 export type SizeFilter = "ALL" | UnitSize
 export type ClimateFilter = "ALL" | StorageCondition
 
-/** 4 nhóm màu trạng thái hiển thị trên sơ đồ */
+// Nhóm màu trạng thái hiển thị trên sơ đồ
 export type StatusGroup = "AVAILABLE" | "HOLD" | "RESERVED" | "RENTED" | "MAINTENANCE"
 
 export interface UnitQuery {

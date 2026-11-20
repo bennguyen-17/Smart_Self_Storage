@@ -63,13 +63,11 @@ export default function CustomerLayout({ children, activeNav = 'home' }: Custome
 
   return (
     <div className={`relative min-h-screen flex flex-col transition-colors ${isDarkMode ? 'dark bg-[#0b1120] text-slate-100' : 'bg-[#eef5fc] text-slate-900'} antialiased`}>
-      {/* Vầng sáng xanh mờ phía trên vùng nội dung, đồng bộ chuẩn 100% với Staff và Manager */}
       <div
         aria-hidden="true"
         className="pointer-events-none fixed top-0 left-1/2 -z-0 h-64 w-full max-w-4xl -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-500/20 via-cyan-400/25 to-indigo-500/20 blur-3xl dark:from-blue-500/10 dark:via-cyan-400/10 dark:to-indigo-500/10"
       />
 
-      {/* Header với thanh chuyển Tab tích hợp */}
       <Header
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
@@ -86,7 +84,6 @@ export default function CustomerLayout({ children, activeNav = 'home' }: Custome
                 transition={{ duration: 0.25, ease: 'easeOut' }}
                 className="flex items-center gap-1 sm:gap-1.5 p-1 bg-slate-100/90 dark:bg-slate-800/90 rounded-2xl border border-slate-200/90 dark:border-slate-700/80 shadow-xs backdrop-blur-md overflow-x-auto no-scrollbar max-w-full"
               >
-              {/* Nút Về Trang Chủ */}
               <button
                 type="button"
                 onClick={() => navigate('/portal')}
@@ -96,7 +93,6 @@ export default function CustomerLayout({ children, activeNav = 'home' }: Custome
                 <Home className="size-4 sm:size-4.5" />
               </button>
 
-              {/* Các Nút điều hướng các màn hình */}
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeNav === item.id;
@@ -126,17 +122,14 @@ export default function CustomerLayout({ children, activeNav = 'home' }: Custome
       }
       />
 
-      {/* Main Content */}
       <main className="relative z-10 flex-1 flex flex-col w-full">
         {children}
       </main>
 
-      {/* Footer */}
       <div className="relative z-10">
         <SiteFooter />
       </div>
 
-      {/* Modal Profile Khách Hàng */}
       {showProfileModal && (
         <CustomerProfileModal
           onClose={() => setShowProfileModal(false)}

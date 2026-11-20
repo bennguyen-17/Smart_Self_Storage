@@ -59,11 +59,9 @@ export default function BomPricingPage() {
     deleteFeePolicyInDb,
   } = useBomContext()
 
-  // Search & Filter state for surcharges
   const [searchSurcharge, setSearchSurcharge] = useState("")
   const [surchargeFilter, setSurchargeFilter] = useState<"all" | "penalty" | "discount" | "damage">("all")
 
-  // Modal 1: Pricing edit modal
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false)
   const [selectedPricingItem, setSelectedPricingItem] = useState<UnitPricing | null>(null)
   const [editDailyPrice, setEditDailyPrice] = useState<number | "">(30000)
@@ -71,7 +69,6 @@ export default function BomPricingPage() {
   const [editClimatePercent, setEditClimatePercent] = useState<number | "">(20)
   const [editDepositAmount, setEditDepositAmount] = useState<number | "">(500000)
 
-  // Modal Thêm loại kho mới
   const [isAddPricingModalOpen, setIsAddPricingModalOpen] = useState(false)
   const [newTypeName, setNewTypeName] = useState("")
   const [newSizeCode, setNewSizeCode] = useState("L")
@@ -99,7 +96,6 @@ export default function BomPricingPage() {
     setter(isNaN(parsed) ? "" : parsed)
   }
 
-  // Modal Xác nhận xóa loại kho
   const [pricingToDelete, setPricingToDelete] = useState<UnitPricing | null>(null)
   const [isDeletingPricing, setIsDeletingPricing] = useState(false)
 
@@ -141,7 +137,7 @@ export default function BomPricingPage() {
         setIsAddPricingModalOpen(false)
         resetAddPricingForm()
       } else {
-        // Fallback local UI
+        // Fallback cập nhật local state khi API lỗi
         const newItem: UnitPricing = {
           id: `custom-${Date.now()}`,
           unitTypeId: Date.now(),
@@ -194,7 +190,6 @@ export default function BomPricingPage() {
     }
   }
 
-  // Modal 2: Surcharge add/edit modal
   const [isSurchargeModalOpen, setIsSurchargeModalOpen] = useState(false)
   const [editingSurcharge, setEditingSurcharge] = useState<SurchargeItem | null>(null)
   const [surchargeCat, setSurchargeCat] = useState<"penalty" | "discount" | "damage">("penalty")
@@ -273,7 +268,7 @@ export default function BomPricingPage() {
     if (success) {
       toast.success(`Đã lưu bảng giá & mức cọc cho ${selectedPricingItem.name} trực tiếp vào Database!`)
     } else {
-      // Fallback update local state
+      // Fallback cập nhật local state khi API lỗi
       setPricingList((prev) =>
         prev.map((p) =>
           p.id === selectedPricingItem.id
@@ -492,7 +487,6 @@ export default function BomPricingPage() {
 
   return (
     <div className="space-y-4">
-      {/* Tiêu đề trang - Chuẩn Staff & Manager */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
@@ -502,7 +496,6 @@ export default function BomPricingPage() {
         </div>
       </div>
 
-      {/* 1. KHUNG GIÁ THUÊ 4 SIZE KHO */}
       <div className="card-box rounded-2xl border border-slate-200/80 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90 p-5 shadow-sm space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -513,7 +506,6 @@ export default function BomPricingPage() {
             </div>
           </div>
 
-          {/* GIAO DIỆN DẠNG BẢNG NGANG (HORIZONTAL TABLE FORMAT - VỪA VẶN 100% KHÔNG CUỘN) */}
           <div className="rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-md overflow-hidden">
             <table className="w-full text-center text-sm border-collapse table-auto">
               <thead>
@@ -530,42 +522,36 @@ export default function BomPricingPage() {
                 {pricingList.map((item) => {
                   return (
                     <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/60 transition">
-                      {/* CỘT 1: SIZE & TÊN LOẠI KHO */}
                       <td className="py-3 px-3 sm:px-4 whitespace-nowrap align-middle text-center">
                         <span className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
                           {item.name}
                         </span>
                       </td>
 
-                      {/* CỘT 2: GIÁ THEO NGÀY */}
                       <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
                         <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
                           ₫{item.dailyPrice.toLocaleString("vi-VN")}
                         </span>
                       </td>
 
-                      {/* CỘT 4: GIÁ THEO THÁNG */}
                       <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
                         <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
                           ₫{item.normPrice.toLocaleString("vi-VN")}
                         </span>
                       </td>
 
-                      {/* CỘT 5: PHỤ PHÍ KHO MÁT */}
                       <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
                         <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
                           +{item.climateSurchargePercent ?? 20}%
                         </span>
                       </td>
 
-                      {/* CỘT 6: TIỀN CỌC CHUẨN */}
                       <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
                         <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
                           ₫{item.depositAmount.toLocaleString("vi-VN")}
                         </span>
                       </td>
 
-                      {/* CỘT 7: THAO TÁC */}
                       <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
                         <button
                           type="button"
@@ -591,7 +577,6 @@ export default function BomPricingPage() {
           )}
       </div>
 
-      {/* 2. BIỂU PHÍ PHẠT QUÁ HẠN, GIẢM GIÁ & BỒI THƯỜNG */}
       <div className="card-box rounded-2xl border border-slate-200/80 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90 p-5 shadow-sm space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
@@ -622,7 +607,6 @@ export default function BomPricingPage() {
             </div>
           </div>
 
-          {/* Thanh phân loại tab */}
           <div className="flex items-center gap-2 overflow-x-auto text-xs pb-1">
             {(["all", "penalty", "discount", "damage"] as const).map((filterKey) => (
               <button
@@ -645,7 +629,6 @@ export default function BomPricingPage() {
             ))}
           </div>
 
-          {/* Dạng bảng cột cho từng khoản phí */}
           <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-md">
             <table className="w-full text-center text-sm border-collapse">
               <thead>
@@ -682,7 +665,6 @@ export default function BomPricingPage() {
                       key={sc.id}
                       className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition"
                     >
-                      {/* Tên biểu phí */}
                       <td className="p-3.5 whitespace-nowrap align-middle text-center">
                         <div className="font-semibold text-slate-800 dark:text-slate-200 text-sm">{sc.name}</div>
                         {sc.note && (
@@ -692,24 +674,20 @@ export default function BomPricingPage() {
                         )}
                       </td>
 
-                      {/* Phân loại */}
                       <td className="p-3.5 text-center">
                         <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badgeConfig.style}`}>
                           {badgeConfig.label}
                         </span>
                       </td>
 
-                      {/* Hình thức */}
                       <td className="p-3.5 text-center text-slate-500 dark:text-slate-400 font-medium text-xs">
                         {sc.type}
                       </td>
 
-                      {/* Mức phí áp dụng */}
                       <td className="p-3.5 whitespace-nowrap align-middle text-center font-mono font-semibold text-slate-800 dark:text-slate-200 text-sm">
                         {sc.rate}
                       </td>
 
-                      {/* Thao tác */}
                       <td className="p-3.5 text-center">
                         <div className="flex items-center justify-center">
                           <button
@@ -737,7 +715,6 @@ export default function BomPricingPage() {
           )}
       </div>
 
-      {/* MODAL 1: CHỈNH SỬA BẢNG GIÁ SIZE S/M/L/XL - PORTAL RA BODY TRÁNH TRỒI LỆCH MÀN HÌNH */}
       {isPricingModalOpen && selectedPricingItem && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 max-w-lg w-full space-y-5 shadow-2xl animate-in fade-in zoom-in duration-150 text-slate-900 dark:text-white my-auto">
@@ -755,7 +732,6 @@ export default function BomPricingPage() {
               </button>
             </div>
 
-            {/* TAB CHỌN SIZE KHO ĐỂ CHUYỂN ĐỔI TIỆN LỢI */}
             <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800">
               {pricingList.map((p) => {
                 const isCurrent = selectedPricingItem.id === p.id
@@ -867,7 +843,6 @@ export default function BomPricingPage() {
         document.body
       )}
 
-      {/* MODAL 2: THÊM / CHỈNH SỬA HẠNG MỤC PHỤ THU & PHÍ PHẠT - PORTAL RA BODY */}
       {isSurchargeModalOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <form
@@ -927,7 +902,6 @@ export default function BomPricingPage() {
                 />
               </div>
 
-              {/* Cách thức tính phí: Số tiền cố định hay % */}
               <div>
                 <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                   Cách Thức Tính Phí:
@@ -964,7 +938,6 @@ export default function BomPricingPage() {
                 </div>
               </div>
 
-              {/* Mức phí và Đơn vị tính */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
@@ -1004,7 +977,6 @@ export default function BomPricingPage() {
                 </div>
               </div>
 
-              {/* Tùy chọn Miễn Cọc khi là Discount */}
               {surchargeCat === "discount" && (
                 <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
                   <input
@@ -1021,7 +993,6 @@ export default function BomPricingPage() {
                 </div>
               )}
 
-              {/* Mô tả / Ghi chú chính sách */}
               <div>
                 <label className="block font-bold text-slate-600 dark:text-slate-400 uppercase text-[10px] mb-1">
                   Mô Tả / Hình Thức Áp Dụng:
@@ -1035,7 +1006,6 @@ export default function BomPricingPage() {
                 />
               </div>
 
-              {/* Dòng Xem Trước (Preview) */}
               <div className="p-3 bg-blue-50/70 dark:bg-slate-950/80 rounded-xl border border-blue-200 dark:border-blue-500/30 flex items-center justify-between">
                 <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Mức phí áp dụng vào hóa đơn:</span>
                 <span className="font-mono font-black text-xs text-blue-600 dark:text-blue-400">
@@ -1080,7 +1050,6 @@ export default function BomPricingPage() {
         document.body
       )}
 
-      {/* MODAL 3: THÊM LOẠI KHO MỚI - PORTAL RA BODY */}
       {isAddPricingModalOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <form
@@ -1245,7 +1214,6 @@ export default function BomPricingPage() {
         document.body
       )}
 
-      {/* MODAL 4: XÁC NHẬN XÓA LOẠI KHO - PORTAL RA BODY */}
       {pricingToDelete && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 max-w-md w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-slate-900 dark:text-white">
@@ -1294,7 +1262,6 @@ export default function BomPricingPage() {
         document.body
       )}
 
-      {/* MODAL 5: XÁC NHẬN XÓA BIỂU PHÍ / PHỤ THU - PORTAL RA BODY */}
       {surchargeToDelete && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 max-w-md w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-slate-900 dark:text-white">

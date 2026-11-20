@@ -20,7 +20,6 @@ public class CheckoutSettlementController {
         this.checkoutSettlementService = checkoutSettlementService;
     }
 
-    // Xem dự thảo quyết toán trả kho và hoàn tiền cọc
     @GetMapping("/checkout-preview")
     public ResponseEntity<CheckoutPreviewResponse> getCheckoutPreview(
             @PathVariable Integer contractId,
@@ -36,7 +35,6 @@ public class CheckoutSettlementController {
         }
     }
 
-    // Xác nhận bàn giao trả kho và chốt quyết toán hoàn cọc hoặc truy thu chi phí
     @PostMapping("/checkout")
     public ResponseEntity<CheckoutConfirmResponse> confirmCheckout(
             @PathVariable Integer contractId,

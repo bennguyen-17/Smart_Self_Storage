@@ -13,7 +13,6 @@ export default function PaymentResultPage() {
 
   useEffect(() => {
     const verifyPayment = async () => {
-      // Chuyển toàn bộ searchParams thành plain object
       const paramsObj: Record<string, string> = {};
       searchParams.forEach((val, key) => {
         paramsObj[key] = val;
@@ -29,7 +28,7 @@ export default function PaymentResultPage() {
 
       const isExtension = String(invoiceNumber || '').startsWith('EXT-');
 
-      // Nếu có chữ ký vnp_SecureHash thì gọi Backend xác thực
+      // Có vnp_SecureHash từ VNPay thì gửi về BE xác thực chữ ký
       if (paramsObj.vnp_SecureHash) {
         try {
           const res: any = await apiClient.post('/payment/vnpay/verify', paramsObj);
@@ -64,7 +63,7 @@ export default function PaymentResultPage() {
           setLoading(false);
         }
       } else {
-        // Trường hợp backend redirect về kèm param success
+        // Trường hợp BE đã xác thực sẵn và redirect kèm param success
         const isSuccessParam = paramsObj.success === 'true' || responseCode === '00';
         setSuccess(isSuccessParam);
         setMessage(
@@ -112,7 +111,6 @@ export default function PaymentResultPage() {
               </p>
             </div>
 
-            {/* Chi tiết đơn */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-xs text-left space-y-2.5">
               {details?.invoiceNumber && (
                 <div className="flex justify-between">

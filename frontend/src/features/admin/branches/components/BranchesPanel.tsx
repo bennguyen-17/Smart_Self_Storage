@@ -21,7 +21,6 @@ const EMPTY_FILTER: BranchFilter = { query: "", region: "ALL", status: "ALL" }
 const STATUS_TONE: Record<FacilityStatus, BadgeTone> = { ACTIVE: "green", MAINTENANCE: "amber", INACTIVE: "slate" }
 const LAYOUT_LABEL: Record<string, string> = { A: "Đô thị (mẫu A)", B: "Kho vận (mẫu B)" }
 
-/** Admin › Chi nhánh: danh sách cơ sở toàn chuỗi (GET /api/facilities), chỉ xem */
 function BranchesPanel() {
   const [reloadCount, setReloadCount] = useState(0)
   const [filter, setFilter] = useState<BranchFilter>(EMPTY_FILTER)

@@ -1,12 +1,7 @@
-// Biểu đồ nhẹ cho trang Báo cáo, vẽ bằng HTML/CSS (không thêm thư viện).
-// Màu theo bộ màu đã kiểm (dataviz palette): 4 màu phân loại đã chạy kiểm tra tương phản và mù màu
-// ở cả sáng / tối. Chữ luôn dùng màu chữ, không dùng màu dữ liệu; mỗi màu đều có chú thích kèm số.
-
 import { cn } from "cn"
 
 import { barWidths, donutArcs, type UnitSegment, type UnitSegmentKey } from "../reportRules"
 
-/** Màu phân loại cố định theo trạng thái ô (không đổi khi lọc / sắp xếp) */
 const UNIT_COLOR: Record<UnitSegmentKey, string> = {
   occupied: "bg-[#2a78d6] dark:bg-[#3987e5]",
   reserved: "bg-[#eb6834] dark:bg-[#d95926]",
@@ -14,7 +9,6 @@ const UNIT_COLOR: Record<UnitSegmentKey, string> = {
   maintenance: "bg-[#eda100] dark:bg-[#c98500]",
 }
 
-/** Màu nét vẽ SVG tương ứng (cùng giá trị với UNIT_COLOR) */
 const UNIT_STROKE: Record<UnitSegmentKey, string> = {
   occupied: "stroke-[#2a78d6] dark:stroke-[#3987e5]",
   reserved: "stroke-[#eb6834] dark:stroke-[#d95926]",
@@ -22,14 +16,9 @@ const UNIT_STROKE: Record<UnitSegmentKey, string> = {
   maintenance: "stroke-[#eda100] dark:stroke-[#c98500]",
 }
 
-/** Bán kính để chu vi đúng 100 đơn vị: độ dài cung = % luôn */
+// Chọn R sao cho chu vi = 100 để dùng trực tiếp % cho strokeDasharray
 const R = 100 / (2 * Math.PI)
 
-/**
- * Biểu đồ vành khuyên cơ cấu ô kho: 4 lát theo thứ tự cố định, khe hở giữa các lát,
- * giữa vòng ghi tỷ lệ lấp đầy; chú thích bên cạnh có màu, tên, số ô và %.
- * Dạng tròn chỉ dùng vì đây là phần-trên-tổng với ≤ 6 lát và các phần chênh nhau rõ.
- */
 export function UnitDonut({
   segments,
   total,
@@ -87,7 +76,6 @@ export function UnitDonut({
   )
 }
 
-/** Thước đo một tỷ lệ (0–100%): phần đã đạt cùng màu xanh, phần còn lại là nền nhạt cùng tông */
 export function Meter({ label, percent }: { label: string; percent: number }) {
   const value = Math.max(0, Math.min(100, percent))
   return (
@@ -113,16 +101,11 @@ export function Meter({ label, percent }: { label: string; percent: number }) {
 export interface BarItem {
   label: string
   value: number
-  /** Chuỗi hiển thị giá trị (đã định dạng tiền / số) */
   display: string
-  /** Khoản trừ ra (hoàn tiền): vẽ màu xám để tách khỏi các khoản thu */
+  // Khoản trừ (hoàn tiền) vẽ màu xám để tách khỏi khoản thu
   subtract?: boolean
 }
 
-/**
- * Danh sách thanh ngang so sánh độ lớn: một màu xanh (càng dài càng lớn), giá trị ghi bằng chữ cạnh thanh.
- * Khoản trừ ra dùng màu xám trung tính, có ghi "trừ ra" bằng chữ, không chỉ dựa vào màu.
- */
 export function BarList({ items, label }: { items: readonly BarItem[]; label: string }) {
   const widths = barWidths(items.map((i) => i.value))
   return (

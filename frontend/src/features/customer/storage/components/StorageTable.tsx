@@ -123,7 +123,6 @@ export default function StorageTable({
                   </span>
                 </td>
 
-                {/* CỘT HÀNH ĐỘNG */}
                 <td className="py-3 px-3 text-center whitespace-nowrap align-middle">
                   <div className="inline-flex items-center justify-center gap-1.5">
                     {isPending && (
@@ -154,7 +153,6 @@ export default function StorageTable({
                       </span>
                     )}
 
-                    {/* HĐ OVERDUE / CHỜ THANH LÝ */}
                     {isWaitingLiquidation ? (
                       <span
                         title="Hợp đồng đang chờ Quản lý/BOM duyệt thanh lý"

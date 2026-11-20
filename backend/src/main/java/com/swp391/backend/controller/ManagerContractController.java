@@ -53,10 +53,6 @@ public class ManagerContractController {
         this.imageStorageService = imageStorageService;
     }
 
-    /**
-     * GET /api/manager/contracts: Danh sách hợp đồng của cơ sở
-     * Phục vụ 2 trang Manager: "Khách & hợp đồng" và "Trả kho & công nợ"
-     */
     @GetMapping
     public ResponseEntity<List<FacilityContractResponse>> getFacilityContracts(
             @AuthenticationPrincipal Integer managerAccountId,
@@ -84,7 +80,6 @@ public class ManagerContractController {
             if (floorOpt.isEmpty()) continue;
             Floor floor = floorOpt.get();
 
-            // Lọc chính xác theo cơ sở của Manager
             if (targetFacilityId != null && !targetFacilityId.equals(floor.getFacilityId())) {
                 continue;
             }
@@ -151,7 +146,7 @@ public class ManagerContractController {
                 }
             } catch (Exception ignored) {}
 
-            // Nếu hợp đồng quá hạn nhưng chưa có hóa đơn phạt trong cơ sở dữ liệu, tự động khởi tạo khoản phạt để hiển thị
+            // Fallback hiển thị khoản phạt tạm nếu hợp đồng OVERDUE chưa có hóa đơn phạt trong DB
             if ("OVERDUE".equals(status) && fees.isEmpty()) {
                 fees.add(new FeeInvoiceResponse(
                         7000 + c.getContractId(),

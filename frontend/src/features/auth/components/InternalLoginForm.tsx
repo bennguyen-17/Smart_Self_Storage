@@ -147,7 +147,6 @@ function InternalLoginForm() {
 
   return (
     <div className="w-full">
-      {/* HEADER FORM */}
       <div className="mb-6 space-y-1 text-center">
         <div className="mb-1 inline-flex size-11 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600 dark:border-blue-800/60 dark:bg-blue-900/40 dark:text-blue-400">
           <UserShield className="size-5" />
@@ -162,7 +161,6 @@ function InternalLoginForm() {
 
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
         <FieldGroup className="gap-4">
-          {/* Phone / Email */}
           <Controller
             name="phone"
             control={form.control}
@@ -193,7 +191,6 @@ function InternalLoginForm() {
             )}
           />
 
-          {/* Password */}
           <Controller
             name="password"
             control={form.control}
@@ -253,8 +250,6 @@ function InternalLoginForm() {
         )}
       </form>
 
-
-      {/* HELPDESK */}
       <div className="mt-4 space-y-1 border-t pt-3 text-center text-xs text-muted-foreground">
         <div>Gặp sự cố đăng nhập tài khoản nội bộ?</div>
         <div className="text-[11.5px] font-medium">

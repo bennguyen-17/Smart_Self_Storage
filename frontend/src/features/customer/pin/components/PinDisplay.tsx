@@ -14,7 +14,6 @@ export default function PinDisplay() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const timerRef = useRef<any>(null);
 
-  // Tải danh sách hợp đồng kho
   const fetchContracts = async () => {
     try {
       setLoading(true);
@@ -33,11 +32,10 @@ export default function PinDisplay() {
     fetchContracts();
   }, []);
 
-  // CHỈ LẤY CÁC CƠ SỞ MÀ KHÁCH HÀNG CÓ HỢP ĐỒNG ĐANG HIỆU LỰC (ACTIVE)
+  // Chỉ lấy cơ sở có hợp đồng ACTIVE mới được cấp mã PIN mở cổng
   const contractedFacilities = useMemo(() => {
     const map = new Map();
     contracts.forEach((c: any) => {
-      // BẮT BUỘC hợp đồng phải ACTIVE mới có quyền chọn mã PIN ở cơ sở đó
       if (c.status !== 'ACTIVE') return;
 
       const code = (c.branchCode || 'HN01').replace('-', '').toUpperCase();
@@ -53,12 +51,10 @@ export default function PinDisplay() {
     return Array.from(map.values());
   }, [contracts]);
 
-  // Số hợp đồng đang chờ check-in
   const pendingContracts = useMemo(() => {
     return contracts.filter((c: any) => c.status === 'PENDING_CHECKIN');
   }, [contracts]);
 
-  // Tự động chọn cơ sở đầu tiên có hợp đồng ACTIVE
   useEffect(() => {
     if (contractedFacilities.length > 0) {
       if (!gateFacility || !contractedFacilities.some((f: any) => f.code === gateFacility)) {
@@ -69,7 +65,6 @@ export default function PinDisplay() {
     }
   }, [contractedFacilities, gateFacility]);
 
-  // Kiểm tra quyền ra vào của cơ sở đang chọn
   const currentFacPermission = useMemo(() => {
     if (!gateFacility) return { hasAccess: false };
     const fac: any = contractedFacilities.find((f: any) => f.code === gateFacility);
@@ -78,7 +73,6 @@ export default function PinDisplay() {
     };
   }, [contractedFacilities, gateFacility]);
 
-  // Lấy mã PIN từ API theo cơ sở (Chỉ gọi khi cơ sở có hợp đồng ACTIVE)
   const fetchPinForFacility = async (code: string) => {
     if (!code || !currentFacPermission.hasAccess) {
       setPinValue('--- ---');
@@ -105,7 +99,6 @@ export default function PinDisplay() {
     }
   };
 
-  // Trigger lấy PIN khi đổi cơ sở hoặc quyền truy cập thay đổi
   useEffect(() => {
     if (gateFacility && currentFacPermission.hasAccess) {
       fetchPinForFacility(gateFacility);
@@ -114,7 +107,7 @@ export default function PinDisplay() {
     }
   }, [gateFacility, currentFacPermission.hasAccess]);
 
-  // Đếm ngược 15s và tự động refresh mã PIN
+  // Tự động làm mới mã PIN mỗi 15 giây theo TTL từ server
   useEffect(() => {
     if (!currentFacPermission.hasAccess) {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -138,7 +131,6 @@ export default function PinDisplay() {
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6">
-      {/* Banner Tiêu Đề */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-3.5">
           <div className="p-3 rounded-2xl bg-blue-50 text-blue-600 dark:bg-slate-800 dark:text-blue-400 border border-slate-200 dark:border-slate-700">
@@ -154,7 +146,6 @@ export default function PinDisplay() {
           </div>
         </div>
 
-        {/* Lựa chọn cơ sở */}
         <div className="w-full sm:w-auto min-w-[220px]">
           {contractedFacilities.length > 0 ? (
             <div className="relative">
@@ -185,10 +176,8 @@ export default function PinDisplay() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* CỘT TRÁI: THẺ HIỂN THỊ MÃ PIN LIVE 24/7 */}
         <div className="lg:col-span-7 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm relative overflow-hidden space-y-6">
 
-          {/* Header Status */}
           <div className="flex items-center justify-between">
             {currentFacPermission.hasAccess && (
               <div className="flex items-center space-x-2 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 text-xs font-mono font-bold">
@@ -198,7 +187,6 @@ export default function PinDisplay() {
             )}
           </div>
 
-          {/* Dãy Số PIN 6 Chữ Số Lớn */}
           <div className="py-6 sm:py-8 text-center space-y-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
             <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold">
               MÃ BÀN PHÍM CỬA CHÍNH (6 CHỮ SỐ)
@@ -254,7 +242,6 @@ export default function PinDisplay() {
           </div>
         </div>
 
-        {/* CỘT PHẢI: HƯỚNG DẪN MỞ CỬA & QUY TRÌNH AN NINH */}
         <div className="lg:col-span-5 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-6">
           <h3 className="font-bold text-sm uppercase text-slate-900 dark:text-white flex items-center space-x-2">
             <DoorOpen className="size-4.5 text-blue-600 dark:text-blue-400" />

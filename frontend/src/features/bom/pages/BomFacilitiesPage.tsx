@@ -168,7 +168,7 @@ export default function BomFacilitiesPage() {
 
   const { facilityId } = useParams()
 
-  // Tìm cơ sở đang chọn để hiển thị chi tiết ở phần bên phải (nếu có facilityId trên URL)
+  // Gộp dữ liệu từ chainOverview và facilities theo facilityId trên URL
   const activeFac = useMemo(() => {
     if (!facilityId) return null
     const normalize = (s?: string | number) =>
@@ -258,7 +258,6 @@ export default function BomFacilitiesPage() {
     }
   }, [facilityId, activeFac])
 
-  // State bộ lọc thời gian doanh thu bảng cơ sở: "this_month" (mặc định), "last_3_months", "all_time"
   const [revenuePeriod, setRevenuePeriod] = useState<"this_month" | "last_3_months" | "all_time">("this_month")
 
   const REVENUE_PERIOD_OPTIONS = [
@@ -288,7 +287,6 @@ export default function BomFacilitiesPage() {
     }
   }, [])
 
-  // Modal State Cấu hình cơ sở
   const [isFacilityModalOpen, setIsFacilityModalOpen] = useState(false)
   const [selectedFacility, setSelectedFacility] = useState<FacilityPerformance | null>(null)
   const [facilityMultiplier, setFacilityMultiplier] = useState<number>(1.0)
@@ -305,7 +303,6 @@ export default function BomFacilitiesPage() {
   })
   const [isSavingConfig, setIsSavingConfig] = useState(false)
 
-  // Modal State Thêm cơ sở kho mới
   const [isAddFacilityModalOpen, setIsAddFacilityModalOpen] = useState(false)
   const [newFacCity, setNewFacCity] = useState("HN")
   const [newFacCode, setNewFacCode] = useState("")
@@ -326,10 +323,8 @@ export default function BomFacilitiesPage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Modal State Xóa cơ sở kho
   const [facilityToDelete, setFacilityToDelete] = useState<FacilityPerformance | null>(null)
 
-  // Modal State Xem chi tiết cơ sở & báo cáo cơ cấu ô kho
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [detailFacility, setDetailFacility] = useState<FacilityPerformance | null>(null)
   const [facilityUnits, setFacilityUnits] = useState<any[]>([])
@@ -406,7 +401,6 @@ export default function BomFacilitiesPage() {
     }
   }
 
-  // Quy mô chuẩn hóa: Layout A = 22 kho (2 tầng), Layout B = 20 kho (2 tầng)
   const computedTotalUnits = useMemo(() => {
     return newFacLayout === "B" ? 20 : 22
   }, [newFacLayout])
@@ -429,7 +423,7 @@ export default function BomFacilitiesPage() {
     return () => window.removeEventListener("storage_facilities_updated", loadAccounts)
   }, [loadAccounts])
 
-  // Lọc danh sách quản lý hợp lệ: Chỉ role = MANAGER, status = ACTIVE, và CHƯA phụ trách cơ sở nào (mỗi cơ sở 1 quản lý)
+  // Chỉ lấy tài khoản MANAGER đang ACTIVE và chưa phụ trách cơ sở khác (1 cơ sở / 1 quản lý)
   const getEligibleManagers = useCallback(
     (targetFacilityId?: number | null, currentManagerName?: string) => {
       const assignedNamesInOtherFacilities = new Set<string>()
@@ -446,16 +440,12 @@ export default function BomFacilitiesPage() {
       const seenNames = new Set<string>()
 
       internalAccounts.forEach((acc) => {
-        // 1. Chỉ những người có role là MANAGER (Quản lý cơ sở)
         if (acc.role !== "MANAGER") return
-        // 2. Tài khoản phải đang hoạt động (ACTIVE)
         if (acc.status !== "ACTIVE") return
 
         const cleanName = (acc.fullName || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
         if (!cleanName) return
 
-        // 3. Validate mỗi cơ sở chỉ có 1 manager:
-        // Manager nào đã quản lý cơ sở KHÁC thì KHÔNG được hiện
         const isAssignedToOther =
           (acc.facilityId != null && targetFacilityId != null && Number(acc.facilityId) !== Number(targetFacilityId)) ||
           (acc.facilityId != null && targetFacilityId == null) ||
@@ -476,7 +466,7 @@ export default function BomFacilitiesPage() {
         }
       })
 
-      // Nếu cơ sở hiện tại đã có manager (currentManagerName) mà chưa có trong list, giữ lại để hiển thị
+      // Giữ lại manager hiện tại của cơ sở để không bị mất option trên dropdown
       if (currentManagerName) {
         const cleanCur = currentManagerName.replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
         if (cleanCur && cleanCur !== "Chưa phân công" && !seenNames.has(cleanCur.toLowerCase())) {
@@ -494,12 +484,10 @@ export default function BomFacilitiesPage() {
     [facilities, internalAccounts, editManagerPhone, editManagerEmail]
   )
 
-  // Quản lý khả dụng cho modal Sửa cấu hình cơ sở
   const availableManagers = useMemo(() => {
     return getEligibleManagers(selectedFacility ? Number(selectedFacility.id) : null, selectedFacility?.managerName)
   }, [getEligibleManagers, selectedFacility])
 
-  // Quản lý khả dụng cho modal Thêm cơ sở mới (chỉ manager chưa quản lý cơ sở nào)
   const addAvailableManagers = useMemo(() => {
     return getEligibleManagers(null, "")
   }, [getEligibleManagers])
@@ -593,7 +581,7 @@ export default function BomFacilitiesPage() {
     })
     setIsFacilityModalOpen(true)
 
-    // Luôn gọi API lấy thông tin hình ảnh mới nhất của cơ sở từ bảng Image trong DB
+    // Tải lại ảnh mới nhất của cơ sở từ API
     try {
       const facId = Number(fac.id)
       if (!isNaN(facId) && facId > 0) {
@@ -788,7 +776,7 @@ export default function BomFacilitiesPage() {
     const cleanFacName = (facilityToDelete.name || "").replace(/\s*\([A-Z0-9-]+\)\s*$/, "").trim()
     const targetCode = facilityToDelete.code
 
-    // Cập nhật ngay trạng thái cơ sở trên màn hình sang INACTIVE (Đã xóa / Tạm ngưng) và giữ nguyên dòng trên bảng
+    // Xóa mềm: chuyển trạng thái sang INACTIVE ngay trên UI, giữ lại dòng trong bảng
     setFacilities((prev) =>
       prev.map((f) => (f.id === targetId ? { ...f, status: "INACTIVE" } : f))
     )
@@ -808,7 +796,6 @@ export default function BomFacilitiesPage() {
   return (
     <div className="space-y-6">
       {facilityId && activeFac ? (
-        /* GIAO DIỆN BÁO CÁO CƠ SỞ KHO CHI TIẾT - VẪN Ở TRONG MỤC "GIÁM SÁT & CƠ SỞ" */
         (() => {
           const fAny = activeFac as any
           const code = fAny.facilityCode || fAny.code || `FAC-${facilityId}`
@@ -819,7 +806,6 @@ export default function BomFacilitiesPage() {
           const isThisMonth = revenuePeriod === "this_month"
           const is3Months = revenuePeriod === "last_3_months"
 
-          // 1. Phân bổ tài chính theo chu kỳ được chọn
           const latestM = monthlyRevs[monthlyRevs.length - 1]
           const m10Revenue = Number(
             latestM?.revenue ?? 
@@ -856,7 +842,6 @@ export default function BomFacilitiesPage() {
           const overdue = Number(fAny.overdueContracts ?? fAny.overdueUnits ?? 0)
           const tUnits = Number(fAny.totalUnits ?? 22)
 
-          // 2. Vận hành cơ sở kho (Đồng bộ số liệu thực tế với danh sách cơ sở)
           const totalOcc = Number(fAny.occupiedUnits ?? fAny.occupied ?? 0)
           const occUnits = totalOcc
           const resUnits = Number(fAny.reservedUnits ?? fAny.reserved ?? 0)
@@ -873,7 +858,6 @@ export default function BomFacilitiesPage() {
 
           return (
             <div className="space-y-5">
-              {/* HEADER BÁO CÁO CƠ SỞ & BỘ CHỌN NHANH */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white/90 dark:bg-slate-900/60 border border-slate-200/90 dark:border-slate-800 shadow-sm dark:shadow-md transition-colors">
                 <div>
                   <div className="flex items-center gap-2">
@@ -892,7 +876,6 @@ export default function BomFacilitiesPage() {
                 </div>
 
                 <div className="flex flex-col items-end gap-2 shrink-0">
-                  {/* BỘ LỌC THỜI GIAN (DROPDOWN SỔ XUỐNG) */}
                   <div className="relative" ref={detailPeriodRef}>
                     <button
                       type="button"
@@ -936,7 +919,6 @@ export default function BomFacilitiesPage() {
                     )}
                   </div>
 
-                  {/* Thanh chuyển đổi nhanh các cơ sở - Gọn gàng trên 1 hàng */}
                   <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950/80 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-x-auto shrink-0">
                     {facilities.map((f) => {
                       const isSelected = String(f.id) === String(facilityId) || f.code === code
@@ -960,7 +942,6 @@ export default function BomFacilitiesPage() {
                 </div>
               </div>
 
-              {/* KHỐI EXECUTIVE DASHBOARD DÒNG TIỀN VÀ QUY MÔ VẬN HÀNH */}
               <FacilityCashFlowDashboard
                 title={`Doanh Thu Thực Thu - ${code}`}
                 subtitle={`Xu hướng dòng tiền thực thu (${periodLabel})`}
@@ -982,7 +963,6 @@ export default function BomFacilitiesPage() {
                 occupancyRate={occRate}
               />
 
-              {/* BẢNG BÁO CÁO CƠ CẤU Ô KHO THEO SIZE */}
               <div className="rounded-2xl border border-slate-200/90 bg-white/90 dark:border-slate-800/90 dark:bg-slate-900/60 p-5 sm:p-6 shadow-sm dark:shadow-xl space-y-4 transition-colors">
                 <div className="flex items-center justify-between">
                   <div>
@@ -1120,7 +1100,6 @@ export default function BomFacilitiesPage() {
           )
         })()
       ) : (
-        /* BẢNG GIÁM SÁT HOẠT ĐỘNG VÀ CƠ SỞ KHO TOÀN CHUỖI */
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
@@ -1131,7 +1110,6 @@ export default function BomFacilitiesPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
-              {/* BỘ LỌC KHOẢNG THỜI GIAN DOANH THU (DROPDOWN SỔ XUỐNG) */}
               <div className="relative" ref={listPeriodRef}>
                 <button
                   type="button"
@@ -1181,7 +1159,6 @@ export default function BomFacilitiesPage() {
                 )}
               </div>
 
-              {/* NÚT THÊM CƠ SỞ KHO MỚI */}
               <button
                 type="button"
                 onClick={handleOpenAddModal}
@@ -1242,7 +1219,6 @@ export default function BomFacilitiesPage() {
                             : "hover:bg-slate-50/90 dark:hover:bg-slate-800/60"
                         }`}
                       >
-                        {/* CỘT 1: CƠ SỞ KHO */}
                         <td className="py-3 px-4 whitespace-nowrap align-middle text-center">
                           <button
                             type="button"
@@ -1262,14 +1238,12 @@ export default function BomFacilitiesPage() {
                           </button>
                         </td>
 
-                        {/* CỘT 2: QUẢN LÝ CHI NHÁNH */}
                         <td className="py-3 px-4 text-center whitespace-nowrap">
                           <span className="text-sm font-normal text-slate-800 dark:text-slate-200">
                             {cleanManager || "Chưa phân công"}
                           </span>
                         </td>
 
-                        {/* CỘT 3: KHO THUÊ (ĐANG THUÊ / TỔNG SỐ KHO) */}
                         <td className="py-3 px-4 text-center whitespace-nowrap">
                           <span className="text-sm font-normal text-slate-800 dark:text-slate-200">
                             <span className="font-semibold text-slate-900 dark:text-white">{rented}</span>
@@ -1277,12 +1251,10 @@ export default function BomFacilitiesPage() {
                           </span>
                         </td>
 
-                        {/* CỘT 4: DOANH THU THEO KHOẢNG THỜI GIAN ĐƯỢC CHỌN */}
                         <td className="py-3 px-4 text-center whitespace-nowrap text-sm font-semibold text-slate-900 dark:text-slate-100">
                           {displayRevenue}
                         </td>
 
-                        {/* CỘT 5: TRẠNG THÁI (ĐẶT TRƯỚC THAO TÁC, BO VIỀN NHẸ GIỐNG NÚT CẤU HÌNH, MÀU NHẠT HƠN) */}
                         <td className="py-3 px-4 text-center whitespace-nowrap">
                           <div className="inline-flex items-center justify-center">
                             <select
@@ -1307,7 +1279,6 @@ export default function BomFacilitiesPage() {
                           </div>
                         </td>
 
-                        {/* CỘT 6: THAO TÁC */}
                         <td className="py-3 px-4 text-center whitespace-nowrap">
                           <div className="flex items-center justify-center gap-1.5">
                             <button
@@ -1349,7 +1320,6 @@ export default function BomFacilitiesPage() {
         </div>
       )}
 
-      {/* MODAL 1: CẤU HÌNH CƠ SỞ KHO - PORTAL RA BODY */}
       {isFacilityModalOpen && selectedFacility && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 max-w-lg w-full space-y-5 shadow-2xl animate-in fade-in zoom-in duration-150 text-slate-900 dark:text-white my-auto">
@@ -1371,7 +1341,6 @@ export default function BomFacilitiesPage() {
             </div>
 
             <div className="space-y-4 text-xs">
-              {/* PHÂN CÔNG QUẢN LÝ CƠ SỞ */}
               <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -1391,7 +1360,6 @@ export default function BomFacilitiesPage() {
                   )}
                 </div>
 
-                {/* 1. MENU SỔ XUỐNG ĐƯA LÊN TRÊN CÙNG */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-1.5">
@@ -1473,7 +1441,6 @@ export default function BomFacilitiesPage() {
                   )}
                 </div>
 
-                {/* 2. KHI BẤM CHỌN -> HIỆN THÔNG TIN MANAGER XUỐNG DƯỚI */}
                 {editManagerName.trim() ? (
                   <div className="pt-2 border-t border-slate-200 dark:border-slate-800/80 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
                     <div>
@@ -1528,7 +1495,6 @@ export default function BomFacilitiesPage() {
                 )}
               </div>
 
-              {/* TRẠNG THÁI HOẠT ĐỘNG & BẢO TRÌ */}
               <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-2">
                 <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
@@ -1628,7 +1594,6 @@ export default function BomFacilitiesPage() {
                 </div>
               </div>
 
-              {/* HÌNH ẢNH CƠ SỞ & LOẠI KHO (LƯU VÀO DATABASE TYPE_CODE = 1) */}
               <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <label className="font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] flex items-center gap-1.5">
@@ -1728,11 +1693,9 @@ export default function BomFacilitiesPage() {
         document.body
       )}
 
-      {/* MODAL 2: THÊM CƠ SỞ KHO MỚI & CHỌN LAYOUT 2D - PORTAL RA BODY */}
       {isAddFacilityModalOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 max-w-2xl w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-slate-900 dark:text-white my-auto max-h-[92vh] overflow-y-auto">
-            {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div>
                 <h3 className="font-black text-sm uppercase text-blue-600 dark:text-blue-400 flex items-center gap-2">
@@ -1748,9 +1711,7 @@ export default function BomFacilitiesPage() {
               </button>
             </div>
 
-            {/* Modal Form Content */}
             <div className="space-y-4">
-              {/* Row 1: Tên chi nhánh */}
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] mb-1">
                   Tên Chi Nhánh Cơ Sở Kho <span className="text-rose-500">*</span>:
@@ -1764,7 +1725,6 @@ export default function BomFacilitiesPage() {
                 />
               </div>
 
-              {/* Row 2: Khu vực tỉnh thành & Mã Code tự động */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] mb-1">
@@ -1798,14 +1758,12 @@ export default function BomFacilitiesPage() {
                 </div>
               </div>
 
-              {/* Row 3: Lựa chọn Mô hình Layout Kiến Trúc Thống Nhất */}
               <div className="space-y-2">
                 <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px]">
                   Mô Hình Kiến Trúc &amp; Sơ Đồ Thiết Kế 2D <span className="text-rose-500">*</span>:
                 </label>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Card Layout A */}
                   <div
                     onClick={() => {
                       setNewFacLayout("A")
@@ -1839,7 +1797,6 @@ export default function BomFacilitiesPage() {
                     </div>
                   </div>
 
-                  {/* Card Layout B */}
                   <div
                     onClick={() => {
                       setNewFacLayout("B")
@@ -1875,7 +1832,6 @@ export default function BomFacilitiesPage() {
                 </div>
               </div>
 
-              {/* Row 4: Địa chỉ chi nhánh */}
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] mb-1">
                   Địa Chỉ Chi Nhánh <span className="text-rose-500">*</span>:
@@ -1892,7 +1848,6 @@ export default function BomFacilitiesPage() {
                 />
               </div>
 
-              {/* Row 5: Quản lý & Hotline */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] mb-1">
@@ -1937,7 +1892,6 @@ export default function BomFacilitiesPage() {
                 </div>
               </div>
 
-              {/* Row 6: Tải Hình Ảnh Cơ Sở & Kho Lên Hệ Thống (Lưu vào DB typeCode = 1) */}
               <div className="p-3.5 rounded-2xl bg-blue-50/40 dark:bg-slate-950/70 border border-blue-200/70 dark:border-slate-800 space-y-2.5">
                 <div className="flex flex-wrap items-center justify-between gap-1">
                   <label className="font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] flex items-center gap-1.5">
@@ -2018,7 +1972,6 @@ export default function BomFacilitiesPage() {
                 </div>
               </div>
 
-              {/* Row 7: Trạng thái ban đầu */}
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] mb-1.5 flex items-center gap-1.5">
                   <Activity className="size-3 text-slate-500 dark:text-slate-400" />
@@ -2062,7 +2015,6 @@ export default function BomFacilitiesPage() {
               </div>
             </div>
 
-            {/* Modal Actions */}
             <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
               <button
                 type="button"
@@ -2086,7 +2038,6 @@ export default function BomFacilitiesPage() {
         document.body
       )}
 
-      {/* MODAL 3: XÁC NHẬN XÓA CƠ SỞ KHO - PORTAL RA BODY */}
       {facilityToDelete && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-rose-200 dark:border-rose-500/30 p-6 max-w-md w-full space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150 text-slate-900 dark:text-white my-auto">

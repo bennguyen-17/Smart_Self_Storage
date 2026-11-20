@@ -198,7 +198,7 @@ export default function StorageMap2D({
   const [selectedStorageType, setSelectedStorageType] = useState<'ALL' | 'STANDARD' | 'CLIMATE_CONTROLLED' | null>(lockFacility ? 'ALL' : null);
   const [selectedCity, setSelectedCity] = useState<string>('ALL');
 
-  // Danh sách cơ sở hợp lệ từ API: Đang hoạt động (ACTIVE) và ĐÃ CÓ MANAGER QUẢN LÝ
+  // Chỉ hiển thị cơ sở đang ACTIVE và đã phân công quản lý
   const eligibleFacilities = React.useMemo(() => {
     const sourceList: any[] = Array.isArray(branches) ? branches : [];
 
@@ -234,7 +234,6 @@ export default function StorageMap2D({
       });
   }, [branches]);
 
-  // Bộ lọc khu vực (thành phố) động theo số lượng cơ sở thực tế có Manager
   const cityTabs = React.useMemo(() => {
     const counts: Record<string, number> = {};
     eligibleFacilities.forEach((f) => {
@@ -248,14 +247,13 @@ export default function StorageMap2D({
     return tabs;
   }, [eligibleFacilities]);
 
-  // Đảm bảo tab được chọn hợp lệ
   useEffect(() => {
     if (selectedCity !== 'ALL' && !cityTabs.some((t) => t.id === selectedCity)) {
       setSelectedCity('ALL');
     }
   }, [cityTabs, selectedCity]);
 
-  // Khi đổi cơ sở kho, reset loại kho đã chọn để hiện lại tuần tự
+  // Reset loại kho khi đổi cơ sở để khách chọn lại theo bước
   useEffect(() => {
     if (lockFacility) {
       setSelectedStorageType('ALL');
@@ -264,7 +262,6 @@ export default function StorageMap2D({
     }
   }, [facility, lockFacility]);
 
-  // Tải danh sách chi nhánh cơ sở từ Database & lắng nghe sự kiện đồng bộ tự động
   useEffect(() => {
     let isMounted = true;
     const fetchBranches = async () => {
@@ -280,7 +277,7 @@ export default function StorageMap2D({
     };
     fetchBranches();
 
-    // Lắng nghe sự kiện khi BOM thêm / xóa / sửa cơ sở
+    // Đồng bộ lại danh sách khi BOM thêm/sửa/xóa cơ sở
     const handleSync = () => {
       fetchBranches();
     };
@@ -330,7 +327,7 @@ export default function StorageMap2D({
         }
       : null;
 
-  // Tự động chuyển về Tầng Trệt nếu tầng đang chọn vượt quá số tầng của cơ sở (vd: từ cơ sở 3 tầng sang cơ sở 2 tầng)
+  // Reset về tầng 1 nếu tầng đang chọn vượt quá số tầng của cơ sở mới
   useEffect(() => {
     const maxFloors = currentFacilityObj?.floors || (isLayoutB ? 2 : 3);
     if (currentFloor > maxFloors) {
@@ -338,7 +335,6 @@ export default function StorageMap2D({
     }
   }, [currentFacilityObj?.floors, currentFloor, isLayoutB, onSelectFloor]);
 
-  // Gọi API lấy danh sách ô kho theo cơ sở và tầng
   useEffect(() => {
     if (!facility) {
       setUnits([]);
@@ -455,10 +451,8 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
   if (compact) {
     return (
       <div className="space-y-3 w-full">
-        {/* THANH ĐIỀU KHIỂN TINH GỌN DÀNH CHO CHECK-IN */}
         <div className="p-3.5 sm:p-4 rounded-2xl border shadow-xs bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-slate-900 dark:text-white">
           <div className="flex flex-wrap items-center gap-4">
-            {/* 1. CHỌN TẦNG */}
             <div className="flex items-center gap-2">
               <span className="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide flex items-center gap-1.5 shrink-0">
                 <Layers className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
@@ -487,7 +481,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
               </div>
             </div>
 
-            {/* 2. BỘ LỌC LOẠI KHO */}
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Lọc loại:</span>
               <div className="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 gap-1 shrink-0">
@@ -513,7 +506,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
             </div>
           </div>
 
-          {/* CHÚ THÍCH TRẠNG THÁI */}
           <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-emerald-500 inline-block"></span>Trống</span>
             {currentUnitCode && (
@@ -525,7 +517,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
           </div>
         </div>
 
-        {/* SƠ ĐỒ MẶT BẰNG 2D BLUEPRINT BẢN RỘNG */}
         <div className="p-3 sm:p-4 rounded-2xl border shadow-xs space-y-2.5 bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white w-full">
           <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2 gap-2">
             <div className="flex items-center space-x-2 text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide">
@@ -539,7 +530,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
             </div>
           </div>
 
-          {/* Blueprint Grid Container */}
         {loading ? (
           <div className="py-24 text-center text-xs text-slate-400">
             <i className="fa-solid fa-spinner animate-spin text-2xl mb-2 block text-blue-500"></i>
@@ -588,7 +578,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
         ) : (
           <div className="floor-blueprint-container p-3 sm:p-4 shadow-inner relative w-full overflow-x-auto">
             <div className="min-w-[560px] space-y-3">
-              {/* Size S Cluster */}
               {units.filter((u) => u.size === 'S').length > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
@@ -611,7 +600,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
               <div className="floor-corridor-strip">—— LỐI ĐI NỘI BỘ ——</div>
 
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                {/* Size M Cluster */}
                 {units.filter((u) => u.size === 'M').length > 0 && (
                   <div className="md:col-span-7 space-y-2">
                     <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
@@ -631,7 +619,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
                   </div>
                 )}
 
-                {/* Size L Cluster */}
                 {units.filter((u) => u.size === 'L').length > 0 && (
                   <div className="md:col-span-5 space-y-2">
                     <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
@@ -661,11 +648,9 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
 
   return (
     <div className="space-y-3">
-      {/* THANH ĐIỀU KHIỂN TRỰC QUAN: ẢNH 7 CƠ SỞ & ẢNH 2 LOẠI KHO */}
       {!lockFacility && (
       <div className="p-4 sm:p-5 rounded-3xl border shadow-sm w-full bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 space-y-4 text-slate-900 dark:text-white">
         
-        {/* 1. CƠ SỞ KHO: 7 CƠ SỞ CÓ ẢNH RIÊNG */}
         <div className="space-y-3 pb-4 border-b border-slate-100 dark:border-slate-800/80">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide flex items-center gap-1.5">
@@ -698,7 +683,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
                 })}
               </div>
 
-              {/* Danh sách các card cơ sở đã có Manager quản lý */}
               <div className="flex gap-4 overflow-x-auto pb-4 pt-1 scrollbar-thin">
                 {eligibleFacilities
                   .filter((fData) => selectedCity === 'ALL' || fData.city === selectedCity)
@@ -715,7 +699,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
                           : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-blue-300 dark:hover:border-slate-700 opacity-85 hover:opacity-100 hover:shadow-md'
                       }`}
                     >
-                      {/* Ảnh cơ sở lấy trực tiếp từ API Database */}
                       <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
                         {fData.image ? (
                           <img
@@ -731,19 +714,16 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
 
-                        {/* Tag thành phố */}
                         <span className="absolute top-3 left-3 text-xs font-black px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white border border-white/20">
                           {fData.city}
                         </span>
 
-                        {/* Dấu tích khi đang chọn */}
                         {isSelected && (
                           <span className="absolute top-3 right-3 w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg">
                             <Check className="size-4 stroke-[3]" />
                           </span>
                         )}
 
-                        {/* Tên cơ sở in đè trên ảnh */}
                         <div className="absolute bottom-3 left-3 right-3">
                           <p className="text-white text-base sm:text-lg font-black truncate leading-tight drop-shadow-sm">
                             {fData.name.replace('SmartStorage ', '')}
@@ -751,7 +731,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
                         </div>
                       </div>
 
-                      {/* Địa chỉ cơ sở: hiển thị đầy đủ, không bị cắt xén */}
                       <div className="p-3 bg-white dark:bg-slate-900 flex-1 min-h-[58px] flex items-start gap-1.5 border-t border-slate-100 dark:border-slate-800/80">
                         <MapPin className="size-3.5 text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
                         <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium leading-snug">
@@ -772,7 +751,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
       </div>
       )}
 
-      {/* 2. LOẠI KHO: CHỈ HIỆN RA KHI KHÁCH ĐÃ CHỌN CƠ SỞ KHO */}
       <AnimatePresence>
         {facility && (
           <motion.div
@@ -817,7 +795,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
                         : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-blue-300 dark:hover:border-slate-700 opacity-80 hover:opacity-100 hover:shadow-xs'
                     }`}
                   >
-                    {/* Ảnh loại kho lấy trực tiếp từ API Database */}
                     <div className="relative h-44 sm:h-52 w-full shrink-0 overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
                       {displayTypeImage ? (
                         <img
@@ -832,7 +809,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
                         </div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                      {/* Dấu tích khi đang chọn */}
                       {isSelected && (
                         <span className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md">
                           <Check className="size-4 stroke-[3]" />
@@ -840,7 +816,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
                       )}
                     </div>
 
-                    {/* Thông tin loại kho */}
                     <div className="p-3 flex-1 flex flex-col justify-center text-center">
                       <p className={`text-sm font-black ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-900 dark:text-white'}`}>
                         {t.name}
@@ -857,7 +832,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
         )}
       </AnimatePresence>
 
-      {/* 3. TẦNG & SƠ ĐỒ MẶT BẰNG 2D: CHỈ HIỆN KHI ĐÃ CHỌN CƠ SỞ VÀ LOẠI KHO */}
       <AnimatePresence>
         {facility && selectedStorageType && (
           <motion.div
@@ -868,7 +842,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
             transition={{ duration: 0.35 }}
             className="space-y-4"
           >
-            {/* 3. TẦNG */}
             <div className="p-4 sm:p-5 rounded-3xl border shadow-sm bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-slate-900 dark:text-white">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide flex items-center shrink-0 min-w-[90px] gap-1.5">
@@ -898,7 +871,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
                 </div>
               </div>
 
-              {/* Thông tin ô kho đã chọn */}
               {!readOnly && selectedUnit && (
                 <div className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 px-3 py-1.5 rounded-xl flex items-center gap-2">
                   <Check className="size-4 text-emerald-600 shrink-0" />
@@ -908,7 +880,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
 
             </div>
 
-      {/* SƠ ĐỒ MẶT BẰNG 2D BLUEPRINT */}
       <div className="p-3 sm:p-3.5 rounded-2xl border shadow-xs space-y-2.5 bg-white dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
         <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2 gap-2">
           <div className="flex items-center space-x-2 text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide">
@@ -922,7 +893,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
           </div>
         </div>
 
-        {/* Blueprint Grid Container */}
         {loading ? (
           <div className="py-24 text-center text-xs text-slate-400">
             <i className="fa-solid fa-spinner animate-spin text-2xl mb-2 block text-blue-500"></i>
@@ -971,7 +941,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
         ) : (
           <div className="floor-blueprint-container p-3 sm:p-3.5 shadow-inner relative overflow-x-auto">
             <div className="min-w-[560px] space-y-3">
-              {/* Size S Cluster */}
               {units.filter((u) => u.size === 'S').length > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
@@ -994,7 +963,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
               <div className="floor-corridor-strip">—— LỐI ĐI NỘI BỘ ——</div>
 
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                {/* Size M Cluster */}
                 {units.filter((u) => u.size === 'M').length > 0 && (
                   <div className="md:col-span-7 space-y-2">
                     <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">
@@ -1014,7 +982,6 @@ className={`proportional-unit ${cardBg} ${filterClass} ${heightClass} p-1.5 sm:p
                   </div>
                 )}
 
-                {/* Size L Cluster */}
                 {units.filter((u) => u.size === 'L').length > 0 && (
                   <div className="md:col-span-5 space-y-2">
                     <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-900 dark:text-white uppercase">

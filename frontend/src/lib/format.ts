@@ -1,4 +1,4 @@
-// Định dạng hiển thị dùng chung. Mọi ngày giờ đều hiển thị theo giờ Việt Nam.
+// Format hiển thị dùng chung theo múi giờ Việt Nam
 
 export const VN_TIME_ZONE = "Asia/Ho_Chi_Minh"
 
@@ -18,22 +18,20 @@ const dateTimeFormatter = new Intl.DateTimeFormat("vi-VN", {
   hourCycle: "h23",
 })
 
-/** 1500000 → "1.500.000 ₫" */
 export function formatVnd(amount: number | null | undefined): string {
   return amount == null ? "—" : vndFormatter.format(amount)
 }
 
-/** "2026-09-26" (ngày thuần) → "26/09/2026", không bị lệch ngày do timezone */
+// Tách chuỗi trực tiếp từ YYYY-MM-DD để không bị lệch ngày do timezone
 export function formatDate(isoDate: string | null | undefined): string {
   if (!isoDate) return "—"
-  if (isoDate.includes('/')) return isoDate; // Already formatted as DD/MM/YYYY
+  if (isoDate.includes('/')) return isoDate;
   const parts = isoDate.slice(0, 10).split("-")
   if (parts.length !== 3) return isoDate;
   const [year, month, day] = parts
   return `${day}/${month}/${year}`
 }
 
-/** ISO datetime → "27/09/2026 00:00" theo giờ Việt Nam */
 export function formatDateTime(isoDateTime: string | null | undefined): string {
   if (!isoDateTime) return "—"
   const date = new Date(isoDateTime)
@@ -44,7 +42,6 @@ export function formatDateTime(isoDateTime: string | null | undefined): string {
   return `${part("day")}/${part("month")}/${part("year")} ${part("hour")}:${part("minute")}`
 }
 
-/** Ngày hôm nay theo giờ Việt Nam, dạng "YYYY-MM-DD" */
 export function todayInVietnam(now: Date = new Date()): string {
   // en-CA cho sẵn định dạng YYYY-MM-DD
   return new Intl.DateTimeFormat("en-CA", { timeZone: VN_TIME_ZONE }).format(
@@ -52,17 +49,13 @@ export function todayInVietnam(now: Date = new Date()): string {
   )
 }
 
-/** Cộng/trừ ngày trên chuỗi "YYYY-MM-DD" */
 export function addDays(isoDate: string, days: number): string {
   const date = new Date(`${isoDate}T00:00:00Z`)
   date.setUTCDate(date.getUTCDate() + days)
   return date.toISOString().slice(0, 10)
 }
 
-/**
- * Che số CCCD khi hiển thị trong bảng (dữ liệu cá nhân – NĐ 13/2023).
- * "001099012345" → "0010******45"
- */
+// Che phần giữa số CCCD khi hiển thị (vd: 0010******45)
 export function maskCccd(cccd: string | null | undefined): string {
   if (!cccd) return "—"
   if (cccd.length <= 6) return "*".repeat(cccd.length)

@@ -78,7 +78,6 @@ public class CustomerController {
                 return accountRepository.findById(targetId).orElse(null);
             }
         } catch (Exception e) {
-            // Token parse error
         }
         return null;
     }
@@ -93,7 +92,6 @@ public class CustomerController {
             return ResponseEntity.status(401).body(new ApiResponse(false, "Vui lòng đăng nhập để xem thông tin hồ sơ."));
         }
 
-        // Fetch CustomerProfile from Database
         Optional<CustomerProfile> profileOpt = customerProfileRepository.findByAccountId(account.getAccountId());
         String identityNumber = profileOpt.map(CustomerProfile::getIdentityNumber).orElse(null);
 
@@ -135,19 +133,16 @@ public class CustomerController {
             return ResponseEntity.badRequest().body(new ApiResponse(false, "Địa chỉ email mới không hợp lệ."));
         }
 
-        // Check if email already used by another account
         Optional<Account> existing = accountRepository.findByEmail(newEmail);
         if (existing.isPresent() && !existing.get().getAccountId().equals(account.getAccountId())) {
             return ResponseEntity.badRequest().body(new ApiResponse(false, "Email này đã được sử dụng bởi một tài khoản khác."));
         }
 
-        // Sinh mã OTP 6 số
         String otpCode = String.format("%06d", new Random().nextInt(1_000_000));
         account.setOtpCode(otpCode);
         account.setOtpExpiryTime(LocalDateTime.now().plusMinutes(5));
         accountRepository.save(account);
 
-        // Gửi email OTP tới Email MỚI
         boolean emailSent = emailService.sendOtpEmail(newEmail, account.getFullName(), otpCode, "Cập nhật Email mới");
         String message = emailSent 
                 ? "Mã OTP đã được gửi đến email " + newEmail + ". Vui lòng kiểm tra hộp thư!"
@@ -166,7 +161,6 @@ public class CustomerController {
             return ResponseEntity.status(401).body(new ApiResponse(false, "Vui lòng đăng nhập."));
         }
 
-        // 1. Họ và tên
         if (updateData.containsKey("fullName") && updateData.get("fullName") != null) {
             String fullName = updateData.get("fullName").toString().trim();
             if (!fullName.isEmpty()) {
@@ -174,7 +168,6 @@ public class CustomerController {
             }
         }
 
-        // 2. Số điện thoại (Kiểm tra định dạng và trùng lặp)
         if (updateData.containsKey("phone") && updateData.get("phone") != null) {
             String newPhone = updateData.get("phone").toString().trim();
             if (!newPhone.matches("^0[0-9]{9}$")) {
@@ -189,7 +182,7 @@ public class CustomerController {
             }
         }
 
-        // 3. Email (Nếu có thay đổi, bắt buộc phải có OTP hợp lệ)
+        // Đổi email yêu cầu xác thực OTP đã gửi tới địa chỉ mới
         if (updateData.containsKey("email") && updateData.get("email") != null) {
             String newEmail = updateData.get("email").toString().trim().toLowerCase();
             String currentEmail = account.getEmail() != null ? account.getEmail().trim().toLowerCase() : "";
@@ -225,7 +218,6 @@ public class CustomerController {
 
         accountRepository.save(account);
 
-        // Fetch or create CustomerProfile from Database
         Optional<CustomerProfile> profileOpt = customerProfileRepository.findByAccountId(account.getAccountId());
         CustomerProfile profile = profileOpt.orElseGet(() -> new CustomerProfile(account.getAccountId(), "Chưa cập nhật"));
         if (updateData.containsKey("bankName")) {
@@ -271,8 +263,7 @@ public class CustomerController {
             return ResponseEntity.status(401).body(Map.of("success", false, "message", "Vui lòng đăng nhập."));
         }
 
-        // 1. Kiểm tra ràng buộc hợp đồng còn hiệu lực / chưa thanh lý / chưa hoàn cọc
-        // Hợp đồng hủy do không đến check-in (NO_SHOW / CANCELLED) hoặc chưa check-in quá hạn thì chưa phát sinh hợp đồng hoạt động thực tế
+        // Chuyển các đơn quá hạn nhận kho sang NO_SHOW trước khi kiểm tra ràng buộc xóa tài khoản
         java.time.LocalDate today = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         List<Reservation> reservations = reservationRepository.findByAccountId(account.getAccountId());
         Map<Integer, Reservation> resById = new HashMap<>();
@@ -297,7 +288,7 @@ public class CustomerController {
                 }
             }
 
-            // Chỉ các hợp đồng đã thực sự kích hoạt / đang thuê hoặc đang chờ hoàn cọc sau trả kho mới tính là đang hoạt động
+            // Chặn xóa tài khoản nếu còn hợp đồng đang thuê, quá hạn hoặc chờ hoàn cọc
             List<String> activeStatuses = List.of("ACTIVE", "OVERDUE", "TERMINATED");
             List<Contract> pendingContracts = contracts.stream()
                     .filter(c -> c.getStatus() != null && activeStatuses.contains(c.getStatus().toUpperCase()))
@@ -310,7 +301,7 @@ public class CustomerController {
                 ));
             }
 
-            // 2. Kiểm tra hóa đơn chưa thanh toán (chỉ tính trên các hợp đồng có hoạt động thực tế, bỏ qua hợp đồng CANCELLED / NO_SHOW / FORFEITED / COMPLETED)
+            // Kiểm tra công nợ chưa thanh toán trên các hợp đồng còn hoạt động
             List<Integer> activeContractIds = pendingContracts.stream().map(Contract::getContractId).toList();
             if (!activeContractIds.isEmpty()) {
                 List<Payment> unpaidPayments = paymentRepository.findAll().stream()

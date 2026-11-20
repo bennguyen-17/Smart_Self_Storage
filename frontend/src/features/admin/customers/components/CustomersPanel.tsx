@@ -26,10 +26,6 @@ import type { AdminCustomer, CustomerFilter, CustomerStatusFilter } from "../typ
 
 const EMPTY_FILTER: CustomerFilter = { query: "", status: "ALL" }
 
-/**
- * Admin › Khách hàng: tra cứu tài khoản khách, thấy ai đang bị khóa do nhập sai mật khẩu 5 lần
- * và mở khóa sớm khi khách gọi hỗ trợ (thao tác được ghi nhật ký).
- */
 function CustomersPanel() {
   const [filter, setFilter] = useState<CustomerFilter>(EMPTY_FILTER)
   const [reloadCount, setReloadCount] = useState(0)

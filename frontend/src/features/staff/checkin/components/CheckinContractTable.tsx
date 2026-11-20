@@ -20,30 +20,25 @@ interface CheckinContractTableProps {
   onOpenDetail?: (item: StaffReservationItem) => void
   onCheckin: (item: StaffReservationItem) => void
   onCheckout: (item: StaffReservationItem) => void
-  /** Mở hộp thoại hủy giữ chỗ tại quầy (bảo lưu 50% tiền cọc, hoàn 50%) */
   onCancel?: (item: StaffReservationItem) => void
-  /** Mở hộp thoại thu phạt quá hạn tại quầy */
   onCollectPenalty: (item: StaffReservationItem) => void
-  /** Mở hộp thoại gia hạn hợp đồng tại quầy */
   onRenew: (item: StaffReservationItem) => void
-  /** unitCode → nhãn "Size M (3m²)" để hiển thị cạnh vị trí kho */
+  // unitCode -> "Size M (3m²)"
   unitMeta?: Record<string, string>
 }
 
-/** Dòng phụ dưới mã HĐ (bám prototype) */
 function codeSubtitle(item: StaffReservationItem): string | null {
   if (item.contractStatus === "TERMINATED") return "Hợp đồng đã thanh lý"
   if (item.contractStatus === "CANCELLED") return "Đã hoàn tiền cọc"
   return null
 }
 
-/** Nhãn size dự phòng từ mã ô kho ("F2-M205" → "Size M (3m²)") khi chưa tải được danh sách ô. */
+// Fallback suy size từ mã ô khi chưa tải được danh sách ô
 function sizeMetaFromCode(unitCode: string): string | undefined {
   const size = unitSizeFromCode(unitCode)
   return size ? `Size ${size} (${SIZE_AREA_M2[size]}m²)` : undefined
 }
 
-/** Bảng hợp đồng 5 cột chuẩn UI đồng bộ Customer */
 function CheckinContractTable({
   rows,
   isLoading,

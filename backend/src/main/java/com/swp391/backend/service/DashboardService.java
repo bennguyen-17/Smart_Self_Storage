@@ -47,17 +47,11 @@ public class DashboardService {
         this.accountRepository = accountRepository;
     }
 
-    /**
-     * Báo cáo và thống kê vận hành cơ sở cho Quản lý cơ sở
-     */
     public ManagerDashboardResponse getManagerDashboard(Integer facilityId) {
         return getManagerDashboard(facilityId, null, null);
     }
 
-    /**
-     * Báo cáo dòng tiền và doanh thu lọc theo khoảng thời gian
-     * Doanh thu, hoàn tiền, miễn giảm, ticket tính trong khoảng; số ô, hợp đồng hiệu lực vẫn là snapshot hiện tại.
-     */
+    // Doanh thu, hoàn tiền và ticket lọc theo khoảng ngày; số ô và hợp đồng lấy snapshot hiện tại
     public ManagerDashboardResponse getManagerDashboard(Integer facilityId, String fromStr, String toStr) {
         LocalDateTime parsedFrom = null;
         LocalDateTime parsedTo = null;
@@ -80,7 +74,6 @@ public class DashboardService {
 
         Facility fac = facOpt.get();
 
-        // 1. Thống kê ô kho thuộc cơ sở này (thông qua Floor)
         List<Floor> floors = floorRepository.findByFacilityId(facilityId);
         List<Integer> floorIds = floors.stream().map(Floor::getFloorId).collect(Collectors.toList());
 
@@ -96,7 +89,6 @@ public class DashboardService {
 
         double occupancyRate = totalUnits > 0 ? ((double) occupiedUnits / totalUnits) * 100.0 : 0.0;
 
-        // 2. Thống kê Hợp đồng thuộc cơ sở này
         Set<String> unitCodes = allUnits.stream().map(StorageUnit::getUnitCode).collect(Collectors.toSet());
         List<Reservation> reservations = reservationRepository.findAll().stream()
                 .filter(r -> unitCodes.contains(r.getUnitCode()))
@@ -112,7 +104,6 @@ public class DashboardService {
         long overdueContracts = contracts.stream().filter(c -> "OVERDUE".equalsIgnoreCase(c.getStatus())).count();
         long terminatedContracts = contracts.stream().filter(c -> "TERMINATED".equalsIgnoreCase(c.getStatus()) || "COMPLETED".equalsIgnoreCase(c.getStatus())).count();
 
-        // 3. Thống kê Tài chính Doanh thu
         Set<Integer> contractIds = contracts.stream().map(Contract::getContractId).collect(Collectors.toSet());
         List<Payment> payments = paymentRepository.findAll().stream()
                 .filter(p -> contractIds.contains(p.getContractId()))
@@ -128,7 +119,7 @@ public class DashboardService {
         BigDecimal forfeitedDeposit = BigDecimal.ZERO;
         BigDecimal waivedAmount = BigDecimal.ZERO;
 
-        // Xác định mốc thời gian: Tháng hiện tại & 3 tháng gần nhất
+        // Chọn tháng gốc theo dữ liệu mới nhất nếu có bản ghi ở tháng sau thời điểm hiện tại
         java.time.YearMonth currentYm = java.time.YearMonth.now();
 
         for (Payment p : payments) {
@@ -166,7 +157,7 @@ public class DashboardService {
             Contract c = cOpt.get();
             String cStatus = c.getStatus();
             if ("PENDING_CHECKIN".equalsIgnoreCase(cStatus) || "CANCELLED".equalsIgnoreCase(cStatus) || "INITIATED".equalsIgnoreCase(cStatus)) {
-                continue; // Chỉ tính những hợp đồng đã hoàn tất / có hiệu lực
+                continue; // Bỏ qua hợp đồng chưa nhận kho hoặc đã hủy
             }
 
             Optional<Reservation> rOpt = reservations.stream().filter(r -> r.getReservationId().equals(c.getReservationId())).findFirst();
@@ -301,10 +292,9 @@ public class DashboardService {
                 .map(p -> p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Doanh thu thực thu = Doanh thu tổng (thuê + gia hạn + phạt + đền bù) - Hoàn tiền
+        // Doanh thu ròng = tổng thu (thuê, gia hạn, phạt, bồi thường) - hoàn tiền
         BigDecimal netRevenue = grossRevenue.subtract(totalRefunds).max(BigDecimal.ZERO);
 
-        // 4. Thống kê Support Ticket & SLA
         List<SupportTicket> allFacilityTickets = supportTicketRepository.findByFacilityIdOrderByCreatedAtDesc(facilityId);
         List<SupportTicket> tickets = allFacilityTickets.stream().filter(t -> {
             if (t.getCreatedAt() == null) return true;
@@ -339,7 +329,6 @@ public class DashboardService {
             resp.setManagerPhone(mappedFac.getManagerPhone());
         }
 
-        // Lấy thông tin Quản lý chi nhánh (Manager) từ DB
         List<com.swp391.backend.entity.EmployeeProfile> employees = employeeProfileRepository.findAll();
         Optional<com.swp391.backend.entity.EmployeeProfile> mgrEmp = employees.stream()
                 .filter(e -> facilityId.equals(e.getFacilityId()))
@@ -388,7 +377,7 @@ public class DashboardService {
         resp.setForfeitedDeposit(forfeitedDeposit);
         resp.setWaivedAmount(waivedAmount);
 
-        // 5. Tính toán doanh thu thực tế 6 tháng gần nhất cho riêng cơ sở này
+        // Tổng hợp doanh thu 6 tháng gần nhất của cơ sở cho biểu đồ
         java.time.YearMonth endFacYm = currentYm;
         List<java.time.YearMonth> facTargetMonths = new ArrayList<>();
         for (int i = 5; i >= 0; i--) {
@@ -408,7 +397,7 @@ public class DashboardService {
                 Contract c = cOpt.get();
                 String cStatus = c.getStatus();
                 if ("PENDING_CHECKIN".equalsIgnoreCase(cStatus) || "CANCELLED".equalsIgnoreCase(cStatus) || "INITIATED".equalsIgnoreCase(cStatus)) {
-                    continue; // Chỉ tính những hợp đồng đã hoàn tất / có hiệu lực
+                    continue;
                 }
 
                 String invNum = p.getInvoiceNumber() != null ? p.getInvoiceNumber() : "";
@@ -502,9 +491,6 @@ public class DashboardService {
         return resp;
     }
 
-    /**
-     * Báo cáo hợp nhất toàn chuỗi cơ sở cho Ban Giám Đốc
-     */
     public ChainDashboardResponse getChainDashboard() {
         return getChainDashboard(null, null, null);
     }
@@ -578,7 +564,7 @@ public class DashboardService {
 
         double chainOccupancy = chainTotalUnits > 0 ? ((double) chainOccupiedUnits / chainTotalUnits) * 100.0 : 0.0;
 
-        // 4. Tính toán doanh thu thực tế từng tháng từ Database cho Biểu đồ
+        // Tổng hợp doanh thu 6 tháng gần nhất toàn chuỗi cho biểu đồ
         java.time.YearMonth endYm = currentYm;
         List<java.time.YearMonth> targetMonths = new ArrayList<>();
         for (int i = 5; i >= 0; i--) {
@@ -598,7 +584,7 @@ public class DashboardService {
                 Contract c = cOpt.get();
                 String cStatus = c.getStatus();
                 if ("PENDING_CHECKIN".equalsIgnoreCase(cStatus) || "CANCELLED".equalsIgnoreCase(cStatus) || "INITIATED".equalsIgnoreCase(cStatus)) {
-                    continue; // Chỉ tính những hợp đồng đã hoàn tất / có hiệu lực
+                    continue;
                 }
 
                 String invNum = p.getInvoiceNumber() != null ? p.getInvoiceNumber() : "";

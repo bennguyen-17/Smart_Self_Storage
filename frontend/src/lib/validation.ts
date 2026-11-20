@@ -10,10 +10,7 @@ export interface PasswordRule {
   test: (password: string) => boolean
 }
 
-/**
- * Nguồn duy nhất cho các quy tắc mật khẩu.
- * Vừa dùng để render checklist trực tiếp, vừa dùng để build Zod schema bên dưới.
- */
+// Dùng chung cho checklist UI và Zod schema bên dưới
 export const passwordRules: PasswordRule[] = [
   { label: "Ít nhất 8 ký tự", test: (password) => password.length >= 8 },
   { label: "Có chữ hoa", test: (password) => /[A-Z]/.test(password) },
@@ -52,13 +49,11 @@ const validateIdentifier = (value: string, ctx: z.RefinementCtx) => {
   }
 }
 
-/** Đăng nhập khách hàng: hỗ trợ Số điện thoại hoặc Email. */
 export const loginSchema = z.object({
   phone: z.string().superRefine(validateIdentifier),
   password: loginPasswordSchema,
 })
 
-/** Đăng nhập nội bộ: hỗ trợ Số điện thoại hoặc Email. */
 export const internalLoginSchema = z.object({
   phone: z.string().superRefine(validateIdentifier),
   password: loginPasswordSchema,

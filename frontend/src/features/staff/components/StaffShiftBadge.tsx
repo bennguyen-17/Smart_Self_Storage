@@ -49,8 +49,7 @@ export default function StaffShiftBadge() {
   const currentShift = shifts.find((s) => s.isCurrent || s.current) || shifts[0]
   const attended = currentShift?.status === "ATTENDED"
 
-  // Cách 1: Chỉ khi nào nhân viên đang trong ca trực (attended) mới hiển thị
-  // Còn khi chưa vào ca, chưa có ca hoặc hết ca thì ẩn hoàn toàn để Card to ở giữa lo thông báo
+  // Chỉ hiện badge khi đang trong ca; chưa vào ca thì StaffShiftRequiredCard sẽ hiển thị
   if (!attended) {
     return null
   }

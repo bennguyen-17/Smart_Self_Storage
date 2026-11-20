@@ -1,19 +1,15 @@
-// Phân trang phía FE cho các bảng của cổng nội bộ. Hàm thuần, kiểm bằng bảng DDT.
-
-/** Cố định 10 dòng mỗi trang cho mọi bảng Manager / Admin (góp ý của Tâm 03/11: bỏ ô chọn số dòng, bảng gọn, nút chuyển trang luôn gần) */
 export const PAGE_SIZE = 10
 
 export interface PageSlice<T> {
   rows: T[]
-  /** Trang đang xem (bắt đầu từ 1), đã kẹp vào khoảng hợp lệ */
   page: number
   totalPages: number
-  /** Số thứ tự dòng đầu / cuối đang hiện (bắt đầu từ 1); bảng rỗng thì cả hai là 0 */
+  // 1-based; cả hai bằng 0 khi danh sách rỗng
   from: number
   to: number
 }
 
-/** Cắt đúng một trang; trang vượt quá (ví dụ sau khi lọc bớt) thì lùi về trang cuối */
+// Tự kẹp page về trang cuối nếu vượt quá tổng trang sau khi lọc
 export function paginate<T>(
   items: readonly T[],
   page: number,
@@ -32,10 +28,7 @@ export function paginate<T>(
   }
 }
 
-/**
- * Các nút số trang cần hiện: luôn có trang đầu, trang cuối và 1 trang mỗi bên trang đang xem;
- * chỗ bị bỏ qua thay bằng "…". Ví dụ trang 5/20 → [1, "…", 4, 5, 6, "…", 20].
- */
+// Tạo danh sách nút trang quanh trang hiện tại, ví dụ 5/20 -> [1, "…", 4, 5, 6, "…", 20]
 export function pageWindow(page: number, totalPages: number): (number | "…")[] {
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
     (p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1

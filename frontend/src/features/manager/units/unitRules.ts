@@ -1,11 +1,6 @@
-// Quy tắc nghiệp vụ quản lý ô kho. Hàm thuần phục vụ kiểm thử.
-
 import type { PhysicalUnitStatus } from "./types"
 
-/**
- * Chuẩn hóa trạng thái ô kho về bộ chuẩn. DB vẫn còn giá trị cũ (RENTED, MAINTENANCE, OVERDUE)
- * nên FE đọc được cả hai bộ. Giá trị lạ → null (không tự đoán).
- */
+// Map cả giá trị cũ trong DB (RENTED, MAINTENANCE, OVERDUE) về bộ trạng thái chuẩn
 export function normalizeUnitStatus(status: string | null | undefined): PhysicalUnitStatus | null {
   switch ((status ?? "").trim().toUpperCase()) {
     case "AVAILABLE":
@@ -26,12 +21,7 @@ export function normalizeUnitStatus(status: string | null | undefined): Physical
   }
 }
 
-/**
- * Loại kho tương ứng khi đổi Thường ↔ Điều hòa (cùng kích thước).
- * Theo bảng UnitType trong database/db-script.sql: Size M (2 ↔ 5), Size L (3 ↔ 6), Size XL (4 ↔ 7).
- * Size S (1) chỉ có kho thường.
- * Khi BE có API danh mục loại kho thì thay bảng này bằng dữ liệu API.
- */
+// Cặp UnitTypeId Thường <-> Điều hòa cùng kích thước: M (2<->5), L (3<->6), XL (4<->7); S (1) chỉ có kho thường
 const CLIMATE_COUNTERPART: Record<number, number> = { 2: 5, 5: 2, 3: 6, 6: 3, 4: 7, 7: 4 }
 
 export function climateCounterpartTypeId(unitTypeId: number | null | undefined): number | null {
@@ -39,43 +29,35 @@ export function climateCounterpartTypeId(unitTypeId: number | null | undefined):
   return CLIMATE_COUNTERPART[unitTypeId] ?? null
 }
 
-/** Chỉ ô đang trống mới được đổi loại kho, và phải có loại tương ứng cùng size */
 export function canChangeStorageType(status: string, unitTypeId: number | null | undefined): boolean {
   return normalizeUnitStatus(status) === "AVAILABLE" && climateCounterpartTypeId(unitTypeId) !== null
 }
 
-/** Ô có khách giữ chỗ / đặt / đang thuê thì không được đưa vào bảo trì; chỉ ô trống mới được */
 export function canStartMaintenance(status: string): boolean {
   return normalizeUnitStatus(status) === "AVAILABLE"
 }
 
-/** Chỉ ô đang bảo trì mới mở lại cho thuê được (sửa / vệ sinh xong) */
 export function canEndMaintenance(status: string): boolean {
   return normalizeUnitStatus(status) === "UNDER_MAINTENANCE"
 }
 
-/** Lý do không thao tác được, để hiện tooltip thay vì nút bị khóa mà không giải thích */
 export function changeTypeBlockReason(status: string, unitTypeId: number | null | undefined): string | null {
   if (normalizeUnitStatus(status) !== "AVAILABLE") return "Chỉ đổi được loại kho khi ô đang trống"
   if (climateCounterpartTypeId(unitTypeId) === null) return "Size này chưa có phiên bản kho điều hòa"
   return null
 }
 
-/** BE mặc định phụ phí kho điều hòa 20% khi bảng giá chưa đặt (StorageService.calculateRentalPrice) */
+// Phụ phí mặc định cho kho điều hòa khi bảng giá chưa cấu hình
 export const DEFAULT_CLIMATE_SURCHARGE_PERCENT = 20
 
 export interface UnitPrice {
   daily: number
   monthly: number
   deposit: number | null
-  /** % phụ phí đã cộng vào giá ngày / tháng (0 với kho thường) */
   surchargePercent: number
 }
 
-/**
- * Giá khách thực trả của ô (chỉ xem, giá do BOM đặt theo loại kho): kho điều hòa cộng phụ phí giống cách BE tính tiền.
- * Thiếu giá trong bảng giá thì trả null để giao diện ghi "Chưa có giá".
- */
+// Cộng phụ phí kho điều hòa đồng bộ với BE; trả null nếu chưa có bảng giá
 export function unitPrice(unit: {
   dailyPrice?: number | null
   monthlyPrice?: number | null
@@ -98,7 +80,6 @@ export function unitPrice(unit: {
   }
 }
 
-/** Ghi chú sự cố khi đưa ô vào bảo trì: không bắt buộc, tối đa 500 ký tự nếu có nhập */
 export const MAINTENANCE_NOTE_MAX = 500
 
 export function maintenanceNoteError(note?: string | null): string | null {
@@ -108,7 +89,6 @@ export function maintenanceNoteError(note?: string | null): string | null {
   return null
 }
 
-/** Những gì Manager chỉnh trong ngăn "Sửa ô kho" */
 export interface UnitEditDraft {
   climate: boolean
   maintenance: boolean
@@ -126,7 +106,6 @@ interface EditableUnit {
   isClimate?: boolean | null
 }
 
-/** Bản nháp ban đầu khớp đúng hiện trạng ô */
 export function initialUnitDraft(unit: EditableUnit): UnitEditDraft {
   return {
     climate: Boolean(unit.isClimate),
@@ -135,11 +114,7 @@ export function initialUnitDraft(unit: EditableUnit): UnitEditDraft {
   }
 }
 
-/**
- * Từ bản nháp suy ra cần gọi API nào, theo thứ tự: đổi loại kho trước rồi mới đưa vào bảo trì
- * (cả hai đều yêu cầu ô đang trống). Thay đổi không hợp lệ với trạng thái ô thì bỏ qua,
- * vì giao diện đã khóa lựa chọn đó. `noteError` khác null nghĩa là chưa được lưu.
- */
+// Đổi loại kho trước rồi mới chuyển bảo trì vì cả hai đều yêu cầu ô đang trống
 export function planUnitEdit(unit: EditableUnit, draft: UnitEditDraft): { ops: UnitEditOp[]; noteError: string | null } {
   const ops: UnitEditOp[] = []
   let noteError: string | null = null
@@ -154,7 +129,6 @@ export function planUnitEdit(unit: EditableUnit, draft: UnitEditDraft): { ops: U
     ops.push({ kind: "maintenance", note: (draft.note || "").trim() })
   }
 
-  // Sửa xong: ô đang bảo trì được chọn "Sẵn sàng cho thuê" → mở lại thành còn trống
   if (!draft.maintenance && canEndMaintenance(unit.status)) {
     ops.push({ kind: "end-maintenance" })
   }

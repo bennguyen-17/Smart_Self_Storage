@@ -17,10 +17,8 @@ interface AuthLayoutProps {
 function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className="relative flex h-screen min-h-screen max-h-screen flex-col overflow-hidden bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
-      {/* 3D VANTA DOTS ANIMATED BACKGROUND */}
       <VantaDotsBackground />
 
-      {/* HEADER */}
       <header className="sticky top-0 z-30 flex h-16 sm:h-18 w-full shrink-0 items-center justify-between border-b border-slate-200/80 bg-white/70 dark:border-white/10 dark:bg-slate-950/75 px-6 backdrop-blur-md transition-colors sm:px-10 lg:px-12">
         <BrandLogo />
 
@@ -37,17 +35,14 @@ function AuthLayout({ children }: AuthLayoutProps) {
         </div>
       </header>
 
-      {/* MAIN: Fits in viewport without vertical scrolling */}
       <main className="relative z-10 mx-auto flex w-full max-w-[1100px] flex-1 min-h-0 items-center justify-center p-3 sm:p-4">
         <div className="grid w-full grid-cols-1 items-center gap-5 lg:grid-cols-12 max-h-full">
-          {/* CỘT TRÁI: BẢN ĐỒ MẠNG LƯỚI KHO (ANIMATED) - CHIẾM 7/12 (LỚN HƠN CỘT PHẢI, CỐ ĐỊNH 540px) */}
           <motion.section
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="relative hidden h-[540px] flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 bg-white/55 dark:border-white/15 dark:bg-slate-950/20 p-6 shadow-xl backdrop-blur-md group lg:col-span-7 lg:flex transition-colors"
           >
-            {/* Ambient Inside Glow */}
             <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl transition-all duration-700 group-hover:bg-blue-500/20" />
 
             <div className="z-10 flex items-center justify-between border-b border-slate-200/80 dark:border-white/10 pb-3.5">
@@ -73,7 +68,6 @@ function AuthLayout({ children }: AuthLayoutProps) {
             </div>
           </motion.section>
 
-          {/* CỘT PHẢI: FORM (ANIMATED) - CHIẾM 5/12 (CÙNG CHIỀU CAO CỐ ĐỊNH 540px) */}
           <motion.section
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}

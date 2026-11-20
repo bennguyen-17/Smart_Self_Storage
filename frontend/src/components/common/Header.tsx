@@ -34,19 +34,16 @@ export default function Header({ isDarkMode, onToggleTheme, onOpenProfileModal, 
 
   return (
     <header className={`w-full min-h-[56px] sm:min-h-[60px] bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 shrink-0 ${isSticky ? 'sticky top-0 z-40' : 'relative z-20'} transition-colors shadow-xs`}>
-      {/* BRAND LOGO */}
       <div className="shrink-0">
         <BrandLogo onClick={onGoHome} />
       </div>
 
-      {/* CENTER CONTENT (NAVBAR TABS) */}
       {centerContent && (
         <div className="flex-1 flex justify-center items-center px-1 sm:px-3 min-w-0">
           {centerContent}
         </div>
       )}
 
-      {/* CONTROLS & USER PROFILE */}
       <div className="flex items-center space-x-2.5 shrink-0">
         <ThemeToggle />
 

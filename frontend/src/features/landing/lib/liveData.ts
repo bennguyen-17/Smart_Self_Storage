@@ -1,23 +1,22 @@
-// Ghép dữ liệu thật (BE) vào nội dung có sẵn của Landing. Hàm thuần, kiểm bằng bảng DDT.
-// Nội dung viết sẵn (ảnh, mô tả, sức chứa, điểm nổi bật) giữ nguyên; chỉ giá, tên, địa chỉ, trạng thái lấy từ BE.
+// Ghép giá và trạng thái cơ sở từ BE vào nội dung tĩnh của trang landing
 
 import type { PublicFacilityRow, PublicPrice } from "../api/landingApi"
 import type { PublicFacility } from "../content/facilities"
 import type { LandingUnit } from "../content/units"
 
-/** "HN-01" và "HN01" là cùng một cơ sở */
+// Chuẩn hóa mã cơ sở để "HN-01" và "HN01" khớp nhau
 export function facilityKey(code: string): string {
   return code.replace(/-/g, "").toUpperCase()
 }
 
-/** Dòng giá kho thường của một cỡ (bỏ dòng kho điều hòa: dòng đó có phụ phí riêng) */
+// Chỉ lấy giá kho thường, bỏ dòng kho điều hòa vì tính phụ phí riêng
 function normalPriceOf(prices: readonly PublicPrice[], size: string): PublicPrice | undefined {
   return prices.find(
     (p) => p.size?.toUpperCase() === size && !(p.climateSurchargePercent && p.climateSurchargePercent > 0) && p.status !== "INACTIVE"
   )
 }
 
-/** Thay giá ngày / tháng / cọc của 4 cỡ bằng bảng giá thật; cỡ nào BE không có thì giữ giá viết sẵn */
+// Ghi đè giá từ BE, giữ giá mặc định cho cỡ kho chưa có trên BE
 export function mergeUnitPrices(units: readonly LandingUnit[], prices: readonly PublicPrice[] | undefined): LandingUnit[] {
   if (!prices || prices.length === 0) return [...units]
   return units.map((u) => {
@@ -33,16 +32,13 @@ export function mergeUnitPrices(units: readonly LandingUnit[], prices: readonly 
 }
 
 export interface LiveFacility extends PublicFacility {
-  /** null khi chưa tải được số ô trống */
+  // null khi chưa tải được số ô trống
   available: number | null
-  /** Cơ sở đang tạm ngưng hoạt động (BOM vô hiệu hóa) */
+  // true khi cơ sở bị tạm ngưng hoạt động
   paused: boolean
 }
 
-/**
- * Tên, địa chỉ, trạng thái lấy từ BE theo mã cơ sở; điểm nổi bật giữ nội dung viết sẵn.
- * Cơ sở BE không còn trả về (đã xóa) vẫn hiện như cũ để trang không trống.
- */
+// Giữ dữ liệu tĩnh làm fallback nếu cơ sở không có trong danh sách BE trả về
 export function mergeFacilities(
   facilities: readonly PublicFacility[],
   rows: readonly PublicFacilityRow[] | undefined,
@@ -62,7 +58,6 @@ export function mergeFacilities(
   })
 }
 
-/** Chữ trên thẻ cơ sở: tạm ngưng / hết ô / còn N ô */
 export function availabilityLabel(f: Pick<LiveFacility, "available" | "paused">): string | null {
   if (f.paused) return "Tạm ngưng nhận khách"
   if (f.available === null) return null

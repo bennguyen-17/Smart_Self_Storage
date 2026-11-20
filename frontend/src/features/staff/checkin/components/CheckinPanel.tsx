@@ -50,7 +50,6 @@ function matches(item: StaffReservationItem, keyword: string): boolean {
   )
 }
 
-/** Dịch vụ khách hàng & hợp đồng — tra cứu, check-in, đổi ô, hủy */
 function CheckinPanel() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -80,7 +79,6 @@ function CheckinPanel() {
     null
   )
   const [inspection, setInspection] = useState<InspectionTarget | null>(null)
-  // Thu phạt quá hạn và gia hạn tại quầy
   const [penaltyContract, setPenaltyContract] = useState<CheckinTarget | null>(
     null
   )
@@ -90,7 +88,7 @@ function CheckinPanel() {
     listCheckinContracts()
   )
 
-  // Map unitCode → "Size M (3m²)" cho cột Kho & Vị trí (dùng chung cache với dialog đổi ô).
+  // Map unitCode sang nhãn cỡ và diện tích, dùng chung cache với dialog đổi ô
   const { data: units } = useAsyncData("checkin:all-units", fetchAllUnits)
   const unitMeta = useMemo(() => {
     const map: Record<string, string> = {}
@@ -128,7 +126,7 @@ function CheckinPanel() {
         const pA = getStatusPriority(a)
         const pB = getStatusPriority(b)
         if (pA !== pB) return pA - pB
-        // Trong cùng 1 nhóm: Sắp xếp hợp đồng mới nhất lên đầu (Newest first)
+        // Trong cùng nhóm trạng thái, xếp hợp đồng mới nhất lên đầu
         const timeA = a.depositDate || a.reservationStartDate || a.checkInDate
         const timeB = b.depositDate || b.reservationStartDate || b.checkInDate
         const timestampA = timeA ? new Date(timeA).getTime() : 0
@@ -189,7 +187,6 @@ function CheckinPanel() {
 
   return (
     <section aria-label="Quản lý khách hàng và check-in" className="space-y-4">
-      {/* Tiêu đề trang - Nằm trực tiếp trên nền ambient xanh mờ như Manager */}
       <div>
         <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
           <UsersIcon className="size-5 text-blue-600 dark:text-blue-400" />
@@ -197,7 +194,6 @@ function CheckinPanel() {
         </h1>
       </div>
 
-      {/* Cụm Tìm kiếm & Trạng thái Ca trực */}
       <div className="card-box flex flex-col justify-between gap-3 rounded-2xl border p-4 shadow-sm md:flex-row md:items-center">
         <div className="flex max-w-xl flex-1 space-x-2">
           <div className="relative flex-1">
@@ -231,7 +227,6 @@ function CheckinPanel() {
         </div>
       )}
 
-      {/* Cụm Filter Chips theo trạng thái - Nằm trực tiếp trên nền như Manager */}
       <div role="group" aria-label="Lọc theo trạng thái hợp đồng" className="flex flex-wrap items-center gap-2">
         {CHECKIN_TABS.map((t) => {
           const active = t.key === tab.key
@@ -254,7 +249,6 @@ function CheckinPanel() {
         })}
       </div>
 
-      {/* Bảng danh sách hợp đồng - Thẻ card kính mờ riêng biệt */}
       <CheckinContractTable
         rows={slice.rows}
         isLoading={isLoading}

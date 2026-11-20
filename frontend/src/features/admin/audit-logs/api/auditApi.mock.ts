@@ -1,5 +1,4 @@
-// Nhật ký mẫu, dùng khi VITE_USE_MOCK=true. Ngày tính theo "hôm nay".
-// Mã hành động và cách viết mô tả chép từ code BE đang ghi vào bảng ActivityLog.
+// Dữ liệu mock tính mốc thời gian tương đối theo ngày hiện tại
 
 import { addDays, todayInVietnam } from "@/lib/format"
 

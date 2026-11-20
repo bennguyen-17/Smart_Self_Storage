@@ -95,7 +95,7 @@ const POLICY_DATA: Record<
 function PolicyDialog({ tab, onClose }: PolicyDialogProps) {
   const [activeTab] = useState<PolicyTab>("terms")
 
-  // Đồng bộ tab khi dialog mở lên từ bên ngoài
+  // Giữ fallback khi đóng dialog (tab = null)
   const currentTab = tab ?? activeTab
   const content = POLICY_DATA[currentTab]
 
@@ -107,8 +107,6 @@ function PolicyDialog({ tab, onClose }: PolicyDialogProps) {
       }}
     >
       <DialogContent className="max-h-[88vh] overflow-hidden p-0 sm:max-w-2xl rounded-2xl flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-        {/* Header với Tabs chuyển đổi trực tiếp */}
-        {/* Header */}
         <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 px-6 py-4.5">
           <div className="flex items-center gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/20">
@@ -132,7 +130,6 @@ function PolicyDialog({ tab, onClose }: PolicyDialogProps) {
           </div>
         </div>
 
-        {/* Nội dung danh sách điều khoản cuộn mượt */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 divide-y divide-slate-100 dark:divide-slate-800/80">
           {content.sections.map((sec, idx) => (
             <div key={sec.heading} className={cn("space-y-1.5", idx > 0 && "pt-3.5")}>
@@ -147,7 +144,6 @@ function PolicyDialog({ tab, onClose }: PolicyDialogProps) {
           ))}
         </div>
 
-        {/* Footer với Hotline & Nút Đóng */}
         <div className="border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
             <PhoneCallIcon className="size-3.5 text-blue-600 dark:text-blue-400 shrink-0" />

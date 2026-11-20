@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, test, vi } from "vitest"
 
 import type { AccountFormValues } from "../types"
 
-// Giả lập apiClient để kiểm FE gửi đúng contract đã đề xuất cho BE
 const env = vi.hoisted(() => ({ mockMode: false }))
 const http = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), patch: vi.fn() }))
 vi.mock("@/lib/apiClient", () => ({ default: http, isMockMode: () => env.mockMode }))

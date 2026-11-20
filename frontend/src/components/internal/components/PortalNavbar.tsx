@@ -47,7 +47,6 @@ function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, 
 
   return (
     <div className="relative min-h-screen bg-[#eef5fc] text-slate-900 dark:bg-[#0b1120] dark:text-slate-100">
-      {/* Vầng sáng xanh mờ phía trên vùng nội dung, như cổng khách */}
       <div
         aria-hidden="true"
         className="pointer-events-none fixed top-0 left-1/2 -z-0 h-64 w-full max-w-4xl -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-500/20 via-cyan-400/25 to-indigo-500/20 blur-3xl md:left-[calc(50%+8rem)] dark:from-blue-500/10 dark:via-cyan-400/10 dark:to-indigo-500/10"
@@ -61,7 +60,6 @@ function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, 
         />
       )}
 
-      {/* Sidebar dọc: full height, logo Smart Storage nằm trên đỉnh sidebar (giống cổng Staff) */}
       <aside
         id="portal-sidebar"
         className={cn(
@@ -69,7 +67,6 @@ function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, 
           sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full md:translate-x-0"
         )}
       >
-        {/* Header ở đỉnh sidebar chứa Brand Logo & Slogan */}
         <div className="flex h-[68px] shrink-0 items-center justify-between border-b border-slate-200/80 px-4 dark:border-slate-800/80">
           <div className="flex min-w-0 items-center gap-2.5">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
@@ -86,7 +83,6 @@ function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, 
           </div>
         </div>
 
-        {/* Danh mục các trang nghiệp vụ */}
         <div className="flex-1 overflow-y-auto p-4">
           <nav aria-label={`Các trang ${portalName}`} className="space-y-1.5">
             {items.map(({ to, label, hint, icon: Icon, badge }) => (
@@ -136,7 +132,6 @@ function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, 
           </nav>
         </div>
 
-        {/* Footer Sidebar: Profile & Theme Toggle giống phong cách Staff */}
         <div className="mt-auto shrink-0 border-t border-slate-200/80 p-4 dark:border-slate-800/80">
           <div className="flex items-center justify-between gap-2">
             <button
@@ -178,9 +173,7 @@ function PortalNavbar({ portalName, hidePortalNameText = false, items, profile, 
         </div>
       </aside>
 
-      {/* Vùng nội dung chính: Trên desktop bắt đầu từ mép trên không bị header cắt ngang */}
       <main className="relative z-10 flex min-h-screen flex-col md:pl-64">
-        {/* Thanh bar mobile (chỉ hiện trên màn hình hẹp md:hidden, giống Staff md:hidden) */}
         <div className="flex h-[52px] items-center justify-between border-b border-slate-200/80 bg-slate-50/95 px-4 shadow-xs backdrop-blur-xl md:hidden dark:border-slate-800 dark:bg-slate-950/95">
           <div className="flex items-center gap-3">
             <button

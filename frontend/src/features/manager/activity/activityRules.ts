@@ -1,11 +1,8 @@
-// Luật của trang Hoạt động nhân viên. Hàm thuần, kiểm bằng bảng DDT.
-
 import { matchesQuery } from "@/components/internal/textSearch"
 import { actionLabel, actorLabel } from "@/features/admin/audit-logs/auditRules"
 
 import type { FacilityLogEntry, ShiftActivity, StaffActivity, StaffActivityDay } from "./types"
 
-/** Các cột đếm việc; dùng chung cho bảng theo ca và dòng tổng trong ngày */
 export const WORK_COUNTS = [
   { key: "checkIns", label: "Nhận kho" },
   { key: "checkouts", label: "Trả kho" },
@@ -16,7 +13,7 @@ export const WORK_COUNTS = [
 export type WorkCountKey = (typeof WORK_COUNTS)[number]["key"]
 
 export interface DayTotals {
-  /** Số lượt người được xếp ca (một người trực 2 ca tính 2) */
+  // Tính theo lượt trực (1 người trực 2 ca tính là 2)
   scheduled: number
   attended: number
   counts: Record<WorkCountKey, number>
@@ -36,19 +33,17 @@ export function dayTotals(day: StaffActivityDay | undefined): DayTotals {
   return { scheduled, attended, counts }
 }
 
-/** Ca có người được xếp; ca trống không cần hiện bảng */
 export function shiftsWithStaff(day: StaffActivityDay | undefined): ShiftActivity[] {
   return (day?.shifts ?? []).filter((s) => s.staff.length > 0)
 }
 
-/** "—" khi chưa nhận ticket nào; dưới 1 phút ghi "< 1 phút"; làm tròn 1 chữ số */
 export function acceptTimeLabel(minutes: number | null): string {
   if (minutes === null) return "—"
   if (minutes < 1) return "< 1 phút"
   return `${Math.round(minutes * 10) / 10} phút`
 }
 
-/** Giờ:phút hiện tại theo giờ Việt Nam, dạng "HH:mm" để so với giờ ca */
+// Trả về HH:mm theo giờ VN để so với giờ bắt đầu ca
 export function vietnamTime(at: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: "Asia/Ho_Chi_Minh",
@@ -58,12 +53,10 @@ export function vietnamTime(at: Date): string {
   }).format(at)
 }
 
-/** Người được xếp ca nhưng chưa bấm "Bắt đầu ca" sau giờ bắt đầu: cần nhắc */
 export function isLateToShift(shift: Pick<ShiftActivity, "startTime">, staff: Pick<StaffActivity, "attended">, now: string): boolean {
   return !staff.attended && now >= shift.startTime
 }
 
-/** Danh sách người có trong ngày (để lọc nhật ký theo người), mỗi tài khoản một lần, sắp theo tên */
 export function staffOptions(day: StaffActivityDay | undefined): { accountId: number; fullName: string }[] {
   const seen = new Map<number, string>()
   for (const shift of day?.shifts ?? []) {
@@ -72,7 +65,6 @@ export function staffOptions(day: StaffActivityDay | undefined): { accountId: nu
   return [...seen].map(([accountId, fullName]) => ({ accountId, fullName })).sort((a, b) => a.fullName.localeCompare(b.fullName, "vi"))
 }
 
-/** Lọc nhật ký theo người và từ khóa (hành động, mô tả). Mới nhất lên đầu */
 export function filterFacilityLogs(
   logs: readonly FacilityLogEntry[],
   filter: { accountId: string; query: string }

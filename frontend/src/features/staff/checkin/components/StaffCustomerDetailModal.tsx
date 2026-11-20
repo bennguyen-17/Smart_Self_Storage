@@ -8,7 +8,7 @@ import { formatDate, formatVnd } from "@/lib/format"
 import type { StaffReservationItem } from "../types"
 import ProtoModal from "@/features/staff/components/ProtoModal"
 
-/** Item có thể kèm thêm field của lookup (unitStatus, contractPdfUrl, storageCondition). */
+// Mở rộng thêm các field chỉ có ở API lookup
 export type CheckinTarget = StaffReservationItem & {
   unitStatus?: string | null
   contractPdfUrl?: string | null
@@ -48,7 +48,6 @@ function badgeOf(status: string | null | undefined) {
   )
 }
 
-/** Modal chi tiết khách hàng & hợp đồng — bám prototype staff_portal.html */
 function StaffCustomerDetailModal({
   contract,
   onClose,
@@ -77,7 +76,6 @@ function Body({
 
   return (
     <>
-      {/* CUSTOMER SUMMARY BANNER */}
       <div className="space-y-2 rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 p-4 text-center text-white shadow-inner">
         <div className="text-xl font-black tracking-tight text-white">
           {contract.customerName ?? "—"}
@@ -92,7 +90,6 @@ function Body({
       </div>
 
       <div className="space-y-3 text-xs">
-        {/* SECTION 1: IDENTITY & CONTACT */}
         <div className="inner-box space-y-2 rounded-2xl border p-3.5">
           <div className="border-b pb-1 text-[10px] font-bold tracking-wider text-muted uppercase">
             1. Thông tin Định danh &amp; Liên hệ
@@ -121,7 +118,6 @@ function Body({
           </div>
         </div>
 
-        {/* SECTION 2: UNIT */}
         <div className="inner-box space-y-2 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-3.5">
           <div className="border-b border-blue-200 pb-1 text-[10px] font-bold tracking-wider text-blue-700 uppercase dark:border-blue-800/40 dark:text-blue-400">
             2. Thông tin Ô kho &amp; Hình thức Bàn giao
@@ -163,7 +159,6 @@ function Body({
                 </div>
               </>
             )}
-            {/* TIỀN THUÊ KHO & TIỀN CỌC */}
             <div className="flex items-center justify-between">
               <span>Tiền thuê kho:</span>
               <b className="text-title font-mono font-bold">
@@ -202,7 +197,6 @@ function Body({
         </div>
       </div>
 
-      {/* FOOTER */}
       <div className="pt-2">
         <button
           type="button"

@@ -9,7 +9,7 @@ interface MapUnit {
   id: string
 }
 
-/** Xem sơ đồ kho 2D cho nhân viên — Khóa cứng theo đúng cơ sở trực thuộc của nhân viên. */
+// Sơ đồ kho 2D cho staff, cố định theo cơ sở trực thuộc
 function StaffFloorPlanPage() {
   const { user } = useAuth()
   const [facility, setFacility] = useState<string>(user?.facilityCode || "")

@@ -1,12 +1,7 @@
 import apiClient from "@/lib/apiClient"
 
-/**
- * Hợp đồng ảnh thực tế của BE (ImageStorageService + UploadController):
- * POST /api/uploads (multipart/form-data)
- *   file     = 1 file ảnh (JPEG/PNG/WebP, tối đa 5 MB)
- *   category = CHECKOUT_INSPECTION  (nhóm typeCode = 2, ảnh nghiệm thu trả kho)
- * Trả về StoredImageResponse có imageId; ảnh còn PENDING cho tới khi confirm gắn vào hợp đồng.
- */
+// Upload ảnh nghiệm thu qua POST /api/uploads (JPEG/PNG/WebP, tối đa 5 MB).
+// Ảnh ở trạng thái PENDING cho tới khi API checkout gắn imageId vào hợp đồng.
 export const UPLOAD_IMAGE_ENDPOINT = "/uploads"
 export const CHECKOUT_INSPECTION_CATEGORY = "CHECKOUT_INSPECTION"
 

@@ -1,6 +1,4 @@
-// Lấy "ai đang thao tác, ở cơ sở nào" từ phiên đăng nhập.
-// Đăng nhập nội bộ trả user.facilityId (cơ sở của nhân sự). Tài khoản chưa gắn cơ sở thì để null
-// và giao diện báo rõ, KHÔNG tự đoán cơ sở. Chỉ chế độ demo (mock) mới dùng cơ sở mẫu HN-01.
+// Lấy cơ sở từ phiên đăng nhập; thiếu facilityId trả null để UI báo lỗi, chỉ chế độ mock mới dùng cơ sở mẫu
 
 import { getStoredUser } from "@/hooks/useAuthSession"
 import { isMockMode } from "@/lib/apiClient"
@@ -8,7 +6,6 @@ import { isMockMode } from "@/lib/apiClient"
 import type { ManagerContext } from "./units/types"
 export type { ManagerContext }
 
-/** Cơ sở mẫu khi demo bằng dữ liệu giả (HN-01 Cầu Giấy) */
 export const DEMO_FACILITY_ID = 1
 
 function toId(value: unknown): number | null {
@@ -23,7 +20,6 @@ export class MissingFacilityError extends Error {
   }
 }
 
-/** Header BE dùng để biết cơ sở và người thao tác; thiếu cơ sở thì báo lỗi rõ, không đoán */
 export function managerHeaders(ctx: ManagerContext): Record<string, string> {
   if (ctx.facilityId === null) throw new MissingFacilityError()
   const headers: Record<string, string> = { "X-Facility-Id": String(ctx.facilityId) }

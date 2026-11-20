@@ -1,14 +1,11 @@
-// Quản trị viên tìm và mở khóa tài khoản khách hàng bị tạm khóa do nhập sai mật khẩu nhiều lần,
-// Admin mở khóa sớm được). Khớp AdminCustomerResponse của BE (/api/admin/customers).
-
 export interface AdminCustomer {
   accountId: number
   fullName: string | null
   phone: string | null
   email: string | null
-  /** BE trả "LOCKED" khi đang bị khóa do sai mật khẩu; còn lại là trạng thái tài khoản (ACTIVE, UNVERIFIED, CLOSED…) */
+  // LOCKED (tạm khóa do sai mật khẩu), ACTIVE, UNVERIFIED, CLOSED
   status: string
-  /** Khóa đến lúc nào (chỉ có khi LOCKED) */
+  // Chỉ có giá trị khi status là LOCKED
   lockUntil: string | null
 }
 

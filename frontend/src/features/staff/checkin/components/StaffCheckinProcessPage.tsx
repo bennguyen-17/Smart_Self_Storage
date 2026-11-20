@@ -70,12 +70,11 @@ function getUnitTypeAndClimateDisplay(
 function getDisplayRentalDuration(contract: StaffReservationLookup | null): string {
   if (!contract) return "—"
 
-  // Nếu BE đã tính sẵn rentalDuration có nội dung
   if (contract.rentalDuration && contract.rentalDuration.trim()) {
     return contract.rentalDuration
   }
 
-  // Tính toán động từ ngày bắt đầu và kết thúc của hợp đồng
+  // Fallback tính từ khoảng ngày khi BE chưa trả rentalDuration
   const startDateStr = contract.reservationStartDate || contract.checkInDate
   const endDateStr = contract.reservationEndDate || contract.endDate
 
@@ -134,7 +133,6 @@ export default function StaffCheckinProcessPage() {
   const [contract, setContract] = useState<StaffReservationLookup | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // Đổi ô kho state (Cách 1: Modal Sơ đồ 2D)
   const [isMapModalOpen, setIsMapModalOpen] = useState(false)
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
   const [selectedUnit, setSelectedUnit] = useState<UnitDetailResponse | null>(null)
@@ -144,7 +142,6 @@ export default function StaffCheckinProcessPage() {
     totalInitialPayment: number
   } | null>(null)
 
-  // State tạm thời khi click ô trên Sơ đồ 2D trong Modal
   const [mapFloor, setMapFloor] = useState<number>(1)
   const [confirmingUnit, setConfirmingUnit] = useState<UnitDetailResponse | null>(null)
   const [confirmingPricing, setConfirmingPricing] = useState<{
@@ -155,31 +152,27 @@ export default function StaffCheckinProcessPage() {
   } | null>(null)
   const [isCalculatingConfirm, setIsCalculatingConfirm] = useState(false)
 
-  // Lấy toàn bộ ô kho để đối chiếu thông tin khi staff click chọn ô trên sơ đồ
+  // Tải sẵn danh sách ô để đối chiếu khi chọn đổi ô trên sơ đồ
   const [units, setUnits] = useState<UnitDetailResponse[]>([])
 
   useEffect(() => {
     fetchAllUnits().then(setUnits).catch(() => {})
   }, [])
 
-  // Ô kho hiện tại của hợp đồng
   const currentUnit = useMemo(() => {
     if (!contract || !units.length) return null
     return units.find((u) => u.unitCode === contract.unitCode) ?? null
   }, [contract, units])
 
-  // Thanh toán & check-in state
   const [paymentMethod, setPaymentMethod] = useState<string>("CASH")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [actionSuccess, setActionSuccess] = useState<StaffCheckInResponse | null>(null)
 
-  // Hiệu chỉnh thông tin khách hàng (Tên & CCCD)
   const [isEditingCustomer, setIsEditingCustomer] = useState(false)
   const [nameInput, setNameInput] = useState("")
   const [cccdInput, setCccdInput] = useState("")
   const [isSavingCustomer, setIsSavingCustomer] = useState(false)
 
-  // Checklist xác nhận với khách
   const [verifiedCustomer, setVerifiedCustomer] = useState(false)
   const [verifiedUnit, setVerifiedUnit] = useState(false)
   const [collectedMoney, setCollectedMoney] = useState(false)
@@ -206,7 +199,6 @@ export default function StaffCheckinProcessPage() {
     loadData()
   }, [reservationId])
 
-  // Cơ sở và Tầng mặc định từ hợp đồng
   const contractFacility = useMemo(() => {
     if (!contract?.unitCode) return "HN01"
     const prefix = contract.unitCode.split("-")[0]
@@ -227,7 +219,7 @@ export default function StaffCheckinProcessPage() {
     }
   }, [contractFloor])
 
-  // Tính thời gian thuê để gửi lên API tính giá
+  // Dưới 30 ngày tính theo ngày, từ 30 ngày trở lên tính theo tháng
   const rentalDurationInfo = useMemo(() => {
     const startDateStr = contract?.reservationStartDate || contract?.checkInDate
     const endDateStr = contract?.reservationEndDate || contract?.endDate
@@ -243,7 +235,6 @@ export default function StaffCheckinProcessPage() {
     return { rentalType: "MONTHLY", duration: Math.max(1, Math.round(days / 30)) }
   }, [contract])
 
-  // Click vào ô trên Sơ đồ 2D trong Modal
   const handleInitiateUnitChange = async (u: any) => {
     if (!contract) return
     if (u.id === contract.unitCode) {
@@ -291,7 +282,6 @@ export default function StaffCheckinProcessPage() {
     }
   }
 
-  // Xác nhận đổi sang ô đã chọn trên sơ đồ 2D
   const handleApplyUnitChange = () => {
     if (!confirmingUnit || !confirmingPricing) return
     setSelectedUnit(confirmingUnit)
@@ -301,17 +291,14 @@ export default function StaffCheckinProcessPage() {
     toast.success(`Đã chọn đổi sang ô ${confirmingUnit.unitCode} thành công!`)
   }
 
-  // Tính toán số tiền tài chính tổng quát
   const financialSummary = useMemo(() => {
     if (!contract) return null
 
-    // Tiền cọc cũ khách đã đóng (100% tiền cọc ban đầu)
     const oldDepositPaid = contract.depPaidAmount ?? contract.depositAmount ?? 0
     const oldRentalAmount = contract.rentalAmount ?? 0
     const oldDepositAmount = contract.depositAmount ?? 0
 
     if (!selectedUnit || !newPricing) {
-      // Trường hợp không đổi ô kho
       const totalAmount = (contract.depAmount ?? 0) > 0 ? (contract.depAmount ?? 0) : (oldDepositAmount + oldRentalAmount)
       const remainingCollect = contract.depRemainingAmount ?? oldRentalAmount
       return {
@@ -327,12 +314,11 @@ export default function StaffCheckinProcessPage() {
       }
     }
 
-    // Trường hợp CÓ ĐỔI Ô KHO MỚI
+    // Đổi ô: trừ cọc đã đóng vào tổng mới, âm thì hoàn phần chênh lệch cho khách
     const newDeposit = newPricing.depositAmount
     const newRental = newPricing.finalRentalAmount
     const totalNew = newDeposit + newRental
 
-    // Tiền còn phải thu = Tổng mới - Đã cọc cũ
     const balance = totalNew - oldDepositPaid
     const remainingDue = balance > 0 ? balance : 0
     const refundAmount = balance < 0 ? Math.abs(balance) : 0
@@ -353,7 +339,6 @@ export default function StaffCheckinProcessPage() {
     }
   }, [contract, selectedUnit, newPricing])
 
-  // Lưu CCCD mới nếu staff sửa
   const handleSaveCustomerInfo = async () => {
     if (!contract || !reservationId) return
     const cleanName = nameInput.trim()
@@ -387,13 +372,12 @@ export default function StaffCheckinProcessPage() {
     setIsEditingCustomer(false)
   }
 
-  // Thực hiện Check-in
   const handleExecuteCheckin = async () => {
     if (!contract || !financialSummary) return
 
     setIsSubmitting(true)
     try {
-      // BƯỚC 1: Nếu có đổi kho, gọi API change-unit trước
+      // Gọi đổi ô trước khi check-in để BE tính lại cọc và tiền thuê
       let activeUnitCode = contract.unitCode
       let activeFloorName = contract.floorName
 
@@ -405,7 +389,6 @@ export default function StaffCheckinProcessPage() {
         activeFloorName = selectedUnit.floorName || activeFloorName
       }
 
-      // BƯỚC 2: Gọi API check-in thu tiền & kích hoạt HĐ sang ACTIVE
       const res = await confirmCheckin(contract.reservationId, {
         collectedAmount: financialSummary.remainingDue,
         paymentMethod,
@@ -467,7 +450,6 @@ export default function StaffCheckinProcessPage() {
     )
   }
 
-  // Màn hình thành công sau khi Check-in xong
   if (actionSuccess) {
     return (
       <CheckinSuccessView
@@ -481,7 +463,6 @@ export default function StaffCheckinProcessPage() {
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
-      {/* THANH ĐIỀU HƯỚNG BREADCRUMB */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
           <Link
@@ -502,7 +483,6 @@ export default function StaffCheckinProcessPage() {
         </div>
       </div>
 
-      {/* TIÊU ĐỀ TRANG */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200/80 pb-4 dark:border-slate-800">
         <div>
           <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
@@ -512,11 +492,8 @@ export default function StaffCheckinProcessPage() {
         </div>
       </div>
 
-      {/* KHỐI NỘI DUNG CHÍNH (2 CỘT) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        {/* CỘT TRÁI: THÔNG TIN HỢP ĐỒNG & KHÁCH & Ô KHO (7 CỘT) */}
         <div className="space-y-6 lg:col-span-7">
-          {/* CARD 1: THÔNG TIN KHÁCH HÀNG */}
           <CheckinCustomerCard
             contract={contract}
             isEditingCustomer={isEditingCustomer}
@@ -530,16 +507,13 @@ export default function StaffCheckinProcessPage() {
             onCancelEditCustomer={handleCancelEditCustomer}
           />
 
-          {/* CARD 2: CHI TIẾT HỢP ĐỒNG THUÊ KHO */}
           <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-xs backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/90 space-y-3">
-            {/* Header hợp đồng */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <PackageIcon className="size-4 text-slate-600 dark:text-slate-400" />
                 <span>Thông tin hợp đồng thuê kho</span>
               </h2>
 
-              {/* NÚT SÁT GÓC PHẢI THEO YÊU CẦU */}
               {selectedUnit ? (
                 <div className="flex items-center gap-2">
                   <button
@@ -574,7 +548,6 @@ export default function StaffCheckinProcessPage() {
               )}
             </div>
 
-            {/* Các dòng ngang thông tin hợp đồng */}
             <div className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
               <div className="flex items-center justify-between py-2">
                 <span className="text-slate-500 dark:text-slate-400">Mã hợp đồng:</span>
@@ -660,9 +633,7 @@ export default function StaffCheckinProcessPage() {
           </div>
         </div>
 
-        {/* CỘT PHẢI: BẢNG TÍNH TÀI CHÍNH & NÚT XÁC NHẬN CHECK-IN (5 CỘT) */}
         <div className="space-y-6 lg:col-span-5">
-          {/* CARD TÀI CHÍNH THU TIỀN TẠI QUẦY */}
           <div className="rounded-2xl border border-blue-200/90 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 p-5 shadow-md dark:border-blue-900/60 dark:from-slate-900 dark:via-blue-950/20 dark:to-slate-900 space-y-5">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -672,7 +643,6 @@ export default function StaffCheckinProcessPage() {
 
             </div>
 
-            {/* Chi tiết từng mục tiền */}
             {financialSummary && (
               <div className="space-y-2.5 text-xs">
                 <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
@@ -720,7 +690,6 @@ export default function StaffCheckinProcessPage() {
               </div>
             )}
 
-            {/* SỐ TIỀN THỰC THU TẠI QUẦY (BIG HERO) */}
             {financialSummary && (
               <div className="rounded-2xl border border-blue-500/30 bg-blue-50/70 p-4 text-center dark:border-blue-800 dark:bg-blue-950/40">
                 {financialSummary.remainingDue > 0 ? (
@@ -750,7 +719,6 @@ export default function StaffCheckinProcessPage() {
               </div>
             )}
 
-            {/* CHECKLIST ĐỐI SOÁT VỚI KHÁCH */}
             <div className="space-y-2.5 rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5 text-xs dark:border-slate-700/80 dark:bg-slate-900/90 shadow-2xs">
               <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 block">
                 Xác nhận trực tiếp với khách trước khi hoàn tất:
@@ -795,7 +763,6 @@ export default function StaffCheckinProcessPage() {
               </label>
             </div>
 
-            {/* NÚT HOÀN TẤT CHECK-IN */}
             <div className="space-y-2 pt-2">
               <button
                 type="button"
@@ -828,7 +795,6 @@ export default function StaffCheckinProcessPage() {
         </div>
       </div>
 
-      {/* MODAL SƠ ĐỒ KHO 2D TRỰC QUAN */}
       <CheckinUnitChangeModal
         isOpen={isMapModalOpen}
         onClose={() => {
@@ -852,7 +818,6 @@ export default function StaffCheckinProcessPage() {
         getUnitTypeAndClimateDisplay={getUnitTypeAndClimateDisplay}
       />
 
-      {/* HỘP THOẠI HỦY TẠI QUẦY */}
       {isCancelDialogOpen && contract && (
         <CounterCancelDialog
           contract={contract as any}

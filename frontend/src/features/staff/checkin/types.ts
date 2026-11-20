@@ -1,11 +1,8 @@
-// Thủ tục check-in tại quầy — định nghĩa kiểu dữ liệu khớp DTO backend.
-// BE: /api/staff/reservations (list, lookup, check-in, change-unit, cancel)
+// DTO cho luồng check-in, thu phạt và gia hạn tại quầy (/api/staff/reservations)
 
-/** Trạng thái hợp đồng (Contract.status) */
 export type ContractStatus =
   "PENDING_CHECKIN" | "ACTIVE" | "OVERDUE" | "CANCELLED" | "TERMINATED"
 
-/** Dòng danh sách trả về từ BE (StaffReservationListItemResponse). */
 export interface StaffReservationItem {
   contractId?: number | null
   reservationId: number
@@ -26,12 +23,11 @@ export interface StaffReservationItem {
   depRemainingAmount: number | null
   depositAmount?: number | null
   rentalAmount?: number | null
-  // Thông tin quá hạn và tiền phạt hiển thị tại tab check-in
   endDate: string | null // YYYY-MM-DD
-  /** BE-16 gửi ngày bắt đầu/kết thúc thật của đơn (endDate phía trên có thể không có) */
+  // Ngày bắt đầu/kết thúc đơn, dùng khi endDate chưa có
   reservationStartDate?: string | null // YYYY-MM-DD
   reservationEndDate?: string | null // YYYY-MM-DD
-  /** BE-16 bổ sung: nhãn thời gian thuê (vd "1 tháng") */
+  // Nhãn thời gian thuê, vd "1 tháng"
   rentalDuration: string | null
   overdueDays: number | null
   overdueLiquidationDays?: number | null
@@ -45,7 +41,6 @@ export interface StaffReservationItem {
   depositDate?: string | null
 }
 
-/** Kết quả tra cứu (StaffReservationLookupResponse = item + unitStatus + contractPdfUrl). */
 export interface StaffReservationLookup extends StaffReservationItem {
   success: boolean
   message: string
@@ -74,7 +69,7 @@ export interface StaffCheckInResponse {
   collectedAmount: number | null
   gatePin: string | null
   remainingDue: number | null
-  /** Link PDF hóa đơn DEP (BE bổ sung khi bàn giao). Chưa có thì ẩn. */
+  // Ẩn nút tải nếu chưa xuất hóa đơn DEP
   invoicePdfUrl?: string | null
 }
 
@@ -96,7 +91,6 @@ export interface StaffCancelReservationResponse {
   penaltyAmount: number | null
 }
 
-// Thu phạt quá hạn tại quầy
 export interface CollectPenaltyRequest {
   paymentMethod: string // CASH | BANK_TRANSFER
 }
@@ -114,7 +108,6 @@ export interface CollectPenaltyResponse {
   overdueLiquidationDays?: number | null
 }
 
-// Gia hạn hợp đồng tại quầy
 export interface RenewAtCounterRequest {
   months?: number // 1 | 2 | 3 | 6 | 12
   days?: number

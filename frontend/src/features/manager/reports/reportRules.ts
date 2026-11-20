@@ -1,5 +1,3 @@
-// Báo cáo cơ sở: chia số liệu thành các bảng và dựng nội dung file CSV. Hàm thuần phục vụ kiểm thử.
-
 import type { ManagerDashboard } from "./types"
 
 export type MetricKind = "count" | "money" | "percent"
@@ -8,9 +6,7 @@ export interface MetricRow {
   label: string
   value: number
   kind: MetricKind
-  /** Dòng tổng / dòng chính của bảng */
   emphasis?: boolean
-  /** Ghi chú ngắn cạnh nhãn */
   note?: string
 }
 
@@ -20,17 +16,12 @@ export interface ReportSection {
   rows: MetricRow[]
 }
 
-/** Tỷ lệ phần trăm an toàn khi mẫu số bằng 0 */
 export function percentOf(part: number, total: number): number {
   if (!total) return 0
   return Math.round((part / total) * 1000) / 10
 }
 
-/**
- * Tổng doanh thu = tiền thuê + gia hạn + phạt trễ hạn + truy thu đền bù.
- * Không trừ tiền hoàn: phiếu hoàn (REF) đều là hoàn CỌC, mà cọc không phải doanh thu (cô chốt 29/10; trả kho sớm
- * không hoàn tiền thuê). netRevenue của BE đang trừ cả hoàn cọc nên FE không dùng.
- */
+// Không trừ tiền hoàn cọc vì cọc không tính vào doanh thu (không dùng netRevenue từ BE)
 export function revenueTotal(d: Pick<ManagerDashboard, "rentalRevenue" | "extensionRevenue" | "penaltyRevenue" | "compensationRevenue">): number {
   return d.rentalRevenue + d.extensionRevenue + d.penaltyRevenue + d.compensationRevenue
 }
@@ -71,7 +62,7 @@ export function buildReportSections(d: ManagerDashboard): ReportSection[] {
       ],
     },
     {
-      // Tách riêng: cọc không phải doanh thu; tiền hoàn cho khách là hoàn cọc nên nằm ở đây
+      // Tiền cọc và hoàn cọc tách riêng, không tính vào doanh thu
       key: "deposits",
       title: "Tiền cọc",
       rows: [
@@ -95,7 +86,7 @@ export function buildReportSections(d: ManagerDashboard): ReportSection[] {
   ]
 }
 
-/** Các dòng CSV: Nhóm, Chỉ số, Giá trị (số thô để Excel tính toán được) */
+// Xuất số thô để Excel tính toán được
 export function reportCsvRows(d: ManagerDashboard, range: ReportRange = ALL_TIME): (string | number)[][] {
   return [
     ["Phạm vi", "Khoảng thời gian", rangeLabel(range)],
@@ -103,9 +94,7 @@ export function reportCsvRows(d: ManagerDashboard, range: ReportRange = ALL_TIME
   ]
 }
 
-// ---- Khoảng thời gian (BE: ?from=&to=, YYYY-MM-DD, gồm cả 2 đầu) ----
-
-/** "" nghĩa là không giới hạn đầu đó */
+// Khoảng lọc YYYY-MM-DD (gồm cả 2 đầu), chuỗi rỗng là không giới hạn
 export interface ReportRange {
   from: string
   to: string
@@ -123,7 +112,7 @@ export const RANGE_PRESET_LABEL: Record<RangePreset, string> = {
   CUSTOM: "Tùy chọn",
 }
 
-/** Đổi mốc nhanh thành khoảng ngày theo lịch (today là YYYY-MM-DD giờ Việt Nam). CUSTOM giữ nguyên, trả null */
+// today theo YYYY-MM-DD; CUSTOM trả null để giữ nguyên khoảng đang chọn
 export function presetRange(preset: RangePreset, today: string): ReportRange | null {
   const [y, m] = today.split("-").map(Number)
   const firstOf = (year: number, month: number) => `${year}-${String(month).padStart(2, "0")}-01`
@@ -145,14 +134,12 @@ export function presetRange(preset: RangePreset, today: string): ReportRange | n
   return null
 }
 
-/** Hợp lệ khi chưa chọn đủ 2 đầu, hoặc ngày bắt đầu không sau ngày kết thúc */
 export function isReportRangeValid(range: ReportRange): boolean {
   return !range.from || !range.to || range.from <= range.to
 }
 
 const dmy = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`
 
-/** "Từ 01/10/2026 đến 23/10/2026", "Từ 01/10/2026", "Đến 23/10/2026", "Từ trước đến nay" */
 export function rangeLabel(range: ReportRange): string {
   if (range.from && range.to) return `Từ ${dmy(range.from)} đến ${dmy(range.to)}`
   if (range.from) return `Từ ${dmy(range.from)}`
@@ -160,19 +147,17 @@ export function rangeLabel(range: ReportRange): string {
   return RANGE_PRESET_LABEL.ALL
 }
 
-// ---- Dữ liệu cho biểu đồ ----
-
 export type UnitSegmentKey = "occupied" | "reserved" | "available" | "maintenance"
 
 export interface UnitSegment {
   key: UnitSegmentKey
   label: string
   count: number
-  /** % trên tổng số ô, làm tròn 1 chữ số; tổng các phần = 100 (dồn phần lẻ vào phần lớn nhất) */
+  // Tổng các phần luôn bằng 100 (dồn phần lẻ vào nhóm lớn nhất)
   percent: number
 }
 
-/** Thứ tự cố định (màu đi theo trạng thái, không theo thứ hạng): đang thuê, đã đặt cọc, còn trống, bảo trì */
+// Giữ thứ tự cố định theo trạng thái để màu biểu đồ không đổi
 export function unitMix(d: ManagerDashboard): UnitSegment[] {
   const raw: Omit<UnitSegment, "percent">[] = [
     { key: "occupied", label: "Đang thuê", count: d.occupiedUnits },
@@ -191,7 +176,7 @@ export function unitMix(d: ManagerDashboard): UnitSegment[] {
   return segments
 }
 
-/** Độ dài thanh (%) so với giá trị lớn nhất theo trị tuyệt đối; giá trị khác 0 luôn có tối thiểu 2% để còn nhìn thấy */
+// Giá trị khác 0 tối thiểu 2% để thanh vẫn nhìn thấy được
 export function barWidths(values: readonly number[]): number[] {
   const max = Math.max(0, ...values.map(Math.abs))
   if (max === 0) return values.map(() => 0)
@@ -200,15 +185,12 @@ export function barWidths(values: readonly number[]): number[] {
 
 export interface DonutArc {
   key: UnitSegmentKey
-  /** Vị trí bắt đầu và độ dài cung, tính theo % chu vi (0–100), đã trừ khe hở giữa các lát */
+  // Tính theo % chu vi (0-100), đã trừ khe hở giữa các lát
   start: number
   length: number
 }
 
-/**
- * Cung cho biểu đồ vành khuyên: bỏ lát 0 ô; giữa các lát chừa khe `gap` (% chu vi) để tách màu.
- * Chỉ có 1 lát thì vẽ trọn vòng, không chừa khe.
- */
+// Chừa khe giữa các lát; chỉ có 1 lát thì vẽ trọn vòng
 export function donutArcs(segments: readonly UnitSegment[], gap = 1): DonutArc[] {
   const visible = segments.filter((s) => s.percent > 0)
   if (visible.length === 1) return [{ key: visible[0].key, start: 0, length: 100 }]

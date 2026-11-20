@@ -26,7 +26,6 @@ public class ManagerShiftController {
         this.securityContextHelper = securityContextHelper;
     }
 
-    // --- 1. GET /api/manager/staff: Danh sách nhân viên của cơ sở ---
     @GetMapping("/staff")
     public ResponseEntity<List<ManagerStaffResponse>> getFacilityStaff(
             @AuthenticationPrincipal Integer managerAccountId,
@@ -35,7 +34,6 @@ public class ManagerShiftController {
         return ResponseEntity.ok(managerShiftService.getFacilityStaff(effectiveFacilityId));
     }
 
-    // --- 2. GET /api/manager/shifts?date=YYYY-MM-DD: Các ca trong ngày và ai đang trực ---
     @GetMapping("/shifts")
     public ResponseEntity<ShiftScheduleResponse> getShiftSchedule(
             @AuthenticationPrincipal Integer managerAccountId,
@@ -48,7 +46,6 @@ public class ManagerShiftController {
         return ResponseEntity.ok(managerShiftService.getShiftSchedule(effectiveFacilityId, date));
     }
 
-    // --- 3. PUT /api/manager/shifts/{date}/{shiftId}: Lưu danh sách người trực của 1 ca ---
     @PutMapping("/shifts/{date}/{shiftId}")
     public ResponseEntity<?> assignShift(
             @AuthenticationPrincipal Integer managerAccountId,

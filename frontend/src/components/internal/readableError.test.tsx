@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from "vitest"
 import { LoadError } from "./components/PanelKit"
 import { GENERIC_ERROR, readableError, sanitizeErrorMessage } from "./readableError"
 
-// Đúng các câu BE trả khi thử thật ngày 01/11 (rút gọn phần câu lệnh SQL)
+// Mẫu lỗi thực tế từ Hibernate/Spring (đã rút gọn SQL)
 const SQL_DUP_PHONE = "could not execute statement [Duplicate entry '0987654321' for key 'account.phone'] [insert into Account (createdAt,email)]; constraint [account.phone]"
 const SQL_TOO_LONG = "Lỗi hệ thống: could not execute statement [Data truncation: Data too long for column 'fullName' at row 1] [insert into Account (createdAt,email)]"
 const SQL_FK = "Lỗi hệ thống: could not execute statement [Cannot add or update a child row: a foreign key constraint fails (`smart_storage`.`employeeprofile`)]"

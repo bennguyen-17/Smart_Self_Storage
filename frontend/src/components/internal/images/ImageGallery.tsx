@@ -7,10 +7,6 @@ import { formatDateTime } from "@/lib/format"
 import AuthImage from "./AuthImage"
 import type { StoredImage } from "./imageApi"
 
-/**
- * Dãy ảnh thu nhỏ (ảnh nghiệm thu, minh chứng thanh lý…); bấm vào thì phóng to kèm người chụp và thời điểm.
- * Không có ảnh thì hiện câu `emptyText`, không để khung trống.
- */
 function ImageGallery({ images, label, emptyText }: { images: readonly StoredImage[]; label: string; emptyText: string }) {
   const [viewing, setViewing] = useState<StoredImage | null>(null)
 

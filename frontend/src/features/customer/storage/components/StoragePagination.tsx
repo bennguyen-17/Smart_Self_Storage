@@ -20,7 +20,6 @@ export default function StoragePagination({
 
   return (
     <nav aria-label="Phân trang" className="flex items-center justify-end gap-1 text-xs pt-1">
-      {/* Nút Trang trước */}
       <button
         type="button"
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
@@ -31,7 +30,6 @@ export default function StoragePagination({
         <ChevronLeft className="h-4 w-4" />
       </button>
 
-      {/* Các số trang */}
       {Array.from({ length: totalPages }, (_, i) => i + 1)
         .filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
         .map((page, idx, arr) => {
@@ -58,7 +56,6 @@ export default function StoragePagination({
           );
         })}
 
-      {/* Nút Trang sau */}
       <button
         type="button"
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}

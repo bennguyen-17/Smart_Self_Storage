@@ -1,5 +1,3 @@
-// Luật của trang Khách hàng (Admin). Hàm thuần, kiểm bằng bảng DDT.
-
 import type { BadgeTone } from "@/components/internal/components/PanelKit"
 import { matchesQuery } from "@/components/internal/textSearch"
 
@@ -21,7 +19,7 @@ export function isLocked(c: Pick<AdminCustomer, "status">): boolean {
   return c.status.trim().toUpperCase() === "LOCKED"
 }
 
-/** Lọc theo trạng thái và từ khóa (tên, số điện thoại, email). Người đang bị khóa lên đầu */
+// Ưu tiên đẩy tài khoản đang bị khóa lên đầu danh sách
 export function filterCustomers(customers: readonly AdminCustomer[], filter: CustomerFilter): AdminCustomer[] {
   return customers
     .filter((c) => {
@@ -37,7 +35,7 @@ export function filterCustomers(customers: readonly AdminCustomer[], filter: Cus
     )
 }
 
-/** Số phút còn lại cho đến khi tự mở khóa (tạm khóa 15 phút do nhập sai mật khẩu); hết hạn trả về 0 */
+// Số phút còn lại trước khi tự mở khóa (0 nếu đã hết hạn)
 export function minutesUntilUnlock(lockUntil: string | null, now: Date): number {
   if (!lockUntil) return 0
   const ms = new Date(lockUntil).getTime() - now.getTime()

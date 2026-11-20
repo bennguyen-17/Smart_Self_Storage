@@ -26,7 +26,6 @@ function AuthPage() {
 
   return (
     <AuthLayout>
-      {/* TAB SWITCHER */}
       <div role="tablist" className="mb-4 flex shrink-0 rounded-xl bg-muted/80 p-1">
         {TABS.map((tab) => {
           const isActive = tab.value === activeTab
@@ -52,7 +51,6 @@ function AuthPage() {
         })}
       </div>
 
-      {/* ANIMATED FORM CONTENT */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}

@@ -6,27 +6,19 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Service quản lý danh sách Token JWT đã đăng xuất (Blacklist).
- * Ngăn chặn token cũ tiếp tục gọi API sau khi người dùng bấm Đăng xuất.
- */
+// Lưu JWT đã đăng xuất trong bộ nhớ để chặn tái sử dụng
 @Service
 public class TokenBlacklistService {
 
     private final Map<String, LocalDateTime> blacklistedTokens = new ConcurrentHashMap<>();
 
-    /**
-     * Thêm token vào danh sách đen. Mặc định giữ trong 24 giờ để tự động dọn dẹp.
-     */
+    // Giữ token trong blacklist 24 giờ rồi tự dọn
     public void blacklistToken(String token) {
         if (token == null || token.isBlank()) return;
         cleanExpiredTokens();
         blacklistedTokens.put(token.trim(), LocalDateTime.now().plusHours(24));
     }
 
-    /**
-     * Kiểm tra xem token có nằm trong blacklist hay không.
-     */
     public boolean isBlacklisted(String token) {
         if (token == null || token.isBlank()) return false;
         LocalDateTime expiresAt = blacklistedTokens.get(token.trim());

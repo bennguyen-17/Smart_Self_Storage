@@ -57,7 +57,6 @@ function notificationStyle(type: string) {
 }
 
 interface NotificationBellProps {
-  /** Mở modal hồ sơ khi khách bấm vào một thông báo bảo mật. */
   onOpenProfile?: () => void;
 }
 
